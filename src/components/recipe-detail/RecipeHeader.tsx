@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Clock, Users, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { RecipeImage } from './RecipeImage';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeHeaderProps {
@@ -12,6 +12,8 @@ interface RecipeHeaderProps {
 export function RecipeHeader({ recipe }: RecipeHeaderProps) {
   return (
     <div className="mb-8">
+      <RecipeImage recipe={recipe} />
+      
       {(recipe.reasoning || recipe.original_request) && (
         <Card className="mb-8 bg-recipe-blue/5 border-recipe-blue/20">
           <CardContent className="pt-6">
