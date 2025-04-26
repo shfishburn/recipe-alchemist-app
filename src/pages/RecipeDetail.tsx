@@ -3,10 +3,11 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
-import { Loader2, Clock, Users } from 'lucide-react';
+import { Loader2, Clock, Users, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -28,6 +29,27 @@ const RecipeDetail = () => {
             </div>
           ) : recipe ? (
             <div className="max-w-4xl mx-auto">
+              {/* AI Reasoning Section */}
+              {(recipe.reasoning || recipe.original_request) && (
+                <Card className="mb-8 bg-recipe-blue/5 border-recipe-blue/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <BookOpen className="h-5 w-5 text-recipe-blue mt-1" />
+                      <div className="space-y-2">
+                        {recipe.original_request && (
+                          <p className="text-sm text-muted-foreground">
+                            Original request: <span className="font-medium text-foreground">{recipe.original_request}</span>
+                          </p>
+                        )}
+                        {recipe.reasoning && (
+                          <p className="text-sm text-muted-foreground">{recipe.reasoning}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Recipe Header */}
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>

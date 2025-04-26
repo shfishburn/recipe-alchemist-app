@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +23,8 @@ export const useRecipeGenerator = () => {
           flavorTags: formData.flavorTags,
           servings: formData.servings,
           maxCalories: formData.maxCalories,
-          maxMinutes: formData.maxMinutes
+          maxMinutes: formData.maxMinutes,
+          recipeRequest: formData.title || undefined
         })
       });
 
@@ -74,6 +74,8 @@ export const useRecipeGenerator = () => {
           ingredients: data.ingredients,
           instructions: data.instructions,
           nutrition: data.nutrition,
+          reasoning: data.reasoning,
+          original_request: formData.title || undefined,
           user_id: user.id
         })
         .select()

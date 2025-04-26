@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -22,6 +21,8 @@ export interface Nutrition {
 export interface Recipe extends Omit<Database['public']['Tables']['recipes']['Row'], 'ingredients' | 'nutrition'> {
   ingredients: Ingredient[];
   nutrition: Nutrition;
+  reasoning?: string;
+  original_request?: string;
 }
 
 export const useRecipeDetail = (id?: string) => {

@@ -22,12 +22,6 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY in Supabase secrets.');
     }
     
-    // Validate API key format
-    if (!apiKey.startsWith('sk-') || apiKey.length < 30) {
-      console.error('Invalid OpenAI API key format');
-      throw new Error('Invalid OpenAI API key format. API keys should start with "sk-" and be at least 30 characters long.');
-    }
-    
     const openai = new OpenAI({
       apiKey: apiKey,
     });
@@ -41,16 +35,18 @@ serve(async (req) => {
       flavorTags, 
       servings, 
       maxCalories, 
-      maxMinutes 
+      maxMinutes,
+      recipeRequest 
     } = requestData;
 
     const prompt = `Build a ${dietary} ${cuisine} recipe that:
+    • Was requested as: "${recipeRequest || 'no specific request'}"
     • Has ${servings} servings
     • Features flavor tags: ${flavorTags.join(', ')}
     • ≤ ${maxCalories} kcal per serving
     • Cookable in ≤ ${maxMinutes} minutes
 
-    Respond only in strict JSON following the provided schema.`;
+    Provide explanation why this recipe matches the request. Respond only in strict JSON following the provided schema.`;
 
     console.log('Calling OpenAI with prompt:', prompt);
 
@@ -81,6 +77,8 @@ serve(async (req) => {
               },
               "tagline": string,
               "image_prompt": string,
+              "reasoning": string,
+              "original_request": string,
               "fdc_ids": number[]
             }`
           },
@@ -115,4 +113,3 @@ serve(async (req) => {
     });
   }
 });
-
