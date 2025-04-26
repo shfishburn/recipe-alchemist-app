@@ -13,8 +13,10 @@ export const useRecipeGenerator = () => {
   const generateRecipe = async (formData: RecipeFormData) => {
     try {
       setIsLoading(true);
+      console.log('Starting recipe generation with form data:', formData);
       
       // Call the edge function to generate the recipe
+      console.log('Calling generate-recipe edge function');
       const { data, error } = await supabase.functions.invoke('generate-recipe', {
         body: JSON.stringify({
           cuisine: formData.cuisine,
@@ -32,14 +34,32 @@ export const useRecipeGenerator = () => {
       }
 
       if (!data) {
-        throw new Error('No recipe data received');
+        console.error('No recipe data received');
+        throw new Error('No recipe data received from the AI');
       }
       
       if (data.error) {
+        console.error('Recipe generation error:', data.error);
         throw new Error(data.error);
       }
 
+      console.log('Recipe generated successfully:', data);
+
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('Auth error:', userError);
+        throw new Error('Authentication error. Please try logging in again.');
+      }
+
+      if (!user) {
+        console.error('No user found');
+        throw new Error('You must be logged in to save recipes');
+      }
+
       // Save the recipe to the database
+      console.log('Saving recipe to database');
       const { data: savedRecipe, error: saveError } = await supabase
         .from('recipes')
         .insert({
@@ -54,7 +74,7 @@ export const useRecipeGenerator = () => {
           ingredients: data.ingredients,
           instructions: data.instructions,
           nutrition: data.nutrition,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         })
         .select()
         .single();
@@ -63,6 +83,8 @@ export const useRecipeGenerator = () => {
         console.error('Database save error:', saveError);
         throw new Error(`Failed to save recipe: ${saveError.message}`);
       }
+
+      console.log('Recipe saved successfully:', savedRecipe);
 
       toast({
         title: "Success!",

@@ -15,14 +15,19 @@ serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log('Starting recipe generation process');
     
     if (!apiKey) {
+      console.error('OpenAI API key is not configured');
       throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY in Supabase secrets.');
     }
     
     const openai = new OpenAI({
       apiKey: apiKey,
     });
+
+    const requestData = await req.json();
+    console.log('Received request data:', JSON.stringify(requestData));
 
     const { 
       cuisine, 
@@ -31,7 +36,7 @@ serve(async (req) => {
       servings, 
       maxCalories, 
       maxMinutes 
-    } = await req.json();
+    } = requestData;
 
     const prompt = `Build a ${dietary} ${cuisine} recipe that:
     • Has ${servings} servings
@@ -77,29 +82,27 @@ serve(async (req) => {
         ]
       });
 
+      console.log('Received OpenAI response:', JSON.stringify(response.choices[0].message.content));
+
       if (!response.choices[0].message.content) {
         throw new Error('OpenAI returned an empty response');
       }
 
       const recipe = JSON.parse(response.choices[0].message.content);
+      console.log('Successfully parsed recipe JSON');
       
       return new Response(JSON.stringify(recipe), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     } catch (openaiError) {
       console.error('OpenAI API Error:', openaiError);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to generate recipe with AI', 
-        details: openaiError.message 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      throw new Error(`OpenAI API Error: ${openaiError.message}`);
     }
   } catch (error) {
     console.error('Recipe generation error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message || 'An unexpected error occurred'
+      error: error.message || 'An unexpected error occurred',
+      details: error.stack
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
