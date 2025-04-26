@@ -1,29 +1,39 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { MobileMenu } from '@/components/ui/mobile-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
-export function Navbar({ className }: { className?: string }) {
+export function MobileMenu() {
   const { session } = useAuth();
 
   return (
-    <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
-      <div className="container-page flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <MobileMenu />
-          <Link to="/" className="flex items-center space-x-2">
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+        <SheetHeader>
+          <SheetTitle className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-recipe-blue/10 flex items-center justify-center">
               <span className="text-recipe-blue text-xl font-bold">R</span>
             </div>
             <span className="font-bold text-lg">Recipe Alchemist</span>
-          </Link>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-6">
+          </SheetTitle>
+        </SheetHeader>
+        <div className="mt-8 flex flex-col gap-4">
           <Link to="/recipes" className="text-sm font-medium hover:text-primary transition-colors">
             Browse Recipes
           </Link>
@@ -43,28 +53,25 @@ export function Navbar({ className }: { className?: string }) {
               </Link>
             </>
           ) : null}
-        </nav>
-
-        {/* Auth Buttons - Hidden on Mobile */}
-        <div className="hidden md:flex items-center space-x-3">
+        </div>
+        <Separator className="my-4" />
+        <div className="flex flex-col gap-2">
           {session ? (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" asChild className="w-full">
               <Link to="/profile">My Account</Link>
             </Button>
           ) : (
             <>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" asChild className="w-full">
                 <Link to="/auth">Log in</Link>
               </Button>
-              <Button size="sm" asChild>
+              <Button asChild className="w-full">
                 <Link to="/auth">Sign up</Link>
               </Button>
             </>
           )}
         </div>
-      </div>
-    </header>
+      </SheetContent>
+    </Sheet>
   );
 }
-
-export default Navbar;
