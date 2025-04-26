@@ -1,12 +1,89 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import Navbar from '@/components/ui/navbar';
+import Hero from '@/components/landing/Hero';
+import Features from '@/components/landing/Features';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Hero />
+        <Features />
+        
+        {/* CTA Section */}
+        <section className="py-20">
+          <div className="container-page">
+            <div className="max-w-3xl mx-auto text-center space-y-6">
+              <h2 className="font-bold">Ready to transform your cooking?</h2>
+              <p className="text-xl text-muted-foreground">
+                Start creating personalized recipes tailored to your preferences today.
+              </p>
+              <div>
+                <Button asChild size="lg" className="bg-recipe-blue hover:bg-recipe-blue/90">
+                  <a href="/build">Create Your First Recipe</a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Footer */}
+        <footer className="bg-gray-50 dark:bg-gray-900 py-12 border-t">
+          <div className="container-page">
+            <div className="flex flex-col md:flex-row justify-between">
+              <div className="mb-8 md:mb-0">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-recipe-blue/10 flex items-center justify-center">
+                    <span className="text-recipe-blue text-xl font-bold">R</span>
+                  </div>
+                  <span className="font-bold text-lg">Recipe Alchemist</span>
+                </div>
+                <p className="mt-4 text-muted-foreground max-w-xs">
+                  Transform your cooking with AI-powered healthy recipes
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                <div>
+                  <h4 className="font-medium mb-4">Product</h4>
+                  <ul className="space-y-2">
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Features</a></li>
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a></li>
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a></li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-4">Company</h4>
+                  <ul className="space-y-2">
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">About</a></li>
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Blog</a></li>
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-4">Legal</h4>
+                  <ul className="space-y-2">
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Terms</a></li>
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Privacy</a></li>
+                    <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Cookies</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-12 pt-8 border-t text-center">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} Recipe Alchemist. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 };
