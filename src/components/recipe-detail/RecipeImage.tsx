@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, ImagePlus } from 'lucide-react';
+import { ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,8 +21,8 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
       const response = await supabase.functions.invoke('generate-recipe-image', {
         body: {
           title: recipe.title,
-          ingredients: recipe.ingredients,
-          instructions: recipe.instructions,
+          ingredients: JSON.stringify(recipe.ingredients),
+          instructions: JSON.stringify(recipe.instructions),
         },
       });
 
@@ -37,6 +37,8 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           previous_version_id: recipe.id,
           version_number: recipe.version_number + 1,
           image_url: response.data.imageUrl,
+          ingredients: JSON.stringify(recipe.ingredients),
+          instructions: JSON.stringify(recipe.instructions),
         })
         .select()
         .single();
@@ -63,24 +65,27 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   };
 
   return (
-    <div className="relative rounded-lg overflow-hidden mb-6">
-      {recipe.image_url ? (
-        <img
-          src={recipe.image_url}
-          alt={recipe.title}
-          className="w-full aspect-video object-cover rounded-lg"
-        />
-      ) : (
-        <div className="w-full aspect-video bg-muted flex items-center justify-center rounded-lg">
-          <p className="text-muted-foreground">No image available</p>
-        </div>
-      )}
-      <div className="absolute bottom-4 right-4">
+    <div className="relative mb-6">
+      <div className="rounded-lg overflow-hidden">
+        {recipe.image_url ? (
+          <img
+            src={recipe.image_url}
+            alt={recipe.title}
+            className="w-full aspect-video object-cover rounded-lg"
+          />
+        ) : (
+          <div className="w-full aspect-video bg-muted flex items-center justify-center rounded-lg">
+            <p className="text-muted-foreground">No image available</p>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 flex justify-end">
         <Button
           onClick={generateNewImage}
           disabled={isGenerating}
-          variant="secondary"
-          className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           {isGenerating ? (
             <>
@@ -90,7 +95,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           ) : (
             <>
               <ImagePlus className="mr-2 h-4 w-4" />
-              Generate New Image
+              Generate Image
             </>
           )}
         </Button>
