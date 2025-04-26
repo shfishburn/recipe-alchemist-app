@@ -20,7 +20,7 @@ export interface Nutrition {
   sodium_mg?: number;
 }
 
-export interface Recipe extends Omit<Database['public']['Tables']['recipes']['Row'], 'ingredients' | 'nutrition'> {
+export interface Recipe extends Omit<Database['public']['Tables']['recipes']['Row'], 'ingredients' | 'nutrition' | 'reasoning'> {
   ingredients: Ingredient[];
   nutrition: Nutrition;
   reasoning?: string;

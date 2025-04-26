@@ -33,34 +33,58 @@ ${recipe.instructions.join('\n')}
 
 User request: ${userMessage}
 
-Provide specific, actionable changes to improve this recipe while maintaining its core characteristics. Return ONLY valid JSON matching this schema:
+Provide specific, actionable changes to improve this recipe while maintaining its core characteristics. Format your response in two parts:
+1. A conversational response to the user
+2. JSON changes in this format if applicable:
 {
-  "response": string (conversational response to user),
-  "changes": {
-    "title": string | null,
-    "ingredients": [{ "qty": number, "unit": string, "item": string }] | null,
-    "instructions": string[] | null,
-    "nutrition": {
-      "kcal": number,
-      "protein_g": number,
-      "carbs_g": number,
-      "fat_g": number,
-      "fiber_g": number,
-      "sugar_g": number,
-      "sodium_mg": number
-    } | null
-  }
+  "title": string | null,
+  "ingredients": [{ "qty": number, "unit": string, "item": string }] | null,
+  "instructions": string[] | null,
+  "nutrition": {
+    "kcal": number,
+    "protein_g": number,
+    "carbs_g": number,
+    "fat_g": number,
+    "fiber_g": number,
+    "sugar_g": number,
+    "sodium_mg": number
+  } | null
 }`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
-      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: prompt }
-      ]
+      ],
+      temperature: 0.7
     });
 
-    const suggestion = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    
+    // Parse the response to extract the conversation and JSON changes
+    let responseText = '';
+    let changes = null;
+    
+    try {
+      // Look for JSON object in the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[0];
+        changes = JSON.parse(jsonStr);
+        // Remove the JSON from the response text
+        responseText = content.replace(jsonStr, '').trim();
+      } else {
+        responseText = content;
+      }
+    } catch (e) {
+      console.error("Error parsing AI response:", e);
+      responseText = content;
+    }
+    
+    const suggestion = {
+      response: responseText,
+      changes: changes
+    };
     
     return new Response(JSON.stringify(suggestion), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
