@@ -137,7 +137,7 @@ export const useRecipeChat = (recipe: Recipe) => {
     onSuccess: (newRecipe) => {
       toast({
         title: "Changes applied",
-        description: "A new version of the recipe has been created.",
+        description: `Created version ${newRecipe.version_number} of the recipe`,
       });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       window.location.href = `/recipes/${newRecipe.id}`;
