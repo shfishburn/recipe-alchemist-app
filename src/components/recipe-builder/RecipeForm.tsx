@@ -1,21 +1,11 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, X } from 'lucide-react';
-import CuisineSelect from './CuisineSelect';
-import DietarySelect from './DietarySelect';
-import FlavorTagsInput from './FlavorTagsInput';
-import ImageDropzone from './ImageDropzone';
-
-interface RecipeFormProps {
-  onSubmit: (formData: RecipeFormData) => void;
-  isLoading?: boolean;
-}
+import InputsTab from './tabs/InputsTab';
+import MediaTab from './tabs/MediaTab';
+import SettingsTab from './tabs/SettingsTab';
 
 export interface RecipeFormData {
   title: string;
@@ -28,6 +18,11 @@ export interface RecipeFormData {
   maxCalories: number;
   maxMinutes: number;
   imageFile: File | null;
+}
+
+interface RecipeFormProps {
+  onSubmit: (formData: RecipeFormData) => void;
+  isLoading?: boolean;
 }
 
 const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
@@ -47,11 +42,6 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
 
   const [ingredientInput, setIngredientInput] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleAddIngredient = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && ingredientInput.trim()) {
       e.preventDefault();
@@ -70,11 +60,8 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
     }));
   };
 
-  const handleImageSelected = (file: File) => {
-    setFormData((prev) => ({
-      ...prev,
-      imageFile: file,
-    }));
+  const handleSettingChange = (field: string, value: number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -91,136 +78,39 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="inputs" className="space-y-4 pt-4">
-          {/* Title Input */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Recipe Title (Optional)</Label>
-            <Input
-              id="title"
-              name="title"
-              placeholder="Leave blank for AI to suggest a title"
-              value={formData.title}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          {/* Cuisine Selector */}
-          <CuisineSelect
-            value={formData.cuisine}
-            onChange={(value) => setFormData((prev) => ({ ...prev, cuisine: value }))}
+        <TabsContent value="inputs">
+          <InputsTab
+            title={formData.title}
+            cuisine={formData.cuisine}
+            dietary={formData.dietary}
+            flavorTags={formData.flavorTags}
+            ingredients={formData.ingredients}
+            ingredientInput={ingredientInput}
+            onTitleChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+            onCuisineChange={(value) => setFormData((prev) => ({ ...prev, cuisine: value }))}
+            onDietaryChange={(value) => setFormData((prev) => ({ ...prev, dietary: value }))}
+            onFlavorTagsChange={(tags) => setFormData((prev) => ({ ...prev, flavorTags: tags }))}
+            onIngredientChange={setIngredientInput}
+            onIngredientKeyDown={handleAddIngredient}
+            onRemoveIngredient={handleRemoveIngredient}
           />
-
-          {/* Dietary Preference */}
-          <DietarySelect
-            value={formData.dietary}
-            onChange={(value) => setFormData((prev) => ({ ...prev, dietary: value }))}
-          />
-
-          {/* Flavor Tags */}
-          <FlavorTagsInput
-            tags={formData.flavorTags}
-            onChange={(tags) => setFormData((prev) => ({ ...prev, flavorTags: tags }))}
-          />
-
-          {/* Ingredients List */}
-          <div className="space-y-2">
-            <Label htmlFor="ingredients">Main Ingredients</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.ingredients.map((ingredient, index) => (
-                <div 
-                  key={index}
-                  className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full flex items-center gap-1 text-sm"
-                >
-                  {ingredient}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveIngredient(index)}
-                    className="ml-1 rounded-full hover:bg-muted p-0.5"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <Input
-              id="ingredients"
-              placeholder="Type ingredient and press Enter"
-              value={ingredientInput}
-              onChange={(e) => setIngredientInput(e.target.value)}
-              onKeyDown={handleAddIngredient}
-            />
-            <p className="text-xs text-muted-foreground">Press Enter to add each ingredient</p>
-          </div>
         </TabsContent>
 
-        <TabsContent value="url" className="space-y-6 pt-4">
-          {/* URL Input */}
-          <div className="space-y-2">
-            <Label htmlFor="url">Recipe URL (Optional)</Label>
-            <Input
-              id="url"
-              name="url"
-              placeholder="Enter a link to a recipe to adapt it"
-              value={formData.url}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          {/* Image Upload */}
-          <ImageDropzone onImageSelected={handleImageSelected} />
+        <TabsContent value="url">
+          <MediaTab
+            url={formData.url}
+            onUrlChange={(e) => setFormData((prev) => ({ ...prev, url: e.target.value }))}
+            onImageSelected={(file) => setFormData((prev) => ({ ...prev, imageFile: file }))}
+          />
         </TabsContent>
 
-        <TabsContent value="settings" className="space-y-6 pt-4">
-          {/* Servings */}
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="servings">Number of Servings</Label>
-              <span className="text-sm text-muted-foreground">{formData.servings}</span>
-            </div>
-            <Slider
-              id="servings"
-              min={1}
-              max={12}
-              step={1}
-              value={[formData.servings]}
-              onValueChange={(values) => setFormData((prev) => ({ ...prev, servings: values[0] }))}
-              className="py-4"
-            />
-          </div>
-
-          {/* Max Calories */}
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="calories">Max Calories per Serving</Label>
-              <span className="text-sm text-muted-foreground">{formData.maxCalories} kcal</span>
-            </div>
-            <Slider
-              id="calories"
-              min={200}
-              max={1200}
-              step={50}
-              value={[formData.maxCalories]}
-              onValueChange={(values) => setFormData((prev) => ({ ...prev, maxCalories: values[0] }))}
-              className="py-4"
-            />
-          </div>
-
-          {/* Max Time */}
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label htmlFor="time">Max Total Time</Label>
-              <span className="text-sm text-muted-foreground">{formData.maxMinutes} minutes</span>
-            </div>
-            <Slider
-              id="time"
-              min={10}
-              max={120}
-              step={5}
-              value={[formData.maxMinutes]}
-              onValueChange={(values) => setFormData((prev) => ({ ...prev, maxMinutes: values[0] }))}
-              className="py-4"
-            />
-          </div>
+        <TabsContent value="settings">
+          <SettingsTab
+            servings={formData.servings}
+            maxCalories={formData.maxCalories}
+            maxMinutes={formData.maxMinutes}
+            onChange={handleSettingChange}
+          />
         </TabsContent>
       </Tabs>
 
