@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import RecipeForm, { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
 import BuildHeader from '@/components/recipe-builder/BuildHeader';
@@ -8,7 +7,6 @@ import { useRecipeGenerator } from '@/hooks/use-recipe-generator';
 import { useToast } from '@/hooks/use-toast';
 
 const Build = () => {
-  const navigate = useNavigate();
   const { generateRecipe, isLoading } = useRecipeGenerator();
   const { toast } = useToast();
 
