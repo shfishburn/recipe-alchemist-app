@@ -1,37 +1,43 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import RecipeForm, { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
 import { useToast } from '@/hooks/use-toast';
-
-// This would be replaced by actual API call in a real implementation
-const mockGenerateRecipe = (data: RecipeFormData): Promise<any> => {
-  return new Promise((resolve) => {
-    console.log('Generating recipe with data:', data);
-    // Simulate API delay
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: 'Recipe generated successfully'
-      });
-    }, 2000);
-  });
-};
+import { supabase } from '@/integrations/supabase/client';
 
 const Build = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (formData: RecipeFormData) => {
     try {
       setIsLoading(true);
-      const result = await mockGenerateRecipe(formData);
-      toast({
-        title: "Success!",
-        description: "Your recipe has been generated successfully.",
+      
+      // Call Supabase edge function to generate recipe
+      const { data, error } = await supabase.functions.invoke('generate-recipe', {
+        body: JSON.stringify({
+          cuisine: formData.cuisine,
+          dietary: formData.dietary,
+          flavorTags: formData.flavorTags,
+          servings: formData.servings,
+          maxCalories: formData.maxCalories,
+          maxMinutes: formData.maxMinutes
+        })
       });
-      // In a real app, we would redirect to the new recipe page
-      console.log('Recipe generated:', result);
+
+      if (error) throw error;
+
+      if (data) {
+        toast({
+          title: "Success!",
+          description: `Recipe "${data.title}" generated successfully.`,
+        });
+        
+        // Optionally, you could navigate to a recipe view or save to database
+        console.log('Generated Recipe:', data);
+      }
     } catch (error) {
       console.error('Error generating recipe:', error);
       toast({
