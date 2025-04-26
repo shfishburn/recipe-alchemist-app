@@ -26,10 +26,17 @@ export const useRecipeGenerator = () => {
         })
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(`Edge function error: ${error.message}`);
+      }
 
       if (!data) {
         throw new Error('No recipe data received');
+      }
+      
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       // Save the recipe to the database
@@ -52,7 +59,10 @@ export const useRecipeGenerator = () => {
         .select()
         .single();
 
-      if (saveError) throw saveError;
+      if (saveError) {
+        console.error('Database save error:', saveError);
+        throw new Error(`Failed to save recipe: ${saveError.message}`);
+      }
 
       toast({
         title: "Success!",
@@ -72,6 +82,7 @@ export const useRecipeGenerator = () => {
         description: error.message || "Failed to generate or save recipe. Please try again.",
         variant: "destructive",
       });
+      return null;
     } finally {
       setIsLoading(false);
     }
