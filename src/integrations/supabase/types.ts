@@ -9,7 +9,140 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          recipe_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipe_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipe_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      recipes: {
+        Row: {
+          cook_time_min: number | null
+          created_at: string
+          cuisine: string | null
+          dietary: string | null
+          flavor_tags: string[] | null
+          id: string
+          image_url: string | null
+          ingredients: Json
+          instructions: string[]
+          nutrition: Json | null
+          prep_time_min: number | null
+          servings: number
+          tagline: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cook_time_min?: number | null
+          created_at?: string
+          cuisine?: string | null
+          dietary?: string | null
+          flavor_tags?: string[] | null
+          id?: string
+          image_url?: string | null
+          ingredients: Json
+          instructions: string[]
+          nutrition?: Json | null
+          prep_time_min?: number | null
+          servings: number
+          tagline?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cook_time_min?: number | null
+          created_at?: string
+          cuisine?: string | null
+          dietary?: string | null
+          flavor_tags?: string[] | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: string[]
+          nutrition?: Json | null
+          prep_time_min?: number | null
+          servings?: number
+          tagline?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shopping_lists: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items: Json
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
