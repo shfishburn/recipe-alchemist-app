@@ -9,6 +9,20 @@ import { MobileMenu } from '@/components/ui/mobile-menu';
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
 
+  // Define all navigation links including those that require authentication
+  const navigationLinks = [
+    { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'Create Recipe', path: '/build', requiresAuth: true },
+    { name: 'Favorites', path: '/favorites', requiresAuth: true },
+    { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
+    { name: 'Profile', path: '/profile', requiresAuth: true },
+  ];
+
+  // Filter links based on authentication status
+  const displayedLinks = navigationLinks.filter(
+    link => !link.requiresAuth || (link.requiresAuth && session)
+  );
+
   return (
     <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
       <div className="container-page flex h-16 items-center justify-between">
@@ -24,25 +38,15 @@ export function Navbar({ className }: { className?: string }) {
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/recipes" className="text-sm font-medium hover:text-primary transition-colors">
-            Browse Recipes
-          </Link>
-          {session ? (
-            <>
-              <Link to="/build" className="text-sm font-medium hover:text-primary transition-colors">
-                Create Recipe
-              </Link>
-              <Link to="/favorites" className="text-sm font-medium hover:text-primary transition-colors">
-                Favorites
-              </Link>
-              <Link to="/shopping-lists" className="text-sm font-medium hover:text-primary transition-colors">
-                Shopping Lists
-              </Link>
-              <Link to="/profile" className="text-sm font-medium hover:text-primary transition-colors">
-                Profile
-              </Link>
-            </>
-          ) : null}
+          {displayedLinks.map((link) => (
+            <Link 
+              key={link.path} 
+              to={link.path} 
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
         </nav>
 
         {/* Auth Buttons - Hidden on Mobile */}

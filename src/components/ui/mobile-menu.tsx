@@ -16,6 +16,20 @@ import { Separator } from '@/components/ui/separator';
 export function MobileMenu() {
   const { session } = useAuth();
 
+  // Define all navigation links including those that require authentication
+  const navigationLinks = [
+    { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'Create Recipe', path: '/build', requiresAuth: true },
+    { name: 'Favorites', path: '/favorites', requiresAuth: true },
+    { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
+    { name: 'Profile', path: '/profile', requiresAuth: true },
+  ];
+
+  // Filter links based on authentication status
+  const displayedLinks = navigationLinks.filter(
+    link => !link.requiresAuth || (link.requiresAuth && session)
+  );
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -34,25 +48,15 @@ export function MobileMenu() {
           </SheetTitle>
         </SheetHeader>
         <div className="mt-8 flex flex-col gap-4">
-          <Link to="/recipes" className="text-sm font-medium hover:text-primary transition-colors">
-            Browse Recipes
-          </Link>
-          {session ? (
-            <>
-              <Link to="/build" className="text-sm font-medium hover:text-primary transition-colors">
-                Create Recipe
-              </Link>
-              <Link to="/favorites" className="text-sm font-medium hover:text-primary transition-colors">
-                Favorites
-              </Link>
-              <Link to="/shopping-lists" className="text-sm font-medium hover:text-primary transition-colors">
-                Shopping Lists
-              </Link>
-              <Link to="/profile" className="text-sm font-medium hover:text-primary transition-colors">
-                Profile
-              </Link>
-            </>
-          ) : null}
+          {displayedLinks.map((link) => (
+            <Link 
+              key={link.path} 
+              to={link.path} 
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
         <Separator className="my-4" />
         <div className="flex flex-col gap-2">
