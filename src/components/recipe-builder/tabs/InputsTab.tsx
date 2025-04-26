@@ -2,7 +2,7 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X } from 'lucide-react';
+import { X, Globe, Leaf, Plus } from 'lucide-react';
 import CuisineSelect from '../CuisineSelect';
 import DietarySelect from '../DietarySelect';
 import FlavorTagsInput from '../FlavorTagsInput';
@@ -39,65 +39,106 @@ const InputsTab = ({
   onRemoveIngredient,
 }: InputsTabProps) => {
   return (
-    <div className="space-y-4 pt-4">
+    <div className="space-y-6">
       {/* Title Input */}
       <div className="space-y-2">
-        <Label htmlFor="title">Recipe Title (Optional)</Label>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="title" className="text-base">Recipe Title</Label>
+          <span className="text-xs text-muted-foreground">(Optional)</span>
+        </div>
         <Input
           id="title"
           name="title"
-          placeholder="Leave blank for AI to suggest a title"
+          placeholder="Enter desired dish or leave blank for AI to suggest"
           value={title}
           onChange={onTitleChange}
         />
+        <p className="text-xs text-muted-foreground">Example: "Spicy Chicken Pasta" or "Vegetable Curry"</p>
       </div>
 
-      {/* Cuisine Selector */}
-      <CuisineSelect
-        value={cuisine}
-        onChange={onCuisineChange}
-      />
-
-      {/* Dietary Preference */}
-      <DietarySelect
-        value={dietary}
-        onChange={onDietaryChange}
-      />
-
-      {/* Flavor Tags */}
-      <FlavorTagsInput
-        tags={flavorTags}
-        onChange={onFlavorTagsChange}
-      />
-
-      {/* Ingredients List */}
-      <div className="space-y-2">
-        <Label htmlFor="ingredients">Main Ingredients</Label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {ingredients.map((ingredient, index) => (
-            <div 
-              key={index}
-              className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full flex items-center gap-1 text-sm"
-            >
-              {ingredient}
-              <button
-                type="button"
-                onClick={() => onRemoveIngredient(index)}
-                className="ml-1 rounded-full hover:bg-muted p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+      {/* Basics Section */}
+      <div className="py-4 space-y-6">
+        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Basics</h3>
+        
+        {/* Cuisine Selector */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-recipe-blue" />
+            <Label htmlFor="cuisine" className="text-base font-medium text-recipe-blue">Cuisine Type</Label>
+            <span className="text-xs bg-recipe-blue/10 text-recipe-blue px-2 py-0.5 rounded-full">Required</span>
+          </div>
+          <CuisineSelect
+            value={cuisine}
+            onChange={onCuisineChange}
+          />
+          <p className="text-xs text-muted-foreground">Sets the cultural style and flavors of your recipe</p>
         </div>
-        <Input
-          id="ingredients"
-          placeholder="Type ingredient and press Enter"
-          value={ingredientInput}
-          onChange={(e) => onIngredientChange(e.target.value)}
-          onKeyDown={onIngredientKeyDown}
+
+        {/* Dietary Preference */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Leaf className="h-4 w-4 text-green-600" />
+            <Label htmlFor="dietary" className="text-base">Dietary Preference</Label>
+          </div>
+          <DietarySelect
+            value={dietary}
+            onChange={onDietaryChange}
+          />
+          <p className="text-xs text-muted-foreground">AI will adapt the recipe to accommodate your dietary needs</p>
+        </div>
+      </div>
+
+      {/* Flavor Section */}
+      <div className="py-4 space-y-6 border-t border-gray-100 dark:border-gray-800">
+        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Flavor Profile</h3>
+        
+        {/* Flavor Tags */}
+        <FlavorTagsInput
+          tags={flavorTags}
+          onChange={onFlavorTagsChange}
         />
-        <p className="text-xs text-muted-foreground">Press Enter to add each ingredient</p>
+      </div>
+
+      {/* Ingredients Section */}
+      <div className="py-4 space-y-4 border-t border-gray-100 dark:border-gray-800">
+        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Ingredients</h3>
+        
+        {/* Ingredients List */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-amber-600" />
+            <Label htmlFor="ingredients" className="text-base">Main Ingredients</Label>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {ingredients.map((ingredient, index) => (
+              <div 
+                key={index}
+                className="bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-3 py-1 rounded-full flex items-center gap-1 text-sm"
+              >
+                {ingredient}
+                <button
+                  type="button"
+                  onClick={() => onRemoveIngredient(index)}
+                  className="ml-1 rounded-full hover:bg-amber-100 dark:hover:bg-amber-800/50 p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <Input
+            id="ingredients"
+            placeholder="Type ingredient and press Enter (e.g., chicken, tomatoes)"
+            value={ingredientInput}
+            onChange={(e) => onIngredientChange(e.target.value)}
+            onKeyDown={onIngredientKeyDown}
+            className="border-amber-200 focus-visible:ring-amber-300"
+          />
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-muted-foreground">Press Enter to add each ingredient</p>
+            <p className="text-xs text-amber-600">{ingredients.length} added</p>
+          </div>
+        </div>
       </div>
     </div>
   );

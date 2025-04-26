@@ -24,7 +24,6 @@ interface CuisineSelectProps {
 const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>Cuisine Type</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder="Select cuisine" />

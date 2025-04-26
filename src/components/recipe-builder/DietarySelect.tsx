@@ -24,7 +24,6 @@ interface DietarySelectProps {
 const DietarySelect = ({ value, onChange, id = "dietary" }: DietarySelectProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>Dietary Preference</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder="Select dietary preference" />

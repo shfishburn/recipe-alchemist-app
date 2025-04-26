@@ -6,7 +6,7 @@ const BuildHeader = () => {
     <div className="mb-8 text-center">
       <h1 className="font-bold mb-2">Create Your Recipe</h1>
       <p className="text-muted-foreground">
-        Customize your preferences and let our AI create a personalized recipe for you.
+        Step 1 of 2: Recipe Details
       </p>
     </div>
   );
