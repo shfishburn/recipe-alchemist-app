@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,11 +12,14 @@ interface ChatMessage {
   ai_response: string;
   changes_suggested: {
     title?: string;
-    ingredients?: Array<{
-      qty: number;
-      unit: string;
-      item: string;
-    }>;
+    ingredients?: {
+      mode: 'add' | 'replace' | 'none';
+      items: Array<{
+        qty: number;
+        unit: string;
+        item: string;
+      }>;
+    };
     instructions?: string[];
     nutrition?: {
       kcal?: number;
@@ -91,19 +93,26 @@ export const useRecipeChat = (recipe: Recipe) => {
     mutationFn: async (chatMessage: ChatMessage) => {
       if (!chatMessage.changes_suggested) return;
 
-      // Create a new recipe object that properly handles JSON serialization
       const newRecipeData = {
         ...recipe,
-        id: undefined, // Let Supabase generate a new ID
+        id: undefined,
         previous_version_id: recipe.id,
         version_number: recipe.version_number + 1,
         title: chatMessage.changes_suggested.title || recipe.title,
-        ingredients: chatMessage.changes_suggested.ingredients || recipe.ingredients,
         instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
         nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
       };
 
-      // We need to ensure ingredients and nutrition are properly serialized as Json
+      if (chatMessage.changes_suggested.ingredients) {
+        const { mode, items } = chatMessage.changes_suggested.ingredients;
+        
+        if (mode === 'add' && items) {
+          newRecipeData.ingredients = [...recipe.ingredients, ...items];
+        } else if (mode === 'replace' && items) {
+          newRecipeData.ingredients = items;
+        }
+      }
+
       const { data: newRecipe, error } = await supabase
         .from('recipes')
         .insert({

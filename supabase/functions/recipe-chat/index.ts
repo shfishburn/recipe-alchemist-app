@@ -34,11 +34,14 @@ ${recipe.instructions.join('\n')}
 User request: ${userMessage}
 
 Provide specific, actionable changes to improve this recipe while maintaining its core characteristics. Format your response in two parts:
-1. A conversational response to the user
+1. A conversational response explaining your suggested changes
 2. JSON changes in this format if applicable:
 {
   "title": string | null,
-  "ingredients": [{ "qty": number, "unit": string, "item": string }] | null,
+  "ingredients": {
+    "mode": "add" | "replace" | "none",
+    "items": [{ "qty": number, "unit": string, "item": string }]
+  } | null,
   "instructions": string[] | null,
   "nutrition": {
     "kcal": number,
@@ -49,7 +52,12 @@ Provide specific, actionable changes to improve this recipe while maintaining it
     "sugar_g": number,
     "sodium_mg": number
   } | null
-}`;
+}
+
+For ingredients changes:
+- Use "add" mode to append new ingredients to the existing ones
+- Use "replace" mode to completely replace all ingredients
+- Use "none" if no ingredient changes are needed`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
@@ -61,17 +69,14 @@ Provide specific, actionable changes to improve this recipe while maintaining it
 
     const content = response.choices[0].message.content;
     
-    // Parse the response to extract the conversation and JSON changes
     let responseText = '';
     let changes = null;
     
     try {
-      // Look for JSON object in the response
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const jsonStr = jsonMatch[0];
         changes = JSON.parse(jsonStr);
-        // Remove the JSON from the response text
         responseText = content.replace(jsonStr, '').trim();
       } else {
         responseText = content;
