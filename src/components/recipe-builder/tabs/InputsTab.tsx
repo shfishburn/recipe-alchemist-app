@@ -2,7 +2,13 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X, Globe, Leaf, Plus } from 'lucide-react';
+import { X, Globe, Leaf, Plus, BookOpen } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import CuisineSelect from '../CuisineSelect';
 import DietarySelect from '../DietarySelect';
 import FlavorTagsInput from '../FlavorTagsInput';
@@ -38,22 +44,64 @@ const InputsTab = ({
   onIngredientKeyDown,
   onRemoveIngredient,
 }: InputsTabProps) => {
+  const commonRecipes = ["Pasta Dish", "Chicken Recipe", "Soup", "Salad"];
+
   return (
     <div className="space-y-6">
-      {/* Title Input */}
-      <div className="space-y-2">
+      {/* Recipe Input */}
+      <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Label htmlFor="title" className="text-base">Recipe Title</Label>
-          <span className="text-xs text-muted-foreground">(Optional)</span>
+          <BookOpen className="h-5 w-5 text-recipe-blue" />
+          <Label 
+            htmlFor="title" 
+            className="text-lg font-medium"
+          >
+            Recipe
+          </Label>
+          <span className="text-xs text-muted-foreground bg-accent/30 px-2 py-0.5 rounded-full">
+            Optional
+          </span>
         </div>
-        <Input
-          id="title"
-          name="title"
-          placeholder="Enter desired dish or leave blank for AI to suggest"
-          value={title}
-          onChange={onTitleChange}
-        />
-        <p className="text-xs text-muted-foreground">Example: "Spicy Chicken Pasta" or "Vegetable Curry"</p>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative">
+                <Input
+                  id="title"
+                  name="title"
+                  className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
+                  placeholder="What would you like to cook? (e.g., 'Pasta', 'Chicken dish')"
+                  value={title}
+                  onChange={onTitleChange}
+                  aria-label="Recipe name input"
+                />
+                <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Enter your desired dish or let AI suggest a recipe name</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Let AI suggest a recipe or enter your own idea
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {commonRecipes.map((recipe) => (
+              <button
+                key={recipe}
+                type="button"
+                onClick={() => onTitleChange({ target: { value: recipe } } as React.ChangeEvent<HTMLInputElement>)}
+                className="text-sm px-3 py-1 rounded-full bg-accent/50 hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors"
+              >
+                {recipe}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Basics Section */}
