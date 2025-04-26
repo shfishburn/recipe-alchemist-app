@@ -93,6 +93,28 @@ export const useRecipeChat = (recipe: Recipe) => {
     mutationFn: async (chatMessage: ChatMessage) => {
       if (!chatMessage.changes_suggested) return;
 
+      let imageUrl = recipe.image_url;
+      if (
+        chatMessage.changes_suggested.title || 
+        (chatMessage.changes_suggested.ingredients && 
+         chatMessage.changes_suggested.ingredients.mode === 'replace')
+      ) {
+        try {
+          const response = await supabase.functions.invoke('generate-recipe-image', {
+            body: {
+              title: chatMessage.changes_suggested.title || recipe.title,
+              ingredients: chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
+              instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
+            },
+          });
+
+          if (response.error) throw response.error;
+          imageUrl = response.data.imageUrl;
+        } catch (error) {
+          console.error('Error generating image:', error);
+        }
+      }
+
       const newRecipeData = {
         ...recipe,
         id: undefined,
@@ -101,6 +123,7 @@ export const useRecipeChat = (recipe: Recipe) => {
         title: chatMessage.changes_suggested.title || recipe.title,
         instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
         nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
+        image_url: imageUrl,
       };
 
       if (chatMessage.changes_suggested.ingredients) {
