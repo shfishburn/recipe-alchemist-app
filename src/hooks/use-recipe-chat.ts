@@ -18,13 +18,13 @@ interface ChatMessage {
     }>;
     instructions?: string[];
     nutrition?: {
-      kcal: number;
-      protein_g: number;
-      carbs_g: number;
-      fat_g: number;
-      fiber_g: number;
-      sugar_g: number;
-      sodium_mg: number;
+      kcal?: number;
+      protein_g?: number;
+      carbs_g?: number;
+      fat_g?: number;
+      fiber_g?: number;
+      sugar_g?: number;
+      sodium_mg?: number;
     };
   } | null;
   applied: boolean;
@@ -52,14 +52,12 @@ export const useRecipeChat = (recipe: Recipe) => {
 
   const mutation = useMutation({
     mutationFn: async (message: string) => {
-      // First, get AI suggestion
       const response = await supabase.functions.invoke('recipe-chat', {
         body: { recipe, userMessage: message }
       });
 
       if (response.error) throw response.error;
 
-      // Save the chat message and AI response
       const { data, error } = await supabase
         .from('recipe_chats')
         .insert({
@@ -91,25 +89,25 @@ export const useRecipeChat = (recipe: Recipe) => {
     mutationFn: async (chatMessage: ChatMessage) => {
       if (!chatMessage.changes_suggested) return;
 
-      // Create new version of the recipe
+      const newRecipeData = {
+        ...recipe,
+        id: undefined, // Let Supabase generate a new ID
+        previous_version_id: recipe.id,
+        version_number: recipe.version_number + 1,
+        title: chatMessage.changes_suggested.title || recipe.title,
+        ingredients: chatMessage.changes_suggested.ingredients || recipe.ingredients,
+        instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
+        nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
+      };
+
       const { data: newRecipe, error } = await supabase
         .from('recipes')
-        .insert({
-          ...recipe,
-          id: undefined, // Let Supabase generate a new ID
-          previous_version_id: recipe.id,
-          version_number: recipe.version_number + 1,
-          title: chatMessage.changes_suggested.title || recipe.title,
-          ingredients: chatMessage.changes_suggested.ingredients || recipe.ingredients,
-          instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
-          nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
-        })
+        .insert(newRecipeData)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Mark the chat message as applied
       const { error: updateError } = await supabase
         .from('recipe_chats')
         .update({ applied: true })
@@ -125,7 +123,6 @@ export const useRecipeChat = (recipe: Recipe) => {
         description: "A new version of the recipe has been created.",
       });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
-      // Redirect to the new recipe version
       window.location.href = `/recipes/${newRecipe.id}`;
     },
     onError: (error) => {
