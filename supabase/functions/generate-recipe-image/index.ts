@@ -20,12 +20,36 @@ serve(async (req) => {
       apiKey: Deno.env.get('OPENAI_API_KEY'),
     });
 
+    // Parse ingredients array if it's a string
+    let ingredientsList = ingredients;
+    
     // Create a descriptive prompt for the recipe
-    const ingredientsList = ingredients.map((ing: any) => 
-      `${ing.qty} ${ing.unit} ${ing.item}`
-    ).join(', ');
+    let ingredientsDescription;
+    
+    // If ingredients is an array, extract details
+    if (Array.isArray(ingredientsList)) {
+      ingredientsDescription = ingredientsList.map(ing => 
+        `${ing.qty} ${ing.unit} ${ing.item}`
+      ).join(', ');
+    } else {
+      // If ingredients was sent as a string, try to parse it
+      try {
+        const parsedIngredients = JSON.parse(ingredientsList);
+        if (Array.isArray(parsedIngredients)) {
+          ingredientsDescription = parsedIngredients.map(ing => 
+            `${ing.qty} ${ing.unit} ${ing.item}`
+          ).join(', ');
+        } else {
+          ingredientsDescription = "various ingredients";
+        }
+      } catch (e) {
+        // If parsing fails, use a generic description
+        ingredientsDescription = "various ingredients";
+        console.log("Error parsing ingredients:", e);
+      }
+    }
 
-    const prompt = `Create a professional, appetizing photo of "${title}". This dish contains ${ingredientsList}. Style: Modern food photography, overhead view, natural lighting, on a white plate with minimal garnish. Make it look delicious and Instagram-worthy.`;
+    const prompt = `Create a professional, appetizing photo of "${title}". This dish contains ${ingredientsDescription}. Style: Modern food photography, overhead view, natural lighting, on a white plate with minimal garnish. Make it look delicious and Instagram-worthy.`;
 
     console.log('Generating image with prompt:', prompt);
 

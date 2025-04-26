@@ -21,8 +21,8 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
       const response = await supabase.functions.invoke('generate-recipe-image', {
         body: {
           title: recipe.title,
-          ingredients: JSON.stringify(recipe.ingredients),
-          instructions: JSON.stringify(recipe.instructions),
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
         },
       });
 
@@ -37,8 +37,6 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           previous_version_id: recipe.id,
           version_number: recipe.version_number + 1,
           image_url: response.data.imageUrl,
-          ingredients: JSON.stringify(recipe.ingredients),
-          instructions: JSON.stringify(recipe.instructions),
         })
         .select()
         .single();
