@@ -3,7 +3,26 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
-type Recipe = Database['public']['Tables']['recipes']['Row'];
+export interface Ingredient {
+  qty: number;
+  unit: string;
+  item: string;
+}
+
+export interface Nutrition {
+  kcal?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+}
+
+export interface Recipe extends Omit<Database['public']['Tables']['recipes']['Row'], 'ingredients' | 'nutrition'> {
+  ingredients: Ingredient[];
+  nutrition: Nutrition;
+}
 
 export const useRecipeDetail = (id?: string) => {
   return useQuery({
@@ -22,7 +41,14 @@ export const useRecipeDetail = (id?: string) => {
       if (error) throw error;
       if (!data) throw new Error('Recipe not found');
       
-      return data as Recipe;
+      // Type cast the JSON fields with their proper structure
+      const recipe: Recipe = {
+        ...data,
+        ingredients: data.ingredients as unknown as Ingredient[],
+        nutrition: data.nutrition as unknown as Nutrition
+      };
+      
+      return recipe;
     },
     enabled: !!id,
   });

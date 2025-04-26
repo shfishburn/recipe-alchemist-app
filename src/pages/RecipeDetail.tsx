@@ -107,43 +107,43 @@ const RecipeDetail = () => {
                       <CardContent className="pt-6">
                         <h2 className="text-xl font-semibold mb-4">Nutrition (per serving)</h2>
                         <ul className="space-y-2">
-                          {recipe.nutrition.kcal && (
+                          {recipe.nutrition.kcal !== undefined && (
                             <li className="flex justify-between">
                               <span>Calories:</span>
                               <span className="font-medium">{recipe.nutrition.kcal} kcal</span>
                             </li>
                           )}
-                          {recipe.nutrition.protein_g && (
+                          {recipe.nutrition.protein_g !== undefined && (
                             <li className="flex justify-between">
                               <span>Protein:</span>
                               <span className="font-medium">{recipe.nutrition.protein_g}g</span>
                             </li>
                           )}
-                          {recipe.nutrition.carbs_g && (
+                          {recipe.nutrition.carbs_g !== undefined && (
                             <li className="flex justify-between">
                               <span>Carbs:</span>
                               <span className="font-medium">{recipe.nutrition.carbs_g}g</span>
                             </li>
                           )}
-                          {recipe.nutrition.fat_g && (
+                          {recipe.nutrition.fat_g !== undefined && (
                             <li className="flex justify-between">
                               <span>Fat:</span>
                               <span className="font-medium">{recipe.nutrition.fat_g}g</span>
                             </li>
                           )}
-                          {recipe.nutrition.fiber_g && (
+                          {recipe.nutrition.fiber_g !== undefined && (
                             <li className="flex justify-between">
                               <span>Fiber:</span>
                               <span className="font-medium">{recipe.nutrition.fiber_g}g</span>
                             </li>
                           )}
-                          {recipe.nutrition.sugar_g && (
+                          {recipe.nutrition.sugar_g !== undefined && (
                             <li className="flex justify-between">
                               <span>Sugar:</span>
                               <span className="font-medium">{recipe.nutrition.sugar_g}g</span>
                             </li>
                           )}
-                          {recipe.nutrition.sodium_mg && (
+                          {recipe.nutrition.sodium_mg !== undefined && (
                             <li className="flex justify-between">
                               <span>Sodium:</span>
                               <span className="font-medium">{recipe.nutrition.sodium_mg}mg</span>
