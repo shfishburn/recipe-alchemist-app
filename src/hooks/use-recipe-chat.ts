@@ -1,9 +1,11 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Recipe, Ingredient, Nutrition } from '@/hooks/use-recipe-detail';
 import type { Database } from '@/integrations/supabase/types';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ChatMessage {
   id: string;
@@ -89,6 +91,7 @@ export const useRecipeChat = (recipe: Recipe) => {
     mutationFn: async (chatMessage: ChatMessage) => {
       if (!chatMessage.changes_suggested) return;
 
+      // Create a new recipe object that properly handles JSON serialization
       const newRecipeData = {
         ...recipe,
         id: undefined, // Let Supabase generate a new ID
@@ -100,9 +103,14 @@ export const useRecipeChat = (recipe: Recipe) => {
         nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
       };
 
+      // We need to ensure ingredients and nutrition are properly serialized as Json
       const { data: newRecipe, error } = await supabase
         .from('recipes')
-        .insert(newRecipeData)
+        .insert({
+          ...newRecipeData,
+          ingredients: newRecipeData.ingredients as unknown as Json,
+          nutrition: newRecipeData.nutrition as unknown as Json
+        })
         .select()
         .single();
 
