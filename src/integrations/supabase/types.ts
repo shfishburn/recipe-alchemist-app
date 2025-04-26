@@ -128,7 +128,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          items: Json
+          items?: Json
           title: string
           updated_at?: string
           user_id: string
