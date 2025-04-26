@@ -5,17 +5,26 @@ import Navbar from '@/components/ui/navbar';
 import RecipeForm, { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
 import BuildHeader from '@/components/recipe-builder/BuildHeader';
 import { useRecipeGenerator } from '@/hooks/use-recipe-generator';
+import { useToast } from '@/hooks/use-toast';
 
 const Build = () => {
   const navigate = useNavigate();
   const { generateRecipe, isLoading } = useRecipeGenerator();
+  const { toast } = useToast();
 
   const handleSubmit = async (formData: RecipeFormData) => {
-    const recipe = await generateRecipe(formData);
-    if (recipe) {
-      // Optionally navigate to recipe view or save to database
-      console.log('Generated Recipe:', recipe);
+    // Validate minimum requirements
+    if (!formData.cuisine) {
+      toast({
+        title: "Missing information",
+        description: "Please select a cuisine type.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    // Generate the recipe (saving and navigation are handled in the hook)
+    await generateRecipe(formData);
   };
 
   return (
