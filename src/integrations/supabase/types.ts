@@ -59,6 +59,44 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_chats: {
+        Row: {
+          ai_response: string
+          applied: boolean | null
+          changes_suggested: Json | null
+          created_at: string
+          id: string
+          recipe_id: string
+          user_message: string
+        }
+        Insert: {
+          ai_response: string
+          applied?: boolean | null
+          changes_suggested?: Json | null
+          created_at?: string
+          id?: string
+          recipe_id: string
+          user_message: string
+        }
+        Update: {
+          ai_response?: string
+          applied?: boolean | null
+          changes_suggested?: Json | null
+          created_at?: string
+          id?: string
+          recipe_id?: string
+          user_message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_chats_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipes: {
         Row: {
           cook_time_min: number | null
@@ -72,11 +110,13 @@ export type Database = {
           instructions: string[]
           nutrition: Json | null
           prep_time_min: number | null
+          previous_version_id: string | null
           servings: number
           tagline: string | null
           title: string
           updated_at: string
           user_id: string
+          version_number: number
         }
         Insert: {
           cook_time_min?: number | null
@@ -90,11 +130,13 @@ export type Database = {
           instructions: string[]
           nutrition?: Json | null
           prep_time_min?: number | null
+          previous_version_id?: string | null
           servings: number
           tagline?: string | null
           title: string
           updated_at?: string
           user_id: string
+          version_number?: number
         }
         Update: {
           cook_time_min?: number | null
@@ -108,13 +150,23 @@ export type Database = {
           instructions?: string[]
           nutrition?: Json | null
           prep_time_min?: number | null
+          previous_version_id?: string | null
           servings?: number
           tagline?: string | null
           title?: string
           updated_at?: string
           user_id?: string
+          version_number?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "recipes_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shopping_lists: {
         Row: {

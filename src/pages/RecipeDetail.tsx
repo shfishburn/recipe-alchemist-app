@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
@@ -8,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RecipeChat } from '@/components/recipe-chat/RecipeChat';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -29,7 +29,6 @@ const RecipeDetail = () => {
             </div>
           ) : recipe ? (
             <div className="max-w-4xl mx-auto">
-              {/* AI Reasoning Section */}
               {(recipe.reasoning || recipe.original_request) && (
                 <Card className="mb-8 bg-recipe-blue/5 border-recipe-blue/20">
                   <CardContent className="pt-6">
@@ -50,7 +49,6 @@ const RecipeDetail = () => {
                 </Card>
               )}
 
-              {/* Recipe Header */}
               <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
                 {recipe.tagline && (
@@ -102,7 +100,6 @@ const RecipeDetail = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Ingredients Column */}
                 <div className="md:col-span-1">
                   <Card>
                     <CardContent className="pt-6">
@@ -123,7 +120,6 @@ const RecipeDetail = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Nutrition Information */}
                   {recipe.nutrition && (
                     <Card className="mt-4">
                       <CardContent className="pt-6">
@@ -177,7 +173,6 @@ const RecipeDetail = () => {
                   )}
                 </div>
 
-                {/* Instructions Column */}
                 <div className="md:col-span-2">
                   <Card>
                     <CardContent className="pt-6">
@@ -200,6 +195,11 @@ const RecipeDetail = () => {
                     </CardContent>
                   </Card>
                 </div>
+              </div>
+
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold mb-4">Recipe Chat</h2>
+                <RecipeChat recipe={recipe} />
               </div>
             </div>
           ) : null}
