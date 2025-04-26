@@ -22,6 +22,12 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY in Supabase secrets.');
     }
     
+    // Validate API key format
+    if (!apiKey.startsWith('sk-') || apiKey.length < 30) {
+      console.error('Invalid OpenAI API key format');
+      throw new Error('Invalid OpenAI API key format. API keys should start with "sk-" and be at least 30 characters long.');
+    }
+    
     const openai = new OpenAI({
       apiKey: apiKey,
     });
