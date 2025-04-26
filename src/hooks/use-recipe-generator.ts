@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,7 +76,7 @@ export const useRecipeGenerator = () => {
           instructions: data.instructions,
           nutrition: data.nutrition,
           reasoning: data.reasoning,
-          original_request: formData.title || undefined,
+          // Removed original_request field since it doesn't exist in the schema
           user_id: user.id
         })
         .select()
