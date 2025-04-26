@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +14,6 @@ export const useRecipeGenerator = () => {
       setIsLoading(true);
       console.log('Starting recipe generation with form data:', formData);
       
-      // Call the edge function to generate the recipe
       console.log('Calling generate-recipe edge function');
       const { data, error } = await supabase.functions.invoke('generate-recipe', {
         body: JSON.stringify({
@@ -46,7 +44,6 @@ export const useRecipeGenerator = () => {
 
       console.log('Recipe generated successfully:', data);
 
-      // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
@@ -59,7 +56,6 @@ export const useRecipeGenerator = () => {
         throw new Error('You must be logged in to save recipes');
       }
 
-      // Save the recipe to the database
       console.log('Saving recipe to database');
       const { data: savedRecipe, error: saveError } = await supabase
         .from('recipes')
@@ -76,7 +72,6 @@ export const useRecipeGenerator = () => {
           instructions: data.instructions,
           nutrition: data.nutrition,
           reasoning: data.reasoning,
-          // Removed original_request field since it doesn't exist in the schema
           user_id: user.id
         })
         .select()
@@ -94,7 +89,6 @@ export const useRecipeGenerator = () => {
         description: `Recipe "${data.title}" generated and saved successfully.`,
       });
 
-      // Navigate to the recipe detail page
       if (savedRecipe) {
         navigate(`/recipes/${savedRecipe.id}`);
       }

@@ -111,6 +111,7 @@ export type Database = {
           nutrition: Json | null
           prep_time_min: number | null
           previous_version_id: string | null
+          reasoning: string | null
           servings: number
           tagline: string | null
           title: string
@@ -131,6 +132,7 @@ export type Database = {
           nutrition?: Json | null
           prep_time_min?: number | null
           previous_version_id?: string | null
+          reasoning?: string | null
           servings: number
           tagline?: string | null
           title: string
@@ -151,6 +153,7 @@ export type Database = {
           nutrition?: Json | null
           prep_time_min?: number | null
           previous_version_id?: string | null
+          reasoning?: string | null
           servings?: number
           tagline?: string | null
           title?: string
