@@ -21,35 +21,67 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
-    let prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements. Format your response as JSON with the structure shown in the example below.
+    let prompt = `As an expert culinary scientist and chef specializing in science-based cooking techniques, provide detailed analysis and improvements for recipes using evidence-based methods and molecular gastronomy principles. 
 
-Example JSON format:
+Your expertise combines:
+- Advanced understanding of chemical reactions in cooking
+- Precise temperature control and timing
+- Ingredient interactions and flavor compound development
+- Texture optimization through protein and starch manipulation
+- Scientific measurement and repeatability in recipes
+
+Format your response as JSON with this exact structure:
+
 {
-  "textResponse": "Your detailed analysis here",
+  "textResponse": "Your detailed, scientific analysis explaining the improvements and techniques",
   "changes": {
-    "title": "Updated title if applicable",
-    "ingredients": ["ingredient 1", "ingredient 2"],
-    "instructions": ["step 1", "step 2"],
-    "equipmentNeeded": ["equipment 1", "equipment 2"]
+    "title": "Updated recipe title if relevant",
+    "ingredients": {
+      "mode": "replace" | "add",
+      "items": [
+        {
+          "qty": number,
+          "unit": "g" | "ml" | "tbsp" | "tsp" | "cup" | "piece",
+          "item": "ingredient name",
+          "notes": "optional preparation notes"
+        }
+      ]
+    },
+    "instructions": [
+      "Precise, numbered steps with temperatures, times, and visual/sensory cues"
+    ],
+    "equipmentNeeded": [
+      "Required tools and equipment"
+    ]
   },
   "nutrition": {
-    "kcal": 300,
-    "protein_g": 20
+    "kcal": number,
+    "protein_g": number,
+    "carbs_g": number,
+    "fat_g": number,
+    "fiber_g": number,
+    "sugar_g": number,
+    "sodium_mg": number
   },
-  "health_insights": ["insight 1", "insight 2"],
-  "scientific_principles": ["principle 1", "principle 2"],
-  "followUpQuestions": ["question 1?", "question 2?"]
+  "science_notes": [
+    "Key scientific principles and reactions",
+    "Temperature-dependent changes",
+    "Chemical interactions between ingredients",
+    "Optimization rationales"
+  ],
+  "health_insights": [
+    "Nutritional benefits",
+    "Dietary considerations",
+    "Potential modifications for different needs"
+  ],
+  "followUpQuestions": [
+    "What happens if we adjust X temperature?",
+    "How does Y ingredient affect texture?",
+    "Can we optimize Z process further?"
+  ]
 }`;
 
-    // Add source-specific context to the prompt
-    if (sourceType === 'image') {
-      prompt += `\n\nAnalyzing recipe from uploaded image. Please extract the recipe details and then provide improvements.`;
-    } else if (sourceType === 'url') {
-      prompt += `\n\nAnalyzing recipe from URL: ${sourceUrl}. Please extract the recipe details and then provide improvements.`;
-    }
-
-    prompt += `
-Current recipe:
+    prompt += `\n\nCurrent recipe:
 - Title: ${recipe.title}
 - Servings: ${recipe.servings}
 
@@ -90,7 +122,7 @@ User request: ${userMessage}`;
         nutrition: parsedContent.nutrition || {},
         health_insights: parsedContent.health_insights || [],
         equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
-        scientific_principles: parsedContent.scientific_principles || [],
+        science_notes: parsedContent.science_notes || [],
         followUpQuestions: parsedContent.followUpQuestions || [
           "How would the science behind this recipe change if we altered the cooking temperature?",
           "What specific chemical reactions occur when cooking this dish?",
@@ -108,7 +140,7 @@ User request: ${userMessage}`;
           nutrition: parsedContent.nutrition || {},
           health_insights: parsedContent.health_insights || [],
           equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
-          scientific_principles: parsedContent.scientific_principles || []
+          science_notes: parsedContent.science_notes || []
         }
       };
       
@@ -121,7 +153,6 @@ User request: ${userMessage}`;
       console.error("Error parsing AI response:", e);
       console.error("Raw response content:", content);
       
-      // If JSON parsing fails, return a friendly error
       return new Response(JSON.stringify({ 
         error: "Failed to generate proper recipe suggestions. Please try again.",
         details: e.message,
