@@ -13,6 +13,7 @@ import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -30,7 +31,7 @@ const RecipeDetail = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 pb-16 sm:pb-16">
         <div className="container-page py-4 sm:py-8">
           {isLoading ? (
             <div className="flex justify-center my-8 sm:my-12">
@@ -53,7 +54,6 @@ const RecipeDetail = () => {
               
               {/* Visible recipe actions */}
               <div className="mb-6 sm:mb-8">
-                <RecipeActions recipe={recipe} sticky={true} />
                 <RecipeChatDrawer recipe={recipe} />
               </div>
               
@@ -69,10 +69,13 @@ const RecipeDetail = () => {
               </div>
 
               {recipe.nutrition && (
-                <div className="mt-6 sm:mt-8">
+                <div className="mt-6 sm:mt-8 mb-16 sm:mb-20">
                   <RecipeNutrition recipe={recipe} />
                 </div>
               )}
+
+              {/* Fixed position recipe actions at bottom with proper spacing */}
+              <RecipeActions recipe={recipe} sticky={true} />
             </div>
           ) : null}
         </div>
