@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { Message } from "@chatscope/chat-ui-kit-react";
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ChatResponseProps {
   response: string;
@@ -24,86 +22,74 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
-  const handleFollowUpClick = (question: string) => {
-    if (!isApplying) {
-      console.log('Selected follow-up question:', question);
-      setMessage(question);
+  // Try to parse the response if it's a JSON string
+  let displayText = response;
+  try {
+    const parsedResponse = JSON.parse(response);
+    if (parsedResponse && typeof parsedResponse.textResponse === 'string') {
+      displayText = parsedResponse.textResponse;
     }
+  } catch (e) {
+    // If parsing fails, just use the response as is
+  }
+
+  const handleFollowUpClick = (question: string) => {
+    setMessage(question);
   };
 
-  const displayResponse = response || "I'm sorry, I couldn't process that response. Please try again.";
-  console.log('Rendering response:', displayResponse);
-
   return (
-    <div className="animate-fade-in transition-all duration-200">
-      <Message
-        model={{
-          message: displayResponse,
-          direction: "incoming",
-          position: "single"
-        }}
-        className={cn(
-          "mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm",
-          "transition-opacity duration-200",
-          isApplying && "opacity-50"
-        )}
-      >
-        {changesSuggested && (
-          <Message.CustomContent>
-            <Button
-              onClick={onApplyChanges}
-              disabled={isApplying || applied}
-              className={cn(
-                "mt-4 transition-all duration-200",
-                applied 
-                  ? "bg-green-500 hover:bg-green-600" 
-                  : "bg-blue-500 hover:bg-blue-600"
-              )}
-              size="sm"
-            >
-              {isApplying ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Applying...
-                </>
-              ) : applied ? (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Applied
-                </>
-              ) : (
-                'Apply Changes'
-              )}
-            </Button>
-          </Message.CustomContent>
-        )}
-      </Message>
-
-      {followUpQuestions && followUpQuestions.length > 0 && (
-        <div className="mt-6 space-y-3 animate-fade-in">
-          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-            Follow-up Questions
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {followUpQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleFollowUpClick(question)}
-                disabled={isApplying}
-                className={cn(
-                  "px-4 py-2 text-sm rounded-full transition-all duration-200",
-                  "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700",
-                  "text-gray-700 dark:text-gray-300",
-                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "transform hover:scale-105 active:scale-95"
-                )}
-              >
-                {question}
-              </button>
+    <div className="flex-1">
+      <div className="flex flex-col space-y-4">
+        <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
+          <div className="prose prose-sm max-w-none">
+            {displayText.split('\n').map((paragraph, index) => (
+              paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />
             ))}
           </div>
+
+          {changesSuggested && (
+            <div className="mt-4">
+              <Button
+                onClick={onApplyChanges}
+                disabled={isApplying || applied}
+                className={`${applied ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                size="sm"
+              >
+                {isApplying ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Applying...
+                  </>
+                ) : applied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Applied
+                  </>
+                ) : (
+                  'Apply Changes'
+                )}
+              </Button>
+            </div>
+          )}
+
+          {followUpQuestions && followUpQuestions.length > 0 && (
+            <div className="mt-6">
+              <h4 className="text-sm font-medium mb-2">Follow-up Questions</h4>
+              <div className="flex flex-wrap gap-2">
+                {followUpQuestions.map((question, index) => (
+                  <button
+                    key={index}
+                    className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left"
+                    onClick={() => handleFollowUpClick(question)}
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { MessageInput } from "@chatscope/chat-ui-kit-react";
-import { Image, Link, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Image, Link, Loader, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RecipeChatInputProps {
@@ -27,7 +27,7 @@ export function RecipeChatInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isSending) {
+    if (message.trim()) {
       if (isUrlMode && onUrlSubmit) {
         onUrlSubmit(message);
       } else {
@@ -49,7 +49,7 @@ export function RecipeChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="pt-4">
+    <form onSubmit={handleSubmit} className="sticky bottom-0 pt-4">
       <div className="flex gap-2 items-end">
         <input
           type="file"
@@ -58,38 +58,40 @@ export function RecipeChatInput({
           accept="image/*"
           onChange={handleFileChange}
         />
-        
+
         <div className="flex-1 relative">
-          <MessageInput
+          <Textarea
             value={message}
-            onChange={(val) => setMessage(val)}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder={
               isUrlMode
                 ? "Paste a recipe URL here..."
                 : "Ask about cooking science, techniques, or modifications..."
             }
-            attachButton={false}
-            sendButton={false}
-            className="rounded-2xl bg-white dark:bg-gray-800"
+            className="flex-1 bg-white resize-none rounded-2xl pr-24"
+            rows={2}
           />
           
           <div className="absolute right-2 bottom-2 flex gap-1">
             <Button
-              variant="ghost"
-              size="icon"
               type="button"
+              size="icon"
+              variant="ghost"
               onClick={() => fileInputRef.current?.click()}
-              className={cn("h-8 w-8", isUrlMode && "hidden")}
+              className={cn(
+                "h-8 w-8 rounded-full hover:bg-gray-100",
+                isUrlMode && "hidden"
+              )}
             >
               <Image className="h-4 w-4" />
             </Button>
             
             <Button
-              variant="ghost"
-              size="icon"
               type="button"
+              size="icon"
+              variant="ghost"
               onClick={toggleUrlMode}
-              className="h-8 w-8"
+              className="h-8 w-8 rounded-full hover:bg-gray-100"
             >
               <Link className="h-4 w-4" />
             </Button>
@@ -97,22 +99,14 @@ export function RecipeChatInput({
         </div>
 
         <Button 
-          type="submit"
-          size="icon"
+          type="submit" 
           disabled={isSending || !message.trim()}
-          className="h-10 w-10"
+          className="rounded-full h-10 w-10 p-0 bg-[#9b87f5] hover:bg-[#8b77e5]"
         >
           {isSending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader className="h-4 w-4 animate-spin" />
           ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-4 w-4"
-            >
-              <path d="M3.105 2.289a.75.75 0 00-.826.95l1.414 4.925A1.5 1.5 0 005.135 9.25h6.115a.75.75 0 010 1.5H5.135a1.5 1.5 0 00-1.442 1.086l-1.414 4.926a.75.75 0 00.826.95 28.896 28.896 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z" />
-            </svg>
+            <Send className="h-4 w-4" />
           )}
         </Button>
       </div>

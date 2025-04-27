@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,14 +13,8 @@ const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Reset error when inputs change
-    if (authError) setAuthError(null);
-  }, [email, password]);
 
   const handleAuth = async (type: 'LOGIN' | 'SIGNUP') => {
     if (!email || !password) {
@@ -34,10 +28,8 @@ const AuthForm = () => {
 
     try {
       setLoading(true);
-      setAuthError(null);
       
       if (type === 'LOGIN') {
-        console.log("Attempting login with:", { email });
         const { error, data } = await supabase.auth.signInWithPassword({ 
           email, 
           password 
@@ -52,7 +44,6 @@ const AuthForm = () => {
           description: "Successfully logged in",
         });
       } else {
-        console.log("Attempting signup with:", { email });
         const { error } = await supabase.auth.signUp({ 
           email, 
           password 
@@ -67,9 +58,8 @@ const AuthForm = () => {
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      setAuthError(error.message);
       toast({
-        title: "Authentication Error",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -86,8 +76,7 @@ const AuthForm = () => {
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="login" role="tabpanel" aria-describedby="login-description">
-          <p id="login-description" className="sr-only">Login to your account</p>
+        <TabsContent value="login">
           <form onSubmit={(e) => { e.preventDefault(); handleAuth('LOGIN'); }}>
             <div className="space-y-4">
               <div>
@@ -111,9 +100,6 @@ const AuthForm = () => {
                   required
                 />
               </div>
-              {authError && (
-                <div className="text-destructive text-sm">{authError}</div>
-              )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
@@ -121,8 +107,7 @@ const AuthForm = () => {
           </form>
         </TabsContent>
 
-        <TabsContent value="signup" role="tabpanel" aria-describedby="signup-description">
-          <p id="signup-description" className="sr-only">Create a new account</p>
+        <TabsContent value="signup">
           <form onSubmit={(e) => { e.preventDefault(); handleAuth('SIGNUP'); }}>
             <div className="space-y-4">
               <div>
@@ -146,9 +131,6 @@ const AuthForm = () => {
                   required
                 />
               </div>
-              {authError && (
-                <div className="text-destructive text-sm">{authError}</div>
-              )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Creating account...' : 'Sign Up'}
               </Button>
