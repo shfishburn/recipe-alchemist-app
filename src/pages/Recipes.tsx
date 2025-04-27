@@ -52,7 +52,7 @@ const Recipes = () => {
             />
           </div>
           
-          {isLoading && (
+          {(isLoading || isFetching) && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {Array(6).fill(0).map((_, i) => (
                 <div key={i} className="rounded-lg overflow-hidden">
@@ -66,14 +66,14 @@ const Recipes = () => {
             </div>
           )}
           
-          {!isLoading && error && (
+          {!isLoading && !isFetching && error && (
             <div className="text-center text-red-500 p-8 border border-red-200 rounded-lg">
               <p className="mb-2 font-semibold">Failed to load recipes</p>
               <p>Please try refreshing the page</p>
             </div>
           )}
           
-          {!isLoading && !error && recipes && recipes.length === 0 && (
+          {!isLoading && !isFetching && !error && recipes && recipes.length === 0 && (
             <div className="text-center text-muted-foreground p-8 border border-dashed rounded-lg">
               {searchTerm 
                 ? <p>No recipes found matching "<span className="font-medium">{searchTerm}</span>"</p>
@@ -82,7 +82,7 @@ const Recipes = () => {
             </div>
           )}
           
-          {!isLoading && !error && recipes && recipes.length > 0 && (
+          {!isLoading && !isFetching && !error && recipes && recipes.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recipes.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />

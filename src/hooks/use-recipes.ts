@@ -20,13 +20,14 @@ export const useRecipes = () => {
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
-      if (searchTerm) {
+      if (searchTerm && searchTerm.trim() !== '') {
+        const trimmedTerm = searchTerm.trim();
         supabaseQuery = supabaseQuery
           .or(
-            `title.ilike.%${searchTerm}%,` +
-            `tagline.ilike.%${searchTerm}%,` +
-            `cuisine.ilike.%${searchTerm}%,` +
-            `dietary.ilike.%${searchTerm}%`
+            `title.ilike.%${trimmedTerm}%,` +
+            `tagline.ilike.%${trimmedTerm}%,` +
+            `cuisine.ilike.%${trimmedTerm}%,` +
+            `dietary.ilike.%${trimmedTerm}%`
           );
       }
 
