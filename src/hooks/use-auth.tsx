@@ -38,15 +38,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       await supabase.auth.signOut();
       setSession(null);
       setUser(null);
       setProfile(null);
+      return Promise.resolve();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Fix: Add proper Promise rejection
+      // Fix: Return a rejected Promise correctly
       return Promise.reject(error);
     }
   };

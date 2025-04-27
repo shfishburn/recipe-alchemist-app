@@ -29,25 +29,35 @@ const AuthForm = () => {
     try {
       setLoading(true);
       
-      const { error } = type === 'LOGIN' 
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
-
-      if (error) throw error;
-
       if (type === 'LOGIN') {
+        const { error, data } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        });
+        
+        if (error) throw error;
+        
+        console.log("Login successful:", data);
         navigate('/');
         toast({
           title: "Success",
           description: "Successfully logged in",
         });
       } else {
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password 
+        });
+        
+        if (error) throw error;
+        
         toast({
           title: "Success",
           description: "Please check your email to confirm your account",
         });
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast({
         title: "Error",
         description: error.message,

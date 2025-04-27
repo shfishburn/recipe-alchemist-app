@@ -8,6 +8,7 @@ const Auth = () => {
   const { session, loading } = useAuth();
   const location = useLocation();
 
+  // Show a loader while checking auth state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -16,7 +17,9 @@ const Auth = () => {
     );
   }
 
+  // If already logged in, redirect to home page
   if (session) {
+    console.log("Already authenticated, redirecting to home");
     return <Navigate to="/" replace />;
   }
 
