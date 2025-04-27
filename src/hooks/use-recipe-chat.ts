@@ -32,6 +32,7 @@ interface ChatMessage {
       sugar_g?: number;
       sodium_mg?: number;
     };
+    health_insights?: string[];
   } | null;
   applied: boolean;
   created_at: string;
@@ -58,20 +59,30 @@ export const useRecipeChat = (recipe: Recipe) => {
 
   const mutation = useMutation({
     mutationFn: async (message: string) => {
+      // Show loading toast
+      toast({
+        title: "Processing your request",
+        description: "Our chef AI is analyzing your recipe...",
+      });
+      
       const response = await supabase.functions.invoke('recipe-chat', {
         body: { recipe, userMessage: message }
       });
 
       if (response.error) throw response.error;
+      
+      // Structure the response data
+      const responseData = {
+        recipe_id: recipe.id,
+        user_message: message,
+        ai_response: response.data.response,
+        changes_suggested: response.data.changes || null,
+        follow_up_questions: response.data.followUpQuestions || []
+      };
 
       const { data, error } = await supabase
         .from('recipe_chats')
-        .insert({
-          recipe_id: recipe.id,
-          user_message: message,
-          ai_response: response.data.response,
-          changes_suggested: response.data.changes
-        })
+        .insert(responseData)
         .select()
         .single();
 
@@ -81,6 +92,10 @@ export const useRecipeChat = (recipe: Recipe) => {
     onSuccess: () => {
       setMessage('');
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
+      toast({
+        title: "Response received",
+        description: "Chef AI has analyzed your recipe",
+      });
     },
     onError: (error) => {
       toast({
@@ -94,6 +109,12 @@ export const useRecipeChat = (recipe: Recipe) => {
   const applyChanges = useMutation({
     mutationFn: async (chatMessage: ChatMessage) => {
       if (!chatMessage.changes_suggested) return;
+
+      // Show loading toast
+      toast({
+        title: "Applying changes",
+        description: "Updating your recipe...",
+      });
 
       let imageUrl = recipe.image_url;
       if (

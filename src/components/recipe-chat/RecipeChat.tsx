@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import type { Recipe } from '@/hooks/use-recipe-detail';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const {
@@ -28,61 +30,72 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   };
 
   const renderFormattedResponse = (response: string) => {
-    // Split into sections based on newlines
-    const sections = response.split('\n\n');
+    if (!response) return null;
     
-    return sections.map((section, sectionIndex) => {
-      // Check if section is a heading (ends with ':')
-      if (section.trim().endsWith(':')) {
-        return (
-          <h3 key={sectionIndex} className="font-semibold text-lg mt-4 mb-2">
-            {section}
-          </h3>
-        );
-      }
+    // Split into sections based on headings (lines ending with colon)
+    const sections = [];
+    let currentSection = { heading: '', content: [] };
+    
+    response.split('\n').forEach(line => {
+      const trimmedLine = line.trim();
       
-      // Handle bullet points
-      if (section.includes('\n•') || section.includes('\n-')) {
-        const items = section.split('\n').filter(item => item.trim());
-        return (
-          <ul key={sectionIndex} className="space-y-2 mb-4">
-            {items.map((item, idx) => (
-              <li key={idx} className={item.startsWith('•') || item.startsWith('-') ? 'list-disc ml-6' : ''}>
-                {item.replace(/^[•-]\s*/, '')}
-              </li>
-            ))}
-          </ul>
-        );
+      // Check if line is a heading (ends with ':')
+      if (trimmedLine.endsWith(':') && !trimmedLine.includes('\u2022') && !trimmedLine.includes('-')) {
+        // Save previous section if it exists
+        if (currentSection.content.length > 0 || currentSection.heading) {
+          sections.push({...currentSection});
+        }
+        // Start new section
+        currentSection = { 
+          heading: trimmedLine, 
+          content: []
+        };
+      } else if (trimmedLine) {
+        // Add content to current section
+        currentSection.content.push(trimmedLine);
       }
-
-      // Handle nutritional comparison tables
-      if (section.toLowerCase().includes('nutrition') && section.includes('|')) {
-        const rows = section.split('\n');
-        return (
-          <div key={sectionIndex} className="overflow-x-auto my-4">
-            <table className="min-w-full divide-y divide-gray-200">
-              <tbody className="divide-y divide-gray-200">
-                {rows.map((row, idx) => {
-                  const cells = row.split('|').map(cell => cell.trim());
-                  return (
-                    <tr key={idx}>
-                      {cells.map((cell, cellIdx) => (
-                        <td key={cellIdx} className="px-4 py-2 whitespace-nowrap text-sm">
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        );
-      }
-
-      // Regular paragraphs
-      return <p key={sectionIndex} className="mb-4">{section}</p>;
     });
+    
+    // Add the last section
+    if (currentSection.content.length > 0 || currentSection.heading) {
+      sections.push(currentSection);
+    }
+    
+    return (
+      <div className="space-y-4">
+        {sections.map((section, idx) => (
+          <div key={idx} className="space-y-2">
+            {section.heading && (
+              <h3 className="font-semibold text-base">{section.heading}</h3>
+            )}
+            
+            {section.content.map((paragraph, pIdx) => {
+              // Handle bullet points
+              if (paragraph.startsWith('\u2022') || paragraph.startsWith('-')) {
+                const bulletItems = section.content
+                  .filter(line => line.startsWith('\u2022') || line.startsWith('-'))
+                  .map(line => line.replace(/^[\u2022-]\s*/, ''));
+                  
+                return pIdx === section.content.indexOf(paragraph) ? (
+                  <ul key={pIdx} className="list-disc list-outside ml-5 space-y-1">
+                    {bulletItems.map((item, iIdx) => (
+                      <li key={iIdx}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null; // Only render the bullet list once
+              }
+              
+              // Handle regular paragraphs (not bullet points)
+              if (!paragraph.startsWith('\u2022') && !paragraph.startsWith('-')) {
+                return <p key={pIdx} className="text-sm text-muted-foreground">{paragraph}</p>;
+              }
+              
+              return null;
+            })}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (isLoadingHistory) {
@@ -101,6 +114,12 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     <Card>
       <CardContent className="pt-6">
         <div className="space-y-4">
+          {chatHistory.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Ask for cooking tips or recipe modifications!</p>
+            </div>
+          )}
+          
           {chatHistory.map((chat, index) => (
             <div key={chat.id} className="space-y-4">
               {index > 0 && <Separator />}
@@ -122,17 +141,28 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                   </div>
                   
                   {/* Nutritional Changes */}
-                  {chat.changes_suggested?.nutrition && (
-                    <div className="mt-4 p-4 bg-muted rounded-lg">
+                  {chat.changes_suggested?.nutrition && Object.keys(chat.changes_suggested.nutrition).length > 0 && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
                       <h4 className="font-medium mb-2">Nutritional Impact:</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(chat.changes_suggested.nutrition).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
-                            <span className="font-medium">{value}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <Table>
+                        <TableBody>
+                          {Object.entries(chat.changes_suggested.nutrition).map(([key, value]) => (
+                            <TableRow key={key}>
+                              <TableCell className="py-1 px-2 capitalize font-medium">{key.replace(/_/g, ' ')}</TableCell>
+                              <TableCell className="py-1 px-2 text-right">{value}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                  
+                  {/* Health Insights */}
+                  {chat.changes_suggested?.health_insights && chat.changes_suggested.health_insights.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {chat.changes_suggested.health_insights.map((insight, i) => (
+                        <Badge key={i} variant="secondary">{insight}</Badge>
+                      ))}
                     </div>
                   )}
                   
@@ -163,22 +193,21 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       <Button
                         onClick={() => applyChanges.mutate(chat)}
                         disabled={isApplying}
+                        className="gap-2"
                       >
                         {isApplying ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <>
-                            <Check className="h-4 w-4" />
-                            Apply Changes
-                          </>
+                          <Check className="h-4 w-4" />
                         )}
+                        Apply Changes
                       </Button>
                     </div>
                   )}
                   
                   {chat.applied && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      ✓ Changes applied
+                    <p className="text-sm text-green-500 mt-2 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Changes applied
                     </p>
                   )}
                 </div>

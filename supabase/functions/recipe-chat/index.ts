@@ -38,26 +38,43 @@ ${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
 User request: ${userMessage}
 
-Provide your response with the following structure:
-1. A clear summary of suggested changes
-2. A detailed nutritional analysis comparing current vs proposed changes
+Your response must include:
+1. A clear, structured response with headings, bullet points, and formatted text
+2. A detailed nutritional analysis of proposed changes
 3. Culinary insights and techniques
-4. Potential health benefits or considerations
+4. Health benefits/considerations
 
-Format your response in a well-structured format using:
-• Clear bullet points for lists
-• Bold text for important points
-• Separate sections with clear headings
+Format your response for readability using:
+• Clear section headings with colons (e.g., "Nutritional Impact:")
+• Bullet points for lists (•)
+• Organized structure with spacing between sections
 
-Include 2-3 engaging follow-up questions focused on:
-• Health and nutrition goals
+Also include 3 engaging follow-up questions related to:
+• Health/nutrition goals
 • Culinary preferences
 • Dietary restrictions
 
-Also provide a structured JSON object with:
-1. Any recipe modifications
-2. Updated nutritional information
-3. Key health insights`;
+IMPORTANT: You must provide a valid JSON object structure with these fields:
+{
+  "textResponse": "Your formatted response text here",
+  "changes": {
+    "title": "Optional updated title",
+    "ingredients": {
+      "mode": "add" or "replace" or "none",
+      "items": [] (array of updated ingredients objects)
+    },
+    "instructions": [] (array of updated instructions)
+  },
+  "nutrition": {
+    "kcal": number,
+    "protein_g": number,
+    "carbs_g": number,
+    "fat_g": number,
+    "fiber_g": number
+  },
+  "health_insights": ["insight1", "insight2"],
+  "follow_up_questions": ["question1", "question2", "question3"]
+}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -69,35 +86,43 @@ Also provide a structured JSON object with:
     });
 
     const content = response.choices[0].message.content;
-    let responseText = '';
-    let changes = null;
     
     try {
+      // Ensure we can parse the JSON response
       const parsedContent = JSON.parse(content);
-      responseText = parsedContent.textResponse || content;
-      changes = {
-        ...parsedContent.changes,
-        nutrition: parsedContent.nutrition || {},
-        health_insights: parsedContent.health_insights || []
+      
+      // Create a structured response object
+      const suggestion = {
+        response: parsedContent.textResponse || content,
+        changes: {
+          title: parsedContent.changes?.title || null,
+          ingredients: parsedContent.changes?.ingredients || null,
+          instructions: parsedContent.changes?.instructions || null,
+          nutrition: parsedContent.nutrition || {},
+          health_insights: parsedContent.health_insights || []
+        },
+        followUpQuestions: parsedContent.follow_up_questions || [
+          "How would you like to adjust the nutritional profile of this recipe?",
+          "Are there any specific health goals you're trying to achieve?",
+          "Would you like to explore alternative ingredients for better nutrition?"
+        ]
       };
+      
+      return new Response(JSON.stringify(suggestion), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+      
     } catch (e) {
       console.error("Error parsing AI response:", e);
-      responseText = content;
+      // If JSON parsing fails, return a friendly error
+      return new Response(JSON.stringify({ 
+        error: "Failed to generate proper recipe suggestions. Please try again.",
+        details: e.message
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-    
-    const suggestion = {
-      response: responseText,
-      changes: changes || null,
-      followUpQuestions: [
-        "How would you like to adjust the nutritional profile of this recipe?",
-        "Are there any specific health goals you're trying to achieve?",
-        "Would you like to explore alternative ingredients for better nutrition?"
-      ]
-    };
-    
-    return new Response(JSON.stringify(suggestion), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
 
   } catch (error) {
     console.error('Recipe chat error:', error);
