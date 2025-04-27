@@ -22,15 +22,22 @@ interface ChartData {
   Target: number;
   percentage: number;
   fill: string;
+  value?: string;
 }
 
 interface HorizontalBarChartProps {
   data: ChartData[];
   showPercentage: boolean;
+  showValue?: boolean;
   height?: number;
 }
 
-export function HorizontalBarChart({ data, showPercentage, height = 200 }: HorizontalBarChartProps) {
+export function HorizontalBarChart({ 
+  data, 
+  showPercentage, 
+  showValue = false,
+  height = 200 
+}: HorizontalBarChartProps) {
   const isMobile = useIsMobile();
   
   // Format label value safely with null checks
@@ -39,6 +46,11 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
     
     // Check if entry and payload exist
     if (!entry || !entry.payload) return `${value}`;
+    
+    // If showValue is true and we have a formatted value string, use that
+    if (showValue && entry.payload.value) {
+      return entry.payload.value;
+    }
     
     const name = entry.payload.name;
     if (showPercentage) {
@@ -50,8 +62,8 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
 
   // Calculate responsive margins based on device type
   const margins = isMobile 
-    ? { top: 15, right: 60, left: 40, bottom: 5 }
-    : { top: 20, right: 100, left: 60, bottom: 5 };
+    ? { top: 15, right: 100, left: 40, bottom: 5 }
+    : { top: 20, right: 140, left: 60, bottom: 5 };
 
   return (
     <ResponsiveContainer 
@@ -64,22 +76,28 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
         margin={margins}
       >
         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-        <XAxis type="number" hide />
+        <XAxis 
+          type="number" 
+          domain={[0, showPercentage ? 100 : 'auto']}
+          tick={{ fontSize: isMobile ? 11 : 12 }}
+        />
         <YAxis 
           dataKey="name" 
           type="category" 
-          tick={{ fontSize: isMobile ? 12 : 14 }} 
-          width={isMobile ? 40 : 60}
+          tick={{ fontSize: isMobile ? 12 : 14, fontWeight: 500 }} 
+          width={isMobile ? 50 : 70}
         />
         <Tooltip content={(props: any) => <ChartTooltip {...props} showPercentage={showPercentage} />} />
         <Legend 
           verticalAlign="top" 
-          height={32} 
-          wrapperStyle={isMobile ? { fontSize: '10px' } : undefined}
+          height={36}
+          formatter={(value) => {
+            return <span style={{ fontSize: isMobile ? '10px' : '12px', color: '#666' }}>{value}</span>;
+          }}
         />
         <Bar 
           dataKey={showPercentage ? "percentage" : "Recipe"} 
-          name={showPercentage ? "% of Target" : "Recipe"}
+          name={showPercentage ? "% of Daily Target" : "Recipe"}
           fill="#9b87f5" 
           radius={[0, 4, 4, 0]}
           barSize={showPercentage ? (isMobile ? 16 : 20) : (isMobile ? 20 : 24)}
@@ -91,7 +109,11 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
             dataKey={showPercentage ? "percentage" : "Recipe"}
             position="right"
             formatter={formatLabelValue}
-            style={{ fontSize: isMobile ? '10px' : '12px' }}
+            style={{ 
+              fontSize: isMobile ? '10px' : '12px', 
+              fontWeight: 500,
+              fill: '#444',
+            }}
           />
         </Bar>
         {!showPercentage && (
@@ -106,12 +128,28 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
               dataKey="Target"
               position="right"
               formatter={formatLabelValue}
-              style={{ fontSize: isMobile ? '10px' : '12px' }}
+              style={{ 
+                fontSize: isMobile ? '10px' : '12px',
+                fontWeight: 500,
+                fill: '#666',
+              }}
             />
           </Bar>
         )}
         {showPercentage && (
-          <ReferenceLine x={100} stroke="#F97316" strokeWidth={1.5} label={{ value: "Target", position: 'right', fontSize: isMobile ? 10 : 12 }} />
+          <ReferenceLine 
+            x={100} 
+            stroke="#F97316" 
+            strokeWidth={2} 
+            strokeDasharray="3 3"
+            label={{ 
+              value: "Target (100%)", 
+              position: 'right', 
+              fontSize: isMobile ? 10 : 12,
+              fill: '#F97316',
+              fontWeight: 600
+            }} 
+          />
         )}
       </BarChart>
     </ResponsiveContainer>

@@ -28,19 +28,52 @@ export function ChartTooltip({ active, payload, showPercentage = false }: ChartT
     return null;
   }
   
+  // Determine which color to use for the tooltip header
+  const headerColor = data.fill || '#333';
+  
   return (
-    <div className="bg-white p-2 border rounded shadow-sm text-xs">
-      <p className="font-medium">{name}</p>
-      <p>
-        {showPercentage
-          ? `${value}% of daily target`
-          : `${value} ${name === 'Calories' ? 'kcal' : 'g'}`
-        }
-      </p>
-      {!showPercentage && data.Target && (
-        <p className="text-muted-foreground">
-          Target: {data.Target} {name === 'Calories' ? 'kcal' : 'g'}
-        </p>
+    <div className="bg-white p-3 border rounded-md shadow-md text-xs">
+      <p className="font-medium mb-1 text-sm" style={{ color: headerColor }}>{name}</p>
+      
+      {showPercentage ? (
+        <>
+          <p className="mb-0.5">
+            <span className="font-semibold">{value}%</span> of daily target
+          </p>
+          <p className="text-muted-foreground">
+            {data.Recipe}{name === 'Calories' ? ' kcal' : 'g'} of {data.Target}{name === 'Calories' ? ' kcal' : 'g'} target
+          </p>
+        </>
+      ) : (
+        <>
+          {payload.map((entry, index) => (
+            <p key={index} className="mb-0.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" 
+                style={{ backgroundColor: entry.color || '#333', verticalAlign: 'middle' }}></span>
+              <span className="font-semibold">{entry.name}: </span>
+              <span>{entry.value} {name === 'Calories' ? 'kcal' : 'g'}</span>
+            </p>
+          ))}
+          
+          {data.percentage !== undefined && (
+            <p className="text-muted-foreground mt-1">
+              Recipe provides {data.percentage}% of daily target
+            </p>
+          )}
+        </>
+      )}
+      
+      {name === 'Protein' && (
+        <p className="mt-1 text-gray-500">Important for muscle maintenance and growth</p>
+      )}
+      {name === 'Carbs' && (
+        <p className="mt-1 text-gray-500">Primary energy source for your body</p>
+      )}
+      {name === 'Fat' && (
+        <p className="mt-1 text-gray-500">Essential for hormone production and nutrient absorption</p>
+      )}
+      {name === 'Calories' && (
+        <p className="mt-1 text-gray-500">Total energy content of the recipe</p>
       )}
     </div>
   );
