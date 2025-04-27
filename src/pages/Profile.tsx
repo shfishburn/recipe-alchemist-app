@@ -23,6 +23,28 @@ export interface NutritionPreferencesType {
   allergens: string[];
   healthGoal: string;
   mealSizePreference: string;
+  // New advanced nutrition fields
+  personalDetails?: {
+    age?: number;
+    weight?: number;
+    height?: number;
+    gender?: string;
+    activityLevel?: string;
+  };
+  bmr?: number; // Basal Metabolic Rate
+  tdee?: number; // Total Daily Energy Expenditure
+  macroDetails?: {
+    complexCarbs?: number; // percentage of total carbs
+    simpleCarbs?: number; // percentage of total carbs
+    saturatedFat?: number; // percentage of total fat
+    unsaturatedFat?: number; // percentage of total fat
+  };
+  mealTiming?: {
+    mealsPerDay?: number;
+    fastingWindow?: number; // in hours
+    preworkoutTiming?: number; // in minutes
+    postworkoutTiming?: number; // in minutes
+  };
 }
 
 const Profile = () => {
@@ -40,6 +62,25 @@ const Profile = () => {
     allergens: [],
     healthGoal: 'maintenance',
     mealSizePreference: 'medium',
+    personalDetails: {
+      age: undefined,
+      weight: undefined,
+      height: undefined,
+      gender: undefined,
+      activityLevel: 'moderate'
+    },
+    macroDetails: {
+      complexCarbs: 60,
+      simpleCarbs: 40,
+      saturatedFat: 30,
+      unsaturatedFat: 70
+    },
+    mealTiming: {
+      mealsPerDay: 3,
+      fastingWindow: 12,
+      preworkoutTiming: 60,
+      postworkoutTiming: 30
+    }
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,9 +101,19 @@ const Profile = () => {
             setProfileData(profileData);
             
             // If nutrition preferences exist, load them
-            const savedPreferences = profileData.nutrition_preferences as NutritionPreferencesType;
+            const savedPreferences = profileData.nutrition_preferences;
             if (savedPreferences) {
-              setNutritionPreferences(savedPreferences);
+              // Type assertion with check to ensure it has required properties
+              const typedPreferences = savedPreferences as any;
+              if (typedPreferences && 
+                  typeof typedPreferences === 'object' && 
+                  'dailyCalories' in typedPreferences &&
+                  'macroSplit' in typedPreferences) {
+                setNutritionPreferences({
+                  ...nutritionPreferences, // Default values
+                  ...typedPreferences as NutritionPreferencesType // Overwrite with saved values
+                });
+              }
             }
           }
         } catch (error) {
@@ -85,16 +136,62 @@ const Profile = () => {
     if (!user) return;
     
     try {
+      // Calculate BMR and TDEE when saving if personal details are available
+      let prefsToSave = { ...updatedPreferences };
+      
+      if (prefsToSave.personalDetails && 
+          prefsToSave.personalDetails.age && 
+          prefsToSave.personalDetails.weight && 
+          prefsToSave.personalDetails.height && 
+          prefsToSave.personalDetails.gender) {
+            
+        // Calculate BMR using Mifflin-St Jeor Equation
+        const { age, weight, height, gender } = prefsToSave.personalDetails;
+        
+        let bmr = 0;
+        if (gender === 'male') {
+          // Men: BMR = 10W + 6.25H - 5A + 5
+          bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        } else {
+          // Women: BMR = 10W + 6.25H - 5A - 161
+          bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
+        
+        // Calculate TDEE based on activity level
+        const activityMultipliers: Record<string, number> = {
+          'sedentary': 1.2,
+          'light': 1.375,
+          'moderate': 1.55,
+          'active': 1.725,
+          'very-active': 1.9
+        };
+        
+        const activityLevel = prefsToSave.personalDetails.activityLevel || 'moderate';
+        const tdee = Math.round(bmr * activityMultipliers[activityLevel]);
+        
+        prefsToSave.bmr = Math.round(bmr);
+        prefsToSave.tdee = tdee;
+        
+        // Update calories based on health goal if auto-calculation is desired
+        if (prefsToSave.healthGoal === 'weight-loss') {
+          prefsToSave.dailyCalories = Math.round(tdee * 0.8); // 20% deficit
+        } else if (prefsToSave.healthGoal === 'muscle-gain') {
+          prefsToSave.dailyCalories = Math.round(tdee * 1.15); // 15% surplus
+        } else {
+          prefsToSave.dailyCalories = tdee; // Maintenance
+        }
+      }
+      
       const { error } = await supabase
         .from('profiles')
         .update({
-          nutrition_preferences: updatedPreferences
+          nutrition_preferences: prefsToSave
         })
         .eq('id', user.id);
 
       if (error) throw error;
       
-      setNutritionPreferences(updatedPreferences);
+      setNutritionPreferences(prefsToSave);
       toast({
         title: 'Success',
         description: 'Nutrition preferences saved',

@@ -34,7 +34,11 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
             .single();
             
           if (error) throw error;
-          if (data?.nutrition_preferences) {
+          
+          if (data?.nutrition_preferences && 
+              typeof data.nutrition_preferences === 'object' && 
+              'dailyCalories' in data.nutrition_preferences &&
+              'macroSplit' in data.nutrition_preferences) {
             setUserPreferences(data.nutrition_preferences as NutritionPreferencesType);
           }
         } catch (error) {
@@ -62,6 +66,16 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
     carbs: carbsPerServing ? Math.round((carbsPerServing / ((userPreferences.dailyCalories * userPreferences.macroSplit.carbs / 100) / 4)) * 100) : 0,
     fat: fatPerServing ? Math.round((fatPerServing / ((userPreferences.dailyCalories * userPreferences.macroSplit.fat / 100) / 9)) * 100) : 0
   } : null;
+  
+  let macroDetails = null;
+  if (userPreferences?.macroDetails && compareToPreferences) {
+    macroDetails = {
+      complexCarbs: carbsPerServing ? Math.round(carbsPerServing * (userPreferences.macroDetails.complexCarbs || 60) / 100) : 0,
+      simpleCarbs: carbsPerServing ? Math.round(carbsPerServing * (userPreferences.macroDetails.simpleCarbs || 40) / 100) : 0,
+      saturatedFat: fatPerServing ? Math.round(fatPerServing * (userPreferences.macroDetails.saturatedFat || 30) / 100) : 0,
+      unsaturatedFat: fatPerServing ? Math.round(fatPerServing * (userPreferences.macroDetails.unsaturatedFat || 70) / 100) : 0,
+    };
+  }
 
   const getProgressColor = (percentage: number) => {
     if (percentage <= 33) return "bg-green-500"; 
@@ -111,6 +125,7 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
                 <TabsList className="mb-4">
                   <TabsTrigger value="basic">Basic</TabsTrigger>
                   <TabsTrigger value="chart">Chart</TabsTrigger>
+                  {macroDetails && <TabsTrigger value="details">Details</TabsTrigger>}
                 </TabsList>
                 <TabsContent value="basic">
                   <ul className="space-y-3">
@@ -217,6 +232,64 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
                     userPreferences={userPreferences}
                   />
                 </TabsContent>
+                
+                {macroDetails && (
+                  <TabsContent value="details">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-sm font-medium mb-2">Carbohydrate Breakdown</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-blue-50 p-3 rounded-md">
+                            <p className="text-xs text-muted-foreground">Complex Carbs</p>
+                            <p className="font-medium">{macroDetails.complexCarbs}g</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {Math.round((macroDetails.complexCarbs / carbsPerServing!) * 100)}% of total carbs
+                            </p>
+                          </div>
+                          <div className="bg-blue-50 p-3 rounded-md">
+                            <p className="text-xs text-muted-foreground">Simple Carbs</p>
+                            <p className="font-medium">{macroDetails.simpleCarbs}g</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {Math.round((macroDetails.simpleCarbs / carbsPerServing!) * 100)}% of total carbs
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-medium mb-2">Fat Breakdown</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-green-50 p-3 rounded-md">
+                            <p className="text-xs text-muted-foreground">Saturated Fat</p>
+                            <p className="font-medium">{macroDetails.saturatedFat}g</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {Math.round((macroDetails.saturatedFat / fatPerServing!) * 100)}% of total fat
+                            </p>
+                          </div>
+                          <div className="bg-green-50 p-3 rounded-md">
+                            <p className="text-xs text-muted-foreground">Unsaturated Fat</p>
+                            <p className="font-medium">{macroDetails.unsaturatedFat}g</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {Math.round((macroDetails.unsaturatedFat / fatPerServing!) * 100)}% of total fat
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {userPreferences.bmr && userPreferences.tdee && (
+                        <div className="p-3 bg-gray-50 rounded-md">
+                          <p className="text-sm font-medium mb-1">This meal represents:</p>
+                          <p className="text-sm">
+                            • {Math.round((caloriesPerServing! / userPreferences.bmr) * 100)}% of your Basal Metabolic Rate ({userPreferences.bmr} kcal)
+                          </p>
+                          <p className="text-sm">
+                            • {Math.round((caloriesPerServing! / userPreferences.tdee) * 100)}% of your Total Daily Energy Expenditure ({userPreferences.tdee} kcal)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
               </Tabs>
             ) : (
               <ul className="space-y-2">
