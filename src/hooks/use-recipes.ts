@@ -12,6 +12,8 @@ export const useRecipes = () => {
   const query = useQuery<Recipe[]>({
     queryKey: ['recipes', searchTerm],
     queryFn: async () => {
+      console.log('Fetching recipes with search term:', searchTerm);
+      
       let supabaseQuery = supabase
         .from('recipes')
         .select('*')
@@ -30,9 +32,16 @@ export const useRecipes = () => {
 
       const { data, error } = await supabaseQuery;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching recipes:', error);
+        throw error;
+      }
+      
+      console.log('Recipes fetched successfully:', data?.length || 0, 'recipes');
       return data || [];
     },
+    retry: 1, // Only retry once if there's an error
+    staleTime: 30000, // Consider data fresh for 30 seconds
   });
 
   return {

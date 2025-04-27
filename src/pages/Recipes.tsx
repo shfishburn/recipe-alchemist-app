@@ -1,20 +1,38 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Loader } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
 import RecipeCard from '@/components/recipes/RecipeCard';
 import { useRecipes } from '@/hooks/use-recipes';
-import { Loader } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const Recipes = () => {
   const { 
     data: recipes, 
     isLoading, 
+    isFetching,
     error, 
     searchTerm, 
-    setSearchTerm 
+    setSearchTerm,
+    status,
   } = useRecipes();
+
+  useEffect(() => {
+    console.log('Recipes component render state:', {
+      status,
+      isLoading,
+      isFetching,
+      recipesCount: recipes?.length,
+      error: error ? `${error}` : 'none'
+    });
+    
+    if (error) {
+      toast.error('Failed to load recipes. Please try again later.');
+      console.error('Recipe loading error:', error);
+    }
+  }, [status, isLoading, isFetching, recipes, error]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -35,26 +53,36 @@ const Recipes = () => {
           </div>
           
           {isLoading && (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <Loader className="h-8 w-8 animate-spin" />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array(6).fill(0).map((_, i) => (
+                <div key={i} className="rounded-lg overflow-hidden">
+                  <Skeleton className="w-full aspect-video" />
+                  <div className="p-4">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           
-          {error && (
-            <div className="text-center text-red-500">
-              Failed to load recipes. Please try again later.
+          {!isLoading && error && (
+            <div className="text-center text-red-500 p-8 border border-red-200 rounded-lg">
+              <p className="mb-2 font-semibold">Failed to load recipes</p>
+              <p>Please try refreshing the page</p>
             </div>
           )}
           
-          {recipes && recipes.length === 0 && (
-            <div className="text-center text-muted-foreground">
+          {!isLoading && !error && recipes && recipes.length === 0 && (
+            <div className="text-center text-muted-foreground p-8 border border-dashed rounded-lg">
               {searchTerm 
-                ? `No recipes found matching "${searchTerm}"`
-                : "No recipes found. Start by creating your first recipe!"}
+                ? <p>No recipes found matching "<span className="font-medium">{searchTerm}</span>"</p>
+                : <p>No recipes found. Start by creating your first recipe!</p>
+              }
             </div>
           )}
           
-          {recipes && recipes.length > 0 && (
+          {!isLoading && !error && recipes && recipes.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recipes.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />
