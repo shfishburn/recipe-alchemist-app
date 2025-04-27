@@ -1,7 +1,15 @@
+
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { X, Globe, Leaf, Plus, BookOpen, Utensils } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -48,6 +56,7 @@ const InputsTab = ({
   onServingsChange,
 }: InputsTabProps) => {
   const commonRecipes = ["Pasta Dish", "Chicken Recipe", "Soup", "Salad"];
+  const servingOptions = [1, 2, 3, 4, 5, 6, 8, 10, 12];
 
   return (
     <div className="space-y-6">
@@ -129,15 +138,21 @@ const InputsTab = ({
             <Utensils className="h-4 w-4 text-amber-600" />
             <Label htmlFor="servings" className="text-base">Servings</Label>
           </div>
-          <Input
-            id="servings"
-            type="number"
-            min={1}
-            max={12}
-            value={servings}
-            onChange={(e) => onServingsChange(parseInt(e.target.value, 10))}
-            className="w-full"
-          />
+          <Select
+            value={servings.toString()}
+            onValueChange={(value) => onServingsChange(parseInt(value, 10))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select number of servings" />
+            </SelectTrigger>
+            <SelectContent>
+              {servingOptions.map((option) => (
+                <SelectItem key={option} value={option.toString()}>
+                  {option} {option === 1 ? 'serving' : 'servings'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">Number of portions this recipe will serve</p>
         </div>
 

@@ -8,6 +8,7 @@ import SettingsTab from './tabs/SettingsTab';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from '@/hooks/use-toast';
 
 export interface RecipeFormData {
   title: string;
