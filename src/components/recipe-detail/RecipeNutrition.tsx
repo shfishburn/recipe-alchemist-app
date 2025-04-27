@@ -10,9 +10,9 @@ interface RecipeNutritionProps {
 }
 
 export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
-  const { user, userPreferences } = useAuth();
+  const { user } = useAuth();
 
-  if (!recipe.nutrition || !userPreferences) {
+  if (!recipe.nutrition) {
     return null;
   }
 
@@ -23,8 +23,7 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
       </CardHeader>
       <CardContent>
         <NutritionChart 
-          recipeNutrition={recipe.nutrition} 
-          userPreferences={userPreferences} 
+          recipeNutrition={recipe.nutrition}
         />
       </CardContent>
     </Card>

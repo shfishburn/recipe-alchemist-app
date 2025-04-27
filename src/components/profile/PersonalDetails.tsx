@@ -50,8 +50,8 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   });
   
   const watchAllFields = watch();
-  const { bmr, tdee, dailyCalories, projectedWeightLossPerWeek, deficit } = calculateBMR(watchAllFields);
 
+  // Define calculateBMR function before using it
   const calculateBMR = (data: any) => {
     if (data.age && data.weight && data.height && data.gender) {
       const age = parseInt(data.age);
@@ -86,6 +86,8 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
     return { bmr: 0, tdee: 0, dailyCalories: 2000, projectedWeightLossPerWeek: 0, deficit: 0 };
   };
   
+  const { bmr, tdee, dailyCalories, projectedWeightLossPerWeek, deficit } = calculateBMR(watchAllFields);
+
   const onSubmit = (data: any) => {
     const calculations = calculateBMR(data);
     
