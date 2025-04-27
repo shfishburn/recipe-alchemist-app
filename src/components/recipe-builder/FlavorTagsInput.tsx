@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,7 @@ import { X } from 'lucide-react';
 
 const popularFlavorTags = [
   "Sweet", "Savory", "Spicy", "Tangy", "Smoky", 
-  "Crispy", "Creamy", "Fresh", "Zesty", "Rich"
+  "Crispy", "Creamy", "Fresh", "Zesty", "Rich", "Umami"
 ];
 
 interface FlavorTagsInputProps {

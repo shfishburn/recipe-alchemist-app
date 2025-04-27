@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X, Globe, Leaf, Plus, BookOpen } from 'lucide-react';
+import { X, Globe, Leaf, Plus, BookOpen, Utensils } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -20,6 +19,7 @@ interface InputsTabProps {
   flavorTags: string[];
   ingredients: string[];
   ingredientInput: string;
+  servings: number;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCuisineChange: (value: string) => void;
   onDietaryChange: (value: string) => void;
@@ -27,6 +27,7 @@ interface InputsTabProps {
   onIngredientChange: (value: string) => void;
   onIngredientKeyDown: (e: React.KeyboardEvent) => void;
   onRemoveIngredient: (index: number) => void;
+  onServingsChange: (value: number) => void;
 }
 
 const InputsTab = ({
@@ -36,6 +37,7 @@ const InputsTab = ({
   flavorTags,
   ingredients,
   ingredientInput,
+  servings,
   onTitleChange,
   onCuisineChange,
   onDietaryChange,
@@ -43,6 +45,7 @@ const InputsTab = ({
   onIngredientChange,
   onIngredientKeyDown,
   onRemoveIngredient,
+  onServingsChange,
 }: InputsTabProps) => {
   const commonRecipes = ["Pasta Dish", "Chicken Recipe", "Soup", "Salad"];
 
@@ -120,6 +123,24 @@ const InputsTab = ({
             onChange={onCuisineChange}
           />
           <p className="text-xs text-muted-foreground">Sets the cultural style and flavors of your recipe</p>
+        </div>
+
+        {/* Servings Input */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Utensils className="h-4 w-4 text-amber-600" />
+            <Label htmlFor="servings" className="text-base">Servings</Label>
+          </div>
+          <Input
+            id="servings"
+            type="number"
+            min={1}
+            max={12}
+            value={servings}
+            onChange={(e) => onServingsChange(parseInt(e.target.value, 10))}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground">Number of portions this recipe will serve</p>
         </div>
 
         {/* Dietary Preference */}
