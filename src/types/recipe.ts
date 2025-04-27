@@ -1,3 +1,4 @@
+
 export interface Ingredient {
   qty: number;
   unit: string;
@@ -43,6 +44,6 @@ export interface Recipe {
   dietary?: string;
   flavor_tags?: string[];
   nutrition?: Nutrition;
-  science_notes?: string[];
+  science_notes?: string[];  // Updated to be string array
   chef_notes?: string;
 }

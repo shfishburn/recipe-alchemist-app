@@ -2,7 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import { Json } from '@/integrations/supabase/types';
 import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
 
 export type { Recipe, Ingredient, Nutrition };
@@ -34,7 +33,8 @@ export const useRecipeDetail = (id?: string) => {
       const recipe: Recipe = {
         ...data,
         ingredients: data.ingredients as unknown as Ingredient[],
-        nutrition: data.nutrition as unknown as Nutrition
+        nutrition: data.nutrition as unknown as Nutrition,
+        science_notes: (data.science_notes as unknown as string[]) || [] // Cast science_notes to string array
       };
       
       console.log('Recipe detail fetched:', recipe);
