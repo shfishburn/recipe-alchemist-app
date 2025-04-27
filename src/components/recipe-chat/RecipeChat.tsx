@@ -111,121 +111,123 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   }
 
   return (
-    <Card>
+    <Card className="bg-[#F1F0FB]">
       <CardContent className="pt-6">
-        <div className="space-y-4">
+        <div className="space-y-6">
           {chatHistory.length === 0 && (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Ask for cooking tips or recipe modifications!</p>
             </div>
           )}
           
-          {chatHistory.map((chat, index) => (
-            <div key={chat.id} className="space-y-4">
-              {index > 0 && <Separator />}
-              
-              {/* User Message */}
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <p className="font-medium">You</p>
-                  <p className="text-muted-foreground">{chat.user_message}</p>
-                </div>
-              </div>
-
-              {/* AI Response */}
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <p className="font-medium">Chef AI</p>
-                  <div className="text-muted-foreground prose prose-sm max-w-none">
-                    {renderFormattedResponse(chat.ai_response)}
+          <div className="space-y-6">
+            {chatHistory.map((chat, index) => (
+              <div key={chat.id} className="space-y-4">
+                {/* User Message */}
+                <div className="flex justify-end mb-4">
+                  <div className="max-w-[85%] bg-[#9b87f5] text-white px-4 py-2 rounded-[20px] rounded-tr-[5px]">
+                    <p>{chat.user_message}</p>
                   </div>
-                  
-                  {/* Nutritional Changes */}
-                  {chat.changes_suggested?.nutrition && Object.keys(chat.changes_suggested.nutrition).length > 0 && (
-                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                      <h4 className="font-medium mb-2">Nutritional Impact:</h4>
-                      <Table>
-                        <TableBody>
-                          {Object.entries(chat.changes_suggested.nutrition).map(([key, value]) => (
-                            <TableRow key={key}>
-                              <TableCell className="py-1 px-2 capitalize font-medium">{key.replace(/_/g, ' ')}</TableCell>
-                              <TableCell className="py-1 px-2 text-right">{value}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                  
-                  {/* Health Insights */}
-                  {chat.changes_suggested?.health_insights && chat.changes_suggested.health_insights.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {chat.changes_suggested.health_insights.map((insight, i) => (
-                        <Badge key={i} variant="secondary">{insight}</Badge>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Follow-up Questions */}
-                  {chat.follow_up_questions && chat.follow_up_questions.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-sm font-semibold">Follow-up Questions:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {chat.follow_up_questions.map((question, qIndex) => (
-                          <Button 
-                            key={qIndex} 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setMessage(question);
-                            }}
-                          >
-                            {question}
-                          </Button>
-                        ))}
+                </div>
+
+                {/* AI Response */}
+                <div className="flex">
+                  <div className="max-w-[85%] space-y-3">
+                    <div className="bg-white px-4 py-2 rounded-[20px] rounded-tl-[5px] shadow-sm">
+                      <div className="prose prose-sm max-w-none text-[#221F26]">
+                        {renderFormattedResponse(chat.ai_response)}
                       </div>
                     </div>
-                  )}
-                  
-                  {/* Apply Changes Button */}
-                  {chat.changes_suggested && !chat.applied && (
-                    <div className="mt-4">
-                      <Button
-                        onClick={() => applyChanges.mutate(chat)}
-                        disabled={isApplying}
-                        className="gap-2"
-                      >
-                        {isApplying ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Check className="h-4 w-4" />
-                        )}
-                        Apply Changes
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {chat.applied && (
-                    <p className="text-sm text-green-500 mt-2 flex items-center gap-1">
-                      <Check className="h-3 w-3" /> Changes applied
-                    </p>
-                  )}
+
+                    {/* Nutritional Changes */}
+                    {chat.changes_suggested?.nutrition && Object.keys(chat.changes_suggested.nutrition).length > 0 && (
+                      <div className="bg-white/80 px-4 py-3 rounded-[20px] shadow-sm">
+                        <h4 className="font-medium mb-2 text-[#221F26]">Nutritional Impact:</h4>
+                        <Table>
+                          <TableBody>
+                            {Object.entries(chat.changes_suggested.nutrition).map(([key, value]) => (
+                              <TableRow key={key}>
+                                <TableCell className="py-1 px-2 capitalize font-medium">{key.replace(/_/g, ' ')}</TableCell>
+                                <TableCell className="py-1 px-2 text-right">{value}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+
+                    {/* Health Insights */}
+                    {chat.changes_suggested?.health_insights && chat.changes_suggested.health_insights.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {chat.changes_suggested.health_insights.map((insight, i) => (
+                          <Badge key={i} variant="secondary" className="bg-white/80">{insight}</Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Follow-up Questions */}
+                    {chat.follow_up_questions && chat.follow_up_questions.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          {chat.follow_up_questions.map((question, qIndex) => (
+                            <Button
+                              key={qIndex}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setMessage(question)}
+                              className="bg-white/80 hover:bg-white"
+                            >
+                              {question}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Apply Changes Button */}
+                    {chat.changes_suggested && !chat.applied && (
+                      <div>
+                        <Button
+                          onClick={() => applyChanges.mutate(chat)}
+                          disabled={isApplying}
+                          className="gap-2 bg-[#9b87f5] hover:bg-[#8b77e5]"
+                        >
+                          {isApplying ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4" />
+                          )}
+                          Apply Changes
+                        </Button>
+                      </div>
+                    )}
+
+                    {chat.applied && (
+                      <p className="text-sm text-green-500 flex items-center gap-1">
+                        <Check className="h-3 w-3" /> Changes applied
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {/* Chat Input */}
-          <form onSubmit={handleSubmit} className="mt-4">
-            <div className="flex gap-2">
+          <form onSubmit={handleSubmit} className="sticky bottom-0 pt-4">
+            <div className="flex gap-2 items-end">
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Ask for recipe modifications..."
-                className="flex-1"
+                className="flex-1 bg-white resize-none rounded-2xl"
                 rows={2}
               />
-              <Button type="submit" disabled={isSending || !message.trim()}>
+              <Button 
+                type="submit" 
+                disabled={isSending || !message.trim()}
+                className="rounded-full h-10 w-10 p-0 bg-[#9b87f5] hover:bg-[#8b77e5]"
+              >
                 {isSending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
