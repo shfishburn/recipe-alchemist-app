@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PrintRecipe } from './PrintRecipe';
 import { CookingMode } from './CookingMode';
-import { Printer, ChefHat, Share2 } from 'lucide-react';
+import { Printer, ChefHat, Share2, Trash2 } from 'lucide-react';
+import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeActionsProps {
@@ -12,6 +14,8 @@ interface RecipeActionsProps {
 }
 
 export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
+  const navigate = useNavigate();
+  const { mutate: deleteRecipe } = useDeleteRecipe();
   const [isSticky, setIsSticky] = useState(false);
   
   useEffect(() => {
@@ -37,6 +41,11 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
     } catch (err) {
       console.error('Error sharing:', err);
     }
+  };
+
+  const handleDelete = () => {
+    deleteRecipe(recipe.id);
+    navigate('/recipes');
   };
   
   const containerClasses = sticky && isSticky 
@@ -79,6 +88,15 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
             Share
           </Button>
         )}
+        <Button 
+          variant="destructive" 
+          size="sm"
+          className="flex-1 md:flex-none"
+          onClick={handleDelete}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </Button>
       </div>
     </div>
   );
