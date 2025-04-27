@@ -21,8 +21,14 @@ export const useRecipeDetail = (id?: string) => {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
-      if (!data) throw new Error('Recipe not found');
+      if (error) {
+        console.error('Error fetching recipe:', error);
+        throw error;
+      }
+      if (!data) {
+        console.error('Recipe not found');
+        throw new Error('Recipe not found');
+      }
       
       // Type cast the JSON fields with their proper structure
       const recipe: Recipe = {
@@ -31,8 +37,11 @@ export const useRecipeDetail = (id?: string) => {
         nutrition: data.nutrition as unknown as Nutrition
       };
       
+      console.log('Recipe detail fetched:', recipe);
       return recipe;
     },
     enabled: !!id,
+    retry: 1,
+    staleTime: 30000,
   });
 };

@@ -15,9 +15,18 @@ export function ChartTooltip({ active, payload, showPercentage = false }: ChartT
     return null;
   }
 
-  const data = payload[0].payload;
+  // Safely access payload data to prevent undefined errors
+  const data = payload[0]?.payload;
+  if (!data) {
+    return null;
+  }
+
   const value = payload[0].value;
   const name = data.name;
+  
+  if (!name) {
+    return null;
+  }
   
   return (
     <div className="bg-white p-2 border rounded shadow-sm text-xs">
