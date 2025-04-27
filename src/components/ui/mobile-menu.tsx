@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -15,12 +16,11 @@ import { Separator } from '@/components/ui/separator';
 export function MobileMenu() {
   const { session } = useAuth();
 
-  // Define all navigation links including those that require authentication
+  // Define navigation links without Profile since it's in the button
   const navigationLinks = [
     { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
     { name: 'Create Recipe', path: '/build', requiresAuth: true },
     { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
-    { name: 'Profile', path: '/profile', requiresAuth: true },
   ];
 
   // Filter links based on authentication status
