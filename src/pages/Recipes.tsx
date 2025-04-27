@@ -41,7 +41,7 @@ const Recipes = () => {
         <div className="container-page py-8">
           <h1 className="text-3xl font-bold mb-6">Browse Recipes</h1>
           
-          {/* Search Input */}
+          {/* Search Input with Loading Indicator */}
           <div className="mb-6 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Input 
@@ -50,9 +50,14 @@ const Recipes = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            {isFetching && !isLoading && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Loader className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
           </div>
           
-          {(isLoading || isFetching) && (
+          {isLoading && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {Array(6).fill(0).map((_, i) => (
                 <div key={i} className="rounded-lg overflow-hidden">
@@ -66,14 +71,14 @@ const Recipes = () => {
             </div>
           )}
           
-          {!isLoading && !isFetching && error && (
+          {!isLoading && error && (
             <div className="text-center text-red-500 p-8 border border-red-200 rounded-lg">
               <p className="mb-2 font-semibold">Failed to load recipes</p>
               <p>Please try refreshing the page</p>
             </div>
           )}
           
-          {!isLoading && !isFetching && !error && recipes && recipes.length === 0 && (
+          {!isLoading && !error && recipes && recipes.length === 0 && (
             <div className="text-center text-muted-foreground p-8 border border-dashed rounded-lg">
               {searchTerm 
                 ? <p>No recipes found matching "<span className="font-medium">{searchTerm}</span>"</p>
@@ -82,7 +87,7 @@ const Recipes = () => {
             </div>
           )}
           
-          {!isLoading && !isFetching && !error && recipes && recipes.length > 0 && (
+          {!isLoading && !error && recipes && recipes.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recipes.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />

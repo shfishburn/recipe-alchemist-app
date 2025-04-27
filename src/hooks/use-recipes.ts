@@ -29,7 +29,7 @@ export const useRecipes = () => {
             `tagline.ilike.%${trimmedTerm}%`,
             `cuisine.ilike.%${trimmedTerm}%`,
             `dietary.ilike.%${trimmedTerm}%`
-          ].join(','));
+          ]);
         }
 
         const { data, error } = await supabaseQuery;
