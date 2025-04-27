@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Recipe, Ingredient, Nutrition } from '@/hooks/use-recipe-detail';
-import type { Database } from '@/integrations/supabase/types';
+import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
 
 interface ChatMessage {
@@ -160,6 +159,8 @@ export const useRecipeChat = (recipe: Recipe) => {
         title: chatMessage.changes_suggested.title || recipe.title,
         nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
         image_url: imageUrl,
+        // Ensure servings is always included
+        servings: recipe.servings || 4, // Default to 4 if somehow missing
       };
 
       // Handle instructions which might be an array of strings or complex objects

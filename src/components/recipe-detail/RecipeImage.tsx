@@ -4,7 +4,7 @@ import { ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
 
 interface RecipeImageProps {
@@ -30,18 +30,22 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
       if (response.error) throw response.error;
 
       // Create a new version of the recipe with the new image
+      const newRecipeData = {
+        ...recipe,
+        id: undefined,
+        previous_version_id: recipe.id,
+        version_number: recipe.version_number + 1,
+        image_url: response.data.imageUrl,
+        // Make sure servings is included and properly set
+        servings: recipe.servings || 4, // Default to 4 if somehow missing
+        // Cast the complex objects to Json type for Supabase
+        ingredients: recipe.ingredients as unknown as Json,
+        nutrition: recipe.nutrition as unknown as Json
+      };
+
       const { data: newRecipe, error: saveError } = await supabase
         .from('recipes')
-        .insert({
-          ...recipe,
-          id: undefined,
-          previous_version_id: recipe.id,
-          version_number: recipe.version_number + 1,
-          image_url: response.data.imageUrl,
-          // Cast the complex objects to Json type for Supabase
-          ingredients: recipe.ingredients as unknown as Json,
-          nutrition: recipe.nutrition as unknown as Json
-        })
+        .insert(newRecipeData)
         .select()
         .single();
 
