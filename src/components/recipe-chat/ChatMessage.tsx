@@ -13,12 +13,11 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
-  // Make sure follow_up_questions is always an array
+  // Parse follow-up questions with better error handling
   const followUpQuestions = Array.isArray(chat.follow_up_questions) 
     ? chat.follow_up_questions 
     : [];
 
-  // Try to parse follow-up questions from the AI response if they exist and aren't already populated
   let parsedFollowUpQuestions = followUpQuestions;
   if (followUpQuestions.length === 0 && chat.ai_response) {
     try {
@@ -32,14 +31,14 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
   }
     
   return (
-    <div className="mb-4">
+    <div className="mb-6 animate-fade-in">
       <Message 
         model={{
           message: chat.user_message,
           direction: "outgoing",
           position: "single"
         }}
-        className="mb-4"
+        className="mb-4 bg-primary text-primary-foreground rounded-lg shadow-sm"
       />
 
       <ChatResponse

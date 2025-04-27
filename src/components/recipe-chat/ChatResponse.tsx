@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Message, Button as ChatButton } from "@chatscope/chat-ui-kit-react";
+import { Message } from "@chatscope/chat-ui-kit-react";
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChatResponseProps {
   response: string;
@@ -23,37 +24,46 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
-  // Try to parse the response if it's a JSON string
+  // Parse response with better error handling
   let displayText = response;
+  let parsedResponse = null;
+  
   try {
-    const parsedResponse = JSON.parse(response);
+    parsedResponse = JSON.parse(response);
     if (parsedResponse && typeof parsedResponse.textResponse === 'string') {
       displayText = parsedResponse.textResponse;
     }
   } catch (e) {
-    // If parsing fails, just use the response as is
+    console.log("Could not parse response as JSON, using raw text");
   }
 
   const handleFollowUpClick = (question: string) => {
-    setMessage(question);
+    if (!isApplying) {
+      setMessage(question);
+    }
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <Message
         model={{
           message: displayText,
           direction: "incoming",
           position: "single"
         }}
-        className="mb-4"
+        className="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
       >
         {changesSuggested && (
           <Message.CustomContent>
             <Button
               onClick={onApplyChanges}
               disabled={isApplying || applied}
-              className={`${applied ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'} text-white mt-4`}
+              className={cn(
+                "mt-4 transition-colors duration-200",
+                applied 
+                  ? "bg-green-500 hover:bg-green-600" 
+                  : "bg-blue-500 hover:bg-blue-600"
+              )}
               size="sm"
             >
               {isApplying ? (
@@ -75,17 +85,25 @@ export function ChatResponse({
       </Message>
 
       {followUpQuestions && followUpQuestions.length > 0 && (
-        <div className="mt-4">
-          <div className="text-sm font-medium mb-2">Follow-up Questions</div>
+        <div className="mt-6 space-y-3 animate-fade-in">
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            Follow-up Questions
+          </div>
           <div className="flex flex-wrap gap-2">
             {followUpQuestions.map((question, index) => (
-              <ChatButton
+              <button
                 key={index}
                 onClick={() => handleFollowUpClick(question)}
-                style={{ fontSize: '0.875rem' }}
+                disabled={isApplying}
+                className={cn(
+                  "px-4 py-2 text-sm rounded-full transition-colors duration-200",
+                  "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700",
+                  "text-gray-700 dark:text-gray-300",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
               >
                 {question}
-              </ChatButton>
+              </button>
             ))}
           </div>
         </div>
