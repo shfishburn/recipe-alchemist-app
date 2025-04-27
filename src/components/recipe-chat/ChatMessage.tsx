@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useEffect, useRef } from 'react';
 import { Message } from "@chatscope/chat-ui-kit-react";
 import { ChatResponse } from './ChatResponse';
 import type { ChatMessage as ChatMessageType } from '@/hooks/use-recipe-chat';
+import { parseAIResponse } from './utils/parseAIResponse';
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 
 interface ChatMessageProps {
@@ -12,29 +14,18 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
-  // Parse the AI response
-  let displayText = chat.ai_response;
-  let parsedFollowUpQuestions: string[] = [];
+  const messageRef = useRef<HTMLDivElement>(null);
+  const { textResponse, followUpQuestions } = parseAIResponse(chat.ai_response);
   
-  try {
-    const parsedResponse = JSON.parse(chat.ai_response);
-    
-    // Extract text response from parsed JSON
-    if (parsedResponse && typeof parsedResponse.textResponse === 'string') {
-      displayText = parsedResponse.textResponse;
+  // Auto-scroll to new messages
+  useEffect(() => {
+    if (messageRef.current) {
+      messageRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-    
-    // Extract follow-up questions
-    if (Array.isArray(parsedResponse.followUpQuestions)) {
-      parsedFollowUpQuestions = parsedResponse.followUpQuestions;
-    }
-  } catch (e) {
-    console.log("Could not parse AI response:", e);
-    // Keep the raw response if parsing fails
-  }
-  
+  }, [chat.ai_response]);
+
   return (
-    <div className="mb-6 animate-fade-in">
+    <div ref={messageRef} className="mb-6 animate-fade-in">
       <Message 
         model={{
           message: chat.user_message,
@@ -45,9 +36,9 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
       />
 
       <ChatResponse
-        response={displayText}
+        response={textResponse}
         changesSuggested={chat.changes_suggested}
-        followUpQuestions={parsedFollowUpQuestions}
+        followUpQuestions={followUpQuestions}
         setMessage={setMessage}
         onApplyChanges={() => applyChanges(chat)}
         isApplying={isApplying}
