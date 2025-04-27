@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ImagePlus, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -12,10 +12,38 @@ interface RecipeImageProps {
 }
 
 export function RecipeImage({ recipe }: RecipeImageProps) {
-  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(recipe.image_url);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Check if the image URL has expired tokens
+  useEffect(() => {
+    if (recipe.image_url) {
+      // If the URL contains expiration parameters, it might be an OpenAI URL with time-limited access
+      const hasExpirationParams = recipe.image_url.includes("st=") && recipe.image_url.includes("se=");
+      
+      if (hasExpirationParams) {
+        // For expired OpenAI URLs, set image error to true to show fallback
+        const currentTime = new Date().getTime();
+        const expireTimeMatch = recipe.image_url.match(/se=(\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z)/);
+        
+        if (expireTimeMatch) {
+          try {
+            const expireTime = new Date(decodeURIComponent(expireTimeMatch[1])).getTime();
+            if (currentTime > expireTime) {
+              console.log("Image URL has expired, showing fallback");
+              setImageError(true);
+              setImageUrl(null);
+            }
+          } catch (e) {
+            console.error("Error parsing expiration time:", e);
+          }
+        }
+      }
+    }
+  }, [recipe.image_url]);
 
   const generateNewImage = async () => {
     if (!user) {
@@ -64,20 +92,22 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   React.useEffect(() => {
     if (recipe.image_url) {
       setImageError(false);
+      setImageUrl(recipe.image_url);
     }
   }, [recipe.id, recipe.image_url]);
 
   const handleImageError = () => {
-    console.error('Image failed to load:', recipe.image_url);
+    console.error('Image failed to load:', imageUrl);
     setImageError(true);
+    setImageUrl(null);
   };
 
   return (
     <div className="relative mb-6">
       <div className="rounded-lg overflow-hidden">
-        {recipe.image_url && !imageError ? (
+        {imageUrl && !imageError ? (
           <img
-            src={recipe.image_url}
+            src={imageUrl}
             alt={recipe.title}
             className="w-full aspect-video object-cover rounded-lg"
             onError={handleImageError}
