@@ -9,6 +9,7 @@ import {
   Legend
 } from 'recharts';
 import { ChartTooltip } from './ChartTooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MacroData {
   name: string;
@@ -22,8 +23,14 @@ interface MacroDistributionPieProps {
 }
 
 export function MacroDistributionPie({ data, title }: MacroDistributionPieProps) {
+  const isMobile = useIsMobile();
+  
+  const renderCustomizedLabel = ({ name, value }: { name: string; value: number }) => {
+    return isMobile ? `${value}%` : `${name}: ${value}%`;
+  };
+  
   return (
-    <div className="h-40">
+    <div className={isMobile ? "h-32" : "h-40"}>
       <p className="text-xs text-muted-foreground mb-2 text-center">
         {title}
       </p>
@@ -34,15 +41,15 @@ export function MacroDistributionPie({ data, title }: MacroDistributionPieProps)
             cx="50%"
             cy="50%"
             labelLine={false}
-            outerRadius={60}
+            outerRadius={isMobile ? 45 : 60}
             dataKey="value"
-            label={({ name, value }) => `${name}: ${value}%`}
+            label={renderCustomizedLabel}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.fill} />
             ))}
           </Pie>
-          <Legend />
+          <Legend wrapperStyle={isMobile ? { fontSize: '10px' } : undefined} />
           <Tooltip content={(props) => <ChartTooltip {...props} showPercentage={true} />} />
         </PieChart>
       </ResponsiveContainer>
