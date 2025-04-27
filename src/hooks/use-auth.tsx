@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return Promise.resolve();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Fix: Return a rejected Promise correctly
       return Promise.reject(error);
     }
   };

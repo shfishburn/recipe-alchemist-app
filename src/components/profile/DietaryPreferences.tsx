@@ -8,6 +8,7 @@ import { DietaryRestrictions } from './dietary/DietaryRestrictions';
 import { AllergenSelector } from './dietary/AllergenSelector';
 import { HealthGoalSelector } from './dietary/HealthGoalSelector';
 import { MealSizeSelector } from './dietary/MealSizeSelector';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DietaryPreferencesProps {
   preferences: NutritionPreferencesType;
@@ -15,6 +16,7 @@ interface DietaryPreferencesProps {
 }
 
 export function DietaryPreferences({ preferences, onSave }: DietaryPreferencesProps) {
+  const isMobile = useIsMobile();
   const { control, handleSubmit } = useForm({
     defaultValues: {
       dietaryRestrictions: preferences.dietaryRestrictions || [],
@@ -37,13 +39,18 @@ export function DietaryPreferences({ preferences, onSave }: DietaryPreferencesPr
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-6">
-            <DietaryRestrictions control={control} />
-            <AllergenSelector control={control} preferences={preferences} />
-            <HealthGoalSelector control={control} />
-            <MealSizeSelector control={control} />
+          <div className={`space-y-6 ${isMobile ? '' : 'grid grid-cols-2 gap-6'}`}>
+            <div className="space-y-6">
+              <DietaryRestrictions control={control} />
+              <AllergenSelector control={control} preferences={preferences} />
+            </div>
             
-            <div className="flex justify-end">
+            <div className="space-y-6">
+              <HealthGoalSelector control={control} />
+              <MealSizeSelector control={control} />
+            </div>
+            
+            <div className={`flex justify-end ${isMobile ? '' : 'col-span-2'}`}>
               <Button type="submit">Save Dietary Preferences</Button>
             </div>
           </div>

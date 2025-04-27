@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
-import { NutritionChart } from './NutritionChart';
 import { NutritionHeader } from './nutrition/NutritionHeader';
 import { useNutritionData } from './nutrition/useNutritionData';
+import { NutritionBlock } from './nutrition/NutritionBlock';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeNutritionProps {
@@ -28,7 +28,7 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
         onViewModeChange={setViewMode}
       />
       <CardContent>
-        <NutritionChart 
+        <NutritionBlock 
           recipeNutrition={recipeNutrition}
           userPreferences={viewMode === 'personal' ? userPreferences : undefined}
         />

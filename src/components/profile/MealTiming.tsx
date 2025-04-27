@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { NutritionPreferencesType } from '@/types/nutrition';
+import { MealsPerDaySelect } from './meal-timing/MealsPerDaySelect';
+import { FastingWindowSlider } from './meal-timing/FastingWindowSlider';
+import { WorkoutTimingInputs } from './meal-timing/WorkoutTimingInputs';
+import { MealScheduleDisplay } from './meal-timing/MealScheduleDisplay';
+import { InfoPanel } from './meal-timing/InfoPanel';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MealTimingProps {
   preferences: NutritionPreferencesType;
@@ -14,6 +17,7 @@ interface MealTimingProps {
 }
 
 export function MealTiming({ preferences, onSave }: MealTimingProps) {
+  const isMobile = useIsMobile();
   const mealTiming = preferences.mealTiming || {
     mealsPerDay: 3,
     fastingWindow: 12,
@@ -35,6 +39,10 @@ export function MealTiming({ preferences, onSave }: MealTimingProps) {
   
   const handleFastingChange = (value: number[]) => {
     setValue('fastingWindow', value[0]);
+  };
+
+  const handleMealsPerDayChange = (value: number) => {
+    setValue('mealsPerDay', value);
   };
   
   const onSubmit = (data: any) => {
@@ -82,109 +90,27 @@ export function MealTiming({ preferences, onSave }: MealTimingProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mealsPerDay">Meals Per Day</Label>
-                <Select
-                  onValueChange={(value) => setValue('mealsPerDay', parseInt(value))}
-                  defaultValue={mealsPerDay.toString()}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select number of meals" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2 meals</SelectItem>
-                    <SelectItem value="3">3 meals</SelectItem>
-                    <SelectItem value="4">4 meals</SelectItem>
-                    <SelectItem value="5">5 meals</SelectItem>
-                    <SelectItem value="6">6 meals</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <MealsPerDaySelect 
+                value={mealsPerDay} 
+                onChange={handleMealsPerDayChange} 
+              />
               
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="fastingWindow">Fasting Window</Label>
-                  <span className="text-sm font-medium">{fastingWindow} hours</span>
-                </div>
-                <Slider 
-                  id="fastingWindow" 
-                  value={[fastingWindow]} 
-                  min={8}
-                  max={16}
-                  step={1}
-                  onValueChange={handleFastingChange} 
-                />
-                <p className="text-xs text-muted-foreground">
-                  Time spent not eating each day (e.g., 16:8 intermittent fasting = 16 hour fast)
-                </p>
-              </div>
+              <FastingWindowSlider 
+                value={fastingWindow} 
+                onChange={handleFastingChange} 
+              />
             </div>
             
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="preworkoutTiming">Pre-Workout Meal Timing</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="preworkoutTiming"
-                    type="number"
-                    className="w-24"
-                    {...register('preworkoutTiming', {
-                      min: { value: 30, message: '30 minutes minimum' },
-                      max: { value: 180, message: '3 hours maximum' },
-                    })}
-                  />
-                  <span>minutes before workout</span>
-                </div>
-                {errors.preworkoutTiming && (
-                  <p className="text-sm text-red-500">{errors.preworkoutTiming.message?.toString()}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="postworkoutTiming">Post-Workout Meal Timing</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="postworkoutTiming"
-                    type="number"
-                    className="w-24"
-                    {...register('postworkoutTiming', {
-                      min: { value: 0, message: 'Must be 0 or greater' },
-                      max: { value: 120, message: '2 hours maximum' },
-                    })}
-                  />
-                  <span>minutes after workout</span>
-                </div>
-                {errors.postworkoutTiming && (
-                  <p className="text-sm text-red-500">{errors.postworkoutTiming.message?.toString()}</p>
-                )}
-              </div>
-            </div>
+            <WorkoutTimingInputs register={register} errors={errors} />
           </div>
           
-          <div className="p-4 bg-blue-50 rounded-md space-y-4">
-            <h4 className="font-medium">Recommended Meal Schedule:</h4>
-            <div className="grid grid-cols-3 gap-4">
-              {mealSchedule.map((time, index) => (
-                <div key={index} className="bg-white p-3 rounded-md shadow-sm">
-                  <p className="font-medium">Meal {index + 1}</p>
-                  <p className="text-lg">{time}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Based on a {fastingWindow}-hour fast with {mealsPerDay} meals during a {24-fastingWindow}-hour eating window.
-              Assumes fasting ends at 8:00 AM.
-            </p>
-          </div>
+          <MealScheduleDisplay 
+            mealSchedule={mealSchedule}
+            fastingWindow={fastingWindow}
+            mealsPerDay={mealsPerDay}
+          />
           
-          <div className="mt-6 p-4 bg-green-50 rounded-md">
-            <h4 className="font-medium mb-2">Why this matters:</h4>
-            <p className="text-sm text-muted-foreground">
-              Meal timing can significantly impact energy levels, workout performance, and recovery.
-              Intermittent fasting may have health benefits including improved insulin sensitivity and cellular repair processes.
-              Pre and post-workout nutrition is crucial for performance and muscle recovery.
-            </p>
-          </div>
+          <InfoPanel />
           
           <div className="flex justify-end">
             <Button type="submit">Save Meal Timing</Button>
