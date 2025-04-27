@@ -17,6 +17,15 @@ const AuthForm = () => {
   const { toast } = useToast();
 
   const handleAuth = async (type: 'LOGIN' | 'SIGNUP') => {
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -28,13 +37,17 @@ const AuthForm = () => {
 
       if (type === 'LOGIN') {
         navigate('/');
+        toast({
+          title: "Success",
+          description: "Successfully logged in",
+        });
       } else {
         toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link.",
+          title: "Success",
+          description: "Please check your email to confirm your account",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,

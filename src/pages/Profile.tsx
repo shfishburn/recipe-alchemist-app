@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
@@ -9,7 +8,6 @@ import { UserCircle, LogOut } from 'lucide-react';
 import { ProfileBasicInfo } from '@/components/profile/ProfileBasicInfo';
 import { NutritionPreferences } from '@/components/profile/NutritionPreferences';
 import { DietaryPreferences } from '@/components/profile/DietaryPreferences';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -51,10 +49,9 @@ export interface NutritionPreferencesType {
 }
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [profileData, setProfileData] = useState<any>(null);
   const [nutritionPreferences, setNutritionPreferences] = useState<NutritionPreferencesType>({
     dailyCalories: 2000,
     macroSplit: {
@@ -90,7 +87,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut();
       navigate('/');
       toast({
         title: 'Success',
@@ -229,21 +226,22 @@ const Profile = () => {
             <Card className="w-full md:w-auto">
               <CardContent className="pt-6 pb-4 flex flex-col items-center">
                 <Avatar className="h-24 w-24 mb-4">
-                  {profileData?.avatar_url ? 
-                    <img src={profileData.avatar_url} alt="Profile" /> : 
+                  {profile?.avatar_url ? 
+                    <img src={profile.avatar_url} alt="Profile" /> : 
                     <UserCircle className="h-24 w-24 text-muted-foreground" />
                   }
                 </Avatar>
-                <h2 className="text-xl font-semibold">{profileData?.username || user?.email}</h2>
+                <h2 className="text-xl font-semibold">{profile?.username || user?.email}</h2>
                 <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
                 <Button 
                   variant="destructive" 
                   onClick={handleLogout}
                   className="w-full"
                   type="button"
+                  disabled={isLoading}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  {isLoading ? 'Logging out...' : 'Logout'}
                 </Button>
               </CardContent>
             </Card>

@@ -1,117 +1,106 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
-
-export interface NutritionPreferences {
-  dailyCalories: number;
-  macroSplit: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  dietaryRestrictions?: string[];
-  allergens?: string[];
-  healthGoal?: string;
-}
-
-export interface Profile {
-  id: string;
-  username: string | null;
-  avatar_url: string | null;
-  nutrition_preferences?: NutritionPreferences;
-  weight_goal_type?: string;
-  weight_goal_deficit?: number;
-}
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: Profile | null;
+  profile: any | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
   session: null, 
   user: null,
-  profile: null
+  profile: null,
+  loading: true,
+  signOut: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const transformProfile = (data: any): Profile | null => {
-    if (!data) return null;
-
-    // Transform nutrition preferences to ensure type safety
-    let nutrition_preferences: NutritionPreferences | undefined;
-    if (data.nutrition_preferences) {
-      const np = data.nutrition_preferences as any;
-      nutrition_preferences = {
-        dailyCalories: Number(np.dailyCalories) || 2000,
-        macroSplit: {
-          protein: Number(np.macroSplit?.protein) || 30,
-          carbs: Number(np.macroSplit?.carbs) || 40,
-          fat: Number(np.macroSplit?.fat) || 30,
-        },
-        dietaryRestrictions: Array.isArray(np.dietaryRestrictions) ? np.dietaryRestrictions : [],
-        allergens: Array.isArray(np.allergens) ? np.allergens : [],
-        healthGoal: typeof np.healthGoal === 'string' ? np.healthGoal : 'maintenance',
-      };
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
     }
-
-    return {
-      id: data.id,
-      username: data.username,
-      avatar_url: data.avatar_url,
-      nutrition_preferences,
-      weight_goal_type: data.weight_goal_type,
-      weight_goal_deficit: data.weight_goal_deficit,
-    };
   };
 
   useEffect(() => {
+    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentSession.user.id)
-            .single();
-          
-          setProfile(transformProfile(data));
+          // Use setTimeout to prevent supabase auth deadlock
+          setTimeout(async () => {
+            try {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentSession.user.id)
+                .single();
+              
+              setProfile(profileData);
+            } catch (error) {
+              console.error('Error fetching profile:', error);
+            }
+          }, 0);
         } else {
           setProfile(null);
         }
+
+        setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        const { data } = await supabase
+        supabase
           .from('profiles')
           .select('*')
           .eq('id', currentSession.user.id)
-          .single();
-        
-        setProfile(transformProfile(data));
+          .single()
+          .then(({ data: profileData }) => {
+            setProfile(profileData);
+          })
+          .catch((error) => {
+            console.error('Error fetching profile:', error);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ session, user, profile }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
