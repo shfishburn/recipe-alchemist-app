@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
@@ -17,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 const RecipeDetail = () => {
   const { id } = useParams();
   const { data: recipe, isLoading, error } = useRecipeDetail(id);
+  const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
@@ -29,15 +29,13 @@ const RecipeDetail = () => {
   }, [recipe]);
 
   const handleOpenChat = () => {
-    if (chatTriggerRef.current) {
-      chatTriggerRef.current.click();
-    }
+    setChatOpen(true);
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pb-32 sm:pb-40"> {/* Increased bottom padding */}
+      <main className="flex-1 pb-32 sm:pb-40">
         <div className="container-page py-4 sm:py-8">
           {isLoading ? (
             <div className="flex justify-center my-8 sm:my-12">
@@ -63,7 +61,6 @@ const RecipeDetail = () => {
               <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
                 <div className="md:col-span-1">
                   <RecipeIngredients recipe={recipe} />
-                  <RecipeChatDrawer recipe={recipe} triggerRef={chatTriggerRef} />
                 </div>
                 <div className="md:col-span-2">
                   <RecipeInstructions recipe={recipe} />
@@ -71,13 +68,20 @@ const RecipeDetail = () => {
               </div>
 
               {recipe.nutrition && (
-                <div className="mt-6 sm:mt-8 mb-24"> {/* Added bottom margin for action buttons */}
+                <div className="mt-6 sm:mt-8 mb-24">
                   <RecipeNutrition recipe={recipe} />
                 </div>
               )}
 
               {/* Action buttons */}
               <RecipeActions recipe={recipe} sticky={true} onOpenChat={handleOpenChat} />
+              
+              {/* Recipe Chat Drawer */}
+              <RecipeChatDrawer 
+                recipe={recipe} 
+                open={chatOpen} 
+                onOpenChange={setChatOpen}
+              />
             </div>
           ) : null}
         </div>
