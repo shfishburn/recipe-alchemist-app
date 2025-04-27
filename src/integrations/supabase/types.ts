@@ -65,6 +65,7 @@ export type Database = {
           applied: boolean | null
           changes_suggested: Json | null
           created_at: string
+          deleted_at: string | null
           id: string
           recipe_id: string
           user_message: string
@@ -74,6 +75,7 @@ export type Database = {
           applied?: boolean | null
           changes_suggested?: Json | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           recipe_id: string
           user_message: string
@@ -83,6 +85,7 @@ export type Database = {
           applied?: boolean | null
           changes_suggested?: Json | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           recipe_id?: string
           user_message?: string
@@ -102,6 +105,7 @@ export type Database = {
           cook_time_min: number | null
           created_at: string
           cuisine: string | null
+          deleted_at: string | null
           dietary: string | null
           flavor_tags: string[] | null
           id: string
@@ -123,6 +127,7 @@ export type Database = {
           cook_time_min?: number | null
           created_at?: string
           cuisine?: string | null
+          deleted_at?: string | null
           dietary?: string | null
           flavor_tags?: string[] | null
           id?: string
@@ -144,6 +149,7 @@ export type Database = {
           cook_time_min?: number | null
           created_at?: string
           cuisine?: string | null
+          deleted_at?: string | null
           dietary?: string | null
           flavor_tags?: string[] | null
           id?: string

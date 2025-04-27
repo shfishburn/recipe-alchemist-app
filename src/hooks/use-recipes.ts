@@ -15,6 +15,7 @@ export const useRecipes = () => {
       let supabaseQuery = supabase
         .from('recipes')
         .select('*')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (searchTerm) {

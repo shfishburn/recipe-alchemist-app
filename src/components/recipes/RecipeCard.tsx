@@ -2,8 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Heart } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import type { Database } from '@/integrations/supabase/types';
 
 type Recipe = Database['public']['Tables']['recipes']['Row'];
@@ -13,6 +14,8 @@ interface RecipeCardProps {
 }
 
 const RecipeCard = ({ recipe }: RecipeCardProps) => {
+  const { mutate: deleteRecipe } = useDeleteRecipe();
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <Link to={`/recipes/${recipe.id}`}>
@@ -56,9 +59,21 @@ const RecipeCard = ({ recipe }: RecipeCardProps) => {
           {recipe.cook_time_min && recipe.prep_time_min && ' • '}
           {recipe.cook_time_min && `${recipe.cook_time_min} min cook`}
         </div>
-        <Button variant="ghost" size="icon">
-          <Heart className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={(e) => {
+              e.preventDefault();
+              deleteRecipe(recipe.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Heart className="h-4 w-4" />
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
