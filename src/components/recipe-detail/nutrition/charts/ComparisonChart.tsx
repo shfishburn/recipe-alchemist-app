@@ -2,7 +2,17 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartContainer } from '@/components/ui/chart';
-import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, LabelList } from 'recharts';
+import { 
+  BarChart, 
+  CartesianGrid, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  Legend, 
+  Bar, 
+  LabelList,
+  Cell
+} from 'recharts';
 import { ChartTooltip } from './ChartTooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 

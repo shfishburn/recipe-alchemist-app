@@ -47,7 +47,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return Promise.resolve();
     } catch (error) {
       console.error('Error signing out:', error);
-      return Promise.reject(error);
+      // Changed from return Promise.reject(error) to throw
+      throw error;
     }
   };
 
