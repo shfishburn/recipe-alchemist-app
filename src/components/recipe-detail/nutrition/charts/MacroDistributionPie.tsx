@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
+import { ChartTooltip } from './ChartTooltip';
 
 interface MacroData {
   name: string;
@@ -42,7 +43,7 @@ export function MacroDistributionPie({ data, title }: MacroDistributionPieProps)
             ))}
           </Pie>
           <Legend />
-          <Tooltip />
+          <Tooltip content={(props: any) => <ChartTooltip {...props} />} />
         </PieChart>
       </ResponsiveContainer>
     </div>

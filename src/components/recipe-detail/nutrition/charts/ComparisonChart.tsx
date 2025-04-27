@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartContainer } from '@/components/ui/chart';
 import { BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
-import { ChartTooltip, ChartTooltipProps } from './ChartTooltip';
+import { ChartTooltip } from './ChartTooltip';
 
 interface ComparisonChartProps {
   compareData: Array<{
@@ -11,6 +11,7 @@ interface ComparisonChartProps {
     Recipe: number;
     Target: number;
     percentage: number;
+    fill: string;
   }>;
 }
 
@@ -30,7 +31,7 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" fontSize={12} />
             <YAxis fontSize={12} />
-            <Tooltip content={(props: any) => <ChartTooltip {...props as ChartTooltipProps} />} />
+            <Tooltip content={(props) => <ChartTooltip {...props} />} />
             <Legend />
             <Bar dataKey="Recipe" fill="#4f46e5" name="Recipe" />
             <Bar dataKey="Target" fill="#94a3b8" name="Daily Target" />
