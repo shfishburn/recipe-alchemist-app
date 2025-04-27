@@ -1,10 +1,9 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
-interface NutritionPreferences {
+export interface NutritionPreferences {
   dailyCalories: number;
   macroSplit: {
     protein: number;
@@ -16,7 +15,7 @@ interface NutritionPreferences {
   healthGoal?: string;
 }
 
-interface Profile {
+export interface Profile {
   id: string;
   username: string | null;
   avatar_url: string | null;
