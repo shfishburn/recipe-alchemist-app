@@ -24,7 +24,10 @@ export const useRecipes = () => {
 
         if (searchTerm && searchTerm.trim() !== '') {
           const trimmedTerm = searchTerm.trim();
-          supabaseQuery = supabaseQuery.or(`title.ilike.%${trimmedTerm}%,tagline.ilike.%${trimmedTerm}%,cuisine.ilike.%${trimmedTerm}%,dietary.ilike.%${trimmedTerm}%`);
+          // Fix: Use the proper format for multiple OR conditions in Supabase
+          supabaseQuery = supabaseQuery.or(
+            `title.ilike.%${trimmedTerm}%,tagline.ilike.%${trimmedTerm}%,cuisine.ilike.%${trimmedTerm}%,dietary.ilike.%${trimmedTerm}%`
+          );
         }
 
         const { data, error } = await supabaseQuery;

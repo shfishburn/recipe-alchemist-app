@@ -93,6 +93,7 @@ export function useNutritionChartData(recipeNutrition: RecipeNutrition, userPref
       calorieData,
       macrosData,
       targetMacrosData,
+      compareData: macroData, // Adding compareData to match what ComparisonChart expects
     };
   }, [recipeNutrition, userPreferences]);
 }

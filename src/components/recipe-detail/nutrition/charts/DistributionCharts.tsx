@@ -3,14 +3,15 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { MacroDistributionPie } from './MacroDistributionPie';
 
-interface MacroData {
+interface MacroChartData {
   name: string;
   value: number;
+  fill: string;
 }
 
 interface DistributionChartsProps {
-  recipeMacros: MacroData[];
-  targetMacros: MacroData[];
+  recipeMacros: MacroChartData[];
+  targetMacros: MacroChartData[];
   colors: string[];
 }
 

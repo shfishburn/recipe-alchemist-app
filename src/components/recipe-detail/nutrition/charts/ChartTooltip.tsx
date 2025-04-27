@@ -1,26 +1,41 @@
 
 import React from 'react';
 
-interface ChartTooltipProps {
-  active: boolean;
-  payload: any[];
-  label: string;
-  showPercentage: boolean;
+export interface ChartTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    name: string;
+    dataKey: string;
+    payload: any;
+  }>;
+  label?: string;
+  showPercentage?: boolean;
 }
 
-export function ChartTooltip({ active, payload, label, showPercentage }: ChartTooltipProps) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="p-2 bg-white border border-gray-200 rounded shadow-md text-xs">
-        <p className="font-medium text-gray-900">{label}</p>
-        <p className="text-gray-800">
-          Recipe: {showPercentage ? `${payload[0].payload.percentage}%` : `${payload[0].value}${label === 'Calories' ? ' kcal' : 'g'}`}
-        </p>
-        <p className="text-gray-600">
-          Daily Target: {showPercentage ? '100%' : `${payload[1].value}${label === 'Calories' ? ' kcal' : 'g'}`}
-        </p>
-      </div>
-    );
+export function ChartTooltip({ active, payload, label, showPercentage = false }: ChartTooltipProps) {
+  if (!active || !payload || payload.length === 0) {
+    return null;
   }
-  return null;
+
+  const data = payload[0].payload;
+  const value = payload[0].value;
+  const name = data.name;
+  
+  return (
+    <div className="bg-white p-2 border rounded shadow-sm text-xs">
+      <p className="font-medium">{name}</p>
+      <p>
+        {showPercentage
+          ? `${value}% of daily target`
+          : `${value} ${name === 'Calories' ? 'kcal' : 'g'}`
+        }
+      </p>
+      {!showPercentage && data.Target && (
+        <p className="text-muted-foreground">
+          Target: {data.Target} {name === 'Calories' ? 'kcal' : 'g'}
+        </p>
+      )}
+    </div>
+  );
 }
