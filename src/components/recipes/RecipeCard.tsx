@@ -16,16 +16,14 @@ interface RecipeCardProps {
 const RecipeCard = ({ recipe }: RecipeCardProps) => {
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(recipe.image_url);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   // Check if the image URL has expired tokens
   useEffect(() => {
     if (recipe.image_url) {
-      // If the URL contains expiration parameters, it might be an OpenAI URL with time-limited access
       const hasExpirationParams = recipe.image_url.includes("st=") && recipe.image_url.includes("se=");
       
       if (hasExpirationParams) {
-        // For expired OpenAI URLs, set image error to true to show fallback
         const currentTime = new Date().getTime();
         const expireTimeMatch = recipe.image_url.match(/se=(\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z)/);
         
@@ -33,13 +31,20 @@ const RecipeCard = ({ recipe }: RecipeCardProps) => {
           try {
             const expireTime = new Date(decodeURIComponent(expireTimeMatch[1])).getTime();
             if (currentTime > expireTime) {
+              console.log("Card image URL has expired, showing fallback");
               setImageError(true);
-              setImageUrl(null);
+            } else {
+              setImageUrl(recipe.image_url);
             }
           } catch (e) {
             console.error("Error parsing expiration time:", e);
+            setImageError(true);
           }
+        } else {
+          setImageUrl(recipe.image_url);
         }
+      } else {
+        setImageUrl(recipe.image_url);
       }
     }
   }, [recipe.image_url]);
@@ -67,6 +72,7 @@ const RecipeCard = ({ recipe }: RecipeCardProps) => {
             </div>
           )}
         </div>
+        
         <CardHeader>
           <h3 className="font-semibold text-lg leading-tight">{recipe.title}</h3>
           {recipe.tagline && (

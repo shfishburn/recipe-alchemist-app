@@ -21,7 +21,7 @@ interface RecipeImageProps {
 export function RecipeImage({ recipe }: RecipeImageProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(recipe.image_url);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -29,11 +29,10 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   // Check if the image URL has expired tokens
   useEffect(() => {
     if (recipe.image_url) {
-      // If the URL contains expiration parameters, it might be an OpenAI URL with time-limited access
       const hasExpirationParams = recipe.image_url.includes("st=") && recipe.image_url.includes("se=");
       
       if (hasExpirationParams) {
-        // For expired OpenAI URLs, set image error to true to show fallback
+        // For potentially expired OpenAI URLs, check the expiration
         const currentTime = new Date().getTime();
         const expireTimeMatch = recipe.image_url.match(/se=(\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z)/);
         
@@ -44,12 +43,27 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
               console.log("Image URL has expired, showing fallback");
               setImageError(true);
               setImageUrl(null);
+            } else {
+              setImageUrl(recipe.image_url);
+              setImageError(false);
             }
           } catch (e) {
             console.error("Error parsing expiration time:", e);
+            setImageError(true);
+            setImageUrl(null);
           }
+        } else {
+          setImageUrl(recipe.image_url);
+          setImageError(false);
         }
+      } else {
+        // Non-expiring URL
+        setImageUrl(recipe.image_url);
+        setImageError(false);
       }
+    } else {
+      setImageUrl(null);
+      setImageError(true);
     }
   }, [recipe.image_url]);
 
@@ -96,16 +110,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     }
   };
 
-  // Reset image error state if the recipe or image URL changes
-  React.useEffect(() => {
-    if (recipe.image_url) {
-      setImageError(false);
-      setImageUrl(recipe.image_url);
-    }
-  }, [recipe.id, recipe.image_url]);
-
   const handleImageError = () => {
-    console.error('Image failed to load:', imageUrl);
     setImageError(true);
     setImageUrl(null);
   };
@@ -131,7 +136,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
             <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
             <p className="text-muted-foreground">
-              {imageError ? "Image failed to load" : "No image available"}
+              {imageError ? "Image unavailable" : "No image available"}
             </p>
           </div>
         )}
@@ -160,7 +165,10 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
 
       {/* Full Image Dialog */}
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-        <DialogContent className="max-w-2xl" aria-describedby="image-dialog-description">
+        <DialogContent 
+          className="max-w-2xl" 
+          aria-describedby="image-dialog-description"
+        >
           <DialogHeader>
             <DialogTitle>{recipe.title}</DialogTitle>
             <DialogDescription id="image-dialog-description">
@@ -168,12 +176,14 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center">
-            <img
-              src={imageUrl || ''}
-              alt={recipe.title}
-              className="max-h-[70vh] object-contain rounded-md"
-              onError={handleImageError}
-            />
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt={recipe.title}
+                className="max-h-[70vh] object-contain rounded-md"
+                onError={handleImageError}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
