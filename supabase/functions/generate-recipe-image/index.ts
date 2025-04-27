@@ -41,51 +41,36 @@ serve(async (req) => {
 
     console.log('Generated image URL:', response.data[0].url);
 
-    // Upload the image to our storage bucket
-    const fileName = `recipe-${recipeId}-${Date.now()}.png`;
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // Download and upload to our bucket
-    const imageResponse = await fetch(response.data[0].url);
-    const imageBlob = await imageResponse.blob();
+    const imageUrl = response.data[0].url;
     
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('recipe-images')
-      .upload(fileName, imageBlob, {
-        contentType: 'image/png',
-        cacheControl: '3600',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error('Error uploading to storage:', uploadError);
-      throw uploadError;
+    if (!imageUrl) {
+      throw new Error('No image URL returned from OpenAI');
     }
 
-    // Get the public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('recipe-images')
-      .getPublicUrl(uploadData.path);
-
-    // Update the recipe with the new image URL
+    // We'll skip the storage upload for now and just return the OpenAI URL
+    // This will help us identify if the issue is with OpenAI or with Supabase storage
+    
+    // Update the recipe with the image URL if a recipe ID was provided
     if (recipeId) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
       const { error: updateError } = await supabase
         .from('recipes')
-        .update({ image_url: publicUrl })
+        .update({ image_url: imageUrl })
         .eq('id', recipeId);
 
       if (updateError) {
         console.error('Error updating recipe:', updateError);
-        throw updateError;
+      } else {
+        console.log('Successfully updated recipe with new image URL');
       }
-      console.log('Successfully updated recipe with new image URL');
     }
 
     return new Response(
-      JSON.stringify({ imageUrl: publicUrl }),
+      JSON.stringify({ imageUrl: imageUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
