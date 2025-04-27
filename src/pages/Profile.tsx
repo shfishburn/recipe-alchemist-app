@@ -48,7 +48,6 @@ const Profile = () => {
       if (user) {
         setIsLoading(true);
         try {
-          // Fetch profile data
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -61,8 +60,9 @@ const Profile = () => {
             setProfileData(profileData);
             
             // If nutrition preferences exist, load them
-            if (profileData.nutrition_preferences) {
-              setNutritionPreferences(profileData.nutrition_preferences);
+            const savedPreferences = profileData.nutrition_preferences as NutritionPreferencesType;
+            if (savedPreferences) {
+              setNutritionPreferences(savedPreferences);
             }
           }
         } catch (error) {

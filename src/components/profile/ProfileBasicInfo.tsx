@@ -66,7 +66,7 @@ export function ProfileBasicInfo({ user, profileData }: ProfileBasicInfoProps) {
                 {...register('username', { required: 'Username is required' })}
               />
               {errors.username && (
-                <p className="text-sm text-red-500">{errors.username.message}</p>
+                <p className="text-sm text-red-500">{errors.username.message?.toString()}</p>
               )}
             </div>
             

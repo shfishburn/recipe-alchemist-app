@@ -31,11 +31,11 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
             .from('profiles')
             .select('nutrition_preferences')
             .eq('id', user.id)
-            .maybeSingle();
+            .single();
             
           if (error) throw error;
           if (data?.nutrition_preferences) {
-            setUserPreferences(data.nutrition_preferences);
+            setUserPreferences(data.nutrition_preferences as NutritionPreferencesType);
           }
         } catch (error) {
           console.error('Error fetching nutrition preferences:', error);
