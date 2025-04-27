@@ -1,9 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Image, Link, Loader, Send } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MessageInput, AttachmentButton, SendButton } from "@chatscope/chat-ui-kit-react";
+import { Image, Link } from 'lucide-react';
 
 interface RecipeChatInputProps {
   message: string;
@@ -49,7 +47,7 @@ export function RecipeChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="sticky bottom-0 pt-4">
+    <form onSubmit={handleSubmit} className="pt-4">
       <div className="flex gap-2 items-end">
         <input
           type="file"
@@ -58,57 +56,39 @@ export function RecipeChatInput({
           accept="image/*"
           onChange={handleFileChange}
         />
-
+        
         <div className="flex-1 relative">
-          <Textarea
+          <MessageInput
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(val) => setMessage(val)}
             placeholder={
               isUrlMode
                 ? "Paste a recipe URL here..."
                 : "Ask about cooking science, techniques, or modifications..."
             }
-            className="flex-1 bg-white resize-none rounded-2xl pr-24"
-            rows={2}
+            attachButton={false}
+            sendButton={false}
+            className="rounded-2xl bg-white"
           />
           
           <div className="absolute right-2 bottom-2 flex gap-1">
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
+            <AttachmentButton
               onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                "h-8 w-8 rounded-full hover:bg-gray-100",
-                isUrlMode && "hidden"
-              )}
+              style={{ display: isUrlMode ? 'none' : 'flex' }}
             >
               <Image className="h-4 w-4" />
-            </Button>
+            </AttachmentButton>
             
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={toggleUrlMode}
-              className="h-8 w-8 rounded-full hover:bg-gray-100"
-            >
+            <AttachmentButton onClick={toggleUrlMode}>
               <Link className="h-4 w-4" />
-            </Button>
+            </AttachmentButton>
           </div>
         </div>
 
-        <Button 
-          type="submit" 
+        <SendButton 
+          onClick={handleSubmit}
           disabled={isSending || !message.trim()}
-          className="rounded-full h-10 w-10 p-0 bg-[#9b87f5] hover:bg-[#8b77e5]"
-        >
-          {isSending ? (
-            <Loader className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
+        />
       </div>
     </form>
   );

@@ -1,7 +1,9 @@
 
 import React from 'react';
+import { Message } from "@chatscope/chat-ui-kit-react";
 import { ChatResponse } from './ChatResponse';
 import type { ChatMessage as ChatMessageType } from '@/hooks/use-recipe-chat';
+import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 
 interface ChatMessageProps {
   chat: ChatMessageType;
@@ -25,30 +27,30 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
         parsedFollowUpQuestions = responseObj.followUpQuestions;
       }
     } catch (e) {
-      // If parsing fails, just continue with the empty array
       console.log("Could not parse follow-up questions from response");
     }
   }
     
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end mb-4">
-        <div className="max-w-[85%] bg-[#9b87f5] text-white px-4 py-2 rounded-[20px] rounded-tr-[5px]">
-          <p>{chat.user_message}</p>
-        </div>
-      </div>
+    <div className="mb-4">
+      <Message 
+        model={{
+          message: chat.user_message,
+          direction: "outgoing",
+          position: "single"
+        }}
+        className="mb-4"
+      />
 
-      <div className="flex">
-        <ChatResponse
-          response={chat.ai_response}
-          changesSuggested={chat.changes_suggested}
-          followUpQuestions={parsedFollowUpQuestions}
-          setMessage={setMessage}
-          onApplyChanges={() => applyChanges(chat)}
-          isApplying={isApplying}
-          applied={chat.applied}
-        />
-      </div>
+      <ChatResponse
+        response={chat.ai_response}
+        changesSuggested={chat.changes_suggested}
+        followUpQuestions={parsedFollowUpQuestions}
+        setMessage={setMessage}
+        onApplyChanges={() => applyChanges(chat)}
+        isApplying={isApplying}
+        applied={chat.applied}
+      />
     </div>
   );
 }
