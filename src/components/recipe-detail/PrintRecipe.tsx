@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -78,10 +77,7 @@ export function PrintRecipe({ recipe }: PrintRecipeProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-muted hover:text-foreground">
-          <Printer className="mr-2 h-4 w-4" />
-          Print recipe
-        </Button>
+        <button id="print-recipe-trigger" className="hidden">Print Recipe</button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>

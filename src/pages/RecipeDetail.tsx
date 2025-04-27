@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
@@ -11,11 +11,21 @@ import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstruction
 import { RecipeChat } from '@/components/recipe-chat/RecipeChat';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { CookingMode } from '@/components/recipe-detail/CookingMode';
+import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { Separator } from '@/components/ui/separator';
 
 const RecipeDetail = () => {
   const { id } = useParams();
   const { data: recipe, isLoading, error } = useRecipeDetail(id);
+  
+  useEffect(() => {
+    if (recipe) {
+      document.title = `${recipe.title} | Recipe`;
+    }
+    return () => {
+      document.title = 'Recipe App';
+    };
+  }, [recipe]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -35,15 +45,18 @@ const RecipeDetail = () => {
             <div className="max-w-4xl mx-auto">
               <RecipeHeader recipe={recipe} />
               
-              {/* Recipe actions */}
-              <div className="mb-8 flex flex-wrap gap-2">
+              {/* Hidden components for triggers */}
+              <div className="hidden">
                 <PrintRecipe recipe={recipe} />
                 <CookingMode recipe={recipe} />
               </div>
+              
+              {/* Visible recipe actions */}
+              <RecipeActions recipe={recipe} sticky={true} />
               <Separator className="mb-8" />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-1">
+                <div className="md:col-span-1 space-y-6">
                   <RecipeIngredients recipe={recipe} />
                   {recipe.nutrition && <RecipeNutrition recipe={recipe} />}
                 </div>

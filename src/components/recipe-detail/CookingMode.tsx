@@ -24,14 +24,12 @@ export function CookingMode({ recipe }: CookingModeProps) {
   const [timer, setTimer] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   
-  // Initialize completed steps array
   useEffect(() => {
     if (recipe.instructions) {
       setCompletedSteps(new Array(recipe.instructions.length).fill(false));
     }
   }, [recipe.instructions]);
   
-  // Timer countdown logic
   useEffect(() => {
     if (timeRemaining === null || timeRemaining <= 0) return;
     
@@ -42,14 +40,12 @@ export function CookingMode({ recipe }: CookingModeProps) {
     return () => clearInterval(interval);
   }, [timeRemaining]);
   
-  // Keep screen on during cooking mode
   useEffect(() => {
     let wakeLock: any = null;
     
     const requestWakeLock = async () => {
       if (isOpen && 'wakeLock' in navigator) {
         try {
-          // @ts-ignore - TypeScript doesn't have Wake Lock API types yet
           wakeLock = await navigator.wakeLock.request('screen');
         } catch (err) {
           console.error('Wake Lock error:', err);
@@ -66,7 +62,6 @@ export function CookingMode({ recipe }: CookingModeProps) {
     };
   }, [isOpen]);
   
-  // Format time for display (mm:ss)
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -115,10 +110,7 @@ export function CookingMode({ recipe }: CookingModeProps) {
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-muted hover:text-foreground">
-          <ChefHat className="mr-2 h-4 w-4" />
-          Cooking Mode
-        </Button>
+        <button id="cooking-mode-trigger" className="hidden">Cooking Mode</button>
       </DrawerTrigger>
       <DrawerContent className="h-[90vh] flex flex-col">
         <div className="container max-w-3xl mx-auto flex-1 overflow-y-auto">
@@ -155,7 +147,6 @@ export function CookingMode({ recipe }: CookingModeProps) {
             </div>
           </div>
           
-          {/* Ingredients section */}
           <div className="px-4 py-2">
             <h3 className="text-lg font-medium mb-2">Ingredients</h3>
             <div className="rounded-lg border p-4 bg-muted/30">
@@ -173,7 +164,6 @@ export function CookingMode({ recipe }: CookingModeProps) {
           
           <Separator className="my-6" />
           
-          {/* Current step */}
           <div className="px-4 py-8">
             <div className="mb-4">
               <div className="flex items-center justify-between">
@@ -199,7 +189,6 @@ export function CookingMode({ recipe }: CookingModeProps) {
               </p>
             </div>
             
-            {/* Timer section */}
             <div className="mt-8 flex flex-col items-center">
               {timeRemaining !== null ? (
                 <div className="p-6 rounded-lg border text-center w-full">
