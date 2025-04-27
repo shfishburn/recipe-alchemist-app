@@ -4,10 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2 } from 'lucide-react';
+import type { ChatMessage } from '@/types/chat';
 
 interface ChatResponseProps {
   response: string;
-  changesSuggested: any;
+  changesSuggested: ChatMessage['changes_suggested'];
   followUpQuestions?: string[];
   setMessage: (message: string) => void;
   onApplyChanges: () => void;
