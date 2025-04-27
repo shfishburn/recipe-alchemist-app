@@ -64,6 +64,8 @@ const RecipeDetail = () => {
                   <RecipeInstructions recipe={recipe} />
                 </div>
               </div>
+              
+              {/* Move Recipe Chat next to Instructions */}
               <div className="mt-8">
                 <h2 className="text-2xl font-semibold mb-4">Recipe Chat</h2>
                 <RecipeChat recipe={recipe} />
