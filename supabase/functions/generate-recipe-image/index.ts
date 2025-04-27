@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { uploadImageFromUrl } from '@/utils/image-storage';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,7 +23,6 @@ serve(async (req) => {
       apiKey: Deno.env.get('OPENAI_API_KEY'),
     });
 
-    // Create a descriptive prompt for the recipe
     let ingredientsDescription = Array.isArray(ingredients) 
       ? ingredients.map(ing => `${ing.qty} ${ing.unit} ${ing.item}`).join(', ')
       : "various ingredients";
@@ -42,16 +42,40 @@ serve(async (req) => {
 
     console.log('Generated image URL:', response.data[0].url);
 
+    // Upload the image to our storage bucket
+    const fileName = `recipe-${recipeId}-${Date.now()}.png`;
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Download and upload to our bucket
+    const imageResponse = await fetch(response.data[0].url);
+    const imageBlob = await imageResponse.blob();
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('recipe-images')
+      .upload(fileName, imageBlob, {
+        contentType: 'image/png',
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading to storage:', uploadError);
+      throw uploadError;
+    }
+
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('recipe-images')
+      .getPublicUrl(uploadData.path);
+
     // Update the recipe with the new image URL
     if (recipeId) {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
       const { error: updateError } = await supabase
         .from('recipes')
-        .update({ image_url: response.data[0].url })
+        .update({ image_url: publicUrl })
         .eq('id', recipeId);
 
       if (updateError) {
@@ -62,7 +86,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ imageUrl: response.data[0].url }),
+      JSON.stringify({ imageUrl: publicUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ImagePlus, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import type { Recipe } from '@/types/recipe';
+import { uploadImageFromUrl } from '@/utils/image-storage';
 import {
   Dialog,
   DialogContent,
@@ -23,49 +23,53 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [isMigratingImage, setIsMigratingImage] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Check if the image URL has expired tokens
   useEffect(() => {
-    if (recipe.image_url) {
-      const hasExpirationParams = recipe.image_url.includes("st=") && recipe.image_url.includes("se=");
-      
-      if (hasExpirationParams) {
-        // For potentially expired OpenAI URLs, check the expiration
-        const currentTime = new Date().getTime();
-        const expireTimeMatch = recipe.image_url.match(/se=(\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z)/);
+    const migrateImageIfNeeded = async () => {
+      if (!recipe.image_url) {
+        setImageError(true);
+        return;
+      }
+
+      // Check if the image is already in our storage (URL contains recipe-images)
+      if (recipe.image_url.includes('recipe-images')) {
+        setImageUrl(recipe.image_url);
+        return;
+      }
+
+      // If it's an OpenAI URL (temporary), migrate it
+      if (recipe.image_url.includes('openai') || recipe.image_url.includes('oai')) {
+        setIsMigratingImage(true);
+        const fileName = `recipe-${recipe.id}-${Date.now()}.png`;
+        const newUrl = await uploadImageFromUrl(recipe.image_url, fileName);
         
-        if (expireTimeMatch) {
-          try {
-            const expireTime = new Date(decodeURIComponent(expireTimeMatch[1])).getTime();
-            if (currentTime > expireTime) {
-              console.log("Image URL has expired, showing fallback");
-              setImageError(true);
-              setImageUrl(null);
-            } else {
-              setImageUrl(recipe.image_url);
-              setImageError(false);
-            }
-          } catch (e) {
-            console.error("Error parsing expiration time:", e);
+        if (newUrl) {
+          // Update the recipe with the new URL
+          const { error: updateError } = await supabase
+            .from('recipes')
+            .update({ image_url: newUrl })
+            .eq('id', recipe.id);
+
+          if (!updateError) {
+            setImageUrl(newUrl);
+          } else {
+            console.error('Error updating recipe image URL:', updateError);
             setImageError(true);
-            setImageUrl(null);
           }
         } else {
-          setImageUrl(recipe.image_url);
-          setImageError(false);
+          setImageError(true);
         }
+        setIsMigratingImage(false);
       } else {
-        // Non-expiring URL
         setImageUrl(recipe.image_url);
-        setImageError(false);
       }
-    } else {
-      setImageUrl(null);
-      setImageError(true);
-    }
-  }, [recipe.image_url]);
+    };
+
+    migrateImageIfNeeded();
+  }, [recipe.image_url, recipe.id]);
 
   const generateNewImage = async () => {
     if (!user) {
@@ -124,7 +128,12 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   return (
     <div className="relative mb-6">
       <div className="rounded-lg overflow-hidden">
-        {imageUrl && !imageError ? (
+        {isMigratingImage ? (
+          <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+            <p className="text-sm text-muted-foreground">Migrating image...</p>
+          </div>
+        ) : imageUrl && !imageError ? (
           <img
             src={imageUrl}
             alt={recipe.title}
