@@ -1,130 +1,30 @@
 
-import React, { useState, useEffect } from 'react';
-import { ImagePlus, Loader2, Image as ImageIcon } from 'lucide-react';
+import { useState } from 'react';
+import { ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
 import type { Recipe } from '@/types/recipe';
-import { uploadImageFromUrl } from '@/utils/image-storage';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { useRecipeImage } from '@/hooks/use-recipe-image';
+import { LoadingState } from './recipe-image/LoadingState';
+import { PlaceholderImage } from './recipe-image/PlaceholderImage';
+import { ImageDialog } from './recipe-image/ImageDialog';
 
 interface RecipeImageProps {
   recipe: Recipe;
 }
 
 export function RecipeImage({ recipe }: RecipeImageProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
-  const [isMigratingImage, setIsMigratingImage] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    const migrateImageIfNeeded = async () => {
-      if (!recipe.image_url) {
-        setImageError(true);
-        return;
-      }
-
-      // Check if the image is already in our storage (URL contains recipe-images)
-      if (recipe.image_url.includes('recipe-images')) {
-        setImageUrl(recipe.image_url);
-        return;
-      }
-
-      // If it's an OpenAI URL (temporary) or any external URL, migrate it
-      if (recipe.image_url.includes('openai') || 
-          recipe.image_url.includes('oai') || 
-          recipe.image_url.startsWith('http')) {
-        setIsMigratingImage(true);
-        try {
-          const fileName = `recipe-${recipe.id}-${Date.now()}.png`;
-          const newUrl = await uploadImageFromUrl(recipe.image_url, fileName);
-          
-          if (newUrl) {
-            // Update the recipe with the new URL
-            const { error: updateError } = await supabase
-              .from('recipes')
-              .update({ image_url: newUrl })
-              .eq('id', recipe.id);
-
-            if (!updateError) {
-              setImageUrl(newUrl);
-            } else {
-              console.error('Error updating recipe image URL:', updateError);
-              setImageError(true);
-            }
-          } else {
-            setImageError(true);
-          }
-        } catch (error) {
-          console.error('Error migrating image:', error);
-          setImageError(true);
-        }
-        setIsMigratingImage(false);
-      } else {
-        setImageUrl(recipe.image_url);
-      }
-    };
-
-    migrateImageIfNeeded();
-  }, [recipe.image_url, recipe.id]);
-
-  const generateNewImage = async () => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to generate a new image",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      setIsGenerating(true);
-      
-      const response = await supabase.functions.invoke('generate-recipe-image', {
-        body: {
-          title: recipe.title,
-          ingredients: recipe.ingredients,
-          instructions: recipe.instructions,
-          recipeId: recipe.id // Pass the recipe ID
-        },
-      });
-
-      if (response.error) throw response.error;
-
-      toast({
-        title: "Success",
-        description: "Generated a new image for your recipe",
-      });
-
-      // Reload the page to show the new image
-      window.location.reload();
-    } catch (error) {
-      console.error('Error generating image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate new image. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const {
+    isGenerating,
+    imageError,
+    imageUrl,
+    isMigratingImage,
+    generateNewImage,
+    setImageError
+  } = useRecipeImage(recipe);
 
   const handleImageError = () => {
     setImageError(true);
-    setImageUrl(null);
   };
 
   const openFullImage = () => {
@@ -137,10 +37,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     <div className="relative mb-6">
       <div className="rounded-lg overflow-hidden">
         {isMigratingImage ? (
-          <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-            <p className="text-sm text-muted-foreground">Processing image...</p>
-          </div>
+          <LoadingState />
         ) : imageUrl && !imageError ? (
           <img
             src={imageUrl}
@@ -150,12 +47,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
             onClick={openFullImage}
           />
         ) : (
-          <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
-            <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">
-              {imageError ? "Image unavailable" : "No image available"}
-            </p>
-          </div>
+          <PlaceholderImage hasError={imageError} />
         )}
       </div>
       <div className="mt-2 flex justify-end">
@@ -180,30 +72,13 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         </Button>
       </div>
 
-      {/* Full Image Dialog */}
-      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-        <DialogContent 
-          className="max-w-2xl" 
-          aria-describedby="image-dialog-description"
-        >
-          <DialogHeader>
-            <DialogTitle>{recipe.title}</DialogTitle>
-            <DialogDescription id="image-dialog-description">
-              Full image view
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center">
-            {imageUrl && (
-              <img
-                src={imageUrl}
-                alt={recipe.title}
-                className="max-h-[70vh] object-contain rounded-md"
-                onError={handleImageError}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ImageDialog
+        open={showImageDialog}
+        onOpenChange={setShowImageDialog}
+        imageUrl={imageUrl || ''}
+        title={recipe.title}
+        onError={handleImageError}
+      />
     </div>
   );
 }
