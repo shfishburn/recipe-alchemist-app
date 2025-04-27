@@ -3,6 +3,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Plus, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface IngredientsSectionProps {
   ingredients: string[];
@@ -26,7 +27,16 @@ const IngredientsSection = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4 text-amber-600" />
-          <Label htmlFor="ingredients" className="text-base">Main Ingredients</Label>
+          <Label htmlFor="ingredients" className="text-base">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>Main Ingredients</TooltipTrigger>
+                <TooltipContent className="max-w-[200px] text-wrap">
+                  Add core ingredients that define the essence of your recipe
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Label>
         </div>
         <div className="flex flex-wrap gap-2 mb-2">
           {ingredients.map((ingredient, index) => (
@@ -54,7 +64,7 @@ const IngredientsSection = ({
           className="border-amber-200 focus-visible:ring-amber-300"
         />
         <div className="flex justify-between items-center">
-          <p className="text-xs text-muted-foreground">Press Enter to add each ingredient</p>
+          <p className="text-xs text-muted-foreground truncate max-w-[200px]">Press Enter to add each ingredient</p>
           <p className="text-xs text-amber-600">{ingredients.length} added</p>
         </div>
       </div>
@@ -63,3 +73,4 @@ const IngredientsSection = ({
 };
 
 export default IngredientsSection;
+
