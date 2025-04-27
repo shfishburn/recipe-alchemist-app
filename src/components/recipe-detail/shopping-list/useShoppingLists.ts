@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { ShoppingList } from '@/types/shopping-list';
+import type { ShoppingList, ShoppingListSummary } from '@/types/shopping-list';
 
 export function useShoppingLists() {
-  const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
+  const [shoppingLists, setShoppingLists] = useState<ShoppingListSummary[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const { toast } = useToast();
 

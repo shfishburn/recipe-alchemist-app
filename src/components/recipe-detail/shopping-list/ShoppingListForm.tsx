@@ -3,10 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShoppingBag, Loader2, Plus } from 'lucide-react';
-import type { ShoppingList } from '@/types/shopping-list';
+import type { ShoppingListSummary } from '@/types/shopping-list';
 
 interface ShoppingListFormProps {
-  shoppingLists: ShoppingList[];
+  shoppingLists: ShoppingListSummary[];
   newListName: string;
   onNewListNameChange: (value: string) => void;
   selectedListId: string | null;

@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard';
 import { ShoppingListDetail } from '@/components/shopping-list/ShoppingListDetail';
 import type { ShoppingList } from '@/types/shopping-list';
+import type { Json } from '@/integrations/supabase/types';
 
 const ShoppingLists = () => {
   const { session } = useAuth();
@@ -18,13 +19,13 @@ const ShoppingLists = () => {
   const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
 
   const { 
-    data: shoppingLists, 
+    data: shoppingLists = [], 
     isLoading, 
     refetch 
-  } = useQuery<ShoppingList[]>({
+  } = useQuery({
     queryKey: ['shopping-lists'],
     queryFn: async () => {
-      if (!session) return [];
+      if (!session) return [] as ShoppingList[];
       
       const { data, error } = await supabase
         .from('shopping_lists')
@@ -37,10 +38,14 @@ const ShoppingLists = () => {
           description: 'Failed to fetch shopping lists',
           variant: 'destructive'
         });
-        return [];
+        return [] as ShoppingList[];
       }
       
-      return data;
+      // Transform the data to match the ShoppingList type
+      return (data || []).map(list => ({
+        ...list,
+        items: Array.isArray(list.items) ? list.items : []
+      })) as ShoppingList[];
     },
     enabled: !!session
   });
@@ -118,7 +123,7 @@ const ShoppingLists = () => {
 
                 {isLoading ? (
                   <div>Loading...</div>
-                ) : !shoppingLists?.length ? (
+                ) : !shoppingLists.length ? (
                   <p className="text-muted-foreground">No shopping lists yet</p>
                 ) : (
                   <div className="grid md:grid-cols-2 gap-4">

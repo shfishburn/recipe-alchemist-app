@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import type { Json } from '@/integrations/supabase/types';
+import type { ShoppingListItem } from '@/types/shopping-list';
 
 export function useShoppingListActions(recipe: Recipe) {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +19,7 @@ export function useShoppingListActions(recipe: Recipe) {
         throw new Error("User not authenticated");
       }
       
-      const ingredientItems = recipe.ingredients.map(ing => ({
+      const ingredientItems: ShoppingListItem[] = recipe.ingredients.map(ing => ({
         name: ing.item,
         quantity: ing.qty,
         unit: ing.unit,
@@ -71,7 +72,7 @@ export function useShoppingListActions(recipe: Recipe) {
       if (fetchError) throw fetchError;
       
       // Prepare new items for adding
-      const newItems = recipe.ingredients.map(ing => ({
+      const newItems: ShoppingListItem[] = recipe.ingredients.map(ing => ({
         name: ing.item,
         quantity: ing.qty,
         unit: ing.unit,
@@ -80,13 +81,13 @@ export function useShoppingListActions(recipe: Recipe) {
       }));
       
       // Combine existing and new items
-      const currentItems = currentList.items as any[] || [];
+      const currentItems = (currentList.items as unknown as ShoppingListItem[]) || [];
       const combinedItems = [...currentItems, ...newItems];
       
       // Update the shopping list
       const { error: updateError } = await supabase
         .from('shopping_lists')
-        .update({ items: combinedItems })
+        .update({ items: combinedItems as unknown as Json })
         .eq('id', selectedListId);
       
       if (updateError) throw updateError;
