@@ -35,19 +35,36 @@ export const useRecipeChat = (recipe: Recipe) => {
         console.log(`No existing chat history for recipe ${recipe.id}`);
       }
       
-      // Process the chat messages to parse follow_up_questions if stored as string
+      // Process the chat messages to handle follow_up_questions
       return data.map(chat => {
-        // Parse follow_up_questions if it's a string
-        if (chat.follow_up_questions && typeof chat.follow_up_questions === 'string') {
+        const chatMessage: ChatMessage = {
+          id: chat.id,
+          user_message: chat.user_message,
+          ai_response: chat.ai_response,
+          changes_suggested: chat.changes_suggested,
+          applied: chat.applied || false,
+          created_at: chat.created_at
+        };
+
+        // Parse follow_up_questions if it exists and is a string
+        if (chat.changes_suggested && 'follow_up_questions' in chat) {
           try {
-            chat.follow_up_questions = JSON.parse(chat.follow_up_questions);
+            // If it's a string, parse it; if it's already an array, use it directly
+            const questions = typeof chat.follow_up_questions === 'string' 
+              ? JSON.parse(chat.follow_up_questions) 
+              : chat.follow_up_questions;
+            
+            chatMessage.follow_up_questions = Array.isArray(questions) ? questions : [];
           } catch (e) {
             console.error("Error parsing follow_up_questions:", e);
-            chat.follow_up_questions = [];
+            chatMessage.follow_up_questions = [];
           }
+        } else {
+          chatMessage.follow_up_questions = [];
         }
-        return chat;
-      }) as ChatMessage[];
+        
+        return chatMessage;
+      });
     },
   });
 
