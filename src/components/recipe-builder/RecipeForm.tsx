@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChevronDown, ChevronUp, Eye } from 'lucide-react';
@@ -76,6 +75,17 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate title is not empty
+    if (!formData.title.trim()) {
+      toast({
+        title: "Missing Recipe Name",
+        description: "Please enter a name for your recipe.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     onSubmit(formData);
   };
 
@@ -101,6 +111,8 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
           onIngredientChange={setIngredientInput}
           onIngredientKeyDown={handleAddIngredient}
           onRemoveIngredient={handleRemoveIngredient}
+          servings={formData.servings}
+          onServingsChange={(value) => setFormData((prev) => ({ ...prev, servings: value }))}
         />
       </div>
       

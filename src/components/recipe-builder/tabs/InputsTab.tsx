@@ -62,7 +62,7 @@ const InputsTab = ({
             Recipe
           </Label>
           <span className="text-xs text-muted-foreground bg-accent/30 px-2 py-0.5 rounded-full">
-            Optional
+            Required
           </span>
         </div>
 
@@ -73,8 +73,9 @@ const InputsTab = ({
                 <Input
                   id="title"
                   name="title"
+                  required
                   className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-                  placeholder="What would you like to cook? (e.g., 'Pasta', 'Chicken dish')"
+                  placeholder="Enter recipe name (e.g., 'Pasta', 'Chicken dish')"
                   value={title}
                   onChange={onTitleChange}
                   aria-label="Recipe name input"
@@ -83,15 +84,12 @@ const InputsTab = ({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Enter your desired dish or let AI suggest a recipe name</p>
+              <p>Enter a name for your recipe</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Let AI suggest a recipe or enter your own idea
-          </p>
           <div className="flex flex-wrap gap-2">
             {commonRecipes.map((recipe) => (
               <button
