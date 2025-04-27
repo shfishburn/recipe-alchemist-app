@@ -41,7 +41,7 @@ export const useRecipeChat = (recipe: Recipe) => {
           id: chat.id,
           user_message: chat.user_message,
           ai_response: chat.ai_response,
-          changes_suggested: chat.changes_suggested,
+          changes_suggested: chat.changes_suggested as ChatMessage['changes_suggested'],
           applied: chat.applied || false,
           created_at: chat.created_at
         };
