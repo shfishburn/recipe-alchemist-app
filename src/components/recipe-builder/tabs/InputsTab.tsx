@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -84,7 +83,7 @@ const InputsTab = ({
                   name="title"
                   required
                   className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-                  placeholder="Enter recipe name (e.g., 'Pasta', 'Chicken dish')"
+                  placeholder="Enter recipe name"
                   value={title}
                   onChange={onTitleChange}
                   aria-label="Recipe name input"
@@ -101,21 +100,6 @@ const InputsTab = ({
         <p className="text-xs text-muted-foreground">
           Your recipe name helps AI understand the dish you're creating
         </p>
-
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            {commonRecipes.map((recipe) => (
-              <button
-                key={recipe}
-                type="button"
-                onClick={() => onTitleChange({ target: { value: recipe } } as React.ChangeEvent<HTMLInputElement>)}
-                className="text-sm px-3 py-1 rounded-full bg-accent/50 hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-colors"
-              >
-                {recipe}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Basics Section */}
@@ -231,4 +215,3 @@ const InputsTab = ({
 };
 
 export default InputsTab;
-
