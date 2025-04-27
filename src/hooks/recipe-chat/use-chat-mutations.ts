@@ -17,6 +17,8 @@ export const useChatMutations = (recipe: Recipe) => {
       sourceUrl?: string;
       sourceImage?: string;
     }) => {
+      console.log("Starting recipe chat mutation:", { message, sourceType });
+      
       toast({
         title: "Processing your request",
         description: sourceType === 'manual' 
@@ -24,6 +26,7 @@ export const useChatMutations = (recipe: Recipe) => {
           : "Extracting recipe information...",
       });
       
+      console.log("Invoking recipe-chat edge function");
       const response = await supabase.functions.invoke('recipe-chat', {
         body: { 
           recipe, 
@@ -34,8 +37,25 @@ export const useChatMutations = (recipe: Recipe) => {
         }
       });
 
-      if (response.error) throw response.error;
+      if (response.error) {
+        console.error("Edge function returned an error:", response.error);
+        throw response.error;
+      }
       
+      console.log("Edge function response:", response.data);
+      
+      if (!response.data) {
+        console.error("Edge function returned no data");
+        throw new Error("No data returned from edge function");
+      }
+      
+      if (response.data.error) {
+        console.error("Edge function response contains error:", response.data.error);
+        throw new Error(response.data.error);
+      }
+
+      // Insert the chat message into the database
+      console.log("Saving chat message to database");
       const { data, error } = await supabase
         .from('recipe_chats')
         .insert({
@@ -51,10 +71,16 @@ export const useChatMutations = (recipe: Recipe) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving chat to database:", error);
+        throw error;
+      }
+      
+      console.log("Chat successfully saved to database with ID:", data.id);
       return data;
     },
     onSuccess: () => {
+      console.log("Recipe chat mutation completed successfully");
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       toast({
         title: "Response received",
@@ -62,9 +88,10 @@ export const useChatMutations = (recipe: Recipe) => {
       });
     },
     onError: (error) => {
+      console.error("Recipe chat mutation error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to get AI response",
         variant: "destructive",
       });
     },

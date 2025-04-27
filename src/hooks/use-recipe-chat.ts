@@ -17,13 +17,24 @@ export const useRecipeChat = (recipe: Recipe) => {
   const { data: chatHistory = [], isLoading: isLoadingHistory } = useQuery({
     queryKey: ['recipe-chats', recipe.id],
     queryFn: async () => {
+      console.log(`Fetching chat history for recipe ${recipe.id}`);
       const { data, error } = await supabase
         .from('recipe_chats')
         .select('*')
         .eq('recipe_id', recipe.id)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching chat history:", error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        console.log(`Found ${data.length} chat messages for recipe ${recipe.id}`);
+      } else {
+        console.log(`No existing chat history for recipe ${recipe.id}`);
+      }
+      
       return data as ChatMessage[];
     },
   });
@@ -33,6 +44,7 @@ export const useRecipeChat = (recipe: Recipe) => {
 
   const uploadRecipeImage = async (file: File) => {
     try {
+      console.log("Processing image upload");
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64Image = e.target?.result as string;
@@ -44,6 +56,7 @@ export const useRecipeChat = (recipe: Recipe) => {
       };
       reader.readAsDataURL(file);
     } catch (error) {
+      console.error("Image upload error:", error);
       toast({
         title: "Error",
         description: "Failed to process image",
@@ -53,6 +66,7 @@ export const useRecipeChat = (recipe: Recipe) => {
   };
 
   const submitRecipeUrl = (url: string) => {
+    console.log("Processing URL submission:", url);
     mutation.mutate({
       message: "Please analyze this recipe URL",
       sourceType: 'url',
@@ -60,12 +74,17 @@ export const useRecipeChat = (recipe: Recipe) => {
     });
   };
 
+  const sendMessage = () => {
+    console.log("Sending chat message:", message.substring(0, 30) + (message.length > 30 ? '...' : ''));
+    mutation.mutate({ message });
+  };
+
   return {
     message,
     setMessage,
     chatHistory,
     isLoadingHistory,
-    sendMessage: () => mutation.mutate({ message }),
+    sendMessage,
     isSending: mutation.isPending,
     applyChanges,
     isApplying: applyChanges.isPending,

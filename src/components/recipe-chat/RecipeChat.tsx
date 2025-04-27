@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -22,12 +22,34 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     submitRecipeUrl,
   } = useRecipeChat(recipe);
 
+  // Debug logging to help trace any issues with chat responses
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      console.log("Chat history loaded:", 
+        chatHistory.map(chat => ({
+          id: chat.id,
+          message: chat.user_message.substring(0, 20) + '...',
+          hasResponse: !!chat.ai_response,
+          responsePreview: chat.ai_response ? chat.ai_response.substring(0, 20) + '...' : 'No response',
+          hasSuggestions: !!chat.changes_suggested
+        }))
+      );
+    }
+  }, [chatHistory]);
+
   const handleUpload = async (file: File) => {
     uploadRecipeImage(file);
   };
 
   const handleUrlSubmit = (url: string) => {
     submitRecipeUrl(url);
+  };
+
+  const handleSubmit = () => {
+    if (message.trim()) {
+      console.log("Sending message:", message);
+      sendMessage();
+    }
   };
 
   if (isLoadingHistory) {
@@ -70,7 +92,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
           <RecipeChatInput
             message={message}
             setMessage={setMessage}
-            onSubmit={sendMessage}
+            onSubmit={handleSubmit}
             isSending={isSending}
             onUpload={handleUpload}
             onUrlSubmit={handleUrlSubmit}
