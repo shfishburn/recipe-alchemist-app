@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -20,7 +21,7 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
-    let prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements.`;
+    let prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements. Provide your response as JSON formatted data.`;
 
     // Add source-specific context to the prompt
     if (sourceType === 'image') {
@@ -43,7 +44,22 @@ ${recipe.ingredients.map(i => `- ${i.qty} ${i.unit} ${i.item}`).join('\n')}
 Instructions:
 ${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
-User request: ${userMessage}`;
+User request: ${userMessage}
+
+Please format your response as a JSON object with the following structure:
+{
+  "textResponse": "Your detailed analysis here",
+  "changes": {
+    "title": "Updated title if applicable",
+    "ingredients": [...],
+    "instructions": [...],
+    "equipmentNeeded": [...]
+  },
+  "nutrition": {},
+  "health_insights": [],
+  "scientific_principles": [],
+  "follow_up_questions": []
+}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
