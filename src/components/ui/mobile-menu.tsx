@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -20,7 +19,6 @@ export function MobileMenu() {
   const navigationLinks = [
     { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
     { name: 'Create Recipe', path: '/build', requiresAuth: true },
-    { name: 'Favorites', path: '/favorites', requiresAuth: true },
     { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
     { name: 'Profile', path: '/profile', requiresAuth: true },
   ];
@@ -62,7 +60,7 @@ export function MobileMenu() {
         <div className="flex flex-col gap-2">
           {session ? (
             <Button variant="outline" asChild className="w-full">
-              <Link to="/profile">My Account</Link>
+              <Link to="/profile">Profile</Link>
             </Button>
           ) : (
             <>

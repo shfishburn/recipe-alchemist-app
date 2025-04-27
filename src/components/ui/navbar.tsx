@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,6 @@ export function Navbar({ className }: { className?: string }) {
   const navigationLinks = [
     { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
     { name: 'Create Recipe', path: '/build', requiresAuth: true },
-    { name: 'Favorites', path: '/favorites', requiresAuth: true },
     { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
     { name: 'Profile', path: '/profile', requiresAuth: true },
   ];
@@ -49,11 +47,11 @@ export function Navbar({ className }: { className?: string }) {
           ))}
         </nav>
 
-        {/* Auth Buttons - Hidden on Mobile */}
+        {/* Auth Button - Hidden on Mobile */}
         <div className="hidden md:flex items-center space-x-3">
           {session ? (
             <Button variant="outline" size="sm" asChild>
-              <Link to="/profile">My Account</Link>
+              <Link to="/profile">Profile</Link>
             </Button>
           ) : (
             <>
