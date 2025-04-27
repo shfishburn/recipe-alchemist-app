@@ -24,7 +24,7 @@ const RecipeNameInput = ({ title, onTitleChange }: RecipeNameInputProps) => {
           htmlFor="title" 
           className="text-lg font-medium"
         >
-          Recipe
+          Recipe Name
         </Label>
         <span className="text-xs text-muted-foreground bg-accent/30 px-2 py-0.5 rounded-full">
           Required
@@ -39,8 +39,8 @@ const RecipeNameInput = ({ title, onTitleChange }: RecipeNameInputProps) => {
                 id="title"
                 name="title"
                 required
-                className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-                placeholder="Enter recipe name (e.g., 'Pasta', 'Chicken dish')"
+                className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md truncate"
+                placeholder="Enter recipe name"
                 value={title}
                 onChange={onTitleChange}
                 aria-label="Recipe name input"
@@ -48,14 +48,14 @@ const RecipeNameInput = ({ title, onTitleChange }: RecipeNameInputProps) => {
               <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
             </div>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>Enter a name for your recipe</p>
+          <TooltipContent side="top" className="max-w-[200px]">
+            <p>Give your recipe a clear, descriptive name</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      <p className="text-xs text-muted-foreground">
-        Your recipe name helps AI understand the dish you're creating
+      <p className="text-xs text-muted-foreground max-w-md">
+        A clear name helps AI understand what you want to create
       </p>
     </div>
   );
