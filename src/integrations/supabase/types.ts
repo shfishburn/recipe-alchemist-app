@@ -120,6 +120,7 @@ export type Database = {
       }
       recipes: {
         Row: {
+          chef_notes: string | null
           cook_time_min: number | null
           created_at: string
           cuisine: string | null
@@ -134,6 +135,7 @@ export type Database = {
           prep_time_min: number | null
           previous_version_id: string | null
           reasoning: string | null
+          science_notes: Json | null
           servings: number
           tagline: string | null
           title: string
@@ -142,6 +144,7 @@ export type Database = {
           version_number: number
         }
         Insert: {
+          chef_notes?: string | null
           cook_time_min?: number | null
           created_at?: string
           cuisine?: string | null
@@ -156,6 +159,7 @@ export type Database = {
           prep_time_min?: number | null
           previous_version_id?: string | null
           reasoning?: string | null
+          science_notes?: Json | null
           servings: number
           tagline?: string | null
           title: string
@@ -164,6 +168,7 @@ export type Database = {
           version_number?: number
         }
         Update: {
+          chef_notes?: string | null
           cook_time_min?: number | null
           created_at?: string
           cuisine?: string | null
@@ -178,6 +183,7 @@ export type Database = {
           prep_time_min?: number | null
           previous_version_id?: string | null
           reasoning?: string | null
+          science_notes?: Json | null
           servings?: number
           tagline?: string | null
           title?: string

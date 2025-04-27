@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -13,6 +12,8 @@ import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
+import { ScienceNotes } from "@/components/recipe-detail/notes/ScienceNotes";
+import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -33,6 +34,12 @@ const RecipeDetail = () => {
     setChatOpen(true);
   };
 
+  const handleNotesUpdate = (notes: string) => {
+    if (recipe) {
+      recipe.chef_notes = notes;
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -51,7 +58,6 @@ const RecipeDetail = () => {
             <div className="max-w-4xl mx-auto">
               <RecipeHeader recipe={recipe} hideReasoning={true} />
               
-              {/* Hidden components for triggers */}
               <div className="hidden">
                 <PrintRecipe recipe={recipe} />
                 <CookingMode recipe={recipe} />
@@ -68,16 +74,19 @@ const RecipeDetail = () => {
                 </div>
               </div>
 
+              <div className="mt-6 sm:mt-8 space-y-6">
+                <ScienceNotes recipe={recipe} />
+                <ChefNotes recipe={recipe} onUpdate={handleNotesUpdate} />
+              </div>
+
               {recipe.nutrition && (
                 <div className="mt-6 sm:mt-8 mb-24">
                   <RecipeNutrition recipe={recipe} />
                 </div>
               )}
 
-              {/* Action buttons */}
               <RecipeActions recipe={recipe} sticky={true} onOpenChat={handleOpenChat} />
               
-              {/* Recipe Chat Drawer */}
               <RecipeChatDrawer 
                 recipe={recipe} 
                 open={chatOpen} 
