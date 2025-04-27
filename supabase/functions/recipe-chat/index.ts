@@ -27,6 +27,9 @@ Current recipe:
 - Title: ${recipe.title}
 - Servings: ${recipe.servings}
 
+Current Nutrition (per serving):
+${Object.entries(recipe.nutrition || {}).map(([key, value]) => `- ${key.replace(/_/g, ' ')}: ${value}`).join('\n')}
+
 Ingredients:
 ${recipe.ingredients.map(i => `- ${i.qty} ${i.unit} ${i.item}`).join('\n')}
 
@@ -35,14 +38,26 @@ ${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
 User request: ${userMessage}
 
-Provide your response in two parts:
-1. A detailed, professionally formatted response with:
-   - Clear bullet points
-   - Professional culinary insights
-   - Explanation of suggested changes
-2. A precise JSON object with potential recipe modifications
+Provide your response with the following structure:
+1. A clear summary of suggested changes
+2. A detailed nutritional analysis comparing current vs proposed changes
+3. Culinary insights and techniques
+4. Potential health benefits or considerations
 
-Include 2-3 engaging follow-up questions to continue the culinary discussion.`;
+Format your response in a well-structured format using:
+• Clear bullet points for lists
+• Bold text for important points
+• Separate sections with clear headings
+
+Include 2-3 engaging follow-up questions focused on:
+• Health and nutrition goals
+• Culinary preferences
+• Dietary restrictions
+
+Also provide a structured JSON object with:
+1. Any recipe modifications
+2. Updated nutritional information
+3. Key health insights`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -60,7 +75,11 @@ Include 2-3 engaging follow-up questions to continue the culinary discussion.`;
     try {
       const parsedContent = JSON.parse(content);
       responseText = parsedContent.textResponse || content;
-      changes = parsedContent.changes;
+      changes = {
+        ...parsedContent.changes,
+        nutrition: parsedContent.nutrition || {},
+        health_insights: parsedContent.health_insights || []
+      };
     } catch (e) {
       console.error("Error parsing AI response:", e);
       responseText = content;
@@ -70,9 +89,9 @@ Include 2-3 engaging follow-up questions to continue the culinary discussion.`;
       response: responseText,
       changes: changes || null,
       followUpQuestions: [
-        "Would you like to explore alternative ingredient substitutions?",
-        "Are you interested in learning more about the culinary techniques involved?",
-        "Do you have any specific dietary restrictions I should consider?"
+        "How would you like to adjust the nutritional profile of this recipe?",
+        "Are there any specific health goals you're trying to achieve?",
+        "Would you like to explore alternative ingredients for better nutrition?"
       ]
     };
     
