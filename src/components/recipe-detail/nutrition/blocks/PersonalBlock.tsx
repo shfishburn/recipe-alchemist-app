@@ -6,6 +6,9 @@ import { ComparisonChart } from '../charts/ComparisonChart';
 import { HorizontalBarChart } from '../charts/HorizontalBarChart';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoIcon } from 'lucide-react';
+import { NutrientStats } from './personal/NutrientStats';
+import { MacroCaloriesBreakdown } from './personal/MacroCaloriesBreakdown';
+import { NUTRITION_COLORS } from './personal/constants';
 
 interface RecipeNutrition {
   calories: number;
@@ -31,13 +34,6 @@ interface PersonalBlockProps {
 export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBlockProps) {
   const isMobile = useIsMobile();
   
-  const COLORS = {
-    protein: '#9b87f5',
-    carbs: '#0EA5E9',
-    fat: '#22c55e',
-    calories: '#F97316'
-  };
-  
   // Calculate user's target macros in grams
   const proteinTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.protein / 100)) / 4);
   const carbsTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.carbs / 100)) / 4);
@@ -55,7 +51,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Recipe: recipeNutrition.protein,
       Target: proteinTarget,
       percentage: proteinPercentage,
-      fill: COLORS.protein,
+      fill: NUTRITION_COLORS.protein,
       value: `${proteinPercentage}% (${recipeNutrition.protein}g)`
     },
     {
@@ -63,7 +59,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Recipe: recipeNutrition.carbs,
       Target: carbsTarget,
       percentage: carbsPercentage,
-      fill: COLORS.carbs,
+      fill: NUTRITION_COLORS.carbs,
       value: `${carbsPercentage}% (${recipeNutrition.carbs}g)`
     },
     {
@@ -71,7 +67,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Recipe: recipeNutrition.fat,
       Target: fatTarget,
       percentage: fatPercentage,
-      fill: COLORS.fat,
+      fill: NUTRITION_COLORS.fat,
       value: `${fatPercentage}% (${recipeNutrition.fat}g)`
     }
   ];
@@ -82,7 +78,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Recipe: recipeNutrition.calories,
       Target: userPreferences.dailyCalories,
       percentage: caloriesPercentage,
-      fill: COLORS.calories,
+      fill: NUTRITION_COLORS.calories,
       value: `${caloriesPercentage}% (${recipeNutrition.calories} kcal)`
     }
   ];
@@ -151,55 +147,27 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       <div className="bg-slate-50 p-4 rounded-md">
         <h4 className="text-sm font-medium mb-3">Nutritional Insights</h4>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div className="bg-white p-3 rounded-md shadow-sm">
-            <p className="text-xs text-gray-500">Calories</p>
-            <p className="text-lg font-semibold">{caloriesPercentage}%</p>
-            <p className="text-xs text-muted-foreground">{recipeNutrition.calories} of {userPreferences.dailyCalories} kcal</p>
-          </div>
-          <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${COLORS.protein}` }}>
-            <p className="text-xs text-gray-500">Protein</p>
-            <p className="text-lg font-semibold">{proteinPercentage}%</p>
-            <p className="text-xs text-muted-foreground">{recipeNutrition.protein}g of {proteinTarget}g</p>
-          </div>
-          <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${COLORS.carbs}` }}>
-            <p className="text-xs text-gray-500">Carbs</p>
-            <p className="text-lg font-semibold">{carbsPercentage}%</p>
-            <p className="text-xs text-muted-foreground">{recipeNutrition.carbs}g of {carbsTarget}g</p>
-          </div>
-          <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${COLORS.fat}` }}>
-            <p className="text-xs text-gray-500">Fat</p>
-            <p className="text-lg font-semibold">{fatPercentage}%</p>
-            <p className="text-xs text-muted-foreground">{recipeNutrition.fat}g of {fatTarget}g</p>
-          </div>
-        </div>
+        <NutrientStats
+          calories={recipeNutrition.calories}
+          protein={recipeNutrition.protein}
+          carbs={recipeNutrition.carbs}
+          fat={recipeNutrition.fat}
+          caloriesPercentage={caloriesPercentage}
+          proteinPercentage={proteinPercentage}
+          carbsPercentage={carbsPercentage}
+          fatPercentage={fatPercentage}
+          colors={NUTRITION_COLORS}
+        />
         
-        <div className="bg-white p-3 rounded-md shadow-sm">
-          <h5 className="text-xs font-medium mb-2">Calories from Macronutrients</h5>
-          <div className="flex items-center mb-2">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="flex h-full rounded-full overflow-hidden">
-                <div style={{ width: `${proteinCaloriePercent}%`, backgroundColor: COLORS.protein }} />
-                <div style={{ width: `${carbCaloriePercent}%`, backgroundColor: COLORS.carbs }} />
-                <div style={{ width: `${fatCaloriePercent}%`, backgroundColor: COLORS.fat }} />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-between text-xs">
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: COLORS.protein }}></div>
-              <span>Protein: {proteinCaloriePercent}% ({proteinCalories} kcal)</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: COLORS.carbs }}></div>
-              <span>Carbs: {carbCaloriePercent}% ({carbCalories} kcal)</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: COLORS.fat }}></div>
-              <span>Fat: {fatCaloriePercent}% ({fatCalories} kcal)</span>
-            </div>
-          </div>
-        </div>
+        <MacroCaloriesBreakdown
+          proteinCalories={proteinCalories}
+          carbCalories={carbCalories}
+          fatCalories={fatCalories}
+          proteinCaloriePercent={proteinCaloriePercent}
+          carbCaloriePercent={carbCaloriePercent}
+          fatCaloriePercent={fatCaloriePercent}
+          colors={NUTRITION_COLORS}
+        />
       </div>
     </div>
   );
