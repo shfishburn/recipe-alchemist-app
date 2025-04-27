@@ -30,6 +30,21 @@ interface HorizontalBarChartProps {
 }
 
 export function HorizontalBarChart({ data, showPercentage, height = 200 }: HorizontalBarChartProps) {
+  // Format label value safely with null checks
+  const formatLabelValue = (value: any, entry: any) => {
+    if (value === undefined || value === null) return '';
+    
+    // Check if entry and payload exist
+    if (!entry || !entry.payload) return `${value}`;
+    
+    const name = entry.payload.name;
+    if (showPercentage) {
+      return `${value}%`;
+    } else {
+      return `${value}${name === 'Calories' ? ' kcal' : 'g'}`;
+    }
+  };
+
   return (
     <ResponsiveContainer width="100%" height={data.length > 1 ? height : 120}>
       <BarChart
@@ -60,9 +75,7 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
           <LabelList
             dataKey={showPercentage ? "percentage" : "Recipe"}
             position="right"
-            formatter={(value: any, entry: any) => 
-              `${value}${showPercentage ? '%' : (entry.payload.name === 'Calories' ? ' kcal' : 'g')}`
-            }
+            formatter={formatLabelValue}
           />
         </Bar>
         {!showPercentage && (
@@ -76,9 +89,7 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
             <LabelList
               dataKey="Target"
               position="right"
-              formatter={(value: any, entry: any) => 
-                `${value}${entry.payload.name === 'Calories' ? ' kcal' : 'g'}`
-              }
+              formatter={formatLabelValue}
             />
           </Bar>
         )}
