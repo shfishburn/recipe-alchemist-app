@@ -30,7 +30,8 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
       <CardContent>
         <NutritionBlock 
           recipeNutrition={recipeNutrition}
-          userPreferences={viewMode === 'personal' ? userPreferences : undefined}
+          userPreferences={userPreferences}
+          viewMode={viewMode}
         />
       </CardContent>
     </Card>

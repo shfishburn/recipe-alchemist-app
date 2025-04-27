@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const signOut = async (): Promise<void> => {
+  const signOut = async () => {
     try {
       await supabase.auth.signOut();
       setSession(null);
@@ -76,25 +76,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentSession.user.id)
-          .single()
-          .then(({ data: profileData }) => {
-            setProfile(profileData);
-          })
-          .catch((error) => {
-            console.error('Error fetching profile:', error);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentSession.user.id)
+            .single();
+          
+          setProfile(profileData);
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setLoading(false);
       }

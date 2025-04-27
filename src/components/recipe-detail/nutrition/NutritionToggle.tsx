@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
 import { User2, ChefHat } from 'lucide-react';
 
 interface NutritionToggleProps {
@@ -10,20 +10,25 @@ interface NutritionToggleProps {
 
 export function NutritionToggle({ viewMode, onViewModeChange }: NutritionToggleProps) {
   return (
-    <ToggleGroup
-      type="single"
-      value={viewMode}
-      onValueChange={(value) => value && onViewModeChange(value as 'recipe' | 'personal')}
-      className="space-x-1"
-    >
-      <ToggleGroupItem value="recipe" size="sm" className="px-3 py-1">
-        <ChefHat className="h-4 w-4 mr-2" />
+    <div className="flex gap-2">
+      <Button 
+        variant={viewMode === 'recipe' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => onViewModeChange('recipe')}
+        className="flex items-center gap-2"
+      >
+        <ChefHat className="h-4 w-4" />
         Recipe
-      </ToggleGroupItem>
-      <ToggleGroupItem value="personal" size="sm" className="px-3 py-1">
-        <User2 className="h-4 w-4 mr-2" />
-        Personal
-      </ToggleGroupItem>
-    </ToggleGroup>
+      </Button>
+      <Button
+        variant={viewMode === 'personal' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => onViewModeChange('personal')}
+        className="flex items-center gap-2"
+      >
+        <User2 className="h-4 w-4" />
+        Personal Impact
+      </Button>
+    </div>
   );
 }
