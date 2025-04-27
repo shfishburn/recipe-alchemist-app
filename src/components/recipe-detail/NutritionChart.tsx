@@ -10,7 +10,8 @@ import {
   Legend, 
   PieChart,
   Pie,
-  Cell
+  Cell,
+  ResponsiveContainer
 } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -107,8 +108,8 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
   
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="comparison">
-        <TabsList className="mb-2">
+      <Tabs defaultValue="comparison" className="w-full">
+        <TabsList className="mb-2 w-full justify-start">
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="distribution">Distribution</TabsTrigger>
         </TabsList>
@@ -119,21 +120,19 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
               <p className="text-xs text-muted-foreground mb-2 text-center">
                 Recipe vs. Daily Targets (g)
               </p>
-              <ChartContainer config={{
-                protein: { color: '#4f46e5' },
-                carbs: { color: '#0ea5e9' },
-                fat: { color: '#22c55e' },
-              }} className="h-64 w-full">
-                <BarChart data={compareData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={12} />
-                  <YAxis fontSize={12} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="Recipe" fill="#4f46e5" name="Recipe" />
-                  <Bar dataKey="Target" fill="#94a3b8" name="Daily Target" />
-                </BarChart>
-              </ChartContainer>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={compareData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" fontSize={12} />
+                    <YAxis fontSize={12} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar dataKey="Recipe" fill="#4f46e5" name="Recipe" />
+                    <Bar dataKey="Target" fill="#94a3b8" name="Daily Target" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -146,11 +145,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
                   Recipe Macro Breakdown
                 </p>
                 <div className="h-40">
-                  <ChartContainer config={{
-                    protein: { color: COLORS[0] },
-                    carbs: { color: COLORS[1] },
-                    fat: { color: COLORS[2] },
-                  }} className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={macrosData}
@@ -166,7 +161,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
                         ))}
                       </Pie>
                     </PieChart>
-                  </ChartContainer>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
@@ -178,11 +173,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
                     Your Target Macro Breakdown
                   </p>
                   <div className="h-40">
-                    <ChartContainer config={{
-                      protein: { color: COLORS[0] },
-                      carbs: { color: COLORS[1] },
-                      fat: { color: COLORS[2] },
-                    }} className="h-full w-full">
+                    <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={[
@@ -202,7 +193,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
                           ))}
                         </Pie>
                       </PieChart>
-                    </ChartContainer>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -211,19 +202,27 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
         </TabsContent>
       </Tabs>
       
-      <div className="text-sm space-y-1">
-        <p>
-          <span className="font-medium">Calories:</span> {recipeNutrition.calories} kcal ({caloriesPercentage}% of daily target)
-        </p>
-        <p>
-          <span className="font-medium">Protein:</span> {recipeNutrition.protein}g ({proteinPercentOfTarget}% of daily target)
-        </p>
-        <p>
-          <span className="font-medium">Carbs:</span> {recipeNutrition.carbs}g ({carbsPercentOfTarget}% of daily target)
-        </p>
-        <p>
-          <span className="font-medium">Fat:</span> {recipeNutrition.fat}g ({fatPercentOfTarget}% of daily target)
-        </p>
+      <div className="text-sm space-y-1 py-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="p-2 bg-gray-50 rounded-md">
+          <p className="font-medium text-xs text-gray-500">Calories</p>
+          <p className="font-bold">{recipeNutrition.calories} kcal</p>
+          <p className="text-xs text-gray-500">({caloriesPercentage}% daily)</p>
+        </div>
+        <div className="p-2 bg-indigo-50 rounded-md">
+          <p className="font-medium text-xs text-gray-500">Protein</p>
+          <p className="font-bold">{recipeNutrition.protein}g</p>
+          <p className="text-xs text-gray-500">({proteinPercentOfTarget}% daily)</p>
+        </div>
+        <div className="p-2 bg-sky-50 rounded-md">
+          <p className="font-medium text-xs text-gray-500">Carbs</p>
+          <p className="font-bold">{recipeNutrition.carbs}g</p>
+          <p className="text-xs text-gray-500">({carbsPercentOfTarget}% daily)</p>
+        </div>
+        <div className="p-2 bg-green-50 rounded-md">
+          <p className="font-medium text-xs text-gray-500">Fat</p>
+          <p className="font-bold">{recipeNutrition.fat}g</p>
+          <p className="text-xs text-gray-500">({fatPercentOfTarget}% daily)</p>
+        </div>
       </div>
     </div>
   );

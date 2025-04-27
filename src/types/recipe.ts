@@ -3,7 +3,7 @@ export interface Recipe {
   id: string;
   title: string;
   description?: string;
-  ingredients: string[];
+  ingredients: string[] | { qty: number; unit: string; item: string; notes?: string }[];
   instructions: string[];
   prepTime?: number;
   cookTime?: number;
@@ -21,5 +21,12 @@ export interface Recipe {
     protein: number;
     carbs: number;
     fat: number;
+    kcal?: number;
+    protein_g?: number;
+    carbs_g?: number;
+    fat_g?: number;
+    fiber_g?: number;
+    sugar_g?: number;
+    sodium_mg?: number;
   };
 }

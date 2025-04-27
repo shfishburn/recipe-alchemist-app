@@ -11,6 +11,7 @@ import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstruction
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
+import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -52,7 +53,11 @@ const RecipeDetail = () => {
               </div>
               
               {/* Visible recipe actions */}
-              <RecipeActions recipe={recipe} sticky={true} />
+              <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
+                <RecipeActions recipe={recipe} sticky={false} />
+                {/* Make RecipeChatDrawer visible as part of the actions */}
+                <RecipeChatDrawer recipe={recipe} />
+              </div>
               <Separator className="mb-8" />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -76,7 +81,7 @@ const RecipeDetail = () => {
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3">
                       <BookOpen className="h-5 w-5 text-recipe-blue mt-1 flex-shrink-0" />
-                      <div className="space-y-2">
+                      <div className="space-y-2 overflow-auto max-h-[300px]"> {/* Make scrollable */}
                         {recipe.original_request && (
                           <p className="text-sm text-muted-foreground">
                             Original request: <span className="font-medium text-foreground">{recipe.original_request}</span>
