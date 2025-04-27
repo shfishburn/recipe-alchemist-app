@@ -53,7 +53,10 @@ const RecipeDetail = () => {
               </div>
               
               {/* Visible recipe actions */}
-              <RecipeActions recipe={recipe} sticky={false} />
+              <div className="mb-8">
+                <RecipeActions recipe={recipe} sticky={false} />
+                <RecipeChatDrawer recipe={recipe} />
+              </div>
               
               <Separator className="mb-8" />
               

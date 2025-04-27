@@ -1,9 +1,30 @@
 
+export interface Ingredient {
+  qty: number;
+  unit: string;
+  item: string;
+  notes?: string;
+}
+
+export interface Nutrition {
+  kcal?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
 export interface Recipe {
   id: string;
   title: string;
   description?: string;
-  ingredients: string[] | { qty: number; unit: string; item: string; notes?: string }[];
+  ingredients: Ingredient[];
   instructions: string[];
   prep_time_min?: number;
   cook_time_min?: number;
@@ -22,17 +43,5 @@ export interface Recipe {
   deleted_at?: string;
   dietary?: string;
   flavor_tags?: string[];
-  nutrition?: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-    kcal?: number;
-    protein_g?: number;
-    carbs_g?: number;
-    fat_g?: number;
-    fiber_g?: number;
-    sugar_g?: number;
-    sodium_mg?: number;
-  };
+  nutrition?: Nutrition;
 }

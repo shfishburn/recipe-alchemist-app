@@ -30,7 +30,7 @@ export function RecipeChatDrawer({ recipe }: RecipeChatDrawerProps) {
           Recipe Chat
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-[85vh]">
+      <DrawerContent className="h-[85vh] max-w-4xl mx-auto">
         <DrawerHeader className="border-b">
           <DrawerTitle>Recipe Chat</DrawerTitle>
         </DrawerHeader>

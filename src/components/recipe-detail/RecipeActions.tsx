@@ -4,9 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PrintRecipe } from './PrintRecipe';
 import { CookingMode } from './CookingMode';
-import { Printer, ChefHat, Share2, Trash2, MessageCircle } from 'lucide-react';
+import { Printer, ChefHat, Share2, Trash2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
-import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeActionsProps {
@@ -51,7 +50,7 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
   
   const containerClasses = sticky && isSticky 
     ? "fixed bottom-0 left-0 right-0 bg-background border-t p-3 shadow-lg z-30 transition-all duration-300 flex justify-center"
-    : "flex flex-wrap gap-2 mb-8";
+    : "flex flex-wrap gap-2";
   
   const innerClasses = sticky && isSticky 
     ? "container max-w-4xl flex flex-wrap gap-2" 
@@ -78,16 +77,6 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
         >
           <Printer className="h-4 w-4 mr-2" />
           Print Recipe
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex-1 md:flex-none md:w-auto"
-          onClick={() => window.document.getElementById('recipe-chat-trigger')?.click()}
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Recipe Chat
         </Button>
         
         {navigator.share && (

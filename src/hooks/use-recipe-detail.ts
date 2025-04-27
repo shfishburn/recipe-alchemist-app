@@ -3,29 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { Json } from '@/integrations/supabase/types';
+import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
 
-export interface Ingredient {
-  qty: number;
-  unit: string;
-  item: string;
-}
-
-export interface Nutrition {
-  kcal?: number;
-  protein_g?: number;
-  carbs_g?: number;
-  fat_g?: number;
-  fiber_g?: number;
-  sugar_g?: number;
-  sodium_mg?: number;
-}
-
-export interface Recipe extends Omit<Database['public']['Tables']['recipes']['Row'], 'ingredients' | 'nutrition' | 'reasoning'> {
-  ingredients: Ingredient[];
-  nutrition: Nutrition;
-  reasoning?: string;
-  original_request?: string;
-}
+export type { Recipe, Ingredient, Nutrition };
 
 export const useRecipeDetail = (id?: string) => {
   return useQuery({
