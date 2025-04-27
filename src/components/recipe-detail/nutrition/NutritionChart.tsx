@@ -25,8 +25,6 @@ interface NutritionChartProps {
   };
 }
 
-const COLORS = ['#4f46e5', '#0ea5e9', '#22c55e']; // Indigo, Sky blue, Green
-
 export function NutritionChart({ recipeNutrition, userPreferences }: NutritionChartProps) {
   const { 
     macroData, 
@@ -52,7 +50,6 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
           <DistributionCharts 
             recipeMacros={macrosData}
             targetMacros={targetMacrosData}
-            colors={COLORS}
           />
         </TabsContent>
       </Tabs>

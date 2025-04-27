@@ -43,7 +43,7 @@ export function MacroDistributionPie({ data, title }: MacroDistributionPieProps)
             ))}
           </Pie>
           <Legend />
-          <Tooltip content={(props: any) => <ChartTooltip {...props} />} />
+          <Tooltip content={props => <ChartTooltip {...props} />} />
         </PieChart>
       </ResponsiveContainer>
     </div>

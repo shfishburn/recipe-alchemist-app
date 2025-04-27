@@ -31,7 +31,7 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" fontSize={12} />
             <YAxis fontSize={12} />
-            <Tooltip content={(props) => <ChartTooltip {...props} />} />
+            <Tooltip content={props => <ChartTooltip {...props} />} />
             <Legend />
             <Bar dataKey="Recipe" fill="#4f46e5" name="Recipe" />
             <Bar dataKey="Target" fill="#94a3b8" name="Daily Target" />

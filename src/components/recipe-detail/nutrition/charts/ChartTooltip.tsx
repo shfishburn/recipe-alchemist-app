@@ -1,19 +1,16 @@
 
 import React from 'react';
+import { TooltipProps } from 'recharts';
+import { 
+  NameType, 
+  ValueType 
+} from 'recharts/types/component/DefaultTooltipContent';
 
-export interface ChartTooltipProps {
-  active?: boolean;
-  payload?: Array<{
-    value: number;
-    name: string;
-    dataKey: string;
-    payload: any;
-  }>;
-  label?: string;
+export interface ChartTooltipProps extends TooltipProps<ValueType, NameType> {
   showPercentage?: boolean;
 }
 
-export function ChartTooltip({ active, payload, label, showPercentage = false }: ChartTooltipProps) {
+export function ChartTooltip({ active, payload, showPercentage = false }: ChartTooltipProps) {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
