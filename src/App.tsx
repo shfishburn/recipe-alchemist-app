@@ -17,7 +17,17 @@ import ShoppingLists from "./pages/ShoppingLists";
 import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Create a new QueryClient with error logging
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      onError: (error) => {
+        console.error('Query error:', error);
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
