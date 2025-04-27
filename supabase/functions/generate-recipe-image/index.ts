@@ -45,7 +45,13 @@ serve(async (req) => {
 
     console.log('Generated OpenAI image URL:', response.data[0].url);
 
-    // Download the image from OpenAI
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Download the image from OpenAI and store it directly
     const imageResponse = await fetch(response.data[0].url);
     if (!imageResponse.ok) {
       throw new Error('Failed to download image from OpenAI');
@@ -53,12 +59,6 @@ serve(async (req) => {
 
     const imageBlob = await imageResponse.blob();
     const fileName = `recipe-${recipeId}-${Date.now()}.png`;
-
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     // Upload to Supabase Storage
     console.log('Uploading image to Supabase Storage...');
