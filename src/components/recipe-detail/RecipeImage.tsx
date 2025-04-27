@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ImagePlus, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,26 +41,33 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         return;
       }
 
-      // If it's an OpenAI URL (temporary), migrate it
-      if (recipe.image_url.includes('openai') || recipe.image_url.includes('oai')) {
+      // If it's an OpenAI URL (temporary) or any external URL, migrate it
+      if (recipe.image_url.includes('openai') || 
+          recipe.image_url.includes('oai') || 
+          recipe.image_url.startsWith('http')) {
         setIsMigratingImage(true);
-        const fileName = `recipe-${recipe.id}-${Date.now()}.png`;
-        const newUrl = await uploadImageFromUrl(recipe.image_url, fileName);
-        
-        if (newUrl) {
-          // Update the recipe with the new URL
-          const { error: updateError } = await supabase
-            .from('recipes')
-            .update({ image_url: newUrl })
-            .eq('id', recipe.id);
+        try {
+          const fileName = `recipe-${recipe.id}-${Date.now()}.png`;
+          const newUrl = await uploadImageFromUrl(recipe.image_url, fileName);
+          
+          if (newUrl) {
+            // Update the recipe with the new URL
+            const { error: updateError } = await supabase
+              .from('recipes')
+              .update({ image_url: newUrl })
+              .eq('id', recipe.id);
 
-          if (!updateError) {
-            setImageUrl(newUrl);
+            if (!updateError) {
+              setImageUrl(newUrl);
+            } else {
+              console.error('Error updating recipe image URL:', updateError);
+              setImageError(true);
+            }
           } else {
-            console.error('Error updating recipe image URL:', updateError);
             setImageError(true);
           }
-        } else {
+        } catch (error) {
+          console.error('Error migrating image:', error);
           setImageError(true);
         }
         setIsMigratingImage(false);
@@ -131,7 +139,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         {isMigratingImage ? (
           <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-            <p className="text-sm text-muted-foreground">Migrating image...</p>
+            <p className="text-sm text-muted-foreground">Processing image...</p>
           </div>
         ) : imageUrl && !imageError ? (
           <img
