@@ -15,6 +15,20 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
   const followUpQuestions = Array.isArray(chat.follow_up_questions) 
     ? chat.follow_up_questions 
     : [];
+
+  // Try to parse follow-up questions from the AI response if they exist and aren't already populated
+  let parsedFollowUpQuestions = followUpQuestions;
+  if (followUpQuestions.length === 0 && chat.ai_response) {
+    try {
+      const responseObj = JSON.parse(chat.ai_response);
+      if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
+        parsedFollowUpQuestions = responseObj.followUpQuestions;
+      }
+    } catch (e) {
+      // If parsing fails, just continue with the empty array
+      console.log("Could not parse follow-up questions from response");
+    }
+  }
     
   return (
     <div className="space-y-4">
@@ -28,7 +42,7 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
         <ChatResponse
           response={chat.ai_response}
           changesSuggested={chat.changes_suggested}
-          followUpQuestions={followUpQuestions}
+          followUpQuestions={parsedFollowUpQuestions}
           setMessage={setMessage}
           onApplyChanges={() => applyChanges(chat)}
           isApplying={isApplying}

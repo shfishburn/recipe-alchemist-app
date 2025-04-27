@@ -38,7 +38,7 @@ Example JSON format:
   },
   "health_insights": ["insight 1", "insight 2"],
   "scientific_principles": ["principle 1", "principle 2"],
-  "follow_up_questions": ["question 1?", "question 2?"]
+  "followUpQuestions": ["question 1?", "question 2?"]
 }`;
 
     // Add source-specific context to the prompt
@@ -83,9 +83,24 @@ User request: ${userMessage}`;
       const parsedContent = JSON.parse(content);
       console.log("Successfully parsed JSON response");
       
-      // Create a structured response object
+      // Create a structured response object - include followUpQuestions in the main response
+      const responseWithFollowUp = {
+        textResponse: parsedContent.textResponse || content,
+        changes: parsedContent.changes || null,
+        nutrition: parsedContent.nutrition || {},
+        health_insights: parsedContent.health_insights || [],
+        equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
+        scientific_principles: parsedContent.scientific_principles || [],
+        followUpQuestions: parsedContent.followUpQuestions || [
+          "How would the science behind this recipe change if we altered the cooking temperature?",
+          "What specific chemical reactions occur when cooking this dish?",
+          "How could we modify this recipe for different dietary restrictions while maintaining the same flavor profile?"
+        ]
+      };
+      
+      // Convert the entire response to a string for storage
       const suggestion = {
-        response: parsedContent.textResponse || content,
+        response: JSON.stringify(responseWithFollowUp),
         changes: {
           title: parsedContent.changes?.title || null,
           ingredients: parsedContent.changes?.ingredients || null,
@@ -94,12 +109,7 @@ User request: ${userMessage}`;
           health_insights: parsedContent.health_insights || [],
           equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
           scientific_principles: parsedContent.scientific_principles || []
-        },
-        followUpQuestions: parsedContent.follow_up_questions || [
-          "How would the science behind this recipe change if we altered the cooking temperature?",
-          "What specific chemical reactions occur when cooking this dish?",
-          "How could we modify this recipe for different dietary restrictions while maintaining the same flavor profile?"
-        ]
+        }
       };
       
       console.log("Returning structured response to client");

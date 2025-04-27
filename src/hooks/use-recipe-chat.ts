@@ -43,24 +43,22 @@ export const useRecipeChat = (recipe: Recipe) => {
           ai_response: chat.ai_response,
           changes_suggested: chat.changes_suggested as ChatMessage['changes_suggested'],
           applied: chat.applied || false,
-          created_at: chat.created_at
+          created_at: chat.created_at,
+          follow_up_questions: [] // Default empty array
         };
 
-        // Parse follow_up_questions if it exists and is a string
-        if (chat.changes_suggested && 'follow_up_questions' in chat) {
+        // Check if the chat response has followUpQuestions in the response data
+        if (chat.changes_suggested && typeof chat.ai_response === 'string') {
           try {
-            // If it's a string, parse it; if it's already an array, use it directly
-            const questions = typeof chat.follow_up_questions === 'string' 
-              ? JSON.parse(chat.follow_up_questions) 
-              : chat.follow_up_questions;
-            
-            chatMessage.follow_up_questions = Array.isArray(questions) ? questions : [];
+            // Try to extract follow-up questions from the AI response if they exist
+            const responseObj = JSON.parse(chat.ai_response);
+            if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
+              chatMessage.follow_up_questions = responseObj.followUpQuestions;
+            }
           } catch (e) {
-            console.error("Error parsing follow_up_questions:", e);
-            chatMessage.follow_up_questions = [];
+            // If parsing fails, just continue with the empty array
+            console.log("Could not parse follow-up questions from response, using default empty array");
           }
-        } else {
-          chatMessage.follow_up_questions = [];
         }
         
         return chatMessage;
