@@ -24,13 +24,12 @@ export const useRecipes = () => {
 
         if (searchTerm && searchTerm.trim() !== '') {
           const trimmedTerm = searchTerm.trim();
-          supabaseQuery = supabaseQuery
-            .or(
-              `title.ilike.%${trimmedTerm}%,` +
-              `tagline.ilike.%${trimmedTerm}%,` +
-              `cuisine.ilike.%${trimmedTerm}%,` +
-              `dietary.ilike.%${trimmedTerm}%`
-            );
+          supabaseQuery = supabaseQuery.or([
+            `title.ilike.%${trimmedTerm}%`,
+            `tagline.ilike.%${trimmedTerm}%`,
+            `cuisine.ilike.%${trimmedTerm}%`,
+            `dietary.ilike.%${trimmedTerm}%`
+          ].join(','));
         }
 
         const { data, error } = await supabaseQuery;

@@ -10,7 +10,8 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
-  LabelList
+  LabelList,
+  Cell
 } from 'recharts';
 import { ChartTooltip } from './ChartTooltip';
 
@@ -44,7 +45,7 @@ export function HorizontalBarChart({ data, showPercentage, height = 200 }: Horiz
           tick={{ fontSize: 14 }} 
           width={60}
         />
-        <Tooltip content={(props) => <ChartTooltip {...props} showPercentage={showPercentage} />} />
+        <Tooltip content={(props: any) => <ChartTooltip {...props} showPercentage={showPercentage} />} />
         <Legend verticalAlign="top" height={36} />
         <Bar 
           dataKey={showPercentage ? "percentage" : "Recipe"} 
