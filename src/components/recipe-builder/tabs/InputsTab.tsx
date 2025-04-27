@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { X, Globe, Leaf, Plus, BookOpen, Utensils } from 'lucide-react';
+import { BookOpen, Globe, Leaf, Plus, Utensils } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -54,7 +55,6 @@ const InputsTab = ({
   onRemoveIngredient,
   onServingsChange,
 }: InputsTabProps) => {
-  const commonRecipes = ["Pasta Dish", "Chicken Recipe", "Soup", "Salad"];
   const servingOptions = [1, 2, 3, 4, 5, 6, 8, 10, 12];
 
   return (
@@ -83,7 +83,7 @@ const InputsTab = ({
                   name="title"
                   required
                   className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-                  placeholder="Enter recipe name"
+                  placeholder="Enter recipe name (e.g., 'Pasta', 'Chicken dish')"
                   value={title}
                   onChange={onTitleChange}
                   aria-label="Recipe name input"
