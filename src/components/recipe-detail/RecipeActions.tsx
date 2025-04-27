@@ -6,6 +6,7 @@ import { PrintRecipe } from './PrintRecipe';
 import { CookingMode } from './CookingMode';
 import { Printer, ChefHat, Share2, Trash2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
+import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeActionsProps {
@@ -77,6 +78,7 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
           <Printer className="h-4 w-4 mr-2" />
           Print Recipe
         </Button>
+        <RecipeChatDrawer recipe={recipe} />
         {navigator.share && (
           <Button 
             variant="outline" 

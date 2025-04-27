@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -8,7 +7,6 @@ import { RecipeHeader } from '@/components/recipe-detail/RecipeHeader';
 import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients';
 import { RecipeNutrition } from '@/components/recipe-detail/RecipeNutrition';
 import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
-import { RecipeChat } from '@/components/recipe-chat/RecipeChat';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
@@ -63,12 +61,6 @@ const RecipeDetail = () => {
                 <div className="md:col-span-2">
                   <RecipeInstructions recipe={recipe} />
                 </div>
-              </div>
-              
-              {/* Move Recipe Chat next to Instructions */}
-              <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Recipe Chat</h2>
-                <RecipeChat recipe={recipe} />
               </div>
             </div>
           ) : null}
