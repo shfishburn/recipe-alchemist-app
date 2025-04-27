@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, BookOpen } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { RecipeHeader } from '@/components/recipe-detail/RecipeHeader';
@@ -12,6 +12,7 @@ import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -42,7 +43,7 @@ const RecipeDetail = () => {
             </div>
           ) : recipe ? (
             <div className="max-w-4xl mx-auto">
-              <RecipeHeader recipe={recipe} />
+              <RecipeHeader recipe={recipe} hideReasoning={true} />
               
               {/* Hidden components for triggers */}
               <div className="hidden">
@@ -57,12 +58,38 @@ const RecipeDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-1 space-y-6">
                   <RecipeIngredients recipe={recipe} />
-                  {recipe.nutrition && <RecipeNutrition recipe={recipe} />}
                 </div>
                 <div className="md:col-span-2">
                   <RecipeInstructions recipe={recipe} />
                 </div>
               </div>
+
+              {recipe.nutrition && (
+                <div className="mt-8">
+                  <RecipeNutrition recipe={recipe} />
+                </div>
+              )}
+              
+              {/* AI Reasoning Card moved to bottom */}
+              {(recipe.reasoning || recipe.original_request) && (
+                <Card className="mt-8 bg-recipe-blue/5 border-recipe-blue/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <BookOpen className="h-5 w-5 text-recipe-blue mt-1 flex-shrink-0" />
+                      <div className="space-y-2">
+                        {recipe.original_request && (
+                          <p className="text-sm text-muted-foreground">
+                            Original request: <span className="font-medium text-foreground">{recipe.original_request}</span>
+                          </p>
+                        )}
+                        {recipe.reasoning && (
+                          <p className="text-sm text-muted-foreground">{recipe.reasoning}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : null}
         </div>

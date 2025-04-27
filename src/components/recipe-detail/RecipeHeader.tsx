@@ -8,9 +8,10 @@ import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeHeaderProps {
   recipe: Recipe;
+  hideReasoning?: boolean;
 }
 
-export function RecipeHeader({ recipe }: RecipeHeaderProps) {
+export function RecipeHeader({ recipe, hideReasoning = false }: RecipeHeaderProps) {
   return (
     <div className="mb-8">
       <div className="mb-2 flex flex-wrap gap-2">
@@ -39,7 +40,7 @@ export function RecipeHeader({ recipe }: RecipeHeaderProps) {
       <RecipeImage recipe={recipe} />
       
       {/* Recipe Overview Card */}
-      <Card className="mt-6 mb-6">
+      <Card className="mt-6">
         <CardContent className="pt-6">
           <h2 className="text-lg font-semibold mb-3 flex items-center">
             <Clock className="mr-2 h-5 w-5 text-recipe-blue" /> Recipe Overview
@@ -76,26 +77,6 @@ export function RecipeHeader({ recipe }: RecipeHeaderProps) {
           </div>
         </CardContent>
       </Card>
-      
-      {(recipe.reasoning || recipe.original_request) && (
-        <Card className="mb-6 bg-recipe-blue/5 border-recipe-blue/20">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <BookOpen className="h-5 w-5 text-recipe-blue mt-1" />
-              <div className="space-y-2">
-                {recipe.original_request && (
-                  <p className="text-sm text-muted-foreground">
-                    Original request: <span className="font-medium text-foreground">{recipe.original_request}</span>
-                  </p>
-                )}
-                {recipe.reasoning && (
-                  <p className="text-sm text-muted-foreground">{recipe.reasoning}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
