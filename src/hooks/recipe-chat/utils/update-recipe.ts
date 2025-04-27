@@ -18,6 +18,9 @@ export async function updateRecipe(
     image_url: imageUrl ?? recipe.image_url,
     user_id: recipe.user_id || user_id,
     servings: recipe.servings || 4,
+    // Add these properties to fix the TypeScript errors
+    instructions: recipe.instructions,
+    ingredients: recipe.ingredients
   };
 
   if (chatMessage.changes_suggested.instructions) {
