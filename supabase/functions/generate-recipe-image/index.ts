@@ -39,27 +39,55 @@ serve(async (req) => {
       style: "natural",
     });
 
-    console.log('Generated image URL:', response.data[0].url);
-
-    const imageUrl = response.data[0].url;
-    
-    if (!imageUrl) {
+    if (!response.data[0].url) {
       throw new Error('No image URL returned from OpenAI');
     }
 
-    // We'll skip the storage upload for now and just return the OpenAI URL
-    // This will help us identify if the issue is with OpenAI or with Supabase storage
-    
-    // Update the recipe with the image URL if a recipe ID was provided
+    console.log('Generated OpenAI image URL:', response.data[0].url);
+
+    // Download the image from OpenAI
+    const imageResponse = await fetch(response.data[0].url);
+    if (!imageResponse.ok) {
+      throw new Error('Failed to download image from OpenAI');
+    }
+
+    const imageBlob = await imageResponse.blob();
+    const fileName = `recipe-${recipeId}-${Date.now()}.png`;
+
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Upload to Supabase Storage
+    console.log('Uploading image to Supabase Storage...');
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('recipe-images')
+      .upload(fileName, imageBlob, {
+        contentType: 'image/png',
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      throw new Error(`Failed to upload image: ${uploadError.message}`);
+    }
+
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('recipe-images')
+      .getPublicUrl(uploadData.path);
+
+    console.log('Image uploaded successfully, public URL:', publicUrl);
+
+    // Update the recipe with the permanent image URL
     if (recipeId) {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-      
+      console.log('Updating recipe with new image URL...');
       const { error: updateError } = await supabase
         .from('recipes')
-        .update({ image_url: imageUrl })
+        .update({ image_url: publicUrl })
         .eq('id', recipeId);
 
       if (updateError) {
@@ -70,7 +98,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ imageUrl: imageUrl }),
+      JSON.stringify({ imageUrl: publicUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
