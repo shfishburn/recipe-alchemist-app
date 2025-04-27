@@ -11,6 +11,11 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
+  // Make sure follow_up_questions is always an array
+  const followUpQuestions = Array.isArray(chat.follow_up_questions) 
+    ? chat.follow_up_questions 
+    : [];
+    
   return (
     <div className="space-y-4">
       <div className="flex justify-end mb-4">
@@ -23,7 +28,7 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
         <ChatResponse
           response={chat.ai_response}
           changesSuggested={chat.changes_suggested}
-          followUpQuestions={chat.follow_up_questions}
+          followUpQuestions={followUpQuestions}
           setMessage={setMessage}
           onApplyChanges={() => applyChanges(chat)}
           isApplying={isApplying}

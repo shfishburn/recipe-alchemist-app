@@ -35,7 +35,19 @@ export const useRecipeChat = (recipe: Recipe) => {
         console.log(`No existing chat history for recipe ${recipe.id}`);
       }
       
-      return data as ChatMessage[];
+      // Process the chat messages to parse follow_up_questions if stored as string
+      return data.map(chat => {
+        // Parse follow_up_questions if it's a string
+        if (chat.follow_up_questions && typeof chat.follow_up_questions === 'string') {
+          try {
+            chat.follow_up_questions = JSON.parse(chat.follow_up_questions);
+          } catch (e) {
+            console.error("Error parsing follow_up_questions:", e);
+            chat.follow_up_questions = [];
+          }
+        }
+        return chat;
+      }) as ChatMessage[];
     },
   });
 

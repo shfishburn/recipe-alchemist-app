@@ -63,7 +63,8 @@ export const useChatMutations = (recipe: Recipe) => {
           user_message: message,
           ai_response: response.data.response,
           changes_suggested: response.data.changes || null,
-          follow_up_questions: response.data.followUpQuestions || [],
+          // Convert follow-up questions array to JSON string to avoid column mismatch
+          follow_up_questions: response.data.followUpQuestions ? JSON.stringify(response.data.followUpQuestions) : null,
           source_type: sourceType || 'manual',
           source_url: sourceUrl,
           source_image: sourceImage
