@@ -42,32 +42,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
 
+  const transformProfile = (data: any): Profile | null => {
+    if (!data) return null;
+
+    // Transform nutrition preferences to ensure type safety
+    let nutrition_preferences: NutritionPreferences | undefined;
+    if (data.nutrition_preferences) {
+      const np = data.nutrition_preferences as any;
+      nutrition_preferences = {
+        dailyCalories: Number(np.dailyCalories) || 2000,
+        macroSplit: {
+          protein: Number(np.macroSplit?.protein) || 30,
+          carbs: Number(np.macroSplit?.carbs) || 40,
+          fat: Number(np.macroSplit?.fat) || 30,
+        },
+        dietaryRestrictions: Array.isArray(np.dietaryRestrictions) ? np.dietaryRestrictions : [],
+        allergens: Array.isArray(np.allergens) ? np.allergens : [],
+        healthGoal: typeof np.healthGoal === 'string' ? np.healthGoal : 'maintenance',
+      };
+    }
+
+    return {
+      id: data.id,
+      username: data.username,
+      avatar_url: data.avatar_url,
+      nutrition_preferences,
+      weight_goal_type: data.weight_goal_type,
+      weight_goal_deficit: data.weight_goal_deficit,
+    };
+  };
+
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Fetch user profile when auth state changes
           const { data } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentSession.user.id)
             .single();
           
-          if (data) {
-            // Transform the profile data to match our Profile interface
-            setProfile({
-              id: data.id,
-              username: data.username,
-              avatar_url: data.avatar_url,
-              nutrition_preferences: data.nutrition_preferences as unknown as NutritionPreferences,
-              weight_goal_type: data.weight_goal_type,
-              weight_goal_deficit: data.weight_goal_deficit
-            });
-          }
+          setProfile(transformProfile(data));
         } else {
           setProfile(null);
         }
@@ -80,24 +98,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        // Fetch user profile on initial load
         const { data } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', currentSession.user.id)
           .single();
         
-        if (data) {
-          // Transform the profile data to match our Profile interface
-          setProfile({
-            id: data.id,
-            username: data.username,
-            avatar_url: data.avatar_url,
-            nutrition_preferences: data.nutrition_preferences as unknown as NutritionPreferences,
-            weight_goal_type: data.weight_goal_type,
-            weight_goal_deficit: data.weight_goal_deficit
-          });
-        }
+        setProfile(transformProfile(data));
       }
     });
 

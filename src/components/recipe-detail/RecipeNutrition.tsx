@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { NutritionChart } from '@/components/recipe-detail/NutritionChart';
 import { useAuth } from '@/hooks/use-auth';
@@ -27,11 +26,14 @@ export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
     fat: recipe.nutrition.fat || recipe.nutrition.fat_g || 0
   };
 
-  // Get user preferences if available
+  // Get user preferences if available and properly formatted
   const userPreferences = profile?.nutrition_preferences ? {
     dailyCalories: profile.nutrition_preferences.dailyCalories,
     macroSplit: profile.nutrition_preferences.macroSplit
   } : undefined;
+
+  console.log('Profile nutrition preferences:', profile?.nutrition_preferences);
+  console.log('User preferences for chart:', userPreferences);
 
   return (
     <Card className="w-full">
