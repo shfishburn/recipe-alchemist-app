@@ -26,15 +26,19 @@ export function ChatResponse({
 }: ChatResponseProps) {
   const handleFollowUpClick = (question: string) => {
     if (!isApplying) {
+      console.log('Selected follow-up question:', question);
       setMessage(question);
     }
   };
+
+  const displayResponse = response || "I'm sorry, I couldn't process that response. Please try again.";
+  console.log('Rendering response:', displayResponse);
 
   return (
     <div className="animate-fade-in transition-all duration-200">
       <Message
         model={{
-          message: response || "I'm sorry, I couldn't process that response. Please try again.",
+          message: displayResponse,
           direction: "incoming",
           position: "single"
         }}
@@ -75,7 +79,7 @@ export function ChatResponse({
         )}
       </Message>
 
-      {followUpQuestions.length > 0 && (
+      {followUpQuestions && followUpQuestions.length > 0 && (
         <div className="mt-6 space-y-3 animate-fade-in">
           <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
             Follow-up Questions

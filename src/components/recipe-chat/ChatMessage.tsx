@@ -15,8 +15,17 @@ interface ChatMessageProps {
 
 export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
   const messageRef = useRef<HTMLDivElement>(null);
-  const { textResponse, followUpQuestions } = parseAIResponse(chat.ai_response);
   
+  useEffect(() => {
+    console.log('Raw AI response:', chat.ai_response);
+  }, [chat.ai_response]);
+
+  const parsedResponse = parseAIResponse(chat.ai_response);
+  
+  useEffect(() => {
+    console.log('Parsed response:', parsedResponse);
+  }, [parsedResponse]);
+
   // Auto-scroll to new messages
   useEffect(() => {
     if (messageRef.current) {
@@ -36,9 +45,9 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
       />
 
       <ChatResponse
-        response={textResponse}
+        response={parsedResponse.textResponse}
         changesSuggested={chat.changes_suggested}
-        followUpQuestions={followUpQuestions}
+        followUpQuestions={parsedResponse.followUpQuestions}
         setMessage={setMessage}
         onApplyChanges={() => applyChanges(chat)}
         isApplying={isApplying}
