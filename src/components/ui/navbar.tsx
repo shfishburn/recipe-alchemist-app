@@ -23,8 +23,8 @@ export function Navbar({ className }: { className?: string }) {
 
   return (
     <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
-      <div className="container-page flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="container-page flex h-16 items-center">
+        <div className="flex items-center gap-4 mr-auto">
           <MobileMenu />
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-recipe-blue/10 flex items-center justify-center">
@@ -48,7 +48,7 @@ export function Navbar({ className }: { className?: string }) {
         </nav>
 
         {/* Auth Button - Hidden on Mobile */}
-        <div className="hidden md:flex items-center space-x-3">
+        <div className="hidden md:flex items-center space-x-3 ml-6">
           {session ? (
             <Button variant="outline" size="sm" asChild>
               <Link to="/profile">Profile</Link>
