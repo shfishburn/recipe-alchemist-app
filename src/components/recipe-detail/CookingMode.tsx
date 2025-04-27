@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ChefHat, Timer, X, ArrowLeft, ArrowRight, Check, Square } from 'lucide-react';
+import { ChefHat, Timer, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Drawer,
@@ -11,6 +12,9 @@ import {
 } from '@/components/ui/drawer';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Timer as TimerComponent } from './cooking/Timer';
+import { CookingStep } from './cooking/CookingStep';
+import { CookingProgress } from './cooking/CookingProgress';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface CookingModeProps {
@@ -21,7 +25,6 @@ export function CookingMode({ recipe }: CookingModeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([]);
-  const [timer, setTimer] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   
   useEffect(() => {
@@ -62,12 +65,6 @@ export function CookingMode({ recipe }: CookingModeProps) {
     };
   }, [isOpen]);
   
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-  
   const toggleStepCompletion = (index: number) => {
     const newCompleted = [...completedSteps];
     newCompleted[index] = !newCompleted[index];
@@ -75,12 +72,10 @@ export function CookingMode({ recipe }: CookingModeProps) {
   };
   
   const startTimer = (minutes: number) => {
-    setTimer(minutes);
     setTimeRemaining(minutes * 60);
   };
   
   const cancelTimer = () => {
-    setTimer(null);
     setTimeRemaining(null);
   };
   
@@ -96,16 +91,7 @@ export function CookingMode({ recipe }: CookingModeProps) {
     }
   };
   
-  const progressPercentage = 
-    recipe.instructions && recipe.instructions.length > 0
-      ? ((currentStep + 1) / recipe.instructions.length) * 100
-      : 0;
-  
   const completedCount = completedSteps.filter(Boolean).length;
-  const completionPercentage = 
-    completedSteps.length > 0
-      ? (completedCount / completedSteps.length) * 100
-      : 0;
   
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -116,15 +102,11 @@ export function CookingMode({ recipe }: CookingModeProps) {
         <div className="container max-w-3xl mx-auto flex-1 overflow-y-auto">
           <DrawerHeader>
             <DrawerTitle className="text-xl">Cooking: {recipe.title}</DrawerTitle>
-            <div className="flex justify-between items-center mt-2">
-              <div className="text-sm text-muted-foreground">
-                Step {currentStep + 1} of {recipe.instructions ? recipe.instructions.length : 0}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {completedCount} of {completedSteps.length} steps completed
-              </div>
-            </div>
-            <Progress value={progressPercentage} className="mt-2" />
+            <CookingProgress 
+              currentStep={currentStep}
+              totalSteps={recipe.instructions?.length || 0}
+              completedSteps={completedCount}
+            />
           </DrawerHeader>
           
           <div className="px-4 py-2 mb-4">
@@ -165,64 +147,20 @@ export function CookingMode({ recipe }: CookingModeProps) {
           <Separator className="my-6" />
           
           <div className="px-4 py-8">
-            <div className="mb-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Step {currentStep + 1}</h2>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => toggleStepCompletion(currentStep)}
-                >
-                  {completedSteps[currentStep] ? (
-                    <Check className="h-4 w-4 mr-1" />
-                  ) : (
-                    <Square className="h-4 w-4 mr-1" />
-                  )}
-                  {completedSteps[currentStep] ? "Completed" : "Mark Complete"}
-                </Button>
-              </div>
-            </div>
+            {recipe.instructions && (
+              <CookingStep
+                stepNumber={currentStep + 1}
+                instruction={recipe.instructions[currentStep]}
+                isCompleted={completedSteps[currentStep]}
+                onToggleComplete={() => toggleStepCompletion(currentStep)}
+              />
+            )}
             
-            <div className="rounded-lg border p-6 bg-background">
-              <p className="text-xl leading-relaxed">
-                {recipe.instructions && recipe.instructions[currentStep]}
-              </p>
-            </div>
-            
-            <div className="mt-8 flex flex-col items-center">
-              {timeRemaining !== null ? (
-                <div className="p-6 rounded-lg border text-center w-full">
-                  <div className="text-3xl font-bold mb-2">
-                    {formatTime(timeRemaining)}
-                  </div>
-                  <Button 
-                    variant="destructive" 
-                    onClick={cancelTimer}
-                  >
-                    Stop Timer
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <Button variant="outline" onClick={() => startTimer(1)}>
-                    <Timer className="h-4 w-4 mr-2" />
-                    1 min
-                  </Button>
-                  <Button variant="outline" onClick={() => startTimer(3)}>
-                    <Timer className="h-4 w-4 mr-2" />
-                    3 min
-                  </Button>
-                  <Button variant="outline" onClick={() => startTimer(5)}>
-                    <Timer className="h-4 w-4 mr-2" />
-                    5 min
-                  </Button>
-                  <Button variant="outline" onClick={() => startTimer(10)}>
-                    <Timer className="h-4 w-4 mr-2" />
-                    10 min
-                  </Button>
-                </div>
-              )}
-            </div>
+            <TimerComponent
+              timeRemaining={timeRemaining}
+              onStart={startTimer}
+              onCancel={cancelTimer}
+            />
           </div>
         </div>
         
@@ -241,7 +179,7 @@ export function CookingMode({ recipe }: CookingModeProps) {
               <span className="text-sm text-muted-foreground">
                 {completedCount}/{completedSteps.length} steps
               </span>
-              <Progress value={completionPercentage} className="w-24 h-2" />
+              <Progress value={(completedCount / completedSteps.length) * 100} className="w-24 h-2" />
             </div>
             
             <Button 
