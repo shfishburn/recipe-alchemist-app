@@ -4,11 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 export async function generateRecipeImage(
   title: string,
   ingredients: Array<{ qty: number; unit: string; item: string; }>,
-  instructions: string[]
+  instructions: string[],
+  recipeId?: string
 ) {
   try {
     const response = await supabase.functions.invoke('generate-recipe-image', {
-      body: { title, ingredients, instructions },
+      body: { title, ingredients, instructions, recipeId },
     });
 
     if (response.error) throw response.error;
