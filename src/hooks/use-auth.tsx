@@ -1,10 +1,8 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Define the Profile interface and export it
 export interface Profile {
   id: string;
   username?: string;
@@ -44,23 +42,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(null);
       setUser(null);
       setProfile(null);
-      return Promise.resolve();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Changed from return Promise.reject(error) to throw
       throw error;
     }
   };
 
   useEffect(() => {
-    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Use setTimeout to prevent supabase auth deadlock
           setTimeout(async () => {
             try {
               const { data: profileData } = await supabase
@@ -82,7 +76,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
