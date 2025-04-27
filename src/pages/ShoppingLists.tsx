@@ -4,29 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/ui/navbar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-
-type ShoppingListItem = {
-  name: string;
-  quantity: number;
-  unit: string;
-  checked: boolean;
-};
-
-type ShoppingList = {
-  id: string;
-  title: string;
-  items: ShoppingListItem[];
-  created_at: string;
-};
+import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard';
+import { ShoppingListDetail } from '@/components/shopping-list/ShoppingListDetail';
+import type { ShoppingList } from '@/types/shopping-list';
 
 const ShoppingLists = () => {
   const { session } = useAuth();
   const { toast } = useToast();
   const [newListTitle, setNewListTitle] = useState('');
+  const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
 
   const { 
     data: shoppingLists, 
@@ -102,33 +91,47 @@ const ShoppingLists = () => {
           <h1 className="text-3xl font-bold mb-6">Shopping Lists</h1>
           
           <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex space-x-2">
-              <Input 
-                placeholder="New shopping list name" 
-                value={newListTitle}
-                onChange={(e) => setNewListTitle(e.target.value)}
-              />
-              <Button onClick={createNewList}>Create List</Button>
-            </div>
-
-            {isLoading ? (
-              <div>Loading...</div>
-            ) : shoppingLists?.length === 0 ? (
-              <p className="text-muted-foreground">No shopping lists yet</p>
+            {selectedList ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedList(null)}
+                  className="mb-4"
+                >
+                  ← Back to lists
+                </Button>
+                <ShoppingListDetail 
+                  list={selectedList} 
+                  onUpdate={refetch} 
+                />
+              </>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4">
-                {shoppingLists?.map((list) => (
-                  <Card key={list.id}>
-                    <CardHeader>
-                      <CardTitle>{list.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{list.items.length} items</p>
-                      {/* Future: Add more list details */}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <>
+                <div className="flex space-x-2">
+                  <Input 
+                    placeholder="New shopping list name" 
+                    value={newListTitle}
+                    onChange={(e) => setNewListTitle(e.target.value)}
+                  />
+                  <Button onClick={createNewList}>Create List</Button>
+                </div>
+
+                {isLoading ? (
+                  <div>Loading...</div>
+                ) : !shoppingLists?.length ? (
+                  <p className="text-muted-foreground">No shopping lists yet</p>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {shoppingLists.map((list) => (
+                      <ShoppingListCard 
+                        key={list.id}
+                        list={list}
+                        onClick={() => setSelectedList(list)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

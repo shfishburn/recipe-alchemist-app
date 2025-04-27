@@ -1,0 +1,16 @@
+
+export type ShoppingListItem = {
+  name: string;
+  quantity: number;
+  unit: string;
+  checked: boolean;
+};
+
+export type ShoppingList = {
+  id: string;
+  title: string;
+  items: ShoppingListItem[];
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+};
