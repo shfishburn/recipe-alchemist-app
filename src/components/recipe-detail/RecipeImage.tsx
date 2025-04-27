@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Json } from '@/integrations/supabase/types';
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -37,6 +38,9 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           previous_version_id: recipe.id,
           version_number: recipe.version_number + 1,
           image_url: response.data.imageUrl,
+          // Cast the complex objects to Json type for Supabase
+          ingredients: recipe.ingredients as unknown as Json,
+          nutrition: recipe.nutrition as unknown as Json
         })
         .select()
         .single();
