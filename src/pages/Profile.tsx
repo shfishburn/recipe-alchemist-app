@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
@@ -11,6 +12,7 @@ import { DietaryPreferences } from '@/components/profile/DietaryPreferences';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface NutritionPreferencesType {
   dailyCalories: number;
@@ -84,6 +86,7 @@ const Profile = () => {
     }
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [profileData, setProfileData] = useState<any>(null);
 
   const handleLogout = async () => {
     try {
