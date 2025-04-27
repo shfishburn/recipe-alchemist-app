@@ -9,6 +9,9 @@ import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients'
 import { RecipeNutrition } from '@/components/recipe-detail/RecipeNutrition';
 import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
 import { RecipeChat } from '@/components/recipe-chat/RecipeChat';
+import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
+import { CookingMode } from '@/components/recipe-detail/CookingMode';
+import { Separator } from '@/components/ui/separator';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -31,6 +34,14 @@ const RecipeDetail = () => {
           ) : recipe ? (
             <div className="max-w-4xl mx-auto">
               <RecipeHeader recipe={recipe} />
+              
+              {/* Recipe actions */}
+              <div className="mb-8 flex flex-wrap gap-2">
+                <PrintRecipe recipe={recipe} />
+                <CookingMode recipe={recipe} />
+              </div>
+              <Separator className="mb-8" />
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="md:col-span-1">
                   <RecipeIngredients recipe={recipe} />

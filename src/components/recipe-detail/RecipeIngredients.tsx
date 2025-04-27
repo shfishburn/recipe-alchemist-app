@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { AddToShoppingList } from './AddToShoppingList';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeIngredientsProps {
@@ -12,7 +13,10 @@ export function RecipeIngredients({ recipe }: RecipeIngredientsProps) {
     <div>
       <Card>
         <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Ingredients</h2>
+            <AddToShoppingList recipe={recipe} />
+          </div>
           <ul className="space-y-2">
             {recipe.ingredients && Array.isArray(recipe.ingredients) ? 
               recipe.ingredients.map((ingredient, index) => (
