@@ -98,6 +98,10 @@ const InputsTab = ({
           </Tooltip>
         </TooltipProvider>
 
+        <p className="text-xs text-muted-foreground">
+          Your recipe name helps AI understand the dish you're creating
+        </p>
+
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
             {commonRecipes.map((recipe) => (
@@ -227,3 +231,4 @@ const InputsTab = ({
 };
 
 export default InputsTab;
+

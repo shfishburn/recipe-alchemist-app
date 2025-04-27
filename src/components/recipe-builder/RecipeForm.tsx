@@ -151,7 +151,6 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
 
           <TabsContent value="settings">
             <SettingsTab
-              servings={formData.servings}
               maxCalories={formData.maxCalories}
               maxMinutes={formData.maxMinutes}
               onChange={handleSettingChange}
