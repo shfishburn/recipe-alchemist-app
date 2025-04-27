@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message } from "@chatscope/chat-ui-kit-react";
 import { ChatResponse } from './ChatResponse';
@@ -13,23 +12,27 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
-  // Parse follow-up questions with better error handling
-  const followUpQuestions = Array.isArray(chat.follow_up_questions) 
-    ? chat.follow_up_questions 
-    : [];
-
-  let parsedFollowUpQuestions = followUpQuestions;
-  if (followUpQuestions.length === 0 && chat.ai_response) {
-    try {
-      const responseObj = JSON.parse(chat.ai_response);
-      if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
-        parsedFollowUpQuestions = responseObj.followUpQuestions;
-      }
-    } catch (e) {
-      console.log("Could not parse follow-up questions from response");
-    }
-  }
+  // Parse the AI response
+  let displayText = chat.ai_response;
+  let parsedFollowUpQuestions: string[] = [];
+  
+  try {
+    const parsedResponse = JSON.parse(chat.ai_response);
     
+    // Extract text response from parsed JSON
+    if (parsedResponse && typeof parsedResponse.textResponse === 'string') {
+      displayText = parsedResponse.textResponse;
+    }
+    
+    // Extract follow-up questions
+    if (Array.isArray(parsedResponse.followUpQuestions)) {
+      parsedFollowUpQuestions = parsedResponse.followUpQuestions;
+    }
+  } catch (e) {
+    console.log("Could not parse AI response:", e);
+    // Keep the raw response if parsing fails
+  }
+  
   return (
     <div className="mb-6 animate-fade-in">
       <Message 
@@ -42,7 +45,7 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
       />
 
       <ChatResponse
-        response={chat.ai_response}
+        response={displayText}
         changesSuggested={chat.changes_suggested}
         followUpQuestions={parsedFollowUpQuestions}
         setMessage={setMessage}

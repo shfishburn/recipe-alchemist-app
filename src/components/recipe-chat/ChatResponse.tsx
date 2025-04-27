@@ -24,19 +24,6 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
-  // Parse response with better error handling
-  let displayText = response;
-  let parsedResponse = null;
-  
-  try {
-    parsedResponse = JSON.parse(response);
-    if (parsedResponse && typeof parsedResponse.textResponse === 'string') {
-      displayText = parsedResponse.textResponse;
-    }
-  } catch (e) {
-    console.log("Could not parse response as JSON, using raw text");
-  }
-
   const handleFollowUpClick = (question: string) => {
     if (!isApplying) {
       setMessage(question);
@@ -47,7 +34,7 @@ export function ChatResponse({
     <div className="animate-fade-in">
       <Message
         model={{
-          message: displayText,
+          message: response || "No response available",
           direction: "incoming",
           position: "single"
         }}
@@ -84,7 +71,7 @@ export function ChatResponse({
         )}
       </Message>
 
-      {followUpQuestions && followUpQuestions.length > 0 && (
+      {followUpQuestions.length > 0 && (
         <div className="mt-6 space-y-3 animate-fade-in">
           <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
             Follow-up Questions
