@@ -20,9 +20,17 @@ interface ChatMessage {
         qty: number;
         unit: string;
         item: string;
+        notes?: string;
       }>;
     };
-    instructions?: string[];
+    instructions?: Array<{
+      stepNumber?: number;
+      action: string;
+      explanation?: string;
+      whyItWorks?: string;
+      troubleshooting?: string;
+      indicator?: string;
+    }> | string[];
     nutrition?: {
       kcal?: number;
       protein_g?: number;
@@ -33,6 +41,8 @@ interface ChatMessage {
       sodium_mg?: number;
     };
     health_insights?: string[];
+    equipmentNeeded?: string[];
+    scientific_principles?: string[];
   } | null;
   applied: boolean;
   created_at: string;
@@ -62,7 +72,7 @@ export const useRecipeChat = (recipe: Recipe) => {
       // Show loading toast
       toast({
         title: "Processing your request",
-        description: "Our chef AI is analyzing your recipe...",
+        description: "Our culinary scientist is analyzing your recipe...",
       });
       
       const response = await supabase.functions.invoke('recipe-chat', {
@@ -94,7 +104,7 @@ export const useRecipeChat = (recipe: Recipe) => {
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       toast({
         title: "Response received",
-        description: "Chef AI has analyzed your recipe",
+        description: "Culinary analysis complete",
       });
     },
     onError: (error) => {
@@ -113,7 +123,7 @@ export const useRecipeChat = (recipe: Recipe) => {
       // Show loading toast
       toast({
         title: "Applying changes",
-        description: "Updating your recipe...",
+        description: "Updating your recipe with scientific improvements...",
       });
 
       let imageUrl = recipe.image_url;
@@ -127,7 +137,11 @@ export const useRecipeChat = (recipe: Recipe) => {
             body: {
               title: chatMessage.changes_suggested.title || recipe.title,
               ingredients: chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
-              instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
+              instructions: Array.isArray(chatMessage.changes_suggested.instructions) 
+                ? chatMessage.changes_suggested.instructions.map(instr => 
+                    typeof instr === 'string' ? instr : instr.action
+                  ) 
+                : recipe.instructions,
             },
           });
 
@@ -144,10 +158,26 @@ export const useRecipeChat = (recipe: Recipe) => {
         previous_version_id: recipe.id,
         version_number: recipe.version_number + 1,
         title: chatMessage.changes_suggested.title || recipe.title,
-        instructions: chatMessage.changes_suggested.instructions || recipe.instructions,
         nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
         image_url: imageUrl,
       };
+
+      // Handle instructions which might be an array of strings or complex objects
+      if (chatMessage.changes_suggested.instructions) {
+        if (typeof chatMessage.changes_suggested.instructions[0] === 'string') {
+          newRecipeData.instructions = chatMessage.changes_suggested.instructions as string[];
+        } else {
+          // Handle complex instruction objects
+          newRecipeData.instructions = (chatMessage.changes_suggested.instructions as Array<{
+            stepNumber?: number;
+            action: string;
+            explanation?: string;
+            whyItWorks?: string;
+            troubleshooting?: string;
+            indicator?: string;
+          }>).map(instr => instr.action);
+        }
+      }
 
       if (chatMessage.changes_suggested.ingredients) {
         const { mode, items } = chatMessage.changes_suggested.ingredients;
@@ -183,7 +213,7 @@ export const useRecipeChat = (recipe: Recipe) => {
     onSuccess: (newRecipe) => {
       toast({
         title: "Changes applied",
-        description: `Created version ${newRecipe.version_number} of the recipe`,
+        description: `Created version ${newRecipe.version_number} of the recipe with scientific improvements`,
       });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       window.location.href = `/recipes/${newRecipe.id}`;

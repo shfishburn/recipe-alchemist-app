@@ -21,7 +21,7 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage } = await req.json();
 
-    const prompt = `As a Michelin-starred chef and registered dietitian, review this recipe and suggest improvements based on the user's request. 
+    const prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements.
 
 Current recipe:
 - Title: ${recipe.title}
@@ -38,32 +38,43 @@ ${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
 User request: ${userMessage}
 
-Your response must include:
-1. A clear, structured response with headings, bullet points, and formatted text
-2. A detailed nutritional analysis of proposed changes
-3. Culinary insights and techniques
-4. Health benefits/considerations
+Your response MUST follow this structure:
+
+1. Overview: A concise summary of your recommended changes and why they'll improve the recipe
+
+2. Scientific Analysis: Explain the food science behind your recommendations, including chemical reactions, texture changes, or flavor development techniques
+
+3. Technique Improvements: Describe precise cooking methods with specific temperatures, times, and visual/tactile indicators
+
+4. Ingredient Modifications: Specify exact measurements for any ingredient changes with scientific justification
+
+5. Nutritional Impact: Detail how your changes affect the nutritional profile with precise values
+
+6. Testing Notes: Briefly describe how these recommendations have been tested and verified
 
 Format your response for readability using:
-• Clear section headings with colons (e.g., "Nutritional Impact:")
+• Clear section headings with colons
 • Bullet points for lists (•)
-• Organized structure with spacing between sections
+• Precise measurements and temperatures
+• Visual and sensory indicators for doneness
+• Scientific terminology with plain English explanations
 
-Also include 3 engaging follow-up questions related to:
-• Health/nutrition goals
-• Culinary preferences
-• Dietary restrictions
+Also include 3 follow-up questions related to:
+• Advanced techniques the user might want to learn
+• Science behind a specific aspect of the recipe
+• Variations to accommodate different dietary needs or equipment
 
-IMPORTANT: You must provide a valid JSON object structure with these fields:
+IMPORTANT: Your response must be valid JSON following this schema:
 {
-  "textResponse": "Your formatted response text here",
+  "textResponse": "Your formatted response with all sections above",
   "changes": {
     "title": "Optional updated title",
     "ingredients": {
       "mode": "add" or "replace" or "none",
-      "items": [] (array of updated ingredients objects)
+      "items": [] (array of ingredients with qty, unit, item, and notes properties)
     },
-    "instructions": [] (array of updated instructions)
+    "instructions": [] (array of updated instructions with stepNumber, action, explanation, whyItWorks, troubleshooting, and indicator properties),
+    "equipmentNeeded": [] (array of necessary equipment)
   },
   "nutrition": {
     "kcal": number,
@@ -73,7 +84,8 @@ IMPORTANT: You must provide a valid JSON object structure with these fields:
     "fiber_g": number
   },
   "health_insights": ["insight1", "insight2"],
-  "follow_up_questions": ["question1", "question2", "question3"]
+  "follow_up_questions": ["question1", "question2", "question3"],
+  "scientific_principles": ["principle1", "principle2"]
 }`;
 
     const response = await openai.chat.completions.create({
@@ -99,12 +111,14 @@ IMPORTANT: You must provide a valid JSON object structure with these fields:
           ingredients: parsedContent.changes?.ingredients || null,
           instructions: parsedContent.changes?.instructions || null,
           nutrition: parsedContent.nutrition || {},
-          health_insights: parsedContent.health_insights || []
+          health_insights: parsedContent.health_insights || [],
+          equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
+          scientific_principles: parsedContent.scientific_principles || []
         },
         followUpQuestions: parsedContent.follow_up_questions || [
-          "How would you like to adjust the nutritional profile of this recipe?",
-          "Are there any specific health goals you're trying to achieve?",
-          "Would you like to explore alternative ingredients for better nutrition?"
+          "How would the science behind this recipe change if we altered the cooking temperature?",
+          "What specific chemical reactions occur when cooking this dish?",
+          "How could we modify this recipe for different dietary restrictions while maintaining the same flavor profile?"
         ]
       };
       

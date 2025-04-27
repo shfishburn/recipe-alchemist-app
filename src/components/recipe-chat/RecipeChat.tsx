@@ -2,9 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, Check } from 'lucide-react';
+import { Loader2, Send, Check, Beaker, ChefHat } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { Badge } from '@/components/ui/badge';
@@ -116,7 +115,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
         <div className="space-y-6">
           {chatHistory.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Ask for cooking tips or recipe modifications!</p>
+              <p className="text-muted-foreground">Ask for cooking techniques, scientific insights, or recipe modifications!</p>
             </div>
           )}
           
@@ -138,6 +137,36 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         {renderFormattedResponse(chat.ai_response)}
                       </div>
                     </div>
+
+                    {/* Scientific Principles */}
+                    {chat.changes_suggested?.scientific_principles && chat.changes_suggested.scientific_principles.length > 0 && (
+                      <div className="bg-white/80 px-4 py-3 rounded-[20px] shadow-sm">
+                        <h4 className="font-medium mb-2 flex items-center gap-1 text-[#221F26]">
+                          <Beaker className="h-4 w-4" />
+                          Scientific Principles:
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {chat.changes_suggested.scientific_principles.map((principle, i) => (
+                            <li key={i} className="text-sm">{principle}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Equipment Needed */}
+                    {chat.changes_suggested?.equipmentNeeded && chat.changes_suggested.equipmentNeeded.length > 0 && (
+                      <div className="bg-white/80 px-4 py-3 rounded-[20px] shadow-sm">
+                        <h4 className="font-medium mb-2 flex items-center gap-1 text-[#221F26]">
+                          <ChefHat className="h-4 w-4" />
+                          Equipment Needed:
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {chat.changes_suggested.equipmentNeeded.map((equipment, i) => (
+                            <li key={i} className="text-sm">{equipment}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                     {/* Nutritional Changes */}
                     {chat.changes_suggested?.nutrition && Object.keys(chat.changes_suggested.nutrition).length > 0 && (
@@ -197,14 +226,14 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                           ) : (
                             <Check className="h-4 w-4" />
                           )}
-                          Apply Changes
+                          Apply Scientific Improvements
                         </Button>
                       </div>
                     )}
 
                     {chat.applied && (
                       <p className="text-sm text-green-500 flex items-center gap-1">
-                        <Check className="h-3 w-3" /> Changes applied
+                        <Check className="h-3 w-3" /> Improvements applied
                       </p>
                     )}
                   </div>
@@ -219,7 +248,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ask for recipe modifications..."
+                placeholder="Ask about cooking science, techniques, or modifications..."
                 className="flex-1 bg-white resize-none rounded-2xl"
                 rows={2}
               />
