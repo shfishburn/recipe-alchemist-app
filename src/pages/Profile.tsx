@@ -1,16 +1,17 @@
-
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, LogOut } from 'lucide-react';
 import { ProfileBasicInfo } from '@/components/profile/ProfileBasicInfo';
 import { NutritionPreferences } from '@/components/profile/NutritionPreferences';
 import { DietaryPreferences } from '@/components/profile/DietaryPreferences';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export interface NutritionPreferencesType {
   dailyCalories: number;
@@ -51,6 +52,7 @@ export interface NutritionPreferencesType {
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState<any>(null);
   const [nutritionPreferences, setNutritionPreferences] = useState<NutritionPreferencesType>({
     dailyCalories: 2000,
@@ -85,6 +87,23 @@ const Profile = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+      toast({
+        title: 'Success',
+        description: 'Successfully logged out',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to log out',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchProfileData = async () => {
       if (user) {
@@ -101,18 +120,16 @@ const Profile = () => {
           if (profileData) {
             setProfileData(profileData);
             
-            // If nutrition preferences exist, load them
             const savedPreferences = profileData.nutrition_preferences;
             if (savedPreferences) {
-              // Type assertion with check to ensure it has required properties
               const typedPreferences = savedPreferences as any;
               if (typedPreferences && 
                   typeof typedPreferences === 'object' && 
                   'dailyCalories' in typedPreferences &&
                   'macroSplit' in typedPreferences) {
                 setNutritionPreferences({
-                  ...nutritionPreferences, // Default values
-                  ...typedPreferences as NutritionPreferencesType // Overwrite with saved values
+                  ...nutritionPreferences,
+                  ...typedPreferences as NutritionPreferencesType
                 });
               }
             }
@@ -137,7 +154,6 @@ const Profile = () => {
     if (!user) return;
     
     try {
-      // Calculate BMR and TDEE when saving if personal details are available
       let prefsToSave = { ...updatedPreferences };
       
       if (prefsToSave.personalDetails && 
@@ -146,19 +162,15 @@ const Profile = () => {
           prefsToSave.personalDetails.height && 
           prefsToSave.personalDetails.gender) {
             
-        // Calculate BMR using Mifflin-St Jeor Equation
         const { age, weight, height, gender } = prefsToSave.personalDetails;
         
         let bmr = 0;
         if (gender === 'male') {
-          // Men: BMR = 10W + 6.25H - 5A + 5
           bmr = 10 * weight + 6.25 * height - 5 * age + 5;
         } else {
-          // Women: BMR = 10W + 6.25H - 5A - 161
           bmr = 10 * weight + 6.25 * height - 5 * age - 161;
         }
         
-        // Calculate TDEE based on activity level
         const activityMultipliers: Record<string, number> = {
           'sedentary': 1.2,
           'light': 1.375,
@@ -173,13 +185,12 @@ const Profile = () => {
         prefsToSave.bmr = Math.round(bmr);
         prefsToSave.tdee = tdee;
         
-        // Update calories based on health goal if auto-calculation is desired
         if (prefsToSave.healthGoal === 'weight-loss') {
-          prefsToSave.dailyCalories = Math.round(tdee * 0.8); // 20% deficit
+          prefsToSave.dailyCalories = Math.round(tdee * 0.8);
         } else if (prefsToSave.healthGoal === 'muscle-gain') {
-          prefsToSave.dailyCalories = Math.round(tdee * 1.15); // 15% surplus
+          prefsToSave.dailyCalories = Math.round(tdee * 1.15);
         } else {
-          prefsToSave.dailyCalories = tdee; // Maintenance
+          prefsToSave.dailyCalories = tdee;
         }
       }
       
@@ -222,7 +233,15 @@ const Profile = () => {
                   }
                 </Avatar>
                 <h2 className="text-xl font-semibold">{profileData?.username || user?.email}</h2>
-                <p className="text-sm text-muted-foreground mb-2">{user?.email}</p>
+                <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
+                <Button 
+                  variant="destructive" 
+                  onClick={handleLogout}
+                  className="w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
               </CardContent>
             </Card>
             <div className="w-full">
