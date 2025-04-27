@@ -6,6 +6,13 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import type { Recipe } from '@/types/recipe';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -15,6 +22,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(recipe.image_url);
+  const [showImageDialog, setShowImageDialog] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -102,6 +110,12 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     setImageUrl(null);
   };
 
+  const openFullImage = () => {
+    if (imageUrl && !imageError) {
+      setShowImageDialog(true);
+    }
+  };
+
   return (
     <div className="relative mb-6">
       <div className="rounded-lg overflow-hidden">
@@ -109,8 +123,9 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           <img
             src={imageUrl}
             alt={recipe.title}
-            className="w-full aspect-video object-cover rounded-lg"
+            className="w-full aspect-video object-cover rounded-lg cursor-pointer"
             onError={handleImageError}
+            onClick={openFullImage}
           />
         ) : (
           <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
@@ -142,6 +157,26 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           )}
         </Button>
       </div>
+
+      {/* Full Image Dialog */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="max-w-2xl" aria-describedby="image-dialog-description">
+          <DialogHeader>
+            <DialogTitle>{recipe.title}</DialogTitle>
+            <DialogDescription id="image-dialog-description">
+              Full image view
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <img
+              src={imageUrl || ''}
+              alt={recipe.title}
+              className="max-h-[70vh] object-contain rounded-md"
+              onError={handleImageError}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

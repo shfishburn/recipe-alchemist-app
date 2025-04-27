@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Heart, Trash2 } from 'lucide-react';
+import { Heart, Trash2, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import type { Database } from '@/integrations/supabase/types';
@@ -15,20 +15,55 @@ interface RecipeCardProps {
 
 const RecipeCard = ({ recipe }: RecipeCardProps) => {
   const { mutate: deleteRecipe } = useDeleteRecipe();
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(recipe.image_url);
+
+  // Check if the image URL has expired tokens
+  useEffect(() => {
+    if (recipe.image_url) {
+      // If the URL contains expiration parameters, it might be an OpenAI URL with time-limited access
+      const hasExpirationParams = recipe.image_url.includes("st=") && recipe.image_url.includes("se=");
+      
+      if (hasExpirationParams) {
+        // For expired OpenAI URLs, set image error to true to show fallback
+        const currentTime = new Date().getTime();
+        const expireTimeMatch = recipe.image_url.match(/se=(\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}%3A\d{2}Z)/);
+        
+        if (expireTimeMatch) {
+          try {
+            const expireTime = new Date(decodeURIComponent(expireTimeMatch[1])).getTime();
+            if (currentTime > expireTime) {
+              setImageError(true);
+              setImageUrl(null);
+            }
+          } catch (e) {
+            console.error("Error parsing expiration time:", e);
+          }
+        }
+      }
+    }
+  }, [recipe.image_url]);
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageUrl(null);
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <Link to={`/recipes/${recipe.id}`}>
         <div className="aspect-video relative overflow-hidden bg-gray-100">
-          {recipe.image_url ? (
+          {imageUrl && !imageError ? (
             <img
-              src={recipe.image_url}
+              src={imageUrl}
               alt={recipe.title}
               className="object-cover w-full h-full"
+              onError={handleImageError}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              <span className="text-gray-400">No image</span>
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+              <ImageIcon className="h-8 w-8 text-gray-400 mb-2" />
+              <span className="text-gray-400 text-sm">No image</span>
             </div>
           )}
         </div>
