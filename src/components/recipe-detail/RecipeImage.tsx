@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { ImagePlus, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ImagePlus, Loader2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,7 @@ interface RecipeImageProps {
 
 export function RecipeImage({ recipe }: RecipeImageProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [imageError, setImageError] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -59,18 +60,34 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     }
   };
 
+  // Reset image error state if the recipe or image URL changes
+  React.useEffect(() => {
+    if (recipe.image_url) {
+      setImageError(false);
+    }
+  }, [recipe.id, recipe.image_url]);
+
+  const handleImageError = () => {
+    console.error('Image failed to load:', recipe.image_url);
+    setImageError(true);
+  };
+
   return (
     <div className="relative mb-6">
       <div className="rounded-lg overflow-hidden">
-        {recipe.image_url ? (
+        {recipe.image_url && !imageError ? (
           <img
             src={recipe.image_url}
             alt={recipe.title}
             className="w-full aspect-video object-cover rounded-lg"
+            onError={handleImageError}
           />
         ) : (
-          <div className="w-full aspect-video bg-muted flex items-center justify-center rounded-lg">
-            <p className="text-muted-foreground">No image available</p>
+          <div className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg">
+            <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
+            <p className="text-muted-foreground">
+              {imageError ? "Image failed to load" : "No image available"}
+            </p>
           </div>
         )}
       </div>
