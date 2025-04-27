@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
@@ -96,6 +97,7 @@ const Profile = () => {
         description: 'Successfully logged out',
       });
     } catch (error) {
+      console.error('Logout error:', error);
       toast({
         title: 'Error',
         description: 'Failed to log out',
@@ -238,6 +240,7 @@ const Profile = () => {
                   variant="destructive" 
                   onClick={handleLogout}
                   className="w-full"
+                  type="button"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
