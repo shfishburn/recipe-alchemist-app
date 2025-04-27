@@ -5,8 +5,8 @@ export interface Recipe {
   description?: string;
   ingredients: string[] | { qty: number; unit: string; item: string; notes?: string }[];
   instructions: string[];
-  prepTime?: number;
-  cookTime?: number;
+  prep_time_min?: number;
+  cook_time_min?: number;
   servings?: number;
   image_url?: string;
   cuisine?: string;
@@ -16,11 +16,17 @@ export interface Recipe {
   updated_at?: string;
   original_request?: string;
   reasoning?: string;
+  tagline?: string;
+  version_number?: number;
+  previous_version_id?: string;
+  deleted_at?: string;
+  dietary?: string;
+  flavor_tags?: string[];
   nutrition?: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
     kcal?: number;
     protein_g?: number;
     carbs_g?: number;

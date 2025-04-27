@@ -53,11 +53,8 @@ const RecipeDetail = () => {
               </div>
               
               {/* Visible recipe actions */}
-              <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
-                <RecipeActions recipe={recipe} sticky={false} />
-                {/* Make RecipeChatDrawer visible as part of the actions */}
-                <RecipeChatDrawer recipe={recipe} />
-              </div>
+              <RecipeActions recipe={recipe} sticky={false} />
+              
               <Separator className="mb-8" />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -81,7 +78,7 @@ const RecipeDetail = () => {
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-3">
                       <BookOpen className="h-5 w-5 text-recipe-blue mt-1 flex-shrink-0" />
-                      <div className="space-y-2 overflow-auto max-h-[300px]"> {/* Make scrollable */}
+                      <div className="space-y-2 overflow-auto max-h-[300px]">
                         {recipe.original_request && (
                           <p className="text-sm text-muted-foreground">
                             Original request: <span className="font-medium text-foreground">{recipe.original_request}</span>

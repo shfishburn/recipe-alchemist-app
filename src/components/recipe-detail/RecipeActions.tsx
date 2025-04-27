@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PrintRecipe } from './PrintRecipe';
 import { CookingMode } from './CookingMode';
-import { Printer, ChefHat, Share2, Trash2 } from 'lucide-react';
+import { Printer, ChefHat, Share2, Trash2, MessageCircle } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Recipe } from '@/types/recipe';
 
 interface RecipeActionsProps {
   recipe: Recipe;
@@ -63,37 +63,49 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
         <Button 
           variant="outline" 
           size="sm"
-          className="flex-1 md:flex-none"
+          className="flex-1 md:flex-none md:w-auto"
           onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
         >
           <ChefHat className="h-4 w-4 mr-2" />
           Cooking Mode
         </Button>
+        
         <Button 
           variant="outline" 
           size="sm"
-          className="flex-1 md:flex-none"
+          className="flex-1 md:flex-none md:w-auto"
           onClick={() => window.document.getElementById('print-recipe-trigger')?.click()}
         >
           <Printer className="h-4 w-4 mr-2" />
           Print Recipe
         </Button>
-        <RecipeChatDrawer recipe={recipe} />
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex-1 md:flex-none md:w-auto"
+          onClick={() => window.document.getElementById('recipe-chat-trigger')?.click()}
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Recipe Chat
+        </Button>
+        
         {navigator.share && (
           <Button 
             variant="outline" 
             size="sm"
-            className="flex-1 md:flex-none"
+            className="flex-1 md:flex-none md:w-auto"
             onClick={shareRecipe}
           >
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
         )}
+        
         <Button 
           variant="destructive" 
           size="sm"
-          className="flex-1 md:flex-none"
+          className="flex-1 md:flex-none md:w-auto"
           onClick={handleDelete}
         >
           <Trash2 className="h-4 w-4 mr-2" />

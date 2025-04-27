@@ -20,7 +20,12 @@ export function RecipeChatDrawer({ recipe }: RecipeChatDrawerProps) {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="outline" size="sm" className="flex-1 md:flex-none md:w-auto">
+        <Button 
+          id="recipe-chat-trigger"
+          variant="outline" 
+          size="sm" 
+          className="flex-1 md:flex-none md:w-auto"
+        >
           <MessageCircle className="h-4 w-4 mr-2" />
           Recipe Chat
         </Button>
