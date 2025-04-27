@@ -1,356 +1,221 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Info } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
+import React from 'react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Label
+} from 'recharts';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { NutritionChart } from './nutrition/NutritionChart';
-import type { Recipe } from '@/hooks/use-recipe-detail';
 import type { NutritionPreferencesType } from '@/pages/Profile';
+import { ChartContainer } from '@/components/ui/chart';
 
-interface RecipeNutritionProps {
-  recipe: Recipe;
+interface RecipeNutrition {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
 }
 
-export function RecipeNutrition({ recipe }: RecipeNutritionProps) {
-  const [isOpen, setIsOpen] = useState(true);
-  const [compareToPreferences, setCompareToPreferences] = useState(false);
-  const [userPreferences, setUserPreferences] = useState<NutritionPreferencesType | null>(null);
-  const { user } = useAuth();
-  
-  useEffect(() => {
-    if (user && compareToPreferences) {
-      const fetchUserPreferences = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('nutrition_preferences')
-            .eq('id', user.id)
-            .single();
-            
-          if (error) throw error;
-          
-          if (data?.nutrition_preferences && 
-              typeof data.nutrition_preferences === 'object' && 
-              'dailyCalories' in data.nutrition_preferences &&
-              'macroSplit' in data.nutrition_preferences) {
-            setUserPreferences(data.nutrition_preferences as NutritionPreferencesType);
-          }
-        } catch (error) {
-          console.error('Error fetching nutrition preferences:', error);
-        }
-      };
-      
-      fetchUserPreferences();
-    }
-  }, [user, compareToPreferences]);
-  
-  if (!recipe.nutrition) return null;
-  
-  const nutrition = recipe.nutrition;
-  const servingSize = recipe.servings || 1;
-  
-  const caloriesPerServing = nutrition.kcal ? Math.round(nutrition.kcal / servingSize) : undefined;
-  const proteinPerServing = nutrition.protein_g ? Math.round(nutrition.protein_g / servingSize) : undefined;
-  const carbsPerServing = nutrition.carbs_g ? Math.round(nutrition.carbs_g / servingSize) : undefined;
-  const fatPerServing = nutrition.fat_g ? Math.round(nutrition.fat_g / servingSize) : undefined;
-  
-  const dailyValuePercentages = userPreferences && compareToPreferences ? {
-    calories: caloriesPerServing ? Math.round((caloriesPerServing / userPreferences.dailyCalories) * 100) : 0,
-    protein: proteinPerServing ? Math.round((proteinPerServing / ((userPreferences.dailyCalories * userPreferences.macroSplit.protein / 100) / 4)) * 100) : 0,
-    carbs: carbsPerServing ? Math.round((carbsPerServing / ((userPreferences.dailyCalories * userPreferences.macroSplit.carbs / 100) / 4)) * 100) : 0,
-    fat: fatPerServing ? Math.round((fatPerServing / ((userPreferences.dailyCalories * userPreferences.macroSplit.fat / 100) / 9)) * 100) : 0
-  } : null;
-  
-  let macroDetails = null;
-  if (userPreferences?.macroDetails && compareToPreferences) {
-    macroDetails = {
-      complexCarbs: carbsPerServing ? Math.round(carbsPerServing * (userPreferences.macroDetails.complexCarbs || 60) / 100) : 0,
-      simpleCarbs: carbsPerServing ? Math.round(carbsPerServing * (userPreferences.macroDetails.simpleCarbs || 40) / 100) : 0,
-      saturatedFat: fatPerServing ? Math.round(fatPerServing * (userPreferences.macroDetails.saturatedFat || 30) / 100) : 0,
-      unsaturatedFat: fatPerServing ? Math.round(fatPerServing * (userPreferences.macroDetails.unsaturatedFat || 70) / 100) : 0,
-    };
-  }
+interface NutritionChartProps {
+  recipeNutrition: RecipeNutrition;
+  userPreferences: NutritionPreferencesType;
+}
 
-  const getProgressColor = (percentage: number) => {
-    if (percentage <= 33) return "bg-green-500"; 
-    if (percentage <= 66) return "bg-amber-500";
-    return "bg-red-500";
+export function NutritionChart({ recipeNutrition, userPreferences }: NutritionChartProps) {
+  // Calculate user's target macros in grams
+  const proteinTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.protein / 100)) / 4);
+  const carbsTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.carbs / 100)) / 4);
+  const fatTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.fat / 100)) / 9);
+  
+  // Calculate percentage of daily goal
+  const proteinPercentage = Math.round((recipeNutrition.protein / proteinTarget) * 100);
+  const carbsPercentage = Math.round((recipeNutrition.carbs / carbsTarget) * 100);
+  const fatPercentage = Math.round((recipeNutrition.fat / fatTarget) * 100);
+  const caloriesPercentage = Math.round((recipeNutrition.calories / userPreferences.dailyCalories) * 100);
+  
+  // Data for the bar chart comparing recipe nutrition with daily targets
+  const compareData = [
+    {
+      name: 'Protein',
+      Recipe: recipeNutrition.protein,
+      Target: proteinTarget,
+      percentage: proteinPercentage
+    },
+    {
+      name: 'Carbs',
+      Recipe: recipeNutrition.carbs,
+      Target: carbsTarget,
+      percentage: carbsPercentage
+    },
+    {
+      name: 'Fat',
+      Recipe: recipeNutrition.fat,
+      Target: fatTarget,
+      percentage: fatPercentage
+    },
+    {
+      name: 'Calories',
+      Recipe: recipeNutrition.calories,
+      Target: userPreferences.dailyCalories,
+      percentage: caloriesPercentage
+    }
+  ];
+  
+  // Data for the pie chart showing macro distribution in the recipe
+  const recipeMacrosTotal = recipeNutrition.protein + recipeNutrition.carbs + recipeNutrition.fat;
+  const macrosData = [
+    { name: 'Protein', value: Math.round((recipeNutrition.protein / recipeMacrosTotal) * 100) },
+    { name: 'Carbs', value: Math.round((recipeNutrition.carbs / recipeMacrosTotal) * 100) },
+    { name: 'Fat', value: Math.round((recipeNutrition.fat / recipeMacrosTotal) * 100) }
+  ];
+  
+  // Data for the pie chart showing user's target macro distribution
+  const targetMacrosData = [
+    { name: 'Protein', value: userPreferences.macroSplit.protein },
+    { name: 'Carbs', value: userPreferences.macroSplit.carbs },
+    { name: 'Fat', value: userPreferences.macroSplit.fat }
+  ];
+  
+  // Colors for the pie charts
+  const COLORS = ['#4f46e5', '#0ea5e9', '#22c55e']; // Indigo, Sky blue, Green
+  
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="p-2 bg-white border rounded shadow text-xs">
+          <p className="font-medium">{label}</p>
+          <p>Recipe: {payload[0].value}g ({payload[0].payload.percentage}% of target)</p>
+          <p>Daily Target: {payload[1].value}g</p>
+        </div>
+      );
+    }
+    return null;
   };
   
   return (
-    <Card>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-xl font-semibold flex items-center">
-              <Info className="h-5 w-5 mr-2 text-recipe-blue" />
-              Nutrition
-            </CardTitle>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-                <span className="sr-only">Toggle nutrition</span>
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Per serving</p>
-            
-            {user && (
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="compare-mode"
-                  checked={compareToPreferences}
-                  onCheckedChange={setCompareToPreferences}
-                />
-                <Label htmlFor="compare-mode" className="text-sm">Compare to my goals</Label>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CollapsibleContent>
-          <CardContent className="pt-0">
-            {userPreferences && compareToPreferences ? (
-              <Tabs defaultValue="basic">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="basic">Basic</TabsTrigger>
-                  <TabsTrigger value="chart">Chart</TabsTrigger>
-                  {macroDetails && <TabsTrigger value="details">Details</TabsTrigger>}
-                </TabsList>
-                <TabsContent value="basic">
-                  <ul className="space-y-3">
-                    {caloriesPerServing !== undefined && (
-                      <li className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span>Calories</span>
-                          <div className="text-right">
-                            <span className="font-medium">{caloriesPerServing} kcal</span>
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({dailyValuePercentages?.calories}% of daily target)
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={dailyValuePercentages?.calories} 
-                          className="h-2" 
-                          indicatorClassName={getProgressColor(dailyValuePercentages?.calories || 0)} 
-                        />
-                      </li>
-                    )}
-                    {proteinPerServing !== undefined && (
-                      <li className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span>Protein</span>
-                          <div className="text-right">
-                            <span className="font-medium">{proteinPerServing}g</span>
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({dailyValuePercentages?.protein}% of daily target)
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={dailyValuePercentages?.protein} 
-                          className="h-2" 
-                          indicatorClassName={getProgressColor(dailyValuePercentages?.protein || 0)} 
-                        />
-                      </li>
-                    )}
-                    {carbsPerServing !== undefined && (
-                      <li className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span>Carbs</span>
-                          <div className="text-right">
-                            <span className="font-medium">{carbsPerServing}g</span>
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({dailyValuePercentages?.carbs}% of daily target)
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={dailyValuePercentages?.carbs} 
-                          className="h-2" 
-                          indicatorClassName={getProgressColor(dailyValuePercentages?.carbs || 0)} 
-                        />
-                      </li>
-                    )}
-                    {fatPerServing !== undefined && (
-                      <li className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span>Fat</span>
-                          <div className="text-right">
-                            <span className="font-medium">{fatPerServing}g</span>
-                            <span className="text-xs text-muted-foreground ml-1">
-                              ({dailyValuePercentages?.fat}% of daily target)
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={dailyValuePercentages?.fat} 
-                          className="h-2" 
-                          indicatorClassName={getProgressColor(dailyValuePercentages?.fat || 0)} 
-                        />
-                      </li>
-                    )}
-                    {nutrition.fiber_g !== undefined && (
-                      <li className="flex justify-between items-center py-1 border-b border-muted">
-                        <span>Fiber</span>
-                        <span className="font-medium">{Math.round(nutrition.fiber_g / servingSize)}g</span>
-                      </li>
-                    )}
-                    {nutrition.sugar_g !== undefined && (
-                      <li className="flex justify-between items-center py-1 border-b border-muted">
-                        <span>Sugar</span>
-                        <span className="font-medium">{Math.round(nutrition.sugar_g / servingSize)}g</span>
-                      </li>
-                    )}
-                    {nutrition.sodium_mg !== undefined && (
-                      <li className="flex justify-between items-center py-1">
-                        <span>Sodium</span>
-                        <span className="font-medium">{Math.round(nutrition.sodium_mg / servingSize)}mg</span>
-                      </li>
-                    )}
-                  </ul>
-                </TabsContent>
-                <TabsContent value="chart">
-                  <NutritionChart 
-                    recipeNutrition={{
-                      calories: caloriesPerServing || 0,
-                      protein: proteinPerServing || 0,
-                      carbs: carbsPerServing || 0,
-                      fat: fatPerServing || 0
-                    }} 
-                    userPreferences={userPreferences}
-                  />
-                </TabsContent>
-                
-                {macroDetails && (
-                  <TabsContent value="details">
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-medium mb-2">Carbohydrate Breakdown</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-blue-50 p-3 rounded-md">
-                            <p className="text-xs text-muted-foreground">Complex Carbs</p>
-                            <p className="font-medium">{macroDetails.complexCarbs}g</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {Math.round((macroDetails.complexCarbs / carbsPerServing!) * 100)}% of total carbs
-                            </p>
-                          </div>
-                          <div className="bg-blue-50 p-3 rounded-md">
-                            <p className="text-xs text-muted-foreground">Simple Carbs</p>
-                            <p className="font-medium">{macroDetails.simpleCarbs}g</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {Math.round((macroDetails.simpleCarbs / carbsPerServing!) * 100)}% of total carbs
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium mb-2">Fat Breakdown</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-green-50 p-3 rounded-md">
-                            <p className="text-xs text-muted-foreground">Saturated Fat</p>
-                            <p className="font-medium">{macroDetails.saturatedFat}g</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {Math.round((macroDetails.saturatedFat / fatPerServing!) * 100)}% of total fat
-                            </p>
-                          </div>
-                          <div className="bg-green-50 p-3 rounded-md">
-                            <p className="text-xs text-muted-foreground">Unsaturated Fat</p>
-                            <p className="font-medium">{macroDetails.unsaturatedFat}g</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {Math.round((macroDetails.unsaturatedFat / fatPerServing!) * 100)}% of total fat
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {userPreferences.bmr && userPreferences.tdee && (
-                        <div className="p-3 bg-gray-50 rounded-md">
-                          <p className="text-sm font-medium mb-1">This meal represents:</p>
-                          <p className="text-sm">
-                            • {Math.round((caloriesPerServing! / userPreferences.bmr) * 100)}% of your Basal Metabolic Rate ({userPreferences.bmr} kcal)
-                          </p>
-                          <p className="text-sm">
-                            • {Math.round((caloriesPerServing! / userPreferences.tdee) * 100)}% of your Total Daily Energy Expenditure ({userPreferences.tdee} kcal)
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                )}
-              </Tabs>
-            ) : (
-              <ul className="space-y-2">
-                {caloriesPerServing !== undefined && (
-                  <li className="flex justify-between items-center py-1 border-b border-muted">
-                    <span>Calories</span>
-                    <span className="font-medium text-recipe-blue">{caloriesPerServing} kcal</span>
-                  </li>
-                )}
-                {proteinPerServing !== undefined && (
-                  <li className="flex justify-between items-center py-1 border-b border-muted">
-                    <span>Protein</span>
-                    <span className="font-medium">{proteinPerServing}g</span>
-                  </li>
-                )}
-                {carbsPerServing !== undefined && (
-                  <li className="flex justify-between items-center py-1 border-b border-muted">
-                    <span>Carbs</span>
-                    <span className="font-medium">{carbsPerServing}g</span>
-                  </li>
-                )}
-                {fatPerServing !== undefined && (
-                  <li className="flex justify-between items-center py-1 border-b border-muted">
-                    <span>Fat</span>
-                    <span className="font-medium">{fatPerServing}g</span>
-                  </li>
-                )}
-                {nutrition.fiber_g !== undefined && (
-                  <li className="flex justify-between items-center py-1 border-b border-muted">
-                    <span>Fiber</span>
-                    <span className="font-medium">{Math.round(nutrition.fiber_g / servingSize)}g</span>
-                  </li>
-                )}
-                {nutrition.sugar_g !== undefined && (
-                  <li className="flex justify-between items-center py-1 border-b border-muted">
-                    <span>Sugar</span>
-                    <span className="font-medium">{Math.round(nutrition.sugar_g / servingSize)}g</span>
-                  </li>
-                )}
-                {nutrition.sodium_mg !== undefined && (
-                  <li className="flex justify-between items-center py-1">
-                    <span>Sodium</span>
-                    <span className="font-medium">{Math.round(nutrition.sodium_mg / servingSize)}mg</span>
-                  </li>
-                )}
-              </ul>
-            )}
-            
-            {!user && compareToPreferences === false && (
-              <div className="mt-4 p-3 bg-muted rounded-md text-sm">
-                <p className="text-muted-foreground">
-                  <a href="/profile" className="text-recipe-blue hover:underline">
-                    Set up your nutrition preferences
-                  </a>{' '}
-                  to see how this recipe compares to your daily goals.
+    <div className="space-y-4">
+      <Tabs defaultValue="comparison">
+        <TabsList className="mb-2">
+          <TabsTrigger value="comparison">Comparison</TabsTrigger>
+          <TabsTrigger value="distribution">Distribution</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="comparison" className="pt-2">
+          <Card>
+            <CardContent className="p-2">
+              <p className="text-xs text-muted-foreground mb-2 text-center">
+                Recipe vs. Daily Targets (g)
+              </p>
+              <ChartContainer config={{
+                protein: { color: '#4f46e5' },
+                carbs: { color: '#0ea5e9' },
+                fat: { color: '#22c55e' },
+              }} className="h-64 w-full">
+                <BarChart data={compareData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" fontSize={12} />
+                  <YAxis fontSize={12} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar dataKey="Recipe" fill="#4f46e5" name="Recipe" />
+                  <Bar dataKey="Target" fill="#94a3b8" name="Daily Target" />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="distribution" className="pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardContent className="p-2">
+                <p className="text-xs text-muted-foreground mb-2 text-center">
+                  Recipe Macro Breakdown
                 </p>
-              </div>
-            )}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+                <div className="h-40">
+                  <ChartContainer config={{
+                    protein: { color: COLORS[0] },
+                    carbs: { color: COLORS[1] },
+                    fat: { color: COLORS[2] },
+                  }} className="h-full w-full">
+                    <PieChart>
+                      <Pie
+                        data={macrosData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={60}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}%`}
+                      >
+                        {macrosData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-2">
+                <p className="text-xs text-muted-foreground mb-2 text-center">
+                  Your Target Macro Breakdown
+                </p>
+                <div className="h-40">
+                  <ChartContainer config={{
+                    protein: { color: COLORS[0] },
+                    carbs: { color: COLORS[1] },
+                    fat: { color: COLORS[2] },
+                  }} className="h-full w-full">
+                    <PieChart>
+                      <Pie
+                        data={targetMacrosData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={60}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}%`}
+                      >
+                        {targetMacrosData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="text-sm space-y-1">
+        <p>
+          <span className="font-medium">Calories:</span> {recipeNutrition.calories} kcal ({caloriesPercentage}% of daily target)
+        </p>
+        <p>
+          <span className="font-medium">Protein:</span> {recipeNutrition.protein}g ({proteinPercentage}% of daily target)
+        </p>
+        <p>
+          <span className="font-medium">Carbs:</span> {recipeNutrition.carbs}g ({carbsPercentage}% of daily target)
+        </p>
+        <p>
+          <span className="font-medium">Fat:</span> {recipeNutrition.fat}g ({fatPercentage}% of daily target)
+        </p>
+      </div>
+    </div>
   );
 }
+

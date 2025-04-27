@@ -23,7 +23,6 @@ export interface NutritionPreferencesType {
   allergens: string[];
   healthGoal: string;
   mealSizePreference: string;
-  // New advanced nutrition fields
   personalDetails?: {
     age?: number;
     weight?: number;
@@ -31,20 +30,22 @@ export interface NutritionPreferencesType {
     gender?: string;
     activityLevel?: string;
   };
-  bmr?: number; // Basal Metabolic Rate
-  tdee?: number; // Total Daily Energy Expenditure
+  bmr?: number;
+  tdee?: number;
   macroDetails?: {
-    complexCarbs?: number; // percentage of total carbs
-    simpleCarbs?: number; // percentage of total carbs
-    saturatedFat?: number; // percentage of total fat
-    unsaturatedFat?: number; // percentage of total fat
+    complexCarbs?: number;
+    simpleCarbs?: number;
+    saturatedFat?: number;
+    unsaturatedFat?: number;
   };
   mealTiming?: {
-    mealsPerDay?: number;
-    fastingWindow?: number; // in hours
-    preworkoutTiming?: number; // in minutes
-    postworkoutTiming?: number; // in minutes
+    mealsPerDay: number;
+    fastingWindow: number;
+    preworkoutTiming: number;
+    postworkoutTiming: number;
   };
+  weightGoalType?: 'maintenance' | 'weight-loss' | 'muscle-gain';
+  weightGoalDeficit?: number;
 }
 
 const Profile = () => {
