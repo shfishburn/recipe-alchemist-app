@@ -1,23 +1,8 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { BookOpen, Globe, Leaf, Plus, Utensils } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import CuisineSelect from '../CuisineSelect';
-import DietarySelect from '../DietarySelect';
+import RecipeNameInput from '../form/RecipeNameInput';
+import RecipeBasics from '../form/RecipeBasics';
+import IngredientsSection from '../form/IngredientsSection';
 import FlavorTagsInput from '../FlavorTagsInput';
 
 interface InputsTabProps {
@@ -55,114 +40,27 @@ const InputsTab = ({
   onRemoveIngredient,
   onServingsChange,
 }: InputsTabProps) => {
-  const servingOptions = [1, 2, 3, 4, 5, 6, 8, 10, 12];
-
   return (
     <div className="space-y-6">
       {/* Recipe Input */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-recipe-blue" />
-          <Label 
-            htmlFor="title" 
-            className="text-lg font-medium"
-          >
-            Recipe
-          </Label>
-          <span className="text-xs text-muted-foreground bg-accent/30 px-2 py-0.5 rounded-full">
-            Required
-          </span>
-        </div>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="relative">
-                <Input
-                  id="title"
-                  name="title"
-                  required
-                  className="h-12 pl-10 bg-background/50 border-2 focus:border-recipe-blue transition-all duration-200 ease-in-out shadow-sm hover:shadow-md"
-                  placeholder="Enter recipe name (e.g., 'Pasta', 'Chicken dish')"
-                  value={title}
-                  onChange={onTitleChange}
-                  aria-label="Recipe name input"
-                />
-                <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Enter a name for your recipe</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        <p className="text-xs text-muted-foreground">
-          Your recipe name helps AI understand the dish you're creating
-        </p>
-      </div>
+      <RecipeNameInput
+        title={title}
+        onTitleChange={onTitleChange}
+      />
 
       {/* Basics Section */}
-      <div className="py-4 space-y-6">
-        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Basics</h3>
-        
-        {/* Cuisine Selector */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-recipe-blue" />
-            <Label htmlFor="cuisine" className="text-base font-medium text-recipe-blue">Cuisine Type</Label>
-            <span className="text-xs bg-recipe-blue/10 text-recipe-blue px-2 py-0.5 rounded-full">Required</span>
-          </div>
-          <CuisineSelect
-            value={cuisine}
-            onChange={onCuisineChange}
-          />
-          <p className="text-xs text-muted-foreground">Sets the cultural style and flavors of your recipe</p>
-        </div>
-
-        {/* Servings Input */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Utensils className="h-4 w-4 text-amber-600" />
-            <Label htmlFor="servings" className="text-base">Servings</Label>
-          </div>
-          <Select
-            value={servings.toString()}
-            onValueChange={(value) => onServingsChange(parseInt(value, 10))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select number of servings" />
-            </SelectTrigger>
-            <SelectContent>
-              {servingOptions.map((option) => (
-                <SelectItem key={option} value={option.toString()}>
-                  {option} {option === 1 ? 'serving' : 'servings'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">Number of portions this recipe will serve</p>
-        </div>
-
-        {/* Dietary Preference */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Leaf className="h-4 w-4 text-green-600" />
-            <Label htmlFor="dietary" className="text-base">Dietary Preference</Label>
-          </div>
-          <DietarySelect
-            value={dietary}
-            onChange={onDietaryChange}
-          />
-          <p className="text-xs text-muted-foreground">AI will adapt the recipe to accommodate your dietary needs</p>
-        </div>
-      </div>
+      <RecipeBasics
+        cuisine={cuisine}
+        dietary={dietary}
+        servings={servings}
+        onCuisineChange={onCuisineChange}
+        onDietaryChange={onDietaryChange}
+        onServingsChange={onServingsChange}
+      />
 
       {/* Flavor Section */}
       <div className="py-4 space-y-6 border-t border-gray-100 dark:border-gray-800">
         <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Flavor Profile</h3>
-        
-        {/* Flavor Tags */}
         <FlavorTagsInput
           tags={flavorTags}
           onChange={onFlavorTagsChange}
@@ -170,46 +68,13 @@ const InputsTab = ({
       </div>
 
       {/* Ingredients Section */}
-      <div className="py-4 space-y-4 border-t border-gray-100 dark:border-gray-800">
-        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Ingredients</h3>
-        
-        {/* Ingredients List */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-amber-600" />
-            <Label htmlFor="ingredients" className="text-base">Main Ingredients</Label>
-          </div>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {ingredients.map((ingredient, index) => (
-              <div 
-                key={index}
-                className="bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 px-3 py-1 rounded-full flex items-center gap-1 text-sm"
-              >
-                {ingredient}
-                <button
-                  type="button"
-                  onClick={() => onRemoveIngredient(index)}
-                  className="ml-1 rounded-full hover:bg-amber-100 dark:hover:bg-amber-800/50 p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <Input
-            id="ingredients"
-            placeholder="Type ingredient and press Enter (e.g., chicken, tomatoes)"
-            value={ingredientInput}
-            onChange={(e) => onIngredientChange(e.target.value)}
-            onKeyDown={onIngredientKeyDown}
-            className="border-amber-200 focus-visible:ring-amber-300"
-          />
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">Press Enter to add each ingredient</p>
-            <p className="text-xs text-amber-600">{ingredients.length} added</p>
-          </div>
-        </div>
-      </div>
+      <IngredientsSection
+        ingredients={ingredients}
+        ingredientInput={ingredientInput}
+        onIngredientChange={onIngredientChange}
+        onIngredientKeyDown={onIngredientKeyDown}
+        onRemoveIngredient={onRemoveIngredient}
+      />
     </div>
   );
 };
