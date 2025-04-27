@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -19,10 +18,18 @@ serve(async (req) => {
     }
 
     const openai = new OpenAI({ apiKey });
-    const { recipe, userMessage } = await req.json();
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
-    const prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements.
+    let prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements.`;
 
+    // Add source-specific context to the prompt
+    if (sourceType === 'image') {
+      prompt += `\n\nAnalyzing recipe from uploaded image. Please extract the recipe details and then provide improvements.`;
+    } else if (sourceType === 'url') {
+      prompt += `\n\nAnalyzing recipe from URL: ${sourceUrl}. Please extract the recipe details and then provide improvements.`;
+    }
+
+    prompt += `
 Current recipe:
 - Title: ${recipe.title}
 - Servings: ${recipe.servings}
@@ -36,57 +43,7 @@ ${recipe.ingredients.map(i => `- ${i.qty} ${i.unit} ${i.item}`).join('\n')}
 Instructions:
 ${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
-User request: ${userMessage}
-
-Your response MUST follow this structure:
-
-1. Overview: A concise summary of your recommended changes and why they'll improve the recipe
-
-2. Scientific Analysis: Explain the food science behind your recommendations, including chemical reactions, texture changes, or flavor development techniques
-
-3. Technique Improvements: Describe precise cooking methods with specific temperatures, times, and visual/tactile indicators
-
-4. Ingredient Modifications: Specify exact measurements for any ingredient changes with scientific justification
-
-5. Nutritional Impact: Detail how your changes affect the nutritional profile with precise values
-
-6. Testing Notes: Briefly describe how these recommendations have been tested and verified
-
-Format your response for readability using:
-• Clear section headings with colons
-• Bullet points for lists (•)
-• Precise measurements and temperatures
-• Visual and sensory indicators for doneness
-• Scientific terminology with plain English explanations
-
-Also include 3 follow-up questions related to:
-• Advanced techniques the user might want to learn
-• Science behind a specific aspect of the recipe
-• Variations to accommodate different dietary needs or equipment
-
-IMPORTANT: Your response must be valid JSON following this schema:
-{
-  "textResponse": "Your formatted response with all sections above",
-  "changes": {
-    "title": "Optional updated title",
-    "ingredients": {
-      "mode": "add" or "replace" or "none",
-      "items": [] (array of ingredients with qty, unit, item, and notes properties)
-    },
-    "instructions": [] (array of updated instructions with stepNumber, action, explanation, whyItWorks, troubleshooting, and indicator properties),
-    "equipmentNeeded": [] (array of necessary equipment)
-  },
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number
-  },
-  "health_insights": ["insight1", "insight2"],
-  "follow_up_questions": ["question1", "question2", "question3"],
-  "scientific_principles": ["principle1", "principle2"]
-}`;
+User request: ${userMessage}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

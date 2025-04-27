@@ -77,6 +77,9 @@ export type Database = {
           deleted_at: string | null
           id: string
           recipe_id: string
+          source_image: string | null
+          source_type: string | null
+          source_url: string | null
           user_message: string
         }
         Insert: {
@@ -87,6 +90,9 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           recipe_id: string
+          source_image?: string | null
+          source_type?: string | null
+          source_url?: string | null
           user_message: string
         }
         Update: {
@@ -97,6 +103,9 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           recipe_id?: string
+          source_image?: string | null
+          source_type?: string | null
+          source_url?: string | null
           user_message?: string
         }
         Relationships: [

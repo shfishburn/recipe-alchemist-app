@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,31 +68,43 @@ export const useRecipeChat = (recipe: Recipe) => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (message: string) => {
-      // Show loading toast
+    mutationFn: async ({ message, sourceType, sourceUrl, sourceImage }: {
+      message: string;
+      sourceType?: 'manual' | 'image' | 'url';
+      sourceUrl?: string;
+      sourceImage?: string;
+    }) => {
       toast({
         title: "Processing your request",
-        description: "Our culinary scientist is analyzing your recipe...",
+        description: sourceType === 'manual' 
+          ? "Our culinary scientist is analyzing your recipe..."
+          : "Extracting recipe information...",
       });
       
       const response = await supabase.functions.invoke('recipe-chat', {
-        body: { recipe, userMessage: message }
+        body: { 
+          recipe, 
+          userMessage: message,
+          sourceType,
+          sourceUrl,
+          sourceImage
+        }
       });
 
       if (response.error) throw response.error;
       
-      // Structure the response data
-      const responseData = {
-        recipe_id: recipe.id,
-        user_message: message,
-        ai_response: response.data.response,
-        changes_suggested: response.data.changes || null,
-        follow_up_questions: response.data.followUpQuestions || []
-      };
-
       const { data, error } = await supabase
         .from('recipe_chats')
-        .insert(responseData)
+        .insert({
+          recipe_id: recipe.id,
+          user_message: message,
+          ai_response: response.data.response,
+          changes_suggested: response.data.changes || null,
+          follow_up_questions: response.data.followUpQuestions || [],
+          source_type: sourceType || 'manual',
+          source_url: sourceUrl,
+          source_image: sourceImage
+        })
         .select()
         .single();
 
@@ -230,14 +241,45 @@ export const useRecipeChat = (recipe: Recipe) => {
     },
   });
 
+  const uploadRecipeImage = async (file: File) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Image = e.target?.result as string;
+        mutation.mutate({
+          message: "Please analyze this recipe image",
+          sourceType: 'image',
+          sourceImage: base64Image
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const submitRecipeUrl = (url: string) => {
+    mutation.mutate({
+      message: "Please analyze this recipe URL",
+      sourceType: 'url',
+      sourceUrl: url
+    });
+  };
+
   return {
     message,
     setMessage,
     chatHistory,
     isLoadingHistory,
-    sendMessage: () => mutation.mutate(message),
+    sendMessage: () => mutation.mutate({ message }),
     isSending: mutation.isPending,
     applyChanges,
     isApplying: applyChanges.isPending,
+    uploadRecipeImage,
+    submitRecipeUrl,
   };
 };

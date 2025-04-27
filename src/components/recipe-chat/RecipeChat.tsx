@@ -1,13 +1,12 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, Send, Check, Beaker, ChefHat } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Check, Beaker, ChefHat } from 'lucide-react';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { RecipeChatInput } from './RecipeChatInput';
+import { ChatProcessingIndicator } from './ChatProcessingIndicator';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const {
@@ -19,82 +18,16 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isSending,
     applyChanges,
     isApplying,
+    uploadRecipeImage,
+    submitRecipeUrl,
   } = useRecipeChat(recipe);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      sendMessage();
-    }
+  const handleUpload = async (file: File) => {
+    uploadRecipeImage(file);
   };
 
-  const renderFormattedResponse = (response: string) => {
-    if (!response) return null;
-    
-    // Split into sections based on headings (lines ending with colon)
-    const sections = [];
-    let currentSection = { heading: '', content: [] };
-    
-    response.split('\n').forEach(line => {
-      const trimmedLine = line.trim();
-      
-      // Check if line is a heading (ends with ':')
-      if (trimmedLine.endsWith(':') && !trimmedLine.includes('\u2022') && !trimmedLine.includes('-')) {
-        // Save previous section if it exists
-        if (currentSection.content.length > 0 || currentSection.heading) {
-          sections.push({...currentSection});
-        }
-        // Start new section
-        currentSection = { 
-          heading: trimmedLine, 
-          content: []
-        };
-      } else if (trimmedLine) {
-        // Add content to current section
-        currentSection.content.push(trimmedLine);
-      }
-    });
-    
-    // Add the last section
-    if (currentSection.content.length > 0 || currentSection.heading) {
-      sections.push(currentSection);
-    }
-    
-    return (
-      <div className="space-y-4">
-        {sections.map((section, idx) => (
-          <div key={idx} className="space-y-2">
-            {section.heading && (
-              <h3 className="font-semibold text-base">{section.heading}</h3>
-            )}
-            
-            {section.content.map((paragraph, pIdx) => {
-              // Handle bullet points
-              if (paragraph.startsWith('\u2022') || paragraph.startsWith('-')) {
-                const bulletItems = section.content
-                  .filter(line => line.startsWith('\u2022') || line.startsWith('-'))
-                  .map(line => line.replace(/^[\u2022-]\s*/, ''));
-                  
-                return pIdx === section.content.indexOf(paragraph) ? (
-                  <ul key={pIdx} className="list-disc list-outside ml-5 space-y-1">
-                    {bulletItems.map((item, iIdx) => (
-                      <li key={iIdx}>{item}</li>
-                    ))}
-                  </ul>
-                ) : null; // Only render the bullet list once
-              }
-              
-              // Handle regular paragraphs (not bullet points)
-              if (!paragraph.startsWith('\u2022') && !paragraph.startsWith('-')) {
-                return <p key={pIdx} className="text-sm text-muted-foreground">{paragraph}</p>;
-              }
-              
-              return null;
-            })}
-          </div>
-        ))}
-      </div>
-    );
+  const handleUrlSubmit = (url: string) => {
+    submitRecipeUrl(url);
   };
 
   if (isLoadingHistory) {
@@ -109,27 +42,89 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     );
   }
 
+  const renderFormattedResponse = (response: string) => {
+    if (!response) return null;
+    
+    const sections = [];
+    let currentSection = { heading: '', content: [] };
+    
+    response.split('\n').forEach(line => {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.endsWith(':') && !trimmedLine.includes('\u2022') && !trimmedLine.includes('-')) {
+        if (currentSection.content.length > 0 || currentSection.heading) {
+          sections.push({...currentSection});
+        }
+        currentSection = { 
+          heading: trimmedLine, 
+          content: []
+        };
+      } else if (trimmedLine) {
+        currentSection.content.push(trimmedLine);
+      }
+    });
+    
+    if (currentSection.content.length > 0 || currentSection.heading) {
+      sections.push(currentSection);
+    }
+    
+    return (
+      <div className="space-y-4">
+        {sections.map((section, idx) => (
+          <div key={idx} className="space-y-2">
+            {section.heading && (
+              <h3 className="font-semibold text-base">{section.heading}</h3>
+            )}
+            
+            {section.content.map((paragraph, pIdx) => {
+              if (paragraph.startsWith('\u2022') || paragraph.startsWith('-')) {
+                const bulletItems = section.content
+                  .filter(line => line.startsWith('\u2022') || line.startsWith('-'))
+                  .map(line => line.replace(/^[\u2022-]\s*/, ''));
+                  
+                return pIdx === section.content.indexOf(paragraph) ? (
+                  <ul key={pIdx} className="list-disc list-outside ml-5 space-y-1">
+                    {bulletItems.map((item, iIdx) => (
+                      <li key={iIdx}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null;
+              }
+              
+              if (!paragraph.startsWith('\u2022') && !paragraph.startsWith('-')) {
+                return <p key={pIdx} className="text-sm text-muted-foreground">{paragraph}</p>;
+              }
+              
+              return null;
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Card className="bg-[#F1F0FB]">
       <CardContent className="pt-6">
         <div className="space-y-6">
           {chatHistory.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Ask for cooking techniques, scientific insights, or recipe modifications!</p>
+              <p className="text-muted-foreground">
+                Ask for cooking techniques, scientific insights, or modifications!
+                You can also upload a recipe image or paste a URL.
+              </p>
             </div>
           )}
           
           <div className="space-y-6">
             {chatHistory.map((chat, index) => (
               <div key={chat.id} className="space-y-4">
-                {/* User Message */}
                 <div className="flex justify-end mb-4">
                   <div className="max-w-[85%] bg-[#9b87f5] text-white px-4 py-2 rounded-[20px] rounded-tr-[5px]">
                     <p>{chat.user_message}</p>
                   </div>
                 </div>
 
-                {/* AI Response */}
                 <div className="flex">
                   <div className="max-w-[85%] space-y-3">
                     <div className="bg-white px-4 py-2 rounded-[20px] rounded-tl-[5px] shadow-sm">
@@ -138,7 +133,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       </div>
                     </div>
 
-                    {/* Scientific Principles */}
                     {chat.changes_suggested?.scientific_principles && chat.changes_suggested.scientific_principles.length > 0 && (
                       <div className="bg-white/80 px-4 py-3 rounded-[20px] shadow-sm">
                         <h4 className="font-medium mb-2 flex items-center gap-1 text-[#221F26]">
@@ -153,7 +147,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       </div>
                     )}
 
-                    {/* Equipment Needed */}
                     {chat.changes_suggested?.equipmentNeeded && chat.changes_suggested.equipmentNeeded.length > 0 && (
                       <div className="bg-white/80 px-4 py-3 rounded-[20px] shadow-sm">
                         <h4 className="font-medium mb-2 flex items-center gap-1 text-[#221F26]">
@@ -168,7 +161,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       </div>
                     )}
 
-                    {/* Nutritional Changes */}
                     {chat.changes_suggested?.nutrition && Object.keys(chat.changes_suggested.nutrition).length > 0 && (
                       <div className="bg-white/80 px-4 py-3 rounded-[20px] shadow-sm">
                         <h4 className="font-medium mb-2 text-[#221F26]">Nutritional Impact:</h4>
@@ -185,7 +177,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       </div>
                     )}
 
-                    {/* Health Insights */}
                     {chat.changes_suggested?.health_insights && chat.changes_suggested.health_insights.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {chat.changes_suggested.health_insights.map((insight, i) => (
@@ -194,7 +185,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       </div>
                     )}
 
-                    {/* Follow-up Questions */}
                     {chat.follow_up_questions && chat.follow_up_questions.length > 0 && (
                       <div className="space-y-2">
                         <div className="flex flex-wrap gap-2">
@@ -213,7 +203,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                       </div>
                     )}
 
-                    {/* Apply Changes Button */}
                     {chat.changes_suggested && !chat.applied && (
                       <div>
                         <Button
@@ -242,29 +231,14 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             ))}
           </div>
 
-          {/* Chat Input */}
-          <form onSubmit={handleSubmit} className="sticky bottom-0 pt-4">
-            <div className="flex gap-2 items-end">
-              <Textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ask about cooking science, techniques, or modifications..."
-                className="flex-1 bg-white resize-none rounded-2xl"
-                rows={2}
-              />
-              <Button 
-                type="submit" 
-                disabled={isSending || !message.trim()}
-                className="rounded-full h-10 w-10 p-0 bg-[#9b87f5] hover:bg-[#8b77e5]"
-              >
-                {isSending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </form>
+          <RecipeChatInput
+            message={message}
+            setMessage={setMessage}
+            onSubmit={sendMessage}
+            isSending={isSending}
+            onUpload={handleUpload}
+            onUrlSubmit={handleUrlSubmit}
+          />
         </div>
       </CardContent>
     </Card>
