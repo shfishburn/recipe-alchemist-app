@@ -3,12 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 
 export async function uploadImageFromUrl(imageUrl: string, fileName: string): Promise<string | null> {
   try {
-    // For OpenAI URLs, use the edge function to proxy the request instead of direct fetch
+    // For OpenAI URLs, use direct fetch instead of proxy function
     if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
       console.log('Using edge function to bypass CORS for OpenAI image URL');
       
-      const { data: imageBlob } = await fetch(imageUrl).then(res => res.blob());
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        console.error('Error fetching image from URL:', response.status);
+        return null;
+      }
       
+      const imageBlob = await response.blob();
       if (!imageBlob) {
         console.error('No image data returned');
         return null;
