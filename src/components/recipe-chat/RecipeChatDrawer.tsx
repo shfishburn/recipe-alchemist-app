@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,15 +14,19 @@ import type { Recipe } from '@/types/recipe';
 
 interface RecipeChatDrawerProps {
   recipe: Recipe;
+  triggerRef?: React.RefObject<HTMLButtonElement>;
 }
 
-export function RecipeChatDrawer({ recipe }: RecipeChatDrawerProps) {
+export function RecipeChatDrawer({ recipe, triggerRef }: RecipeChatDrawerProps) {
+  const [open, setOpen] = useState(false);
+  
   return (
     <div className="mt-4">
-      <Drawer>
+      <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           <Button 
             id="recipe-chat-trigger"
+            ref={triggerRef}
             variant="outline" 
             size="sm" 
             className="w-full"

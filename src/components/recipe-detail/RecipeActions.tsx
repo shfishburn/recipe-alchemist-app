@@ -9,9 +9,10 @@ import type { Recipe } from '@/types/recipe';
 interface RecipeActionsProps {
   recipe: Recipe;
   sticky?: boolean;
+  onOpenChat: () => void;
 }
 
-export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
+export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActionsProps) {
   const navigate = useNavigate();
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const [isSticky, setIsSticky] = useState(false);
@@ -69,7 +70,7 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
             variant="default"
             size="lg"
             className="w-full"
-            onClick={() => window.document.getElementById('recipe-chat-trigger')?.click()}
+            onClick={onOpenChat}
           >
             <MessageSquare className="h-5 w-5 mr-2" />
             AI Chat
