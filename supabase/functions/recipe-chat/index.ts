@@ -21,7 +21,25 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
-    let prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements. Provide your response as JSON formatted data.`;
+    let prompt = `As a culinary scientist and expert chef in the style of Cook's Illustrated, analyze this recipe and respond to the user's request with detailed, science-based improvements. Format your response as JSON with the structure shown in the example below.
+
+Example JSON format:
+{
+  "textResponse": "Your detailed analysis here",
+  "changes": {
+    "title": "Updated title if applicable",
+    "ingredients": ["ingredient 1", "ingredient 2"],
+    "instructions": ["step 1", "step 2"],
+    "equipmentNeeded": ["equipment 1", "equipment 2"]
+  },
+  "nutrition": {
+    "kcal": 300,
+    "protein_g": 20
+  },
+  "health_insights": ["insight 1", "insight 2"],
+  "scientific_principles": ["principle 1", "principle 2"],
+  "follow_up_questions": ["question 1?", "question 2?"]
+}`;
 
     // Add source-specific context to the prompt
     if (sourceType === 'image') {
@@ -44,23 +62,10 @@ ${recipe.ingredients.map(i => `- ${i.qty} ${i.unit} ${i.item}`).join('\n')}
 Instructions:
 ${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
-User request: ${userMessage}
+User request: ${userMessage}`;
 
-Please format your response as a JSON object with the following structure:
-{
-  "textResponse": "Your detailed analysis here",
-  "changes": {
-    "title": "Updated title if applicable",
-    "ingredients": [...],
-    "instructions": [...],
-    "equipmentNeeded": [...]
-  },
-  "nutrition": {},
-  "health_insights": [],
-  "scientific_principles": [],
-  "follow_up_questions": []
-}`;
-
+    console.log("Sending request to OpenAI with prompt");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -71,10 +76,12 @@ Please format your response as a JSON object with the following structure:
     });
 
     const content = response.choices[0].message.content;
+    console.log("Received response from OpenAI:", content.substring(0, 100) + "...");
     
     try {
       // Ensure we can parse the JSON response
       const parsedContent = JSON.parse(content);
+      console.log("Successfully parsed JSON response");
       
       // Create a structured response object
       const suggestion = {
@@ -95,16 +102,20 @@ Please format your response as a JSON object with the following structure:
         ]
       };
       
+      console.log("Returning structured response to client");
       return new Response(JSON.stringify(suggestion), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
       
     } catch (e) {
       console.error("Error parsing AI response:", e);
+      console.error("Raw response content:", content);
+      
       // If JSON parsing fails, return a friendly error
       return new Response(JSON.stringify({ 
         error: "Failed to generate proper recipe suggestions. Please try again.",
-        details: e.message
+        details: e.message,
+        rawResponse: content
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -113,7 +124,10 @@ Please format your response as a JSON object with the following structure:
 
   } catch (error) {
     console.error('Recipe chat error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      stack: error.stack
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
