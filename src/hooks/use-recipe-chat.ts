@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -51,6 +52,7 @@ export const useRecipeChat = (recipe: Recipe) => {
   const [message, setMessage] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: chatHistory = [], isLoading: isLoadingHistory } = useQuery({
     queryKey: ['recipe-chats', recipe.id],
@@ -117,7 +119,7 @@ export const useRecipeChat = (recipe: Recipe) => {
 
   const applyChanges = useMutation({
     mutationFn: async (chatMessage: ChatMessage) => {
-      if (!chatMessage.changes_suggested) return;
+      if (!chatMessage.changes_suggested || !user) return;
 
       // Show loading toast
       toast({
@@ -159,7 +161,7 @@ export const useRecipeChat = (recipe: Recipe) => {
         title: chatMessage.changes_suggested.title || recipe.title,
         nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
         image_url: imageUrl,
-        // Ensure servings is always included
+        user_id: recipe.user_id || user.id, // Include the user_id field which is required
         servings: recipe.servings || 4, // Default to 4 if somehow missing
       };
 

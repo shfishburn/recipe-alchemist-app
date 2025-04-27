@@ -2,22 +2,25 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
+
+interface NutritionPreferences {
+  dailyCalories: number;
+  macroSplit: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  dietaryRestrictions?: string[];
+  allergens?: string[];
+  healthGoal?: string;
+}
 
 interface Profile {
   id: string;
   username: string | null;
   avatar_url: string | null;
-  nutrition_preferences?: {
-    dailyCalories: number;
-    macroSplit: {
-      protein: number;
-      carbs: number;
-      fat: number;
-    };
-    dietaryRestrictions?: string[];
-    allergens?: string[];
-    healthGoal?: string;
-  };
+  nutrition_preferences?: NutritionPreferences;
   weight_goal_type?: string;
   weight_goal_deficit?: number;
 }
@@ -54,7 +57,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .eq('id', currentSession.user.id)
             .single();
           
-          setProfile(data);
+          if (data) {
+            // Transform the profile data to match our Profile interface
+            setProfile({
+              id: data.id,
+              username: data.username,
+              avatar_url: data.avatar_url,
+              nutrition_preferences: data.nutrition_preferences as unknown as NutritionPreferences,
+              weight_goal_type: data.weight_goal_type,
+              weight_goal_deficit: data.weight_goal_deficit
+            });
+          }
         } else {
           setProfile(null);
         }
@@ -74,7 +87,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .eq('id', currentSession.user.id)
           .single();
         
-        setProfile(data);
+        if (data) {
+          // Transform the profile data to match our Profile interface
+          setProfile({
+            id: data.id,
+            username: data.username,
+            avatar_url: data.avatar_url,
+            nutrition_preferences: data.nutrition_preferences as unknown as NutritionPreferences,
+            weight_goal_type: data.weight_goal_type,
+            weight_goal_deficit: data.weight_goal_deficit
+          });
+        }
       }
     });
 

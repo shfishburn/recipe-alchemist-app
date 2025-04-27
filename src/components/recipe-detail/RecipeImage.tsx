@@ -4,6 +4,7 @@ import { ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -14,8 +15,18 @@ interface RecipeImageProps {
 export function RecipeImage({ recipe }: RecipeImageProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const generateNewImage = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to generate a new image",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       setIsGenerating(true);
       
@@ -36,7 +47,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         previous_version_id: recipe.id,
         version_number: recipe.version_number + 1,
         image_url: response.data.imageUrl,
-        // Make sure servings is included and properly set
+        user_id: user.id, // Include the user_id field which is required
         servings: recipe.servings || 4, // Default to 4 if somehow missing
         // Cast the complex objects to Json type for Supabase
         ingredients: recipe.ingredients as unknown as Json,
