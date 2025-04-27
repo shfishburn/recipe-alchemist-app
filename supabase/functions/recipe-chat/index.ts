@@ -21,14 +21,31 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
-    let prompt = `As an expert culinary scientist and chef specializing in science-based cooking techniques, provide detailed analysis and improvements for recipes using evidence-based methods and molecular gastronomy principles. 
+    let prompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, analyze and improve this recipe with precise, science-backed techniques. Your response should:
 
-Your expertise combines:
-- Advanced understanding of chemical reactions in cooking
-- Precise temperature control and timing
-- Ingredient interactions and flavor compound development
-- Texture optimization through protein and starch manipulation
-- Scientific measurement and repeatability in recipes
+1. Examine Chemical Processes:
+   - Explain Maillard reactions, caramelization, and enzymatic activities occurring
+   - Detail how heat transfer methods affect flavor compound development
+   - Describe protein denaturation and starch gelatinization specific to these ingredients
+   - Identify key flavor molecules and their interactions during cooking
+
+2. Enhance Techniques with Scientific Precision:
+   - Specify exact temperatures, timing, and visual/tactile doneness cues
+   - Explain how ingredient preparation affects texture and flavor (e.g., cutting techniques, resting times)
+   - Provide equipment recommendations based on thermal properties
+   - Include troubleshooting for common issues with scientific explanations
+
+3. Optimize Nutritional Impact:
+   - Detail nutrient changes during cooking (retention, loss, or enhancement)
+   - Explain how cooking methods affect bioavailability of nutrients
+   - Suggest evidence-based modifications for different health goals
+   - Provide margin-of-error for nutritional calculations with explanation
+
+4. Transform Ingredient Understanding:
+   - Explain chemical composition of key ingredients and their functional roles
+   - Detail how ingredient quality indicators affect results
+   - Provide scientifically-validated substitutions with reasoning
+   - Explain how ingredient temperature, pH, and freshness impact outcomes
 
 Format your response as JSON with this exact structure:
 
@@ -43,7 +60,7 @@ Format your response as JSON with this exact structure:
           "qty": number,
           "unit": "g" | "ml" | "tbsp" | "tsp" | "cup" | "piece",
           "item": "ingredient name",
-          "notes": "optional preparation notes"
+          "notes": "scientific rationale for preparation or selection"
         }
       ]
     },
@@ -51,7 +68,7 @@ Format your response as JSON with this exact structure:
       "Precise, numbered steps with temperatures, times, and visual/sensory cues"
     ],
     "equipmentNeeded": [
-      "Required tools and equipment"
+      "Required tools and equipment with scientific justification"
     ]
   },
   "nutrition": {
@@ -64,20 +81,21 @@ Format your response as JSON with this exact structure:
     "sodium_mg": number
   },
   "science_notes": [
-    "Key scientific principles and reactions",
-    "Temperature-dependent changes",
-    "Chemical interactions between ingredients",
-    "Optimization rationales"
+    "Key scientific principles and reactions specific to this recipe",
+    "Temperature-dependent changes with molecular explanations",
+    "Chemical interactions between ingredients with compound names",
+    "Optimization rationales based on food science research"
   ],
   "health_insights": [
-    "Nutritional benefits",
-    "Dietary considerations",
-    "Potential modifications for different needs"
+    "Evidence-based nutritional benefits with citations where possible",
+    "Functional properties of key ingredients",
+    "Metabolic impacts and considerations",
+    "Suggested modifications for specific dietary needs with scientific reasoning"
   ],
   "followUpQuestions": [
-    "What happens if we adjust X temperature?",
-    "How does Y ingredient affect texture?",
-    "Can we optimize Z process further?"
+    "Specific questions about variable control in this recipe",
+    "Inquiries about molecular gastronomy applications",
+    "Questions about scaling or adapting techniques"
   ]
 }`;
 
