@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,7 @@ interface ChatMessage {
   id: string;
   user_message: string;
   ai_response: string;
+  follow_up_questions?: string[];
   changes_suggested: {
     title?: string;
     ingredients?: {

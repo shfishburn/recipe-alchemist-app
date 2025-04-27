@@ -21,66 +21,46 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage } = await req.json();
 
-    const prompt = `As a Michelin-starred chef and registered dietitian, review this recipe and suggest improvements based on the user's request. Current recipe:
+    const prompt = `As a Michelin-starred chef and registered dietitian, review this recipe and suggest improvements based on the user's request. 
 
-Title: ${recipe.title}
-Servings: ${recipe.servings}
+Current recipe:
+- Title: ${recipe.title}
+- Servings: ${recipe.servings}
+
 Ingredients:
 ${recipe.ingredients.map(i => `- ${i.qty} ${i.unit} ${i.item}`).join('\n')}
 
 Instructions:
-${recipe.instructions.join('\n')}
+${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
 
 User request: ${userMessage}
 
-Provide specific, actionable changes to improve this recipe while maintaining its core characteristics. Format your response in two parts:
-1. A conversational response explaining your suggested changes
-2. JSON changes in this format if applicable:
-{
-  "title": string | null,
-  "ingredients": {
-    "mode": "add" | "replace" | "none",
-    "items": [{ "qty": number, "unit": string, "item": string }]
-  } | null,
-  "instructions": string[] | null,
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number,
-    "sugar_g": number,
-    "sodium_mg": number
-  } | null
-}
+Provide your response in two parts:
+1. A detailed, professionally formatted response with:
+   - Clear bullet points
+   - Professional culinary insights
+   - Explanation of suggested changes
+2. A precise JSON object with potential recipe modifications
 
-For ingredients changes:
-- Use "add" mode to append new ingredients to the existing ones
-- Use "replace" mode to completely replace all ingredients
-- Use "none" if no ingredient changes are needed`;
+Include 2-3 engaging follow-up questions to continue the culinary discussion.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: prompt }
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      response_format: { type: "json_object" }
     });
 
     const content = response.choices[0].message.content;
-    
     let responseText = '';
     let changes = null;
     
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[0];
-        changes = JSON.parse(jsonStr);
-        responseText = content.replace(jsonStr, '').trim();
-      } else {
-        responseText = content;
-      }
+      const parsedContent = JSON.parse(content);
+      responseText = parsedContent.textResponse || content;
+      changes = parsedContent.changes;
     } catch (e) {
       console.error("Error parsing AI response:", e);
       responseText = content;
@@ -88,7 +68,12 @@ For ingredients changes:
     
     const suggestion = {
       response: responseText,
-      changes: changes
+      changes: changes || null,
+      followUpQuestions: [
+        "Would you like to explore alternative ingredient substitutions?",
+        "Are you interested in learning more about the culinary techniques involved?",
+        "Do you have any specific dietary restrictions I should consider?"
+      ]
     };
     
     return new Response(JSON.stringify(suggestion), {

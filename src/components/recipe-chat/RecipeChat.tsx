@@ -27,6 +27,21 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     }
   };
 
+  const renderFormattedResponse = (response: string) => {
+    // Convert text to formatted HTML with better parsing
+    const paragraphs = response.split('\n\n');
+    return paragraphs.map((para, index) => {
+      // Check if paragraph starts with bullet points
+      if (para.startsWith('- ') || para.startsWith('•')) {
+        const bulletItems = para.split('\n').map((item, idx) => (
+          <li key={idx} className="list-disc list-inside">{item.replace(/^[-•]\s*/, '')}</li>
+        ));
+        return <ul key={index} className="pl-4 space-y-2">{bulletItems}</ul>;
+      }
+      return <p key={index} className="mb-4">{para}</p>;
+    });
+  };
+
   if (isLoadingHistory) {
     return (
       <Card>
@@ -59,7 +74,31 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
               <div className="flex gap-2">
                 <div className="flex-1">
                   <p className="font-medium">Chef AI</p>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{chat.ai_response}</p>
+                  <div className="text-muted-foreground">
+                    {renderFormattedResponse(chat.ai_response)}
+                  </div>
+                  
+                  {/* Follow-up Questions */}
+                  {chat.follow_up_questions && chat.follow_up_questions.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm font-semibold">Follow-up Questions:</p>
+                      {chat.follow_up_questions.map((question, qIndex) => (
+                        <Button 
+                          key={qIndex} 
+                          variant="outline" 
+                          size="sm" 
+                          className="mr-2 mb-2"
+                          onClick={() => {
+                            setMessage(question);
+                            // Optional: automatically send the follow-up question
+                            // sendMessage();
+                          }}
+                        >
+                          {question}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                   
                   {chat.changes_suggested && !chat.applied && (
                     <div className="mt-4">
