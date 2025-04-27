@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { NutritionPreferencesType } from '@/pages/Profile';
+import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface MealTimingProps {
   preferences: NutritionPreferencesType;
@@ -49,12 +48,10 @@ export function MealTiming({ preferences, onSave }: MealTimingProps) {
     });
   };
   
-  // Generate recommended meal schedule based on fasting window and meals per day
   const generateMealSchedule = () => {
     const feedingWindow = 24 - fastingWindow;
     const mealInterval = feedingWindow / mealsPerDay;
     
-    // Assume fasting ends at 8 AM
     const fastingEnd = 8;
     let schedule = [];
     

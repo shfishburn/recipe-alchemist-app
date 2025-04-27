@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-import type { NutritionPreferencesType } from '@/pages/Profile';
+import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface MacroDetailsProps {
   preferences: NutritionPreferencesType;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { NutritionPreferencesType } from '@/pages/Profile';
+import type { NutritionPreferencesType } from '@/types/nutrition';
 import { WeightGoalSelector } from './personal-details/WeightGoalSelector';
 import { CalculationDisplay } from './personal-details/CalculationDisplay';
 
@@ -51,7 +50,6 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   
   const watchAllFields = watch();
 
-  // Define calculateBMR function before using it
   const calculateBMR = (data: any) => {
     if (data.age && data.weight && data.height && data.gender) {
       const age = parseInt(data.age);

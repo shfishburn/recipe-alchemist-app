@@ -1,17 +1,17 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import type { NutritionPreferencesType } from '@/pages/Profile';
-import { ChartContainer } from '@/components/ui/chart';
+import { MacroSliders } from './nutrition/MacroSliders';
+import { MacroChart } from './nutrition/MacroChart';
 import { PersonalDetails } from './PersonalDetails';
 import { MacroDetails } from './MacroDetails';
 import { MealTiming } from './MealTiming';
+import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface NutritionPreferencesProps {
   preferences: NutritionPreferencesType;
@@ -25,7 +25,7 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
     fat: preferences.macroSplit.fat,
   });
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       dailyCalories: preferences.dailyCalories,
       ...macros,
@@ -39,15 +39,8 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
   const carbsGrams = Math.round((dailyCalories * (macros.carbs / 100)) / 4);
   const fatGrams = Math.round((dailyCalories * (macros.fat / 100)) / 9);
 
-  const chartData = [
-    { name: 'Protein', value: macros.protein, color: '#4f46e5' }, // Indigo
-    { name: 'Carbs', value: macros.carbs, color: '#0ea5e9' },     // Sky blue
-    { name: 'Fat', value: macros.fat, color: '#22c55e' },         // Green
-  ];
-
   const handleProteinChange = (value: number[]) => {
     const protein = value[0];
-    // Adjust carbs and fat proportionally to maintain total of 100%
     const remainingPercent = 100 - protein;
     const currentSum = macros.carbs + macros.fat;
     const carbsRatio = macros.carbs / currentSum;
@@ -64,7 +57,6 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
 
   const handleCarbsChange = (value: number[]) => {
     const carbs = value[0];
-    // Adjust protein and fat proportionally to maintain total of 100%
     const remainingPercent = 100 - carbs;
     const currentSum = macros.protein + macros.fat;
     const proteinRatio = macros.protein / currentSum;
@@ -81,7 +73,6 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
 
   const handleFatChange = (value: number[]) => {
     const fat = value[0];
-    // Adjust protein and carbs proportionally to maintain total of 100%
     const remainingPercent = 100 - fat;
     const currentSum = macros.protein + macros.carbs;
     const proteinRatio = macros.protein / currentSum;
@@ -96,6 +87,12 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
     setValue('fat', fat);
   };
 
+  const chartData = [
+    { name: 'Protein', value: macros.protein, color: '#4f46e5' },
+    { name: 'Carbs', value: macros.carbs, color: '#0ea5e9' },
+    { name: 'Fat', value: macros.fat, color: '#22c55e' },
+  ];
+
   const onSubmit = (data: any) => {
     const updatedPreferences = {
       ...preferences,
@@ -108,27 +105,6 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
     };
     
     onSave(updatedPreferences);
-  };
-
-  const handlePersonalDetailsSave = (details: Partial<NutritionPreferencesType>) => {
-    onSave({
-      ...preferences,
-      ...details
-    });
-  };
-
-  const handleMacroDetailsSave = (details: Partial<NutritionPreferencesType>) => {
-    onSave({
-      ...preferences,
-      ...details
-    });
-  };
-
-  const handleMealTimingSave = (details: Partial<NutritionPreferencesType>) => {
-    onSave({
-      ...preferences,
-      ...details
-    });
   };
 
   return (
@@ -154,107 +130,31 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
                     max="5000"
                     step="50"
                     className="w-full"
-                    {...register('dailyCalories', { 
-                      required: 'Calorie target is required',
-                      min: {
-                        value: 1000,
-                        message: 'Minimum is 1000 calories'
-                      },
-                      max: {
-                        value: 5000,
-                        message: 'Maximum is 5000 calories'
-                      }
-                    })}
+                    {...register('dailyCalories')}
                   />
-                  {errors.dailyCalories && (
-                    <p className="text-sm text-red-500">{errors.dailyCalories.message as string}</p>
-                  )}
                 </div>
-  
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Macro Distribution</h3>
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="protein">Protein ({macros.protein}%)</Label>
-                          <span className="text-sm font-medium">{proteinGrams}g</span>
-                        </div>
-                        <Slider 
-                          id="protein" 
-                          value={[macros.protein]} 
-                          max={70}
-                          step={5}
-                          onValueChange={handleProteinChange} 
-                          className="w-full" 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="carbs">Carbs ({macros.carbs}%)</Label>
-                          <span className="text-sm font-medium">{carbsGrams}g</span>
-                        </div>
-                        <Slider 
-                          id="carbs" 
-                          value={[macros.carbs]} 
-                          max={70} 
-                          step={5}
-                          onValueChange={handleCarbsChange} 
-                          className="w-full" 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label htmlFor="fat">Fat ({macros.fat}%)</Label>
-                          <span className="text-sm font-medium">{fatGrams}g</span>
-                        </div>
-                        <Slider 
-                          id="fat" 
-                          value={[macros.fat]} 
-                          max={70} 
-                          step={5}
-                          onValueChange={handleFatChange} 
-                          className="w-full" 
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <MacroSliders 
+                    macros={macros}
+                    onProteinChange={handleProteinChange}
+                    onCarbsChange={handleCarbsChange}
+                    onFatChange={handleFatChange}
+                    proteinGrams={proteinGrams}
+                    carbsGrams={carbsGrams}
+                    fatGrams={fatGrams}
+                  />
                   
-                  <div className="flex flex-col justify-center items-center">
-                    <ChartContainer config={{
-                      protein: { color: '#4f46e5' },
-                      carbs: { color: '#0ea5e9' },
-                      fat: { color: '#22c55e' },
-                    }} className="h-64 w-full">
-                      <PieChart>
-                        <Pie 
-                          data={chartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          dataKey="value"
-                        >
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ChartContainer>
-                  </div>
+                  <MacroChart chartData={chartData} />
                 </div>
-  
+
                 <div className="text-sm text-muted-foreground">
                   <p>Total: {dailyCalories} calories per day</p>
                   <p>Protein: {proteinGrams}g ({macros.protein}%)</p>
                   <p>Carbs: {carbsGrams}g ({macros.carbs}%)</p>
                   <p>Fat: {fatGrams}g ({macros.fat}%)</p>
                 </div>
-  
+
                 <div className="flex justify-end">
                   <Button type="submit">Save Nutrition Goals</Button>
                 </div>
@@ -267,21 +167,21 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
       <TabsContent value="personal">
         <PersonalDetails 
           preferences={preferences}
-          onSave={handlePersonalDetailsSave}
+          onSave={onSave}
         />
       </TabsContent>
       
       <TabsContent value="advanced">
         <MacroDetails 
           preferences={preferences}
-          onSave={handleMacroDetailsSave}
+          onSave={onSave}
         />
       </TabsContent>
       
       <TabsContent value="timing">
         <MealTiming 
           preferences={preferences}
-          onSave={handleMealTimingSave}
+          onSave={onSave}
         />
       </TabsContent>
     </Tabs>

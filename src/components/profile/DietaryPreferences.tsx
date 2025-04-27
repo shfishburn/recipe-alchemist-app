@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { NutritionPreferencesType } from '@/pages/Profile';
+import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface DietaryPreferencesProps {
   preferences: NutritionPreferencesType;
