@@ -18,28 +18,30 @@ interface RecipeChatDrawerProps {
 
 export function RecipeChatDrawer({ recipe }: RecipeChatDrawerProps) {
   return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button 
-          id="recipe-chat-trigger"
-          variant="outline" 
-          size="sm" 
-          className="flex-1 md:flex-none md:w-auto"
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Recipe Chat
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent className="h-[85vh] max-w-4xl mx-auto">
-        <DrawerHeader className="border-b">
-          <DrawerTitle>Recipe Chat</DrawerTitle>
-        </DrawerHeader>
-        <div className="p-4 flex-1 overflow-hidden flex flex-col h-[calc(85vh-60px)]">
-          <div className="overflow-y-auto flex-1">
-            <RecipeChat recipe={recipe} />
+    <div className="mt-4">
+      <Drawer>
+        <DrawerTrigger asChild>
+          <Button 
+            id="recipe-chat-trigger"
+            variant="outline" 
+            size="sm" 
+            className="w-full"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Recipe Chat
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent className="h-[85vh] max-w-4xl mx-auto z-50">
+          <DrawerHeader className="border-b">
+            <DrawerTitle>Recipe Chat</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 flex-1 overflow-hidden flex flex-col h-[calc(85vh-60px)]">
+            <div className="overflow-y-auto flex-1">
+              <RecipeChat recipe={recipe} />
+            </div>
           </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </DrawerContent>
+      </Drawer>
+    </div>
   );
 }
