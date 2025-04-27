@@ -56,13 +56,15 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
     ? "container max-w-4xl flex flex-wrap gap-2" 
     : "";
   
+  const buttonClasses = "min-h-[44px] sm:min-h-[36px]"; // Larger touch targets on mobile
+  
   return (
     <div className={containerClasses}>
       <div className={innerClasses}>
         <Button 
           variant="outline" 
           size="sm"
-          className="flex-1 md:flex-none md:w-auto"
+          className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
           onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
         >
           <ChefHat className="h-4 w-4 mr-2" />
@@ -72,7 +74,7 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
         <Button 
           variant="outline" 
           size="sm"
-          className="flex-1 md:flex-none md:w-auto"
+          className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
           onClick={() => window.document.getElementById('print-recipe-trigger')?.click()}
         >
           <Printer className="h-4 w-4 mr-2" />
@@ -83,7 +85,7 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
           <Button 
             variant="outline" 
             size="sm"
-            className="flex-1 md:flex-none md:w-auto"
+            className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
             onClick={shareRecipe}
           >
             <Share2 className="h-4 w-4 mr-2" />
@@ -94,7 +96,7 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
         <Button 
           variant="destructive" 
           size="sm"
-          className="flex-1 md:flex-none md:w-auto"
+          className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
           onClick={handleDelete}
         >
           <Trash2 className="h-4 w-4 mr-2" />
