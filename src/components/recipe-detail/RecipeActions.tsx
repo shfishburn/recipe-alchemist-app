@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { PrintRecipe } from './PrintRecipe';
-import { CookingMode } from './CookingMode';
-import { Printer, ChefHat, Share2, Trash2 } from 'lucide-react';
+import { ChefHat, MessageSquare, Printer, Share2, Trash2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import type { Recipe } from '@/types/recipe';
 
@@ -49,59 +47,69 @@ export function RecipeActions({ recipe, sticky = false }: RecipeActionsProps) {
   };
   
   const containerClasses = sticky && isSticky 
-    ? "fixed bottom-0 left-0 right-0 bg-background border-t p-3 shadow-lg z-30 transition-all duration-300 flex justify-center"
-    : "flex flex-wrap gap-2";
-  
-  const innerClasses = sticky && isSticky 
-    ? "container max-w-4xl flex flex-wrap gap-2" 
-    : "";
-  
-  const buttonClasses = "min-h-[44px] sm:min-h-[36px]"; // Larger touch targets on mobile
+    ? "fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg z-30 transition-all duration-300"
+    : "relative w-full";
   
   return (
     <div className={containerClasses}>
-      <div className={innerClasses}>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
-          onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
-        >
-          <ChefHat className="h-4 w-4 mr-2" />
-          Cooking Mode
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm"
-          className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
-          onClick={() => window.document.getElementById('print-recipe-trigger')?.click()}
-        >
-          <Printer className="h-4 w-4 mr-2" />
-          Print Recipe
-        </Button>
-        
-        {navigator.share && (
+      <div className="container max-w-4xl mx-auto p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          {/* Primary Actions */}
           <Button 
-            variant="outline" 
-            size="sm"
-            className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
-            onClick={shareRecipe}
+            variant="default" 
+            size="lg"
+            className="w-full"
+            onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
           >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
+            <ChefHat className="h-5 w-5 mr-2" />
+            Cooking Mode
           </Button>
-        )}
-        
-        <Button 
-          variant="destructive" 
-          size="sm"
-          className={`flex-1 md:flex-none md:w-auto ${buttonClasses}`}
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
-        </Button>
+          
+          <Button 
+            variant="default"
+            size="lg"
+            className="w-full"
+            onClick={() => window.document.getElementById('recipe-chat-trigger')?.click()}
+          >
+            <MessageSquare className="h-5 w-5 mr-2" />
+            AI Chat
+          </Button>
+        </div>
+
+        {/* Secondary Actions */}
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10"
+            onClick={() => window.document.getElementById('print-recipe-trigger')?.click()}
+            title="Print Recipe"
+          >
+            <Printer className="h-5 w-5" />
+          </Button>
+          
+          {navigator.share && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10"
+              onClick={shareRecipe}
+              title="Share Recipe"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          )}
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10"
+            onClick={handleDelete}
+            title="Delete Recipe"
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
     </div>
   );
