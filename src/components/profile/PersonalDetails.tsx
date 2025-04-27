@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { NutritionPreferencesType } from '@/pages/Profile';
+import { WeightGoalSelector } from './personal-details/WeightGoalSelector';
+import { CalculationDisplay } from './personal-details/CalculationDisplay';
 
 interface PersonalDetailsProps {
   preferences: NutritionPreferencesType;
@@ -47,7 +50,8 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   });
   
   const watchAllFields = watch();
-  
+  const { bmr, tdee, dailyCalories, projectedWeightLossPerWeek, deficit } = calculateBMR(watchAllFields);
+
   const calculateBMR = (data: any) => {
     if (data.age && data.weight && data.height && data.gender) {
       const age = parseInt(data.age);
@@ -64,12 +68,10 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       const activityMultiplier = activityLevels.find(level => level.value === data.activityLevel)?.multiplier || 1.55;
       const tdee = Math.round(bmr * activityMultiplier);
       
-      // Calculate daily calories based on goal
       const goalOption = weightGoalOptions.find(goal => goal.value === data.weightGoalType);
       const deficit = goalOption?.deficit || 0;
       const dailyCalories = tdee - deficit;
       
-      // Calculate projected weight loss per week (if in deficit)
       const projectedWeightLossPerWeek = deficit > 0 ? (deficit * 7) / 3500 : 0;
       
       return {
@@ -83,8 +85,6 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
     
     return { bmr: 0, tdee: 0, dailyCalories: 2000, projectedWeightLossPerWeek: 0, deficit: 0 };
   };
-  
-  const { bmr, tdee, dailyCalories, projectedWeightLossPerWeek, deficit } = calculateBMR(watchAllFields);
   
   const onSubmit = (data: any) => {
     const calculations = calculateBMR(data);
@@ -104,7 +104,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       weightGoalDeficit: calculations.deficit
     });
   };
-  
+
   return (
     <Card>
       <CardHeader>
@@ -215,73 +215,20 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="weightGoalType">Weight Management Goal</Label>
-            <Controller
-              control={control}
-              name="weightGoalType"
-              render={({ field }) => (
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    const goalOption = weightGoalOptions.find(goal => goal.value === value);
-                    if (goalOption) {
-                      setValue('weightGoalDeficit', goalOption.deficit);
-                    }
-                  }}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select your goal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {weightGoalOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
+          <WeightGoalSelector 
+            control={control}
+            weightGoalOptions={weightGoalOptions}
+            setValue={setValue}
+          />
           
           {bmr > 0 && (
-            <div className="p-4 bg-blue-50 rounded-md space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Basal Metabolic Rate (BMR)</p>
-                  <p className="font-semibold">{bmr} calories</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Daily Energy Expenditure (TDEE)</p>
-                  <p className="font-semibold">{tdee} calories</p>
-                </div>
-              </div>
-              
-              <div className="border-t pt-4">
-                <div className="space-y-2">
-                  <p className="font-medium">Recommended Daily Calories: {dailyCalories}</p>
-                  {deficit > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      <p>Calorie Deficit: {deficit} calories per day</p>
-                      <p>Projected Weight Loss: {projectedWeightLossPerWeek.toFixed(1)} lbs per week</p>
-                    </div>
-                  )}
-                  {deficit < 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      <p>Calorie Surplus: {Math.abs(deficit)} calories per day</p>
-                      <p>Ideal for muscle gain and recovery</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <p className="text-xs text-muted-foreground">
-                These calculations are estimates based on your personal details and activity level.
-                Adjust your daily calories based on your progress and how you feel.
-              </p>
-            </div>
+            <CalculationDisplay 
+              bmr={bmr}
+              tdee={tdee}
+              dailyCalories={dailyCalories}
+              deficit={deficit}
+              projectedWeightLossPerWeek={projectedWeightLossPerWeek}
+            />
           )}
           
           <div className="flex justify-end">
