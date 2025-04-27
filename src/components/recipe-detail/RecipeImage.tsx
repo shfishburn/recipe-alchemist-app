@@ -6,7 +6,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import type { Recipe } from '@/types/recipe';
-import type { Json } from '@/integrations/supabase/types';
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -35,40 +34,19 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           title: recipe.title,
           ingredients: recipe.ingredients,
           instructions: recipe.instructions,
+          recipeId: recipe.id // Pass the recipe ID
         },
       });
 
       if (response.error) throw response.error;
-
-      // Create a new version of the recipe with the new image
-      const newRecipeData = {
-        ...recipe,
-        id: undefined,
-        previous_version_id: recipe.id,
-        version_number: recipe.version_number + 1,
-        image_url: response.data.imageUrl,
-        user_id: user.id, // Include the user_id field which is required
-        servings: recipe.servings || 4, // Default to 4 if somehow missing
-        // Cast the complex objects to Json type for Supabase
-        ingredients: recipe.ingredients as unknown as Json,
-        nutrition: recipe.nutrition as unknown as Json
-      };
-
-      const { data: newRecipe, error: saveError } = await supabase
-        .from('recipes')
-        .insert(newRecipeData)
-        .select()
-        .single();
-
-      if (saveError) throw saveError;
 
       toast({
         title: "Success",
         description: "Generated a new image for your recipe",
       });
 
-      // Redirect to the new version
-      window.location.href = `/recipes/${newRecipe.id}`;
+      // Reload the page to show the new image
+      window.location.reload();
     } catch (error) {
       console.error('Error generating image:', error);
       toast({

@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,40 +15,17 @@ serve(async (req) => {
   }
 
   try {
-    const { title, ingredients, instructions } = await req.json();
+    const { title, ingredients, instructions, recipeId } = await req.json();
+    console.log('Generating image for recipe:', { title, recipeId });
 
     const openai = new OpenAI({
       apiKey: Deno.env.get('OPENAI_API_KEY'),
     });
 
-    // Parse ingredients array if it's a string
-    let ingredientsList = ingredients;
-    
     // Create a descriptive prompt for the recipe
-    let ingredientsDescription;
-    
-    // If ingredients is an array, extract details
-    if (Array.isArray(ingredientsList)) {
-      ingredientsDescription = ingredientsList.map(ing => 
-        `${ing.qty} ${ing.unit} ${ing.item}`
-      ).join(', ');
-    } else {
-      // If ingredients was sent as a string, try to parse it
-      try {
-        const parsedIngredients = JSON.parse(ingredientsList);
-        if (Array.isArray(parsedIngredients)) {
-          ingredientsDescription = parsedIngredients.map(ing => 
-            `${ing.qty} ${ing.unit} ${ing.item}`
-          ).join(', ');
-        } else {
-          ingredientsDescription = "various ingredients";
-        }
-      } catch (e) {
-        // If parsing fails, use a generic description
-        ingredientsDescription = "various ingredients";
-        console.log("Error parsing ingredients:", e);
-      }
-    }
+    let ingredientsDescription = Array.isArray(ingredients) 
+      ? ingredients.map(ing => `${ing.qty} ${ing.unit} ${ing.item}`).join(', ')
+      : "various ingredients";
 
     const prompt = `Create a professional, appetizing photo of "${title}". This dish contains ${ingredientsDescription}. Style: Modern food photography, overhead view, natural lighting, on a white plate with minimal garnish. Make it look delicious and Instagram-worthy.`;
 
@@ -63,6 +41,25 @@ serve(async (req) => {
     });
 
     console.log('Generated image URL:', response.data[0].url);
+
+    // Update the recipe with the new image URL
+    if (recipeId) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { error: updateError } = await supabase
+        .from('recipes')
+        .update({ image_url: response.data[0].url })
+        .eq('id', recipeId);
+
+      if (updateError) {
+        console.error('Error updating recipe:', updateError);
+        throw updateError;
+      }
+      console.log('Successfully updated recipe with new image URL');
+    }
 
     return new Response(
       JSON.stringify({ imageUrl: response.data[0].url }),
