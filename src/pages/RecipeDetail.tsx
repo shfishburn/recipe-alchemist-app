@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
@@ -11,11 +11,13 @@ import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstruction
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
+import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
 
 const RecipeDetail = () => {
   const { id } = useParams();
   const { data: recipe, isLoading, error } = useRecipeDetail(id);
+  const chatTriggerRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     if (recipe) {
@@ -25,6 +27,12 @@ const RecipeDetail = () => {
       document.title = 'Recipe App';
     };
   }, [recipe]);
+
+  const handleOpenChat = () => {
+    if (chatTriggerRef.current) {
+      chatTriggerRef.current.click();
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,6 +63,7 @@ const RecipeDetail = () => {
               <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
                 <div className="md:col-span-1">
                   <RecipeIngredients recipe={recipe} />
+                  <RecipeChatDrawer recipe={recipe} triggerRef={chatTriggerRef} />
                 </div>
                 <div className="md:col-span-2">
                   <RecipeInstructions recipe={recipe} />
@@ -68,7 +77,7 @@ const RecipeDetail = () => {
               )}
 
               {/* Action buttons */}
-              <RecipeActions recipe={recipe} sticky={true} />
+              <RecipeActions recipe={recipe} sticky={true} onOpenChat={handleOpenChat} />
             </div>
           ) : null}
         </div>
