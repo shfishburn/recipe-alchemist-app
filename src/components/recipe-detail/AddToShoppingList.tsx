@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -39,8 +37,12 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   return (
     <Sheet onOpenChange={(open) => open && fetchShoppingLists()}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-muted hover:text-foreground">
-          <ShoppingBag className="mr-2 h-4 w-4" />
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200"
+        >
+          <ShoppingBag className="h-4 w-4 mr-2" />
           Add to shopping list
         </Button>
       </SheetTrigger>
