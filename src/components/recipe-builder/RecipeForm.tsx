@@ -3,6 +3,7 @@ import React from 'react';
 import InputsTab from './tabs/InputsTab';
 import FormFooter from './form/FormFooter';
 import PreviewDialog from './form/PreviewDialog';
+import LoadingInterstitial from './LoadingInterstitial';
 import AdvancedOptions from './form/AdvancedOptions';
 import { useRecipeForm } from '@/hooks/use-recipe-form';
 
@@ -87,7 +88,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
 
       <FormFooter
         onPreview={() => setPreviewOpen(true)}
-        onSubmit={() => {}} /* Empty function to match the type */
+        onSubmit={onFormSubmit}
         isLoading={isLoading}
         hasGenerated={hasGenerated}
       />
@@ -98,6 +99,8 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
         formData={formData}
         showAdvanced={showAdvanced}
       />
+
+      <LoadingInterstitial isOpen={isLoading} />
     </form>
   );
 };

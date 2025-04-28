@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,6 +91,8 @@ export const useRecipeGenerator = () => {
       });
 
       if (savedRecipe) {
+        // Add a small delay before navigation for smoother transition
+        await new Promise(resolve => setTimeout(resolve, 1000));
         navigate(`/recipes/${savedRecipe.id}`);
       }
 
