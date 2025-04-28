@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -56,6 +57,16 @@ const RecipeDetail = () => {
         description: "Your chef notes have been updated successfully.",
       });
     }
+  };
+
+  const handleRecipeUpdate = (updatedRecipe: Recipe) => {
+    // Update the local recipe state with the updated recipe data
+    setLocalRecipe(updatedRecipe);
+    
+    toast({
+      title: "Recipe updated",
+      description: "Recipe has been updated with analysis insights.",
+    });
   };
 
   const handleToggleAnalysis = () => {
@@ -120,7 +131,11 @@ const RecipeDetail = () => {
                 </div>
               </div>
 
-              <RecipeAnalysis recipe={currentRecipe} isVisible={showAnalysis} />
+              <RecipeAnalysis 
+                recipe={currentRecipe} 
+                isVisible={showAnalysis} 
+                onRecipeUpdated={handleRecipeUpdate}
+              />
 
               <div className="mt-6 sm:mt-8 space-y-6">
                 <ScienceNotes 

@@ -1,18 +1,23 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
+import { toast } from 'sonner';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeAnalysisProps {
   recipe: Recipe;
   isVisible: boolean;
+  onRecipeUpdated?: (updatedRecipe: Recipe) => void;
 }
 
-export function RecipeAnalysis({ recipe, isVisible }: RecipeAnalysisProps) {
+export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAnalysisProps) {
+  const { updateRecipe } = useRecipeUpdates(recipe.id);
+  
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
@@ -47,6 +52,27 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     enabled: isVisible,
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
   });
+
+  // Apply analysis updates to recipe when data is available
+  useEffect(() => {
+    if (analysis && analysis.changes) {
+      console.log('Applying analysis updates to recipe:', analysis.changes);
+      // Apply the updates from the analysis
+      updateRecipe.mutate(analysis.changes, {
+        onSuccess: (updatedRecipe) => {
+          console.log('Recipe updated with analysis data:', updatedRecipe);
+          if (onRecipeUpdated) {
+            onRecipeUpdated(updatedRecipe);
+          }
+          toast.success('Recipe updated with analysis insights');
+        },
+        onError: (error) => {
+          console.error('Failed to update recipe with analysis data:', error);
+          toast.error('Failed to update recipe with analysis');
+        }
+      });
+    }
+  }, [analysis, updateRecipe, onRecipeUpdated]);
 
   if (!isVisible) return null;
 

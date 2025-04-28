@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { corsHeaders } from '../_shared/cors.ts'
@@ -35,7 +36,7 @@ serve(async (req) => {
   }
 
   try {
-    const { recipeId, userMessage } = await req.json()
+    const { recipeId, userMessage, sourceType } = await req.json()
     
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -52,8 +53,8 @@ serve(async (req) => {
 
     if (recipeError) throw recipeError
 
-    // Your existing OpenAI call here with updated system prompt
-    const systemPrompt = `You are a helpful cooking assistant. When suggesting changes to recipes:
+    // Modify system prompt based on the source type
+    let systemPrompt = `You are a helpful cooking assistant. When suggesting changes to recipes:
     1. Always format responses as JSON with changes
     2. For cooking instructions:
        - Include specific temperatures (F° and C°)
@@ -100,6 +101,36 @@ serve(async (req) => {
       }
     }`
 
+    // If this is an analysis request, enhance the system prompt
+    if (sourceType === 'analysis') {
+      systemPrompt = `${systemPrompt}
+      
+      You are performing a scientific analysis of a recipe. Your response must include:
+      1. An improved, more specific recipe title that highlights key techniques or flavors
+      2. At least 3 detailed scientific notes about the cooking chemistry
+      3. The response must be formatted as valid JSON
+      
+      The improved title should be descriptive but concise and should NEVER be generic like "optional new title" or "untitled recipe".
+      
+      Example response format:
+      {
+        "title": "Slow-Braised Short Ribs with Red Wine Reduction",
+        "science_notes": [
+          "The Maillard reaction during initial searing creates complex flavor compounds and improves color",
+          "Slow braising at 275°F (135°C) allows collagen to convert to gelatin for tender meat",
+          "Acidic components in wine denature proteins and tenderize tough connective tissue"
+        ],
+        "techniques": [
+          "Proper searing requires a dry surface and high heat (450°F+) to achieve browning",
+          "Low and slow cooking (275°F) promotes collagen breakdown without moisture loss"
+        ],
+        "troubleshooting": [
+          "If meat is tough, extend cooking time by 30-45 minutes to allow more collagen conversion",
+          "If sauce is thin, reduce separately at a simmer until it coats the back of a spoon"
+        ]
+      }`
+    }
+
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY is not set')
@@ -141,23 +172,39 @@ serve(async (req) => {
       }),
     }).then((res) => res.json()).then((json) => json.choices[0].message.content)
 
+    console.log("Raw AI response:", aiResponse);
+
     // Validate the response
     const changes = validateRecipeChanges(aiResponse)
+    console.log("Validated changes:", changes);
     
-    // Store the chat interaction
-    const { error: chatError } = await supabaseClient
-      .from('recipe_chats')
-      .insert({
-        recipe_id: recipeId,
-        user_message: userMessage,
-        ai_response: JSON.stringify(changes),
-        changes_suggested: changes
-      })
+    // For analysis requests, make sure we include the changes in the response
+    const responseData = sourceType === 'analysis' 
+      ? { 
+          success: true, 
+          changes,
+          science_notes: changes.science_notes || [],
+          techniques: changes.techniques || [],
+          troubleshooting: changes.troubleshooting || [] 
+        }
+      : { success: true, changes };
+    
+    // Store the chat interaction if it's not an analysis
+    if (sourceType !== 'analysis') {
+      const { error: chatError } = await supabaseClient
+        .from('recipe_chats')
+        .insert({
+          recipe_id: recipeId,
+          user_message: userMessage,
+          ai_response: JSON.stringify(changes),
+          changes_suggested: changes
+        })
 
-    if (chatError) throw chatError
+      if (chatError) throw chatError
+    }
 
     return new Response(
-      JSON.stringify({ success: true, changes }),
+      JSON.stringify(responseData),
       {
         headers: {
           ...corsHeaders,
@@ -166,6 +213,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error("Error in recipe-chat function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
