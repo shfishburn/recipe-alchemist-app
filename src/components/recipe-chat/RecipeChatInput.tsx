@@ -27,7 +27,6 @@ export function RecipeChatInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     if (message.trim()) {
       if (isUrlMode && onUrlSubmit) {
         onUrlSubmit(message);
@@ -38,20 +37,13 @@ export function RecipeChatInput({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     const file = e.target.files?.[0];
     if (file && onUpload) {
       onUpload(file);
     }
   };
 
-  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    e.stopPropagation();
-    setMessage(e.target.value);
-  };
-
-  const toggleUrlMode = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleUrlMode = () => {
     setIsUrlMode(!isUrlMode);
     setMessage('');
   };
@@ -70,7 +62,7 @@ export function RecipeChatInput({
         <div className="flex-1 relative">
           <Textarea
             value={message}
-            onChange={handleMessageChange}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder={
               isUrlMode
                 ? "Paste a recipe URL here..."
@@ -85,10 +77,7 @@ export function RecipeChatInput({
               type="button"
               size="icon"
               variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
+              onClick={() => fileInputRef.current?.click()}
               className={cn(
                 "h-8 w-8 rounded-full hover:bg-gray-100",
                 isUrlMode && "hidden"
