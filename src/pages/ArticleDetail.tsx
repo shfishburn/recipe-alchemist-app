@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
@@ -19,7 +18,6 @@ const ArticleDetail = () => {
   const [articleTitle, setArticleTitle] = useState('Article');
 
   useEffect(() => {
-    // Set page title based on slug
     if (slug === 'intelligent-cooking') {
       setArticleTitle('AI Makes Cooking Intelligent');
     } else if (slug === 'nutrition-tracking') {
@@ -28,7 +26,6 @@ const ArticleDetail = () => {
       setArticleTitle('Smart Ingredient Substitutions');
     }
     
-    // Check for existing image in storage
     const checkForExistingImage = async () => {
       try {
         const { data: fileList } = await supabase.storage
@@ -38,7 +35,6 @@ const ArticleDetail = () => {
           });
           
         if (fileList && fileList.length > 0) {
-          // Sort by created_at to get the most recent file
           const sortedFiles = fileList.sort((a, b) => 
             new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
           );
@@ -64,7 +60,6 @@ const ArticleDetail = () => {
     try {
       console.log('Generating image for article:', articleTitle, 'with slug:', slug);
       
-      // Create a more descriptive prompt based on the article type
       let prompt = `Create an informative, visually appealing illustration for an article titled "${articleTitle}". `;
       
       if (slug === 'intelligent-cooking') {
@@ -75,7 +70,6 @@ const ArticleDetail = () => {
         prompt += 'Illustrate ingredient substitution science with side-by-side comparison of alternative ingredients. Include molecular analysis showing flavor profile matches, cooking property similarities, and nutritional equivalence data.';
       }
       
-      // Use the existing image generation utility
       const imageUrl = await generateRecipeImage(
         articleTitle,
         [{ qty: 1, unit: '', item: articleTitle }],
@@ -98,17 +92,13 @@ const ArticleDetail = () => {
       case 'intelligent-cooking':
         return <ArticleIntelligentCooking />;
       case 'nutrition-tracking':
-        return (
-          <Card className="p-8">
-            <h2 className="text-3xl font-bold mb-6">Precise Nutrition Tracking</h2>
-            <p className="mb-4">Article content coming soon...</p>
-          </Card>
-        );
       case 'substitutions':
         return (
           <Card className="p-8">
-            <h2 className="text-3xl font-bold mb-6">Smart Ingredient Substitutions</h2>
-            <p className="mb-4">Article content coming soon...</p>
+            <article className="prose prose-lg max-w-4xl mx-auto dark:prose-invert">
+              <h2 className="text-3xl font-bold mb-6">{articleTitle}</h2>
+              <p className="mb-4">Article content coming soon...</p>
+            </article>
           </Card>
         );
       default:
@@ -138,7 +128,7 @@ const ArticleDetail = () => {
       <Navbar />
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-12">
-          <div className="flex justify-between items-center mb-8">
+          <div className="mb-8">
             <Button 
               variant="outline" 
               onClick={() => navigate('/how-it-works')}
@@ -147,8 +137,10 @@ const ArticleDetail = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Articles
             </Button>
-            
-            {!generatedImage && !isGenerating && (
+          </div>
+
+          {!generatedImage && !isGenerating && (
+            <div className="mb-8 flex justify-end">
               <Button 
                 onClick={handleGenerateImage}
                 className="flex items-center"
@@ -156,15 +148,14 @@ const ArticleDetail = () => {
                 <ImageIcon className="mr-2 h-4 w-4" />
                 Generate Article Image
               </Button>
-            )}
-            
-            {isGenerating && (
-              <Button disabled className="flex items-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
-              </Button>
-            )}
-          </div>
+            </div>
+          )}
+          
+          {isGenerating && (
+            <div className="mb-8 flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
           
           {generatedImage && (
             <div className="mb-8">
