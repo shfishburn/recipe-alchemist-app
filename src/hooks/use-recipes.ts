@@ -46,9 +46,9 @@ export const useRecipes = () => {
           let ingredients: Ingredient[] = [];
           try {
             ingredients = Array.isArray(dbRecipe.ingredients) 
-              ? dbRecipe.ingredients as unknown as Ingredient[]
+              ? (dbRecipe.ingredients as unknown as Ingredient[])
               : typeof dbRecipe.ingredients === 'object' 
-                ? Object.values(dbRecipe.ingredients) as Ingredient[]
+                ? (Object.values(dbRecipe.ingredients) as unknown as Ingredient[])
                 : [];
           } catch (e) {
             console.error('Failed to parse ingredients', e);
@@ -59,7 +59,7 @@ export const useRecipes = () => {
           try {
             if (dbRecipe.science_notes) {
               scienceNotes = Array.isArray(dbRecipe.science_notes) 
-                ? dbRecipe.science_notes as unknown as string[]
+                ? (dbRecipe.science_notes as unknown as string[])
                 : [];
             }
           } catch (e) {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
@@ -5,12 +6,12 @@ import { ImageIcon, Loader2 } from 'lucide-react';
 import { uploadImageFromUrl } from '@/utils/image-storage';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import type { Recipe } from '@/types/recipe';
 
-type Recipe = Database['public']['Tables']['recipes']['Row'];
-
-interface RecipeCardProps {
-  recipe: Recipe;
-}
+// Allow both Recipe types to be used
+type RecipeCardProps = {
+  recipe: Recipe | Database['public']['Tables']['recipes']['Row'];
+};
 
 const RecipeCard = ({ recipe }: RecipeCardProps) => {
   const [imageError, setImageError] = useState(false);
