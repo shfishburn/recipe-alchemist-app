@@ -16,7 +16,7 @@ export function Navbar({ className }: { className?: string }) {
     { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
     { name: 'My Lab', path: '/build', requiresAuth: true },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
-    { name: 'How It Works', path: '/how-it-works', requiresAuth: false },
+    { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];
 
   // Filter links based on authentication status
