@@ -39,11 +39,14 @@ export function MobileMenu() {
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] sm:w-[400px]">
         <SheetHeader>
-          <SheetTitle className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-recipe-blue/10 flex items-center justify-center">
-              <span className="text-recipe-blue text-xl font-bold">R</span>
-            </div>
-            <span className="font-bold text-lg">Recipe Alchemist</span>
+          <SheetTitle>
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png" 
+                alt="Recipe Alchemy Logo" 
+                className="h-10 w-auto"
+              />
+            </Link>
           </SheetTitle>
         </SheetHeader>
         <div className="mt-8 flex flex-col gap-4">

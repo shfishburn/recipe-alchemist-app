@@ -12,11 +12,12 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12">
           {/* Logo and Description */}
           <div className="col-span-1">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-recipe-blue/10 flex items-center justify-center">
-                <span className="text-recipe-blue text-xl font-bold">R</span>
-              </div>
-              <span className="font-bold text-lg">Recipe Alchemist</span>
+            <Link to="/" className="flex items-center">
+              <img 
+                src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png" 
+                alt="Recipe Alchemy Logo" 
+                className="h-12 w-auto"
+              />
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
               Transform your cooking experience with AI-powered recipe creation and personalization.
@@ -48,7 +49,7 @@ export function Footer() {
         {/* Social Links and Copyright - More compact on mobile */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
-            © {currentYear} Recipe Alchemist. All rights reserved.
+            © {currentYear} Recipe Alchemy. All rights reserved.
           </p>
           <div className="flex space-x-4 order-1 sm:order-2">
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">

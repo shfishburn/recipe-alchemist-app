@@ -26,11 +26,12 @@ export function Navbar({ className }: { className?: string }) {
       <div className="container-page flex h-16 items-center">
         <div className="flex items-center gap-4 mr-auto">
           <MobileMenu />
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-recipe-blue/10 flex items-center justify-center">
-              <span className="text-recipe-blue text-xl font-bold">R</span>
-            </div>
-            <span className="font-bold text-lg">Recipe Alchemist</span>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png" 
+              alt="Recipe Alchemy Logo" 
+              className="h-10 w-auto"
+            />
           </Link>
         </div>
 
