@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import HowItWorks from "./pages/HowItWorks";
 import ArticleDetail from "./pages/ArticleDetail";
 import FAQ from "./pages/FAQ";
+import About from "./pages/About";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +52,7 @@ const App = () => (
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/how-it-works/:slug" element={<ArticleDetail />} />
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/about" element={<About />} />
                 <Route
                   path="/build"
                   element={
