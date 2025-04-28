@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -60,7 +59,6 @@ const RecipeDetail = () => {
   };
 
   const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    // Update the local recipe state with the updated recipe data
     setLocalRecipe(updatedRecipe);
     
     toast({
@@ -90,7 +88,7 @@ const RecipeDetail = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pb-32 sm:pb-40">
+      <main className="flex-1 pb-20 sm:pb-28 md:pb-32">
         <div className="container-page py-4 sm:py-8">
           {isLoading ? (
             <div className="flex justify-center my-8 sm:my-12">
@@ -152,7 +150,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-6 sm:mt-8 mb-24">
+                <div className="mt-6 sm:mt-8 mb-16 sm:mb-20">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}

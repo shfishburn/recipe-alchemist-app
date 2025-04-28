@@ -80,7 +80,7 @@ const HowItWorks = () => {
       </Helmet>
       <Navbar />
       <main className="flex-1 animate-fadeIn">
-        <div className="container-page py-12">
+        <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
           {/* Breadcrumb Navigation */}
           <nav className="mb-8" aria-label="Breadcrumb">
             <Breadcrumb>
