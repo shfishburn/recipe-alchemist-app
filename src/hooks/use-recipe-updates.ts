@@ -37,7 +37,15 @@ export function useRecipeUpdates(recipeId: string) {
           ...updates,
           // Only include properties if they exist in updates
           ingredients: updates.ingredients ? updates.ingredients as unknown as Json : undefined,
-          science_notes: updates.science_notes ? updates.science_notes as unknown as Json : undefined,
+          // Properly transform science_notes to ensure it's stored as JSON but is a string array
+          science_notes: updates.science_notes 
+            ? (Array.isArray(updates.science_notes) 
+                ? updates.science_notes.map(note => 
+                    typeof note === 'string' ? note : String(note)
+                  ) 
+                : []
+              ) as unknown as Json
+            : undefined,
           nutrition: updates.nutrition ? updates.nutrition as unknown as Json : undefined,
           updated_at: new Date().toISOString(),
         };
@@ -57,7 +65,10 @@ export function useRecipeUpdates(recipeId: string) {
         const processedData: Recipe = {
           ...data,
           ingredients: data.ingredients as unknown as Ingredient[],
-          science_notes: Array.isArray(data.science_notes) ? data.science_notes : []
+          // Ensure science_notes is always a string array
+          science_notes: Array.isArray(data.science_notes) 
+            ? data.science_notes.map(note => typeof note === 'string' ? note : String(note))
+            : []
         };
         
         return processedData;
