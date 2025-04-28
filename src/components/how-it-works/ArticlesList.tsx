@@ -7,6 +7,9 @@ import { BookOpen, ChefHat, Leaf, Lightbulb, Utensils, Activity } from 'lucide-r
 import { Badge } from '@/components/ui/badge';
 import { ReadTimeDisplay } from './ReadTimeDisplay';
 
+// Import the article content
+import { articlesContent } from './ArticleContent';
+
 interface Article {
   id: string;
   title: string;
@@ -63,6 +66,9 @@ export const ArticlesList = () => {
       <div className="sr-only" id="articles-section">Recipe Alchemist Knowledge Articles</div>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
         {articles.map((article) => {
+          // Get full article content for accurate read time calculation
+          const fullContent = articlesContent[article.id] || article.description;
+          
           return (
             <Card 
               key={article.id} 
@@ -77,7 +83,7 @@ export const ArticlesList = () => {
                 </div>
                 <CardTitle className="text-xl text-center" itemProp="headline">{article.title}</CardTitle>
                 <div className="flex justify-center mt-2">
-                  <ReadTimeDisplay text={article.description} />
+                  <ReadTimeDisplay text={fullContent} />
                 </div>
               </CardHeader>
               <CardContent className="flex-grow">
