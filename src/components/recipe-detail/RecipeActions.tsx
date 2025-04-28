@@ -33,6 +33,7 @@ export function RecipeActions({
     if (!sticky) return;
     
     const handleScroll = () => {
+      // Adjusted to account for the taller navbar (h-20 = 80px)
       setIsSticky(window.scrollY > 300);
     };
     

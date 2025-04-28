@@ -9,7 +9,6 @@ import { Footer } from "@/components/ui/footer";
 import PrivateRoute from "@/components/PrivateRoute";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
-import { Navbar } from "@/components/ui/navbar";
 
 import Index from "./pages/Index";
 import Build from "./pages/Build";
@@ -44,7 +43,6 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <LoadingIndicator />
-            <Navbar />
             <PageTransition>
               <Routes>
                 <Route path="/" element={<Index />} />

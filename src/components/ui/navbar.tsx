@@ -26,7 +26,7 @@ export function Navbar({ className }: { className?: string }) {
 
   return (
     <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
-      <div className="container-page flex h-16 items-center">
+      <div className="container-page flex h-20 items-center">
         <div className="flex items-center gap-4 mr-auto">
           <MobileMenu />
           <Link to="/" className="flex items-center">
