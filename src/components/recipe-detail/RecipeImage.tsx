@@ -33,6 +33,8 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     }
   };
 
+  const shouldShowGenerateButton = !imageUrl || imageError;
+
   return (
     <div className="relative mb-6">
       <div className="rounded-lg overflow-hidden">
@@ -50,27 +52,29 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           <PlaceholderImage hasError={imageError} />
         )}
       </div>
-      <div className="mt-2 flex justify-end">
-        <Button
-          onClick={generateNewImage}
-          disabled={isGenerating}
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-foreground hover:bg-muted"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <ImagePlus className="mr-2 h-4 w-4" />
-              Generate Image
-            </>
-          )}
-        </Button>
-      </div>
+      {shouldShowGenerateButton && (
+        <div className="mt-2 flex justify-end">
+          <Button
+            onClick={generateNewImage}
+            disabled={isGenerating}
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <ImagePlus className="mr-2 h-4 w-4" />
+                Generate Image
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
       <ImageDialog
         open={showImageDialog}
@@ -82,3 +86,4 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     </div>
   );
 }
+
