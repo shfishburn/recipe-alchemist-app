@@ -1,8 +1,5 @@
-
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,15 +15,43 @@ serve(async (req) => {
     const { title, ingredients, instructions, recipeId } = await req.json();
     console.log('Generating image for recipe:', { title, recipeId });
 
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
     const openai = new OpenAI({
-      apiKey: Deno.env.get('OPENAI_API_KEY'),
+      apiKey: apiKey,
     });
 
     let ingredientsDescription = Array.isArray(ingredients) 
       ? ingredients.map(ing => `${ing.qty} ${ing.unit} ${ing.item}`).join(', ')
       : "various ingredients";
 
-    const prompt = `Create a professional, appetizing photo of "${title}". This dish contains ${ingredientsDescription}. Style: Modern food photography, overhead view, natural lighting, on a white plate with minimal garnish. Make it look delicious and Instagram-worthy.`;
+    const prompt = `Create a professional, appetizing photo of "${title}" that showcases both visual appeal and culinary technique. This dish contains ${ingredientsDescription}.
+
+VISUAL STYLE:
+- Professional food photography with 45-degree angled perspective (showing both top and side)
+- Natural, directional lighting from top-left with soft shadows for depth
+- Shallow depth of field focusing on key textural elements
+- Set on a neutral ceramic or slate surface with minimal props
+- Color harmony highlighting the dish's dominant ingredients
+
+CULINARY ACCURACY:
+- Show scientifically correct cooking results (proper caramelization, appropriate doneness)
+- Capture texture contrasts (crispy/tender, moist/dry) based on the cooking techniques
+- Display proper garnish placement that enhances visual appeal
+- Demonstrate proper knife work and cutting techniques for ingredients
+- Include appropriate steam/moisture where relevant for freshness indicators
+
+FOOD STYLING DETAILS:
+- Include 1-2 complementary ingredients in background (whole forms of processed ingredients)
+- Show proper plating technique appropriate for cuisine style
+- Display correct sauce consistency and application
+- Capture appropriate portion size on properly scaled dishware
+- Include small details that suggest freshness (droplets, herb oils, textural variations)
+
+The image should appear professionally styled but achievable, with natural colors and textures that accurately represent the dish's scientific preparation methods.`;
 
     console.log('Generating image with prompt:', prompt);
 
