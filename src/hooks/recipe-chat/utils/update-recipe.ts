@@ -21,7 +21,9 @@ export async function updateRecipe(
     ingredientMode: chatMessage.changes_suggested?.ingredients?.mode,
     ingredientCount: chatMessage.changes_suggested?.ingredients?.items?.length,
     hasInstructions: !!chatMessage.changes_suggested?.instructions,
-    hasNutrition: !!chatMessage.changes_suggested?.nutrition
+    hasNutrition: !!chatMessage.changes_suggested?.nutrition,
+    hasScienceNotes: !!chatMessage.changes_suggested?.science_notes,
+    scienceNoteCount: chatMessage.changes_suggested?.science_notes?.length
   });
 
   // Process basic recipe updates

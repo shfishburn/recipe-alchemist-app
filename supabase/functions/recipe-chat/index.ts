@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -168,6 +169,38 @@ function validateAIResponse(response) {
       response.changes.nutrition = standardizeNutrition(response.changes.nutrition);
     }
   }
+
+  // If science notes are present, validate they're an array
+  if (response.changes.science_notes) {
+    if (!Array.isArray(response.changes.science_notes)) {
+      console.warn("Invalid science_notes format in AI response, should be an array");
+      if (typeof response.changes.science_notes === 'string') {
+        response.changes.science_notes = [response.changes.science_notes];
+      } else {
+        delete response.changes.science_notes;
+      }
+    }
+  }
+
+  // Ensure troubleshooting is an array if present
+  if (response.troubleshooting && !Array.isArray(response.troubleshooting)) {
+    console.warn("Invalid troubleshooting format in AI response, should be an array");
+    if (typeof response.troubleshooting === 'string') {
+      response.troubleshooting = [response.troubleshooting];
+    } else {
+      delete response.troubleshooting;
+    }
+  }
+
+  // Ensure techniques is an array if present
+  if (response.techniques && !Array.isArray(response.techniques)) {
+    console.warn("Invalid techniques format in AI response, should be an array");
+    if (typeof response.techniques === 'string') {
+      response.techniques = [response.techniques];
+    } else {
+      delete response.techniques;
+    }
+  }
   
   return true;
 }
@@ -190,84 +223,125 @@ serve(async (req) => {
       .map(ing => `${ing.qty} ${ing.unit} ${ing.item}`)
       .join('\n');
 
-    // Enhanced system prompt with stricter guidelines and nutrition guidance
-    const systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest specific improvements.
-    
-    IMPORTANT GUIDELINES FOR RECIPE MODIFICATIONS:
-    1. EXISTING INGREDIENTS:
-       Current recipe ingredients:
-       ${existingIngredientsText}
-       
-       STRICT RULES:
-       - NEVER suggest ingredients that already exist (check thoroughly for variations/synonyms)
-       - When suggesting new ingredients, explain WHY they enhance the recipe
-       - Use "add" mode ONLY for genuinely new ingredients
-       - Use "replace" mode ONLY for complete recipe revisions
-       - Use "none" mode when no changes are needed
-       
-    2. QUANTITY GUIDELINES:
-       Serving size: ${recipe.servings}
-       - Quantities MUST be proportional to serving size
-       - Follow these ranges per serving (adjust for total servings):
-         - Proteins: 4-8 oz per serving
-         - Vegetables: 0.5-2 cups per serving
-         - Spices/Herbs: 0.25-1 tsp per serving
-         - Liquids: 0.25-2 cups per serving
-       - Flag any quantities outside these ranges
-       - Preserve core ingredient ratios unless specifically improving them
-       
-    3. NAMING CONVENTIONS:
-       - Use standard ingredient names (e.g., "onion" not "onions")
-       - Be specific with varieties (e.g., "yellow onion" vs just "onion")
-       - Include preparation state if relevant (e.g., "diced yellow onion")
-    
-    4. NUTRITION DATA GUIDELINES:
-       - ALWAYS provide nutrition data when ingredients change substantially
-       - Format nutrition data consistently with BOTH forms of each field
-         (calories/kcal, protein/protein_g, carbs/carbs_g, fat/fat_g)
-       - Use only realistic macro values that align with ingredients
-       - All nutrition values must be NUMBERS (not strings)
-       - Include both calories AND macros (protein, carbs, fat) at minimum
-       
-    5. RESPONSE FORMAT:
-       - Use a conversational tone appropriate for a professional chef
-       - ALWAYS highlight specific recommended changes in your response
-       - ALWAYS provide scientific reasoning behind each recommendation
-       - ALWAYS include specific measurement changes where applicable
+    // Check if this is a science analysis request
+    const isAnalysisRequest = sourceType === 'analysis';
 
-    Format response as JSON:
-    {
-      "textResponse": "Detailed analysis with scientific reasoning",
-      "changes": {
-        "title": "optional new title",
-        "ingredients": {
-          "mode": "add" or "replace" or "none",
-          "items": [
-            {
-              "qty": number,
-              "unit": "string",
-              "item": "string",
-              "notes": "string explaining WHY this change enhances the recipe"
-            }
-          ]
-        },
-        "instructions": ["string array of steps"],
-        "nutrition": {
-          "calories": number,
-          "kcal": number,
-          "protein": number,
-          "protein_g": number,
-          "carbs": number,
-          "carbs_g": number,
-          "fat": number,
-          "fat_g": number
-        },
-        "science_notes": ["array of scientific insights"]
-      },
-      "followUpQuestions": ["array of relevant follow-up questions"]
-    }`;
+    // Select appropriate prompt based on request type
+    let systemPrompt;
 
-    console.log("Sending request to OpenAI with enhanced prompts");
+    if (isAnalysisRequest) {
+      systemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. Analyze this recipe through the lens of precision cooking and provide comprehensive insights.
+
+Your analysis should include:
+
+1. KEY CHEMISTRY INSIGHTS:
+   - Detailed breakdown of key chemical processes (Maillard reactions, protein denaturation, etc.)
+   - Scientific explanation of flavor development
+   - Molecular interactions between ingredients
+
+2. TECHNIQUE ANALYSIS:
+   - Temperature-dependent explanations for each cooking step
+   - Timing considerations with scientific rationale
+   - Visual/tactile indicators of doneness with explanations
+   - Equipment recommendations with scientific justification
+
+3. TROUBLESHOOTING GUIDE:
+   - Common issues with scientific explanations
+   - Prevention and solutions based on food science principles
+   - Ingredient substitution impacts and considerations
+
+Format your response as JSON with these sections clearly separated:
+{
+  "textResponse": "Overall analysis summary formatted for readability",
+  "science_notes": ["Array of detailed scientific notes about key chemistry processes"],
+  "techniques": ["Array of detailed technique analyses with temperature explanations"],
+  "troubleshooting": ["Array of common issues and science-based solutions"],
+  "changes": {
+    "science_notes": ["Array of scientific insights for storing with the recipe"]
+  }
+}
+
+Be thorough, precise, and back everything with scientific principles. Include specific temperatures, timing considerations, and clear explanations of WHY each technique works as it does.`;
+    } else {
+      // Enhanced system prompt with stricter guidelines and nutrition guidance
+      systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest specific improvements.
+      
+      IMPORTANT GUIDELINES FOR RECIPE MODIFICATIONS:
+      1. EXISTING INGREDIENTS:
+         Current recipe ingredients:
+         ${existingIngredientsText}
+         
+         STRICT RULES:
+         - NEVER suggest ingredients that already exist (check thoroughly for variations/synonyms)
+         - When suggesting new ingredients, explain WHY they enhance the recipe
+         - Use "add" mode ONLY for genuinely new ingredients
+         - Use "replace" mode ONLY for complete recipe revisions
+         - Use "none" mode when no changes are needed
+         
+      2. QUANTITY GUIDELINES:
+         Serving size: ${recipe.servings}
+         - Quantities MUST be proportional to serving size
+         - Follow these ranges per serving (adjust for total servings):
+           - Proteins: 4-8 oz per serving
+           - Vegetables: 0.5-2 cups per serving
+           - Spices/Herbs: 0.25-1 tsp per serving
+           - Liquids: 0.25-2 cups per serving
+         - Flag any quantities outside these ranges
+         - Preserve core ingredient ratios unless specifically improving them
+         
+      3. NAMING CONVENTIONS:
+         - Use standard ingredient names (e.g., "onion" not "onions")
+         - Be specific with varieties (e.g., "yellow onion" vs just "onion")
+         - Include preparation state if relevant (e.g., "diced yellow onion")
+      
+      4. NUTRITION DATA GUIDELINES:
+         - ALWAYS provide nutrition data when ingredients change substantially
+         - Format nutrition data consistently with BOTH forms of each field
+           (calories/kcal, protein/protein_g, carbs/carbs_g, fat/fat_g)
+         - Use only realistic macro values that align with ingredients
+         - All nutrition values must be NUMBERS (not strings)
+         - Include both calories AND macros (protein, carbs, fat) at minimum
+         
+      5. RESPONSE FORMAT:
+         - Use a conversational tone appropriate for a professional chef
+         - ALWAYS highlight specific recommended changes in your response
+         - ALWAYS provide scientific reasoning behind each recommendation
+         - ALWAYS include specific measurement changes where applicable
+
+      Format response as JSON:
+      {
+        "textResponse": "Detailed analysis with scientific reasoning",
+        "changes": {
+          "title": "optional new title",
+          "ingredients": {
+            "mode": "add" or "replace" or "none",
+            "items": [
+              {
+                "qty": number,
+                "unit": "string",
+                "item": "string",
+                "notes": "string explaining WHY this change enhances the recipe"
+              }
+            ]
+          },
+          "instructions": ["string array of steps"],
+          "nutrition": {
+            "calories": number,
+            "kcal": number,
+            "protein": number,
+            "protein_g": number,
+            "carbs": number,
+            "carbs_g": number,
+            "fat": number,
+            "fat_g": number
+          },
+          "science_notes": ["array of scientific insights"]
+        },
+        "followUpQuestions": ["array of relevant follow-up questions"]
+      }`;
+    }
+
+    console.log(`Sending ${isAnalysisRequest ? 'analysis' : 'standard'} request to OpenAI`);
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -280,7 +354,7 @@ serve(async (req) => {
     });
 
     const content = response.choices[0].message.content;
-    console.log("Received response from OpenAI:", content.substring(0, 200));
+    console.log(`Received response from OpenAI (${content.length} chars)`);
     
     let parsedContent;
     try {
@@ -364,13 +438,30 @@ serve(async (req) => {
           delete parsedContent.changes.nutrition;
         }
       }
-      
-      console.log("Validated recipe chat response:", {
-        hasIngredients: !!parsedContent.changes?.ingredients,
-        ingredientMode: parsedContent.changes?.ingredients?.mode,
-        ingredientCount: parsedContent.changes?.ingredients?.items?.length,
-        hasNutrition: !!parsedContent.changes?.nutrition
-      });
+
+      // For analysis requests, make sure we properly structure the science notes
+      if (isAnalysisRequest) {
+        // Ensure science_notes is set in the changes object for storage with the recipe
+        if (!parsedContent.changes.science_notes && parsedContent.science_notes) {
+          parsedContent.changes.science_notes = parsedContent.science_notes;
+          console.log("Copied science_notes to changes.science_notes for recipe storage");
+        }
+
+        console.log("Validated recipe analysis response:", {
+          hasTextResponse: !!parsedContent.textResponse,
+          hasScienceNotes: Array.isArray(parsedContent.changes?.science_notes),
+          scienceNoteCount: Array.isArray(parsedContent.changes?.science_notes) ? parsedContent.changes.science_notes.length : 0,
+          hasTechniques: Array.isArray(parsedContent.techniques),
+          hasTroubleshooting: Array.isArray(parsedContent.troubleshooting)
+        });
+      } else {
+        console.log("Validated recipe chat response:", {
+          hasIngredients: !!parsedContent.changes?.ingredients,
+          ingredientMode: parsedContent.changes?.ingredients?.mode,
+          ingredientCount: parsedContent.changes?.ingredients?.items?.length,
+          hasNutrition: !!parsedContent.changes?.nutrition
+        });
+      }
     } catch (error) {
       console.error('Error parsing or validating OpenAI response:', error);
       throw new Error('Invalid response format from AI');

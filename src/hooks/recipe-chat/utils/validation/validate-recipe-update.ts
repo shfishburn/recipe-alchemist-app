@@ -11,6 +11,12 @@ export function validateRecipeUpdate(recipe: Recipe, chatMessage: ChatMessage) {
     throw new Error("Invalid recipe data");
   }
 
-  // Add any additional validation logic here if needed
+  // Validate science notes if they exist
+  if (chatMessage.changes_suggested.science_notes) {
+    if (!Array.isArray(chatMessage.changes_suggested.science_notes)) {
+      throw new Error("Invalid science notes format");
+    }
+  }
+
   return true;
 }

@@ -26,22 +26,34 @@ export const useApplyChanges = (recipe: Recipe) => {
         throw new Error("You must be logged in to apply changes");
       }
 
+      const hasTitle = !!chatMessage.changes_suggested.title;
+      const hasIngredients = !!chatMessage.changes_suggested.ingredients?.items?.length;
+      const hasInstructions = !!chatMessage.changes_suggested.instructions?.length;
+      const hasNutrition = !!chatMessage.changes_suggested.nutrition;
+      const hasScienceNotes = !!chatMessage.changes_suggested.science_notes?.length;
+      
+      const changeType = hasTitle ? 'title' : 
+                          hasIngredients ? 'ingredients' :
+                          hasInstructions ? 'instructions' :
+                          hasNutrition ? 'nutrition information' :
+                          hasScienceNotes ? 'science notes' : 'recipe';
+
       toast({
         title: "Applying changes",
-        description: "Updating your recipe title...",
+        description: `Updating ${changeType}...`,
       });
 
       console.log("Starting to apply changes from chat:", chatMessage.id);
 
-      // Create a properly typed recipe update object with just the title change
+      // Create a properly typed recipe update object
       const recipeUpdate: Recipe = {
         ...recipe,
         id: recipe.id,
-        title: "Cajun Mississippi Pot Roast",
-        ingredients: recipe.ingredients,
-        instructions: recipe.instructions,
-        nutrition: recipe.nutrition,
-        science_notes: recipe.science_notes || [],
+        title: recipe.title, // Keep existing title
+        ingredients: recipe.ingredients, // Keep existing ingredients
+        instructions: recipe.instructions, // Keep existing instructions
+        nutrition: recipe.nutrition, // Keep existing nutrition
+        science_notes: recipe.science_notes || [], // Keep existing science notes
         image_url: recipe.image_url,
         version_number: recipe.version_number
       };
@@ -69,8 +81,8 @@ export const useApplyChanges = (recipe: Recipe) => {
     },
     onSuccess: (newRecipe) => {
       toast({
-        title: "Title Updated",
-        description: "Recipe title has been updated successfully",
+        title: "Recipe Updated",
+        description: "Recipe has been updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       queryClient.invalidateQueries({ queryKey: ['recipe', recipe.id] });

@@ -12,6 +12,11 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     science_notes: updatedRecipe.science_notes as unknown as Json
   };
 
+  console.log("Saving recipe update with science notes:", {
+    hasNotes: Array.isArray(dbRecipe.science_notes) && dbRecipe.science_notes.length > 0,
+    noteCount: Array.isArray(dbRecipe.science_notes) ? dbRecipe.science_notes.length : 0
+  });
+
   const { data, error } = await supabase
     .from('recipes')
     .update(dbRecipe)

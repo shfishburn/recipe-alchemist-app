@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import type { Recipe } from "@/types/recipe";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface ScienceNotesProps {
   recipe: Recipe;
@@ -22,11 +23,26 @@ export function ScienceNotes({ recipe }: ScienceNotesProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="list-disc pl-4 space-y-2">
-          {recipe.science_notes.map((note, index) => (
-            <li key={index} className="text-muted-foreground">{note}</li>
-          ))}
-        </ul>
+        {recipe.science_notes.length > 3 ? (
+          <Accordion type="single" collapsible className="w-full">
+            {recipe.science_notes.map((note, index) => (
+              <AccordionItem key={index} value={`note-${index}`}>
+                <AccordionTrigger className="text-muted-foreground">
+                  Note {index + 1}: {note.substring(0, 50)}...
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {note}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <ul className="list-disc pl-4 space-y-2">
+            {recipe.science_notes.map((note, index) => (
+              <li key={index} className="text-muted-foreground">{note}</li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

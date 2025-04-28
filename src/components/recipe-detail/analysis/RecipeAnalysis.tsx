@@ -68,9 +68,9 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
           </div>
         ) : (
-          <Tabs defaultValue="science" className="w-full">
+          <Tabs defaultValue="chemistry" className="w-full">
             <TabsList className="mb-4 w-full flex justify-between overflow-x-auto">
-              <TabsTrigger value="science" className="flex items-center gap-2">
+              <TabsTrigger value="chemistry" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 Key Chemistry
               </TabsTrigger>
@@ -84,7 +84,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="science" className="prose prose-zinc dark:prose-invert max-w-none">
+            <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
               {analysis?.science_notes?.map((note, i) => (
                 <div key={i} className="mb-4">
                   <p>{note}</p>
@@ -92,18 +92,26 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               )) || (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No chemical analysis available for this recipe.</p>
-                  <p className="text-sm mt-2">Try a different recipe or check back later.</p>
+                  <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
                 </div>
               )}
             </TabsContent>
             
             <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-              {analysis?.textResponse ? (
+              {analysis?.techniques ? (
+                <div>
+                  {analysis.techniques.map((technique, i) => (
+                    <div key={i} className="mb-4">
+                      <p>{technique}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : analysis?.textResponse ? (
                 <div dangerouslySetInnerHTML={{ __html: analysis.textResponse.replace(/\n/g, '<br>') }} />
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No technique analysis available for this recipe.</p>
-                  <p className="text-sm mt-2">Try a different recipe or check back later.</p>
+                  <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
                 </div>
               )}
             </TabsContent>
@@ -120,7 +128,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
                     <p>No troubleshooting tips available for this recipe.</p>
-                    <p className="text-sm mt-2">Try a different recipe or check back later.</p>
+                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
                   </div>
                 )}
               </div>
