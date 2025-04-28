@@ -48,16 +48,6 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     setOpen(false);
   }
 
-  // Modified handler that ONLY handles Escape key and only stops propagation for that key
-  const handleEscapeKey = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.stopPropagation(); // Stop propagation ONLY for Escape key
-      e.preventDefault(); // Prevent default to avoid double-closing
-      setOpen(false);
-    }
-    // All other keys just pass through naturally without interference
-  };
-
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
@@ -71,7 +61,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
               </Button>
             </DrawerClose>
           </DrawerHeader>
-          <ScrollArea className="p-6 h-full max-h-[70vh]" onKeyDown={handleEscapeKey}>
+          <ScrollArea className="p-6 h-full max-h-[70vh]">
             <AuthForm onSuccess={handleAuthSuccess} />
           </ScrollArea>
         </DrawerContent>
@@ -91,7 +81,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
             </Button>
           </SheetClose>
         </SheetHeader>
-        <ScrollArea className="flex-1 p-6 h-full" onKeyDown={handleEscapeKey}>
+        <ScrollArea className="flex-1 p-6 h-full">
           <AuthForm onSuccess={handleAuthSuccess} />
         </ScrollArea>
       </SheetContent>
