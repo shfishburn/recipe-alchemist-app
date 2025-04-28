@@ -26,7 +26,7 @@ export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAna
       console.log('Fetching recipe analysis for', recipe.title);
       const { data, error } = await supabase.functions.invoke('recipe-chat', {
         body: { 
-          recipeId: recipe.id,
+          recipe,
           userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
 
 Please provide:

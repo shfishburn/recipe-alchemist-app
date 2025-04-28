@@ -55,8 +55,7 @@ export const useChatMutations = (recipe: Recipe) => {
       }
 
       // Extract and validate the AI response content
-      // Check multiple possible response fields to ensure we always have content
-      const aiResponse = response.data.textResponse || response.data.response || JSON.stringify({
+      const aiResponse = response.data.textResponse || JSON.stringify({
         textResponse: "I couldn't generate a proper analysis for this recipe. Please try again."
       });
       

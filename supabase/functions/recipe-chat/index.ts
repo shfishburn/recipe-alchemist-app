@@ -1,34 +1,9 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { corsHeaders } from '../_shared/cors.ts'
 import { validateRecipeChanges } from './validation.ts'
 import { recipeAnalysisPrompt, chatSystemPrompt } from '../_shared/recipe-prompts.ts'
-
-interface RecipeChanges {
-  ingredients?: {
-    qty: number;
-    unit: string;
-    item: string;
-    notes?: string;
-  }[];
-  instructions?: string[];
-  title?: string;
-  cookingDetails?: {
-    temperature?: {
-      fahrenheit: number;
-      celsius: number;
-    };
-    duration?: {
-      prep: number;
-      cook: number;
-      rest?: number;
-    };
-    equipment?: {
-      type: string;
-      settings?: string;
-    }[];
-  };
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -36,22 +11,27 @@ serve(async (req) => {
   }
 
   try {
-    const { recipeId, userMessage, sourceType } = await req.json()
+    const requestData = await req.json()
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = requestData
+    
+    // Validate required parameters
+    if (!recipe || !recipe.id) {
+      console.error("Missing recipe data in request")
+      throw new Error("Recipe data is required")
+    }
+    
+    if (!userMessage) {
+      console.error("Missing user message in request")
+      throw new Error("User message is required")
+    }
+    
+    console.log(`Processing recipe chat request for recipe ${recipe.id} with message: ${userMessage.substring(0, 50)}...`)
     
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
-
-    // Get the current recipe
-    const { data: recipe, error: recipeError } = await supabaseClient
-      .from('recipes')
-      .select('*')
-      .eq('id', recipeId)
-      .single()
-
-    if (recipeError) throw recipeError
 
     // Use the appropriate prompt based on the source type
     const systemPrompt = sourceType === 'analysis' ? recipeAnalysisPrompt : chatSystemPrompt;
@@ -70,6 +50,8 @@ serve(async (req) => {
 
     Please analyze and suggest changes in JSON format.
     `
+
+    console.log(`Sending request to OpenAI with ${prompt.length} characters`)
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -111,20 +93,26 @@ serve(async (req) => {
           techniques: changes.techniques || [],
           troubleshooting: changes.troubleshooting || [] 
         }
-      : { success: true, changes };
+      : { success: true, changes, textResponse: aiResponse };
 
     // Store the chat interaction if it's not an analysis
-    if (sourceType !== 'analysis') {
+    if (sourceType !== 'analysis' && recipe.id) {
       const { error: chatError } = await supabaseClient
         .from('recipe_chats')
         .insert({
-          recipe_id: recipeId,
+          recipe_id: recipe.id,
           user_message: userMessage,
-          ai_response: JSON.stringify(changes),
-          changes_suggested: changes
+          ai_response: aiResponse,
+          changes_suggested: changes,
+          source_type: sourceType || 'manual',
+          source_url: sourceUrl,
+          source_image: sourceImage
         })
 
-      if (chatError) throw chatError
+      if (chatError) {
+        console.error("Error storing chat:", chatError);
+        throw chatError;
+      }
     }
 
     return new Response(
