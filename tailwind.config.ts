@@ -64,9 +64,9 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				recipe: {
-					blue: '#38bdf8', // Primary accent color
+					blue: '#04a118', // Updated to primary green color
 					orange: '#fb923c',
-					green: '#4ade80',
+					green: '#59a52c', // Updated to secondary green color
 					yellow: '#facc15'
 				}
 			},
