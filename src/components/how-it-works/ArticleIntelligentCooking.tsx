@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { CircleCheck, CircleInfo, Info, Leaf, Lightbulb, Utensils } from 'lucide-react';
+import { Circle, CircleCheck, Info, Leaf, Lightbulb, Utensils } from 'lucide-react';
 
 export const ArticleIntelligentCooking = () => {
   return (
@@ -40,7 +40,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="fresh-data">
             <h3 id="fresh-data" className="text-2xl font-semibold flex items-center gap-2 mt-8">
-              <CircleInfo className="text-recipe-blue" />
+              <Info className="text-recipe-blue" />
               1. Fresh, Real Ingredient Data
             </h3>
             <p>
@@ -128,7 +128,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="transparent-info">
             <h3 id="transparent-info" className="text-2xl font-semibold flex items-center gap-2">
-              <CircleInfo className="text-recipe-blue" />
+              <Circle className="text-recipe-blue" />
               5. Transparent, Honest Information
             </h3>
             <p>
