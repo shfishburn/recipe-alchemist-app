@@ -48,6 +48,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
   } = useRecipeForm(onSubmit, isLoading);
 
   const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     handleSubmit(e);
   };
 
@@ -86,7 +87,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
 
       <FormFooter
         onPreview={() => setPreviewOpen(true)}
-        onSubmit={onFormSubmit}
+        onSubmit={() => {}} /* Empty function to match the type */
         isLoading={isLoading}
         hasGenerated={hasGenerated}
       />

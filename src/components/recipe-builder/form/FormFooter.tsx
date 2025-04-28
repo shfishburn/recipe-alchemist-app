@@ -5,7 +5,7 @@ import { Eye, Loader2 } from 'lucide-react';
 
 interface FormFooterProps {
   onPreview: () => void;
-  onSubmit: () => void;
+  onSubmit: (e?: React.FormEvent) => void;
   isLoading: boolean;
   hasGenerated: boolean;
 }
