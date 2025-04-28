@@ -41,14 +41,31 @@ const InputsTab = ({
   onServingsChange,
 }: InputsTabProps) => {
   return (
-    <div className="space-y-6">
-      {/* Recipe Input */}
+    <div className="space-y-8">
+      {/* Recipe Name */}
       <RecipeNameInput
         title={title}
         onTitleChange={onTitleChange}
       />
 
-      {/* Basics Section */}
+      {/* Main Ingredients */}
+      <IngredientsSection
+        ingredients={ingredients}
+        ingredientInput={ingredientInput}
+        onIngredientChange={onIngredientChange}
+        onIngredientKeyDown={onIngredientKeyDown}
+        onRemoveIngredient={onRemoveIngredient}
+      />
+
+      {/* Flavor Profile */}
+      <div className="py-4 space-y-4 border-t border-gray-100 dark:border-gray-800">
+        <FlavorTagsInput
+          tags={flavorTags}
+          onChange={onFlavorTagsChange}
+        />
+      </div>
+
+      {/* Recipe Basics (Cuisine, Servings, Dietary) */}
       <RecipeBasics
         cuisine={cuisine}
         dietary={dietary}
@@ -56,24 +73,6 @@ const InputsTab = ({
         onCuisineChange={onCuisineChange}
         onDietaryChange={onDietaryChange}
         onServingsChange={onServingsChange}
-      />
-
-      {/* Flavor Section */}
-      <div className="py-4 space-y-6 border-t border-gray-100 dark:border-gray-800">
-        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Flavor Profile</h3>
-        <FlavorTagsInput
-          tags={flavorTags}
-          onChange={onFlavorTagsChange}
-        />
-      </div>
-
-      {/* Ingredients Section */}
-      <IngredientsSection
-        ingredients={ingredients}
-        ingredientInput={ingredientInput}
-        onIngredientChange={onIngredientChange}
-        onIngredientKeyDown={onIngredientKeyDown}
-        onRemoveIngredient={onRemoveIngredient}
       />
     </div>
   );

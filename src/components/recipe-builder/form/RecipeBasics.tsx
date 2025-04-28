@@ -32,14 +32,12 @@ const RecipeBasics = ({
   const servingOptions = [1, 2, 3, 4, 5, 6, 8, 10, 12];
 
   return (
-    <div className="py-4 space-y-6">
-      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Basics</h3>
-      
-      {/* Cuisine Selector */}
+    <div className="py-4 space-y-6 border-t border-gray-100 dark:border-gray-800">
+      {/* Cuisine Type */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4 text-recipe-blue" />
-          <Label htmlFor="cuisine" className="text-base font-medium text-recipe-blue">Cuisine Type</Label>
+          <Label htmlFor="cuisine" className="text-base">Cuisine Type</Label>
           <span className="text-xs bg-recipe-blue/10 text-recipe-blue px-2 py-0.5 rounded-full">Required</span>
         </div>
         <CuisineSelect
