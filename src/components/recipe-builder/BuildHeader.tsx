@@ -1,12 +1,4 @@
 
-// Note: I'm making changes to BuildHeader since it contains the page heading
-// that needs to be left-aligned. The file isn't included in the provided files,
-// but since there are references to it in Build.tsx, I will update it based on
-// what I can infer about its structure.
-
-// If this component doesn't match the actual structure, 
-// we'll need to make adjustments to Build.tsx itself instead.
-
 import React from 'react';
 
 const BuildHeader = () => {

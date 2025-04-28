@@ -130,7 +130,7 @@ const FAQ = () => {
       </Helmet>
       <Navbar />
       <main className="flex-1 animate-fadeIn">
-        <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
+        <div className="container-page py-6 md:py-8 flex-grow">
           {/* Breadcrumb Navigation */}
           <nav className="mb-4" aria-label="Breadcrumb">
             <Breadcrumb>
@@ -155,7 +155,7 @@ const FAQ = () => {
             </p>
           </section>
           
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto mb-12">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-left">

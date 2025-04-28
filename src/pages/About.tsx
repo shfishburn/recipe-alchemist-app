@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import Navbar from '@/components/ui/navbar';
@@ -25,7 +24,7 @@ const About = () => {
       </Helmet>
       <Navbar />
       <main className="flex-1 animate-fadeIn">
-        <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
+        <div className="container-page py-6 md:py-8 flex-grow">
           {/* Breadcrumb Navigation */}
           <nav className="mb-4" aria-label="Breadcrumb">
             <Breadcrumb>
@@ -49,7 +48,7 @@ const About = () => {
           </p>
 
           {/* Who We Are */}
-          <section className="mb-16">
+          <section className="mb-12 md:mb-16">
             <h2 className="text-2xl font-bold mb-6">Who We Are</h2>
             <div className="prose max-w-none text-lg">
               <p className="mb-4">
@@ -71,7 +70,7 @@ const About = () => {
           </section>
 
           {/* Why We Built Recipe Alchemy */}
-          <section className="mb-16">
+          <section className="mb-12 md:mb-16">
             <h2 className="text-2xl font-bold mb-6">Why We Built Recipe Alchemy</h2>
             <div className="prose max-w-none text-lg">
               <p className="mb-4">
@@ -91,7 +90,7 @@ const About = () => {
           </section>
 
           {/* How We Work */}
-          <section className="mb-16">
+          <section className="mb-12 md:mb-16">
             <h2 className="text-2xl font-bold mb-6">How We Work</h2>
             <div className="prose max-w-none text-lg">
               <p className="mb-4">Our system is powered by real science:</p>
@@ -111,7 +110,7 @@ const About = () => {
           </section>
 
           {/* Our Mission */}
-          <section className="mb-16">
+          <section className="mb-12 md:mb-16">
             <h2 className="text-2xl font-bold mb-6">Our Mission</h2>
             <div className="prose max-w-none text-lg">
               <p className="mb-4">
@@ -143,7 +142,7 @@ const About = () => {
           </section>
 
           {/* Made With Care */}
-          <section className="mb-16">
+          <section className="mb-12 md:mb-16">
             <h2 className="text-2xl font-bold mb-6">Made With Care Across Continents</h2>
             <div className="prose max-w-none text-lg">
               <p className="mb-4">
@@ -156,7 +155,7 @@ const About = () => {
           </section>
 
           {/* Closing */}
-          <section>
+          <section className="mb-8 md:mb-12">
             <div className="prose max-w-none text-lg">
               <p className="text-xl font-semibold mb-2">Real Humans. Real Science. Smarter Cooking.</p>
               <p className="mb-4">Welcome to Recipe Alchemy.</p>
