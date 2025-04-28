@@ -26,18 +26,31 @@ serve(async (req) => {
       ? ingredients.map(ing => `${ing.qty} ${ing.unit} ${ing.item}`).join('\n')
       : "No ingredients provided";
 
-    const prompt = `As a professional chef and grocery shopping expert, organize these ingredients from the recipe "${title}" into an optimized shopping list. 
+    const prompt = `As a professional chef specializing in culinary science and practical shopping, organize these ingredients from the recipe "${title}" into an optimized shopping list with expert insights.
 
 Input ingredients:
 ${ingredientsText}
 
-Requirements:
-1. Group similar items by store department (Produce, Meat, Dairy, etc.)
-2. Combine identical ingredients and adjust quantities
-3. Convert units for consistency when possible (e.g., combine tablespoons into cups)
-4. Add commonly paired items that aren't listed but are often needed
-5. Suggest alternative ingredients for hard-to-find items
-6. Note items that might already be in a typical pantry
+ORGANIZATION PRINCIPLES:
+1. Group ingredients by store department (Produce, Meat, Dairy, Pantry, Specialty, etc.)
+2. Combine identical ingredients with mathematical precision and adjust quantities
+3. Standardize measurement units for consistency (metric or imperial based on recipe style)
+4. Prioritize ingredients by cooking sequence and perishability
+5. Flag items needing advance preparation or special handling
+
+PRACTICAL ENHANCEMENTS:
+1. Identify quality indicators for key ingredients (e.g., "ripe but firm avocados")
+2. Note seasonal availability and suggest peak-season alternatives
+3. Include substitutions for dietary restrictions (gluten-free, dairy-free, etc.)
+4. Add commonly needed companion ingredients missing from the recipe
+5. Suggest precise quantity purchasing to minimize waste (e.g., "buy 1 bunch for 2 tbsp needed")
+
+SHOPPING EFFICIENCY:
+1. Mark ingredients that could already exist in a well-stocked pantry
+2. Indicate ingredients that can be bought in bulk vs. fresh
+3. Note ingredients with significant price variations between brands/sources
+4. Suggest preservation methods for unused portions
+5. Flag ingredients that require special storage after purchase
 
 Return ONLY valid JSON matching this schema:
 {
@@ -48,11 +61,14 @@ Return ONLY valid JSON matching this schema:
       "quantity": number,
       "unit": string,
       "notes": string,
+      "quality_indicators": string,
       "alternatives": string[],
-      "pantry_staple": boolean
+      "pantry_staple": boolean,
+      "storage_tips": string
     }]
   }],
-  "tips": string[]
+  "efficiency_tips": string[],
+  "preparation_notes": string[]
 }`;
 
     const response = await openai.chat.completions.create({

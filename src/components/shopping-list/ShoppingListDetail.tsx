@@ -1,13 +1,18 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Plus, Trash2, Info } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ShoppingListDetailProps {
   list: ShoppingList;
@@ -28,41 +33,6 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
     acc[dept].push(item);
     return acc;
   }, {} as Record<string, ShoppingListItem[]>);
-
-  const handleAddItem = async () => {
-    if (!newItemName.trim()) return;
-
-    const newItem: ShoppingListItem = {
-      name: newItemName.trim(),
-      quantity: newItemQuantity,
-      unit: newItemUnit.trim(),
-      checked: false
-    };
-
-    const updatedItems = [...list.items, newItem];
-
-    const { error } = await supabase
-      .from('shopping_lists')
-      .update({ items: updatedItems })
-      .eq('id', list.id);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to add item',
-        variant: 'destructive'
-      });
-    } else {
-      setNewItemName('');
-      setNewItemQuantity(1);
-      setNewItemUnit('');
-      onUpdate();
-      toast({
-        title: 'Success',
-        description: 'Item added to list'
-      });
-    }
-  };
 
   const handleToggleItem = async (index: number) => {
     const updatedItems = [...list.items];
@@ -114,12 +84,25 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
     <Card className="p-6">
       <h2 className="text-2xl font-bold mb-6">{list.title}</h2>
       
+      {/* Shopping Tips */}
       {list.tips && list.tips.length > 0 && (
         <div className="mb-6 p-4 bg-muted rounded-md">
           <h3 className="font-medium mb-2">Shopping Tips:</h3>
           <ul className="list-disc list-inside space-y-1">
             {list.tips.map((tip, index) => (
               <li key={index} className="text-sm text-muted-foreground">{tip}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Preparation Notes */}
+      {list.preparation_notes && list.preparation_notes.length > 0 && (
+        <div className="mb-6 p-4 bg-muted/50 rounded-md">
+          <h3 className="font-medium mb-2">Preparation Notes:</h3>
+          <ul className="list-disc list-inside space-y-1">
+            {list.preparation_notes.map((note, index) => (
+              <li key={index} className="text-sm text-muted-foreground">{note}</li>
             ))}
           </ul>
         </div>
@@ -140,7 +123,24 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
                   htmlFor={`item-${department}-${index}`}
                   className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
                 >
-                  <span>{item.quantity} {item.unit} {item.name}</span>
+                  <span className="flex items-center gap-2">
+                    <span>{item.quantity} {item.unit} {item.name}</span>
+                    {(item.quality_indicators || item.storage_tips) && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          {item.quality_indicators && (
+                            <p className="mb-1">{item.quality_indicators}</p>
+                          )}
+                          {item.storage_tips && (
+                            <p className="text-sm text-muted-foreground">{item.storage_tips}</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </span>
                   {item.notes && (
                     <span className="block text-sm text-muted-foreground">{item.notes}</span>
                   )}

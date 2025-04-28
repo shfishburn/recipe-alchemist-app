@@ -206,6 +206,8 @@ export type Database = {
           created_at: string
           id: string
           items: Json
+          preparation_notes: string[] | null
+          tips: string[] | null
           title: string
           updated_at: string
           user_id: string
@@ -214,6 +216,8 @@ export type Database = {
           created_at?: string
           id?: string
           items?: Json
+          preparation_notes?: string[] | null
+          tips?: string[] | null
           title: string
           updated_at?: string
           user_id: string
@@ -222,6 +226,8 @@ export type Database = {
           created_at?: string
           id?: string
           items?: Json
+          preparation_notes?: string[] | null
+          tips?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
