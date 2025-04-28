@@ -149,7 +149,7 @@ const FAQ = () => {
           </nav>
 
           <section aria-labelledby="page-title">
-            <h1 id="page-title" className="text-4xl font-bold mb-6 text-center">Frequently Asked Questions</h1>
+            <h1 id="page-title" className="text-2xl sm:text-3xl font-bold mb-6 text-center">Frequently Asked Questions</h1>
             <p className="text-lg text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               Find answers to common questions about Recipe Alchemy's features, nutrition calculations, and more.
             </p>

@@ -20,9 +20,9 @@ export function MobileMenu() {
 
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
-    { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
     { name: 'Create Recipe', path: '/build', requiresAuth: true },
-    { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
+    { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
     { name: 'How It Works', path: '/how-it-works', requiresAuth: false },
   ];
 
