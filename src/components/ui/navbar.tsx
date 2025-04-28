@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { MobileMenu } from '@/components/ui/mobile-menu';
+import { AuthDrawer } from '@/components/auth/AuthDrawer';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
+  const { isOpen, open, close } = useAuthDrawer();
 
   const navigationLinks = [
     { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
@@ -56,16 +59,19 @@ export function Navbar({ className }: { className?: string }) {
             </Button>
           ) : (
             <>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/auth">Log in</Link>
+              <Button variant="outline" size="sm" onClick={open}>
+                Log in
               </Button>
-              <Button size="sm" asChild>
-                <Link to="/auth">Sign up</Link>
+              <Button size="sm" onClick={open}>
+                Sign up
               </Button>
             </>
           )}
         </div>
       </div>
+
+      {/* Auth Drawer */}
+      <AuthDrawer open={isOpen} setOpen={(state) => state ? open() : close()} />
     </header>
   );
 }

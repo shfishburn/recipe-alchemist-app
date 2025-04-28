@@ -9,9 +9,9 @@ import { Footer } from "@/components/ui/footer";
 import PrivateRoute from "@/components/PrivateRoute";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { Navbar } from "@/components/ui/navbar";
 
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import Build from "./pages/Build";
 import Recipes from "./pages/Recipes";
 import RecipeDetail from "./pages/RecipeDetail";
@@ -44,9 +44,9 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <LoadingIndicator />
+            <Navbar />
             <PageTransition>
               <Routes>
-                <Route path="/auth" element={<Auth />} />
                 <Route path="/" element={<Index />} />
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/recipes/:id" element={<RecipeDetail />} />

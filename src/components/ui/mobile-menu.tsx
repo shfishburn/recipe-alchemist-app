@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import {
   Sheet,
   SheetContent,
@@ -15,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
   const { session } = useAuth();
+  const { open: openAuthDrawer } = useAuthDrawer();
 
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
@@ -68,11 +70,11 @@ export function MobileMenu() {
             </Button>
           ) : (
             <>
-              <Button variant="outline" asChild className="w-full">
-                <Link to="/auth">Log in</Link>
+              <Button variant="outline" className="w-full" onClick={() => openAuthDrawer()}>
+                Log in
               </Button>
-              <Button asChild className="w-full">
-                <Link to="/auth">Sign up</Link>
+              <Button className="w-full" onClick={() => openAuthDrawer()}>
+                Sign up
               </Button>
             </>
           )}
