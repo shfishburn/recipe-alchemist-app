@@ -4,39 +4,67 @@ import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import type { Json } from '@/integrations/supabase/types';
 
+// Helper function to normalize ingredient names for comparison
+function normalizeIngredient(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/s$/, ''); // Remove trailing 's' for plurals
+}
+
+// Check if two ingredients are similar enough to be considered duplicates
+function areSimilarIngredients(ing1: string, ing2: string): boolean {
+  const norm1 = normalizeIngredient(ing1);
+  const norm2 = normalizeIngredient(ing2);
+  
+  // Direct match
+  if (norm1 === norm2) return true;
+  
+  // Check if one contains the other
+  if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+  
+  // Could add more sophisticated matching here if needed
+  return false;
+}
+
 function validateIngredientQuantities(
   originalRecipe: Recipe,
   newIngredients: any[],
   mode: 'add' | 'replace' | 'none'
 ): { valid: boolean; message?: string } {
-  // If mode is 'none' or no ingredients to validate, return valid
   if (mode === 'none' || newIngredients.length === 0) {
     return { valid: true };
   }
-  
-  // For replace mode, validate the entire new ingredient list
+
   const ingredientsToCheck = mode === 'replace' ? newIngredients : [...originalRecipe.ingredients, ...newIngredients];
-  
-  // Calculate average quantity per serving from original recipe
-  const originalAvgQtyPerServing = originalRecipe.ingredients.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
-  
-  // Calculate new average
+  const avgQtyPerServing = originalRecipe.ingredients.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
   const newAvgQtyPerServing = ingredientsToCheck.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
-  
-  // Check if the new average is significantly different (more than 3x)
-  if (newAvgQtyPerServing > originalAvgQtyPerServing * 3) {
+
+  // Check total quantity ratio
+  if (newAvgQtyPerServing > avgQtyPerServing * 3) {
     return {
       valid: false,
-      message: `Warning: New ingredient quantities seem too high for ${originalRecipe.servings} servings`
+      message: `Warning: New quantities seem too high for ${originalRecipe.servings} servings`
     };
   }
 
-  // Check individual ingredients for unreasonable quantities
+  // Check individual ingredients
   for (const ing of newIngredients) {
-    if (ing.qty > 5 && ['lb', 'lbs', 'pound', 'pounds'].includes(ing.unit.toLowerCase())) {
+    const qtyPerServing = ing.qty / originalRecipe.servings;
+
+    // Validate quantity ranges based on common ingredient types
+    if (ing.unit.toLowerCase().includes('pound') && qtyPerServing > 1) {
       return {
         valid: false,
-        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high for ${originalRecipe.servings} servings`
+        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
+      };
+    }
+
+    if (ing.unit.toLowerCase().includes('cup') && qtyPerServing > 2) {
+      return {
+        valid: false,
+        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
       };
     }
   }
@@ -44,11 +72,10 @@ function validateIngredientQuantities(
   return { valid: true };
 }
 
-// New helper function to check for duplicate ingredients
 function findDuplicateIngredients(existingIngredients: Recipe['ingredients'], newIngredients: Recipe['ingredients']) {
   return newIngredients.filter(newIng => 
     existingIngredients.some(existingIng => 
-      existingIng.item.toLowerCase() === newIng.item.toLowerCase()
+      areSimilarIngredients(existingIng.item, newIng.item)
     )
   );
 }
@@ -93,33 +120,36 @@ export async function updateRecipe(
       throw new Error("Invalid ingredient format in suggested changes");
     }
 
-    // Check for duplicates in add mode
+    // Enhanced duplicate checking in add mode
     if (mode === 'add') {
       const duplicates = findDuplicateIngredients(recipe.ingredients, items);
       if (duplicates.length > 0) {
         console.error("Duplicate ingredients detected:", duplicates);
-        throw new Error(`These ingredients already exist in the recipe: ${duplicates.map(d => d.item).join(', ')}`);
+        throw new Error(
+          `These ingredients (or similar ones) already exist in the recipe: ${
+            duplicates.map(d => d.item).join(', ')
+          }`
+        );
       }
     }
 
-    // Validate quantities against serving size
+    // Validate quantities against serving size with improved logic
     const quantityValidation = validateIngredientQuantities(recipe, items, mode);
     if (!quantityValidation.valid) {
       console.error("Ingredient quantity validation failed:", quantityValidation.message);
       throw new Error(quantityValidation.message);
     }
 
-    if (mode === 'add' && Array.isArray(items)) {
+    if (mode === 'add') {
       console.log("Adding new ingredients to existing recipe");
       updatedRecipe.ingredients = [...recipe.ingredients, ...items];
-    } else if (mode === 'replace' && Array.isArray(items)) {
+    } else if (mode === 'replace') {
       console.log("Replacing all ingredients");
       updatedRecipe.ingredients = items;
     }
-    // For 'none' mode, we don't modify ingredients
   }
 
-  // Process instructions - ensure we always store as string array
+  // Process instructions with better formatting
   if (chatMessage.changes_suggested.instructions) {
     console.log("Updating instructions");
     updatedRecipe.instructions = chatMessage.changes_suggested.instructions.map(
@@ -134,7 +164,6 @@ export async function updateRecipe(
   });
 
   try {
-    // Cast our strongly typed objects to Json for database storage
     const dbRecipe = {
       ...updatedRecipe,
       ingredients: updatedRecipe.ingredients as unknown as Json,

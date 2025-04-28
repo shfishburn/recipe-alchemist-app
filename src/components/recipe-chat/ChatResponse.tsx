@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, RefreshCw } from 'lucide-react';
+import { Check, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface ChatResponseProps {
   response: string;
@@ -29,38 +30,41 @@ export function ChatResponse({
       const responseObj = JSON.parse(response);
       let text = responseObj.textResponse || responseObj.response || response;
 
-      // Format ingredients if present in the response
       if (responseObj.changes?.ingredients?.items) {
         console.log("Formatting ingredients in response");
+        
+        // Create a map of normalized ingredient names to their display text
         const ingredientsMap = new Map();
         responseObj.changes.ingredients.items.forEach((ingredient: any) => {
-          const ingredientText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
-          ingredientsMap.set(ingredientText.toLowerCase(), ingredientText);
+          const displayText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
+          // Use normalized form for comparison
+          const normalizedName = ingredient.item.toLowerCase().trim();
+          ingredientsMap.set(normalizedName, displayText);
         });
 
-        // Replace ingredient mentions with bold text, being careful not to double-bold
+        // Replace ingredient mentions with bold text
         text = text.replace(/\*\*(.*?)\*\*/g, (match, content) => {
-          const lowerContent = content.toLowerCase();
-          return ingredientsMap.has(lowerContent) ? match : content;
+          return match; // Keep existing bold text
         });
 
-        // Now add bold to any remaining ingredients that weren't already bold
-        ingredientsMap.forEach((original, lower) => {
-          const regExp = new RegExp(`(?<!\\*\\*)${original}(?!\\*\\*)`, 'gi');
-          text = text.replace(regExp, `**${original}**`);
+        // Add bold to ingredients that aren't already bold
+        ingredientsMap.forEach((displayText, normalizedName) => {
+          const regex = new RegExp(`(?<!\\*\\*)${displayText}(?!\\*\\*)`, 'gi');
+          text = text.replace(regex, `**${displayText}**`);
         });
       }
 
-      // Format instructions with better matching
+      // Format instructions with better context
       if (responseObj.changes?.instructions) {
         console.log("Formatting instructions in response");
         responseObj.changes.instructions.forEach((instruction: string | { action: string }) => {
           const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
           if (!instructionText.includes('**')) {
-            text = text.replace(
-              new RegExp(instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-              `**${instructionText}**`
+            const regex = new RegExp(
+              `(?<!\\*\\*)${instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!\\*\\*)`,
+              'g'
             );
+            text = text.replace(regex, `**${instructionText}**`);
           }
         });
       }
@@ -72,11 +76,19 @@ export function ChatResponse({
     }
   }, [response]);
 
+  const showWarning = React.useMemo(() => {
+    if (!changesSuggested?.ingredients?.items) return false;
+    
+    // Check for any ingredients with warning notes
+    return changesSuggested.ingredients.items.some((item: any) => 
+      item.notes?.toLowerCase().includes('warning')
+    );
+  }, [changesSuggested]);
+
   const handleFollowUpClick = (question: string) => {
     setMessage(question);
   };
 
-  // Render formatted text with bold sections
   const renderFormattedText = (text: string) => {
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
@@ -90,6 +102,16 @@ export function ChatResponse({
     <div className="flex-1">
       <div className="flex flex-col space-y-4">
         <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
+          {showWarning && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Warning</AlertTitle>
+              <AlertDescription>
+                Some suggested changes may need review. Please check the ingredient quantities carefully.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div className="prose prose-sm max-w-none">
             {displayText.split('\n').filter(Boolean).map((paragraph, index) => (
               <p key={index} className="mb-2">{renderFormattedText(paragraph)}</p>
@@ -101,7 +123,9 @@ export function ChatResponse({
               <Button
                 onClick={onApplyChanges}
                 disabled={isApplying || applied}
-                className={`${applied ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                className={`${
+                  applied ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white`}
                 size="sm"
               >
                 {isApplying ? (
@@ -129,7 +153,7 @@ export function ChatResponse({
                   <button
                     key={index}
                     className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left"
-                    onClick={() => setMessage(question)}
+                    onClick={() => handleFollowUpClick(question)}
                   >
                     {question}
                   </button>
