@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, ChefHat, Leaf, Lightbulb, Utensils } from 'lucide-react';
+import { BookOpen, ChefHat, Leaf, Lightbulb, Utensils, Activity } from 'lucide-react';
 
 interface Article {
   id: string;
@@ -35,6 +35,14 @@ export const ArticlesList = () => {
       keywords: ['AI cooking', 'food science', 'recipe generation', 'nutrition data', 'cooking chemistry', 'precision cooking']
     },
     {
+      id: 'personalized-nutrition',
+      title: 'How We Align Every Recipe to Your Health Goals',
+      description: 'Your body is unique — and your food should be too. We start by understanding your energy needs and nutrition goals, from daily calorie targets to protein, carb, and fat ratios. Every recipe we build then adapts to you, balancing macronutrients and key vitamins and minerals, while weaving in smart ingredient choices that boost nutrient absorption naturally.',
+      icon: <Activity className="h-10 w-10 text-recipe-purple" />,
+      slug: 'personalized-nutrition',
+      keywords: ['personalized nutrition', 'health goals', 'macronutrient balance', 'nutrient absorption', 'bioavailability', 'TDEE', 'BMR']
+    },
+    {
       id: 'substitutions',
       title: 'Smart Ingredient Substitutions',
       description: 'See how our AI suggests perfect substitutions while maintaining flavor profiles and nutrition.',
@@ -51,7 +59,7 @@ export const ArticlesList = () => {
   return (
     <section aria-labelledby="articles-section" className="py-8">
       <div className="sr-only" id="articles-section">Recipe Alchemist Knowledge Articles</div>
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
         {articles.map((article) => (
           <Card 
             key={article.id} 

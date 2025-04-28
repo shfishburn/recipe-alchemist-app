@@ -37,6 +37,14 @@ const HowItWorks = () => {
       },
       {
         "@type": "Question",
+        "name": "How does Recipe Alchemist align recipes to individual health goals?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Your body is unique — and your food should be too. We start by understanding your energy needs and nutrition goals, from daily calorie targets to protein, carb, and fat ratios. Every recipe we build then adapts to you, balancing macronutrients and key vitamins and minerals, while weaving in smart ingredient choices that boost nutrient absorption naturally."
+        }
+      },
+      {
+        "@type": "Question",
         "name": "How does Recipe Alchemist handle ingredient substitutions?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -56,7 +64,7 @@ const HowItWorks = () => {
         />
         <meta 
           name="keywords" 
-          content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking" 
+          content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals" 
         />
         <link rel="canonical" href="https://recipealchemist.com/how-it-works" />
         <meta property="og:title" content="How Recipe Alchemist Works: AI-Powered Cooking & Nutrition" />
