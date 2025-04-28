@@ -1,0 +1,14 @@
+
+@layer components {
+  .container-page {
+    @apply container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-recipe-blue to-recipe-green bg-clip-text text-transparent;
+  }
+
+  .recipe-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg dark:bg-gray-800;
+  }
+}

@@ -1,0 +1,16 @@
+
+/* Loading indicator for top of page */
+.nprogress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 9999;
+}
+
+.nprogress-bar {
+  background: linear-gradient(to right, #38bdf8, #22c55e);
+  height: 100%;
+  transition: width 0.2s ease-out;
+}
