@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { ArticleIntelligentCooking } from '@/components/how-it-works/ArticleIntelligentCooking';
 import { toast } from 'sonner';
 import { generateRecipeImage } from '@/hooks/recipe-chat/utils/generate-recipe-image';
+import { supabase } from '@/integrations/supabase/client';
 
 const ArticleDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -26,16 +27,53 @@ const ArticleDetail = () => {
     } else if (slug === 'substitutions') {
       setArticleTitle('Smart Ingredient Substitutions');
     }
+    
+    // Check for existing image in storage
+    const checkForExistingImage = async () => {
+      try {
+        const { data: fileList } = await supabase.storage
+          .from('recipe-images')
+          .list('', { 
+            search: `article-${slug}` 
+          });
+          
+        if (fileList && fileList.length > 0) {
+          // Sort by created_at to get the most recent file
+          const sortedFiles = fileList.sort((a, b) => 
+            new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+          );
+          
+          const latestFile = sortedFiles[0];
+          const { data: { publicUrl } } = supabase.storage
+            .from('recipe-images')
+            .getPublicUrl(latestFile.name);
+            
+          setGeneratedImage(publicUrl);
+          console.log('Found existing image:', publicUrl);
+        }
+      } catch (error) {
+        console.error('Error checking for existing image:', error);
+      }
+    };
+    
+    checkForExistingImage();
   }, [slug]);
 
   const handleGenerateImage = async () => {
     setIsGenerating(true);
     try {
-      // For now, we'll just generate an image for the intelligent cooking article
-      const prompt = `Create a photorealistic image for an article titled "${articleTitle}". 
-        Show cooking with advanced technology, AI assistance, and scientific elements. 
-        Include visual elements representing recipe analysis and nutrition data. 
-        Use a bright, clean style with soft lighting.`;
+      console.log('Generating image for article:', articleTitle, 'with slug:', slug);
+      
+      // Create a more descriptive prompt based on the article type
+      let prompt = `Create an informative, visually appealing illustration for an article titled "${articleTitle}". `;
+      
+      if (slug === 'intelligent-cooking') {
+        prompt += 'Show a modern kitchen setting with AI visualizations analyzing cooking processes, ingredient interactions, and scientific data points. Include elements like molecular structures, temperature graphs, and flavor compound visualizations.';
+      } else if (slug === 'nutrition-tracking') {
+        prompt += 'Depict nutrition tracking technology with detailed macro visualizations, vitamin/mineral breakdowns, and cooking method impacts on nutrient retention. Show scientific tools monitoring nutritional changes during cooking.';
+      } else if (slug === 'substitutions') {
+        prompt += 'Illustrate ingredient substitution science with side-by-side comparison of alternative ingredients. Include molecular analysis showing flavor profile matches, cooking property similarities, and nutritional equivalence data.';
+      }
       
       // Use the existing image generation utility
       const imageUrl = await generateRecipeImage(

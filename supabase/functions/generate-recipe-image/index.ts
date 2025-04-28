@@ -114,8 +114,11 @@ The image should appear professionally styled but achievable, with natural color
 
     console.log('Image uploaded successfully, public URL:', publicUrl);
 
-    // Update the recipe with the permanent image URL
-    if (recipeId) {
+    // Update the recipe with the permanent image URL if recipeId is a UUID
+    // but not for article slugs
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipeId);
+    
+    if (recipeId && isUuid) {
       console.log('Updating recipe with new image URL...');
       const { error: updateError } = await supabase
         .from('recipes')
@@ -127,6 +130,8 @@ The image should appear professionally styled but achievable, with natural color
       } else {
         console.log('Successfully updated recipe with new image URL');
       }
+    } else {
+      console.log('Not updating database, recipeId is not a UUID:', recipeId);
     }
 
     return new Response(
