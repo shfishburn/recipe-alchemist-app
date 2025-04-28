@@ -69,30 +69,29 @@ const Build = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">
-        <div className="container-page py-8 md:py-12">
-          <div className="max-w-3xl mx-auto">
-            <Breadcrumb className="mb-4">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator>
-                  <ChevronRight className="h-4 w-4" />
-                </BreadcrumbSeparator>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>My Lab</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            
-            <BuildHeader />
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6">
-              <div className="mb-6 text-center">
-                <p className="text-muted-foreground">Create your perfect recipe by filling out the details below or leave fields blank for AI suggestions</p>
-              </div>
-              <RecipeForm onSubmit={handleSubmit} isLoading={isLoading} />
+      <main className="flex-1 animate-fadeIn">
+        <div className="container-page py-6 md:py-8 flex-grow">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator>
+                <ChevronRight className="h-4 w-4" />
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbPage>My Lab</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          
+          <BuildHeader />
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 mb-8 md:mb-12">
+            <div className="mb-6 text-center">
+              <p className="text-muted-foreground">Create your perfect recipe by filling out the details below or leave fields blank for AI suggestions</p>
             </div>
+            <RecipeForm onSubmit={handleSubmit} isLoading={isLoading} />
           </div>
         </div>
       </main>
