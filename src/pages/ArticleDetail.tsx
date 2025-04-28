@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
@@ -19,6 +18,7 @@ import {
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
 import { Link } from 'react-router-dom';
+import { ReadTimeDisplay } from '@/components/how-it-works/ReadTimeDisplay';
 
 const ArticleDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -83,6 +83,247 @@ const ArticleDetail = () => {
     
     checkForExistingImage();
   }, [slug]);
+
+  const getArticleContent = () => {
+    switch (slug) {
+      case 'intelligent-cooking':
+        return "We don't guess what's in your food — we measure it with real science. Our system pulls data from trusted sources like USDA FoodData Central, adjusts for cooking methods, tracks both macronutrients and vital micronutrients, and personalizes your nutrition to your body's needs. Every recipe you see reflects not just what you cook — but how it truly nourishes you.";
+      case 'nutrition-tracking':
+        return "Our AI builds recipes with real food science — using trusted nutrition data, cooking chemistry, and precision techniques to create meals that are not just delicious, but deeply nourishing. Real science. Real flavor. Real life.";
+      case 'personalized-nutrition':
+        return "Your body is unique — and your food should be too. We start by understanding your energy needs and nutrition goals, from daily calorie targets to protein, carb, and fat ratios. Every recipe we build then adapts to you, balancing macronutrients and key vitamins and minerals, while weaving in smart ingredient choices that boost nutrient absorption naturally.";
+      case 'substitutions':
+        return "Great cooking isn't rigid — it's flexible, creative, and alive. With our AI assistant, you can customize recipes in real time, making smart ingredient swaps that preserve flavor, structure, and nutrition. Whether you're cooking dairy-free, swapping to whole grains, or adjusting for allergies, our system guides you with real food science — so your meals stay joyful, nourishing, and entirely yours.";
+      default:
+        return "";
+    }
+  };
+
+  const renderFullArticleContent = (articleSlug: string) => {
+    switch (articleSlug) {
+      case 'nutrition-tracking':
+        return `
+          Behind the Magic: How Our AI Crafts Smarter Recipes
+          When you open our app and ask for a recipe — something low-carb, or dairy-free, or packed with vitamin C — it might feel like magic.
+          A few taps. A few seconds. A beautiful recipe, ready to cook.
+          But under the hood, it's not magic.
+          It's a beautiful dance of science, cooking wisdom, and precision nutrition. Every recipe we generate follows rules shaped by real culinary chemistry, food safety research, and the messy, wonderful realities of a home kitchen.
+          We don't believe in guesses.
+          We believe in building flavor and nutrition with care, honesty, and respect for the food you feed yourself and the people you love.
+          Here's how it really works:
+          
+          It Starts with Real Ingredient Science
+          The first thing our AI does isn't chopping, stirring, or seasoning.
+          It's thinking deeply about ingredients.
+          Before anything else, the system pulls data from the most trusted nutrition sources available:
+          USDA FoodData Central — the gold standard for lab-analyzed food composition.
+          Branded food databases — capturing real manufacturer data for store-bought products.
+          Scientific literature — when cooking transformations need extra depth.
+          When you ask for almond flour pancakes or tofu stir-fry, the app doesn't guess at calories, vitamins, or carbs. It pulls real numbers tied to real foods — adjusting for brand-specific variations when possible.
+          It's ingredient data that respects where food comes from, how it's processed, and how it truly nourishes you.
+          Accuracy matters — because nutrition isn't about good intentions; it's about good information.
+          
+          Cooking Changes Everything — and We Respect It
+          Cooking is magic — and it's science.
+          The sizzle of fat. The sweet collapse of roasted carrots. The crust that forms on a seared steak.
+          But along with flavor and texture, cooking changes nutrients too.
+          Water evaporates — concentrating some nutrients and washing others away.
+          Delicate vitamins degrade under heat — Vitamin C and B vitamins can lose up to 55% during cooking.
+          Minerals like iron and potassium stay behind — but in smaller, more concentrated bites.
+          Fats soak into foods during frying — or drip away during roasting.
+          Our AI adjusts every recipe's nutrition using real scientific yield factors (how much food shrinks or absorbs) and nutrient retention factors (how cooking alters vitamins and minerals).
+          These are the same techniques dietitians and food scientists use to calculate nutrition labels for packaged foods and hospital meals.
+          So the numbers you see after you sauté, bake, roast, or simmer match what's truly on your plate — not just what you started with.
+          
+          Flavor Built with Chemistry
+          Flavor doesn't just happen.
+          It's a chemical story, written by heat, time, and care.
+          Every recipe our AI creates is built to unlock the best flavor reactions:
+          Maillard reaction — the browning that gives bread its crust, steaks their sear, and onions their deep sweetness.
+          Emulsification — the secret behind rich, creamy sauces that don't break.
+          Heat transfer mastery — knowing when to blast food with high heat and when to go slow and gentle.
+          We aren't just tossing ingredients together.
+          We're designing each step to trigger the right chemical magic at the right moment — so even a fast 20-minute recipe can taste thoughtful, layered, and deeply satisfying.
+          You might not see the chemistry happening, but you'll taste it.
+          
+          Smarter for Your Health Goals
+          Healthy recipes aren't just low-calorie.
+          True health comes from building food that feeds your body wisely and joyfully.
+          Our AI thinks like a chef and a registered dietitian.
+          It considers:
+          Macronutrients — protein, carbohydrates, fats, fiber, and sugar.
+          Micronutrients — the quiet heroes like iron, potassium, vitamin C, calcium, vitamin A, and vitamin D.
+          Bioavailability — how well your body can actually absorb those nutrients.
+          We don't just list iron — we suggest adding lemon to spinach to boost iron absorption.
+          We don't just mention carrots are rich in vitamin A — we design the recipe to include a little healthy fat, so your body can actually absorb it.
+          This is nutrition designed for real life — where flavor, chemistry, and health are partners, not enemies.
+          
+          Measurements You Can Trust
+          Precision isn't about being fussy.
+          It's about freedom.
+          When you trust the measurements, you can relax and focus on the joy of cooking.
+          Every recipe includes:
+          Standard imperial measurements (cups, tablespoons, ounces) — the language of most home kitchens.
+          Metric equivalents (grams, Celsius) — for precision and global cooks.
+          Visual and tactile cues — like "golden brown" or "knife slides easily through" — because your senses are the best timers of all.
+          Whether you're weighing flour or checking a roast for doneness, our recipes speak the real language of cooks — sight, smell, touch, and intuition, grounded in careful science.
+          
+          Why It Matters
+          When you cook with our app, you're not just following a list of steps.
+          You're stepping into a kitchen built on real knowledge — chemistry, nutrition, technique — disguised as easy, joyful guidance.
+          You're building meals that are beautiful, delicious, and nourishing — without needing to decode a food science textbook.
+          And behind every soup simmer, every loaf rising, every plate set on the table, there's real science working quietly for you.
+          Welcome to the future of smarter cooking — joyful, informed, and delicious.
+        `;
+      case 'personalized-nutrition':
+        return `
+          How We Align Every Recipe to Your Health Goals
+          When you cook with us, you're not just making a meal.
+          You're building something in conversation with your body:
+          Its energy needs.
+          Its cravings.
+          Its deeper goals — whether that's fueling a workout, managing blood sugar, supporting recovery, or simply feeling vibrant and alive.
+          Our AI doesn't treat you like an anonymous user.
+          It treats you like a complex, dynamic human being — one who deserves food that fits.
+          Here's how we do it:
+          
+          1. We Start With Your Unique Blueprint
+          Every body has a different starting point.
+          That's why we begin by estimating key personal metrics — using the best evidence from nutritional science:
+          Basal Metabolic Rate (BMR) — how many calories your body needs at complete rest, based on your age, weight, height, and biological sex.
+          Total Daily Energy Expenditure (TDEE) — how your lifestyle and activity levels layer onto that foundation, changing what you truly need day-to-day.
+          Some people need more fuel for performance.
+          Some need careful balance for healing.
+          Some simply want food that feels good and sustaining.
+          Our recipes adjust accordingly — because a 5'2" runner and a 6'4" desk worker don't need the same plate, even if the flavor is just as joyful.
+          
+          2. We Honor Your Macro Goals — Without Forgetting the Micronutrients
+          Nutrition is an ecosystem, not a checklist.
+          Our AI aligns recipes to your preferred macronutrient targets — whether you're aiming for:
+          Higher protein to build muscle
+          Lower carbs for blood sugar management
+          Balanced macros for general health
+          High fiber for gut support
+          But we don't stop at macros.
+          Each recipe also tracks essential micronutrients — the quiet architects of energy, immunity, and long-term vitality:
+          Iron, calcium, potassium, magnesium
+          Vitamins C, A, D, E, and the full B-complex
+          Phytonutrients like carotenoids and polyphenols for antioxidant power
+          Food isn't just fuel.
+          It's a matrix of molecules, supporting every system in your body — and we make sure you see that full picture.
+          
+          3. We Build Bioavailability into Every Meal
+          It's not just what you eat.
+          It's what your body can absorb and use.
+          That's why our AI weaves bioavailability wisdom directly into recipes:
+          Add a squeeze of lemon over sautéed spinach to unlock more iron.
+          Drizzle olive oil onto roasted carrots to boost vitamin A absorption.
+          Pair plant-based proteins smartly to form complete amino acid profiles.
+          These aren't random tips.
+          They're subtle design choices that let the food do more work for you — quietly, in the background, every time you cook.
+          
+          4. We Adjust for Special Needs, Without Sacrificing Joy
+          You might need — or want — recipes that are:
+          Low-sodium for heart health
+          Gluten-free for celiac safety
+          Low-glycemic to stabilize energy
+          Dairy-free for digestion comfort
+          High-antioxidant for recovery and resilience
+          Our AI doesn't just delete ingredients.
+          It rebuilds flavor and structure with intention — using substitutions based on culinary chemistry, not guesswork.
+          Because everyone deserves recipes that feel indulgent and satisfying, even when they serve a deeper purpose.
+          
+          5. We Respect the Whole Person
+          Maybe today, your "goal" isn't a number.
+          Maybe it's feeding your family after a long week.
+          Maybe it's celebrating a milestone.
+          Maybe it's nourishing yourself gently through a hard season.
+          Our system is smart enough to offer science — and humble enough to recognize that you are not a spreadsheet.
+          You are a story in motion.
+          We build recipes that flex with your life — science in service of joy, health, and flavor, not against it.
+          
+          Why It Matters
+          When recipes align with your body's needs, food becomes more than pleasure — it becomes power.
+          The power to heal.
+          The power to thrive.
+          The power to build a life full of movement, resilience, and presence.
+          We don't just make meals smarter.
+          We make them yours.
+        `;
+      case 'substitutions':
+        return `
+          Smart Ingredient Substitution: How Our AI Adapts Recipes to You — in Real Time
+          Cooking is a living process.
+          And real kitchens are full of real surprises:
+          You're out of eggs. You need a dairy-free option. You want more protein or less sodium.
+          Maybe you simply want the dish to feel more like you.
+          That's where our AI doesn't just generate a recipe — it becomes your kitchen co-pilot, helping you adapt, swap, and customize ingredients in real time through our recipe chat assistant.
+          Smart Ingredient Substitution isn't just about replacing things.
+          It's about preserving flavor, structure, nutrition — and empowering you to make every recipe your own.
+          Here's how it really works:
+          
+          1. Every Ingredient Has a Job — And We Respect It
+          Before suggesting any swap, our AI understands what the ingredient is doing in the recipe:
+          Is it providing structure (like flour)?
+          Is it binding moisture (like eggs)?
+          Is it supplying fat for tenderness (like butter)?
+          Is it delivering acidity for balance (like lemon juice)?
+          When you ask for a substitution — whether in your initial preferences or later through the recipe chat — our AI doesn't just pick a similar ingredient.
+          It finds one that performs the same function, so the dish stays true in texture, taste, and craftsmanship.
+          Form follows function — even in cooking.
+          
+          2. You Stay in the Driver's Seat with Real-Time Chat
+          When you open a recipe, you're not stuck with a static page.
+          You can chat with the AI assistant right inside the recipe details:
+          Want to make it dairy-free? Just ask.
+          Need a lower-sodium version? It'll adjust.
+          Curious if almond flour can replace all-purpose? Our AI will explain when it works — and when it might not — with science behind the advice.
+          It's a living conversation — fast, flexible, and always rooted in real food science.
+          You're not limited to pre-set "dietary filters."
+          You can shape the recipe moment-by-moment based on what you have, what you want, and how you're feeling today.
+          
+          3. Flavor and Culture Stay Intact
+          Smart substitutions honor the original spirit of a recipe.
+          Our AI understands:
+          Flavor balancing — if you swap something sweet, it considers acidity and saltiness too.
+          Regional authenticity — it won't suggest swapping miso paste with ketchup, or coconut milk with heavy cream, unless you ask for a playful twist.
+          Culinary integrity — when a dish's identity matters, we suggest substitutions that respect the tradition, not dilute it.
+          In the recipe chat, you can even ask:
+          "What's a traditional swap for this ingredient if I can't find it?"
+          And the assistant will guide you — not just for nutrition, but for authenticity too.
+          
+          4. Nutrition Adjusts Automatically — No Guesswork
+          Every time you modify a recipe, our system recalculates the full nutrition:
+          Calories
+          Macronutrients (protein, carbs, fat, fiber, sugar)
+          Key micronutrients (vitamin C, iron, potassium, calcium, vitamin A, vitamin D)
+          Cooking isn't just about flavor.
+          It's about fueling your life wisely.
+          When you make a change, we show you immediately how it impacts your plate — no hidden math, no surprises later.
+          
+          5. Food That Fits Today, and Tomorrow
+          Maybe today, you want a lower-carb version.
+          Maybe next week, you're cooking for a friend who's allergic to nuts.
+          Maybe next month, you decide to lean more plant-based.
+          Our Smart Ingredient Substitution through recipe chat lets your cooking grow with you.
+          One recipe becomes many.
+          One meal becomes a flexible foundation for whatever life — and your cravings — bring next.
+          You're not trapped in someone else's kitchen rules.
+          You're cooking for your real life, with real science quietly working in the background.
+          
+          Why It Matters
+          Good recipes inspire.
+          Great recipes adapt.
+          When you can adjust ingredients confidently — guided by a smart, science-savvy assistant — you're not just following directions.
+          You're collaborating with your food.
+          You're crafting meals that nourish your body, honor your tastes, and celebrate your changing life.
+          That's the power of Smart Ingredient Substitution.
+          Recipes that listen, learn, and grow with you.
+        `;
+      default:
+        return "";
+    }
+  };
 
   const generateSchemaData = () => {
     return {
@@ -154,6 +395,9 @@ const ArticleDetail = () => {
             <article className="prose prose-lg max-w-4xl mx-auto dark:prose-invert">
               <header className="mb-8">
                 <h1 className="text-3xl font-bold mb-3">{articleTitle}</h1>
+                <div className="flex items-center gap-2 mb-4">
+                  <ReadTimeDisplay text={getArticleContent() + " " + renderFullArticleContent('nutrition-tracking')} />
+                </div>
                 <p className="text-xl font-medium text-muted-foreground">
                   {articleDescription}
                 </p>
@@ -317,6 +561,9 @@ const ArticleDetail = () => {
             <article className="prose prose-lg max-w-4xl mx-auto dark:prose-invert">
               <header className="mb-8">
                 <h1 className="text-3xl font-bold mb-3">{articleTitle}</h1>
+                <div className="flex items-center gap-2 mb-4">
+                  <ReadTimeDisplay text={getArticleContent() + " " + renderFullArticleContent('personalized-nutrition')} />
+                </div>
                 <p className="text-xl font-medium text-muted-foreground">
                   {articleDescription}
                 </p>
@@ -465,6 +712,9 @@ const ArticleDetail = () => {
             <article className="prose prose-lg max-w-4xl mx-auto dark:prose-invert">
               <header className="mb-8">
                 <h1 className="text-3xl font-bold mb-3">{articleTitle}</h1>
+                <div className="flex items-center gap-2 mb-4">
+                  <ReadTimeDisplay text={getArticleContent() + " " + renderFullArticleContent('substitutions')} />
+                </div>
                 <p className="text-xl font-medium text-muted-foreground">
                   {articleDescription}
                 </p>

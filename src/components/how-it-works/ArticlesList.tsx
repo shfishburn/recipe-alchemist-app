@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, ChefHat, Leaf, Lightbulb, Utensils, Activity } from 'lucide-react';
+import { calculateReadTime } from '@/utils/read-time';
+import { Badge } from '@/components/ui/badge';
 
 interface Article {
   id: string;
@@ -60,38 +62,47 @@ export const ArticlesList = () => {
     <section aria-labelledby="articles-section" className="py-8">
       <div className="sr-only" id="articles-section">Recipe Alchemist Knowledge Articles</div>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
-        {articles.map((article) => (
-          <Card 
-            key={article.id} 
-            className="flex flex-col h-full hover:shadow-lg transition-shadow"
-            itemScope
-            itemType="http://schema.org/Article"
-          >
-            <meta itemProp="keywords" content={article.keywords.join(', ')} />
-            <CardHeader className="pb-4">
-              <div className="mb-4 flex justify-center" aria-hidden="true">
-                {article.icon}
-              </div>
-              <CardTitle className="text-xl text-center" itemProp="headline">{article.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <CardDescription className="text-center text-base" itemProp="description">
-                {article.description}
-              </CardDescription>
-            </CardContent>
-            <CardFooter className="pt-2 flex justify-center">
-              <Button 
-                variant="outline" 
-                onClick={() => handleNavigate(article.slug)}
-                className="w-full"
-                aria-label={`Read article about ${article.title}`}
-              >
-                <BookOpen className="mr-2 h-4 w-4" aria-hidden="true" />
-                Read Article
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {articles.map((article) => {
+          const readTime = calculateReadTime(article.description);
+          
+          return (
+            <Card 
+              key={article.id} 
+              className="flex flex-col h-full hover:shadow-lg transition-shadow"
+              itemScope
+              itemType="http://schema.org/Article"
+            >
+              <meta itemProp="keywords" content={article.keywords.join(', ')} />
+              <CardHeader className="pb-4">
+                <div className="mb-4 flex justify-center" aria-hidden="true">
+                  {article.icon}
+                </div>
+                <CardTitle className="text-xl text-center" itemProp="headline">{article.title}</CardTitle>
+                <div className="flex justify-center mt-2 opacity-0 animate-fadeIn" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+                  <Badge variant="outline" className="text-xs font-normal" aria-label="Estimated reading time">
+                    {readTime.displayText}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <CardDescription className="text-center text-base" itemProp="description">
+                  {article.description}
+                </CardDescription>
+              </CardContent>
+              <CardFooter className="pt-2 flex justify-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleNavigate(article.slug)}
+                  className="w-full"
+                  aria-label={`Read article about ${article.title}`}
+                >
+                  <BookOpen className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Read Article
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );

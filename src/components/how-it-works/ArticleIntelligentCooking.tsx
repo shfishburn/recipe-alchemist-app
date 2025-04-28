@@ -1,188 +1,214 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { ReadTimeDisplay } from '@/components/how-it-works/ReadTimeDisplay';
 
 export const ArticleIntelligentCooking = () => {
-  return (
-    <article 
-      className="prose prose-lg max-w-4xl mx-auto dark:prose-invert"
-      itemScope 
-      itemType="http://schema.org/Article"
-    >
-      <meta itemProp="headline" content="How Our Nutrition Analysis Works: Real Science, Real Food" />
-      <meta itemProp="keywords" content="nutrition analysis, macro tracking, micronutrients, USDA FoodData, recipe nutrition, cooking science, food science" />
-      <meta itemProp="datePublished" content="2025-04-28T10:00:00Z" />
-      <meta itemProp="author" content="Recipe Alchemist Team" />
+  const [articleContent, setArticleContent] = useState('');
+  
+  useEffect(() => {
+    // In a real implementation, this could come from an API or database
+    setArticleContent(`
+      How Nutrition Analysis Works
+      We don't guess what's in your food — we measure it with real science. Our system pulls data from trusted sources like USDA FoodData Central, adjusts for cooking methods, tracks both macronutrients and vital micronutrients, and personalizes your nutrition to your body's needs. Every recipe you see reflects not just what you cook — but how it truly nourishes you.
       
-      <Card className="p-8 mb-8 space-y-12">
-        <div className="space-y-8" itemProp="articleBody">
-          <header className="mb-12">
-            <h1 className="text-3xl font-bold mb-4" id="article-title">How Our Nutrition Analysis Works: Real Science, Real Food</h1>
-            <p className="text-xl font-medium text-muted-foreground">
-              Understanding what's really in your food goes far beyond counting calories or macros.
-              It's a quiet, careful conversation between chemistry, cooking, and the messiness of real life.
-            </p>
-          </header>
-
-          <p className="text-lg leading-relaxed mb-8">
-            Our nutrition analysis system doesn't guess — it respects the true science behind how food transforms, nourishes, and fuels you.
-          </p>
-
-          <p className="text-lg leading-relaxed mb-8">
-            Here's how we build a complete, honest picture of your meals:
-          </p>
-
-          <section aria-labelledby="trusted-sources" className="space-y-4">
-            <h2 id="trusted-sources" className="text-2xl font-semibold mt-8">
-              1. It All Starts With Trusted Sources
-            </h2>
-            <p>
-              Good analysis begins with good ingredients — and good data.
-              Unlike many apps that rely on crowdsourced entries or outdated labels, we source nutrition information from places that treat food with the seriousness it deserves:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>USDA FoodData Central</strong> — the gold standard of lab-tested nutrient data.</li>
-              <li><strong>Branded food databases</strong> — real manufacturer values, updated to match what's on store shelves today.</li>
-              <li><strong>Peer-reviewed science</strong> — research on how nutrients survive (or don't) through cooking, storage, and digestion.</li>
-            </ul>
-            <p>
-              When you see numbers in our app, you're seeing science-backed truths, not guesses.
-            </p>
-          </section>
-
-          <section aria-labelledby="cooking-changes" className="space-y-4">
-            <h2 id="cooking-changes" className="text-2xl font-semibold">
-              2. Cooking Changes Everything — and We Measure It
-            </h2>
-            <p>
-              The heat of the stove, the slow work of an oven, the quick sear in a pan — every cooking method reshapes your food's nutrients.
-              Our system tracks those transformations, carefully adjusting every value:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Water loss and concentration</strong> — When foods lose water, some nutrients get more concentrated. Others — especially delicate vitamins — wash away or evaporate.
-              </li>
-              <li>
-                <strong>Heat-sensitive vitamin loss</strong> — Vitamin C and B vitamins can fade by 15–55%, depending on how gently (or fiercely) you cook.
-              </li>
-              <li>
-                <strong>Fat absorption and rendering</strong> — Frying pulls oil into foods; roasting often lets fat drip away.
-              </li>
-              <li>
-                <strong>Chemical reactions</strong> — Cooking doesn't just destroy nutrients — it sometimes creates new ones, or makes hidden ones easier for your body to absorb.
-              </li>
-            </ul>
-            <p>
-              We don't treat raw broccoli and roasted broccoli the same. Neither should you.
-            </p>
-          </section>
-
-          <section aria-labelledby="beyond-macros" className="space-y-4">
-            <h2 id="beyond-macros" className="text-2xl font-semibold">
-              3. We Look Beyond Macros — Into the Micronutrient Heart of Food
-            </h2>
-            <p>
-              Calories, carbs, protein, and fat are only part of the story.
-              Our analysis goes deeper, following the real architects of health:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Vitamins</strong> — Fat-soluble (A, D, E, K) and water-soluble (B-complex, C).
-              </li>
-              <li>
-                <strong>Minerals</strong> — Like iron, calcium, potassium, magnesium, and zinc.
-              </li>
-              <li>
-                <strong>Phytonutrients</strong> — Plant-powered compounds like carotenoids and polyphenols.
-              </li>
-            </ul>
-            <p>
-              Every time you glance at your nutrition breakdown, you're seeing a full symphony, not just the bass drum.
-            </p>
-          </section>
-
-          <section aria-labelledby="personalized" className="space-y-4">
-            <h2 id="personalized" className="text-2xl font-semibold">
-              4. Personalized, Because No Two Bodies Are the Same
-            </h2>
-            <p>
-              A meal isn't just fuel — it's a conversation between your food and your body's needs.
-              That's why we tailor nutrition analysis to you:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Basal Metabolic Rate (BMR)</strong> — How many calories your body burns just staying alive.
-              </li>
-              <li>
-                <strong>Total Daily Energy Expenditure (TDEE)</strong> — How your movement and life shape your daily needs.
-              </li>
-              <li>
-                <strong>Macro targets</strong> — Your personal best ratio of protein, carbs, and fats, based on your goals.
-              </li>
-            </ul>
-            <p>
-              Every recipe can be seen through the lens of your own metabolism, not a generic average.
-            </p>
-          </section>
-
-          <section aria-labelledby="ingredient-precision" className="space-y-4">
-            <h2 id="ingredient-precision" className="text-2xl font-semibold">
-              5. Ingredient-Level Precision — No Guessing Allowed
-            </h2>
-            <p>
-              Behind every beautiful dish lies the story of each ingredient.
-              We break it down carefully:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Precise weight conversions</strong> — Cups and spoons turn into grams, because your body eats mass, not volume.</li>
-              <li><strong>State changes</strong> — We track how ingredients transform during cooking, mixing, or soaking.</li>
-              <li><strong>Smart substitution analysis</strong> — When you swap almond flour for wheat flour, we don't just change the label — we recalculate the full nutrient impact.</li>
-            </ul>
-            <p>
-              Every layer of your meal gets its own moment of scientific attention.
-            </p>
-          </section>
-
-          <section aria-labelledby="limitations" className="space-y-4">
-            <h2 id="limitations" className="text-2xl font-semibold">
-              6. Respecting the Limits of Science, Too
-            </h2>
-            <p>
-              Food is alive. Nature is messy.
-              And we believe in honesty about what even the best nutrition analysis can and can't promise:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Natural variation</strong> — A tomato picked today won't have exactly the same nutrients as one picked next week.
-              </li>
-              <li>
-                <strong>Individual digestion</strong> — Your gut microbiome changes how you absorb what you eat.
-              </li>
-              <li>
-                <strong>Kitchen realities</strong> — A minute more in the pan, a hotter oven, a different cut of chicken — all create tiny shifts.
-              </li>
-            </ul>
-            <p>
-              Our system accounts for all it can — and it always respects the beautiful, irreducible variability of real food.
-            </p>
-          </section>
-
-          <div className="text-center mt-16 space-y-4">
-            <p className="text-xl font-semibold">
-              <strong>Why It Matters</strong>
-            </p>
-            <p className="text-lg">
-              When you know what's truly on your plate, you cook with confidence. 
-              You eat with intention.
-              And you nourish yourself — not just your hunger, but your body's complex, wonderful needs.
-            </p>
-            <p className="text-lg">
-              That's the kind of nutrition analysis we believe in.
-              <br />Real science. Real food. Real life.
-            </p>
+      Food is Not Static: Why Accurate Nutrition Analysis Matters
+      When you cook a steak, it loses water and shrinks.
+      When you steam broccoli, some vitamins leach into the cooking water.
+      When you eat fat with carrots, your body absorbs more vitamin A.
+      
+      These are the realities of food — constantly changing, interacting, transforming. But most nutrition apps don't account for any of this. They treat food like numbers in a database, not living chemistry that shifts with every cooking technique and combination.
+      
+      We believe you deserve better information about what you're really eating.
+      
+      That's why our nutrition analysis accounts for the real science of food:
+      
+      1. We Start with Quality Data
+      Our system doesn't guess — it measures. We pull nutrition data from:
+      
+      USDA FoodData Central — laboratory-analyzed data, the gold standard in nutrition science
+      Academic food composition databases — for unique or specialty ingredients
+      Branded food databases — for packaged products
+      
+      This means you're seeing real numbers, not estimates.
+      
+      2. We Account for Cooking Methods
+      Different cooking techniques transform food in different ways:
+      
+      Boiling can reduce water-soluble vitamins by up to 50%
+      Grilling changes fat content as drippings are lost
+      Baking causes moisture loss, concentrating some nutrients
+      
+      Our system applies scientifically validated retention factors to adjust nutrition values based on your cooking method.
+      
+      3. We Track the Full Nutrition Picture
+      While most apps focus only on calories and macronutrients, we believe the micronutrients are equally important:
+      
+      Essential minerals like iron, potassium, calcium, magnesium, zinc
+      Full vitamin profile including folate, riboflavin, and vitamins A, C, D, E, K
+      Amino acid profiles for protein quality tracking
+      
+      Because health is about more than just calories in, calories out.
+      
+      4. We Balance Scientific Depth with Practical Clarity
+      While our engine runs on complex calculations, what you see is clear and actionable:
+      
+      Visual representations of nutrient density
+      Percentage of daily needs met (personalized to your body)
+      Plain-language explanations of nutrition highlights
+      
+      So you always understand not just what you're eating, but why it matters.
+      
+      5. We Design for Bioavailability, Not Just Content
+      It's not just what nutrients are in your food — it's whether your body can use them:
+      
+      We pair vitamin C with iron-rich foods to enhance absorption
+      We include healthy fats with fat-soluble vitamins A, D, E and K
+      We combine complementary plant proteins for complete amino acid profiles
+      
+      These pairings aren't random — they're designed to maximize how your body uses what you eat.
+      
+      Why Precision Nutrition Matters for Your Real Life
+      When you understand what's truly in your food, cooking becomes more than just feeding yourself — it becomes a powerful tool for supporting your health goals, athletic performance, energy levels, and long-term vitality.
+      
+      With accurate nutrition analysis, you can:
+      
+      Make confident substitutions knowing the real impact
+      Balance your plate more effectively
+      Identify and address potential nutrient gaps
+      Connect what you eat with how you feel
+      
+      You deserve to know what you're really eating — not just what you're cooking.
+      That's the difference with Recipe Alchemist.
+    `);
+  }, []);
+  
+  return (
+    <Card className="p-8">
+      <article className="prose prose-lg max-w-4xl mx-auto dark:prose-invert">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-3">How Nutrition Analysis Works</h1>
+          <div className="flex items-center gap-2 mb-4">
+            <ReadTimeDisplay text={articleContent} />
           </div>
-        </div>
-      </Card>
-    </article>
+          <p className="text-xl font-medium text-muted-foreground">
+            We don't guess what's in your food — we measure it with real science. Our system pulls data from trusted sources like USDA FoodData Central, adjusts for cooking methods, tracks both macronutrients and vital micronutrients, and personalizes your nutrition to your body's needs.
+          </p>
+        </header>
+        
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Food is Not Static: Why Accurate Nutrition Analysis Matters</h2>
+          <p className="mb-4">
+            When you cook a steak, it loses water and shrinks.
+            When you steam broccoli, some vitamins leach into the cooking water.
+            When you eat fat with carrots, your body absorbs more vitamin A.
+          </p>
+          <p className="mb-4">
+            These are the realities of food — constantly changing, interacting, transforming. But most nutrition apps don't account for any of this. They treat food like numbers in a database, not living chemistry that shifts with every cooking technique and combination.
+          </p>
+          <p className="mb-4">
+            We believe you deserve better information about what you're really eating.
+          </p>
+          <p className="font-medium">
+            That's why our nutrition analysis accounts for the real science of food:
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">1. We Start with Quality Data</h3>
+          <p className="mb-3">
+            Our system doesn't guess — it measures. We pull nutrition data from:
+          </p>
+          <ul className="list-disc pl-6 mb-3">
+            <li>USDA FoodData Central — laboratory-analyzed data, the gold standard in nutrition science</li>
+            <li>Academic food composition databases — for unique or specialty ingredients</li>
+            <li>Branded food databases — for packaged products</li>
+          </ul>
+          <p className="mb-3">
+            This means you're seeing real numbers, not estimates.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">2. We Account for Cooking Methods</h3>
+          <p className="mb-3">
+            Different cooking techniques transform food in different ways:
+          </p>
+          <ul className="list-disc pl-6 mb-3">
+            <li>Boiling can reduce water-soluble vitamins by up to 50%</li>
+            <li>Grilling changes fat content as drippings are lost</li>
+            <li>Baking causes moisture loss, concentrating some nutrients</li>
+          </ul>
+          <p className="mb-3">
+            Our system applies scientifically validated retention factors to adjust nutrition values based on your cooking method.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">3. We Track the Full Nutrition Picture</h3>
+          <p className="mb-3">
+            While most apps focus only on calories and macronutrients, we believe the micronutrients are equally important:
+          </p>
+          <ul className="list-disc pl-6 mb-3">
+            <li>Essential minerals like iron, potassium, calcium, magnesium, zinc</li>
+            <li>Full vitamin profile including folate, riboflavin, and vitamins A, C, D, E, K</li>
+            <li>Amino acid profiles for protein quality tracking</li>
+          </ul>
+          <p className="mb-3">
+            Because health is about more than just calories in, calories out.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">4. We Balance Scientific Depth with Practical Clarity</h3>
+          <p className="mb-3">
+            While our engine runs on complex calculations, what you see is clear and actionable:
+          </p>
+          <ul className="list-disc pl-6 mb-3">
+            <li>Visual representations of nutrient density</li>
+            <li>Percentage of daily needs met (personalized to your body)</li>
+            <li>Plain-language explanations of nutrition highlights</li>
+          </ul>
+          <p className="mb-3">
+            So you always understand not just what you're eating, but why it matters.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-3">5. We Design for Bioavailability, Not Just Content</h3>
+          <p className="mb-3">
+            It's not just what nutrients are in your food — it's whether your body can use them:
+          </p>
+          <ul className="list-disc pl-6 mb-3">
+            <li>We pair vitamin C with iron-rich foods to enhance absorption</li>
+            <li>We include healthy fats with fat-soluble vitamins A, D, E and K</li>
+            <li>We combine complementary plant proteins for complete amino acid profiles</li>
+          </ul>
+          <p className="mb-3">
+            These pairings aren't random — they're designed to maximize how your body uses what you eat.
+          </p>
+        </section>
+
+        <section className="mb-4">
+          <h3 className="text-xl font-semibold mb-3">Why Precision Nutrition Matters for Your Real Life</h3>
+          <p className="mb-3">
+            When you understand what's truly in your food, cooking becomes more than just feeding yourself — it becomes a powerful tool for supporting your health goals, athletic performance, energy levels, and long-term vitality.
+          </p>
+          <p className="mb-3">
+            With accurate nutrition analysis, you can:
+          </p>
+          <ul className="list-disc pl-6 mb-3">
+            <li>Make confident substitutions knowing the real impact</li>
+            <li>Balance your plate more effectively</li>
+            <li>Identify and address potential nutrient gaps</li>
+            <li>Connect what you eat with how you feel</li>
+          </ul>
+          <p className="mb-3 font-medium">
+            You deserve to know what you're really eating — not just what you're cooking.
+            That's the difference with Recipe Alchemist.
+          </p>
+        </section>
+      </article>
+    </Card>
   );
 };
