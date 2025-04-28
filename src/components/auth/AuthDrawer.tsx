@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCallback, useEffect, useMemo } from "react";
 
 // For desktop
 import {
@@ -37,15 +38,22 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   const isMobile = useMediaQuery("(max-width: 768px)");
   
   // Close drawer and navigate on successful auth
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = useCallback(() => {
     setOpen(false);
     navigate("/"); // Navigate to home page after successful auth
-  };
+  }, [setOpen, navigate]);
 
   // If user is already authenticated, close drawer
-  if (session && open) {
-    setOpen(false);
-  }
+  useEffect(() => {
+    if (session && open) {
+      setOpen(false);
+    }
+  }, [session, open, setOpen]);
+
+  // Memoize the auth form to prevent unnecessary rerenders
+  const authForm = useMemo(() => (
+    <AuthForm onSuccess={handleAuthSuccess} />
+  ), [handleAuthSuccess]);
 
   if (isMobile) {
     return (
@@ -61,7 +69,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
             </DrawerClose>
           </DrawerHeader>
           <ScrollArea className="p-6 h-full max-h-[70vh]">
-            <AuthForm onSuccess={handleAuthSuccess} />
+            {authForm}
           </ScrollArea>
         </DrawerContent>
       </Drawer>
@@ -81,7 +89,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
           </SheetClose>
         </SheetHeader>
         <ScrollArea className="flex-1 p-6 h-full">
-          <AuthForm onSuccess={handleAuthSuccess} />
+          {authForm}
         </ScrollArea>
       </SheetContent>
     </Sheet>
