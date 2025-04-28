@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
@@ -28,17 +29,25 @@ export function ChatResponse({
       const responseObj = JSON.parse(response);
       let text = responseObj.textResponse || responseObj.response || response;
 
-      // Format ingredients with better logging
+      // Format ingredients if present in the response
       if (responseObj.changes?.ingredients?.items) {
         console.log("Formatting ingredients in response");
+        const ingredientsMap = new Map();
         responseObj.changes.ingredients.items.forEach((ingredient: any) => {
           const ingredientText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
-          console.log("Formatting ingredient:", ingredientText);
-          // Make the ingredient bold in the text
-          text = text.replace(
-            new RegExp(ingredientText, 'gi'),
-            `**${ingredientText}**`
-          );
+          ingredientsMap.set(ingredientText.toLowerCase(), ingredientText);
+        });
+
+        // Replace ingredient mentions with bold text, being careful not to double-bold
+        text = text.replace(/\*\*(.*?)\*\*/g, (match, content) => {
+          const lowerContent = content.toLowerCase();
+          return ingredientsMap.has(lowerContent) ? match : content;
+        });
+
+        // Now add bold to any remaining ingredients that weren't already bold
+        ingredientsMap.forEach((original, lower) => {
+          const regExp = new RegExp(`(?<!\\*\\*)${original}(?!\\*\\*)`, 'gi');
+          text = text.replace(regExp, `**${original}**`);
         });
       }
 
@@ -47,12 +56,12 @@ export function ChatResponse({
         console.log("Formatting instructions in response");
         responseObj.changes.instructions.forEach((instruction: string | { action: string }) => {
           const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
-          console.log("Formatting instruction:", instructionText);
-          // Make the instruction bold in the text
-          text = text.replace(
-            new RegExp(instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-            `**${instructionText}**`
-          );
+          if (!instructionText.includes('**')) {
+            text = text.replace(
+              new RegExp(instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+              `**${instructionText}**`
+            );
+          }
         });
       }
 

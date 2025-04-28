@@ -21,16 +21,25 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
+    const existingIngredientsText = recipe.ingredients
+      .map(ing => `${ing.qty} ${ing.unit} ${ing.item}`)
+      .join(', ');
+
     const systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest improvements.
     
     IMPORTANT GUIDELINES FOR RECIPE MODIFICATIONS:
-    1. ALWAYS maintain proper ingredient proportions relative to the serving size
-    2. When suggesting ingredient changes:
+    1. EXISTING INGREDIENTS: The recipe currently contains: ${existingIngredientsText}
+       - DO NOT suggest adding ingredients that already exist in the recipe
+       - When suggesting new ingredients, ensure they complement existing ones
+       - Only use "add" mode for genuinely new ingredients
+       - Use "replace" mode ONLY for complete recipe revisions
+       - Use "none" mode when no ingredient changes are needed
+       
+    2. QUANTITY GUIDELINES:
        - For a serving size of ${recipe.servings}, quantities must be proportional
        - Justify ANY significant quantity changes with culinary or scientific reasoning
        - Flag unreasonable quantities (e.g., 3 lbs meat for 2 servings)
        - Preserve the original recipe's core ratios unless specifically improving them
-    3. Use "add" mode for new ingredients, "replace" mode ONLY when revising the entire recipe
     
     Format your response as JSON with these fields:
     {
@@ -38,7 +47,7 @@ serve(async (req) => {
       "changes": {
         "title": "optional new title",
         "ingredients": {
-          "mode": "add" or "replace",
+          "mode": "add" or "replace" or "none",
           "items": [
             {
               "qty": number,
@@ -56,7 +65,7 @@ serve(async (req) => {
     }
 
     When suggesting ingredient changes:
-    1. Default to "add" mode unless complete revision is needed
+    1. Default to "none" mode unless changes are needed
     2. Include detailed notes explaining quantity changes
     3. Format ingredient references with **bold** text
     4. Validate all quantities against serving size`;

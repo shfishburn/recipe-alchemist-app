@@ -44,6 +44,15 @@ function validateIngredientQuantities(
   return { valid: true };
 }
 
+// New helper function to check for duplicate ingredients
+function findDuplicateIngredients(existingIngredients: Recipe['ingredients'], newIngredients: Recipe['ingredients']) {
+  return newIngredients.filter(newIng => 
+    existingIngredients.some(existingIng => 
+      existingIng.item.toLowerCase() === newIng.item.toLowerCase()
+    )
+  );
+}
+
 export async function updateRecipe(
   recipe: Recipe,
   chatMessage: ChatMessage,
@@ -84,7 +93,16 @@ export async function updateRecipe(
       throw new Error("Invalid ingredient format in suggested changes");
     }
 
-    // Validate quantities against serving size - now supports 'none' mode
+    // Check for duplicates in add mode
+    if (mode === 'add') {
+      const duplicates = findDuplicateIngredients(recipe.ingredients, items);
+      if (duplicates.length > 0) {
+        console.error("Duplicate ingredients detected:", duplicates);
+        throw new Error(`These ingredients already exist in the recipe: ${duplicates.map(d => d.item).join(', ')}`);
+      }
+    }
+
+    // Validate quantities against serving size
     const quantityValidation = validateIngredientQuantities(recipe, items, mode);
     if (!quantityValidation.valid) {
       console.error("Ingredient quantity validation failed:", quantityValidation.message);
