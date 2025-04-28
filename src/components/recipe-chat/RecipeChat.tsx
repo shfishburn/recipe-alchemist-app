@@ -64,10 +64,10 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
 
   if (isLoadingHistory) {
     return (
-      <Card>
+      <Card className="border-slate-100">
         <CardContent className="pt-6">
-          <div className="flex justify-center">
-            <Loader2 className="h-6 w-6 animate-spin" />
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </CardContent>
       </Card>
@@ -75,12 +75,12 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   }
 
   return (
-    <Card className="bg-[#F1F0FB]">
+    <Card className="bg-[#F9FAFB] border-slate-100 shadow-sm">
       <CardContent className="pt-6">
         <div className="space-y-6">
           {chatHistory.length === 0 && optimisticMessages.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
+            <div className="text-center py-8 bg-white/60 rounded-lg border border-slate-100 shadow-sm">
+              <p className="text-muted-foreground px-4">
                 Ask for cooking techniques, scientific insights, or modifications!
                 You can also upload a recipe image or paste a URL.
               </p>
@@ -101,7 +101,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             
             {/* Render optimistic messages that haven't been confirmed yet */}
             {optimisticMessages.map((chat, index) => (
-              <div key={`optimistic-${index}`} className="opacity-80">
+              <div key={`optimistic-${index}`} className="opacity-90">
                 <ChatMessage
                   chat={chat}
                   setMessage={setMessage}

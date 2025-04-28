@@ -141,7 +141,7 @@ export function ChatResponse({
     // Improved text formatting with better handling of bold sections
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="font-semibold text-blue-600">{part.slice(2, -2)}</strong>;
+        return <strong key={index} className="font-semibold text-primary">{part.slice(2, -2)}</strong>;
       }
       return <span key={index}>{part}</span>;
     });
@@ -150,7 +150,7 @@ export function ChatResponse({
   return (
     <div className="flex-1">
       <div className="flex flex-col space-y-4">
-        <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
+        <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm border border-slate-100">
           {showWarning && (
             <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4" />
@@ -161,7 +161,7 @@ export function ChatResponse({
             </Alert>
           )}
           
-          <div className="prose prose-sm max-w-none">
+          <div className="prose prose-sm max-w-none text-slate-800">
             {displayText.split('\n').filter(Boolean).map((paragraph, index) => (
               <p key={index} className="mb-2">{renderFormattedText(paragraph)}</p>
             ))}
@@ -181,7 +181,7 @@ export function ChatResponse({
                 onClick={handleApplyChanges}
                 disabled={isApplying || applied}
                 className={`${
-                  applied ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
+                  applied ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'
                 } text-white`}
                 size="sm"
               >
@@ -204,12 +204,12 @@ export function ChatResponse({
 
           {followUpQuestions?.length > 0 && (
             <div className="mt-6">
-              <h4 className="text-sm font-medium mb-2">Follow-up Questions</h4>
+              <h4 className="text-sm font-medium mb-2 text-slate-700">Follow-up Questions</h4>
               <div className="flex flex-wrap gap-2">
                 {followUpQuestions.map((question, index) => (
                   <button
                     key={index}
-                    className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left"
+                    className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left text-slate-800 border border-gray-200 transition-colors"
                     onClick={() => handleFollowUpClick(question)}
                   >
                     {question}

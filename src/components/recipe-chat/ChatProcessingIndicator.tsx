@@ -15,8 +15,8 @@ export function ChatProcessingIndicator({ stage, className }: ChatProcessingIndi
   };
 
   return (
-    <div className={`flex items-center gap-2 text-sm text-muted-foreground bg-white/70 px-3 py-2 rounded-md ${className}`}>
-      <Loader2 className="h-4 w-4 animate-spin" />
+    <div className={`flex items-center gap-2 text-sm text-muted-foreground rounded-md border border-border/50 bg-white/70 px-3 py-2 shadow-sm ${className}`}>
+      <Loader2 className="h-4 w-4 animate-spin text-primary" />
       <span className="animate-pulse">{messages[stage]}</span>
     </div>
   );

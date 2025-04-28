@@ -22,8 +22,8 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="h-[85vh] max-w-4xl mx-auto z-50">
-        <DrawerHeader className="border-b flex items-center justify-between">
-          <DrawerTitle>Recipe Chat</DrawerTitle>
+        <DrawerHeader className="border-b flex items-center justify-between bg-white">
+          <DrawerTitle className="text-primary font-medium">Recipe Chat</DrawerTitle>
           <DrawerClose asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <X className="h-4 w-4" />
@@ -31,7 +31,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
             </Button>
           </DrawerClose>
         </DrawerHeader>
-        <div className="p-4 flex-1 overflow-hidden flex flex-col h-[calc(85vh-60px)]">
+        <div className="p-4 flex-1 overflow-hidden flex flex-col h-[calc(85vh-60px)] bg-[#F9FAFB]">
           <div className="overflow-y-auto flex-1">
             <RecipeChat recipe={recipe} />
           </div>

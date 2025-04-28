@@ -51,11 +51,11 @@ export function ChatMessage({
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-start gap-4">
-        <Avatar className="h-10 w-10 border-2 border-primary/25">
-          <AvatarFallback>U</AvatarFallback>
+        <Avatar className="h-10 w-10 border-2 border-blue-100 bg-blue-50">
+          <AvatarFallback className="text-blue-500 font-medium">U</AvatarFallback>
         </Avatar>
         <div className="bg-blue-50 rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
-          <p className="text-sm">{chat.user_message}</p>
+          <p className="text-sm text-slate-800">{chat.user_message}</p>
         </div>
       </div>
       
@@ -63,7 +63,7 @@ export function ChatMessage({
         <div className="flex items-start gap-4">
           <Avatar className="h-10 w-10 bg-primary/10 border-2 border-primary/25">
             <AvatarImage src="/chef-ai.png" alt="Chef AI" />
-            <AvatarFallback>AI</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">AI</AvatarFallback>
           </Avatar>
           <ChatResponse 
             response={chat.ai_response}
@@ -79,7 +79,7 @@ export function ChatMessage({
         <div className="flex items-start gap-4">
           <Avatar className="h-10 w-10 bg-primary/10 border-2 border-primary/25">
             <AvatarImage src="/chef-ai.png" alt="Chef AI" />
-            <AvatarFallback>AI</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">AI</AvatarFallback>
           </Avatar>
           <div className="bg-white rounded-[20px] rounded-tl-[5px] p-6 shadow-sm w-full max-w-[calc(100%-60px)]">
             <Skeleton className="h-4 w-3/4 mb-2" />
