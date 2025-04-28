@@ -19,11 +19,12 @@ export const useRecipeChat = (recipe: Recipe) => {
     queryKey: ['recipe-chats', recipe.id],
     queryFn: async () => {
       console.log(`Fetching chat history for recipe ${recipe.id}`);
+      // Fix: Modified query to properly handle NULL check for deleted_at
       const { data, error } = await supabase
         .from('recipe_chats')
         .select('*')
         .eq('recipe_id', recipe.id)
-        .eq('deleted_at', null)
+        .is('deleted_at', null) // Fixed: Use .is() instead of .eq() for NULL comparison
         .order('created_at', { ascending: true });
 
       if (error) {
