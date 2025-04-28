@@ -119,7 +119,7 @@ export const useApplyChanges = (recipe: Recipe) => {
         title: "Error",
         description: error instanceof Error 
           ? error.message 
-          : (error.message || 'Failed to apply changes'),
+          : "Failed to apply changes",
         variant: "destructive",
       });
     },
