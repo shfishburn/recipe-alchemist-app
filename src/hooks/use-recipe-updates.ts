@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Recipe } from '@/types/recipe';
+import { Recipe, Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
 
 interface CookingDetails {
   temperature?: {
@@ -29,12 +30,19 @@ export function useRecipeUpdates(recipeId: string) {
     mutationFn: async (updates: Partial<Recipe> & { cookingDetails?: CookingDetails }) => {
       setIsUpdating(true);
       try {
+        // Transform complex objects to JSON format for Supabase
+        const transformedUpdates = {
+          ...updates,
+          // Convert arrays to JSON compatible format
+          ingredients: updates.ingredients as unknown as Json,
+          science_notes: updates.science_notes as unknown as Json,
+          nutrition: updates.nutrition as unknown as Json,
+          updated_at: new Date().toISOString(),
+        };
+
         const { data, error } = await supabase
           .from('recipes')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString(),
-          })
+          .update(transformedUpdates)
           .eq('id', recipeId)
           .select()
           .single();

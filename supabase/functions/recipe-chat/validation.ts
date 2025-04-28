@@ -8,6 +8,14 @@ export function validateRecipeChanges(response: any) {
     if (typeof changes.title !== 'string' || changes.title.trim().length === 0) {
       throw new Error('Invalid title format');
     }
+    
+    // Ensure title isn't a placeholder or default value
+    const lowerTitle = changes.title.toLowerCase();
+    if (lowerTitle === 'optional new title' || 
+        lowerTitle === 'untitled recipe' || 
+        lowerTitle === 'new recipe') {
+      throw new Error('Title cannot be a generic placeholder');
+    }
   }
 
   // Validate ingredients if present
