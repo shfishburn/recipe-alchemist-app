@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, ChefHat, Leaf, Lightbulb, Utensils, Activity } from 'lucide-react';
-import { calculateReadTime } from '@/utils/read-time';
 import { Badge } from '@/components/ui/badge';
+import { ReadTimeDisplay } from './ReadTimeDisplay';
 
 interface Article {
   id: string;
@@ -63,8 +63,6 @@ export const ArticlesList = () => {
       <div className="sr-only" id="articles-section">Recipe Alchemist Knowledge Articles</div>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
         {articles.map((article) => {
-          const readTime = calculateReadTime(article.description);
-          
           return (
             <Card 
               key={article.id} 
@@ -78,10 +76,8 @@ export const ArticlesList = () => {
                   {article.icon}
                 </div>
                 <CardTitle className="text-xl text-center" itemProp="headline">{article.title}</CardTitle>
-                <div className="flex justify-center mt-2 opacity-0 animate-fadeIn" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-                  <Badge variant="outline" className="text-xs font-normal" aria-label="Estimated reading time">
-                    {readTime.displayText}
-                  </Badge>
+                <div className="flex justify-center mt-2">
+                  <ReadTimeDisplay text={article.description} />
                 </div>
               </CardHeader>
               <CardContent className="flex-grow">

@@ -7,11 +7,19 @@ import { Clock } from 'lucide-react';
 interface ReadTimeDisplayProps {
   text: string;
   className?: string;
+  showIcon?: boolean;
 }
 
-export const ReadTimeDisplay: React.FC<ReadTimeDisplayProps> = ({ text, className = '' }) => {
+export const ReadTimeDisplay: React.FC<ReadTimeDisplayProps> = ({ 
+  text, 
+  className = '',
+  showIcon = true
+}) => {
   const badgeRef = useRef<HTMLDivElement>(null);
   const { displayText } = calculateReadTime(text);
+  
+  // Extract just the text part without the clock emoji since we're using the Clock icon
+  const textContent = displayText.replace('🕒 ', '');
   
   useEffect(() => {
     const badge = badgeRef.current;
@@ -35,8 +43,8 @@ export const ReadTimeDisplay: React.FC<ReadTimeDisplayProps> = ({ text, classNam
       style={{ transitionProperty: 'opacity' }}
     >
       <Badge variant="outline" className="flex items-center gap-1 font-normal">
-        <Clock className="h-3 w-3" />
-        <span>{displayText}</span>
+        {showIcon && <Clock className="h-3 w-3" />}
+        <span>{textContent}</span>
       </Badge>
     </div>
   );
