@@ -22,9 +22,9 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
   const isMobile = useIsMobile();
   
   const COLORS = {
-    protein: '#9b87f5',
-    carbs: '#0EA5E9',
-    fat: '#22c55e'
+    protein: '#9b87f5', // Soft purple for protein
+    carbs: '#0EA5E9',   // Ocean blue for carbs
+    fat: '#22c55e'      // Soft green for fat
   };
   
   // Calculate macro distribution
@@ -50,8 +50,27 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
     { name: 'Carbs', value: Math.round((carbsCalories / totalCalories) * 100), fill: COLORS.carbs },
     { name: 'Fat', value: Math.round((fatCalories / totalCalories) * 100), fill: COLORS.fat }
   ];
-  
-  const renderLabel = ({ name, value }: { name: string; value: number }) => `${name}: ${value}%`;
+
+  const renderCustomLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#fff"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={isMobile ? "12" : "14"}
+        fontWeight="500"
+      >
+        {`${value}%`}
+      </text>
+    );
+  };
   
   return (
     <div className="space-y-6">
@@ -71,9 +90,6 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-xs text-muted-foreground mb-1 text-center">
-              Distribution by grams
-            </p>
             <div className={`${isMobile ? 'h-52' : 'h-56'} flex flex-col justify-center`}>
               <ChartContainer config={{
                 'Protein': { color: COLORS.protein },
@@ -85,18 +101,26 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                     data={macrosData}
                     cx="50%"
                     cy="50%"
+                    innerRadius={isMobile ? 40 : 50}
                     outerRadius={isMobile ? 65 : 80}
-                    fill="#8884d8"
+                    paddingAngle={2}
                     dataKey="value"
-                    label={renderLabel}
+                    label={renderCustomLabel}
                   >
                     {macrosData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.fill}
+                        strokeWidth={1}
+                        stroke="#fff"
+                      />
                     ))}
                   </Pie>
                   <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
                     formatter={(value, entry) => `${value}: ${entry.payload.value}%`}
-                    wrapperStyle={{ bottom: 10 }}
                   />
                 </PieChart>
               </ChartContainer>
@@ -119,9 +143,6 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-xs text-muted-foreground mb-1 text-center">
-              Distribution by calories
-            </p>
             <div className={`${isMobile ? 'h-52' : 'h-56'} flex flex-col justify-center`}>
               <ChartContainer config={{
                 'Protein': { color: COLORS.protein },
@@ -133,18 +154,26 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                     data={calorieMacroData}
                     cx="50%"
                     cy="50%"
+                    innerRadius={isMobile ? 40 : 50}
                     outerRadius={isMobile ? 65 : 80}
-                    fill="#8884d8"
+                    paddingAngle={2}
                     dataKey="value"
-                    label={renderLabel}
+                    label={renderCustomLabel}
                   >
                     {calorieMacroData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.fill}
+                        strokeWidth={1}
+                        stroke="#fff"
+                      />
                     ))}
                   </Pie>
-                  <Legend 
+                  <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
                     formatter={(value, entry) => `${value}: ${entry.payload.value}%`}
-                    wrapperStyle={{ bottom: 10 }}
                   />
                 </PieChart>
               </ChartContainer>
