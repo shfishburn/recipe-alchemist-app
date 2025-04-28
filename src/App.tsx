@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { Footer } from "@/components/ui/footer";
 import PrivateRoute from "@/components/PrivateRoute";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
+import { DefaultSeo } from "@/components/seo/DefaultSeo";
 
 import Index from "./pages/Index";
 import Build from "./pages/Build";
@@ -40,6 +42,7 @@ const App = () => (
     <AuthProvider>
       <TooltipProvider>
         <div className="min-h-screen flex flex-col">
+          <DefaultSeo />
           <Toaster />
           <Sonner />
           <BrowserRouter>

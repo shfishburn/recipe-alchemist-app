@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/ui/navbar';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
 import { 
@@ -16,12 +16,55 @@ const About = () => {
   // Use our scroll restoration hook
   useScrollRestoration();
   
+  // Schema.org JSON-LD structured data for better SEO
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Recipe Alchemy",
+    "url": "https://recipealchemist.com",
+    "logo": "https://recipealchemist.com/lovable-uploads/7d2f98f4-6026-4582-bbe4-e5c69edf0dc9.png",
+    "description": "Recipe Alchemy was founded by a team who loves great food, respects real science, and believes technology should make life in the kitchen richer. We create AI-powered recipes that are personalized for your health goals.",
+    "foundingDate": "2023",
+    "founders": [
+      {
+        "@type": "Person",
+        "name": "Recipe Alchemy Team"
+      }
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Seattle",
+      "addressRegion": "WA",
+      "addressCountry": "USA"
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
         <title>About Recipe Alchemy | Our Story, Mission & Values</title>
         <meta name="description" content="Recipe Alchemy was founded by a team who loves great food, respects real science, and believes technology should make life in the kitchen richer. Learn about our mission, team, and values." />
+        <link rel="canonical" href="https://recipealchemist.com/about" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="About Recipe Alchemy | Our Story, Mission & Values" />
+        <meta property="og:description" content="Recipe Alchemy was founded by a team who loves great food, respects real science, and believes technology should make life in the kitchen richer." />
+        <meta property="og:url" content="https://recipealchemist.com/about" />
+        <meta property="og:image" content="https://recipealchemist.com/lovable-uploads/7d2f98f4-6026-4582-bbe4-e5c69edf0dc9.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About Recipe Alchemy | Our Story, Mission & Values" />
+        <meta name="twitter:description" content="Learn about our mission, team, and the science behind Recipe Alchemy." />
+        <meta name="twitter:image" content="https://recipealchemist.com/lovable-uploads/7d2f98f4-6026-4582-bbe4-e5c69edf0dc9.png" />
+        
+        {/* Schema.org structured data */}
+        <script type="application/ld+json">
+          {JSON.stringify(schemaData)}
+        </script>
       </Helmet>
+      
       <Navbar />
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-6 md:py-8 flex-grow">

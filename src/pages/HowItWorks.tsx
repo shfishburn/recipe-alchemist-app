@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
 import { 
   Breadcrumb,

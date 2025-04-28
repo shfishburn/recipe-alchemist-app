@@ -1,6 +1,7 @@
 
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
+import { PageSeo } from '@/components/seo/PageSeo';
 import { 
   Breadcrumb,
   BreadcrumbList,
@@ -14,6 +15,12 @@ import { Link } from 'react-router-dom';
 const Favorites = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <PageSeo 
+        title="My Favorite Recipes | Recipe Alchemist"
+        description="Access your saved favorite recipes for quick reference and meal planning."
+        canonicalUrl="https://recipealchemist.com/favorites"
+      />
+      
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-8">

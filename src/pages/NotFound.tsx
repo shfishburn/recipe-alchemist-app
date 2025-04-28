@@ -1,7 +1,9 @@
 
+import React from "react";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { PageSeo } from "@/components/seo/PageSeo";
 
 const NotFound = () => {
   const location = useLocation();
@@ -15,6 +17,12 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <PageSeo 
+        title="Page Not Found | Recipe Alchemist"
+        description="Sorry, we couldn't find the page you're looking for. It might have been moved or doesn't exist."
+        ogType="website"
+      />
+      
       <div className="max-w-md w-full text-center sm:text-left">
         <h1 className="text-2xl md:text-3xl font-bold mb-4">Page Not Found</h1>
         <p className="text-base text-muted-foreground mb-8">

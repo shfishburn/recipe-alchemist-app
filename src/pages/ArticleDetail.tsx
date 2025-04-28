@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ImageIcon, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -334,18 +334,25 @@ const ArticleDetail = () => {
       "image": generatedImage || "https://recipealchemist.com/images/default-article-image.jpg",
       "author": {
         "@type": "Organization",
-        "name": authorName
+        "name": authorName,
+        "url": "https://recipealchemist.com"
       },
       "publisher": {
         "@type": "Organization",
         "name": "Recipe Alchemist",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://recipealchemist.com/logo.png"
+          "url": "https://recipealchemist.com/lovable-uploads/7d2f98f4-6026-4582-bbe4-e5c69edf0dc9.png",
+          "width": "192",
+          "height": "192"
         }
       },
       "datePublished": publishDate,
-      "dateModified": publishDate
+      "dateModified": publishDate,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `https://recipealchemist.com/how-it-works/${slug}`
+      }
     };
   };
 
@@ -870,14 +877,12 @@ const ArticleDetail = () => {
   const getMetaTags = () => {
     const title = `${articleTitle} | Recipe Alchemist`;
     const keywords = `${slug}, recipe science, nutrition analysis, AI cooking, food science`;
+    const fullImageUrl = generatedImage || "https://recipealchemist.com/images/default-article-image.jpg";
     
     return (
       <Helmet>
         <title>{title}</title>
-        <meta 
-          name="description" 
-          content={articleDescription} 
-        />
+        <meta name="description" content={articleDescription} />
         <meta name="keywords" content={keywords} />
         <link rel="canonical" href={`https://recipealchemist.com/how-it-works/${slug}`} />
         
@@ -886,13 +891,15 @@ const ArticleDetail = () => {
         <meta property="og:title" content={title} />
         <meta property="og:description" content={articleDescription} />
         <meta property="og:url" content={`https://recipealchemist.com/how-it-works/${slug}`} />
-        {generatedImage && <meta property="og:image" content={generatedImage} />}
+        <meta property="og:image" content={fullImageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={articleDescription} />
-        {generatedImage && <meta name="twitter:image" content={generatedImage} />}
+        <meta name="twitter:image" content={fullImageUrl} />
         
         {/* Schema.org structured data */}
         <script type="application/ld+json">
