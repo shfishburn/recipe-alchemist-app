@@ -20,8 +20,8 @@ export const ArticlesList = () => {
   const articles: Article[] = [
     {
       id: 'intelligent-cooking',
-      title: 'AI Makes Cooking Intelligent',
-      description: 'Discover how our AI analyzes recipes for nutrition, cooking science, and ingredient interactions.',
+      title: 'How Nutrition Analysis Works',
+      description: 'The science behind accurate recipe nutrition calculations',
       icon: <Lightbulb className="h-10 w-10 text-recipe-blue" />,
       slug: 'intelligent-cooking'
     },
