@@ -10,10 +10,10 @@ export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
 
   const navigationLinks = [
-    { name: 'How it Works', path: '/how-it-works', requiresAuth: false },
     { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
     { name: 'Create Recipe', path: '/build', requiresAuth: true },
     { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
+    { name: 'How it Works', path: '/how-it-works', requiresAuth: false },
   ];
 
   // Filter links based on authentication status
