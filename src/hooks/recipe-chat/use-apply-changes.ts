@@ -131,8 +131,18 @@ export const useApplyChanges = (recipe: Recipe) => {
             if (newImageUrl) {
               // If image generation succeeds, update the recipe image separately
               console.log("Updating recipe with new image URL:", newImageUrl);
+              // Fix: Use a type assertion with "as unknown as Recipe" to correctly handle the ingredient transformation
+              const updatedRecipeWithImage = { 
+                ...updatedRecipe, 
+                image_url: newImageUrl,
+                // Ensure ingredients are properly typed for the Recipe interface
+                ingredients: Array.isArray(updatedRecipe.ingredients) 
+                  ? updatedRecipe.ingredients as unknown as Ingredient[]
+                  : []
+              } as unknown as Recipe;
+              
               await updateRecipe(
-                { ...updatedRecipe, image_url: newImageUrl } as Recipe, 
+                updatedRecipeWithImage,
                 chatMessage, 
                 user.id,
                 newImageUrl
