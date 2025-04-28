@@ -16,6 +16,8 @@ import { Separator } from '@/components/ui/separator';
 import { ScienceNotes } from "@/components/recipe-detail/notes/ScienceNotes";
 import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -38,9 +40,31 @@ const RecipeDetail = () => {
     setChatOpen(true);
   };
   
-  const handleNotesUpdate = (notes: string) => {
+  const handleNotesUpdate = async (notes: string) => {
     if (recipe) {
-      recipe.chef_notes = notes;
+      try {
+        const { error } = await supabase
+          .from("recipes")
+          .update({ chef_notes: notes })
+          .eq("id", recipe.id);
+
+        if (error) throw error;
+        
+        // Update local state
+        recipe.chef_notes = notes;
+        
+        toast({
+          title: "Notes saved",
+          description: "Your chef notes have been updated successfully.",
+        });
+      } catch (error) {
+        console.error("Error saving notes:", error);
+        toast({
+          title: "Error saving notes",
+          description: "There was a problem saving your notes. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
