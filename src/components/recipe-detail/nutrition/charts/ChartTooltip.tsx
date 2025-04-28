@@ -81,7 +81,8 @@ export function ChartTooltip({ active, payload, showPercentage = false }: ChartT
         <>
           <div className="mt-2 pt-2 border-t border-gray-200">
             <p className="text-gray-500">{nutrientInfo.description}</p>
-            {nutrientInfo.energyPerGram && (
+            {/* Check if energyPerGram exists before trying to use it */}
+            {'energyPerGram' in nutrientInfo && (
               <p className="text-gray-500 mt-1">
                 Provides {nutrientInfo.energyPerGram} calories per gram
               </p>

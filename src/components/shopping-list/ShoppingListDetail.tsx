@@ -12,6 +12,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  TooltipProvider
 } from "@/components/ui/tooltip";
 
 interface ShoppingListDetailProps {
@@ -126,19 +127,21 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
                   <span className="flex items-center gap-2">
                     <span>{item.quantity} {item.unit} {item.name}</span>
                     {(item.quality_indicators || item.storage_tips) && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          {item.quality_indicators && (
-                            <p className="mb-1">{item.quality_indicators}</p>
-                          )}
-                          {item.storage_tips && (
-                            <p className="text-sm text-muted-foreground">{item.storage_tips}</p>
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            {item.quality_indicators && (
+                              <p className="mb-1">{item.quality_indicators}</p>
+                            )}
+                            {item.storage_tips && (
+                              <p className="text-sm text-muted-foreground">{item.storage_tips}</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </span>
                   {item.notes && (

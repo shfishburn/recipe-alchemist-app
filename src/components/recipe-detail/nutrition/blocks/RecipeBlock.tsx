@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoIcon } from 'lucide-react';
 import { ChartTooltip } from '../charts/ChartTooltip';
 import { NUTRITION_COLORS } from './personal/constants';
@@ -166,12 +166,14 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium">Macronutrient Distribution by Weight</h4>
               <TooltipProvider>
-                <TooltipTrigger asChild>
-                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-xs">Shows the percentage breakdown of protein, carbs, and fat by weight (grams) in this recipe.</p>
-                </TooltipContent>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">Shows the percentage breakdown of protein, carbs, and fat by weight (grams) in this recipe.</p>
+                  </TooltipContent>
+                </UITooltip>
               </TooltipProvider>
             </div>
             <div className={`${isMobile ? 'h-52' : 'h-56'} flex flex-col justify-center`}>
@@ -219,12 +221,14 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium">Calorie Source Breakdown</h4>
               <TooltipProvider>
-                <TooltipTrigger asChild>
-                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-xs">Shows the percentage of calories provided by each macronutrient. Note that fat has 9 calories per gram, while protein and carbs have 4 calories per gram.</p>
-                </TooltipContent>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-xs">Shows the percentage of calories provided by each macronutrient. Note that fat has 9 calories per gram, while protein and carbs have 4 calories per gram.</p>
+                  </TooltipContent>
+                </UITooltip>
               </TooltipProvider>
             </div>
             <div className={`${isMobile ? 'h-52' : 'h-56'} flex flex-col justify-center`}>
