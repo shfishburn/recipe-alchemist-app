@@ -28,15 +28,21 @@ export const useApplyChanges = (recipe: Recipe) => {
         (chatMessage.changes_suggested.ingredients && 
          chatMessage.changes_suggested.ingredients.mode === 'replace')
       ) {
-        imageUrl = await generateRecipeImage(
-          chatMessage.changes_suggested.title || recipe.title,
-          chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
-          Array.isArray(chatMessage.changes_suggested.instructions) 
-            ? chatMessage.changes_suggested.instructions.map(instr => 
-                typeof instr === 'string' ? instr : instr.action
-              ) 
-            : recipe.instructions,
-        );
+        try {
+          imageUrl = await generateRecipeImage(
+            chatMessage.changes_suggested.title || recipe.title,
+            chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
+            Array.isArray(chatMessage.changes_suggested.instructions) 
+              ? chatMessage.changes_suggested.instructions.map(instr => 
+                  typeof instr === 'string' ? instr : instr.action
+                ) 
+              : recipe.instructions,
+            recipe.id
+          );
+        } catch (error) {
+          console.error('Failed to generate new recipe image:', error);
+          // Continue with existing image if generation fails
+        }
       }
 
       const newRecipe = await updateRecipe(recipe, chatMessage, user.id, imageUrl);
@@ -47,15 +53,15 @@ export const useApplyChanges = (recipe: Recipe) => {
     onSuccess: (newRecipe) => {
       toast({
         title: "Changes applied",
-        description: `Created version ${newRecipe.version_number} of the recipe with scientific improvements`,
+        description: `Created version ${newRecipe?.version_number || 'new'} of the recipe with scientific improvements`,
       });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
-      window.location.href = `/recipes/${newRecipe.id}`;
+      window.location.href = `/recipes/${recipe.id}`;
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to apply changes',
         variant: "destructive",
       });
     },

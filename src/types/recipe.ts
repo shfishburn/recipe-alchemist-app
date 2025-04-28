@@ -44,6 +44,6 @@ export interface Recipe {
   dietary?: string;
   flavor_tags?: string[];
   nutrition?: Nutrition;
-  science_notes?: string[];  // Updated to be string array
+  science_notes: string[];  // Updated to be required string array
   chef_notes?: string;
 }

@@ -20,7 +20,8 @@ export async function updateRecipe(
     servings: recipe.servings || 4,
     // Add these properties to fix the TypeScript errors
     instructions: recipe.instructions,
-    ingredients: recipe.ingredients
+    ingredients: recipe.ingredients,
+    science_notes: chatMessage.changes_suggested.science_notes || recipe.science_notes || []
   };
 
   if (chatMessage.changes_suggested.instructions) {
@@ -49,6 +50,7 @@ export async function updateRecipe(
       ...updatedRecipe,
       ingredients: updatedRecipe.ingredients as unknown as Json,
       nutrition: updatedRecipe.nutrition as unknown as Json,
+      science_notes: updatedRecipe.science_notes as unknown as Json,
       updated_at: new Date().toISOString()
     })
     .eq('id', recipe.id)

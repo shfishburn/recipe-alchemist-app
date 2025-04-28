@@ -8,7 +8,10 @@ interface ScienceNotesProps {
 }
 
 export function ScienceNotes({ recipe }: ScienceNotesProps) {
-  if (!recipe.science_notes?.length) return null;
+  // Guard against missing or empty science_notes
+  const hasNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0;
+  
+  if (!hasNotes) return null;
 
   return (
     <Card>
