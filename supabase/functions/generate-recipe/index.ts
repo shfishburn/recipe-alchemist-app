@@ -39,78 +39,81 @@ serve(async (req) => {
       recipeRequest 
     } = requestData;
 
-    const prompt = `Build a ${dietary} ${cuisine} recipe that:
+    const prompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, create a ${dietary} ${cuisine} recipe that:
     • Was requested as: "${recipeRequest || 'no specific request'}"
     • Has ${servings} servings
     • Features flavor tags: ${flavorTags.join(', ')}
     • ≤ ${maxCalories} kcal per serving
     • Cookable in ≤ ${maxMinutes} minutes
 
-    Provide detailed scientific explanations for techniques, ingredient choices, and nutritional impact. Include sensory cues and troubleshooting guidance. Respond only in strict JSON following the provided schema.`;
+    Create a recipe with precise, science-backed techniques that:
 
-    console.log('Calling OpenAI with prompt:', prompt);
+    1. Utilizes Chemical Processes:
+       - Leverages Maillard reactions, caramelization, and enzymatic activities
+       - Optimizes heat transfer for flavor development
+       - Controls protein denaturation and starch gelatinization
+       - Considers flavor molecule interactions
+
+    2. Provides Scientific Precision:
+       - Exact temperatures, timing, and visual/tactile doneness cues
+       - Detailed ingredient preparation impact on texture/flavor
+       - Equipment recommendations with thermal justification
+       - Common issues troubleshooting with scientific basis
+
+    3. Optimizes Nutrition:
+       - Details nutrient changes during cooking
+       - Explains nutrient bioavailability
+       - Provides evidence-based health modifications
+       - Includes nutritional calculation margins
+
+    4. Details Ingredient Science:
+       - Explains ingredient chemical roles
+       - Lists quality indicators
+       - Provides scientific substitutions
+       - Covers temperature/pH/freshness impacts
+
+    Return ONLY valid JSON matching this schema:
+    {
+      "title": string,
+      "servings": number,
+      "prep_time_min": number,
+      "cook_time_min": number,
+      "ingredients": [{ 
+        "qty": number, 
+        "unit": string, 
+        "item": string, 
+        "notes": string 
+      }],
+      "instructions": string[],
+      "nutrition": {
+        "kcal": number,
+        "protein_g": number,
+        "carbs_g": number,
+        "fat_g": number,
+        "fiber_g": number,
+        "sugar_g": number,
+        "sodium_mg": number
+      },
+      "science_notes": string[],
+      "tagline": string,
+      "image_prompt": string,
+      "reasoning": string,
+      "equipmentNeeded": string[],
+      "original_request": string
+    }`;
+
+    console.log('Calling OpenAI with prompt');
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: `You are CHEF-RD-PRO, a culinary scientist and registered dietitian who develops recipes with López-Alt-style precision and explanation. Follow these guidelines:
-
-1. Recipe Development Approach:
-   - Test and explain WHY techniques work, not just WHAT to do
-   - Provide precise measurements, temperatures, and timing with scientific justification
-   - Explain the chemical/physical transformations occurring during cooking
-   - Include visual/tactile cues that indicate doneness or proper technique
-   - Anticipate potential failure points and provide troubleshooting tips
-
-2. Nutritional Methodology:
-   - Calculate evidence-based nutritional values with error margins
-   - Explain how cooking methods affect nutritional content (e.g., fat absorption, vitamin retention)
-   - Detail how ingredient substitutions impact both flavor and nutritional profile
-   - Provide macro and micronutrient ratios with functional benefits
-
-3. Ingredient Intelligence:
-   - Specify ingredient quality markers (e.g., "extra-virgin olive oil with peppery finish")
-   - Explain WHY certain ingredients work better than others
-   - Offer scientifically-validated substitution options with expected outcome differences
-   - Note how ingredient temperature, freshness, and sourcing impact results
-
-4. Culinary Principles:
-   - Balance flavors using acid, salt, fat, heat, and umami relationships
-   - Incorporate texture contrasts with scientific explanation
-   - Explain how layering flavors creates depth
-   - Consider how serving temperature affects taste perception
-
-Return ONLY valid JSON matching this schema:
-{
-  "title": string,
-  "servings": number,
-  "prep_time_min": number,
-  "cook_time_min": number,
-  "ingredients": [{ "qty": number, "unit": string, "item": string, "notes": string }],
-  "instructions": string[],
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number,
-    "sugar_g": number,
-    "sodium_mg": number
-  },
-  "science_notes": string[],
-  "tagline": string,
-  "image_prompt": string,
-  "reasoning": string,
-  "original_request": string,
-  "fdc_ids": number[]
-}`
-          },
-          { role: "user", content: prompt }
-        ]
+            content: prompt
+          }
+        ],
+        response_format: { type: "json_object" }
       });
 
       console.log('Received OpenAI response:', JSON.stringify(response.choices[0].message.content));
