@@ -112,14 +112,15 @@ export function RecipeCarousel() {
         </CarouselContent>
         <CarouselPrevious className="-left-3 md:-left-4 lg:-left-6" />
         <CarouselNext className="-right-3 md:-right-4 lg:-right-6" />
-        <div className="absolute -bottom-8 w-full">
-          <CarouselDots 
-            recipes={featuredRecipes} 
-            selectedIndex={selectedIndex} 
-          />
-          <div className="text-center text-xs md:text-sm text-muted-foreground mt-2" aria-live="polite">
-            Slide {selectedIndex + 1} of {featuredRecipes.length}
-          </div>
+      </Carousel>
+      
+      <div className="absolute -bottom-8 w-full">
+        <CarouselDots 
+          recipes={featuredRecipes} 
+          selectedIndex={selectedIndex} 
+        />
+        <div className="text-center text-xs md:text-sm text-muted-foreground mt-2" aria-live="polite">
+          Slide {selectedIndex + 1} of {featuredRecipes.length}
         </div>
       </div>
     </div>
