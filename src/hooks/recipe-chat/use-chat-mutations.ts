@@ -54,19 +54,25 @@ export const useChatMutations = (recipe: Recipe) => {
         throw new Error(response.data.error);
       }
 
+      // Extract and validate the AI response content
+      const aiResponse = response.data.textResponse || response.data.response;
+      if (!aiResponse) {
+        console.error("No valid response content found in:", response.data);
+        throw new Error("Invalid AI response format");
+      }
+
       // Insert the chat message into the database
-      console.log("Saving chat message to database");
+      console.log("Saving chat message to database with response:", aiResponse);
       const { data, error } = await supabase
         .from('recipe_chats')
         .insert({
           recipe_id: recipe.id,
           user_message: message,
-          ai_response: response.data.response,
+          ai_response: aiResponse,
           changes_suggested: response.data.changes || null,
           source_type: sourceType || 'manual',
           source_url: sourceUrl,
           source_image: sourceImage
-          // No need to include follow_up_questions as it's not in the database schema
         })
         .select()
         .single();
