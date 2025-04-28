@@ -45,7 +45,7 @@ export const ArticlesList = () => {
     {
       id: 'substitutions',
       title: 'Smart Ingredient Substitutions',
-      description: 'See how our AI suggests perfect substitutions while maintaining flavor profiles and nutrition.',
+      description: 'Great cooking isn\'t rigid — it\'s flexible, creative, and alive. With our AI assistant, you can customize recipes in real time, making smart ingredient swaps that preserve flavor, structure, and nutrition. Whether you\'re cooking dairy-free, swapping to whole grains, or adjusting for allergies, our system guides you with real food science — so your meals stay joyful, nourishing, and entirely yours.',
       icon: <Utensils className="h-10 w-10 text-recipe-orange" />,
       slug: 'substitutions',
       keywords: ['ingredient substitutions', 'flavor profiles', 'nutrition balance', 'AI cooking', 'recipe alternatives']
