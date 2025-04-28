@@ -1,4 +1,3 @@
-
 export interface Ingredient {
   qty: number;
   unit: string;
@@ -48,4 +47,3 @@ export interface Recipe {
   science_notes: string[];
   chef_notes?: string;
 }
-
