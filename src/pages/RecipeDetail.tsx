@@ -22,6 +22,7 @@ const RecipeDetail = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   useEffect(() => {
     if (recipe) {
@@ -36,11 +37,21 @@ const RecipeDetail = () => {
     setChatOpen(true);
   };
 
-  const handleNotesUpdate = (notes: string) => {
-    if (recipe) {
-      recipe.chef_notes = notes;
+  const handleToggleAnalysis = () => {
+    if (!showAnalysis) {
+      setIsAnalyzing(true);
     }
+    setShowAnalysis(!showAnalysis);
   };
+
+  useEffect(() => {
+    if (showAnalysis) {
+      const timer = setTimeout(() => {
+        setIsAnalyzing(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showAnalysis]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -93,8 +104,9 @@ const RecipeDetail = () => {
                 recipe={recipe} 
                 sticky={true} 
                 onOpenChat={handleOpenChat}
-                onToggleAnalysis={() => setShowAnalysis(!showAnalysis)}
+                onToggleAnalysis={handleToggleAnalysis}
                 showingAnalysis={showAnalysis}
+                isAnalyzing={isAnalyzing}
               />
               
               <RecipeChatDrawer 

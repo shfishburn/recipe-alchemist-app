@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, FlaskConical, MessageSquare, Printer, Share2, Trash2 } from 'lucide-react';
+import { ChefHat, FlaskConical, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Recipe } from '@/types/recipe';
@@ -12,9 +12,17 @@ interface RecipeActionsProps {
   onOpenChat: () => void;
   onToggleAnalysis: () => void;
   showingAnalysis: boolean;
+  isAnalyzing?: boolean;
 }
 
-export function RecipeActions({ recipe, sticky = false, onOpenChat, onToggleAnalysis, showingAnalysis }: RecipeActionsProps) {
+export function RecipeActions({ 
+  recipe, 
+  sticky = false, 
+  onOpenChat, 
+  onToggleAnalysis, 
+  showingAnalysis,
+  isAnalyzing = false 
+}: RecipeActionsProps) {
   const navigate = useNavigate();
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const [isSticky, setIsSticky] = React.useState(false);
@@ -73,9 +81,14 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat, onToggleAnal
             size={isMobile ? "lg" : "lg"}
             className={`w-full ${showingAnalysis ? 'bg-sky-600' : 'bg-sky-400'} hover:bg-sky-500 text-white`}
             onClick={onToggleAnalysis}
+            disabled={isAnalyzing}
           >
-            <FlaskConical className="h-5 w-5 mr-2" />
-            {isMobile ? "Analyze" : "Analyze Recipe"}
+            {isAnalyzing ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            ) : (
+              <FlaskConical className="h-5 w-5 mr-2" />
+            )}
+            {isMobile ? (isAnalyzing ? "Analyzing..." : "Analyze") : (isAnalyzing ? "Analyzing Recipe..." : "Analyze Recipe")}
           </Button>
           
           <Button 
@@ -89,7 +102,6 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat, onToggleAnal
           </Button>
         </div>
 
-        {/* Secondary Actions */}
         <div className="flex justify-center gap-2">
           <Button
             variant="outline"
