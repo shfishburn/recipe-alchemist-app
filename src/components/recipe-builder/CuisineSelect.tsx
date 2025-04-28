@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Select,
@@ -10,10 +9,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Restructured with unique IDs to avoid duplicates
 interface CuisineOption {
   id: string;
   value: string;
@@ -101,7 +99,6 @@ const cuisineCategories: CuisineCategory[] = [
   },
 ];
 
-// For displaying the selected cuisine name properly
 const getCuisineLabel = (value: string): string => {
   for (const category of cuisineCategories) {
     const option = category.options.find(opt => opt.value === value);
@@ -143,12 +140,16 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
                   <SelectItem 
                     key={cuisine.id} 
                     value={cuisine.value}
-                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer data-[state=checked]:bg-blue-50/50 data-[state=checked]:text-blue-600"
+                    className={cn(
+                      "px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer relative",
+                      "data-[state=checked]:bg-blue-50 data-[state=checked]:text-blue-600",
+                      "focus:bg-blue-50 focus:text-blue-600"
+                    )}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="truncate mr-2">{cuisine.label}</span>
+                    <div className="flex items-center justify-between w-full pr-6">
+                      <span className="truncate">{cuisine.label}</span>
                       {value === cuisine.value && (
-                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                        <Check className="h-4 w-4 text-blue-600 absolute right-4" />
                       )}
                     </div>
                   </SelectItem>
