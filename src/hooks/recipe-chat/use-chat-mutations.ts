@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
-import type { Json } from '@/integrations/supabase/types';
 
 export const useChatMutations = (recipe: Recipe) => {
   const { toast } = useToast();
@@ -22,7 +21,7 @@ export const useChatMutations = (recipe: Recipe) => {
       toast({
         title: "Processing your request",
         description: sourceType === 'manual' 
-          ? "Our culinary scientist is analyzing your recipe..."
+          ? "Our culinary scientist is analyzing your request..."
           : "Extracting recipe information...",
       });
       
@@ -121,6 +120,9 @@ export const useChatMutations = (recipe: Recipe) => {
         description: error.message || "Failed to get AI response",
         variant: "destructive",
       });
+      // Even though there was an error, we should invalidate the query to refresh the chat history
+      // This helps clear any optimistic messages
+      queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
     },
   });
 

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatResponse } from './ChatResponse';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 
 interface ChatMessageProps {
@@ -9,10 +10,18 @@ interface ChatMessageProps {
   setMessage: (message: string) => void;
   applyChanges: (chat: ChatMessageType) => void;
   isApplying: boolean;
+  isOptimistic?: boolean;
 }
 
-export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
+export function ChatMessage({ 
+  chat, 
+  setMessage, 
+  applyChanges, 
+  isApplying, 
+  isOptimistic = false 
+}: ChatMessageProps) {
   const handleApplyChanges = () => {
+    if (isOptimistic) return; // Don't allow applying changes from optimistic messages
     console.log("Applying changes from chat:", chat.id);
     applyChanges(chat);
   };
@@ -50,21 +59,35 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
         </div>
       </div>
       
-      <div className="flex items-start gap-4">
-        <Avatar className="h-10 w-10 bg-primary/10 border-2 border-primary/25">
-          <AvatarImage src="/chef-ai.png" alt="Chef AI" />
-          <AvatarFallback>AI</AvatarFallback>
-        </Avatar>
-        <ChatResponse 
-          response={chat.ai_response}
-          changesSuggested={chat.changes_suggested}
-          followUpQuestions={followUpQuestions}
-          setMessage={setMessage}
-          onApplyChanges={handleApplyChanges}
-          isApplying={isApplying}
-          applied={chat.applied || false}
-        />
-      </div>
+      {(!isOptimistic && chat.ai_response) ? (
+        <div className="flex items-start gap-4">
+          <Avatar className="h-10 w-10 bg-primary/10 border-2 border-primary/25">
+            <AvatarImage src="/chef-ai.png" alt="Chef AI" />
+            <AvatarFallback>AI</AvatarFallback>
+          </Avatar>
+          <ChatResponse 
+            response={chat.ai_response}
+            changesSuggested={chat.changes_suggested}
+            followUpQuestions={followUpQuestions}
+            setMessage={setMessage}
+            onApplyChanges={handleApplyChanges}
+            isApplying={isApplying}
+            applied={chat.applied || false}
+          />
+        </div>
+      ) : isOptimistic ? null : (
+        <div className="flex items-start gap-4">
+          <Avatar className="h-10 w-10 bg-primary/10 border-2 border-primary/25">
+            <AvatarImage src="/chef-ai.png" alt="Chef AI" />
+            <AvatarFallback>AI</AvatarFallback>
+          </Avatar>
+          <div className="bg-white rounded-[20px] rounded-tl-[5px] p-6 shadow-sm w-full max-w-[calc(100%-60px)]">
+            <Skeleton className="h-4 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

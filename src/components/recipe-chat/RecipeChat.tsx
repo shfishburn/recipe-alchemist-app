@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -7,12 +7,15 @@ import type { Recipe } from '@/types/recipe';
 import { RecipeChatInput } from './RecipeChatInput';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
+import type { OptimisticMessage } from '@/types/chat';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
     message,
     setMessage,
     chatHistory,
+    optimisticMessages,
     isLoadingHistory,
     sendMessage,
     isSending,
@@ -36,6 +39,13 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       );
     }
   }, [chatHistory]);
+
+  // Auto-scroll to bottom when new messages appear
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory, optimisticMessages]);
 
   const handleUpload = async (file: File) => {
     uploadRecipeImage(file);
@@ -68,7 +78,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     <Card className="bg-[#F1F0FB]">
       <CardContent className="pt-6">
         <div className="space-y-6">
-          {chatHistory.length === 0 && (
+          {chatHistory.length === 0 && optimisticMessages.length === 0 && (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
                 Ask for cooking techniques, scientific insights, or modifications!
@@ -78,6 +88,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
           )}
           
           <div className="space-y-6">
+            {/* Render confirmed chat messages */}
             {chatHistory.map((chat) => (
               <ChatMessage
                 key={chat.id}
@@ -87,6 +98,29 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                 isApplying={isApplying}
               />
             ))}
+            
+            {/* Render optimistic messages that haven't been confirmed yet */}
+            {optimisticMessages.map((chat, index) => (
+              <div key={`optimistic-${index}`} className="opacity-80">
+                <ChatMessage
+                  chat={chat}
+                  setMessage={setMessage}
+                  applyChanges={applyChanges.mutate}
+                  isApplying={isApplying}
+                  isOptimistic={true}
+                />
+              </div>
+            ))}
+            
+            {/* Show processing indicator when sending */}
+            {isSending && (
+              <div className="flex justify-start pl-14 mt-2">
+                <ChatProcessingIndicator stage="analyzing" />
+              </div>
+            )}
+            
+            {/* Invisible element for auto-scrolling */}
+            <div ref={messagesEndRef} />
           </div>
 
           <RecipeChatInput

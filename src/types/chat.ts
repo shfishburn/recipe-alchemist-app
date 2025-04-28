@@ -32,6 +32,10 @@ export interface ChatMessage {
   follow_up_questions?: string[];
 }
 
+export interface OptimisticMessage extends ChatMessage {
+  pending?: boolean;
+}
+
 export interface AIResponse {
   textResponse: string;
   changes: ChangesResponse;

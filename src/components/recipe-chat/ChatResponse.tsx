@@ -30,16 +30,14 @@ export function ChatResponse({
     
     try {
       // Enhanced JSON parsing with better text extraction
-      let parsedResponse;
       let text = '';
       
       try {
-        parsedResponse = JSON.parse(response);
+        const parsedResponse = JSON.parse(response);
         // Extract the text content from the parsed JSON
         text = parsedResponse.textResponse || parsedResponse.response || '';
       } catch (e) {
         // If it's not valid JSON, use the raw response as text
-        console.log("Response is not valid JSON, using as plain text");
         text = response;
       }
       
@@ -59,26 +57,24 @@ export function ChatResponse({
 
       // Enhanced ingredient highlighting
       if (changesSuggested?.ingredients?.items && Array.isArray(changesSuggested.ingredients.items)) {
-        console.log("Formatting ingredients in response");
-        
         // Create a map of normalized ingredient names to their display text
         changesSuggested.ingredients.items.forEach((ingredient: any) => {
           if (ingredient && typeof ingredient.item === 'string') {
-            const displayText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
             // Make sure ingredient mention in text is highlighted
             const regex = new RegExp(`${ingredient.item}`, 'gi');
             text = text.replace(regex, `**${ingredient.item}**`);
             
             // Also highlight quantity mentions
-            const qtyRegex = new RegExp(`${ingredient.qty} ${ingredient.unit}\\s+(?!\\*\\*)`, 'gi');
-            text = text.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
+            if (ingredient.qty && ingredient.unit) {
+              const qtyRegex = new RegExp(`${ingredient.qty} ${ingredient.unit}\\s+(?!\\*\\*)`, 'gi');
+              text = text.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
+            }
           }
         });
       }
 
       // Format instructions with better context
       if (changesSuggested?.instructions && Array.isArray(changesSuggested.instructions)) {
-        console.log("Formatting instructions in response");
         changesSuggested.instructions.forEach((instruction: string | { action: string }) => {
           const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
           if (instructionText && !instructionText.includes('**')) {

@@ -1,10 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage, ChangesResponse } from '@/types/chat';
+import type { ChatMessage, OptimisticMessage, ChangesResponse } from '@/types/chat';
 import { useChatMutations } from './recipe-chat/use-chat-mutations';
 import { useApplyChanges } from './recipe-chat/use-apply-changes';
 
@@ -12,6 +12,7 @@ export type { ChatMessage };
 
 export const useRecipeChat = (recipe: Recipe) => {
   const [message, setMessage] = useState('');
+  const [optimisticMessages, setOptimisticMessages] = useState<OptimisticMessage[]>([]);
   const { toast } = useToast();
 
   const { data: chatHistory = [], isLoading: isLoadingHistory } = useQuery({
@@ -22,6 +23,7 @@ export const useRecipeChat = (recipe: Recipe) => {
         .from('recipe_chats')
         .select('*')
         .eq('recipe_id', recipe.id)
+        .eq('deleted_at', null)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -68,17 +70,24 @@ export const useRecipeChat = (recipe: Recipe) => {
             }
           } catch (e) {
             // If parsing fails, just continue with the empty array
-            console.log("Could not parse follow-up questions from response, using default empty array");
           }
         }
         
         return chatMessage;
       });
     },
+    refetchOnWindowFocus: false,
   });
 
   const mutation = useChatMutations(recipe);
   const applyChanges = useApplyChanges(recipe);
+
+  // Clear optimistic messages when chat history is updated
+  useCallback(() => {
+    if (chatHistory && chatHistory.length > 0) {
+      setOptimisticMessages([]);
+    }
+  }, [chatHistory]);
 
   const uploadRecipeImage = async (file: File) => {
     try {
@@ -86,6 +95,14 @@ export const useRecipeChat = (recipe: Recipe) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64Image = e.target?.result as string;
+        
+        // Add optimistic message
+        const optimisticMessage: OptimisticMessage = {
+          user_message: "Analyzing recipe image...",
+          pending: true
+        };
+        setOptimisticMessages([optimisticMessage]);
+        
         mutation.mutate({
           message: "Please analyze this recipe image",
           sourceType: 'image',
@@ -105,6 +122,14 @@ export const useRecipeChat = (recipe: Recipe) => {
 
   const submitRecipeUrl = (url: string) => {
     console.log("Processing URL submission:", url);
+    
+    // Add optimistic message
+    const optimisticMessage: OptimisticMessage = {
+      user_message: `Analyzing recipe from: ${url}`,
+      pending: true
+    };
+    setOptimisticMessages([optimisticMessage]);
+    
     mutation.mutate({
       message: "Please analyze this recipe URL",
       sourceType: 'url',
@@ -122,6 +147,15 @@ export const useRecipeChat = (recipe: Recipe) => {
       return;
     }
     
+    // Create optimistic message
+    const optimisticMessage: OptimisticMessage = {
+      user_message: message,
+      pending: true
+    };
+    
+    // Add to optimistic messages queue
+    setOptimisticMessages([...optimisticMessages, optimisticMessage]);
+    
     console.log("Sending chat message:", message.substring(0, 30) + (message.length > 30 ? '...' : ''));
     mutation.mutate({ message });
     setMessage(''); // Clear the input after sending
@@ -131,6 +165,7 @@ export const useRecipeChat = (recipe: Recipe) => {
     message,
     setMessage,
     chatHistory,
+    optimisticMessages,
     isLoadingHistory,
     sendMessage,
     isSending: mutation.isPending,

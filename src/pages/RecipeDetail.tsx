@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -19,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
+import { Footer } from '@/components/ui/footer';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -150,7 +152,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-6 sm:mt-8">
+                <div className="mt-6 sm:mt-8 mb-20">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}
@@ -177,6 +179,7 @@ const RecipeDetail = () => {
           ) : null}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
