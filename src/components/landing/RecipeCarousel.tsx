@@ -48,8 +48,7 @@ export function RecipeCarousel() {
     );
   }
 
-  // The recipes array is of type from the database, but we're passing it to RecipeCard
-  // which expects Recipe from @/types/recipe - the RecipeCard component now handles both types
+  // The recipes are now properly typed as Recipe[] from our hook
   const featuredRecipes = recipes?.slice(0, 3) || [];
 
   return (

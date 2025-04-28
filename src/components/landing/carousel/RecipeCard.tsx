@@ -40,10 +40,13 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
             )}
             {typeof recipe.nutrition === 'object' && 
              recipe.nutrition && 
-             'calories' in recipe.nutrition && (
+             ('calories' in recipe.nutrition || 'kcal' in recipe.nutrition) && (
               <span>
-                {recipe.nutrition.calories !== null ? 
-                  `${recipe.nutrition.calories} calories` : ''}
+                {recipe.nutrition.calories !== undefined 
+                  ? `${recipe.nutrition.calories} calories` 
+                  : recipe.nutrition.kcal !== undefined
+                  ? `${recipe.nutrition.kcal} calories`
+                  : ''}
               </span>
             )}
           </div>
