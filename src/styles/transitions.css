@@ -6,6 +6,8 @@
     will-change: transform, opacity;
     backface-visibility: hidden;
     transform-style: preserve-3d;
+    perspective: 1000px;
+    transform-origin: top;
     contain: layout paint;
   }
 
@@ -20,7 +22,7 @@
   @keyframes pageEnter {
     from {
       opacity: 0;
-      transform: translate3d(0, 5px, 0);
+      transform: translate3d(0, -3px, 0);
     }
     to {
       opacity: 1;
@@ -35,7 +37,7 @@
     }
     to {
       opacity: 0;
-      transform: translate3d(0, -5px, 0);
+      transform: translate3d(0, -3px, 0);
     }
   }
 }
@@ -43,7 +45,7 @@
 /* Animation utilities for elements */
 .animate-enter {
   opacity: 0;
-  transform: translateY(5px);
+  transform: translateY(3px);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 

@@ -11,17 +11,14 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState("fadeIn");
   const containerRef = useRef<HTMLDivElement>(null);
+  const transitionTimeRef = useRef<number | null>(null);
   
   useEffect(() => {
     if (location !== displayLocation) {
-      // Store current scroll position before transition
-      if (window.history.state && typeof window.history.state.scroll === 'number') {
-        sessionStorage.setItem(`scroll_${displayLocation.pathname}`, window.history.state.scroll.toString());
-      } else {
-        sessionStorage.setItem(`scroll_${displayLocation.pathname}`, window.scrollY.toString());
-      }
+      // Store scroll position before transition
+      sessionStorage.setItem(`scroll_${displayLocation.pathname}`, window.scrollY.toString());
       
-      // If we have a container reference, store its height to prevent layout shifts
+      // Preserve container height to prevent layout shifts
       if (containerRef.current) {
         const height = containerRef.current.offsetHeight;
         containerRef.current.style.minHeight = `${height}px`;
@@ -31,38 +28,45 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
       setTransitionStage("fadeOut");
       
       // After exit animation completes, update location and start entry animation
-      const timeout = setTimeout(() => {
+      if (transitionTimeRef.current) clearTimeout(transitionTimeRef.current);
+      
+      transitionTimeRef.current = window.setTimeout(() => {
         setDisplayLocation(location);
         setTransitionStage("fadeIn");
         
-        // After entry animation, restore scroll and reset min-height
-        const scrollTimeout = setTimeout(() => {
-          // Restore scroll position for new page
+        // Restoration happens in one synchronized step
+        transitionTimeRef.current = window.setTimeout(() => {
+          // Restore scroll position
           const savedScrollY = sessionStorage.getItem(`scroll_${location.pathname}`);
+          
           if (savedScrollY) {
-            window.scrollTo({ top: parseInt(savedScrollY), behavior: 'instant' });
+            window.scrollTo(0, parseInt(savedScrollY));
           } else {
-            window.scrollTo({ top: 0, behavior: 'instant' });
+            window.scrollTo(0, 0);
           }
           
-          // Reset min-height after scroll is restored
+          // Reset min-height after scroll is restored and animation completes
           if (containerRef.current) {
             containerRef.current.style.minHeight = '';
           }
-        }, 350); // Wait slightly longer than animation duration
-        
-        return () => clearTimeout(scrollTimeout);
-      }, 300); // Match the animation duration
-      
-      return () => clearTimeout(timeout);
+          
+          transitionTimeRef.current = null;
+        }, 320); // Slightly longer than the animation to ensure animation completes
+      }, 300); // Exactly match animation duration
     }
+    
+    // Clean up timeouts
+    return () => {
+      if (transitionTimeRef.current) {
+        clearTimeout(transitionTimeRef.current);
+      }
+    };
   }, [location, displayLocation]);
 
-  // Scroll to top immediately when component mounts
+  // Scroll to top on initial component mount only
   useEffect(() => {
-    // Only scroll to top on initial page load, not for transitions
     if (location.pathname === displayLocation.pathname) {
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo(0, 0);
     }
   }, []);
 
