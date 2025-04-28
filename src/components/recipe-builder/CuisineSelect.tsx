@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CuisineOption {
@@ -141,17 +140,12 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
                     key={cuisine.id} 
                     value={cuisine.value}
                     className={cn(
-                      "px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer relative",
+                      "px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer",
                       "data-[state=checked]:bg-blue-50 data-[state=checked]:text-blue-600",
                       "focus:bg-blue-50 focus:text-blue-600"
                     )}
                   >
-                    <div className="flex items-center justify-between w-full gap-3">
-                      <span className="truncate">{cuisine.label}</span>
-                      {value === cuisine.value && (
-                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
-                      )}
-                    </div>
+                    <span className="truncate">{cuisine.label}</span>
                   </SelectItem>
                 ))}
               </SelectGroup>
