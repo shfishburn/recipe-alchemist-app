@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, MessageSquare, ShoppingBag, History } from 'lucide-react';
+import { ChevronRight, CookingPot, Filter, ShoppingBag, Sparkles } from 'lucide-react';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -23,24 +23,24 @@ const FeatureCard = ({ icon, title, description }: FeatureCardProps) => {
 const Features = () => {
   const features = [
     {
-      icon: <Check className="h-6 w-6 text-recipe-blue" />,
-      title: "Create Recipe",
-      description: "Generate healthy recipes based on your preferences, ingredients, and dietary needs."
+      icon: <Sparkles className="h-6 w-6 text-recipe-blue" />,
+      title: "AI-Powered Creation",
+      description: "Generate personalized recipes based on your ingredients, dietary needs, and nutritional goals."
     },
     {
-      icon: <MessageSquare className="h-6 w-6 text-recipe-blue" />,
-      title: "Iterate with AI",
-      description: "Chat with our AI assistant to customize and perfect your recipes."
+      icon: <Filter className="h-6 w-6 text-recipe-blue" />,
+      title: "Dietary Customization",
+      description: "Tailor recipes to your specific dietary restrictions and preferences automatically."
     },
     {
-      icon: <History className="h-6 w-6 text-recipe-blue" />,
-      title: "Save & Browse",
-      description: "Store your favorite recipes and their versions for easy access anytime."
+      icon: <CookingPot className="h-6 w-6 text-recipe-blue" />,
+      title: "Interactive Cooking",
+      description: "Follow step-by-step instructions with built-in timers and cooking mode."
     },
     {
       icon: <ShoppingBag className="h-6 w-6 text-recipe-blue" />,
-      title: "Shopping List",
-      description: "Automatically create shopping lists from one or multiple recipes."
+      title: "Smart Shopping Lists",
+      description: "Generate and manage shopping lists from your favorite recipes automatically."
     }
   ];
 
@@ -48,7 +48,7 @@ const Features = () => {
     <section className="py-20 bg-gray-50 dark:bg-gray-900">
       <div className="container-page">
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="font-bold mb-4">Cook smarter, not harder</h2>
+          <h2 className="font-bold mb-4">Modern cooking made simple</h2>
           <p className="text-xl text-muted-foreground">
             Our AI-powered tools help you create delicious, healthy meals with less effort.
           </p>
