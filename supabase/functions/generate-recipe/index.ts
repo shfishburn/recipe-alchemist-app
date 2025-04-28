@@ -49,7 +49,7 @@ serve(async (req) => {
     Create a recipe with evidence-based techniques that maximize flavor through understanding of food chemistry:
     
     1. PRECISION AND TECHNIQUE:
-       - Specify exact temperatures (°F/°C) and timing with scientific rationale
+       - Specify exact temperatures (°F with °C in parentheses) and timing with scientific rationale
        - Include visual/tactile/aromatic indicators for doneness (e.g., "golden-brown with crisp edges")
        - Identify critical control points where technique impacts outcome
        - Explain how ingredient preparation (cutting style, resting times) affects flavor development
@@ -71,6 +71,12 @@ serve(async (req) => {
        - Preserve heat-sensitive nutrients through appropriate cooking techniques
        - Balance macronutrient ratios for specific dietary goals
        - Maximize nutrient bioavailability through ingredient pairing
+    
+    5. MEASUREMENT STANDARDIZATION:
+       - All measurements MUST be in imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
+       - Convert any metric values to their imperial equivalents
+       - For small quantities where precision matters, use fractions (1/4 tsp, etc.)
+       - Provide temperatures in °F with °C in parentheses where relevant
     
     Return ONLY valid JSON matching this schema:
     {

@@ -47,6 +47,12 @@ serve(async (req) => {
    - Provide scientifically-validated substitutions with reasoning
    - Explain how ingredient temperature, pH, and freshness impact outcomes
 
+5. Standardize Measurement Units:
+   - Ensure all measurements are provided in imperial units
+   - Temperature should be in °F with °C in parentheses where relevant
+   - Weight measurements should use oz/lb rather than g/kg
+   - Volume measurements should use tsp/tbsp/cups/fluid oz rather than ml/l
+
 Format your response as JSON with this exact structure:
 
 {

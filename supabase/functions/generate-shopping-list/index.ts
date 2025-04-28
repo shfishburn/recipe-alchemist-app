@@ -34,7 +34,7 @@ ${ingredientsText}
 ORGANIZATION PRINCIPLES:
 1. Group ingredients by store department (Produce, Meat, Dairy, Pantry, Specialty, etc.)
 2. Combine identical ingredients with mathematical precision and adjust quantities
-3. Standardize measurement units for consistency (metric or imperial based on recipe style)
+3. Standardize measurement units for consistency using imperial units only
 4. Prioritize ingredients by cooking sequence and perishability
 5. Flag items needing advance preparation or special handling
 
@@ -51,6 +51,12 @@ SHOPPING EFFICIENCY:
 3. Note ingredients with significant price variations between brands/sources
 4. Suggest preservation methods for unused portions
 5. Flag ingredients that require special storage after purchase
+
+MEASUREMENT STANDARDIZATION:
+- Standardize all measurements to imperial units (oz, lb, cups, etc.)
+- When converting from metric, round to practical shopping quantities
+- Use common US grocery store packaging sizes where applicable
+- For small quantities where precision matters, use fractions (1/4 tsp, etc.)
 
 Return ONLY valid JSON matching this schema:
 {
