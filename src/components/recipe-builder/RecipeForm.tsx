@@ -16,7 +16,6 @@ export interface RecipeFormData {
   url: string;
   servings: number;
   maxCalories: number;
-  maxMinutes: number;
   imageFile: File | null;
 }
 
@@ -82,7 +81,6 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
         onUrlChange={(e) => setFormData((prev) => ({ ...prev, url: e.target.value }))}
         onImageSelected={(file) => setFormData((prev) => ({ ...prev, imageFile: file }))}
         maxCalories={formData.maxCalories}
-        maxMinutes={formData.maxMinutes}
         onSettingChange={handleSettingChange}
       />
 

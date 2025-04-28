@@ -20,7 +20,6 @@ export const useRecipeForm = (onSubmit: (formData: RecipeFormData) => void, isLo
     url: '',
     servings: 2,
     maxCalories: 600,
-    maxMinutes: 30,
     imageFile: null,
   });
 

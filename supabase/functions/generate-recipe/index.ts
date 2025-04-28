@@ -29,8 +29,7 @@ serve(async (req) => {
       dietary, 
       flavorTags, 
       servings, 
-      maxCalories, 
-      maxMinutes,
+      maxCalories,
       recipeRequest 
     } = requestData;
 
@@ -39,7 +38,6 @@ serve(async (req) => {
     • Has ${servings} servings
     • Features flavor tags: ${flavorTags.join(', ')}
     • ≤ ${maxCalories} kcal per serving
-    • Cookable in ≤ ${maxMinutes} minutes
     
     Create a recipe with evidence-based techniques that maximize flavor through understanding of food chemistry:
     
@@ -48,37 +46,52 @@ serve(async (req) => {
        - Include visual/tactile/aromatic indicators for doneness (e.g., "golden-brown with crisp edges")
        - Identify critical control points where technique impacts outcome
        - Explain how ingredient preparation (cutting style, resting times) affects flavor development
+       - Choose appropriate cooking methods for the dish (slow-cooking, pressure cooking, etc.)
+       - For traditional dishes, use authentic cooking methods that may require extended cooking times
+
+    2. COOKING METHOD AUTHENTICITY:
+       - For classic dishes with established methods (like slow-cooked pot roast, braised short ribs, etc.), 
+         use the authentic cooking method even if it requires hours of cooking
+       - Do NOT sacrifice authenticity for speed - use the correct cooking method for the dish
+       - Be precise about active cooking time (preparation, active attention) vs. passive cooking time (simmering, braising, etc.)
+       - Identify specialized equipment needed (slow-cooker, pressure cooker, etc.)
     
-    2. INGREDIENT SCIENCE:
+    3. INGREDIENT SCIENCE:
        - Select ingredients with specific qualities (e.g., "80/20 ground beef for optimal fat rendering")
        - Note when ingredient temperature matters (e.g., "room-temperature eggs for proper emulsification")
        - Explain functional properties (e.g., "high-protein flour for gluten development")
        - Include scientific substitutions with expected outcome differences
     
-    3. COOKING CHEMISTRY:
+    4. COOKING CHEMISTRY:
        - Leverage specific reactions (Maillard browning, caramelization, protein denaturation)
        - Balance flavor molecules (acids, salts, fats, aromatics) with precision
        - Control moisture and heat transfer for optimal texture development
        - Sequence cooking steps to build flavor compounds systematically
     
-    4. NUTRITIONAL OPTIMIZATION:
+    5. NUTRITIONAL OPTIMIZATION:
        - Calculate accurate nutritional values with evidence-based methods
        - Preserve heat-sensitive nutrients through appropriate cooking techniques
        - Balance macronutrient ratios for specific dietary goals
        - Maximize nutrient bioavailability through ingredient pairing
     
-    5. MEASUREMENT STANDARDIZATION:
+    6. MEASUREMENT STANDARDIZATION:
        - All measurements MUST be in imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
        - Convert any metric values to their imperial equivalents
        - For small quantities where precision matters, use fractions (1/4 tsp, etc.)
        - Provide temperatures in °F with °C in parentheses where relevant
 
-    6. INLINE INGREDIENTS FORMAT:
+    7. INLINE INGREDIENTS FORMAT:
        - Include ingredient references within instructions using **bold** text
        - Each instruction must reference specific ingredients with exact quantities
        - Example: "Heat a large skillet and add **2 tablespoons olive oil**. Once hot, sear **1 pound beef chuck, cubed** until browned"
        - Maintain complete measurements in the separate ingredients list with quality specs
        - Ensure every ingredient mentioned is properly formatted in bold
+
+    8. RECIPE VALIDATION:
+       - For traditional dishes (like Mississippi Pot Roast), verify your cooking method and times against established standards
+       - For slow-cooked dishes, include appropriate cooking times (several hours if necessary)
+       - Do NOT modify traditional cooking methods to fit arbitrary time constraints
+       - Indicate if special equipment is needed (slow cooker, pressure cooker, dutch oven, etc.)
     
     Return ONLY valid JSON matching this schema:
     {
@@ -86,6 +99,8 @@ serve(async (req) => {
       "servings": number,
       "prep_time_min": number,
       "cook_time_min": number,
+      "total_time_min": number,
+      "cooking_method": string,
       "ingredients": [{ 
         "qty": number, 
         "unit": string, 

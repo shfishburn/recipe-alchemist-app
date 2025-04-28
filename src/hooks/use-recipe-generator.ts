@@ -23,7 +23,6 @@ export const useRecipeGenerator = () => {
           flavorTags: formData.flavorTags,
           servings: formData.servings,
           maxCalories: formData.maxCalories,
-          maxMinutes: formData.maxMinutes,
           recipeRequest: formData.title || undefined
         })
       });

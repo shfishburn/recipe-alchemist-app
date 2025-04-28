@@ -23,18 +23,28 @@ serve(async (req) => {
 
     // Create the base prompt - this ensures that regardless of what the client sends,
     // we format a system message that requests JSON output
-    let systemPrompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, analyze and improve this recipe with precise, science-backed techniques. Please format your response as JSON with these fields:
+    let systemPrompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, analyze and improve this recipe with precise, science-backed techniques. 
+
+When analyzing recipes, pay special attention to:
+1. Cooking method authenticity - ensure that traditional dishes use the correct cooking methods (slow-cooking, braising, etc.) regardless of time requirements
+2. Appropriate cooking times - do not compress cooking times for dishes that traditionally require long cooking periods
+3. Correct equipment selection - verify that the recipe specifies the right equipment (slow cooker, dutch oven, etc.) for the dish
+4. Active vs. passive cooking time - distinguish between hands-on preparation time and inactive cooking time
+5. Temperature precision - ensure cooking temperatures are appropriate for the specific cooking method
+
+Please format your response as JSON with these fields:
 
 1. textResponse - Your main analysis including:
    - Key chemical processes occurring (Maillard reactions, protein denaturation, etc)
    - Temperature-dependent techniques analysis
    - Scientific rationale for ingredient choices
+   - Validation of cooking method and time against traditional standards
 
 2. science_notes - An array of strings with key scientific principles
 
 3. troubleshooting - An array of strings with common issues and fixes
 
-4. changes - An object containing suggested recipe improvements
+4. changes - An object containing suggested recipe improvements, including corrected cooking methods and times if needed
 
 5. followUpQuestions - An array of strings with follow-up question suggestions
 
@@ -75,9 +85,10 @@ Remember that I need your response formatted as JSON compatible with these field
         science_notes: parsedContent.science_notes || [],
         troubleshooting: parsedContent.troubleshooting || [],
         followUpQuestions: parsedContent.followUpQuestions || [
-          "How would the science behind this recipe change if we altered the cooking temperature?",
-          "What specific chemical reactions occur when cooking this dish?",
-          "How could we modify this recipe for different dietary restrictions while maintaining the same flavor profile?"
+          "How would the science behind this recipe change if we altered the cooking method?",
+          "What specific chemical reactions occur during the extended cooking time?",
+          "How could we modify this recipe for different dietary restrictions while maintaining the authentic cooking method?",
+          "What is the scientific reason for using this specific cooking technique/time in traditional recipes?"
         ]
       };
       

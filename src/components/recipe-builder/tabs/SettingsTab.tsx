@@ -5,11 +5,10 @@ import { Slider } from '@/components/ui/slider';
 
 interface SettingsTabProps {
   maxCalories: number;
-  maxMinutes: number;
   onChange: (field: string, value: number) => void;
 }
 
-const SettingsTab = ({ maxCalories, maxMinutes, onChange }: SettingsTabProps) => {
+const SettingsTab = ({ maxCalories, onChange }: SettingsTabProps) => {
   return (
     <div className="space-y-6 pt-4">
       {/* Max Calories */}
@@ -29,21 +28,8 @@ const SettingsTab = ({ maxCalories, maxMinutes, onChange }: SettingsTabProps) =>
         />
       </div>
 
-      {/* Max Time */}
-      <div className="space-y-2">
-        <div className="flex justify-between">
-          <Label htmlFor="time">Max Total Time</Label>
-          <span className="text-sm text-muted-foreground">{maxMinutes} minutes</span>
-        </div>
-        <Slider
-          id="time"
-          min={10}
-          max={120}
-          step={5}
-          value={[maxMinutes]}
-          onValueChange={(values) => onChange('maxMinutes', values[0])}
-          className="py-4"
-        />
+      <div className="mt-6 text-sm text-muted-foreground italic">
+        <p>Note: We no longer limit cooking time to allow for traditional recipes that require slow cooking or extended preparation.</p>
       </div>
     </div>
   );

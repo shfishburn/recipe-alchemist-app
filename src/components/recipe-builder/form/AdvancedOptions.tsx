@@ -14,7 +14,6 @@ interface AdvancedOptionsProps {
   onUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onImageSelected: (file: File) => void;
   maxCalories: number;
-  maxMinutes: number;
   onSettingChange: (field: string, value: number) => void;
 }
 
@@ -27,7 +26,6 @@ const AdvancedOptions = ({
   onUrlChange,
   onImageSelected,
   maxCalories,
-  maxMinutes,
   onSettingChange,
 }: AdvancedOptionsProps) => {
   return (
@@ -65,7 +63,6 @@ const AdvancedOptions = ({
           <TabsContent value="settings">
             <SettingsTab
               maxCalories={maxCalories}
-              maxMinutes={maxMinutes}
               onChange={onSettingChange}
             />
           </TabsContent>
