@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Recipe, Ingredient } from '@/types/recipe';
+import { Recipe, Ingredient, Nutrition } from '@/types/recipe';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
 
@@ -68,7 +68,9 @@ export function useRecipeUpdates(recipeId: string) {
           // Ensure science_notes is always a string array
           science_notes: Array.isArray(data.science_notes) 
             ? data.science_notes.map(note => typeof note === 'string' ? note : String(note))
-            : []
+            : [],
+          // Transform nutrition back to the correct type
+          nutrition: data.nutrition as unknown as Nutrition
         };
         
         return processedData;
