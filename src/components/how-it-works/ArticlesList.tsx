@@ -21,7 +21,7 @@ export const ArticlesList = () => {
     {
       id: 'intelligent-cooking',
       title: 'How Nutrition Analysis Works',
-      description: 'The science behind accurate recipe nutrition calculations',
+      description: 'We don\'t guess what\'s in your food — we measure it with real science. Our system pulls data from trusted sources like USDA FoodData Central, adjusts for cooking methods, tracks both macronutrients and vital micronutrients, and personalizes your nutrition to your body\'s needs. Every recipe you see reflects not just what you cook — but how it truly nourishes you.',
       icon: <Lightbulb className="h-10 w-10 text-recipe-blue" />,
       slug: 'intelligent-cooking'
     },
