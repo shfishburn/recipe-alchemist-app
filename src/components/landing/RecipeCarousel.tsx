@@ -46,9 +46,18 @@ export function RecipeCarousel() {
   React.useEffect(() => {
     if (!carouselApi) return;
 
-    carouselApi.on('select', () => {
+    const onSelect = () => {
       setSelectedIndex(carouselApi.selectedScrollSnap());
-    });
+    };
+
+    carouselApi.on('select', onSelect);
+    
+    // Call once to set initial value
+    onSelect();
+
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
   }, [carouselApi]);
 
   if (isLoading) {
@@ -107,8 +116,13 @@ export function RecipeCarousel() {
                       {recipe.cook_time_min && (
                         <span>{recipe.cook_time_min} minutes</span>
                       )}
-                      {typeof recipe.nutrition === 'object' && recipe.nutrition && 'calories' in recipe.nutrition && (
-                        <span>{recipe.nutrition.calories} calories</span>
+                      {typeof recipe.nutrition === 'object' && 
+                       recipe.nutrition && 
+                       'calories' in recipe.nutrition && (
+                        <span>
+                          {recipe.nutrition.calories !== null ? 
+                            `${recipe.nutrition.calories} calories` : ''}
+                        </span>
                       )}
                     </div>
                   </div>

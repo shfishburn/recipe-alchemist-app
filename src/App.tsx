@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Footer } from "@/components/ui/footer";
 import PrivateRoute from "@/components/PrivateRoute";
+import { PageTransition } from "@/components/ui/page-transition";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -38,45 +41,48 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/recipes" element={<Recipes />} />
-              <Route path="/recipes/:id" element={<RecipeDetail />} />
-              <Route
-                path="/build"
-                element={
-                  <PrivateRoute>
-                    <Build />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <Profile />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/shopping-lists"
-                element={
-                  <PrivateRoute>
-                    <ShoppingLists />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/favorites"
-                element={
-                  <PrivateRoute>
-                    <Favorites />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <LoadingIndicator />
+            <PageTransition>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/recipes" element={<Recipes />} />
+                <Route path="/recipes/:id" element={<RecipeDetail />} />
+                <Route
+                  path="/build"
+                  element={
+                    <PrivateRoute>
+                      <Build />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <PrivateRoute>
+                      <Profile />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/shopping-lists"
+                  element={
+                    <PrivateRoute>
+                      <ShoppingLists />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/favorites"
+                  element={
+                    <PrivateRoute>
+                      <Favorites />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </PageTransition>
             <Footer />
           </BrowserRouter>
         </div>
