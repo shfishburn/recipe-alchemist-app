@@ -1,9 +1,10 @@
 
 import React from 'react';
+import type { ChangesResponse } from '@/types/chat';
 
 interface ResponseFormatterProps {
   response: string;
-  changesSuggested: any | null;
+  changesSuggested: ChangesResponse | null;
 }
 
 export function useResponseFormatter({ response, changesSuggested }: ResponseFormatterProps) {
@@ -85,5 +86,26 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
     );
   }, [changesSuggested]);
 
-  return { displayText, showWarning };
+  // Extract a summary of the changes
+  const changesPreview = React.useMemo(() => {
+    if (!changesSuggested) return null;
+    
+    const summary = {
+      hasTitle: !!changesSuggested.title,
+      hasIngredients: changesSuggested.ingredients?.items && 
+                    changesSuggested.ingredients.items.length > 0,
+      hasInstructions: changesSuggested.instructions && 
+                     changesSuggested.instructions.length > 0,
+      hasScienceNotes: changesSuggested.science_notes && 
+                     changesSuggested.science_notes.length > 0,
+      ingredientCount: changesSuggested.ingredients?.items?.length || 0,
+      instructionCount: changesSuggested.instructions?.length || 0,
+      scienceNoteCount: changesSuggested.science_notes?.length || 0,
+      ingredientMode: changesSuggested.ingredients?.mode || 'none'
+    };
+    
+    return summary;
+  }, [changesSuggested]);
+
+  return { displayText, showWarning, changesPreview };
 }

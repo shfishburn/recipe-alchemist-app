@@ -5,10 +5,11 @@ import { FormattedText } from './response/FormattedText';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
 import { FollowUpQuestions } from './response/FollowUpQuestions';
 import { useResponseFormatter } from './response/ResponseFormatter';
+import type { ChangesResponse } from '@/types/chat';
 
 interface ChatResponseProps {
   response: string;
-  changesSuggested: any | null;
+  changesSuggested: ChangesResponse | null;
   followUpQuestions: string[];
   setMessage: (message: string) => void;
   onApplyChanges: () => void;
@@ -27,7 +28,7 @@ export function ChatResponse({
   applied,
   isMobile = false
 }: ChatResponseProps) {
-  const { displayText, showWarning } = useResponseFormatter({ response, changesSuggested });
+  const { displayText, showWarning, changesPreview } = useResponseFormatter({ response, changesSuggested });
   
   const handleFollowUpClick = (question: string) => {
     setMessage(question);
@@ -51,8 +52,8 @@ export function ChatResponse({
               </p>
             ))}
           </div>
-
-          {/* Apply changes section */}
+          
+          {/* Apply changes section with summary and confirmation */}
           <ApplyChangesSection 
             changesSuggested={changesSuggested}
             onApplyChanges={onApplyChanges}
