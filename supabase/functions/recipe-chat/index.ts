@@ -81,22 +81,12 @@ Remember that I need your response formatted as JSON compatible with these field
         ]
       };
       
-      // Convert the entire response to a string for storage
-      const suggestion = {
-        response: JSON.stringify(responseWithFollowUp),
-        changes: {
-          title: parsedContent.changes?.title || null,
-          ingredients: parsedContent.changes?.ingredients || null,
-          instructions: parsedContent.changes?.instructions || null,
-          nutrition: parsedContent.nutrition || {},
-          health_insights: parsedContent.health_insights || [],
-          equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
-          science_notes: parsedContent.science_notes || []
-        }
-      };
+      console.log("Returning structured response with science notes:", 
+                 responseWithFollowUp.science_notes?.length || 0, 
+                 "and troubleshooting tips:", 
+                 responseWithFollowUp.troubleshooting?.length || 0);
       
-      console.log("Returning structured response to client");
-      return new Response(JSON.stringify(suggestion), {
+      return new Response(JSON.stringify(responseWithFollowUp), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
       
@@ -104,14 +94,30 @@ Remember that I need your response formatted as JSON compatible with these field
       console.error("Error parsing AI response:", e);
       console.error("Raw response content:", content);
       
-      return new Response(JSON.stringify({ 
-        error: "Failed to generate proper recipe suggestions. Please try again.",
-        details: e.message,
-        rawResponse: content
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      // Fallback: If parsing fails, try to create a basic structure from the text
+      try {
+        // Format as basic output
+        const fallbackResponse = {
+          textResponse: content,
+          science_notes: ["Our AI couldn't format a proper analysis. Here's what it returned:", content.substring(0, 200) + "..."],
+          troubleshooting: ["Please try analyzing again."],
+          changes: null,
+          followUpQuestions: ["Can you explain this recipe in simpler terms?"]
+        };
+        
+        return new Response(JSON.stringify(fallbackResponse), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (fallbackError) {
+        return new Response(JSON.stringify({ 
+          error: "Failed to generate proper recipe suggestions. Please try again.",
+          details: e.message,
+          rawResponse: content.substring(0, 500) // Limit length for security
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
   } catch (error) {

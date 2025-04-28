@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -65,20 +66,23 @@ export function RecipeActions({
   return (
     <div className={containerClasses}>
       <div className="container max-w-4xl mx-auto p-4 space-y-3">
+        {/* Main action buttons - Stacked on mobile, horizontal on larger screens */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Button 
-            variant={isMobile ? "default" : "default"}
-            size={isMobile ? "lg" : "lg"}
+            variant="default"
+            size={isMobile ? "default" : "lg"}
             className="w-full bg-sky-400 hover:bg-sky-500 text-white"
             onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
           >
             <ChefHat className="h-5 w-5 mr-2" />
-            {isMobile ? "Cooking Mode" : "Cooking Mode"}
+            <span className="whitespace-nowrap">
+              {isMobile ? "Cooking Mode" : "Cooking Mode"}
+            </span>
           </Button>
 
           <Button 
-            variant={isMobile ? "default" : "default"}
-            size={isMobile ? "lg" : "lg"}
+            variant="default"
+            size={isMobile ? "default" : "lg"}
             className={`w-full ${showingAnalysis ? 'bg-sky-600' : 'bg-sky-400'} hover:bg-sky-500 text-white`}
             onClick={onToggleAnalysis}
             disabled={isAnalyzing}
@@ -88,20 +92,25 @@ export function RecipeActions({
             ) : (
               <FlaskConical className="h-5 w-5 mr-2" />
             )}
-            {isMobile ? (isAnalyzing ? "Analyzing..." : "Analyze") : (isAnalyzing ? "Analyzing Recipe..." : "Analyze Recipe")}
+            <span className="whitespace-nowrap">
+              {isMobile ? (isAnalyzing ? "Analyzing..." : "Analyze") : (isAnalyzing ? "Analyzing..." : "Analyze Recipe")}
+            </span>
           </Button>
           
           <Button 
-            variant={isMobile ? "default" : "default"}
-            size={isMobile ? "lg" : "lg"}
+            variant="default"
+            size={isMobile ? "default" : "lg"}
             className="w-full bg-sky-400 hover:bg-sky-500 text-white"
             onClick={onOpenChat}
           >
             <MessageSquare className="h-5 w-5 mr-2" />
-            {isMobile ? "AI Chat" : "AI Chat"}
+            <span className="whitespace-nowrap">
+              {isMobile ? "AI Chat" : "AI Chat"}
+            </span>
           </Button>
         </div>
 
+        {/* Secondary utility buttons */}
         <div className="flex justify-center gap-2">
           <Button
             variant="outline"

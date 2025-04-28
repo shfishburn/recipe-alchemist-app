@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -35,6 +36,12 @@ const RecipeDetail = () => {
 
   const handleOpenChat = () => {
     setChatOpen(true);
+  };
+  
+  const handleNotesUpdate = (notes: string) => {
+    if (recipe) {
+      recipe.chef_notes = notes;
+    }
   };
 
   const handleToggleAnalysis = () => {

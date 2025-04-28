@@ -18,6 +18,7 @@ export function RecipeAnalysis({ recipe, isVisible }: RecipeAnalysisProps) {
     queryFn: async () => {
       if (!isVisible) return null;
       
+      console.log('Fetching recipe analysis for', recipe.title);
       const { data, error } = await supabase.functions.invoke('recipe-chat', {
         body: { 
           recipe,
@@ -35,7 +36,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching recipe analysis:', error);
+        throw error;
+      }
+      
+      console.log('Analysis data received:', data);
       return data;
     },
     enabled: isVisible,
@@ -62,8 +68,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
           </div>
         ) : (
-          <Tabs defaultValue="science">
-            <TabsList className="mb-4">
+          <Tabs defaultValue="science" className="w-full">
+            <TabsList className="mb-4 w-full flex justify-between overflow-x-auto">
               <TabsTrigger value="science" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 Key Chemistry
@@ -83,21 +89,40 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 <div key={i} className="mb-4">
                   <p>{note}</p>
                 </div>
-              )) || 'No chemical analysis available'}
+              )) || (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No chemical analysis available for this recipe.</p>
+                  <p className="text-sm mt-2">Try a different recipe or check back later.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-              {analysis?.textResponse || 'No technique analysis available'}
+              {analysis?.textResponse ? (
+                <div dangerouslySetInnerHTML={{ __html: analysis.textResponse.replace(/\n/g, '<br>') }} />
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No technique analysis available for this recipe.</p>
+                  <p className="text-sm mt-2">Try a different recipe or check back later.</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
               <div className="space-y-4">
-                {analysis?.troubleshooting?.map((tip, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-                    <p>{tip}</p>
+                {analysis?.troubleshooting?.length > 0 ? (
+                  analysis.troubleshooting.map((tip, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <p>{tip}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>No troubleshooting tips available for this recipe.</p>
+                    <p className="text-sm mt-2">Try a different recipe or check back later.</p>
                   </div>
-                )) || 'No troubleshooting tips available'}
+                )}
               </div>
             </TabsContent>
           </Tabs>
