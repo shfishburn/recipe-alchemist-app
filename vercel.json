@@ -1,33 +1,66 @@
 
 {
   "version": 2,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With, Content-Type, Accept, Origin, Authorization" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ],
   "routes": [
     {
       "src": "^/api/render",
-      "dest": "/api/render.js"
+      "dest": "/api/render.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     },
     {
       "src": "^/assets/(.*)",
       "dest": "/assets/$1",
       "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
+        "cache-control": "public, max-age=31536000, immutable",
+        "Access-Control-Allow-Origin": "*"
       }
     },
     {
       "src": "^/(.*)\\.(.+)$",
-      "dest": "/$1.$2"
+      "dest": "/$1.$2",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     },
     {
       "src": "/how-it-works/(.*)",
-      "dest": "/api/render?route=/how-it-works/$1"
+      "dest": "/api/render?route=/how-it-works/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     },
     {
       "src": "/recipe/(.*)",
-      "dest": "/api/render?route=/recipe/$1" 
+      "dest": "/api/render?route=/recipe/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     },
     {
       "src": "/(.*)",
-      "dest": "/api/render?route=/$1"
+      "dest": "/api/render?route=/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     }
   ],
   "buildCommand": "npm run build",

@@ -7,6 +7,16 @@ const path = require('path');
  * based on the requested path before serving it to the client.
  */
 module.exports = (req, res) => {
+  // Set CORS headers to allow cross-origin requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle OPTIONS requests for CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   try {
     // Get the full URL and extract path information
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -46,6 +56,8 @@ module.exports = (req, res) => {
         if (fs.existsSync(filePath)) {
           const content = fs.readFileSync(filePath);
           res.setHeader('Content-Type', getContentType(pathname));
+          // Add CORS headers for static assets
+          res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
           return res.status(200).send(content);
         }
@@ -94,10 +106,15 @@ module.exports = (req, res) => {
       ogType = 'article';
     }
 
-    // Base URL for absolute references
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'https://recipealchemist.com';
+    // Use the actual domain that is making the request
+    const origin = req.headers.origin || req.headers.host || 'https://recipealchemist.ai';
+    
+    // Get the actual production domain or use the Vercel URL as fallback
+    const baseUrl = process.env.VERCEL_ENV === 'production' 
+      ? origin
+      : (process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : 'https://recipealchemist.ai');
     
     // Convert relative asset paths to absolute paths and add SEO tags
     let enhancedHtml = indexHtml
@@ -114,16 +131,21 @@ module.exports = (req, res) => {
         </head>
       `);
       
-    // Fix asset paths for proper loading
+    // Fix asset paths for proper loading with crossorigin attributes
     enhancedHtml = enhancedHtml
       .replace(/src="\//g, `src="${baseUrl}/`)
       .replace(/href="\//g, `href="${baseUrl}/`)
+      // Add crossorigin attribute to scripts
+      .replace(/<script src="([^"]+)"/g, '<script src="$1" crossorigin="anonymous"')
+      // Add crossorigin attribute to stylesheets
+      .replace(/<link rel="stylesheet" href="([^"]+)"/g, '<link rel="stylesheet" href="$1" crossorigin="anonymous"')
       // But don't modify absolute URLs that already have https:// prefix
       .replace(new RegExp(`src="${baseUrl}/(https?:)`, 'g'), 'src="$1')
       .replace(new RegExp(`href="${baseUrl}/(https?:)`, 'g'), 'href="$1');
 
-    // Set proper content type and serve the enhanced HTML
+    // Set proper content type and CORS headers and serve the enhanced HTML
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(200).send(enhancedHtml);
     console.log(`Successfully rendered ${routePath} with title: ${title}`);
   } catch (error) {
@@ -157,8 +179,10 @@ module.exports = (req, res) => {
         </html>
       `;
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
       return res.status(500).send(fallbackHtml);
     } catch (fallbackError) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
       return res.status(500).send('An error occurred while generating the page');
     }
   }
