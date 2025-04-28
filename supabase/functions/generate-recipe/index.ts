@@ -45,33 +45,33 @@ serve(async (req) => {
     • Features flavor tags: ${flavorTags.join(', ')}
     • ≤ ${maxCalories} kcal per serving
     • Cookable in ≤ ${maxMinutes} minutes
-
-    Create a recipe with precise, science-backed techniques that:
-
-    1. Utilizes Chemical Processes:
-       - Leverages Maillard reactions, caramelization, and enzymatic activities
-       - Optimizes heat transfer for flavor development
-       - Controls protein denaturation and starch gelatinization
-       - Considers flavor molecule interactions
-
-    2. Provides Scientific Precision:
-       - Exact temperatures, timing, and visual/tactile doneness cues
-       - Detailed ingredient preparation impact on texture/flavor
-       - Equipment recommendations with thermal justification
-       - Common issues troubleshooting with scientific basis
-
-    3. Optimizes Nutrition:
-       - Details nutrient changes during cooking
-       - Explains nutrient bioavailability
-       - Provides evidence-based health modifications
-       - Includes nutritional calculation margins
-
-    4. Details Ingredient Science:
-       - Explains ingredient chemical roles
-       - Lists quality indicators
-       - Provides scientific substitutions
-       - Covers temperature/pH/freshness impacts
-
+    
+    Create a recipe with evidence-based techniques that maximize flavor through understanding of food chemistry:
+    
+    1. PRECISION AND TECHNIQUE:
+       - Specify exact temperatures (°F/°C) and timing with scientific rationale
+       - Include visual/tactile/aromatic indicators for doneness (e.g., "golden-brown with crisp edges")
+       - Identify critical control points where technique impacts outcome
+       - Explain how ingredient preparation (cutting style, resting times) affects flavor development
+    
+    2. INGREDIENT SCIENCE:
+       - Select ingredients with specific qualities (e.g., "80/20 ground beef for optimal fat rendering")
+       - Note when ingredient temperature matters (e.g., "room-temperature eggs for proper emulsification")
+       - Explain functional properties (e.g., "high-protein flour for gluten development")
+       - Include scientific substitutions with expected outcome differences
+    
+    3. COOKING CHEMISTRY:
+       - Leverage specific reactions (Maillard browning, caramelization, protein denaturation)
+       - Balance flavor molecules (acids, salts, fats, aromatics) with precision
+       - Control moisture and heat transfer for optimal texture development
+       - Sequence cooking steps to build flavor compounds systematically
+    
+    4. NUTRITIONAL OPTIMIZATION:
+       - Calculate accurate nutritional values with evidence-based methods
+       - Preserve heat-sensitive nutrients through appropriate cooking techniques
+       - Balance macronutrient ratios for specific dietary goals
+       - Maximize nutrient bioavailability through ingredient pairing
+    
     Return ONLY valid JSON matching this schema:
     {
       "title": string,
