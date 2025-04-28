@@ -41,6 +41,15 @@ const CarouselDots = ({
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [carouselApi, setCarouselApi] = React.useState<UseEmblaCarouselType[1] | null>(null);
+
+  React.useEffect(() => {
+    if (!carouselApi) return;
+
+    carouselApi.on('select', () => {
+      setSelectedIndex(carouselApi.selectedScrollSnap());
+    });
+  }, [carouselApi]);
 
   if (isLoading) {
     return (
@@ -66,9 +75,7 @@ export function RecipeCarousel() {
           loop: true,
         }}
         className="relative w-full"
-        onSelect={(api: UseEmblaCarouselType[1]) => {
-          setSelectedIndex(api.selectedScrollSnap());
-        }}
+        setApi={setCarouselApi}
       >
         <CarouselContent>
           {featuredRecipes.map((recipe) => (
@@ -100,7 +107,7 @@ export function RecipeCarousel() {
                       {recipe.cook_time_min && (
                         <span>{recipe.cook_time_min} minutes</span>
                       )}
-                      {recipe.nutrition?.calories && (
+                      {typeof recipe.nutrition === 'object' && recipe.nutrition && 'calories' in recipe.nutrition && (
                         <span>{recipe.nutrition.calories} calories</span>
                       )}
                     </div>
