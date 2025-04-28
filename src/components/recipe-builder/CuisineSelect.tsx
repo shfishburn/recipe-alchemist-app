@@ -114,14 +114,14 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
         <SelectContent className="max-h-[400px]">
           {cuisineCategories.map((category) => (
             <SelectGroup key={category.name}>
-              <SelectLabel className="font-semibold text-sm text-muted-foreground px-2 py-1.5">
+              <SelectLabel className="font-semibold text-base text-primary px-2 py-2 border-b">
                 {category.name}
               </SelectLabel>
               {category.options.map((cuisine) => (
                 <SelectItem 
                   key={cuisine.value} 
                   value={cuisine.value}
-                  className="pl-4"
+                  className="pl-4 py-2 text-sm hover:bg-accent cursor-pointer"
                 >
                   {cuisine.label}
                 </SelectItem>
