@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 interface PageTransitionProps {
@@ -10,25 +10,19 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState("fadeIn");
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     if (location !== displayLocation) {
-      setIsTransitioning(true);
+      // Capture the current scroll position and container height
+      const currentHeight = containerRef.current?.offsetHeight || 'auto';
+      
       setTransitionStage("fadeOut");
       
-      // Shorter fadeOut for a more responsive feel
       const timeout = setTimeout(() => {
         setDisplayLocation(location);
         setTransitionStage("fadeIn");
-        
-        // Reset transitioning state after fadeIn completes
-        const fadeInTimeout = setTimeout(() => {
-          setIsTransitioning(false);
-        }, 300); // Match the fadeIn duration in CSS
-        
-        return () => clearTimeout(fadeInTimeout);
-      }, 150); // Duration should match the CSS fadeOut transition
+      }, 150); // Match fadeOut duration
       
       return () => clearTimeout(timeout);
     }
@@ -36,10 +30,11 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
 
   return (
     <div 
+      ref={containerRef}
       className={`page-transition ${transitionStage}`}
       style={{ 
-        minHeight: isTransitioning ? "100vh" : "auto",
-        position: "relative"
+        position: "relative",
+        minHeight: "auto" // Always use auto to prevent jumping
       }}
     >
       {children}
