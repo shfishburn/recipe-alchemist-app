@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 
@@ -24,7 +23,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="fresh-data">
             <h3 id="fresh-data" className="text-2xl font-semibold mt-8">
-              1. Fresh, Real Ingredient Data
+              Fresh, Real Ingredient Data
             </h3>
             <p>
               Our app pulls the most trusted nutrition data from <strong>USDA FoodData Central</strong> and 
@@ -38,7 +37,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="cooking-changes">
             <h3 id="cooking-changes" className="text-2xl font-semibold">
-              2. Cooking Changes Food — We Respect That
+              Cooking Changes Food — We Respect That
             </h3>
             <p>
               Boiling, roasting, frying — cooking transforms ingredients, and nutrients along with them.
@@ -52,7 +51,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="smart-substitutions">
             <h3 id="smart-substitutions" className="text-2xl font-semibold">
-              3. Smart Substitutions for Every Diet
+              Smart Substitutions for Every Diet
             </h3>
             <p>
               Want to make a recipe gluten-free, vegan, keto, low-sodium? Our AI understands 
@@ -68,7 +67,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="absorption-insights">
             <h3 id="absorption-insights" className="text-2xl font-semibold">
-              4. Beyond Labels: Real Absorption Insights
+              Beyond Labels: Real Absorption Insights
             </h3>
             <p>
               Nutrition isn't just about what's in the food — it's about what your body can use.
@@ -84,7 +83,7 @@ export const ArticleIntelligentCooking = () => {
 
           <section aria-labelledby="transparent-info">
             <h3 id="transparent-info" className="text-2xl font-semibold">
-              5. Transparent, Honest Information
+              Transparent, Honest Information
             </h3>
             <p>
               We tell you when numbers might vary — because real food isn't always perfectly predictable.
