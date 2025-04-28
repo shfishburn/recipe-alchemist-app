@@ -8,14 +8,26 @@ export async function generateRecipeImage(
   recipeId?: string
 ) {
   try {
+    console.log('Calling generate-recipe-image function with:', { title, ingredients, instructions, recipeId });
+    
     const response = await supabase.functions.invoke('generate-recipe-image', {
       body: { title, ingredients, instructions, recipeId },
     });
 
-    if (response.error) throw response.error;
+    if (response.error) {
+      console.error('Error from generate-recipe-image function:', response.error);
+      throw response.error;
+    }
+
+    if (!response.data?.imageUrl) {
+      console.error('No image URL in response:', response);
+      throw new Error('No image URL returned from generation');
+    }
+
+    console.log('Successfully generated image:', response.data.imageUrl);
     return response.data.imageUrl;
   } catch (error) {
     console.error('Error generating image:', error);
-    return null;
+    throw error; // Let the caller handle the error
   }
 }
