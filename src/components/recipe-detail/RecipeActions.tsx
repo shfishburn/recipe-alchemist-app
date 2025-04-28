@@ -10,9 +10,11 @@ interface RecipeActionsProps {
   recipe: Recipe;
   sticky?: boolean;
   onOpenChat: () => void;
+  onToggleAnalysis: () => void;
+  showingAnalysis: boolean;
 }
 
-export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActionsProps) {
+export function RecipeActions({ recipe, sticky = false, onOpenChat, onToggleAnalysis, showingAnalysis }: RecipeActionsProps) {
   const navigate = useNavigate();
   const { mutate: deleteRecipe } = useDeleteRecipe();
   const [isSticky, setIsSticky] = React.useState(false);
@@ -48,18 +50,6 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActi
     navigate('/recipes');
   };
 
-  const handleAnalyze = () => {
-    onOpenChat();
-    // We'll pre-populate the chat with a scientific analysis request
-    const analysisMessage = "Please provide a detailed scientific analysis of this recipe, including chemical processes, cooking techniques, and troubleshooting tips.";
-    const chatInput = document.querySelector('textarea[name="recipe-chat"]') as HTMLTextAreaElement;
-    if (chatInput) {
-      chatInput.value = analysisMessage;
-      const event = new Event('input', { bubbles: true });
-      chatInput.dispatchEvent(event);
-    }
-  };
-  
   const containerClasses = sticky && isSticky 
     ? "fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg z-30 transition-all duration-300"
     : "relative w-full";
@@ -81,8 +71,8 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActi
           <Button 
             variant={isMobile ? "default" : "default"}
             size={isMobile ? "lg" : "lg"}
-            className="w-full bg-sky-400 hover:bg-sky-500 text-white"
-            onClick={handleAnalyze}
+            className={`w-full ${showingAnalysis ? 'bg-sky-600' : 'bg-sky-400'} hover:bg-sky-500 text-white`}
+            onClick={onToggleAnalysis}
           >
             <FlaskConical className="h-5 w-5 mr-2" />
             {isMobile ? "Analyze" : "Analyze Recipe"}

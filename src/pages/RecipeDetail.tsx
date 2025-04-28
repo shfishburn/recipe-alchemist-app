@@ -14,12 +14,14 @@ import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
 import { ScienceNotes } from "@/components/recipe-detail/notes/ScienceNotes";
 import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
+import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
 
 const RecipeDetail = () => {
   const { id } = useParams();
   const { data: recipe, isLoading, error } = useRecipeDetail(id);
   const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   
   useEffect(() => {
     if (recipe) {
@@ -74,6 +76,8 @@ const RecipeDetail = () => {
                 </div>
               </div>
 
+              <RecipeAnalysis recipe={recipe} isVisible={showAnalysis} />
+
               <div className="mt-6 sm:mt-8 space-y-6">
                 <ScienceNotes recipe={recipe} />
                 <ChefNotes recipe={recipe} onUpdate={handleNotesUpdate} />
@@ -85,7 +89,13 @@ const RecipeDetail = () => {
                 </div>
               )}
 
-              <RecipeActions recipe={recipe} sticky={true} onOpenChat={handleOpenChat} />
+              <RecipeActions 
+                recipe={recipe} 
+                sticky={true} 
+                onOpenChat={handleOpenChat}
+                onToggleAnalysis={() => setShowAnalysis(!showAnalysis)}
+                showingAnalysis={showAnalysis}
+              />
               
               <RecipeChatDrawer 
                 recipe={recipe} 
