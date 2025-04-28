@@ -30,15 +30,19 @@ export function useRecipeUpdates(recipeId: string) {
     mutationFn: async (updates: Partial<Recipe> & { cookingDetails?: CookingDetails }) => {
       setIsUpdating(true);
       try {
+        console.log("Updating recipe with:", updates);
+        
         // Transform complex objects to JSON format for Supabase
         const transformedUpdates = {
           ...updates,
-          // Convert arrays to JSON compatible format
-          ingredients: updates.ingredients as unknown as Json,
-          science_notes: updates.science_notes as unknown as Json,
-          nutrition: updates.nutrition as unknown as Json,
+          // Only include properties if they exist in updates
+          ingredients: updates.ingredients ? updates.ingredients as unknown as Json : undefined,
+          science_notes: updates.science_notes ? updates.science_notes as unknown as Json : undefined,
+          nutrition: updates.nutrition ? updates.nutrition as unknown as Json : undefined,
           updated_at: new Date().toISOString(),
         };
+        
+        console.log("Transformed updates for Supabase:", transformedUpdates);
 
         const { data, error } = await supabase
           .from('recipes')
@@ -48,13 +52,22 @@ export function useRecipeUpdates(recipeId: string) {
           .single();
 
         if (error) throw error;
-        return data;
+        
+        // Transform the returned data back to the expected Recipe format
+        const processedData: Recipe = {
+          ...data,
+          ingredients: data.ingredients as unknown as Ingredient[],
+          science_notes: Array.isArray(data.science_notes) ? data.science_notes : []
+        };
+        
+        return processedData;
       } finally {
         setIsUpdating(false);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes', recipeId] });
+      console.log("Recipe updated successfully");
       toast.success('Recipe updated successfully');
     },
     onError: (error) => {

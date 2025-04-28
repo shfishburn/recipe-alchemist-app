@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { toast } from 'sonner';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Ingredient } from '@/types/recipe';
 
 interface RecipeAnalysisProps {
   recipe: Recipe;
@@ -26,7 +26,7 @@ export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAna
       console.log('Fetching recipe analysis for', recipe.title);
       const { data, error } = await supabase.functions.invoke('recipe-chat', {
         body: { 
-          recipe,
+          recipeId: recipe.id,
           userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
 
 Please provide:
@@ -57,12 +57,24 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   useEffect(() => {
     if (analysis && analysis.changes) {
       console.log('Applying analysis updates to recipe:', analysis.changes);
-      // Apply the updates from the analysis
-      updateRecipe.mutate(analysis.changes, {
+      
+      // Ensure the data has the correct structure before updating
+      const updatedData: Partial<Recipe> = {
+        // Copy essential properties from existing recipe
+        id: recipe.id,
+        // Apply changes from analysis while ensuring proper types
+        title: analysis.changes.title || recipe.title,
+        science_notes: Array.isArray(analysis.changes.science_notes) ? analysis.changes.science_notes : recipe.science_notes,
+        instructions: Array.isArray(analysis.changes.instructions) ? analysis.changes.instructions : recipe.instructions,
+        ingredients: Array.isArray(analysis.changes.ingredients) ? analysis.changes.ingredients : recipe.ingredients,
+      };
+
+      // Now update with properly structured data
+      updateRecipe.mutate(updatedData, {
         onSuccess: (updatedRecipe) => {
           console.log('Recipe updated with analysis data:', updatedRecipe);
           if (onRecipeUpdated) {
-            onRecipeUpdated(updatedRecipe);
+            onRecipeUpdated(updatedRecipe as Recipe);
           }
           toast.success('Recipe updated with analysis insights');
         },
@@ -72,7 +84,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         }
       });
     }
-  }, [analysis, updateRecipe, onRecipeUpdated]);
+  }, [analysis, updateRecipe, onRecipeUpdated, recipe.id, recipe.title, recipe.science_notes, recipe.instructions, recipe.ingredients]);
 
   if (!isVisible) return null;
 
