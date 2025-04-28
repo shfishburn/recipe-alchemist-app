@@ -11,7 +11,8 @@ import {
   Legend, 
   Bar, 
   LabelList,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts';
 import { ChartTooltip } from './ChartTooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -37,6 +38,13 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
     return `${value}g`;
   };
 
+  // Add percent formatter for the labels showing percentage of target
+  const formatPercentage = (value: number, entry: any) => {
+    if (!entry || !entry.payload) return '';
+    const percentage = entry.payload.percentage;
+    return `${percentage}%`;
+  };
+
   return (
     <div className="h-full">
       <ChartContainer config={{
@@ -46,7 +54,7 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
       }} className={`${isMobile ? 'h-56' : 'h-64'} w-full`}>
         <BarChart 
           data={compareData}
-          barGap={2}
+          barGap={2} // Reduced from previous value for tighter grouping
           barCategoryGap={isMobile ? "15%" : "25%"}
           margin={{ top: 5, right: 30, left: 10, bottom: 25 }}
         >
@@ -79,6 +87,8 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
             iconSize={isMobile ? 8 : 10}
             iconType="circle"
           />
+          
+          {/* Recipe amount bars */}
           <Bar 
             dataKey="Recipe" 
             name="Recipe Amount" 
@@ -95,13 +105,28 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
               formatter={formatAxisValue}
               style={{ fontSize: isMobile ? 10 : 11, fontWeight: 500, fill: '#333' }}
             />
+            {/* Add percentage indicator showing proportion of target met */}
+            <LabelList 
+              dataKey="Recipe" 
+              position="insideTop"
+              formatter={formatPercentage}
+              style={{ 
+                fontSize: isMobile ? 9 : 10, 
+                fontWeight: 600, 
+                fill: '#fff',
+                textAnchor: 'middle'
+              }}
+            />
           </Bar>
+          
+          {/* Target amount bars */}
           <Bar 
             dataKey="Target" 
             name="Daily Target" 
             fill="#94a3b8" 
             radius={[4, 4, 0, 0]}
             maxBarSize={isMobile ? 40 : 60}
+            opacity={0.7} // More transparent to create visual hierarchy
           >
             <LabelList 
               dataKey="Target" 
@@ -110,6 +135,22 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
               style={{ fontSize: isMobile ? 10 : 11, fontWeight: 500, fill: '#666' }}
             />
           </Bar>
+          
+          {/* Add reference lines for recommended ranges */}
+          {compareData.map((entry, index) => (
+            <ReferenceLine
+              key={`ref-${index}`}
+              segment={[
+                { x: entry.name, y: entry.Target * 0.8 },  
+                { x: entry.name, y: entry.Target * 1.2 }   
+              ]}
+              stroke="#F97316"
+              strokeWidth={2}
+              strokeDasharray="3 3"
+              ifOverflow="extendDomain"
+              className="reference-optimal-range"
+            />
+          ))}
         </BarChart>
       </ChartContainer>
     </div>

@@ -5,6 +5,7 @@ import {
   NameType, 
   ValueType 
 } from 'recharts/types/component/DefaultTooltipContent';
+import { NUTRIENT_INFO } from '../blocks/personal/constants';
 
 export interface ChartTooltipProps extends TooltipProps<ValueType, NameType> {
   showPercentage?: boolean;
@@ -30,6 +31,18 @@ export function ChartTooltip({ active, payload, showPercentage = false }: ChartT
   
   // Determine which color to use for the tooltip header
   const headerColor = data.fill || '#333';
+  
+  // Find nutrient info from our constants
+  const getNutrientInfo = (name: string) => {
+    const lowercaseName = name.toLowerCase();
+    if (lowercaseName.includes('protein')) return NUTRIENT_INFO.protein;
+    if (lowercaseName.includes('carb')) return NUTRIENT_INFO.carbs;
+    if (lowercaseName.includes('fat')) return NUTRIENT_INFO.fat;
+    if (lowercaseName.includes('calorie')) return NUTRIENT_INFO.calories;
+    return null;
+  };
+  
+  const nutrientInfo = getNutrientInfo(name);
   
   return (
     <div className="bg-white p-3 border rounded-md shadow-md text-xs">
@@ -63,17 +76,18 @@ export function ChartTooltip({ active, payload, showPercentage = false }: ChartT
         </>
       )}
       
-      {name === 'Protein' && (
-        <p className="mt-1 text-gray-500">Important for muscle maintenance and growth</p>
-      )}
-      {name === 'Carbs' && (
-        <p className="mt-1 text-gray-500">Primary energy source for your body</p>
-      )}
-      {name === 'Fat' && (
-        <p className="mt-1 text-gray-500">Essential for hormone production and nutrient absorption</p>
-      )}
-      {name === 'Calories' && (
-        <p className="mt-1 text-gray-500">Total energy content of the recipe</p>
+      {/* Additional informational content for each nutrient */}
+      {nutrientInfo && (
+        <>
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <p className="text-gray-500">{nutrientInfo.description}</p>
+            {nutrientInfo.energyPerGram && (
+              <p className="text-gray-500 mt-1">
+                Provides {nutrientInfo.energyPerGram} calories per gram
+              </p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

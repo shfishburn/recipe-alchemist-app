@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { NUTRITION_COLORS } from '@/components/recipe-detail/nutrition/blocks/personal/constants';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MacroChartProps {
   chartData: Array<{
@@ -13,6 +14,8 @@ interface MacroChartProps {
 }
 
 export function MacroChart({ chartData }: MacroChartProps) {
+  const isMobile = useIsMobile();
+  
   // Use consistent colors from our nutrition color palette
   const enhancedChartData = chartData.map(item => ({
     ...item,
@@ -33,6 +36,15 @@ export function MacroChart({ chartData }: MacroChartProps) {
         <p><span className="font-semibold">{data.value}%</span> of daily intake</p>
         {data.tooltip && (
           <p className="mt-1 text-gray-500 text-xs">{data.tooltip}</p>
+        )}
+        {data.name.toLowerCase().includes('protein') && (
+          <p className="mt-1 text-xs text-gray-500">4 calories per gram</p>
+        )}
+        {data.name.toLowerCase().includes('carb') && (
+          <p className="mt-1 text-xs text-gray-500">4 calories per gram</p>
+        )}
+        {data.name.toLowerCase().includes('fat') && (
+          <p className="mt-1 text-xs text-gray-500">9 calories per gram</p>
         )}
       </div>
     );
@@ -89,33 +101,38 @@ export function MacroChart({ chartData }: MacroChartProps) {
         carbs: { color: NUTRITION_COLORS.carbs },
         fat: { color: NUTRITION_COLORS.fat },
       }} className="h-64 w-full">
-        <PieChart>
-          <Pie 
-            data={enhancedChartData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            outerRadius={80}
-            innerRadius={50}
-            dataKey="value"
-            label={renderCustomizedLabel}
-            strokeWidth={1}
-            stroke="#ffffff"
-            paddingAngle={2}
-          >
-            {enhancedChartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip content={customTooltip} />
-          <Legend 
-            formatter={customLegendFormatter} 
-            layout="horizontal"
-            verticalAlign="bottom"
-            align="center"
-          />
-        </PieChart>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie 
+              data={enhancedChartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={isMobile ? 70 : 80}
+              innerRadius={isMobile ? 40 : 50}
+              dataKey="value"
+              label={renderCustomizedLabel}
+              strokeWidth={1}
+              stroke="#ffffff"
+              paddingAngle={2}
+            >
+              {enhancedChartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip content={customTooltip} />
+            <Legend 
+              formatter={customLegendFormatter} 
+              layout="horizontal"
+              verticalAlign="bottom"
+              align="center"
+            />
+          </PieChart>
+        </ResponsiveContainer>
       </ChartContainer>
+      <div className="text-xs text-center text-gray-500 mt-2">
+        <p className="italic">*Protein and carbs provide 4 calories per gram, fat provides 9 calories per gram</p>
+      </div>
     </div>
   );
 }

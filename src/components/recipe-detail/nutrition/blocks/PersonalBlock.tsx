@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { InfoIcon } from 'lucide-react';
 import { NutrientStats } from './personal/NutrientStats';
 import { MacroCaloriesBreakdown } from './personal/MacroCaloriesBreakdown';
-import { NUTRITION_COLORS } from './personal/constants';
+import { NUTRITION_COLORS, NUTRIENT_INFO } from './personal/constants';
 
 interface RecipeNutrition {
   calories: number;
@@ -52,7 +52,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Target: proteinTarget,
       percentage: proteinPercentage,
       fill: NUTRITION_COLORS.protein,
-      value: `${proteinPercentage}% (${recipeNutrition.protein}g)`
+      value: `${proteinPercentage}% (${recipeNutrition.protein}g of ${proteinTarget}g)`
     },
     {
       name: 'Carbs',
@@ -60,7 +60,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Target: carbsTarget,
       percentage: carbsPercentage,
       fill: NUTRITION_COLORS.carbs,
-      value: `${carbsPercentage}% (${recipeNutrition.carbs}g)`
+      value: `${carbsPercentage}% (${recipeNutrition.carbs}g of ${carbsTarget}g)`
     },
     {
       name: 'Fat',
@@ -68,7 +68,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Target: fatTarget,
       percentage: fatPercentage,
       fill: NUTRITION_COLORS.fat,
-      value: `${fatPercentage}% (${recipeNutrition.fat}g)`
+      value: `${fatPercentage}% (${recipeNutrition.fat}g of ${fatTarget}g)`
     }
   ];
   
@@ -79,7 +79,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
       Target: userPreferences.dailyCalories,
       percentage: caloriesPercentage,
       fill: NUTRITION_COLORS.calories,
-      value: `${caloriesPercentage}% (${recipeNutrition.calories} kcal)`
+      value: `${caloriesPercentage}% (${recipeNutrition.calories} of ${userPreferences.dailyCalories} kcal)`
     }
   ];
   
@@ -111,7 +111,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
             </TooltipProvider>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Percentage of your daily targets this recipe provides
+            Percentage of your daily targets this recipe provides <span className="italic">(per serving)</span>
           </p>
           <HorizontalBarChart 
             data={[...compareData, ...calorieData]} 
@@ -119,6 +119,9 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
             showValue={true}
             height={isMobile ? 200 : 240}
           />
+          <p className="text-xs text-gray-500 mt-2 italic">
+            * Values above 100% exceed your daily target for that nutrient
+          </p>
         </CardContent>
       </Card>
       
@@ -132,15 +135,18 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
                   <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
-                  <p className="text-xs">Compares the actual amount of nutrients in this recipe to your daily targets in grams.</p>
+                  <p className="text-xs">Compares the actual amount of nutrients in this recipe to your daily targets in grams. Dotted lines represent recommended range (±20% of target).</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Side by side comparison in grams
+            Side by side comparison in grams <span className="italic">(per serving)</span>
           </p>
           <ComparisonChart compareData={compareData} />
+          <p className="text-xs text-gray-500 mt-2 italic">
+            * Dotted lines show recommended range (±20% of your target)
+          </p>
         </CardContent>
       </Card>
       
@@ -168,6 +174,18 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
           fatCaloriePercent={fatCaloriePercent}
           colors={NUTRITION_COLORS}
         />
+        
+        <div className="mt-4 pt-3 border-t border-gray-200">
+          <h5 className="text-xs font-semibold mb-2">Nutritional Information</h5>
+          <ul className="text-xs text-gray-600 space-y-1">
+            <li>• Protein provides 4 calories per gram - vital for muscle repair and growth</li>
+            <li>• Carbohydrates provide 4 calories per gram - your body's preferred energy source</li>
+            <li>• Fat provides 9 calories per gram - necessary for hormone production and nutrient absorption</li>
+          </ul>
+          <p className="text-xs text-muted-foreground mt-2 italic">
+            Values are calculated per serving based on your selected nutritional preferences.
+          </p>
+        </div>
       </div>
     </div>
   );

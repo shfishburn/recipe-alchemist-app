@@ -22,13 +22,13 @@ interface ChartData {
   Target: number;
   percentage: number;
   fill: string;
-  value?: string;
+  value?: string; // For pre-formatted display values
 }
 
 interface HorizontalBarChartProps {
   data: ChartData[];
   showPercentage: boolean;
-  showValue?: boolean;
+  showValue?: boolean; // Whether to use pre-formatted value string
   height?: number;
 }
 
