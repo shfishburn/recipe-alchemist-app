@@ -22,28 +22,35 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
-  // Try to parse the response if it's a JSON string
   let displayText = response;
-  try {
-    const parsedResponse = JSON.parse(response);
-    if (parsedResponse && typeof parsedResponse.textResponse === 'string') {
-      displayText = parsedResponse.textResponse;
+  
+  // Try to parse JSON response if applicable
+  if (response) {
+    try {
+      const responseObj = JSON.parse(response);
+      if (responseObj && typeof responseObj.textResponse === 'string') {
+        displayText = responseObj.textResponse;
+      }
+    } catch (e) {
+      // If parsing fails, use the response as is
+      console.log("Using raw response - not JSON format");
     }
-  } catch (e) {
-    // If parsing fails, just use the response as is
   }
 
   const handleFollowUpClick = (question: string) => {
     setMessage(question);
   };
 
+  // Split text into paragraphs and filter out empty lines
+  const paragraphs = displayText.split('\n').filter(Boolean);
+
   return (
     <div className="flex-1">
       <div className="flex flex-col space-y-4">
         <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
           <div className="prose prose-sm max-w-none">
-            {displayText.split('\n').map((paragraph, index) => (
-              paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />
+            {paragraphs.map((paragraph, index) => (
+              <p key={index} className="mb-2">{paragraph}</p>
             ))}
           </div>
 

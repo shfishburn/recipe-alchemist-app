@@ -16,7 +16,7 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
     ? chat.follow_up_questions 
     : [];
 
-  // Try to parse follow-up questions from the AI response if they exist and aren't already populated
+  // Try to parse follow-up questions from the AI response if they exist
   let parsedFollowUpQuestions = followUpQuestions;
   if (followUpQuestions.length === 0 && chat.ai_response) {
     try {
@@ -25,7 +25,6 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
         parsedFollowUpQuestions = responseObj.followUpQuestions;
       }
     } catch (e) {
-      // If parsing fails, just continue with the empty array
       console.log("Could not parse follow-up questions from response");
     }
   }
