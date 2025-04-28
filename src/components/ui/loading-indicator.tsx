@@ -12,23 +12,46 @@ export function LoadingIndicator() {
     setIsLoading(true);
     setProgress(0);
     
-    // Simulate progress
-    const timer1 = setTimeout(() => setProgress(30), 100);
-    const timer2 = setTimeout(() => setProgress(60), 200);
-    const timer3 = setTimeout(() => setProgress(80), 300);
+    // Use requestAnimationFrame for smoother progress updates
+    let frameId: number;
+    
+    const startProgress = () => {
+      // Quick initial progress to 30%
+      setTimeout(() => setProgress(30), 50);
+      
+      // More gradual progress to 80%
+      setTimeout(() => {
+        let currentProgress = 30;
+        
+        const incrementProgress = () => {
+          if (currentProgress < 80) {
+            currentProgress += 1;
+            setProgress(currentProgress);
+            frameId = requestAnimationFrame(incrementProgress);
+          }
+        };
+        
+        frameId = requestAnimationFrame(incrementProgress);
+      }, 100);
+    };
+    
+    startProgress();
     
     // Complete loading
-    const timer4 = setTimeout(() => {
+    const completeTimeout = setTimeout(() => {
+      cancelAnimationFrame(frameId);
       setProgress(100);
-      const timer5 = setTimeout(() => setIsLoading(false), 200);
-      return () => clearTimeout(timer5);
+      
+      const hideTimeout = setTimeout(() => {
+        setIsLoading(false);
+      }, 200);
+      
+      return () => clearTimeout(hideTimeout);
     }, 400);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+      clearTimeout(completeTimeout);
+      cancelAnimationFrame(frameId);
     };
   }, [location]);
 
@@ -38,7 +61,10 @@ export function LoadingIndicator() {
     <div className="nprogress-container">
       <div 
         className="nprogress-bar" 
-        style={{ width: `${progress}%` }}
+        style={{ 
+          width: `${progress}%`,
+          transition: progress < 100 ? 'width 0.2s ease-out' : 'width 0.1s ease-out'
+        }}
       />
     </div>
   );
