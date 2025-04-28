@@ -12,6 +12,7 @@ interface ChatResponseProps {
   onApplyChanges: () => void;
   isApplying: boolean;
   applied: boolean;
+  isMobile?: boolean;
 }
 
 export function ChatResponse({ 
@@ -21,7 +22,8 @@ export function ChatResponse({
   setMessage, 
   onApplyChanges,
   isApplying,
-  applied
+  applied,
+  isMobile = false
 }: ChatResponseProps) {
   const [applyError, setApplyError] = useState<string | null>(null);
   
@@ -147,33 +149,38 @@ export function ChatResponse({
     });
   };
 
+  const textSize = isMobile ? "text-xs sm:text-sm" : "text-sm";
+  const bubblePadding = isMobile ? "p-2 sm:p-4" : "p-4";
+  const alertPadding = isMobile ? "p-2 sm:p-4" : "p-4";
+  const buttonSize = isMobile ? "text-xs px-2 py-1" : "text-sm";
+
   return (
-    <div className="flex-1">
-      <div className="flex flex-col space-y-4">
-        <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm border border-slate-100">
+    <div className="flex-1 max-w-[calc(100%-32px)]">
+      <div className="flex flex-col space-y-2 sm:space-y-4">
+        <div className={`bg-white rounded-[20px] rounded-tl-[5px] ${bubblePadding} shadow-sm border border-slate-100`}>
           {showWarning && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Warning</AlertTitle>
-              <AlertDescription>
+            <Alert variant="destructive" className={`mb-2 sm:mb-4 text-xs sm:text-sm ${alertPadding}`}>
+              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <AlertTitle className="text-xs sm:text-sm">Warning</AlertTitle>
+              <AlertDescription className="text-xs sm:text-sm">
                 Some suggested changes may need review. Please check the ingredient quantities carefully.
               </AlertDescription>
             </Alert>
           )}
           
-          <div className="prose prose-sm max-w-none text-slate-800">
+          <div className={`prose prose-sm max-w-none ${textSize} text-slate-800`}>
             {displayText.split('\n').filter(Boolean).map((paragraph, index) => (
-              <p key={index} className="mb-2">{renderFormattedText(paragraph)}</p>
+              <p key={index} className="mb-1 sm:mb-2">{renderFormattedText(paragraph)}</p>
             ))}
           </div>
 
           {changesSuggested && (
-            <div className="mt-4">
+            <div className="mt-2 sm:mt-4">
               {applyError && (
-                <Alert variant="destructive" className="mb-4">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{applyError}</AlertDescription>
+                <Alert variant="destructive" className="mb-2 sm:mb-4 text-xs sm:text-sm">
+                  <Info className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <AlertTitle className="text-xs sm:text-sm">Error</AlertTitle>
+                  <AlertDescription className="text-xs sm:text-sm">{applyError}</AlertDescription>
                 </Alert>
               )}
               
@@ -182,17 +189,17 @@ export function ChatResponse({
                 disabled={isApplying || applied}
                 className={`${
                   applied ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'
-                } text-white`}
-                size="sm"
+                } text-white text-xs sm:text-sm h-7 sm:h-9`}
+                size={isMobile ? "sm" : "default"}
               >
                 {isApplying ? (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     Applying...
                   </>
                 ) : applied ? (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Check className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Applied
                   </>
                 ) : (
@@ -203,13 +210,13 @@ export function ChatResponse({
           )}
 
           {followUpQuestions?.length > 0 && (
-            <div className="mt-6">
-              <h4 className="text-sm font-medium mb-2 text-slate-700">Follow-up Questions</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className="mt-3 sm:mt-6">
+              <h4 className="text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-slate-700">Follow-up Questions</h4>
+              <div className="flex flex-wrap gap-1 sm:gap-2">
                 {followUpQuestions.map((question, index) => (
                   <button
                     key={index}
-                    className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left text-slate-800 border border-gray-200 transition-colors"
+                    className="text-xs sm:text-sm px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left text-slate-800 border border-gray-200 transition-colors"
                     onClick={() => handleFollowUpClick(question)}
                   >
                     {question}

@@ -7,10 +7,12 @@ import type { Recipe } from '@/types/recipe';
 import { RecipeChatInput } from './RecipeChatInput';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { OptimisticMessage } from '@/types/chat';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const {
     message,
     setMessage,
@@ -65,9 +67,9 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   if (isLoadingHistory) {
     return (
       <Card className="border-slate-100">
-        <CardContent className="pt-6">
-          <div className="flex justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CardContent className="pt-2 sm:pt-6">
+          <div className="flex justify-center p-4 sm:p-8">
+            <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
           </div>
         </CardContent>
       </Card>
@@ -76,18 +78,18 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
 
   return (
     <Card className="bg-[#F9FAFB] border-slate-100 shadow-sm">
-      <CardContent className="pt-6">
-        <div className="space-y-6">
+      <CardContent className="pt-2 sm:pt-6 px-2 sm:px-6">
+        <div className="space-y-3 sm:space-y-6">
           {chatHistory.length === 0 && optimisticMessages.length === 0 && (
-            <div className="text-center py-8 bg-white/60 rounded-lg border border-slate-100 shadow-sm">
-              <p className="text-muted-foreground px-4">
+            <div className="text-center py-4 sm:py-8 bg-white/60 rounded-lg border border-slate-100 shadow-sm">
+              <p className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-4">
                 Ask for cooking techniques, scientific insights, or modifications!
                 You can also upload a recipe image or paste a URL.
               </p>
             </div>
           )}
           
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-6">
             {/* Render confirmed chat messages */}
             {chatHistory.map((chat) => (
               <ChatMessage
@@ -114,7 +116,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             
             {/* Show processing indicator when sending */}
             {isSending && (
-              <div className="flex justify-start pl-14 mt-2">
+              <div className="flex justify-start pl-8 sm:pl-14 mt-1 sm:mt-2">
                 <ChatProcessingIndicator stage="analyzing" />
               </div>
             )}
