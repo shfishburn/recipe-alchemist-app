@@ -3,6 +3,7 @@ import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
+import { FeaturedRecipe } from '@/components/landing/FeaturedRecipe';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -15,6 +16,7 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <Features />
+        <FeaturedRecipe />
         
         {/* CTA Section */}
         <section className="py-20">
