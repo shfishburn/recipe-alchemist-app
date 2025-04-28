@@ -18,6 +18,7 @@ const ArticleDetail = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [articleTitle, setArticleTitle] = useState('Article');
   const [articleDescription, setArticleDescription] = useState('');
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
     if (slug === 'intelligent-cooking') {
@@ -32,12 +33,19 @@ const ArticleDetail = () => {
     }
     
     const checkForExistingImage = async () => {
+      setIsImageLoading(true);
       try {
-        const { data: fileList } = await supabase.storage
+        const { data: fileList, error } = await supabase.storage
           .from('recipe-images')
           .list('', { 
             search: `article-${slug}` 
           });
+          
+        if (error) {
+          console.error('Error fetching image list:', error);
+          setIsImageLoading(false);
+          return;
+        }
           
         if (fileList && fileList.length > 0) {
           const sortedFiles = fileList.sort((a, b) => 
@@ -54,6 +62,8 @@ const ArticleDetail = () => {
         }
       } catch (error) {
         console.error('Error checking for existing image:', error);
+      } finally {
+        setIsImageLoading(false);
       }
     };
     
@@ -75,11 +85,13 @@ const ArticleDetail = () => {
         prompt += 'Illustrate ingredient substitution science with side-by-side comparison of alternative ingredients. Include molecular analysis showing flavor profile matches, cooking property similarities, and nutritional equivalence data.';
       }
       
+      const fileName = `article-${slug}-${Date.now()}.png`;
+      
       const imageUrl = await generateRecipeImage(
         articleTitle,
         [{ qty: 1, unit: '', item: articleTitle }],
         [prompt],
-        `article-${slug}`
+        fileName
       );
       
       setGeneratedImage(imageUrl);
@@ -157,6 +169,7 @@ const ArticleDetail = () => {
                   src={generatedImage} 
                   alt={articleTitle}
                   className="w-full h-64 object-cover" 
+                  onError={() => setGeneratedImage(null)}
                 />
               ) : (
                 <div className="w-full h-64 flex items-center justify-center">
@@ -164,6 +177,11 @@ const ArticleDetail = () => {
                     <div className="flex flex-col items-center">
                       <Loader2 className="h-10 w-10 animate-spin mb-2" />
                       <p>Generating article image...</p>
+                    </div>
+                  ) : isImageLoading ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="h-10 w-10 animate-spin mb-2" />
+                      <p>Loading image...</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">

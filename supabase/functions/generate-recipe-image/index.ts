@@ -90,10 +90,12 @@ The image should appear professionally styled but achievable, with natural color
     }
 
     const imageBlob = await imageResponse.blob();
-    const fileName = `recipe-${recipeId}-${Date.now()}.png`;
+    
+    // Use the specified fileName or generate a default one
+    const fileName = recipeId.includes('.png') ? recipeId : `recipe-${recipeId}-${Date.now()}.png`;
 
     // Upload to Supabase Storage
-    console.log('Uploading image to Supabase Storage...');
+    console.log('Uploading image to Supabase Storage with filename:', fileName);
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('recipe-images')
       .upload(fileName, imageBlob, {
@@ -115,7 +117,7 @@ The image should appear professionally styled but achievable, with natural color
     console.log('Image uploaded successfully, public URL:', publicUrl);
 
     // Update the recipe with the permanent image URL if recipeId is a UUID
-    // but not for article slugs
+    // but not for article slugs or custom filenames
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recipeId);
     
     if (recipeId && isUuid) {
