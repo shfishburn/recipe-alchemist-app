@@ -6,10 +6,32 @@ import { Badge } from '@/components/ui/badge';
 import { ChefHat, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const popularFlavorTags = [
-  "Creamy", "Crispy", "Fresh", "Rich", "Savory", 
-  "Smoky", "Spicy", "Sweet", "Tangy", "Umami", "Zesty"
+interface FlavorCategory {
+  name: string;
+  tags: string[];
+}
+
+const flavorCategories: FlavorCategory[] = [
+  {
+    name: "Texture and Mouthfeel",
+    tags: ["Silky", "Crunchy", "Tender", "Flaky", "Velvety", "Juicy", "Crisp"]
+  },
+  {
+    name: "Flavor Complexity",
+    tags: ["Aromatic", "Earthy", "Herbaceous", "Nutty", "Pungent", "Buttery", "Caramelized", "Fruity", "Malty", "Peppery"]
+  },
+  {
+    name: "Flavor Intensity",
+    tags: ["Delicate", "Bold", "Robust", "Intense", "Mild", "Subtle"]
+  },
+  {
+    name: "Specific Taste Categories",
+    tags: ["Bitter", "Briny", "Citrusy", "Fermented", "Floral", "Gamey", "Honeyed", "Mellow", "Minty", "Roasted", "Woodsy", "Astringent"]
+  }
 ];
+
+// Flatten all tags for quick access
+const popularFlavorTags = flavorCategories.flatMap(category => category.tags);
 
 interface FlavorTagsInputProps {
   tags: string[];
@@ -84,24 +106,28 @@ const FlavorTagsInput = ({ tags, onChange, id = "flavor-tags" }: FlavorTagsInput
         className="border-recipe-blue/20 focus-visible:ring-recipe-blue"
       />
 
-      <div className="mt-2">
-        <p className="text-xs text-muted-foreground mb-2">Popular flavors:</p>
-        <div className="flex flex-wrap gap-2">
-          {popularFlavorTags
-            .filter(tag => !tags.map(t => t.toLowerCase()).includes(tag.toLowerCase()))
-            .map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="outline" 
-                className="cursor-pointer hover:bg-recipe-blue/10 hover:text-recipe-blue transition-colors"
-                onClick={() => addTag(tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
-        </div>
+      <div className="mt-4 space-y-4">
+        {flavorCategories.map((category) => (
+          <div key={category.name} className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">{category.name}:</p>
+            <div className="flex flex-wrap gap-2">
+              {category.tags
+                .filter(tag => !tags.map(t => t.toLowerCase()).includes(tag.toLowerCase()))
+                .map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="outline" 
+                    className="cursor-pointer hover:bg-recipe-blue/10 hover:text-recipe-blue transition-colors"
+                    onClick={() => addTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+            </div>
+          </div>
+        ))}
       </div>
-      <p className="text-xs text-muted-foreground">Press Enter to add each flavor</p>
+      <p className="text-xs text-muted-foreground mt-2">Press Enter to add each flavor</p>
     </div>
   );
 };
