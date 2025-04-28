@@ -2,8 +2,12 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onFocus, onBlur, onChange, ...props }, ref) => {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  // You can add additional props here if needed
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, onFocus, onBlur, onChange, onKeyDown, ...props }, ref) => {
     // Enhanced input handlers with stopPropagation to prevent event bubbling
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       e.stopPropagation();
@@ -20,6 +24,16 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
       if (onChange) onChange(e);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Handle specific keyboard events, but don't stop propagation for all
+      // Only stop for Tab, as we want Enter and Escape to bubble up in forms
+      if (e.key === 'Tab') {
+        e.stopPropagation();
+      }
+      
+      if (onKeyDown) onKeyDown(e);
+    };
+
     return (
       <input
         type={type}
@@ -31,6 +45,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         onFocus={handleFocus}
         onBlur={handleBlur}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     )

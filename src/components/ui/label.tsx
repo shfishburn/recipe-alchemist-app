@@ -14,7 +14,7 @@ const Label = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
     VariantProps<typeof labelVariants>
 >(({ className, htmlFor, ...props }, ref) => {
-  // Add a click handler to focus the associated input
+  // Add a click handler to focus the associated input with improved keyboard handling
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (htmlFor) {
@@ -25,12 +25,28 @@ const Label = React.forwardRef<
     }
   };
 
+  // Add keyboard handler to focus associated input on Enter or Space
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (htmlFor) {
+        const input = document.getElementById(htmlFor);
+        if (input) {
+          input.focus();
+        }
+      }
+    }
+  };
+
   return (
     <LabelPrimitive.Root
       ref={ref}
       className={cn(labelVariants(), className)}
       htmlFor={htmlFor}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0} // Make the label focusable for keyboard users
       {...props}
     />
   );

@@ -7,7 +7,7 @@ export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, onFocus, onBlur, onChange, ...props }, ref) => {
+  ({ className, onFocus, onBlur, onChange, onKeyDown, ...props }, ref) => {
     // Enhanced textarea handlers with stopPropagation to prevent event bubbling
     const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
       e.stopPropagation();
@@ -24,6 +24,15 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       if (onChange) onChange(e);
     };
     
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Only stop propagation for Tab, but let Enter and Escape bubble up
+      if (e.key === 'Tab') {
+        e.stopPropagation();
+      }
+      
+      if (onKeyDown) onKeyDown(e);
+    };
+    
     return (
       <textarea
         className={cn(
@@ -34,6 +43,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         onFocus={handleFocus}
         onBlur={handleBlur}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     )
