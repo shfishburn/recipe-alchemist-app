@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MessageSquare, Printer, Share2, Trash2 } from 'lucide-react';
+import { ChefHat, FlaskConical, MessageSquare, Printer, Share2, Trash2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import type { Recipe } from '@/types/recipe';
 
@@ -15,9 +15,9 @@ interface RecipeActionsProps {
 export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActionsProps) {
   const navigate = useNavigate();
   const { mutate: deleteRecipe } = useDeleteRecipe();
-  const [isSticky, setIsSticky] = useState(false);
+  const [isSticky, setIsSticky] = React.useState(false);
   
-  useEffect(() => {
+  React.useEffect(() => {
     if (!sticky) return;
     
     const handleScroll = () => {
@@ -46,6 +46,18 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActi
     deleteRecipe(recipe.id);
     navigate('/recipes');
   };
+
+  const handleAnalyze = () => {
+    onOpenChat();
+    // We'll pre-populate the chat with a scientific analysis request
+    const analysisMessage = "Please provide a detailed scientific analysis of this recipe, including chemical processes, cooking techniques, and troubleshooting tips.";
+    const chatInput = document.querySelector('textarea[name="recipe-chat"]') as HTMLTextAreaElement;
+    if (chatInput) {
+      chatInput.value = analysisMessage;
+      const event = new Event('input', { bubbles: true });
+      chatInput.dispatchEvent(event);
+    }
+  };
   
   const containerClasses = sticky && isSticky 
     ? "fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg z-30 transition-all duration-300"
@@ -54,8 +66,7 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActi
   return (
     <div className={containerClasses}>
       <div className="container max-w-4xl mx-auto p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          {/* Primary Actions */}
+        <div className="grid grid-cols-3 gap-3">
           <Button 
             variant="default" 
             size="lg"
@@ -64,6 +75,16 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActi
           >
             <ChefHat className="h-5 w-5 mr-2" />
             Cooking Mode
+          </Button>
+
+          <Button 
+            variant="default"
+            size="lg"
+            className="w-full"
+            onClick={handleAnalyze}
+          >
+            <FlaskConical className="h-5 w-5 mr-2" />
+            Analyze Recipe
           </Button>
           
           <Button 
