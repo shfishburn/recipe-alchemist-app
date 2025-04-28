@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 
@@ -12,6 +13,13 @@ export const ArticleIntelligentCooking = () => {
       
       <Card className="p-8 mb-8">
         <div className="space-y-6" itemProp="articleBody">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold mb-3">AI Makes Cooking Intelligent</h1>
+            <p className="text-xl font-medium text-muted-foreground">
+              Discover how our AI uses food science to transform your kitchen experience
+            </p>
+          </header>
+
           <p className="text-lg">
             When you cook with our AI app, you're not just following recipes — you're cooking smarter.
           </p>
