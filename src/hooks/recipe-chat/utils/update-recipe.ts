@@ -11,6 +11,8 @@ export async function updateRecipe(
   imageUrl: string | null
 ) {
   if (!chatMessage.changes_suggested) return null;
+  
+  console.log("Updating recipe with changes:", chatMessage.changes_suggested);
 
   const updatedRecipe = {
     title: chatMessage.changes_suggested.title || recipe.title,
@@ -18,13 +20,14 @@ export async function updateRecipe(
     image_url: imageUrl ?? recipe.image_url,
     user_id: recipe.user_id || user_id,
     servings: recipe.servings || 4,
-    // Add these properties to fix the TypeScript errors
     instructions: recipe.instructions,
     ingredients: recipe.ingredients,
     science_notes: chatMessage.changes_suggested.science_notes || recipe.science_notes || []
   };
 
+  // Process instructions
   if (chatMessage.changes_suggested.instructions) {
+    console.log("Updating instructions:", chatMessage.changes_suggested.instructions);
     if (typeof chatMessage.changes_suggested.instructions[0] === 'string') {
       updatedRecipe.instructions = chatMessage.changes_suggested.instructions as string[];
     } else {
@@ -35,28 +38,51 @@ export async function updateRecipe(
     }
   }
 
+  // Process ingredients
   if (chatMessage.changes_suggested.ingredients) {
     const { mode, items } = chatMessage.changes_suggested.ingredients;
-    if (mode === 'add' && items) {
+    console.log("Updating ingredients with mode:", mode, "Items:", items);
+    
+    if (mode === 'add' && items && Array.isArray(items)) {
+      console.log("Adding ingredients to existing recipe");
       updatedRecipe.ingredients = [...recipe.ingredients, ...items];
-    } else if (mode === 'replace' && items) {
+    } else if (mode === 'replace' && items && Array.isArray(items)) {
+      console.log("Replacing all ingredients");
       updatedRecipe.ingredients = items;
+    } else {
+      console.warn("Unhandled ingredients update mode or invalid items:", mode, items);
     }
   }
 
-  const { data: updatedRecipeData, error } = await supabase
-    .from('recipes')
-    .update({
-      ...updatedRecipe,
-      ingredients: updatedRecipe.ingredients as unknown as Json,
-      nutrition: updatedRecipe.nutrition as unknown as Json,
-      science_notes: updatedRecipe.science_notes as unknown as Json,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', recipe.id)
-    .select()
-    .single();
+  console.log("Final updated recipe data:", {
+    title: updatedRecipe.title,
+    ingredientsCount: updatedRecipe.ingredients.length,
+    instructionsCount: updatedRecipe.instructions.length
+  });
 
-  if (error) throw error;
-  return updatedRecipeData;
+  try {
+    const { data: updatedRecipeData, error } = await supabase
+      .from('recipes')
+      .update({
+        ...updatedRecipe,
+        ingredients: updatedRecipe.ingredients as unknown as Json,
+        nutrition: updatedRecipe.nutrition as unknown as Json,
+        science_notes: updatedRecipe.science_notes as unknown as Json,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', recipe.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating recipe in database:", error);
+      throw error;
+    }
+    
+    console.log("Recipe successfully updated in database");
+    return updatedRecipeData;
+  } catch (error) {
+    console.error("Exception when updating recipe:", error);
+    throw error;
+  }
 }

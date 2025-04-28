@@ -15,12 +15,39 @@ export const useApplyChanges = (recipe: Recipe) => {
 
   const applyChanges = useMutation({
     mutationFn: async (chatMessage: ChatMessage) => {
-      if (!chatMessage.changes_suggested || !user) return;
+      if (!chatMessage.changes_suggested) {
+        console.error("No changes to apply in this chat message");
+        throw new Error("No changes to apply");
+      }
+      
+      if (!user) {
+        console.error("User not authenticated");
+        throw new Error("You must be logged in to apply changes");
+      }
 
       toast({
         title: "Applying changes",
         description: "Updating your recipe with scientific improvements...",
       });
+
+      console.log("Starting to apply changes from chat:", chatMessage.id);
+      
+      // First validate that we have changes that can be applied
+      if (
+        !chatMessage.changes_suggested.title && 
+        !chatMessage.changes_suggested.instructions && 
+        (!chatMessage.changes_suggested.ingredients || 
+         !chatMessage.changes_suggested.ingredients.items || 
+         chatMessage.changes_suggested.ingredients.items.length === 0)
+      ) {
+        console.warn("No substantial changes found to apply");
+        toast({
+          title: "No changes to apply",
+          description: "The AI didn't suggest any specific recipe changes",
+          variant: "destructive",
+        });
+        throw new Error("No substantial changes to apply");
+      }
 
       let imageUrl = recipe.image_url;
       if (
@@ -53,12 +80,13 @@ export const useApplyChanges = (recipe: Recipe) => {
     onSuccess: (newRecipe) => {
       toast({
         title: "Changes applied",
-        description: `Created version ${newRecipe?.version_number || 'new'} of the recipe with scientific improvements`,
+        description: `Created version ${newRecipe?.version_number || 'new'} of the recipe with improvements`,
       });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
-      window.location.href = `/recipes/${recipe.id}`;
+      queryClient.invalidateQueries({ queryKey: ['recipe', recipe.id] });
     },
     onError: (error) => {
+      console.error("Error applying changes:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : 'Failed to apply changes',
