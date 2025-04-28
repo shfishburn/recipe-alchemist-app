@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -49,6 +48,7 @@ export const useApplyChanges = (recipe: Recipe) => {
       let imageUrl = recipe.image_url;
       let shouldGenerateNewImage = false;
       
+      // Process nutrition data with proper typing
       let standardizedNutrition = recipe.nutrition;
       if (chatMessage.changes_suggested?.nutrition) {
         console.log("Processing nutrition data from chat suggestion");
@@ -57,12 +57,10 @@ export const useApplyChanges = (recipe: Recipe) => {
         if (!validateNutrition(standardizedNutrition)) {
           console.warn("Nutrition data validation failed, using existing recipe nutrition");
           standardizedNutrition = recipe.nutrition;
-        } else {
-          console.log("Using new nutrition data from chat suggestion");
         }
       }
 
-      // Process ingredients to ensure proper typing
+      // Process ingredients with proper typing
       let updatedIngredients: Ingredient[] = recipe.ingredients;
       if (chatMessage.changes_suggested?.ingredients?.items) {
         updatedIngredients = chatMessage.changes_suggested.ingredients.items.map(item => ({
@@ -73,18 +71,21 @@ export const useApplyChanges = (recipe: Recipe) => {
         }));
       }
       
-      // Create a properly typed recipe object for update
+      // Create a properly typed recipe update object
       const recipeUpdate: Recipe = {
         ...recipe,
-        nutrition: standardizedNutrition,
-        ingredients: updatedIngredients,
+        id: recipe.id,
         title: chatMessage.changes_suggested?.title || recipe.title,
+        ingredients: updatedIngredients,
         instructions: Array.isArray(chatMessage.changes_suggested?.instructions) 
           ? chatMessage.changes_suggested.instructions.map(instr => 
               typeof instr === 'string' ? instr : instr.action
             )
           : recipe.instructions,
-        science_notes: chatMessage.changes_suggested?.science_notes || recipe.science_notes || []
+        nutrition: standardizedNutrition,
+        science_notes: chatMessage.changes_suggested?.science_notes || recipe.science_notes || [],
+        image_url: imageUrl,
+        version_number: recipe.version_number
       };
 
       // Determine if we need a new image based on the types of changes
@@ -112,34 +113,22 @@ export const useApplyChanges = (recipe: Recipe) => {
         // Mark chat message as applied
         await updateChatStatus(chatMessage);
         
-        // If we should generate a new image, do it asynchronously after recipe update succeeds
         if (shouldGenerateNewImage) {
           try {
             console.log("Generating new image for updated recipe");
             
             const newImageUrl = await generateRecipeImage(
-              chatMessage.changes_suggested.title || recipe.title,
-              chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
-              Array.isArray(chatMessage.changes_suggested.instructions) 
-                ? chatMessage.changes_suggested.instructions.map(instr => 
-                    typeof instr === 'string' ? instr : instr.action
-                  ) 
-                : recipe.instructions,
+              recipeUpdate.title,
+              recipeUpdate.ingredients,
+              recipeUpdate.instructions,
               recipe.id
             );
             
             if (newImageUrl) {
-              // If image generation succeeds, update the recipe image separately
-              console.log("Updating recipe with new image URL:", newImageUrl);
-              // Fix: Use a type assertion with "as unknown as Recipe" to correctly handle the ingredient transformation
-              const updatedRecipeWithImage = { 
-                ...updatedRecipe, 
-                image_url: newImageUrl,
-                // Ensure ingredients are properly typed for the Recipe interface
-                ingredients: Array.isArray(updatedRecipe.ingredients) 
-                  ? updatedRecipe.ingredients as unknown as Ingredient[]
-                  : []
-              } as unknown as Recipe;
+              const updatedRecipeWithImage: Recipe = {
+                ...recipeUpdate,
+                image_url: newImageUrl
+              };
               
               await updateRecipe(
                 updatedRecipeWithImage,
@@ -150,8 +139,6 @@ export const useApplyChanges = (recipe: Recipe) => {
             }
           } catch (imageError) {
             console.error('Error generating image:', imageError);
-            // Non-blocking - continue with existing image if generation fails
-            // The recipe update was already successful
           }
         }
 
