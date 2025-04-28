@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, ChangesResponse } from '@/types/chat';
 import { useChatMutations } from './recipe-chat/use-chat-mutations';
 import { useApplyChanges } from './recipe-chat/use-apply-changes';
 
@@ -35,18 +35,29 @@ export const useRecipeChat = (recipe: Recipe) => {
         console.log(`No existing chat history for recipe ${recipe.id}`);
       }
       
-      // Process the chat messages to handle follow_up_questions
+      // Process the chat messages to handle follow_up_questions and changes_suggested
       return data.map(chat => {
+        // Initialize chat message with default values
         const chatMessage: ChatMessage = {
           id: chat.id,
           user_message: chat.user_message,
           ai_response: chat.ai_response,
-          changes_suggested: chat.changes_suggested,
+          changes_suggested: null,
           applied: chat.applied || false,
           created_at: chat.created_at,
           follow_up_questions: [] // Default empty array
         };
 
+        // Process changes_suggested as a properly typed object
+        if (chat.changes_suggested) {
+          try {
+            // Ensure changes_suggested is properly typed
+            chatMessage.changes_suggested = chat.changes_suggested as unknown as ChangesResponse;
+          } catch (e) {
+            console.error("Error processing changes_suggested data:", e);
+          }
+        }
+        
         // Check if the chat response has followUpQuestions in the response data
         if (typeof chat.ai_response === 'string') {
           try {

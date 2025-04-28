@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -40,6 +39,105 @@ function basicStringSimilarity(str1, str2) {
   return commonWords.length / Math.max(words1.length, words2.length);
 }
 
+// Nutrition data validation function
+function validateNutrition(nutrition) {
+  if (!nutrition || typeof nutrition !== 'object') {
+    console.warn("Invalid nutrition data format: not an object");
+    return false;
+  }
+  
+  // Check for basic required fields
+  const hasCalories = nutrition.calories !== undefined || nutrition.kcal !== undefined;
+  const hasProtein = nutrition.protein !== undefined || nutrition.protein_g !== undefined;
+  const hasCarbs = nutrition.carbs !== undefined || nutrition.carbs_g !== undefined;
+  const hasFat = nutrition.fat !== undefined || nutrition.fat_g !== undefined;
+  
+  // Must have calories plus at least one macronutrient
+  if (!hasCalories) {
+    console.warn("Missing calories in nutrition data");
+    return false;
+  }
+  
+  if (!hasProtein && !hasCarbs && !hasFat) {
+    console.warn("Missing all macronutrients in nutrition data");
+    return false;
+  }
+  
+  // Check that values are numeric and reasonable
+  const calories = Number(nutrition.calories || nutrition.kcal || 0);
+  const protein = Number(nutrition.protein || nutrition.protein_g || 0);
+  const carbs = Number(nutrition.carbs || nutrition.carbs_g || 0);
+  const fat = Number(nutrition.fat || nutrition.fat_g || 0);
+  
+  if (isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat)) {
+    console.warn("Non-numeric values in nutrition data");
+    return false;
+  }
+  
+  if (calories < 0 || calories > 10000 || 
+      protein < 0 || protein > 500 || 
+      carbs < 0 || carbs > 500 || 
+      fat < 0 || fat > 500) {
+    console.warn("Nutrition values out of reasonable range");
+    return false;
+  }
+  
+  return true;
+}
+
+// Standardize nutrition data to consistent format
+function standardizeNutrition(nutrition) {
+  if (!nutrition) return null;
+  
+  const standardized = {};
+  
+  // Map calories (we want both fields populated for compatibility)
+  if (nutrition.calories !== undefined) {
+    standardized.calories = Number(nutrition.calories);
+    standardized.kcal = Number(nutrition.calories);
+  } else if (nutrition.kcal !== undefined) {
+    standardized.calories = Number(nutrition.kcal);
+    standardized.kcal = Number(nutrition.kcal);
+  }
+  
+  // Map protein fields
+  if (nutrition.protein !== undefined) {
+    standardized.protein = Number(nutrition.protein);
+    standardized.protein_g = Number(nutrition.protein);
+  } else if (nutrition.protein_g !== undefined) {
+    standardized.protein = Number(nutrition.protein_g);
+    standardized.protein_g = Number(nutrition.protein_g);
+  }
+  
+  // Map carbs fields
+  if (nutrition.carbs !== undefined) {
+    standardized.carbs = Number(nutrition.carbs);
+    standardized.carbs_g = Number(nutrition.carbs);
+  } else if (nutrition.carbs_g !== undefined) {
+    standardized.carbs = Number(nutrition.carbs_g);
+    standardized.carbs_g = Number(nutrition.carbs_g);
+  }
+  
+  // Map fat fields
+  if (nutrition.fat !== undefined) {
+    standardized.fat = Number(nutrition.fat);
+    standardized.fat_g = Number(nutrition.fat);
+  } else if (nutrition.fat_g !== undefined) {
+    standardized.fat = Number(nutrition.fat_g);
+    standardized.fat_g = Number(nutrition.fat_g);
+  }
+  
+  // Other fields
+  if (nutrition.fiber !== undefined) standardized.fiber = Number(nutrition.fiber);
+  if (nutrition.fiber_g !== undefined) standardized.fiber_g = Number(nutrition.fiber_g);
+  if (nutrition.sugar !== undefined) standardized.sugar = Number(nutrition.sugar);
+  if (nutrition.sugar_g !== undefined) standardized.sugar_g = Number(nutrition.sugar_g);
+  if (nutrition.sodium !== undefined) standardized.sodium = Number(nutrition.sodium);
+  if (nutrition.sodium_mg !== undefined) standardized.sodium_mg = Number(nutrition.sodium_mg);
+  
+  return standardized;
+}
+
 function validateAIResponse(response) {
   // Check if response has required fields
   if (!response.textResponse) {
@@ -58,6 +156,17 @@ function validateAIResponse(response) {
     console.warn("Missing or invalid followUpQuestions array");
     // Not critical, so don't fail validation
     response.followUpQuestions = [];
+  }
+  
+  // If nutrition data is present, validate and standardize it
+  if (response.changes.nutrition) {
+    if (!validateNutrition(response.changes.nutrition)) {
+      console.warn("Invalid nutrition data in AI response, removing");
+      delete response.changes.nutrition;
+    } else {
+      // Standardize the nutrition data
+      response.changes.nutrition = standardizeNutrition(response.changes.nutrition);
+    }
   }
   
   return true;
@@ -81,7 +190,7 @@ serve(async (req) => {
       .map(ing => `${ing.qty} ${ing.unit} ${ing.item}`)
       .join('\n');
 
-    // Enhanced system prompt with stricter guidelines
+    // Enhanced system prompt with stricter guidelines and nutrition guidance
     const systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest specific improvements.
     
     IMPORTANT GUIDELINES FOR RECIPE MODIFICATIONS:
@@ -111,8 +220,16 @@ serve(async (req) => {
        - Use standard ingredient names (e.g., "onion" not "onions")
        - Be specific with varieties (e.g., "yellow onion" vs just "onion")
        - Include preparation state if relevant (e.g., "diced yellow onion")
+    
+    4. NUTRITION DATA GUIDELINES:
+       - ALWAYS provide nutrition data when ingredients change substantially
+       - Format nutrition data consistently with BOTH forms of each field
+         (calories/kcal, protein/protein_g, carbs/carbs_g, fat/fat_g)
+       - Use only realistic macro values that align with ingredients
+       - All nutrition values must be NUMBERS (not strings)
+       - Include both calories AND macros (protein, carbs, fat) at minimum
        
-    4. RESPONSE FORMAT:
+    5. RESPONSE FORMAT:
        - Use a conversational tone appropriate for a professional chef
        - ALWAYS highlight specific recommended changes in your response
        - ALWAYS provide scientific reasoning behind each recommendation
@@ -135,7 +252,16 @@ serve(async (req) => {
           ]
         },
         "instructions": ["string array of steps"],
-        "nutrition": {},
+        "nutrition": {
+          "calories": number,
+          "kcal": number,
+          "protein": number,
+          "protein_g": number,
+          "carbs": number,
+          "carbs_g": number,
+          "fat": number,
+          "fat_g": number
+        },
         "science_notes": ["array of scientific insights"]
       },
       "followUpQuestions": ["array of relevant follow-up questions"]
@@ -221,10 +347,29 @@ serve(async (req) => {
         }
       }
       
+      // Enhanced nutrition validation to ensure proper data structure
+      if (parsedContent.changes.nutrition) {
+        const standardizedNutrition = standardizeNutrition(parsedContent.changes.nutrition);
+        
+        if (validateNutrition(standardizedNutrition)) {
+          parsedContent.changes.nutrition = standardizedNutrition;
+          console.log("Standardized nutrition data:", {
+            calories: standardizedNutrition.calories,
+            protein: standardizedNutrition.protein,
+            carbs: standardizedNutrition.carbs,
+            fat: standardizedNutrition.fat
+          });
+        } else {
+          console.warn("Removing invalid nutrition data from response");
+          delete parsedContent.changes.nutrition;
+        }
+      }
+      
       console.log("Validated recipe chat response:", {
         hasIngredients: !!parsedContent.changes?.ingredients,
         ingredientMode: parsedContent.changes?.ingredients?.mode,
-        ingredientCount: parsedContent.changes?.ingredients?.items?.length
+        ingredientCount: parsedContent.changes?.ingredients?.items?.length,
+        hasNutrition: !!parsedContent.changes?.nutrition
       });
     } catch (error) {
       console.error('Error parsing or validating OpenAI response:', error);

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import type { Json } from '@/integrations/supabase/types';
+import { standardizeNutrition } from '@/types/nutrition-utils';
 
 // Enhanced ingredient name normalization for comparison
 function normalizeIngredient(name: string): string {
@@ -129,13 +130,19 @@ export async function updateRecipe(
     hasIngredients: !!chatMessage.changes_suggested.ingredients,
     ingredientMode: chatMessage.changes_suggested.ingredients?.mode,
     ingredientCount: chatMessage.changes_suggested.ingredients?.items?.length,
-    hasInstructions: !!chatMessage.changes_suggested.instructions
+    hasInstructions: !!chatMessage.changes_suggested.instructions,
+    hasNutrition: !!chatMessage.changes_suggested.nutrition
   });
+
+  // Process and validate nutrition data
+  const processedNutrition = chatMessage.changes_suggested.nutrition 
+    ? standardizeNutrition(chatMessage.changes_suggested.nutrition) 
+    : recipe.nutrition;
 
   const updatedRecipe: Partial<Recipe> & { id: string } = {
     ...recipe,
     title: chatMessage.changes_suggested.title || recipe.title,
-    nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
+    nutrition: processedNutrition,
     image_url: imageUrl ?? recipe.image_url,
     science_notes: chatMessage.changes_suggested.science_notes || recipe.science_notes || [],
     updated_at: new Date().toISOString()
@@ -221,10 +228,12 @@ export async function updateRecipe(
   console.log("Final recipe update:", {
     title: updatedRecipe.title,
     ingredientsCount: updatedRecipe.ingredients?.length,
-    instructionsCount: updatedRecipe.instructions?.length
+    instructionsCount: updatedRecipe.instructions?.length,
+    hasNutrition: !!updatedRecipe.nutrition
   });
 
   try {
+    // Properly transform the recipe for Supabase storage
     const dbRecipe = {
       ...updatedRecipe,
       ingredients: updatedRecipe.ingredients as unknown as Json,
@@ -232,7 +241,7 @@ export async function updateRecipe(
       science_notes: updatedRecipe.science_notes as unknown as Json
     };
 
-    const { data: updatedRecipeData, error } = await supabase
+    const { data, error } = await supabase
       .from('recipes')
       .update(dbRecipe)
       .eq('id', recipe.id)
@@ -245,7 +254,7 @@ export async function updateRecipe(
     }
     
     console.log("Recipe successfully updated");
-    return updatedRecipeData;
+    return data;
   } catch (error) {
     console.error("Update recipe error:", error);
     throw error;

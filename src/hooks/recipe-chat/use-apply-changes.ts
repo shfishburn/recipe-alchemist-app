@@ -7,6 +7,7 @@ import type { ChatMessage } from '@/types/chat';
 import { generateRecipeImage } from './utils/generate-recipe-image';
 import { updateRecipe } from './utils/update-recipe';
 import { updateChatStatus } from './utils/update-chat-status';
+import { standardizeNutrition, validateNutrition } from '@/types/nutrition-utils';
 
 export const useApplyChanges = (recipe: Recipe) => {
   const { toast } = useToast();
@@ -48,6 +49,20 @@ export const useApplyChanges = (recipe: Recipe) => {
       let imageUrl = recipe.image_url;
       let shouldGenerateNewImage = false;
       
+      // Process nutrition data if provided
+      let standardizedNutrition = recipe.nutrition;
+      if (chatMessage.changes_suggested.nutrition) {
+        console.log("Processing nutrition data from chat suggestion");
+        standardizedNutrition = standardizeNutrition(chatMessage.changes_suggested.nutrition);
+        
+        if (!validateNutrition(standardizedNutrition)) {
+          console.warn("Nutrition data validation failed, using existing recipe nutrition");
+          standardizedNutrition = recipe.nutrition;
+        } else {
+          console.log("Using new nutrition data from chat suggestion");
+        }
+      }
+      
       // Determine if we need a new image based on the types of changes
       if (
         // Only generate new image for substantive changes
@@ -60,9 +75,18 @@ export const useApplyChanges = (recipe: Recipe) => {
       
       // Try to update the recipe first, independent of image generation
       try {
-        const newRecipe = await updateRecipe(recipe, chatMessage, user.id, imageUrl);
+        const updatedRecipe = await updateRecipe(
+          { 
+            ...recipe,
+            // Add validated nutrition data
+            nutrition: standardizedNutrition
+          }, 
+          chatMessage, 
+          user.id, 
+          imageUrl
+        );
         
-        if (!newRecipe) {
+        if (!updatedRecipe) {
           throw new Error("Failed to update recipe - no data returned");
         }
         
@@ -88,17 +112,12 @@ export const useApplyChanges = (recipe: Recipe) => {
             if (newImageUrl) {
               // If image generation succeeds, update the recipe image separately
               console.log("Updating recipe with new image URL:", newImageUrl);
-              const { data: updatedRecipe, error: updateError } = await updateRecipe(
-                { ...newRecipe, image_url: newImageUrl }, 
+              await updateRecipe(
+                { ...updatedRecipe, image_url: newImageUrl }, 
                 chatMessage, 
                 user.id,
                 newImageUrl
               );
-              
-              if (updateError) {
-                console.error("Error updating recipe with new image:", updateError);
-                // Non-blocking - we already have a successful recipe update
-              }
             }
           } catch (imageError) {
             console.error('Error generating image:', imageError);
@@ -107,7 +126,7 @@ export const useApplyChanges = (recipe: Recipe) => {
           }
         }
         
-        return newRecipe;
+        return updatedRecipe;
       } catch (error) {
         console.error("Update recipe error:", error);
         throw error;
