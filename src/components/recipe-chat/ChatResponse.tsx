@@ -29,41 +29,51 @@ export function ChatResponse({
     if (!response) return '';
     
     try {
-      const responseObj = JSON.parse(response);
-      let text = responseObj.textResponse || responseObj.response || response;
+      // Robust parsing of response, accounting for different formats
+      let parsedResponse;
+      let text = '';
+      
+      try {
+        parsedResponse = JSON.parse(response);
+        text = parsedResponse.textResponse || parsedResponse.response || '';
+      } catch (e) {
+        // If JSON parsing fails, use the raw response
+        console.log("Response is not valid JSON, using as plain text:", e);
+        text = response;
+      }
+      
+      // If we still don't have text, try to extract from the raw response
+      if (!text && typeof response === 'string') {
+        text = response;
+      }
 
-      if (responseObj.changes?.ingredients?.items) {
+      // Enhanced ingredient highlighting
+      if (changesSuggested?.ingredients?.items && Array.isArray(changesSuggested.ingredients.items)) {
         console.log("Formatting ingredients in response");
         
         // Create a map of normalized ingredient names to their display text
-        const ingredientsMap = new Map();
-        responseObj.changes.ingredients.items.forEach((ingredient: any) => {
-          const displayText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
-          // Use normalized form for comparison
-          const normalizedName = ingredient.item.toLowerCase().trim();
-          ingredientsMap.set(normalizedName, displayText);
-        });
-
-        // Replace ingredient mentions with bold text
-        text = text.replace(/\*\*(.*?)\*\*/g, (match, content) => {
-          return match; // Keep existing bold text
-        });
-
-        // Add bold to ingredients that aren't already bold
-        ingredientsMap.forEach((displayText, normalizedName) => {
-          const regex = new RegExp(`(?<!\\*\\*)${displayText}(?!\\*\\*)`, 'gi');
-          text = text.replace(regex, `**${displayText}**`);
+        changesSuggested.ingredients.items.forEach((ingredient: any) => {
+          if (ingredient && typeof ingredient.item === 'string') {
+            const displayText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
+            // Make sure ingredient mention in text is highlighted
+            const regex = new RegExp(`${ingredient.item}`, 'gi');
+            text = text.replace(regex, `**${ingredient.item}**`);
+            
+            // Also highlight quantity mentions
+            const qtyRegex = new RegExp(`${ingredient.qty} ${ingredient.unit}\\s+(?!\\*\\*)`, 'gi');
+            text = text.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
+          }
         });
       }
 
       // Format instructions with better context
-      if (responseObj.changes?.instructions) {
+      if (changesSuggested?.instructions && Array.isArray(changesSuggested.instructions)) {
         console.log("Formatting instructions in response");
-        responseObj.changes.instructions.forEach((instruction: string | { action: string }) => {
+        changesSuggested.instructions.forEach((instruction: string | { action: string }) => {
           const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
-          if (!instructionText.includes('**')) {
+          if (instructionText && !instructionText.includes('**')) {
             const regex = new RegExp(
-              `(?<!\\*\\*)${instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!\\*\\*)`,
+              instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
               'g'
             );
             text = text.replace(regex, `**${instructionText}**`);
@@ -73,10 +83,10 @@ export function ChatResponse({
 
       return text;
     } catch (e) {
-      console.log("Using raw response - not JSON format:", e);
-      return response;
+      console.error("Error formatting response:", e);
+      return response || 'Error formatting response';
     }
-  }, [response]);
+  }, [response, changesSuggested]);
 
   const showWarning = React.useMemo(() => {
     if (!changesSuggested?.ingredients?.items) return false;
@@ -95,25 +105,34 @@ export function ChatResponse({
     setApplyError(null); // Reset any previous errors
     
     try {
-      // Check if there are actual changes to apply
-      if (!changesSuggested || 
-          (!changesSuggested.title && 
-           !changesSuggested.instructions && 
-           (!changesSuggested.ingredients || 
-            !changesSuggested.ingredients.items || 
-            changesSuggested.ingredients.items.length === 0))) {
-        setApplyError("No changes to apply. The AI didn't suggest any specific modifications.");
+      // Enhanced validation before applying changes
+      if (!changesSuggested) {
+        setApplyError("No changes to apply. The AI didn't suggest any modifications.");
         return;
       }
       
+      // Check for actual substantive changes
+      const hasTitle = !!changesSuggested.title;
+      const hasInstructions = Array.isArray(changesSuggested.instructions) && changesSuggested.instructions.length > 0;
+      const hasIngredients = changesSuggested.ingredients?.mode !== 'none' && 
+                             Array.isArray(changesSuggested.ingredients?.items) && 
+                             changesSuggested.ingredients?.items.length > 0;
+      
+      if (!hasTitle && !hasInstructions && !hasIngredients) {
+        setApplyError("No substantive changes to apply. The AI didn't suggest any specific modifications.");
+        return;
+      }
+      
+      // If we get here, there are valid changes to apply
       onApplyChanges();
     } catch (error) {
       console.error("Error preparing to apply changes:", error);
-      setApplyError(error.message || "Failed to apply changes. Please try again.");
+      setApplyError(error instanceof Error ? error.message : "Failed to apply changes. Please try again.");
     }
   };
 
   const renderFormattedText = (text: string) => {
+    // Improved text formatting with better handling of bold sections
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={index} className="font-semibold text-blue-600">{part.slice(2, -2)}</strong>;

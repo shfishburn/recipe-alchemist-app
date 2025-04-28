@@ -4,16 +4,17 @@ import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import type { Json } from '@/integrations/supabase/types';
 
-// Helper function to normalize ingredient names for comparison
+// Enhanced ingredient name normalization for comparison
 function normalizeIngredient(name: string): string {
   return name
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim()
-    .replace(/s$/, ''); // Remove trailing 's' for plurals
+    .replace(/s$/, '') // Remove trailing 's' for plurals
+    .replace(/^(fresh |dried |ground |powdered |minced |chopped |diced |sliced )/, ''); // Remove common preparation prefixes
 }
 
-// Check if two ingredients are similar enough to be considered duplicates
+// Improved similarity check for ingredients
 function areSimilarIngredients(ing1: string, ing2: string): boolean {
   const norm1 = normalizeIngredient(ing1);
   const norm2 = normalizeIngredient(ing2);
@@ -24,10 +25,21 @@ function areSimilarIngredients(ing1: string, ing2: string): boolean {
   // Check if one contains the other
   if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
   
-  // Could add more sophisticated matching here if needed
+  // Check word overlap
+  const words1 = norm1.split(' ');
+  const words2 = norm2.split(' ');
+  const commonWords = words1.filter(word => words2.includes(word));
+  
+  // If there's significant word overlap
+  if (commonWords.length > 0 && 
+      commonWords.length / Math.max(words1.length, words2.length) > 0.5) {
+    return true;
+  }
+  
   return false;
 }
 
+// More sophisticated ingredient quantity validation
 function validateIngredientQuantities(
   originalRecipe: Recipe,
   newIngredients: any[],
@@ -37,34 +49,47 @@ function validateIngredientQuantities(
     return { valid: true };
   }
 
+  // Calculate ingredients to check based on mode
   const ingredientsToCheck = mode === 'replace' ? newIngredients : [...originalRecipe.ingredients, ...newIngredients];
-  const avgQtyPerServing = originalRecipe.ingredients.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
-  const newAvgQtyPerServing = ingredientsToCheck.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
-
-  // Check total quantity ratio
-  if (newAvgQtyPerServing > avgQtyPerServing * 3) {
-    return {
-      valid: false,
-      message: `Warning: New quantities seem too high for ${originalRecipe.servings} servings`
-    };
-  }
-
-  // Check individual ingredients
+  
+  // Check for reasonable quantities relative to serving size
+  const servingSize = originalRecipe.servings || 1;
+  
   for (const ing of newIngredients) {
-    const qtyPerServing = ing.qty / originalRecipe.servings;
-
-    // Validate quantity ranges based on common ingredient types
-    if (ing.unit.toLowerCase().includes('pound') && qtyPerServing > 1) {
+    // Skip ingredients without proper quantity data
+    if (typeof ing.qty !== 'number' || typeof ing.unit !== 'string') {
+      continue;
+    }
+    
+    const qtyPerServing = ing.qty / servingSize;
+    const unit = ing.unit.toLowerCase();
+    
+    // Detect extreme values based on common unit types
+    if ((unit.includes('cup') || unit.includes('cups')) && qtyPerServing > 3) {
       return {
         valid: false,
         message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
       };
     }
-
-    if (ing.unit.toLowerCase().includes('cup') && qtyPerServing > 2) {
+    
+    if ((unit.includes('pound') || unit.includes('lb')) && qtyPerServing > 1) {
       return {
         valid: false,
         message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
+      };
+    }
+    
+    if ((unit.includes('tablespoon') || unit.includes('tbsp')) && qtyPerServing > 4) {
+      return {
+        valid: false,
+        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
+      };
+    }
+    
+    if (qtyPerServing <= 0) {
+      return {
+        valid: false,
+        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} has an invalid quantity`
       };
     }
   }
@@ -72,12 +97,23 @@ function validateIngredientQuantities(
   return { valid: true };
 }
 
+// Enhanced duplicate ingredient detection
 function findDuplicateIngredients(existingIngredients: Recipe['ingredients'], newIngredients: Recipe['ingredients']) {
-  return newIngredients.filter(newIng => 
-    existingIngredients.some(existingIng => 
-      areSimilarIngredients(existingIng.item, newIng.item)
-    )
-  );
+  const duplicates = [];
+  
+  for (const newIng of newIngredients) {
+    for (const existingIng of existingIngredients) {
+      if (areSimilarIngredients(existingIng.item, newIng.item)) {
+        duplicates.push({
+          new: newIng.item,
+          existing: existingIng.item
+        });
+        break;
+      }
+    }
+  }
+  
+  return duplicates;
 }
 
 export async function updateRecipe(
@@ -89,9 +125,11 @@ export async function updateRecipe(
   if (!chatMessage.changes_suggested) return null;
   
   console.log("Starting recipe update with changes:", {
+    hasTitle: !!chatMessage.changes_suggested.title,
     hasIngredients: !!chatMessage.changes_suggested.ingredients,
     ingredientMode: chatMessage.changes_suggested.ingredients?.mode,
-    ingredientCount: chatMessage.changes_suggested.ingredients?.items?.length
+    ingredientCount: chatMessage.changes_suggested.ingredients?.items?.length,
+    hasInstructions: !!chatMessage.changes_suggested.instructions
   });
 
   const updatedRecipe: Partial<Recipe> & { id: string } = {
@@ -105,56 +143,79 @@ export async function updateRecipe(
 
   // Process ingredients with enhanced validation
   if (chatMessage.changes_suggested.ingredients?.items) {
-    const { mode = 'none', items } = chatMessage.changes_suggested.ingredients;
+    const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
     console.log("Processing ingredients:", { mode, itemCount: items.length });
     
-    // Validate ingredients format
-    const validIngredients = items.every(item => 
-      typeof item.qty === 'number' && 
-      typeof item.unit === 'string' && 
-      typeof item.item === 'string'
-    );
+    // Skip processing if mode is none or items is empty
+    if (mode === 'none' || items.length === 0) {
+      console.log("No ingredient changes to apply");
+    } else {
+      // Validate ingredients format
+      const validIngredients = items.every(item => 
+        typeof item.qty === 'number' && 
+        typeof item.unit === 'string' && 
+        typeof item.item === 'string'
+      );
 
-    if (!validIngredients) {
-      console.error("Invalid ingredient format detected");
-      throw new Error("Invalid ingredient format in suggested changes");
-    }
-
-    // Enhanced duplicate checking in add mode
-    if (mode === 'add') {
-      const duplicates = findDuplicateIngredients(recipe.ingredients, items);
-      if (duplicates.length > 0) {
-        console.error("Duplicate ingredients detected:", duplicates);
-        throw new Error(
-          `These ingredients (or similar ones) already exist in the recipe: ${
-            duplicates.map(d => d.item).join(', ')
-          }`
-        );
+      if (!validIngredients) {
+        console.error("Invalid ingredient format detected");
+        throw new Error("Invalid ingredient format in suggested changes");
       }
-    }
 
-    // Validate quantities against serving size with improved logic
-    const quantityValidation = validateIngredientQuantities(recipe, items, mode);
-    if (!quantityValidation.valid) {
-      console.error("Ingredient quantity validation failed:", quantityValidation.message);
-      throw new Error(quantityValidation.message);
-    }
+      // Enhanced duplicate checking in add mode
+      if (mode === 'add') {
+        const duplicates = findDuplicateIngredients(recipe.ingredients, items);
+        if (duplicates.length > 0) {
+          console.error("Duplicate ingredients detected:", duplicates);
+          throw new Error(
+            `These ingredients (or similar ones) already exist in the recipe: ${
+              duplicates.map(d => d.new).join(', ')
+            }`
+          );
+        }
+      }
 
-    if (mode === 'add') {
-      console.log("Adding new ingredients to existing recipe");
-      updatedRecipe.ingredients = [...recipe.ingredients, ...items];
-    } else if (mode === 'replace') {
-      console.log("Replacing all ingredients");
-      updatedRecipe.ingredients = items;
+      // Validate quantities against serving size with improved logic
+      const quantityValidation = validateIngredientQuantities(recipe, items, mode);
+      if (!quantityValidation.valid) {
+        console.error("Ingredient quantity validation failed:", quantityValidation.message);
+        throw new Error(quantityValidation.message || "Invalid ingredient quantities");
+      }
+
+      if (mode === 'add') {
+        console.log("Adding new ingredients to existing recipe");
+        updatedRecipe.ingredients = [...recipe.ingredients, ...items];
+      } else if (mode === 'replace') {
+        console.log("Replacing all ingredients");
+        updatedRecipe.ingredients = items;
+      }
     }
   }
 
-  // Process instructions with better formatting
-  if (chatMessage.changes_suggested.instructions) {
+  // Process instructions with better formatting and validation
+  if (chatMessage.changes_suggested.instructions && 
+      Array.isArray(chatMessage.changes_suggested.instructions)) {
     console.log("Updating instructions");
-    updatedRecipe.instructions = chatMessage.changes_suggested.instructions.map(
-      instruction => typeof instruction === 'string' ? instruction : instruction.action
-    );
+    
+    // Make sure all instructions are properly formatted
+    const formattedInstructions = chatMessage.changes_suggested.instructions.map(
+      instruction => {
+        if (typeof instruction === 'string') {
+          return instruction;
+        }
+        if (typeof instruction === 'object' && instruction.action) {
+          return instruction.action;
+        }
+        console.warn("Skipping invalid instruction format:", instruction);
+        return null;
+      }
+    ).filter(Boolean);
+    
+    if (formattedInstructions.length > 0) {
+      updatedRecipe.instructions = formattedInstructions as string[];
+    } else {
+      console.warn("No valid instructions found in changes");
+    }
   }
 
   console.log("Final recipe update:", {

@@ -32,65 +32,33 @@ export const useApplyChanges = (recipe: Recipe) => {
 
       console.log("Starting to apply changes from chat:", chatMessage.id);
       
-      // First validate that we have changes that can be applied
+      // Enhanced validation to ensure there are substantive changes to apply
       if (
         !chatMessage.changes_suggested.title && 
         !chatMessage.changes_suggested.instructions && 
         (!chatMessage.changes_suggested.ingredients || 
          !chatMessage.changes_suggested.ingredients.items || 
-         chatMessage.changes_suggested.ingredients.items.length === 0)
+         chatMessage.changes_suggested.ingredients.items.length === 0 ||
+         chatMessage.changes_suggested.ingredients.mode === 'none')
       ) {
         console.warn("No substantial changes found to apply");
-        toast({
-          title: "No changes to apply",
-          description: "The AI didn't suggest any specific recipe changes",
-          variant: "destructive",
-        });
-        throw new Error("No substantial changes to apply");
+        throw new Error("The AI didn't suggest any specific recipe changes that can be applied");
       }
 
       let imageUrl = recipe.image_url;
+      let shouldGenerateNewImage = false;
       
-      // Try to generate a new image, but catch errors to prevent the entire process from failing
+      // Determine if we need a new image based on the types of changes
       if (
+        // Only generate new image for substantive changes
         chatMessage.changes_suggested.title || 
         (chatMessage.changes_suggested.ingredients && 
          chatMessage.changes_suggested.ingredients.mode === 'replace')
       ) {
-        try {
-          console.log("Calling generate-recipe-image function with:", {
-            title: chatMessage.changes_suggested.title || recipe.title,
-            ingredients: chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
-            instructions: Array.isArray(chatMessage.changes_suggested.instructions) 
-              ? chatMessage.changes_suggested.instructions.map(instr => 
-                  typeof instr === 'string' ? instr : instr.action
-                ) 
-              : recipe.instructions,
-            recipeId: recipe.id
-          });
-          
-          const newImageUrl = await generateRecipeImage(
-            chatMessage.changes_suggested.title || recipe.title,
-            chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
-            Array.isArray(chatMessage.changes_suggested.instructions) 
-              ? chatMessage.changes_suggested.instructions.map(instr => 
-                  typeof instr === 'string' ? instr : instr.action
-                ) 
-              : recipe.instructions,
-            recipe.id
-          );
-          
-          if (newImageUrl) {
-            imageUrl = newImageUrl;
-          } else {
-            console.log("Image generation returned null or empty URL, keeping existing image");
-          }
-        } catch (error) {
-          console.error('Error generating image:', error);
-          // Continue with existing image if generation fails
-        }
+        shouldGenerateNewImage = true;
       }
-
+      
+      // Try to update the recipe first, independent of image generation
       try {
         const newRecipe = await updateRecipe(recipe, chatMessage, user.id, imageUrl);
         
@@ -98,7 +66,47 @@ export const useApplyChanges = (recipe: Recipe) => {
           throw new Error("Failed to update recipe - no data returned");
         }
         
+        // Mark chat message as applied
         await updateChatStatus(chatMessage);
+        
+        // If we should generate a new image, do it asynchronously after recipe update succeeds
+        if (shouldGenerateNewImage) {
+          try {
+            console.log("Generating new image for updated recipe");
+            
+            const newImageUrl = await generateRecipeImage(
+              chatMessage.changes_suggested.title || recipe.title,
+              chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
+              Array.isArray(chatMessage.changes_suggested.instructions) 
+                ? chatMessage.changes_suggested.instructions.map(instr => 
+                    typeof instr === 'string' ? instr : instr.action
+                  ) 
+                : recipe.instructions,
+              recipe.id
+            );
+            
+            if (newImageUrl) {
+              // If image generation succeeds, update the recipe image separately
+              console.log("Updating recipe with new image URL:", newImageUrl);
+              const { data: updatedRecipe, error: updateError } = await updateRecipe(
+                { ...newRecipe, image_url: newImageUrl }, 
+                chatMessage, 
+                user.id,
+                newImageUrl
+              );
+              
+              if (updateError) {
+                console.error("Error updating recipe with new image:", updateError);
+                // Non-blocking - we already have a successful recipe update
+              }
+            }
+          } catch (imageError) {
+            console.error('Error generating image:', imageError);
+            // Non-blocking - continue with existing image if generation fails
+            // The recipe update was already successful
+          }
+        }
+        
         return newRecipe;
       } catch (error) {
         console.error("Update recipe error:", error);

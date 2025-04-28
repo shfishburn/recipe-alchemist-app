@@ -41,14 +41,14 @@ export const useRecipeChat = (recipe: Recipe) => {
           id: chat.id,
           user_message: chat.user_message,
           ai_response: chat.ai_response,
-          changes_suggested: chat.changes_suggested as ChatMessage['changes_suggested'],
+          changes_suggested: chat.changes_suggested,
           applied: chat.applied || false,
           created_at: chat.created_at,
           follow_up_questions: [] // Default empty array
         };
 
         // Check if the chat response has followUpQuestions in the response data
-        if (chat.changes_suggested && typeof chat.ai_response === 'string') {
+        if (typeof chat.ai_response === 'string') {
           try {
             // Try to extract follow-up questions from the AI response if they exist
             const responseObj = JSON.parse(chat.ai_response);
@@ -102,8 +102,18 @@ export const useRecipeChat = (recipe: Recipe) => {
   };
 
   const sendMessage = () => {
+    if (!message.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a message",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     console.log("Sending chat message:", message.substring(0, 30) + (message.length > 30 ? '...' : ''));
     mutation.mutate({ message });
+    setMessage(''); // Clear the input after sending
   };
 
   return {

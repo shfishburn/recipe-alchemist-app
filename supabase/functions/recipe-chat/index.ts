@@ -16,6 +16,53 @@ const QUANTITY_RANGES = {
   liquids: { min: 0.25, max: 8, unit: 'cups' },
 };
 
+// Helper functions for improved ingredient comparisons
+function normalizeString(str) {
+  return str.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function basicStringSimilarity(str1, str2) {
+  const norm1 = normalizeString(str1);
+  const norm2 = normalizeString(str2);
+  
+  // Direct match
+  if (norm1 === norm2) return 1.0;
+  
+  // Check if one is a subset of the other
+  if (norm1.includes(norm2) || norm2.includes(norm1)) {
+    return Math.min(norm1.length, norm2.length) / Math.max(norm1.length, norm2.length);
+  }
+  
+  // Calculate simple word overlap
+  const words1 = norm1.split(' ');
+  const words2 = norm2.split(' ');
+  const commonWords = words1.filter(word => words2.includes(word));
+  return commonWords.length / Math.max(words1.length, words2.length);
+}
+
+function validateAIResponse(response) {
+  // Check if response has required fields
+  if (!response.textResponse) {
+    console.error("Missing textResponse in AI response");
+    return false;
+  }
+  
+  // Ensure changes field exists with expected structure
+  if (!response.changes) {
+    console.error("Missing changes field in AI response");
+    return false;
+  }
+  
+  // Check follow-up questions
+  if (!Array.isArray(response.followUpQuestions)) {
+    console.warn("Missing or invalid followUpQuestions array");
+    // Not critical, so don't fail validation
+    response.followUpQuestions = [];
+  }
+  
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,7 +82,7 @@ serve(async (req) => {
       .join('\n');
 
     // Enhanced system prompt with stricter guidelines
-    const systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest improvements.
+    const systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest specific improvements.
     
     IMPORTANT GUIDELINES FOR RECIPE MODIFICATIONS:
     1. EXISTING INGREDIENTS:
@@ -64,6 +111,12 @@ serve(async (req) => {
        - Use standard ingredient names (e.g., "onion" not "onions")
        - Be specific with varieties (e.g., "yellow onion" vs just "onion")
        - Include preparation state if relevant (e.g., "diced yellow onion")
+       
+    4. RESPONSE FORMAT:
+       - Use a conversational tone appropriate for a professional chef
+       - ALWAYS highlight specific recommended changes in your response
+       - ALWAYS provide scientific reasoning behind each recommendation
+       - ALWAYS include specific measurement changes where applicable
 
     Format response as JSON:
     {
@@ -96,7 +149,7 @@ serve(async (req) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage }
       ],
-      temperature: 0.7,
+      temperature: 0.5, // Reduced for more consistent formatting
       response_format: { type: "json_object" }
     });
 
@@ -107,9 +160,33 @@ serve(async (req) => {
     try {
       parsedContent = JSON.parse(content);
       
-      // Validate ingredient quantities against serving size
+      // Perform deeper validation on the response
+      if (!validateAIResponse(parsedContent)) {
+        throw new Error('AI response failed validation checks');
+      }
+      
+      // Enhanced ingredient validation and duplicate detection
       if (parsedContent.changes?.ingredients?.items) {
+        const existingIngredientNames = recipe.ingredients.map(ing => ing.item.toLowerCase().trim());
+        
+        // Detect duplicates with improved similarity comparison
+        const duplicates = [];
         parsedContent.changes.ingredients.items = parsedContent.changes.ingredients.items
+          .filter(ingredient => {
+            // Check against existing ingredients
+            for (const existing of recipe.ingredients) {
+              const similarity = basicStringSimilarity(existing.item, ingredient.item);
+              if (similarity > 0.7) {  // If more than 70% similar, consider as duplicate
+                duplicates.push({
+                  suggested: ingredient.item,
+                  existing: existing.item,
+                  similarity: similarity
+                });
+                return false; // Filter out this ingredient
+              }
+            }
+            return true; // Keep this ingredient
+          })
           .map(ingredient => {
             const qtyPerServing = ingredient.qty / recipe.servings;
             let warning = null;
@@ -130,6 +207,18 @@ serve(async (req) => {
               notes: warning ? `${ingredient.notes || ''}\n${warning}` : ingredient.notes
             };
           });
+        
+        // If all suggested ingredients were filtered as duplicates in "add" mode,
+        // change the mode to "none" to prevent empty array issues
+        if (parsedContent.changes.ingredients.mode === 'add' && 
+            parsedContent.changes.ingredients.items.length === 0) {
+          console.log("All suggested ingredients were duplicates, changing mode to 'none'");
+          parsedContent.changes.ingredients.mode = 'none';
+        }
+        
+        if (duplicates.length > 0) {
+          console.log("Filtered out duplicate ingredients:", duplicates);
+        }
       }
       
       console.log("Validated recipe chat response:", {
@@ -138,7 +227,7 @@ serve(async (req) => {
         ingredientCount: parsedContent.changes?.ingredients?.items?.length
       });
     } catch (error) {
-      console.error('Error parsing OpenAI response:', error);
+      console.error('Error parsing or validating OpenAI response:', error);
       throw new Error('Invalid response format from AI');
     }
 
