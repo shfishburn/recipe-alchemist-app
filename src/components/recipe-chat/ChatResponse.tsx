@@ -26,10 +26,34 @@ export function ChatResponse({
     if (!response) return '';
     
     try {
-      // Try to parse the response as JSON first
+      // Parse response as JSON first
       const responseObj = JSON.parse(response);
-      // Extract the text content using different possible field names
-      return responseObj.textResponse || responseObj.response || response;
+      let text = responseObj.textResponse || responseObj.response || response;
+
+      // Format ingredients if present in changes
+      if (responseObj.changes?.ingredients?.items) {
+        responseObj.changes.ingredients.items.forEach((ingredient: any) => {
+          const ingredientText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
+          text = text.replace(
+            ingredientText,
+            `**${ingredientText}**`
+          );
+        });
+      }
+
+      // Format instructions if present in changes
+      if (responseObj.changes?.instructions) {
+        const instructions = responseObj.changes.instructions;
+        instructions.forEach((instruction: string | { action: string }) => {
+          const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
+          text = text.replace(
+            instructionText,
+            `**${instructionText}**`
+          );
+        });
+      }
+
+      return text;
     } catch (e) {
       // If parsing fails, just use the raw response text
       console.log("Using raw response - not JSON format:", e);
@@ -41,6 +65,17 @@ export function ChatResponse({
     setMessage(question);
   };
 
+  // Process text to handle markdown-style bold syntax
+  const renderFormattedText = (text: string) => {
+    return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Remove the ** markers and render as bold
+        return <strong key={index} className="font-semibold text-blue-600">{part.slice(2, -2)}</strong>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   // Split text into paragraphs and filter out empty lines
   const paragraphs = displayText.split('\n').filter(Boolean);
 
@@ -50,7 +85,7 @@ export function ChatResponse({
         <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
           <div className="prose prose-sm max-w-none">
             {paragraphs.map((paragraph, index) => (
-              <p key={index} className="mb-2">{paragraph}</p>
+              <p key={index} className="mb-2">{renderFormattedText(paragraph)}</p>
             ))}
           </div>
 
