@@ -1,7 +1,8 @@
+
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
-import { Helmet } from 'react-helmet-async';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
+import { PageSeo } from '@/components/seo/PageSeo';
 import { 
   Breadcrumb,
   BreadcrumbList,
@@ -55,28 +56,16 @@ const HowItWorks = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Helmet>
-        <title>Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist</title>
-        <meta 
-          name="description" 
-          content="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights." 
-        />
-        <meta 
-          name="keywords" 
-          content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals" 
-        />
-        <link rel="canonical" href="https://recipealchemist.com/how-it-works" />
-        <meta property="og:title" content="Our Science: AI-Powered Cooking & Nutrition" />
-        <meta property="og:description" content="Discover how our AI uses food science to transform your cooking with precise nutrition tracking and smart substitutions." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://recipealchemist.com/how-it-works" />
-        <meta property="og:image" content="https://recipealchemist.com/images/how-it-works-banner.jpg" />
-        <meta name="twitter:title" content="Our Science: AI-Powered Cooking & Nutrition" />
-        <meta name="twitter:description" content="Discover how our AI uses food science to transform your cooking experience." />
-        <script type="application/ld+json">
-          {JSON.stringify(schemaData)}
-        </script>
-      </Helmet>
+      <PageSeo 
+        title="Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist"
+        description="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights."
+        keywords="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals"
+        canonicalUrl="https://recipealchemist.com/how-it-works"
+        ogType="website"
+        ogImage="https://recipealchemist.com/images/how-it-works-banner.jpg"
+        structuredData={schemaData}
+      />
+      
       <Navbar />
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
