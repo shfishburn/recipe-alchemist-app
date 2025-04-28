@@ -1,18 +1,30 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import type { Recipe } from '@/types/recipe';
 import { RecipeChatInput } from './RecipeChatInput';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import type { OptimisticMessage } from '@/types/chat';
+import { Button } from '@/components/ui/button';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  
   const {
     message,
     setMessage,
@@ -25,6 +37,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
+    clearChatHistory,
   } = useRecipeChat(recipe);
 
   // Debug logging to help trace any issues with chat responses
@@ -63,6 +76,15 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       sendMessage();
     }
   };
+  
+  const handleClearChat = () => {
+    setIsDialogOpen(true);
+  };
+  
+  const confirmClearChat = async () => {
+    await clearChatHistory();
+    setIsDialogOpen(false);
+  };
 
   if (isLoadingHistory) {
     return (
@@ -80,6 +102,20 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     <Card className="bg-[#F9FAFB] border-slate-100 shadow-sm">
       <CardContent className="pt-2 sm:pt-6 px-2 sm:px-6">
         <div className="space-y-3 sm:space-y-6">
+          <div className="flex justify-between items-center">
+            {chatHistory.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleClearChat}
+                className="text-xs sm:text-sm"
+              >
+                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                Clear Chat
+              </Button>
+            )}
+          </div>
+          
           {chatHistory.length === 0 && optimisticMessages.length === 0 && (
             <div className="text-center py-4 sm:py-8 bg-white/60 rounded-lg border border-slate-100 shadow-sm">
               <p className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-4">
@@ -135,6 +171,21 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
           />
         </div>
       </CardContent>
+      
+      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear chat history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all chat messages for this recipe. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearChat}>Clear</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

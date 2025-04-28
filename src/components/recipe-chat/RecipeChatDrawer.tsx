@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Trash2 } from 'lucide-react';
 import { RecipeChat } from './RecipeChat';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -25,7 +25,8 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   const isMobile = useIsMobile();
   const {
     isSending,
-    isApplying
+    isApplying,
+    clearChatHistory
   } = useRecipeChat(recipe);
   
   const isPending = isSending || isApplying;
@@ -42,19 +43,21 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto z-50`}>
         <DrawerHeader className="border-b flex items-center justify-between bg-white py-2">
-          <DrawerTitle className="text-primary font-medium text-base">
-            Recipe Chat
-            {isPending && (
-              <span className="ml-2 text-xs text-muted-foreground">
-                (Processing request...)
-              </span>
-            )}
-          </DrawerTitle>
+          <div className="flex items-center gap-2">
+            <DrawerTitle className="text-primary font-medium text-base">
+              Recipe Chat
+              {isPending && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (Processing request...)
+                </span>
+              )}
+            </DrawerTitle>
+          </div>
           
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -69,15 +72,15 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
                     )}
                     <span className="sr-only">Close</span>
                   </Button>
-                </div>
-              </TooltipTrigger>
-              {isPending && (
-                <TooltipContent>
-                  <p>Please wait until the current operation completes</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+                </TooltipTrigger>
+                {isPending && (
+                  <TooltipContent>
+                    <p>Please wait until the current operation completes</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </DrawerHeader>
         <div className={`p-2 sm:p-4 flex-1 overflow-hidden flex flex-col ${isMobile ? 'h-[calc(95vh-48px)]' : 'h-[calc(85vh-60px)]'} bg-[#F9FAFB]`}>
           <div className="overflow-y-auto flex-1">
