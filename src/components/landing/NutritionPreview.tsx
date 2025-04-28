@@ -11,22 +11,22 @@ const sampleData = [
 
 export function NutritionPreview() {
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-12 md:py-20 bg-muted/30">
       <div className="container-page">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="font-bold mb-4">Track Your Nutrition</h2>
-            <p className="text-lg text-muted-foreground">
+          <div className="text-center mb-6 md:mb-10">
+            <h2 className="font-bold text-2xl md:text-3xl mb-3 md:mb-4">Track Your Nutrition</h2>
+            <p className="text-base md:text-lg text-muted-foreground px-4 md:px-0">
               Understand the nutritional value of every recipe with detailed macro breakdowns 
               and personalized insights.
             </p>
           </div>
           
-          <Card>
-            <CardContent className="p-6">
-              <div className="space-y-6">
+          <Card className="mx-4 md:mx-0">
+            <CardContent className="p-4 md:p-6">
+              <div className="space-y-4 md:space-y-6">
                 <MacroChart chartData={sampleData} />
-                <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="space-y-3 text-sm md:text-base text-muted-foreground">
                   <p>
                     Every recipe comes with a detailed nutritional analysis. Our charts 
                     break down the macronutrient ratios, helping you make informed decisions 

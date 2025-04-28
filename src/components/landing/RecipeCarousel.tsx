@@ -1,7 +1,7 @@
+
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRecipes } from '@/hooks/use-recipes';
 import { Button } from '@/components/ui/button';
 import {
   Carousel,
@@ -11,9 +11,8 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useRecipes } from '@/hooks/use-recipes';
 import { type Recipe } from '@/types/recipe';
-import type { EmblaCarouselType } from 'embla-carousel-react';
+import type { UseEmblaCarouselType } from 'embla-carousel-react';
 
 const CarouselDots = ({ 
   recipes, 
@@ -46,10 +45,10 @@ export function RecipeCarousel() {
   if (isLoading) {
     return (
       <div className="relative z-10 bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden border">
-        <div className="aspect-[4/3]">
+        <div className="aspect-[4/3] max-h-[300px]">
           <Skeleton className="w-full h-full" />
         </div>
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <Skeleton className="h-6 w-2/3 mb-4" />
           <Skeleton className="h-4 w-full" />
         </div>
@@ -67,16 +66,16 @@ export function RecipeCarousel() {
           loop: true,
         }}
         className="relative w-full"
-        onSelect={(api: EmblaCarouselType) => {
+        onSelect={(api: UseEmblaCarouselType[1]) => {
           setSelectedIndex(api.selectedScrollSnap());
         }}
       >
         <CarouselContent>
-          {featuredRecipes.map((recipe, index) => (
+          {featuredRecipes.map((recipe) => (
             <CarouselItem key={recipe.id} className="md:basis-full">
               <Link to={`/recipes/${recipe.id}`}>
-                <div className="relative z-10 bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden border hover:shadow-lg transition-shadow">
-                  <div className="aspect-[4/3] bg-gray-100">
+                <div className="relative z-10 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl rounded-2xl overflow-hidden border transition-all">
+                  <div className="aspect-[4/3] max-h-[300px] bg-gray-100">
                     {recipe.image_url ? (
                       <img 
                         src={recipe.image_url}
@@ -89,23 +88,17 @@ export function RecipeCarousel() {
                       </div>
                     )}
                   </div>
-                  <div className="p-6">
-                    <h3 className="font-medium text-lg mb-2">{recipe.title}</h3>
-                    <div className="flex items-center text-sm text-muted-foreground">
+                  <div className="p-4 md:p-6">
+                    <h3 className="font-medium text-base md:text-lg mb-2 line-clamp-2">{recipe.title}</h3>
+                    <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
                       {recipe.dietary && (
-                        <>
-                          <span className="flex items-center">
-                            <span className="w-2 h-2 bg-recipe-green rounded-full mr-2"></span>
-                            {recipe.dietary}
-                          </span>
-                          <span className="mx-2">•</span>
-                        </>
+                        <span className="flex items-center">
+                          <span className="w-2 h-2 bg-recipe-green rounded-full mr-2"></span>
+                          {recipe.dietary}
+                        </span>
                       )}
                       {recipe.cook_time_min && (
-                        <>
-                          <span>{recipe.cook_time_min} minutes</span>
-                          <span className="mx-2">•</span>
-                        </>
+                        <span>{recipe.cook_time_min} minutes</span>
                       )}
                       {recipe.nutrition?.calories && (
                         <span>{recipe.nutrition.calories} calories</span>
@@ -117,18 +110,18 @@ export function RecipeCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="-left-4" />
-        <CarouselNext className="-right-4" />
+        <CarouselPrevious className="-left-3 md:-left-4 lg:-left-6" />
+        <CarouselNext className="-right-3 md:-right-4 lg:-right-6" />
         <div className="absolute -bottom-8 w-full">
           <CarouselDots 
             recipes={featuredRecipes} 
             selectedIndex={selectedIndex} 
           />
-          <div className="text-center text-sm text-muted-foreground mt-2" aria-live="polite">
+          <div className="text-center text-xs md:text-sm text-muted-foreground mt-2" aria-live="polite">
             Slide {selectedIndex + 1} of {featuredRecipes.length}
           </div>
         </div>
-      </Carousel>
+      </div>
     </div>
   );
 }
