@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -11,9 +10,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRecipes } from '@/hooks/use-recipes';
 import { type Recipe } from '@/types/recipe';
+import type { EmblaCarouselType } from 'embla-carousel-react';
 
 const CarouselDots = ({ 
   recipes, 
@@ -67,9 +67,8 @@ export function RecipeCarousel() {
           loop: true,
         }}
         className="relative w-full"
-        onSelect={(api) => {
-          const selectedIndex = api.selectedScrollSnap();
-          setSelectedIndex(selectedIndex);
+        onSelect={(api: EmblaCarouselType) => {
+          setSelectedIndex(api.selectedScrollSnap());
         }}
       >
         <CarouselContent>
@@ -133,4 +132,3 @@ export function RecipeCarousel() {
     </div>
   );
 }
-
