@@ -4,20 +4,17 @@
   "routes": [
     {
       "src": "/how-it-works/.*",
-      "dest": "server.js"
+      "dest": "/index.html"
     },
     {
       "src": "/recipe/.*",
-      "dest": "server.js"
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
-  "functions": {
-    "server.js": {
-      "includeFiles": "dist/**"
-    }
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }

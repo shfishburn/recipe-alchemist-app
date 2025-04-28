@@ -40,11 +40,8 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-  },
-  // SSR specific options
-  ssr: {
-    // Pre-render the specific routes that need SEO
-    target: 'node',
-    format: 'cjs',
+    // Ensure the output is optimized for Vercel
+    outDir: 'dist',
+    emptyOutDir: true,
   },
 }));
