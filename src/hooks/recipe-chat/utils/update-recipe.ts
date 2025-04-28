@@ -68,10 +68,12 @@ export async function updateRecipe(
   });
 
   try {
-    // Convert ingredients to Json type for database storage
+    // Cast our strongly typed objects to Json for database storage
     const dbRecipe = {
       ...updatedRecipe,
-      ingredients: updatedRecipe.ingredients as Json,
+      ingredients: updatedRecipe.ingredients as unknown as Json,
+      nutrition: updatedRecipe.nutrition as unknown as Json,
+      science_notes: updatedRecipe.science_notes as unknown as Json
     };
 
     const { data: updatedRecipeData, error } = await supabase
