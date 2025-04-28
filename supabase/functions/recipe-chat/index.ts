@@ -48,82 +48,93 @@ serve(async (req) => {
     User request:
     ${userMessage}
 
-    Please analyze and suggest changes in JSON format.
+    Please analyze and respond in valid JSON format with textResponse and changes fields.
     `
 
     console.log(`Sending request to OpenAI with ${prompt.length} characters`)
 
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 1000,
-        n: 1,
-        stop: null,
-      }),
-    }).then((res) => res.json()).then((json) => json.choices[0].message.content)
-
-    console.log("Raw AI response:", aiResponse);
-
-    // Validate the response
-    const changes = validateRecipeChanges(aiResponse)
-    console.log("Validated changes:", changes);
-    
-    // For analysis requests, make sure we include the changes in the response
-    const responseData = sourceType === 'analysis' 
-      ? { 
-          success: true, 
-          changes,
-          science_notes: changes.science_notes || [],
-          techniques: changes.techniques || [],
-          troubleshooting: changes.troubleshooting || [] 
-        }
-      : { success: true, changes, textResponse: aiResponse };
-
-    // Store the chat interaction if it's not an analysis
-    if (sourceType !== 'analysis' && recipe.id) {
-      const { error: chatError } = await supabaseClient
-        .from('recipe_chats')
-        .insert({
-          recipe_id: recipe.id,
-          user_message: userMessage,
-          ai_response: aiResponse,
-          changes_suggested: changes,
-          source_type: sourceType || 'manual',
-          source_url: sourceUrl,
-          source_image: sourceImage
-        })
-
-      if (chatError) {
-        console.error("Error storing chat:", chatError);
-        throw chatError;
-      }
-    }
-
-    return new Response(
-      JSON.stringify(responseData),
-      {
+    try {
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
         headers: {
-          ...corsHeaders,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`,
         },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+          n: 1,
+          stop: null,
+        }),
+      }).then((res) => res.json())
+      
+      if (!aiResponse.choices || !aiResponse.choices[0] || !aiResponse.choices[0].message) {
+        console.error("Invalid AI response structure:", aiResponse);
+        throw new Error("Failed to get a valid response from OpenAI");
       }
-    )
+      
+      const rawResponse = aiResponse.choices[0].message.content;
+      console.log("Raw AI response:", rawResponse);
+
+      // Validate the response
+      const changes = validateRecipeChanges(rawResponse);
+      console.log("Validated changes:", changes);
+      
+      // For analysis requests, make sure we include the changes in the response
+      const responseData = sourceType === 'analysis' 
+        ? { 
+            success: true, 
+            changes,
+            science_notes: changes.science_notes || [],
+            techniques: changes.techniques || [],
+            troubleshooting: changes.troubleshooting || [] 
+          }
+        : { success: true, changes, textResponse: rawResponse };
+
+      // Store the chat interaction if it's not an analysis
+      if (sourceType !== 'analysis' && recipe.id) {
+        const { error: chatError } = await supabaseClient
+          .from('recipe_chats')
+          .insert({
+            recipe_id: recipe.id,
+            user_message: userMessage,
+            ai_response: rawResponse,
+            changes_suggested: changes,
+            source_type: sourceType || 'manual',
+            source_url: sourceUrl,
+            source_image: sourceImage
+          })
+
+        if (chatError) {
+          console.error("Error storing chat:", chatError);
+          throw chatError;
+        }
+      }
+
+      return new Response(
+        JSON.stringify(responseData),
+        {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+    } catch (aiError) {
+      console.error("Error with OpenAI request:", aiError);
+      throw new Error(`OpenAI request failed: ${aiError.message}`);
+    }
   } catch (error) {
     console.error("Error in recipe-chat function:", error);
     return new Response(

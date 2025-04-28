@@ -58,31 +58,38 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     if (analysis && analysis.changes) {
       console.log('Applying analysis updates to recipe:', analysis.changes);
       
-      // Ensure the data has the correct structure before updating
-      const updatedData: Partial<Recipe> = {
-        // Copy essential properties from existing recipe
-        id: recipe.id,
-        // Apply changes from analysis while ensuring proper types
-        title: analysis.changes.title || recipe.title,
-        science_notes: Array.isArray(analysis.changes.science_notes) ? analysis.changes.science_notes : recipe.science_notes,
-        instructions: Array.isArray(analysis.changes.instructions) ? analysis.changes.instructions : recipe.instructions,
-        ingredients: Array.isArray(analysis.changes.ingredients) ? analysis.changes.ingredients : recipe.ingredients,
-      };
+      try {
+        // Ensure the data has the correct structure before updating
+        const updatedData: Partial<Recipe> = {
+          // Copy essential properties from existing recipe
+          id: recipe.id,
+          // Apply changes from analysis while ensuring proper types
+          title: analysis.changes.title || recipe.title,
+          science_notes: Array.isArray(analysis.changes.science_notes) ? analysis.changes.science_notes : recipe.science_notes,
+          instructions: Array.isArray(analysis.changes.instructions) ? analysis.changes.instructions : recipe.instructions,
+          ingredients: Array.isArray(analysis.changes.ingredients?.items) && analysis.changes.ingredients?.mode === 'replace' 
+            ? analysis.changes.ingredients.items
+            : recipe.ingredients,
+        };
 
-      // Now update with properly structured data
-      updateRecipe.mutate(updatedData, {
-        onSuccess: (updatedRecipe) => {
-          console.log('Recipe updated with analysis data:', updatedRecipe);
-          if (onRecipeUpdated) {
-            onRecipeUpdated(updatedRecipe as Recipe);
+        // Now update with properly structured data
+        updateRecipe.mutate(updatedData, {
+          onSuccess: (updatedRecipe) => {
+            console.log('Recipe updated with analysis data:', updatedRecipe);
+            if (onRecipeUpdated) {
+              onRecipeUpdated(updatedRecipe as Recipe);
+            }
+            toast.success('Recipe updated with analysis insights');
+          },
+          onError: (error) => {
+            console.error('Failed to update recipe with analysis data:', error);
+            toast.error('Failed to update recipe with analysis');
           }
-          toast.success('Recipe updated with analysis insights');
-        },
-        onError: (error) => {
-          console.error('Failed to update recipe with analysis data:', error);
-          toast.error('Failed to update recipe with analysis');
-        }
-      });
+        });
+      } catch (e) {
+        console.error("Error processing analysis data:", e);
+        toast.error("Failed to process recipe analysis data");
+      }
     }
   }, [analysis, updateRecipe, onRecipeUpdated, recipe.id, recipe.title, recipe.science_notes, recipe.instructions, recipe.ingredients]);
 

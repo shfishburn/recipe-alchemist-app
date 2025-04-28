@@ -1,76 +1,38 @@
 
-export function validateRecipeChanges(response: any) {
-  // Parse the response if it's a string
-  const changes = typeof response === 'string' ? JSON.parse(response) : response;
+export const validateRecipeChanges = (response: string): any => {
+  try {
+    // First try to parse the raw JSON directly
+    try {
+      return JSON.parse(response);
+    } catch (e) {
+      console.log("Failed to parse response as direct JSON, trying to clean markdown...");
 
-  // Validate title if present
-  if (changes.title) {
-    if (typeof changes.title !== 'string' || changes.title.trim().length === 0) {
-      throw new Error('Invalid title format');
-    }
-    
-    // Ensure title isn't a placeholder or default value
-    const lowerTitle = changes.title.toLowerCase();
-    if (lowerTitle === 'optional new title' || 
-        lowerTitle === 'untitled recipe' || 
-        lowerTitle === 'new recipe') {
-      throw new Error('Title cannot be a generic placeholder');
-    }
-  }
-
-  // Validate ingredients if present
-  if (changes.ingredients) {
-    if (!Array.isArray(changes.ingredients)) {
-      throw new Error('Ingredients must be an array');
-    }
-    
-    changes.ingredients.forEach((ingredient: any, index: number) => {
-      if (!ingredient.qty || !ingredient.unit || !ingredient.item) {
-        throw new Error(`Invalid ingredient format at index ${index}`);
+      // If direct parsing fails, try to extract JSON from markdown code blocks
+      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch && jsonMatch[1]) {
+        console.log("Found JSON in markdown code block, attempting to parse");
+        return JSON.parse(jsonMatch[1]);
       }
-    });
-  }
 
-  // Validate instructions if present
-  if (changes.instructions) {
-    if (!Array.isArray(changes.instructions)) {
-      throw new Error('Instructions must be an array');
-    }
-
-    // Validate cooking instructions
-    const cookingSteps = changes.instructions.filter((step: string) => 
-      step.toLowerCase().includes('cook') ||
-      step.toLowerCase().includes('bake') ||
-      step.toLowerCase().includes('grill') ||
-      step.toLowerCase().includes('fry')
-    );
-
-    cookingSteps.forEach((step: string, index: number) => {
-      if (!step.includes('°F') && !step.includes('°C')) {
-        throw new Error(`Missing temperature in cooking step ${index + 1}`);
+      // If that fails, see if the whole response is wrapped in backticks
+      const backtickMatch = response.match(/`([\s\S]*)`/);
+      if (backtickMatch && backtickMatch[1]) {
+        console.log("Found content in backticks, attempting to parse");
+        return JSON.parse(backtickMatch[1]);
       }
-      if (!step.includes('minute') && !step.includes('hour')) {
-        throw new Error(`Missing duration in cooking step ${index + 1}`);
-      }
-    });
-  }
 
-  // Validate cooking details if present
-  if (changes.cookingDetails) {
-    const { temperature, duration, equipment } = changes.cookingDetails;
-    
-    if (temperature && (!temperature.fahrenheit || !temperature.celsius)) {
-      throw new Error('Temperature must include both Fahrenheit and Celsius');
+      // As a last resort, try to create a basic structure from the text response
+      console.log("Creating fallback response object");
+      return {
+        textResponse: response,
+        changes: { mode: "none" }
+      };
     }
-    
-    if (duration && (!duration.prep || !duration.cook)) {
-      throw new Error('Duration must include both prep and cook times');
-    }
-    
-    if (equipment && (!Array.isArray(equipment) || equipment.length === 0)) {
-      throw new Error('Equipment must be a non-empty array');
-    }
+  } catch (error) {
+    console.error("Error validating recipe changes:", error);
+    return {
+      textResponse: response,
+      changes: { mode: "none" }
+    };
   }
-
-  return changes;
-}
+};
