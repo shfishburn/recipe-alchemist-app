@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
@@ -25,9 +26,12 @@ export function ChatResponse({
     if (!response) return '';
     
     try {
+      // Try to parse the response as JSON first
       const responseObj = JSON.parse(response);
+      // Extract the text content using different possible field names
       return responseObj.textResponse || responseObj.response || response;
     } catch (e) {
+      // If parsing fails, just use the raw response text
       console.log("Using raw response - not JSON format:", e);
       return response;
     }

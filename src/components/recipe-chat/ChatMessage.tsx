@@ -15,6 +15,7 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
     if (!chat.ai_response) return [];
     
     try {
+      // First try to parse the response as JSON
       const responseObj = JSON.parse(chat.ai_response);
       return Array.isArray(responseObj.followUpQuestions) 
         ? responseObj.followUpQuestions 

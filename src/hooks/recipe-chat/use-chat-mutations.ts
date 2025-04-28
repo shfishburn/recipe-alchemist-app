@@ -55,35 +55,51 @@ export const useChatMutations = (recipe: Recipe) => {
       }
 
       // Extract and validate the AI response content
-      const aiResponse = response.data.textResponse || response.data.response;
+      // Check multiple possible response fields to ensure we always have content
+      const aiResponse = response.data.textResponse || response.data.response || JSON.stringify({
+        textResponse: "I couldn't generate a proper analysis for this recipe. Please try again."
+      });
+      
       if (!aiResponse) {
         console.error("No valid response content found in:", response.data);
         throw new Error("Invalid AI response format");
       }
 
-      // Insert the chat message into the database
-      console.log("Saving chat message to database with response:", aiResponse);
-      const { data, error } = await supabase
-        .from('recipe_chats')
-        .insert({
-          recipe_id: recipe.id,
-          user_message: message,
-          ai_response: aiResponse,
-          changes_suggested: response.data.changes || null,
-          source_type: sourceType || 'manual',
-          source_url: sourceUrl,
-          source_image: sourceImage
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error saving chat to database:", error);
-        throw error;
-      }
+      // Log the exact content we're saving to help with debugging
+      console.log("Saving chat message to database with response:", aiResponse.substring(0, 100) + "...");
       
-      console.log("Chat successfully saved to database with ID:", data.id);
-      return data;
+      try {
+        // Insert the chat message into the database
+        const { data, error } = await supabase
+          .from('recipe_chats')
+          .insert({
+            recipe_id: recipe.id,
+            user_message: message,
+            ai_response: aiResponse,
+            changes_suggested: response.data.changes || null,
+            source_type: sourceType || 'manual',
+            source_url: sourceUrl,
+            source_image: sourceImage
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error saving chat to database:", error);
+          throw error;
+        }
+        
+        console.log("Chat successfully saved to database with ID:", data.id);
+        return data;
+      } catch (dbError) {
+        console.error("Database error when saving chat:", dbError);
+        // If we hit a database constraint error, let's provide more specific feedback
+        if (dbError.message?.includes("violates not-null constraint") && 
+            dbError.message?.includes("ai_response")) {
+          throw new Error("Failed to save chat response: AI response cannot be empty");
+        }
+        throw dbError;
+      }
     },
     onSuccess: () => {
       console.log("Recipe chat mutation completed successfully");
