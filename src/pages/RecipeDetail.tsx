@@ -88,7 +88,7 @@ const RecipeDetail = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pb-20 sm:pb-28 md:pb-32">
+      <main className="flex-1">
         <div className="container-page py-4 sm:py-8">
           {isLoading ? (
             <div className="flex justify-center my-8 sm:my-12">
@@ -150,7 +150,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-6 sm:mt-8 mb-16 sm:mb-20">
+                <div className="mt-6 sm:mt-8">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}
