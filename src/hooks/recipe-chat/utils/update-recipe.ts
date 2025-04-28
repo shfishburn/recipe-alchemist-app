@@ -12,49 +12,60 @@ export async function updateRecipe(
 ) {
   if (!chatMessage.changes_suggested) return null;
   
-  console.log("Updating recipe with changes:", chatMessage.changes_suggested);
+  console.log("Starting recipe update with changes:", {
+    hasIngredients: !!chatMessage.changes_suggested.ingredients,
+    ingredientMode: chatMessage.changes_suggested.ingredients?.mode,
+    ingredientCount: chatMessage.changes_suggested.ingredients?.items?.length
+  });
 
   const updatedRecipe = {
+    ...recipe,
     title: chatMessage.changes_suggested.title || recipe.title,
     nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
     image_url: imageUrl ?? recipe.image_url,
-    user_id: recipe.user_id || user_id,
-    servings: recipe.servings || 4,
-    instructions: recipe.instructions,
-    ingredients: recipe.ingredients,
-    science_notes: chatMessage.changes_suggested.science_notes || recipe.science_notes || []
+    science_notes: chatMessage.changes_suggested.science_notes || recipe.science_notes || [],
+    updated_at: new Date().toISOString()
   };
+
+  // Process ingredients with validation
+  if (chatMessage.changes_suggested.ingredients?.items) {
+    const { mode, items } = chatMessage.changes_suggested.ingredients;
+    console.log("Processing ingredients:", { mode, itemCount: items.length });
+    
+    // Validate ingredients format
+    const validIngredients = items.every(item => 
+      typeof item.qty === 'number' && 
+      typeof item.unit === 'string' && 
+      typeof item.item === 'string'
+    );
+
+    if (!validIngredients) {
+      console.error("Invalid ingredient format detected");
+      throw new Error("Invalid ingredient format in suggested changes");
+    }
+
+    if (mode === 'add' && Array.isArray(items)) {
+      console.log("Adding new ingredients to existing recipe");
+      updatedRecipe.ingredients = [...recipe.ingredients, ...items];
+    } else if (mode === 'replace' && Array.isArray(items)) {
+      console.log("Replacing all ingredients");
+      updatedRecipe.ingredients = items;
+    }
+  }
 
   // Process instructions
   if (chatMessage.changes_suggested.instructions) {
-    console.log("Updating instructions:", chatMessage.changes_suggested.instructions);
+    console.log("Updating instructions");
     if (typeof chatMessage.changes_suggested.instructions[0] === 'string') {
-      updatedRecipe.instructions = chatMessage.changes_suggested.instructions as string[];
+      updatedRecipe.instructions = chatMessage.changes_suggested.instructions;
     } else {
-      updatedRecipe.instructions = (chatMessage.changes_suggested.instructions as Array<{
-        stepNumber?: number;
-        action: string;
-      }>).map(instr => instr.action);
+      updatedRecipe.instructions = chatMessage.changes_suggested.instructions.map(
+        instr => typeof instr === 'string' ? instr : instr.action
+      );
     }
   }
 
-  // Process ingredients
-  if (chatMessage.changes_suggested.ingredients) {
-    const { mode, items } = chatMessage.changes_suggested.ingredients;
-    console.log("Updating ingredients with mode:", mode, "Items:", items);
-    
-    if (mode === 'add' && items && Array.isArray(items)) {
-      console.log("Adding ingredients to existing recipe");
-      updatedRecipe.ingredients = [...recipe.ingredients, ...items];
-    } else if (mode === 'replace' && items && Array.isArray(items)) {
-      console.log("Replacing all ingredients");
-      updatedRecipe.ingredients = items;
-    } else {
-      console.warn("Unhandled ingredients update mode or invalid items:", mode, items);
-    }
-  }
-
-  console.log("Final updated recipe data:", {
+  console.log("Final recipe update:", {
     title: updatedRecipe.title,
     ingredientsCount: updatedRecipe.ingredients.length,
     instructionsCount: updatedRecipe.instructions.length
@@ -63,26 +74,20 @@ export async function updateRecipe(
   try {
     const { data: updatedRecipeData, error } = await supabase
       .from('recipes')
-      .update({
-        ...updatedRecipe,
-        ingredients: updatedRecipe.ingredients as unknown as Json,
-        nutrition: updatedRecipe.nutrition as unknown as Json,
-        science_notes: updatedRecipe.science_notes as unknown as Json,
-        updated_at: new Date().toISOString()
-      })
+      .update(updatedRecipe)
       .eq('id', recipe.id)
       .select()
       .single();
 
     if (error) {
-      console.error("Error updating recipe in database:", error);
+      console.error("Error updating recipe:", error);
       throw error;
     }
     
-    console.log("Recipe successfully updated in database");
+    console.log("Recipe successfully updated");
     return updatedRecipeData;
   } catch (error) {
-    console.error("Exception when updating recipe:", error);
+    console.error("Update recipe error:", error);
     throw error;
   }
 }

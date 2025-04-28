@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
@@ -26,28 +25,32 @@ export function ChatResponse({
     if (!response) return '';
     
     try {
-      // Parse response as JSON first
       const responseObj = JSON.parse(response);
       let text = responseObj.textResponse || responseObj.response || response;
 
-      // Format ingredients if present in changes
+      // Format ingredients with better logging
       if (responseObj.changes?.ingredients?.items) {
+        console.log("Formatting ingredients in response");
         responseObj.changes.ingredients.items.forEach((ingredient: any) => {
           const ingredientText = `${ingredient.qty} ${ingredient.unit} ${ingredient.item}`;
+          console.log("Formatting ingredient:", ingredientText);
+          // Make the ingredient bold in the text
           text = text.replace(
-            ingredientText,
+            new RegExp(ingredientText, 'gi'),
             `**${ingredientText}**`
           );
         });
       }
 
-      // Format instructions if present in changes
+      // Format instructions with better matching
       if (responseObj.changes?.instructions) {
-        const instructions = responseObj.changes.instructions;
-        instructions.forEach((instruction: string | { action: string }) => {
+        console.log("Formatting instructions in response");
+        responseObj.changes.instructions.forEach((instruction: string | { action: string }) => {
           const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
+          console.log("Formatting instruction:", instructionText);
+          // Make the instruction bold in the text
           text = text.replace(
-            instructionText,
+            new RegExp(instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
             `**${instructionText}**`
           );
         });
@@ -55,7 +58,6 @@ export function ChatResponse({
 
       return text;
     } catch (e) {
-      // If parsing fails, just use the raw response text
       console.log("Using raw response - not JSON format:", e);
       return response;
     }
@@ -65,26 +67,22 @@ export function ChatResponse({
     setMessage(question);
   };
 
-  // Process text to handle markdown-style bold syntax
+  // Render formatted text with bold sections
   const renderFormattedText = (text: string) => {
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        // Remove the ** markers and render as bold
         return <strong key={index} className="font-semibold text-blue-600">{part.slice(2, -2)}</strong>;
       }
       return <span key={index}>{part}</span>;
     });
   };
 
-  // Split text into paragraphs and filter out empty lines
-  const paragraphs = displayText.split('\n').filter(Boolean);
-
   return (
     <div className="flex-1">
       <div className="flex flex-col space-y-4">
         <div className="bg-white rounded-[20px] rounded-tl-[5px] p-4 shadow-sm">
           <div className="prose prose-sm max-w-none">
-            {paragraphs.map((paragraph, index) => (
+            {displayText.split('\n').filter(Boolean).map((paragraph, index) => (
               <p key={index} className="mb-2">{renderFormattedText(paragraph)}</p>
             ))}
           </div>
@@ -114,7 +112,7 @@ export function ChatResponse({
             </div>
           )}
 
-          {followUpQuestions && followUpQuestions.length > 0 && (
+          {followUpQuestions?.length > 0 && (
             <div className="mt-6">
               <h4 className="text-sm font-medium mb-2">Follow-up Questions</h4>
               <div className="flex flex-wrap gap-2">
@@ -122,7 +120,7 @@ export function ChatResponse({
                   <button
                     key={index}
                     className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-left"
-                    onClick={() => handleFollowUpClick(question)}
+                    onClick={() => setMessage(question)}
                   >
                     {question}
                   </button>
