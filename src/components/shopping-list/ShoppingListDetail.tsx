@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,15 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
   const [newItemName, setNewItemName] = useState('');
   const [newItemQuantity, setNewItemQuantity] = useState(1);
   const [newItemUnit, setNewItemUnit] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState('Other');
+
+  // Group items by department
+  const itemsByDepartment = list.items.reduce((acc, item) => {
+    const dept = item.department || 'Other';
+    if (!acc[dept]) acc[dept] = [];
+    acc[dept].push(item);
+    return acc;
+  }, {} as Record<string, ShoppingListItem[]>);
 
   const handleAddItem = async () => {
     if (!newItemName.trim()) return;
@@ -106,57 +114,58 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
     <Card className="p-6">
       <h2 className="text-2xl font-bold mb-6">{list.title}</h2>
       
-      <div className="space-y-4">
-        {/* Add new item form */}
-        <div className="flex flex-wrap gap-2">
-          <Input
-            placeholder="Item name"
-            value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            min="1"
-            placeholder="Qty"
-            value={newItemQuantity}
-            onChange={(e) => setNewItemQuantity(Number(e.target.value))}
-            className="w-24"
-          />
-          <Input
-            placeholder="Unit"
-            value={newItemUnit}
-            onChange={(e) => setNewItemUnit(e.target.value)}
-            className="w-24"
-          />
-          <Button onClick={handleAddItem}><Plus className="mr-2" />Add Item</Button>
+      {list.tips && list.tips.length > 0 && (
+        <div className="mb-6 p-4 bg-muted rounded-md">
+          <h3 className="font-medium mb-2">Shopping Tips:</h3>
+          <ul className="list-disc list-inside space-y-1">
+            {list.tips.map((tip, index) => (
+              <li key={index} className="text-sm text-muted-foreground">{tip}</li>
+            ))}
+          </ul>
         </div>
-
-        {/* Items list */}
-        <div className="space-y-2">
-          {list.items.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 p-2 bg-muted/40 rounded-md">
-              <Checkbox
-                checked={item.checked}
-                onCheckedChange={() => handleToggleItem(index)}
-                id={`item-${index}`}
-              />
-              <Label 
-                htmlFor={`item-${index}`}
-                className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
-              >
-                {item.quantity} {item.unit} {item.name}
-              </Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDeleteItem(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+      )}
+      
+      <div className="space-y-6">
+        {Object.entries(itemsByDepartment).map(([department, items]) => (
+          <div key={department} className="space-y-2">
+            <h3 className="font-medium text-lg">{department}</h3>
+            {items.map((item, index) => (
+              <div key={index} className="flex items-center gap-2 p-2 bg-muted/40 rounded-md group">
+                <Checkbox
+                  checked={item.checked}
+                  onCheckedChange={() => handleToggleItem(list.items.indexOf(item))}
+                  id={`item-${department}-${index}`}
+                />
+                <Label 
+                  htmlFor={`item-${department}-${index}`}
+                  className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+                >
+                  <span>{item.quantity} {item.unit} {item.name}</span>
+                  {item.notes && (
+                    <span className="block text-sm text-muted-foreground">{item.notes}</span>
+                  )}
+                  {item.alternatives?.length > 0 && (
+                    <span className="block text-sm text-muted-foreground">
+                      Alternatives: {item.alternatives.join(', ')}
+                    </span>
+                  )}
+                  {item.pantry_staple && (
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
+                      Pantry Staple
+                    </span>
+                  )}
+                </Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteItem(list.items.indexOf(item))}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </Card>
   );
