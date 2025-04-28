@@ -146,10 +146,10 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
                       "focus:bg-blue-50 focus:text-blue-600"
                     )}
                   >
-                    <div className="flex items-center justify-between w-full pr-6">
+                    <div className="flex items-center justify-between w-full gap-3">
                       <span className="truncate">{cuisine.label}</span>
                       {value === cuisine.value && (
-                        <Check className="h-4 w-4 text-blue-600 absolute right-4" />
+                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
                       )}
                     </div>
                   </SelectItem>
