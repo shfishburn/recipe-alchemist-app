@@ -1,7 +1,7 @@
 
 export const NUTRITION_COLORS = {
   protein: '#9b87f5',  // Purple for protein
-  carbs: '#0EA5E9',    // Blue for carbs
+  carbs: '#1EAEDB',    // Bright blue for carbs
   fat: '#22c55e',      // Green for fat
   calories: '#F97316'  // Orange for calories
 } as const;

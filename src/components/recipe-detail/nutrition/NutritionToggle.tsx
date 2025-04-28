@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { User2, ChefHat } from 'lucide-react';
 
 interface NutritionToggleProps {
@@ -10,25 +10,26 @@ interface NutritionToggleProps {
 
 export function NutritionToggle({ viewMode, onViewModeChange }: NutritionToggleProps) {
   return (
-    <div className="flex gap-2">
-      <Button 
-        variant={viewMode === 'recipe' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => onViewModeChange('recipe')}
-        className="flex items-center gap-2"
+    <ToggleGroup 
+      type="single" 
+      value={viewMode}
+      onValueChange={(value) => value && onViewModeChange(value as 'recipe' | 'personal')}
+      className="border rounded-full p-1 bg-slate-50"
+    >
+      <ToggleGroupItem
+        value="recipe"
+        className="data-[state=on]:bg-primary data-[state=on]:text-white rounded-full px-3 text-sm font-medium"
       >
-        <ChefHat className="h-4 w-4" />
+        <ChefHat className="h-4 w-4 mr-1" />
         Recipe
-      </Button>
-      <Button
-        variant={viewMode === 'personal' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => onViewModeChange('personal')}
-        className="flex items-center gap-2"
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="personal"
+        className="data-[state=on]:bg-primary data-[state=on]:text-white rounded-full px-3 text-sm font-medium"
       >
-        <User2 className="h-4 w-4" />
-        Personal Impact
-      </Button>
-    </div>
+        <User2 className="h-4 w-4 mr-1" />
+        Personal
+      </ToggleGroupItem>
+    </ToggleGroup>
   );
 }

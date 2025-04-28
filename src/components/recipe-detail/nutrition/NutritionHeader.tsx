@@ -11,9 +11,9 @@ interface NutritionHeaderProps {
 
 export function NutritionHeader({ showToggle, viewMode, onViewModeChange }: NutritionHeaderProps) {
   return (
-    <CardHeader className="pb-2">
-      <CardTitle className="text-lg md:text-xl flex items-center justify-between">
-        <span>Nutrition Information</span>
+    <CardHeader className="pb-4">
+      <CardTitle className="text-base md:text-lg flex items-center justify-between">
+        <span className="text-slate-800">Nutrition Information</span>
         {showToggle && (
           <NutritionToggle 
             viewMode={viewMode} 
