@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 
@@ -11,25 +10,25 @@ export const ArticleIntelligentCooking = () => {
     >
       <meta itemProp="keywords" content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions" />
       
-      <Card className="p-8 mb-8">
-        <div className="space-y-6" itemProp="articleBody">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold mb-3">AI Makes Cooking Intelligent</h1>
+      <Card className="p-8 mb-8 space-y-12">
+        <div className="space-y-8" itemProp="articleBody">
+          <header className="mb-12">
+            <h1 className="text-3xl font-bold mb-4">AI Makes Cooking Intelligent</h1>
             <p className="text-xl font-medium text-muted-foreground">
               Discover how our AI uses food science to transform your kitchen experience
             </p>
           </header>
 
-          <p className="text-lg">
+          <p className="text-lg leading-relaxed mb-8">
             When you cook with our AI app, you're not just following recipes — you're cooking smarter.
           </p>
 
-          <p>
+          <p className="leading-relaxed mb-8">
             We believe great food deserves great information. That's why every recipe you see, 
             every nutrition label you get, is crafted using real science, not guesses.
           </p>
 
-          <section aria-labelledby="fresh-data">
+          <section aria-labelledby="fresh-data" className="space-y-4">
             <h3 id="fresh-data" className="text-2xl font-semibold mt-8">
               Fresh, Real Ingredient Data
             </h3>
@@ -43,7 +42,7 @@ export const ArticleIntelligentCooking = () => {
             </p>
           </section>
 
-          <section aria-labelledby="cooking-changes">
+          <section aria-labelledby="cooking-changes" className="space-y-4">
             <h3 id="cooking-changes" className="text-2xl font-semibold">
               Cooking Changes Food — We Respect That
             </h3>
@@ -57,7 +56,7 @@ export const ArticleIntelligentCooking = () => {
             </ul>
           </section>
 
-          <section aria-labelledby="smart-substitutions">
+          <section aria-labelledby="smart-substitutions" className="space-y-4">
             <h3 id="smart-substitutions" className="text-2xl font-semibold">
               Smart Substitutions for Every Diet
             </h3>
@@ -73,7 +72,7 @@ export const ArticleIntelligentCooking = () => {
             </ul>
           </section>
 
-          <section aria-labelledby="absorption-insights">
+          <section aria-labelledby="absorption-insights" className="space-y-4">
             <h3 id="absorption-insights" className="text-2xl font-semibold">
               Beyond Labels: Real Absorption Insights
             </h3>
@@ -89,7 +88,7 @@ export const ArticleIntelligentCooking = () => {
             </ul>
           </section>
 
-          <section aria-labelledby="transparent-info">
+          <section aria-labelledby="transparent-info" className="space-y-4">
             <h3 id="transparent-info" className="text-2xl font-semibold">
               Transparent, Honest Information
             </h3>
@@ -104,7 +103,7 @@ export const ArticleIntelligentCooking = () => {
             </ul>
           </section>
 
-          <section aria-labelledby="why-it-matters">
+          <section aria-labelledby="why-it-matters" className="space-y-4">
             <h3 id="why-it-matters" className="text-2xl font-semibold">
               Why It Matters
             </h3>
@@ -116,7 +115,7 @@ export const ArticleIntelligentCooking = () => {
             </ul>
           </section>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-16 space-y-4">
             <p className="text-xl font-semibold">
               <strong>Our AI makes recipes smarter, so you can cook, eat, and live better.</strong>
             </p>
