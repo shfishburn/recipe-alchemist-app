@@ -111,17 +111,19 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
         <SelectTrigger id={id} className="w-full">
           <SelectValue placeholder="Select cuisine" />
         </SelectTrigger>
-        <SelectContent className="max-h-[400px]">
+        <SelectContent className="max-h-[400px] bg-white">
           {cuisineCategories.map((category) => (
             <SelectGroup key={category.name}>
-              <SelectLabel className="font-semibold text-base text-primary px-2 py-2 border-b">
+              <SelectLabel 
+                className="font-semibold text-base px-3 py-2 border-b bg-gray-50 text-primary sticky top-0"
+              >
                 {category.name}
               </SelectLabel>
               {category.options.map((cuisine) => (
                 <SelectItem 
                   key={cuisine.value} 
                   value={cuisine.value}
-                  className="pl-4 py-2 text-sm hover:bg-accent cursor-pointer"
+                  className="pl-6 py-2.5 text-sm hover:bg-gray-50 cursor-pointer data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                 >
                   {cuisine.label}
                 </SelectItem>
