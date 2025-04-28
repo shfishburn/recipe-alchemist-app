@@ -15,7 +15,7 @@ export const useRecipeChat = (recipe: Recipe) => {
   const [optimisticMessages, setOptimisticMessages] = useState<OptimisticMessage[]>([]);
   const { toast } = useToast();
 
-  const { data: chatHistory = [], isLoading: isLoadingHistory } = useQuery({
+  const { data: chatHistory = [], isLoading: isLoadingHistory, refetch } = useQuery({
     queryKey: ['recipe-chats', recipe.id],
     queryFn: async () => {
       console.log(`Fetching chat history for recipe ${recipe.id}`);
@@ -77,6 +77,7 @@ export const useRecipeChat = (recipe: Recipe) => {
       });
     },
     refetchOnWindowFocus: false,
+    staleTime: 5000, // Don't refetch too often to avoid flickering
   });
 
   const mutation = useChatMutations(recipe);
@@ -173,5 +174,6 @@ export const useRecipeChat = (recipe: Recipe) => {
     isApplying: applyChanges.isPending,
     uploadRecipeImage,
     submitRecipeUrl,
+    refetchChatHistory: refetch
   };
 };

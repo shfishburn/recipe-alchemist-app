@@ -91,7 +91,7 @@ export const useChatMutations = (recipe: Recipe) => {
           
           console.log("Chat successfully saved to database with ID:", data.id);
           return data;
-        } catch (dbError) {
+        } catch (dbError: any) {
           console.error("Database error when saving chat:", dbError);
           // If we hit a database constraint error, let's provide more specific feedback
           if (dbError.message?.includes("violates not-null constraint") && 
@@ -100,7 +100,7 @@ export const useChatMutations = (recipe: Recipe) => {
           }
           throw dbError;
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Recipe chat error:", err);
         throw err;
       }
@@ -113,7 +113,7 @@ export const useChatMutations = (recipe: Recipe) => {
         description: "Culinary analysis complete",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Recipe chat mutation error:", error);
       toast({
         title: "Error",
