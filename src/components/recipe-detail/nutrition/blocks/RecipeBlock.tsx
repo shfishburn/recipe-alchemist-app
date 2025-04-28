@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
@@ -106,6 +105,7 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                     paddingAngle={2}
                     dataKey="value"
                     label={renderCustomLabel}
+                    isAnimationActive={false}
                   >
                     {macrosData.map((entry, index) => (
                       <Cell 
@@ -159,6 +159,7 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                     paddingAngle={2}
                     dataKey="value"
                     label={renderCustomLabel}
+                    isAnimationActive={false}
                   >
                     {calorieMacroData.map((entry, index) => (
                       <Cell 
