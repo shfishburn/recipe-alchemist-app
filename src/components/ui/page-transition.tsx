@@ -10,19 +10,15 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState("fadeIn");
-  const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (location !== displayLocation) {
-      // Capture the current scroll position and container height
-      const currentHeight = containerRef.current?.offsetHeight || 'auto';
-      
       setTransitionStage("fadeOut");
       
       const timeout = setTimeout(() => {
         setDisplayLocation(location);
         setTransitionStage("fadeIn");
-      }, 150); // Match fadeOut duration
+      }, 300); // Match the animation duration
       
       return () => clearTimeout(timeout);
     }
@@ -30,12 +26,8 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
 
   return (
     <div 
-      ref={containerRef}
       className={`page-transition ${transitionStage}`}
-      style={{ 
-        position: "relative",
-        minHeight: "auto" // Always use auto to prevent jumping
-      }}
+      style={{ position: "relative" }}
     >
       {children}
     </div>
