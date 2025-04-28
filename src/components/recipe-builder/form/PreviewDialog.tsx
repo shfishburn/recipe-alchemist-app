@@ -82,11 +82,6 @@ const PreviewDialog = ({ open, onOpenChange, formData, showAdvanced }: PreviewDi
                 <h4 className="text-sm font-medium">Max Calories</h4>
                 <p className="text-sm text-muted-foreground">{formData.maxCalories} per serving</p>
               </div>
-              
-              <div>
-                <h4 className="text-sm font-medium">Max Time</h4>
-                <p className="text-sm text-muted-foreground">{formData.maxMinutes} minutes</p>
-              </div>
             </>
           )}
         </div>
