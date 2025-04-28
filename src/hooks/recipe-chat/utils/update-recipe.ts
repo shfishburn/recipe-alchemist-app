@@ -1,10 +1,10 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
-import type { Json } from '@/integrations/supabase/types';
 import { findDuplicateIngredients, validateIngredientQuantities } from './ingredients/ingredient-validation';
 import { processRecipeUpdates } from './process-recipe-updates';
+import { saveRecipeUpdate } from './db/save-recipe-update';
+import { validateRecipeUpdate } from './validation/validate-recipe-update';
 
 export async function updateRecipe(
   recipe: Recipe,
@@ -12,22 +12,23 @@ export async function updateRecipe(
   user_id: string,
   imageUrl: string | null
 ) {
-  if (!chatMessage.changes_suggested) return null;
+  // Validate inputs
+  validateRecipeUpdate(recipe, chatMessage);
   
   console.log("Starting recipe update with changes:", {
-    hasTitle: !!chatMessage.changes_suggested.title,
-    hasIngredients: !!chatMessage.changes_suggested.ingredients,
-    ingredientMode: chatMessage.changes_suggested.ingredients?.mode,
-    ingredientCount: chatMessage.changes_suggested.ingredients?.items?.length,
-    hasInstructions: !!chatMessage.changes_suggested.instructions,
-    hasNutrition: !!chatMessage.changes_suggested.nutrition
+    hasTitle: !!chatMessage.changes_suggested?.title,
+    hasIngredients: !!chatMessage.changes_suggested?.ingredients,
+    ingredientMode: chatMessage.changes_suggested?.ingredients?.mode,
+    ingredientCount: chatMessage.changes_suggested?.ingredients?.items?.length,
+    hasInstructions: !!chatMessage.changes_suggested?.instructions,
+    hasNutrition: !!chatMessage.changes_suggested?.nutrition
   });
 
   // Process basic recipe updates
   const updatedRecipe = processRecipeUpdates(recipe, chatMessage);
 
-  // Process ingredients with enhanced validation
-  if (chatMessage.changes_suggested.ingredients?.items) {
+  // Process ingredients if they exist
+  if (chatMessage.changes_suggested?.ingredients?.items) {
     const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
     console.log("Processing ingredients:", { mode, itemCount: items.length });
     
@@ -44,7 +45,7 @@ export async function updateRecipe(
         throw new Error("Invalid ingredient format in suggested changes");
       }
 
-      // Enhanced duplicate checking in add mode
+      // Check for duplicates in add mode
       if (mode === 'add') {
         const duplicates = findDuplicateIngredients(recipe.ingredients, items);
         if (duplicates.length > 0) {
@@ -57,7 +58,7 @@ export async function updateRecipe(
         }
       }
 
-      // Validate quantities against serving size with improved logic
+      // Validate quantities
       const quantityValidation = validateIngredientQuantities(recipe, items, mode);
       if (!quantityValidation.valid) {
         console.error("Ingredient quantity validation failed:", quantityValidation.message);
@@ -75,28 +76,7 @@ export async function updateRecipe(
   }
 
   try {
-    // Properly transform the recipe for Supabase storage
-    const dbRecipe = {
-      ...updatedRecipe,
-      ingredients: updatedRecipe.ingredients as unknown as Json,
-      nutrition: updatedRecipe.nutrition as unknown as Json,
-      science_notes: updatedRecipe.science_notes as unknown as Json
-    };
-
-    const { data, error } = await supabase
-      .from('recipes')
-      .update(dbRecipe)
-      .eq('id', recipe.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error updating recipe:", error);
-      throw error;
-    }
-    
-    console.log("Recipe successfully updated");
-    return data;
+    return await saveRecipeUpdate(updatedRecipe);
   } catch (error) {
     console.error("Update recipe error:", error);
     throw error;
