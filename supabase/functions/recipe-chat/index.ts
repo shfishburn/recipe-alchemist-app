@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -31,94 +30,28 @@ serve(async (req) => {
 
 2. Enhance Techniques with Scientific Precision:
    - Specify exact temperatures, timing, and visual/tactile doneness cues
-   - Explain how ingredient preparation affects texture and flavor (e.g., cutting techniques, resting times)
+   - Explain how ingredient preparation affects texture and flavor
    - Provide equipment recommendations based on thermal properties
    - Include troubleshooting for common issues with scientific explanations
 
-3. Optimize Nutritional Impact:
-   - Detail nutrient changes during cooking (retention, loss, or enhancement)
-   - Explain how cooking methods affect bioavailability of nutrients
-   - Suggest evidence-based modifications for different health goals
-   - Provide margin-of-error for nutritional calculations with explanation
+3. MEASUREMENT STANDARDIZATION:
+   - All measurements MUST be in imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
+   - Convert any metric values to their imperial equivalents
+   - For small quantities where precision matters, use fractions (1/4 tsp, etc.)
+   - Provide temperatures in °F with °C in parentheses where relevant
 
-4. Transform Ingredient Understanding:
+4. INLINE INGREDIENTS FORMAT:
+   - Include ingredient references within instructions using **bold** text
+   - Each instruction must reference specific ingredients with exact quantities
+   - Example: "Heat a large skillet and add **2 tablespoons olive oil**. Once hot, sear **1 pound beef chuck, cubed** until browned"
+   - Maintain complete measurements in the separate ingredients list with quality specs
+   - Ensure every ingredient mentioned is properly formatted in bold
+
+5. Transform Ingredient Understanding:
    - Explain chemical composition of key ingredients and their functional roles
    - Detail how ingredient quality indicators affect results
    - Provide scientifically-validated substitutions with reasoning
-   - Explain how ingredient temperature, pH, and freshness impact outcomes
-
-5. Standardize Measurement Units:
-   - Ensure all measurements are provided in imperial units
-   - Temperature should be in °F with °C in parentheses where relevant
-   - Weight measurements should use oz/lb rather than g/kg
-   - Volume measurements should use tsp/tbsp/cups/fluid oz rather than ml/l
-
-Format your response as JSON with this exact structure:
-
-{
-  "textResponse": "Your detailed, scientific analysis explaining the improvements and techniques",
-  "changes": {
-    "title": "Updated recipe title if relevant",
-    "ingredients": {
-      "mode": "replace" | "add",
-      "items": [
-        {
-          "qty": number,
-          "unit": "g" | "ml" | "tbsp" | "tsp" | "cup" | "piece",
-          "item": "ingredient name",
-          "notes": "scientific rationale for preparation or selection"
-        }
-      ]
-    },
-    "instructions": [
-      "Precise, numbered steps with temperatures, times, and visual/sensory cues"
-    ],
-    "equipmentNeeded": [
-      "Required tools and equipment with scientific justification"
-    ]
-  },
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number,
-    "sugar_g": number,
-    "sodium_mg": number
-  },
-  "science_notes": [
-    "Key scientific principles and reactions specific to this recipe",
-    "Temperature-dependent changes with molecular explanations",
-    "Chemical interactions between ingredients with compound names",
-    "Optimization rationales based on food science research"
-  ],
-  "health_insights": [
-    "Evidence-based nutritional benefits with citations where possible",
-    "Functional properties of key ingredients",
-    "Metabolic impacts and considerations",
-    "Suggested modifications for specific dietary needs with scientific reasoning"
-  ],
-  "followUpQuestions": [
-    "Specific questions about variable control in this recipe",
-    "Inquiries about molecular gastronomy applications",
-    "Questions about scaling or adapting techniques"
-  ]
-}`;
-
-    prompt += `\n\nCurrent recipe:
-- Title: ${recipe.title}
-- Servings: ${recipe.servings}
-
-Current Nutrition (per serving):
-${Object.entries(recipe.nutrition || {}).map(([key, value]) => `- ${key.replace(/_/g, ' ')}: ${value}`).join('\n')}
-
-Ingredients:
-${recipe.ingredients.map(i => `- ${i.qty} ${i.unit} ${i.item}`).join('\n')}
-
-Instructions:
-${recipe.instructions.map((step, index) => `${index + 1}. ${step}`).join('\n')}
-
-User request: ${userMessage}`;
+   - Explain how ingredient temperature, pH, and freshness impact outcomes`;
 
     console.log("Sending request to OpenAI with prompt");
     

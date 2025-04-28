@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,16 +18,12 @@ serve(async (req) => {
     
     if (!apiKey) {
       console.error('OpenAI API key is not configured');
-      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY in Supabase secrets.');
+      throw new Error('OpenAI API key is not configured');
     }
     
-    const openai = new OpenAI({
-      apiKey: apiKey,
-    });
-
+    const openai = new OpenAI({ apiKey });
     const requestData = await req.json();
-    console.log('Received request data:', JSON.stringify(requestData));
-
+    
     const { 
       cuisine, 
       dietary, 
@@ -77,6 +72,13 @@ serve(async (req) => {
        - Convert any metric values to their imperial equivalents
        - For small quantities where precision matters, use fractions (1/4 tsp, etc.)
        - Provide temperatures in °F with °C in parentheses where relevant
+
+    6. INLINE INGREDIENTS FORMAT:
+       - Include ingredient references within instructions using **bold** text
+       - Each instruction must reference specific ingredients with exact quantities
+       - Example: "Heat a large skillet and add **2 tablespoons olive oil**. Once hot, sear **1 pound beef chuck, cubed** until browned"
+       - Maintain complete measurements in the separate ingredients list with quality specs
+       - Ensure every ingredient mentioned is properly formatted in bold
     
     Return ONLY valid JSON matching this schema:
     {

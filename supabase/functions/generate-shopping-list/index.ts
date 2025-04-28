@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -38,6 +37,13 @@ ORGANIZATION PRINCIPLES:
 4. Prioritize ingredients by cooking sequence and perishability
 5. Flag items needing advance preparation or special handling
 
+MEASUREMENT STANDARDIZATION:
+- All measurements MUST be in imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
+- Convert any metric values to their imperial equivalents
+- For small quantities where precision matters, use fractions (1/4 tsp, etc.)
+- Ensure consistent units across similar ingredients
+- Round measurements to practical shopping quantities
+
 PRACTICAL ENHANCEMENTS:
 1. Identify quality indicators for key ingredients (e.g., "ripe but firm avocados")
 2. Note seasonal availability and suggest peak-season alternatives
@@ -51,12 +57,6 @@ SHOPPING EFFICIENCY:
 3. Note ingredients with significant price variations between brands/sources
 4. Suggest preservation methods for unused portions
 5. Flag ingredients that require special storage after purchase
-
-MEASUREMENT STANDARDIZATION:
-- Standardize all measurements to imperial units (oz, lb, cups, etc.)
-- When converting from metric, round to practical shopping quantities
-- Use common US grocery store packaging sizes where applicable
-- For small quantities where precision matters, use fractions (1/4 tsp, etc.)
 
 Return ONLY valid JSON matching this schema:
 {
