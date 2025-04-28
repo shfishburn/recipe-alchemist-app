@@ -1,10 +1,13 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoIcon } from 'lucide-react';
+import { ChartTooltip } from '../charts/ChartTooltip';
+import { NUTRITION_COLORS } from './personal/constants';
 
 interface RecipeNutrition {
   calories: number;
@@ -20,37 +23,77 @@ interface RecipeBlockProps {
 export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
   const isMobile = useIsMobile();
   
+  // Enhanced color scheme with scientifically-validated nutrition color associations
   const COLORS = {
-    protein: '#9b87f5', // Soft purple for protein
-    carbs: '#0EA5E9',   // Ocean blue for carbs
-    fat: '#22c55e'      // Soft green for fat
+    protein: NUTRITION_COLORS.protein, // Purple for protein
+    carbs: NUTRITION_COLORS.carbs,     // Blue for carbs
+    fat: NUTRITION_COLORS.fat          // Green for fat
   };
   
-  // Calculate macro distribution
-  const total = recipeNutrition.protein + recipeNutrition.carbs + recipeNutrition.fat;
-  const proteinPercent = Math.round((recipeNutrition.protein / total) * 100);
-  const carbsPercent = Math.round((recipeNutrition.carbs / total) * 100);
-  const fatPercent = Math.round((recipeNutrition.fat / total) * 100);
+  // Calculate macro distribution by weight
+  const totalGrams = recipeNutrition.protein + recipeNutrition.carbs + recipeNutrition.fat;
+  const proteinPercent = Math.round((recipeNutrition.protein / totalGrams) * 100);
+  const carbsPercent = Math.round((recipeNutrition.carbs / totalGrams) * 100);
+  const fatPercent = Math.round((recipeNutrition.fat / totalGrams) * 100);
   
   const macrosData = [
-    { name: 'Protein', value: proteinPercent, fill: COLORS.protein },
-    { name: 'Carbs', value: carbsPercent, fill: COLORS.carbs },
-    { name: 'Fat', value: fatPercent, fill: COLORS.fat }
+    { 
+      name: 'Protein', 
+      value: proteinPercent, 
+      fill: COLORS.protein,
+      actualGrams: recipeNutrition.protein,
+      tooltip: 'Essential for muscle building and repair'
+    },
+    { 
+      name: 'Carbs', 
+      value: carbsPercent, 
+      fill: COLORS.carbs,
+      actualGrams: recipeNutrition.carbs,
+      tooltip: 'Primary energy source for the body'
+    },
+    { 
+      name: 'Fat', 
+      value: fatPercent, 
+      fill: COLORS.fat,
+      actualGrams: recipeNutrition.fat,
+      tooltip: 'Important for hormone production and nutrient absorption'
+    }
   ];
   
-  // Calculate calories from each macro
+  // Calculate calories from each macro using the conversion factors
   const proteinCalories = recipeNutrition.protein * 4;
   const carbsCalories = recipeNutrition.carbs * 4;
   const fatCalories = recipeNutrition.fat * 9;
-  const totalCalories = recipeNutrition.calories;
+  const totalCalories = recipeNutrition.calories || (proteinCalories + carbsCalories + fatCalories);
   
   const calorieMacroData = [
-    { name: 'Protein', value: Math.round((proteinCalories / totalCalories) * 100), fill: COLORS.protein },
-    { name: 'Carbs', value: Math.round((carbsCalories / totalCalories) * 100), fill: COLORS.carbs },
-    { name: 'Fat', value: Math.round((fatCalories / totalCalories) * 100), fill: COLORS.fat }
+    { 
+      name: 'Protein', 
+      value: Math.round((proteinCalories / totalCalories) * 100), 
+      fill: COLORS.protein,
+      actualCalories: proteinCalories,
+      conversionFactor: '4 cal/g',
+      tooltip: 'Protein provides 4 calories per gram'
+    },
+    { 
+      name: 'Carbs', 
+      value: Math.round((carbsCalories / totalCalories) * 100), 
+      fill: COLORS.carbs,
+      actualCalories: carbsCalories,
+      conversionFactor: '4 cal/g',
+      tooltip: 'Carbohydrates provide 4 calories per gram'
+    },
+    { 
+      name: 'Fat', 
+      value: Math.round((fatCalories / totalCalories) * 100), 
+      fill: COLORS.fat,
+      actualCalories: fatCalories,
+      conversionFactor: '9 cal/g',
+      tooltip: 'Fat provides 9 calories per gram, more than twice that of protein or carbs'
+    }
   ];
 
-  const renderCustomLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
+  const renderCustomLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius, actualGrams, actualCalories }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -70,7 +113,51 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
       </text>
     );
   };
+
+  const customTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || payload.length === 0) return null;
+    
+    const data = payload[0].payload;
+    
+    return (
+      <div className="bg-white p-3 border rounded-md shadow-md text-xs">
+        <p className="font-medium mb-1 text-sm" style={{ color: data.fill }}>{data.name}</p>
+        
+        {data.actualGrams !== undefined && (
+          <p className="mb-0.5">
+            <span className="font-semibold">{data.actualGrams}g</span> ({data.value}% of total)
+          </p>
+        )}
+        
+        {data.actualCalories !== undefined && (
+          <>
+            <p className="mb-0.5">
+              <span className="font-semibold">{data.actualCalories} kcal</span> ({data.value}% of total)
+            </p>
+            <p className="text-gray-500 mb-0.5">Conversion: {data.conversionFactor}</p>
+          </>
+        )}
+        
+        {data.tooltip && <p className="mt-1 text-gray-500">{data.tooltip}</p>}
+      </div>
+    );
+  };
   
+  const customLegendFormatter = (value: string, entry: any) => {
+    let extraInfo = '';
+    if (entry.payload.actualGrams !== undefined) {
+      extraInfo = `${entry.payload.actualGrams}g`;
+    } else if (entry.payload.actualCalories !== undefined) {
+      extraInfo = `${entry.payload.actualCalories} kcal`;
+    }
+    
+    return (
+      <span className="text-xs">
+        {value}: <span className="font-medium">{extraInfo} ({entry.payload.value}%)</span>
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -79,14 +166,12 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium">Macronutrient Distribution by Weight</h4>
               <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-xs">Shows the percentage breakdown of protein, carbs, and fat by weight (grams) in this recipe.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">Shows the percentage breakdown of protein, carbs, and fat by weight (grams) in this recipe.</p>
+                </TooltipContent>
               </TooltipProvider>
             </div>
             <div className={`${isMobile ? 'h-52' : 'h-56'} flex flex-col justify-center`}>
@@ -116,11 +201,12 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                       />
                     ))}
                   </Pie>
+                  <Tooltip content={customTooltip} />
                   <Legend
                     layout="horizontal"
                     verticalAlign="bottom"
                     align="center"
-                    formatter={(value, entry) => `${value}: ${entry.payload.value}%`}
+                    formatter={customLegendFormatter}
                   />
                 </PieChart>
               </ChartContainer>
@@ -133,14 +219,12 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium">Calorie Source Breakdown</h4>
               <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-xs">Shows the percentage of calories provided by each macronutrient. Note that fat has 9 calories per gram, while protein and carbs have 4 calories per gram.</p>
-                  </TooltipContent>
-                </Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">Shows the percentage of calories provided by each macronutrient. Note that fat has 9 calories per gram, while protein and carbs have 4 calories per gram.</p>
+                </TooltipContent>
               </TooltipProvider>
             </div>
             <div className={`${isMobile ? 'h-52' : 'h-56'} flex flex-col justify-center`}>
@@ -170,11 +254,12 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                       />
                     ))}
                   </Pie>
+                  <Tooltip content={customTooltip} />
                   <Legend
                     layout="horizontal"
                     verticalAlign="bottom"
                     align="center"
-                    formatter={(value, entry) => `${value}: ${entry.payload.value}%`}
+                    formatter={customLegendFormatter}
                   />
                 </PieChart>
               </ChartContainer>
@@ -188,25 +273,37 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-3 rounded-md shadow-sm">
             <p className="text-xs text-gray-500">Calories</p>
-            <p className="text-lg font-semibold">{recipeNutrition.calories} kcal</p>
+            <p className="text-lg font-semibold">{totalCalories} kcal</p>
             <p className="text-xs text-muted-foreground">Total calories</p>
           </div>
           <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${COLORS.protein}` }}>
             <p className="text-xs text-gray-500">Protein</p>
-            <p className="text-lg font-semibold">{recipeNutrition.protein}g</p>
-            <p className="text-xs text-muted-foreground">{proteinCalories} kcal ({proteinPercent}%)</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-lg font-semibold">{recipeNutrition.protein}g</p>
+              <p className="text-xs font-medium">{proteinCalories} kcal</p>
+            </div>
+            <p className="text-xs text-muted-foreground">{proteinPercent}% by weight, {Math.round((proteinCalories / totalCalories) * 100)}% of calories</p>
           </div>
           <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${COLORS.carbs}` }}>
             <p className="text-xs text-gray-500">Carbs</p>
-            <p className="text-lg font-semibold">{recipeNutrition.carbs}g</p>
-            <p className="text-xs text-muted-foreground">{carbsCalories} kcal ({carbsPercent}%)</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-lg font-semibold">{recipeNutrition.carbs}g</p>
+              <p className="text-xs font-medium">{carbsCalories} kcal</p>
+            </div>
+            <p className="text-xs text-muted-foreground">{carbsPercent}% by weight, {Math.round((carbsCalories / totalCalories) * 100)}% of calories</p>
           </div>
           <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${COLORS.fat}` }}>
             <p className="text-xs text-gray-500">Fat</p>
-            <p className="text-lg font-semibold">{recipeNutrition.fat}g</p>
-            <p className="text-xs text-muted-foreground">{fatCalories} kcal ({fatPercent}%)</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-lg font-semibold">{recipeNutrition.fat}g</p>
+              <p className="text-xs font-medium">{fatCalories} kcal</p>
+            </div>
+            <p className="text-xs text-muted-foreground">{fatPercent}% by weight, {Math.round((fatCalories / totalCalories) * 100)}% of calories</p>
           </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-3 italic">
+          *Protein and carbs provide 4 calories per gram, while fat provides 9 calories per gram.
+        </p>
       </div>
     </div>
   );

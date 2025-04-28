@@ -2,6 +2,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { NUTRITION_COLORS } from '@/components/recipe-detail/nutrition/blocks/personal/constants';
 
 interface MacroChartProps {
   chartData: Array<{
@@ -12,28 +13,107 @@ interface MacroChartProps {
 }
 
 export function MacroChart({ chartData }: MacroChartProps) {
+  // Use consistent colors from our nutrition color palette
+  const enhancedChartData = chartData.map(item => ({
+    ...item,
+    // If the item has a color from the original data, use it. Otherwise, use our standard colors
+    color: item.color || getColorForMacro(item.name),
+    tooltip: getTooltipForMacro(item.name)
+  }));
+
+  // Custom tooltip for better information display
+  const customTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || payload.length === 0) return null;
+    
+    const data = payload[0].payload;
+    
+    return (
+      <div className="bg-white p-3 border rounded-md shadow-md text-xs">
+        <p className="font-medium mb-1" style={{ color: data.color }}>{data.name}</p>
+        <p><span className="font-semibold">{data.value}%</span> of daily intake</p>
+        {data.tooltip && (
+          <p className="mt-1 text-gray-500 text-xs">{data.tooltip}</p>
+        )}
+      </div>
+    );
+  };
+
+  // Custom legend formatter for better readability
+  const customLegendFormatter = (value: string, entry: any) => {
+    return <span className="text-xs">{value}: <strong>{entry.payload.value}%</strong></span>;
+  };
+  
+  // Render custom labels inside the chart
+  const renderCustomizedLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor="middle" 
+        dominantBaseline="central"
+        fontSize={12}
+        fontWeight="bold"
+      >
+        {`${value}%`}
+      </text>
+    );
+  };
+
+  // Helper functions for colors and tooltips
+  function getColorForMacro(name: string): string {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('protein')) return NUTRITION_COLORS.protein;
+    if (lowerName.includes('carb')) return NUTRITION_COLORS.carbs;
+    if (lowerName.includes('fat')) return NUTRITION_COLORS.fat;
+    return '#8E9196'; // Default gray
+  }
+  
+  function getTooltipForMacro(name: string): string {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('protein')) return 'Important for muscle maintenance and growth (4 cal/g)';
+    if (lowerName.includes('carb')) return 'Primary energy source for your body (4 cal/g)';
+    if (lowerName.includes('fat')) return 'Essential for hormone production and absorption (9 cal/g)';
+    return '';
+  }
+
   return (
     <div className="flex flex-col justify-center items-center">
       <ChartContainer config={{
-        protein: { color: '#4f46e5' },
-        carbs: { color: '#0ea5e9' },
-        fat: { color: '#22c55e' },
+        protein: { color: NUTRITION_COLORS.protein },
+        carbs: { color: NUTRITION_COLORS.carbs },
+        fat: { color: NUTRITION_COLORS.fat },
       }} className="h-64 w-full">
         <PieChart>
           <Pie 
-            data={chartData}
+            data={enhancedChartData}
             cx="50%"
             cy="50%"
             labelLine={false}
             outerRadius={80}
+            innerRadius={50}
             dataKey="value"
+            label={renderCustomizedLabel}
+            strokeWidth={1}
+            stroke="#ffffff"
+            paddingAngle={2}
           >
-            {chartData.map((entry, index) => (
+            {enhancedChartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip />
-          <Legend />
+          <Tooltip content={customTooltip} />
+          <Legend 
+            formatter={customLegendFormatter} 
+            layout="horizontal"
+            verticalAlign="bottom"
+            align="center"
+          />
         </PieChart>
       </ChartContainer>
     </div>
