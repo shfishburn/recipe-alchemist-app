@@ -123,7 +123,7 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
                 <SelectItem 
                   key={cuisine.value} 
                   value={cuisine.value}
-                  className="px-4 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 cursor-pointer data-[highlighted]:bg-gray-50 data-[highlighted]:text-gray-900"
+                  className="px-4 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 cursor-pointer data-[highlighted]:bg-gray-50 data-[highlighted]:text-gray-900 truncate"
                 >
                   {cuisine.label}
                 </SelectItem>
@@ -137,3 +137,4 @@ const CuisineSelect = ({ value, onChange, id = "cuisine" }: CuisineSelectProps) 
 };
 
 export default CuisineSelect;
+
