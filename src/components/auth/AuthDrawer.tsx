@@ -47,6 +47,12 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     setOpen(false);
   }
 
+  // Handle click events inside drawer to prevent form submission issues
+  const handleContentClick = (e: React.MouseEvent) => {
+    // This prevents click events in the drawer content from bubbling up
+    e.stopPropagation();
+  };
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
@@ -60,7 +66,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
               </Button>
             </DrawerClose>
           </DrawerHeader>
-          <div className="p-6">
+          <div className="p-6" onClick={handleContentClick}>
             <AuthForm onSuccess={handleAuthSuccess} />
           </div>
         </DrawerContent>
@@ -70,7 +76,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent side="right" className="w-full max-w-md border-l">
+      <SheetContent side="right" className="w-full max-w-md border-l" onClick={handleContentClick}>
         <SheetHeader className="flex items-center justify-between border-b pb-4">
           <SheetTitle>Account</SheetTitle>
           <SheetClose asChild>

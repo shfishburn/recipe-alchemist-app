@@ -21,14 +21,12 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Improved input change handlers with stopPropagation
+  // Enhanced input change handlers
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     setEmail(e.target.value);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
     setPassword(e.target.value);
   };
 
@@ -96,6 +94,12 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     handleAuth(type);
   };
 
+  // Set explicit id attributes to ensure uniqueness and avoid conflicts
+  const loginEmailId = "login-email-input";
+  const loginPasswordId = "login-password-input";
+  const signupEmailId = "signup-email-input";
+  const signupPasswordId = "signup-password-input";
+
   const FormContent = () => (
     <Tabs defaultValue="login" className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -106,9 +110,9 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       <TabsContent value="login">
         <form onSubmit={(e) => handleSubmit(e, 'LOGIN')} className="space-y-4">
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor={loginEmailId}>Email</Label>
             <Input
-              id="email"
+              id={loginEmailId}
               type="email"
               placeholder="you@example.com"
               value={email}
@@ -119,9 +123,9 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
             />
           </div>
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor={loginPasswordId}>Password</Label>
             <Input
-              id="password"
+              id={loginPasswordId}
               type="password"
               value={password}
               onChange={handlePasswordChange}
@@ -139,9 +143,9 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       <TabsContent value="signup">
         <form onSubmit={(e) => handleSubmit(e, 'SIGNUP')} className="space-y-4">
           <div>
-            <Label htmlFor="signup-email">Email</Label>
+            <Label htmlFor={signupEmailId}>Email</Label>
             <Input
-              id="signup-email"
+              id={signupEmailId}
               type="email"
               placeholder="you@example.com"
               value={email}
@@ -152,9 +156,9 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
             />
           </div>
           <div>
-            <Label htmlFor="signup-password">Password</Label>
+            <Label htmlFor={signupPasswordId}>Password</Label>
             <Input
-              id="signup-password"
+              id={signupPasswordId}
               type="password"
               value={password}
               onChange={handlePasswordChange}
@@ -172,14 +176,14 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
   );
 
   if (standalone) {
-    return (
-      <Card className="w-full max-w-md p-6">
-        <FormContent />
-      </Card>
-    );
+    return <FormContent />;
   }
 
-  return <FormContent />;
+  return (
+    <Card className="w-full max-w-md p-6">
+      <FormContent />
+    </Card>
+  );
 };
 
 export default AuthForm;
