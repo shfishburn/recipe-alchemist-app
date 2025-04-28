@@ -48,12 +48,14 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     setOpen(false);
   }
 
-  // Handle keyboard events for the drawer content, not the drawer itself
-  const handleContentKeyDown = (e: React.KeyboardEvent) => {
+  // Modified handler that ONLY handles Escape key and only stops propagation for that key
+  const handleEscapeKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
+      e.stopPropagation(); // Stop propagation ONLY for Escape key
       e.preventDefault(); // Prevent default to avoid double-closing
       setOpen(false);
     }
+    // All other keys just pass through naturally without interference
   };
 
   if (isMobile) {
@@ -69,7 +71,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
               </Button>
             </DrawerClose>
           </DrawerHeader>
-          <ScrollArea className="p-6 h-full max-h-[70vh]" onKeyDown={handleContentKeyDown}>
+          <ScrollArea className="p-6 h-full max-h-[70vh]" onKeyDown={handleEscapeKey}>
             <AuthForm onSuccess={handleAuthSuccess} />
           </ScrollArea>
         </DrawerContent>
@@ -89,7 +91,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
             </Button>
           </SheetClose>
         </SheetHeader>
-        <ScrollArea className="flex-1 p-6 h-full" onKeyDown={handleContentKeyDown}>
+        <ScrollArea className="flex-1 p-6 h-full" onKeyDown={handleEscapeKey}>
           <AuthForm onSuccess={handleAuthSuccess} />
         </ScrollArea>
       </SheetContent>
