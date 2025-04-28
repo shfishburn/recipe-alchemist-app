@@ -1,8 +1,8 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { corsHeaders } from '../_shared/cors.ts'
 import { validateRecipeChanges } from './validation.ts'
+import { recipeAnalysisPrompt, chatSystemPrompt } from '../_shared/recipe-prompts.ts'
 
 interface RecipeChanges {
   ingredients?: {
@@ -53,83 +53,8 @@ serve(async (req) => {
 
     if (recipeError) throw recipeError
 
-    // Modify system prompt based on the source type
-    let systemPrompt = `You are a helpful cooking assistant. When suggesting changes to recipes:
-    1. Always format responses as JSON with changes
-    2. For cooking instructions:
-       - Include specific temperatures (F° and C°)
-       - Specify cooking durations
-       - Add equipment setup details
-       - Include doneness indicators for proteins
-       - Add resting times when needed
-    3. Format ingredients with exact measurements
-    4. Validate all titles are descriptive and clear
-    
-    Example format:
-    {
-      "title": "Herb-Crusted Chicken Breast",
-      "ingredients": [
-        {
-          "qty": 2,
-          "unit": "lb",
-          "item": "chicken breast",
-          "notes": "boneless, skinless"
-        }
-      ],
-      "instructions": [
-        "Preheat the oven to 400°F (200°C)",
-        "Season chicken breast with salt and pepper",
-        "Cook for 25-30 minutes until internal temperature reaches 165°F (74°C)",
-        "Let rest for 5-10 minutes before slicing"
-      ],
-      "cookingDetails": {
-        "temperature": {
-          "fahrenheit": 400,
-          "celsius": 200
-        },
-        "duration": {
-          "prep": 10,
-          "cook": 30,
-          "rest": 10
-        },
-        "equipment": [
-          {
-            "type": "oven",
-            "settings": "conventional bake"
-          }
-        ]
-      }
-    }`
-
-    // If this is an analysis request, enhance the system prompt
-    if (sourceType === 'analysis') {
-      systemPrompt = `${systemPrompt}
-      
-      You are performing a scientific analysis of a recipe. Your response must include:
-      1. An improved, more specific recipe title that highlights key techniques or flavors
-      2. At least 3 detailed scientific notes about the cooking chemistry
-      3. The response must be formatted as valid JSON
-      
-      The improved title should be descriptive but concise and should NEVER be generic like "optional new title" or "untitled recipe".
-      
-      Example response format:
-      {
-        "title": "Slow-Braised Short Ribs with Red Wine Reduction",
-        "science_notes": [
-          "The Maillard reaction during initial searing creates complex flavor compounds and improves color",
-          "Slow braising at 275°F (135°C) allows collagen to convert to gelatin for tender meat",
-          "Acidic components in wine denature proteins and tenderize tough connective tissue"
-        ],
-        "techniques": [
-          "Proper searing requires a dry surface and high heat (450°F+) to achieve browning",
-          "Low and slow cooking (275°F) promotes collagen breakdown without moisture loss"
-        ],
-        "troubleshooting": [
-          "If meat is tough, extend cooking time by 30-45 minutes to allow more collagen conversion",
-          "If sauce is thin, reduce separately at a simmer until it coats the back of a spoon"
-        ]
-      }`
-    }
+    // Use the appropriate prompt based on the source type
+    const systemPrompt = sourceType === 'analysis' ? recipeAnalysisPrompt : chatSystemPrompt;
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiApiKey) {
@@ -137,14 +62,13 @@ serve(async (req) => {
     }
 
     const prompt = `
-    You are a helpful cooking assistant. The user is asking for changes to a recipe.
-    The current recipe is:
+    Current recipe:
     ${JSON.stringify(recipe)}
 
-    The user is asking for the following changes:
+    User request:
     ${userMessage}
 
-    Please suggest changes to the recipe in JSON format.
+    Please analyze and suggest changes in JSON format.
     `
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -154,7 +78,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -188,7 +112,7 @@ serve(async (req) => {
           troubleshooting: changes.troubleshooting || [] 
         }
       : { success: true, changes };
-    
+
     // Store the chat interaction if it's not an analysis
     if (sourceType !== 'analysis') {
       const { error: chatError } = await supabaseClient
