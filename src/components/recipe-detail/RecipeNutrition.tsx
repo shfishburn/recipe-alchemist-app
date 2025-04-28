@@ -22,6 +22,11 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   const [viewMode, setViewMode] = useState<'recipe' | 'personal'>('recipe');
   const { recipeNutrition, userPreferences } = useNutritionData(recipe, profile);
   const isMobile = useMediaQuery('(max-width: 640px)');
+  
+  // Calculate total time from prep + cook time
+  const totalTime = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
+  // Use cuisine as cooking method since cooking_method doesn't exist in the type
+  const cookingMethod = recipe.cuisine || '';
 
   if (!recipeNutrition) {
     return null;
@@ -35,8 +40,8 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
             showToggle={!!user && !!userPreferences}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
-            cookingMethod={recipe.cooking_method}
-            totalTime={recipe.total_time}
+            cookingMethod={cookingMethod}
+            totalTime={totalTime}
           />
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
