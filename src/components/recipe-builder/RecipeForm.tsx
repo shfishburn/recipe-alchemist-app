@@ -32,6 +32,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
   const [activeTab, setActiveTab] = useState('inputs');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
   
   const [formData, setFormData] = useState<RecipeFormData>({
     title: '',
@@ -88,6 +89,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
     }
 
     onSubmit(formData);
+    setHasGenerated(true);
   };
 
   const openPreview = () => {
@@ -172,20 +174,22 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
           Preview Selection
         </Button>
         
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-recipe-blue hover:bg-recipe-blue/90 w-full sm:w-auto"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Your Recipe...
-            </>
-          ) : (
-            'Create My Recipe'
-          )}
-        </Button>
+        {!hasGenerated && (
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="bg-recipe-blue hover:bg-recipe-blue/90 w-full sm:w-auto"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Your Recipe...
+              </>
+            ) : (
+              'Create My Recipe'
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Preview Dialog */}
