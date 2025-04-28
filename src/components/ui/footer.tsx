@@ -7,9 +7,9 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto bg-background py-12 border-t">
+    <footer className="mt-auto bg-background py-8 sm:py-12 border-t">
       <div className="container-page">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12">
           {/* Logo and Description */}
           <div className="col-span-1">
             <Link to="/" className="flex items-center space-x-2">
@@ -23,21 +23,10 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Product Links */}
-          <div>
-            <h4 className="font-semibold mb-4">Product</h4>
-            <ul className="space-y-3">
-              <li><Link to="/recipes" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Browse Recipes</Link></li>
-              <li><Link to="/build" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Create Recipe</Link></li>
-              <li><Link to="/features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
-            </ul>
-          </div>
-
           {/* Company Links */}
           <div>
-            <h4 className="font-semibold mb-4">Company</h4>
-            <ul className="space-y-3">
+            <h4 className="font-semibold mb-3 sm:mb-4">Company</h4>
+            <ul className="space-y-2 sm:space-y-3">
               <li><Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About</Link></li>
               <li><Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link></li>
               <li><Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
@@ -47,8 +36,8 @@ export function Footer() {
 
           {/* Legal Links */}
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-3">
+            <h4 className="font-semibold mb-3 sm:mb-4">Legal</h4>
+            <ul className="space-y-2 sm:space-y-3">
               <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
               <li><Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</Link></li>
@@ -56,23 +45,23 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Social Links and Copyright */}
-        <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground order-2 md:order-1">
+        {/* Social Links and Copyright - More compact on mobile */}
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
             © {currentYear} Recipe Alchemist. All rights reserved.
           </p>
-          <div className="flex space-x-4 order-1 md:order-2">
+          <div className="flex space-x-4 order-1 sm:order-2">
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Twitter size={20} />
+              <Twitter size={18} />
             </a>
             <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Facebook size={20} />
+              <Facebook size={18} />
             </a>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Instagram size={20} />
+              <Instagram size={18} />
             </a>
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Linkedin size={20} />
+              <Linkedin size={18} />
             </a>
           </div>
         </div>
@@ -80,4 +69,3 @@ export function Footer() {
     </footer>
   );
 }
-
