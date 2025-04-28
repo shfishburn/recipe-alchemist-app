@@ -38,6 +38,10 @@ export default defineConfig(({ mode }) => ({
             'lucide-react'
           ],
         },
+        // Ensure assets include a hash to avoid caching issues
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]'
       },
     },
     // Ensure the output is optimized for Vercel

@@ -3,12 +3,27 @@
   "version": 2,
   "routes": [
     {
-      "src": "/how-it-works/.*",
-      "dest": "/index.html"
+      "src": "^/api/render",
+      "dest": "/api/render.js"
     },
     {
-      "src": "/recipe/.*",
-      "dest": "/index.html"
+      "src": "^/assets/(.*)",
+      "dest": "/assets/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "^/(.*)\\.(.+)$",
+      "dest": "/$1.$2"
+    },
+    {
+      "src": "/how-it-works/(.*)",
+      "dest": "/api/render?route=/how-it-works/$1"
+    },
+    {
+      "src": "/recipe/(.*)",
+      "dest": "/api/render?route=/recipe/$1" 
     },
     {
       "src": "/(.*)",

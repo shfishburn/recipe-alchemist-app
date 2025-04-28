@@ -8,17 +8,25 @@ const path = require('path');
  */
 module.exports = (req, res) => {
   try {
-    // Read the index.html file from the build directory
-    const indexHtml = fs.readFileSync(path.resolve(__dirname, '../dist/index.html'), 'utf-8');
-    
+    // Determine if the request is for an asset or a route
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
+    
+    // If requesting a static asset with extension (CSS, JS, images)
+    if (pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i)) {
+      // For assets, redirect to the static files
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.status(307).setHeader('Location', pathname).send();
+    }
+
+    // For HTML routes, read the index.html file from the build directory
+    const indexHtml = fs.readFileSync(path.resolve(__dirname, '../dist/index.html'), 'utf-8');
     
     // Basic routing to identify content type
     let title = 'Recipe Alchemist';
     let description = 'AI-Powered Cooking & Nutrition';
     let ogType = 'website';
-    let ogImage = 'https://recipealchemist.com/images/how-it-works-banner.jpg';
+    let ogImage = 'https://recipealchemist.com/lovable-uploads/7d2f98f4-6026-4582-bbe4-e5c69edf0dc9.png';
     
     // Check if this is an article route
     if (pathname.startsWith('/how-it-works/')) {
@@ -46,8 +54,8 @@ module.exports = (req, res) => {
       ogType = 'article';
     }
 
-    // Enhanced HTML with proper SEO tags injected into the head
-    const enhancedHtml = indexHtml
+    // Convert relative asset paths to absolute paths
+    let enhancedHtml = indexHtml
       .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
       .replace('</head>', `
         <meta name="description" content="${description}" />
@@ -59,9 +67,14 @@ module.exports = (req, res) => {
         <meta name="twitter:card" content="summary_large_image" />
         </head>
       `);
+      
+    // Fix asset paths if needed - transform relative paths to absolute paths
+    enhancedHtml = enhancedHtml
+      .replace(/src="\/(?!\/)/g, 'src="/')
+      .replace(/href="\/(?!\/)/g, 'href="/');
 
     // Set proper content type and serve the enhanced HTML
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(enhancedHtml);
   } catch (error) {
     console.error('Error generating HTML:', error);
