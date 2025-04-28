@@ -1,8 +1,7 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Ingredient } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { generateRecipeImage } from './utils/generate-recipe-image';
 import { updateRecipe } from './utils/update-recipe';
@@ -49,9 +48,8 @@ export const useApplyChanges = (recipe: Recipe) => {
       let imageUrl = recipe.image_url;
       let shouldGenerateNewImage = false;
       
-      // Process nutrition data if provided
       let standardizedNutrition = recipe.nutrition;
-      if (chatMessage.changes_suggested.nutrition) {
+      if (chatMessage.changes_suggested?.nutrition) {
         console.log("Processing nutrition data from chat suggestion");
         standardizedNutrition = standardizeNutrition(chatMessage.changes_suggested.nutrition);
         
@@ -62,7 +60,32 @@ export const useApplyChanges = (recipe: Recipe) => {
           console.log("Using new nutrition data from chat suggestion");
         }
       }
+
+      // Process ingredients to ensure proper typing
+      let updatedIngredients: Ingredient[] = recipe.ingredients;
+      if (chatMessage.changes_suggested?.ingredients?.items) {
+        updatedIngredients = chatMessage.changes_suggested.ingredients.items.map(item => ({
+          qty: Number(item.qty),
+          unit: String(item.unit),
+          item: String(item.item),
+          notes: item.notes ? String(item.notes) : undefined
+        }));
+      }
       
+      // Create a properly typed recipe object for update
+      const recipeUpdate: Recipe = {
+        ...recipe,
+        nutrition: standardizedNutrition,
+        ingredients: updatedIngredients,
+        title: chatMessage.changes_suggested?.title || recipe.title,
+        instructions: Array.isArray(chatMessage.changes_suggested?.instructions) 
+          ? chatMessage.changes_suggested.instructions.map(instr => 
+              typeof instr === 'string' ? instr : instr.action
+            )
+          : recipe.instructions,
+        science_notes: chatMessage.changes_suggested?.science_notes || recipe.science_notes || []
+      };
+
       // Determine if we need a new image based on the types of changes
       if (
         // Only generate new image for substantive changes
@@ -72,24 +95,19 @@ export const useApplyChanges = (recipe: Recipe) => {
       ) {
         shouldGenerateNewImage = true;
       }
-      
-      // Try to update the recipe first, independent of image generation
+
       try {
         const updatedRecipe = await updateRecipe(
-          { 
-            ...recipe,
-            // Add validated nutrition data
-            nutrition: standardizedNutrition
-          }, 
-          chatMessage, 
-          user.id, 
-          imageUrl
+          recipeUpdate,
+          chatMessage,
+          user.id,
+          recipe.image_url
         );
-        
+
         if (!updatedRecipe) {
           throw new Error("Failed to update recipe - no data returned");
         }
-        
+
         // Mark chat message as applied
         await updateChatStatus(chatMessage);
         
@@ -125,7 +143,7 @@ export const useApplyChanges = (recipe: Recipe) => {
             // The recipe update was already successful
           }
         }
-        
+
         return updatedRecipe;
       } catch (error) {
         console.error("Update recipe error:", error);
