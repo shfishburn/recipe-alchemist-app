@@ -124,6 +124,9 @@ export type Database = {
           cook_time_min: number | null
           created_at: string
           cuisine: string | null
+          cuisine_category:
+            | Database["public"]["Enums"]["cuisine_category"]
+            | null
           deleted_at: string | null
           dietary: string | null
           flavor_tags: string[] | null
@@ -148,6 +151,9 @@ export type Database = {
           cook_time_min?: number | null
           created_at?: string
           cuisine?: string | null
+          cuisine_category?:
+            | Database["public"]["Enums"]["cuisine_category"]
+            | null
           deleted_at?: string | null
           dietary?: string | null
           flavor_tags?: string[] | null
@@ -172,6 +178,9 @@ export type Database = {
           cook_time_min?: number | null
           created_at?: string
           cuisine?: string | null
+          cuisine_category?:
+            | Database["public"]["Enums"]["cuisine_category"]
+            | null
           deleted_at?: string | null
           dietary?: string | null
           flavor_tags?: string[] | null
@@ -242,7 +251,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      cuisine_category:
+        | "Global"
+        | "Regional American"
+        | "European"
+        | "Asian"
+        | "Dietary Styles"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -357,6 +371,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      cuisine_category: [
+        "Global",
+        "Regional American",
+        "European",
+        "Asian",
+        "Dietary Styles",
+      ],
+    },
   },
 } as const
