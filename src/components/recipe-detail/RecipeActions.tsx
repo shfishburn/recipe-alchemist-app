@@ -72,7 +72,7 @@ export function RecipeActions({
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
-            className="w-full bg-sky-400 hover:bg-sky-500 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
           >
             <ChefHat className="h-5 w-5 mr-2" />
@@ -84,7 +84,7 @@ export function RecipeActions({
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
-            className={`w-full ${showingAnalysis ? 'bg-sky-600' : 'bg-sky-400'} hover:bg-sky-500 text-white`}
+            className={`w-full ${showingAnalysis ? 'bg-primary/80' : 'bg-primary'} hover:bg-primary/90 text-primary-foreground`}
             onClick={onToggleAnalysis}
             disabled={isAnalyzing}
           >
@@ -101,7 +101,7 @@ export function RecipeActions({
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
-            className="w-full bg-sky-400 hover:bg-sky-500 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={onOpenChat}
           >
             <MessageSquare className="h-5 w-5 mr-2" />

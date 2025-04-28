@@ -20,7 +20,6 @@ import { toast } from "@/hooks/use-toast";
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
-import { Footer } from '@/components/ui/footer';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -179,7 +178,7 @@ const RecipeDetail = () => {
           ) : null}
         </div>
       </main>
-      <Footer />
+      {/* Footer is removed from here as it's already included in App.tsx */}
     </div>
   );
 }
