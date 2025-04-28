@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -23,14 +22,12 @@ interface RecipeBlockProps {
 export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
   const isMobile = useIsMobile();
   
-  // Enhanced color scheme with scientifically-validated nutrition color associations
   const COLORS = {
-    protein: NUTRITION_COLORS.protein, // Purple for protein
-    carbs: NUTRITION_COLORS.carbs,     // Blue for carbs
-    fat: NUTRITION_COLORS.fat          // Green for fat
+    protein: NUTRITION_COLORS.protein,
+    carbs: NUTRITION_COLORS.carbs,
+    fat: NUTRITION_COLORS.fat
   };
   
-  // Calculate macro distribution by weight
   const totalGrams = recipeNutrition.protein + recipeNutrition.carbs + recipeNutrition.fat;
   const proteinPercent = Math.round((recipeNutrition.protein / totalGrams) * 100);
   const carbsPercent = Math.round((recipeNutrition.carbs / totalGrams) * 100);
@@ -60,7 +57,6 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
     }
   ];
   
-  // Calculate calories from each macro using the conversion factors
   const proteinCalories = recipeNutrition.protein * 4;
   const carbsCalories = recipeNutrition.carbs * 4;
   const fatCalories = recipeNutrition.fat * 9;
@@ -192,6 +188,7 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                     paddingAngle={2}
                     dataKey="value"
                     label={renderCustomLabel}
+                    labelLine={false}
                     isAnimationActive={false}
                   >
                     {macrosData.map((entry, index) => (
@@ -247,6 +244,7 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
                     paddingAngle={2}
                     dataKey="value"
                     label={renderCustomLabel}
+                    labelLine={false}
                     isAnimationActive={false}
                   >
                     {calorieMacroData.map((entry, index) => (

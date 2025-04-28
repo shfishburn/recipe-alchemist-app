@@ -18,7 +18,7 @@ export async function updateRecipe(
     ingredientCount: chatMessage.changes_suggested.ingredients?.items?.length
   });
 
-  const updatedRecipe = {
+  const updatedRecipe: Partial<Recipe> & { id: string } = {
     ...recipe,
     title: chatMessage.changes_suggested.title || recipe.title,
     nutrition: chatMessage.changes_suggested.nutrition || recipe.nutrition,
@@ -53,28 +53,30 @@ export async function updateRecipe(
     }
   }
 
-  // Process instructions
+  // Process instructions - ensure we always store as string array
   if (chatMessage.changes_suggested.instructions) {
     console.log("Updating instructions");
-    if (typeof chatMessage.changes_suggested.instructions[0] === 'string') {
-      updatedRecipe.instructions = chatMessage.changes_suggested.instructions;
-    } else {
-      updatedRecipe.instructions = chatMessage.changes_suggested.instructions.map(
-        instr => typeof instr === 'string' ? instr : instr.action
-      );
-    }
+    updatedRecipe.instructions = chatMessage.changes_suggested.instructions.map(
+      instruction => typeof instruction === 'string' ? instruction : instruction.action
+    );
   }
 
   console.log("Final recipe update:", {
     title: updatedRecipe.title,
-    ingredientsCount: updatedRecipe.ingredients.length,
-    instructionsCount: updatedRecipe.instructions.length
+    ingredientsCount: updatedRecipe.ingredients?.length,
+    instructionsCount: updatedRecipe.instructions?.length
   });
 
   try {
+    // Convert ingredients to Json type for database storage
+    const dbRecipe = {
+      ...updatedRecipe,
+      ingredients: updatedRecipe.ingredients as Json,
+    };
+
     const { data: updatedRecipeData, error } = await supabase
       .from('recipes')
-      .update(updatedRecipe)
+      .update(dbRecipe)
       .eq('id', recipe.id)
       .select()
       .single();
