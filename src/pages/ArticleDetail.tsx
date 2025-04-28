@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
@@ -10,6 +9,15 @@ import { ArticleIntelligentCooking } from '@/components/how-it-works/ArticleInte
 import { toast } from 'sonner';
 import { generateRecipeImage } from '@/hooks/recipe-chat/utils/generate-recipe-image';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Link } from 'react-router-dom';
 
 const ArticleDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -19,17 +27,19 @@ const ArticleDetail = () => {
   const [articleTitle, setArticleTitle] = useState('Article');
   const [articleDescription, setArticleDescription] = useState('');
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [publishDate, setPublishDate] = useState('2025-04-28T10:00:00Z');
+  const [authorName, setAuthorName] = useState('Recipe Alchemist Team');
 
   useEffect(() => {
     if (slug === 'intelligent-cooking') {
-      setArticleTitle('AI Makes Cooking Intelligent');
-      setArticleDescription('Discover how our AI uses food science to transform your kitchen experience');
+      setArticleTitle('How Nutrition Analysis Works');
+      setArticleDescription('We don\'t guess what\'s in your food — we measure it with real science. Our system pulls data from trusted sources like USDA FoodData Central, adjusts for cooking methods, tracks both macronutrients and vital micronutrients, and personalizes your nutrition to your body\'s needs.');
     } else if (slug === 'nutrition-tracking') {
       setArticleTitle('Precise Nutrition Tracking');
-      setArticleDescription('Learn how we calculate nutrition data based on actual cooking methods');
+      setArticleDescription('Learn how we calculate nutrition data based on actual cooking methods and ingredient changes to provide the most accurate nutrition information possible.');
     } else if (slug === 'substitutions') {
       setArticleTitle('Smart Ingredient Substitutions');
-      setArticleDescription('See how our AI suggests perfect substitutions while maintaining flavor profiles');
+      setArticleDescription('See how our AI suggests perfect substitutions while maintaining flavor profiles and nutrition balance to accommodate your dietary needs and preferences.');
     }
     
     const checkForExistingImage = async () => {
@@ -69,6 +79,30 @@ const ArticleDetail = () => {
     
     checkForExistingImage();
   }, [slug]);
+
+  const generateSchemaData = () => {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": articleTitle,
+      "description": articleDescription,
+      "image": generatedImage || "https://recipealchemist.com/images/default-article-image.jpg",
+      "author": {
+        "@type": "Organization",
+        "name": authorName
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Recipe Alchemist",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://recipealchemist.com/logo.png"
+        }
+      },
+      "datePublished": publishDate,
+      "dateModified": publishDate
+    };
+  };
 
   const handleGenerateImage = async () => {
     setIsGenerating(true);
@@ -138,18 +172,65 @@ const ArticleDetail = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col">
+  const getMetaTags = () => {
+    const title = `${articleTitle} | Recipe Alchemist`;
+    const keywords = `${slug}, recipe science, nutrition analysis, AI cooking, food science`;
+    
+    return (
       <Helmet>
-        <title>{articleTitle} - Recipe Alchemist</title>
+        <title>{title}</title>
         <meta 
           name="description" 
-          content={`Learn about ${articleTitle} in Recipe Alchemist's knowledge base.`} 
+          content={articleDescription} 
         />
+        <meta name="keywords" content={keywords} />
+        <link rel="canonical" href={`https://recipealchemist.com/how-it-works/${slug}`} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={articleDescription} />
+        <meta property="og:url" content={`https://recipealchemist.com/how-it-works/${slug}`} />
+        {generatedImage && <meta property="og:image" content={generatedImage} />}
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={articleDescription} />
+        {generatedImage && <meta name="twitter:image" content={generatedImage} />}
+        
+        {/* Schema.org structured data */}
+        <script type="application/ld+json">
+          {JSON.stringify(generateSchemaData())}
+        </script>
       </Helmet>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {getMetaTags()}
       <Navbar />
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-12">
+          <nav className="mb-6" aria-label="Breadcrumb">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink as={Link} to="/how-it-works">How It Works</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{articleTitle}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </nav>
+
           <div className="mb-8">
             <Button 
               variant="outline" 
@@ -161,15 +242,15 @@ const ArticleDetail = () => {
             </Button>
           </div>
 
-          {/* Hero section with image and buttons */}
           <div className="mb-8">
             <div className="relative rounded-lg overflow-hidden bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
               {generatedImage ? (
                 <img 
                   src={generatedImage} 
-                  alt={articleTitle}
+                  alt={`Illustration for article: ${articleTitle}`}
                   className="w-full h-64 object-cover" 
                   onError={() => setGeneratedImage(null)}
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-64 flex items-center justify-center">
@@ -202,6 +283,43 @@ const ArticleDetail = () => {
           </div>
           
           {renderArticle()}
+
+          <section aria-labelledby="related-articles-heading" className="mt-12">
+            <h2 id="related-articles-heading" className="text-2xl font-bold mb-6">Related Articles</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {['intelligent-cooking', 'nutrition-tracking', 'substitutions'].filter(s => s !== slug).map((relatedSlug) => {
+                let title = '';
+                let description = '';
+                
+                if (relatedSlug === 'intelligent-cooking') {
+                  title = 'How Nutrition Analysis Works';
+                  description = 'Discover how our AI uses food science to measure nutrition with precision.';
+                } else if (relatedSlug === 'nutrition-tracking') {
+                  title = 'Precise Nutrition Tracking';
+                  description = 'Learn about our method for accurate nutrition calculation.';
+                } else if (relatedSlug === 'substitutions') {
+                  title = 'Smart Ingredient Substitutions';
+                  description = 'See how we maintain flavor profiles when swapping ingredients.';
+                }
+                
+                return (
+                  <Card key={relatedSlug} className="hover:shadow-md transition-shadow">
+                    <div className="p-6">
+                      <h3 className="font-semibold mb-2">{title}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{description}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/how-it-works/${relatedSlug}`)}
+                      >
+                        Read Article
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
         </div>
       </main>
     </div>

@@ -9,12 +9,15 @@ export const ArticleIntelligentCooking = () => {
       itemScope 
       itemType="http://schema.org/Article"
     >
-      <meta itemProp="keywords" content="nutrition analysis, macro tracking, micronutrients, USDA FoodData, recipe nutrition" />
+      <meta itemProp="headline" content="How Our Nutrition Analysis Works: Real Science, Real Food" />
+      <meta itemProp="keywords" content="nutrition analysis, macro tracking, micronutrients, USDA FoodData, recipe nutrition, cooking science, food science" />
+      <meta itemProp="datePublished" content="2025-04-28T10:00:00Z" />
+      <meta itemProp="author" content="Recipe Alchemist Team" />
       
       <Card className="p-8 mb-8 space-y-12">
         <div className="space-y-8" itemProp="articleBody">
           <header className="mb-12">
-            <h1 className="text-3xl font-bold mb-4">How Our Nutrition Analysis Works: Real Science, Real Food</h1>
+            <h1 className="text-3xl font-bold mb-4" id="article-title">How Our Nutrition Analysis Works: Real Science, Real Food</h1>
             <p className="text-xl font-medium text-muted-foreground">
               Understanding what's really in your food goes far beyond counting calories or macros.
               It's a quiet, careful conversation between chemistry, cooking, and the messiness of real life.
@@ -30,9 +33,9 @@ export const ArticleIntelligentCooking = () => {
           </p>
 
           <section aria-labelledby="trusted-sources" className="space-y-4">
-            <h3 id="trusted-sources" className="text-2xl font-semibold mt-8">
+            <h2 id="trusted-sources" className="text-2xl font-semibold mt-8">
               1. It All Starts With Trusted Sources
-            </h3>
+            </h2>
             <p>
               Good analysis begins with good ingredients — and good data.
               Unlike many apps that rely on crowdsourced entries or outdated labels, we source nutrition information from places that treat food with the seriousness it deserves:
@@ -48,9 +51,9 @@ export const ArticleIntelligentCooking = () => {
           </section>
 
           <section aria-labelledby="cooking-changes" className="space-y-4">
-            <h3 id="cooking-changes" className="text-2xl font-semibold">
+            <h2 id="cooking-changes" className="text-2xl font-semibold">
               2. Cooking Changes Everything — and We Measure It
-            </h3>
+            </h2>
             <p>
               The heat of the stove, the slow work of an oven, the quick sear in a pan — every cooking method reshapes your food's nutrients.
               Our system tracks those transformations, carefully adjusting every value:
@@ -75,9 +78,9 @@ export const ArticleIntelligentCooking = () => {
           </section>
 
           <section aria-labelledby="beyond-macros" className="space-y-4">
-            <h3 id="beyond-macros" className="text-2xl font-semibold">
+            <h2 id="beyond-macros" className="text-2xl font-semibold">
               3. We Look Beyond Macros — Into the Micronutrient Heart of Food
-            </h3>
+            </h2>
             <p>
               Calories, carbs, protein, and fat are only part of the story.
               Our analysis goes deeper, following the real architects of health:
@@ -99,9 +102,9 @@ export const ArticleIntelligentCooking = () => {
           </section>
 
           <section aria-labelledby="personalized" className="space-y-4">
-            <h3 id="personalized" className="text-2xl font-semibold">
+            <h2 id="personalized" className="text-2xl font-semibold">
               4. Personalized, Because No Two Bodies Are the Same
-            </h3>
+            </h2>
             <p>
               A meal isn't just fuel — it's a conversation between your food and your body's needs.
               That's why we tailor nutrition analysis to you:
@@ -123,9 +126,9 @@ export const ArticleIntelligentCooking = () => {
           </section>
 
           <section aria-labelledby="ingredient-precision" className="space-y-4">
-            <h3 id="ingredient-precision" className="text-2xl font-semibold">
+            <h2 id="ingredient-precision" className="text-2xl font-semibold">
               5. Ingredient-Level Precision — No Guessing Allowed
-            </h3>
+            </h2>
             <p>
               Behind every beautiful dish lies the story of each ingredient.
               We break it down carefully:
@@ -141,9 +144,9 @@ export const ArticleIntelligentCooking = () => {
           </section>
 
           <section aria-labelledby="limitations" className="space-y-4">
-            <h3 id="limitations" className="text-2xl font-semibold">
+            <h2 id="limitations" className="text-2xl font-semibold">
               6. Respecting the Limits of Science, Too
-            </h3>
+            </h2>
             <p>
               Food is alive. Nature is messy.
               And we believe in honesty about what even the best nutrition analysis can and can't promise:

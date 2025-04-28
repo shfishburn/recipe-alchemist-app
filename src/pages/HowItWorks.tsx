@@ -2,32 +2,98 @@
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import { Helmet } from 'react-helmet';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Link } from 'react-router-dom';
 
 const HowItWorks = () => {
+  // Schema.org JSON-LD structured data for better SEO
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Recipe Alchemist's nutrition analysis work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We don't guess what's in your food — we measure it with real science. Our system pulls data from trusted sources like USDA FoodData Central, adjusts for cooking methods, tracks both macronutrients and vital micronutrients, and personalizes your nutrition to your body's needs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Recipe Alchemist track nutrition?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We calculate nutrition data based on actual cooking methods and ingredient changes to provide the most accurate nutrition information possible."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Recipe Alchemist handle ingredient substitutions?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Our AI suggests perfect substitutions while maintaining flavor profiles and nutrition balance to accommodate dietary needs and preferences."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>How It Works - Recipe Alchemist</title>
+        <title>How It Works: AI-Powered Cooking & Nutrition | Recipe Alchemist</title>
         <meta 
           name="description" 
-          content="Discover how Recipe Alchemist uses AI and real science to make cooking smarter, from precise nutrition tracking to intelligent substitutions and absorption insights." 
+          content="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights." 
         />
         <meta 
           name="keywords" 
-          content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking" 
+          content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking" 
         />
+        <link rel="canonical" href="https://recipealchemist.com/how-it-works" />
+        <meta property="og:title" content="How Recipe Alchemist Works: AI-Powered Cooking & Nutrition" />
+        <meta property="og:description" content="Discover how our AI uses food science to transform your cooking with precise nutrition tracking and smart substitutions." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://recipealchemist.com/how-it-works" />
+        <meta property="og:image" content="https://recipealchemist.com/images/how-it-works-banner.jpg" />
+        <meta name="twitter:title" content="How Recipe Alchemist Works: AI-Powered Cooking & Nutrition" />
+        <meta name="twitter:description" content="Discover how our AI uses food science to transform your cooking experience." />
+        <script type="application/ld+json">
+          {JSON.stringify(schemaData)}
+        </script>
       </Helmet>
       <Navbar />
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-12">
-          <h1 className="text-4xl font-bold mb-6 text-center">How It Works</h1>
-          <p className="text-lg text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Explore how Recipe Alchemist combines AI and food science to transform your cooking experience.
-          </p>
+          {/* Breadcrumb Navigation */}
+          <nav className="mb-8" aria-label="Breadcrumb">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>How It Works</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </nav>
+
+          <section aria-labelledby="page-title">
+            <h1 id="page-title" className="text-4xl font-bold mb-6 text-center">How It Works</h1>
+            <p className="text-lg text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Explore how Recipe Alchemist combines AI and food science to transform your cooking experience.
+            </p>
+          </section>
           
           <ArticlesList />
         </div>
