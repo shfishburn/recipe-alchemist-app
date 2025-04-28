@@ -22,6 +22,23 @@ export function RecipeInstructions({ recipe }: RecipeInstructionsProps) {
     }));
   };
   
+  // Function to process markdown-style bold text
+  const renderInstructionWithBoldIngredients = (instruction: string) => {
+    // Split by bold markers
+    const parts = instruction.split(/(\*\*.*?\*\*)/g);
+    
+    return parts.map((part, i) => {
+      // Check if this part is wrapped in bold markers
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Extract content between ** markers and render as bold
+        const content = part.substring(2, part.length - 2);
+        return <strong key={i} className="font-semibold text-recipe-blue">{content}</strong>;
+      }
+      // Return regular text
+      return <React.Fragment key={i}>{part}</React.Fragment>;
+    });
+  };
+  
   return (
     <Card>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -62,7 +79,7 @@ export function RecipeInstructions({ recipe }: RecipeInstructionsProps) {
                       </div>
                       <div className="flex-1 pt-0.5 flex items-center justify-between">
                         <p className={completedSteps[index] ? "line-through text-muted-foreground" : ""}>
-                          {step}
+                          {renderInstructionWithBoldIngredients(step)}
                         </p>
                         {completedSteps[index] && (
                           <Check className="h-5 w-5 text-green-500" />
