@@ -11,23 +11,19 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: ChatMessageProps) {
-  // Make sure follow_up_questions is always an array
-  const followUpQuestions = Array.isArray(chat.follow_up_questions) 
-    ? chat.follow_up_questions 
-    : [];
-
-  // Try to parse follow-up questions from the AI response if they exist
-  let parsedFollowUpQuestions = followUpQuestions;
-  if (followUpQuestions.length === 0 && chat.ai_response) {
+  const parsedFollowUpQuestions = React.useMemo(() => {
+    if (!chat.ai_response) return [];
+    
     try {
       const responseObj = JSON.parse(chat.ai_response);
-      if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
-        parsedFollowUpQuestions = responseObj.followUpQuestions;
-      }
+      return Array.isArray(responseObj.followUpQuestions) 
+        ? responseObj.followUpQuestions 
+        : [];
     } catch (e) {
-      console.log("Could not parse follow-up questions from response");
+      console.log("Could not parse follow-up questions from response:", e);
+      return [];
     }
-  }
+  }, [chat.ai_response]);
     
   return (
     <div className="space-y-4">

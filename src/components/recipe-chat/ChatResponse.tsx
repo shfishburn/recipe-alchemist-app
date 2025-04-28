@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
@@ -22,20 +21,17 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
-  let displayText = response;
-  
-  // Try to parse JSON response if applicable
-  if (response) {
+  const displayText = React.useMemo(() => {
+    if (!response) return '';
+    
     try {
       const responseObj = JSON.parse(response);
-      if (responseObj && typeof responseObj.textResponse === 'string') {
-        displayText = responseObj.textResponse;
-      }
+      return responseObj.textResponse || responseObj.response || response;
     } catch (e) {
-      // If parsing fails, use the response as is
-      console.log("Using raw response - not JSON format");
+      console.log("Using raw response - not JSON format:", e);
+      return response;
     }
-  }
+  }, [response]);
 
   const handleFollowUpClick = (question: string) => {
     setMessage(question);
