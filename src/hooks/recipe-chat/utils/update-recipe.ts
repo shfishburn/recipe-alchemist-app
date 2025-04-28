@@ -7,8 +7,13 @@ import type { Json } from '@/integrations/supabase/types';
 function validateIngredientQuantities(
   originalRecipe: Recipe,
   newIngredients: any[],
-  mode: 'add' | 'replace'
+  mode: 'add' | 'replace' | 'none'
 ): { valid: boolean; message?: string } {
+  // If mode is 'none' or no ingredients to validate, return valid
+  if (mode === 'none' || newIngredients.length === 0) {
+    return { valid: true };
+  }
+  
   // For replace mode, validate the entire new ingredient list
   const ingredientsToCheck = mode === 'replace' ? newIngredients : [...originalRecipe.ingredients, ...newIngredients];
   
@@ -64,7 +69,7 @@ export async function updateRecipe(
 
   // Process ingredients with enhanced validation
   if (chatMessage.changes_suggested.ingredients?.items) {
-    const { mode, items } = chatMessage.changes_suggested.ingredients;
+    const { mode = 'none', items } = chatMessage.changes_suggested.ingredients;
     console.log("Processing ingredients:", { mode, itemCount: items.length });
     
     // Validate ingredients format
@@ -79,7 +84,7 @@ export async function updateRecipe(
       throw new Error("Invalid ingredient format in suggested changes");
     }
 
-    // Validate quantities against serving size
+    // Validate quantities against serving size - now supports 'none' mode
     const quantityValidation = validateIngredientQuantities(recipe, items, mode);
     if (!quantityValidation.valid) {
       console.error("Ingredient quantity validation failed:", quantityValidation.message);
@@ -93,6 +98,7 @@ export async function updateRecipe(
       console.log("Replacing all ingredients");
       updatedRecipe.ingredients = items;
     }
+    // For 'none' mode, we don't modify ingredients
   }
 
   // Process instructions - ensure we always store as string array
