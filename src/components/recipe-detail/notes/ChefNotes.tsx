@@ -28,6 +28,7 @@ export function ChefNotes({ recipe, onUpdate }: ChefNotesProps) {
 
       if (error) throw error;
 
+      // Call the onUpdate prop to update parent component state
       onUpdate(notes);
       setIsEditing(false);
       toast({
@@ -80,7 +81,7 @@ export function ChefNotes({ recipe, onUpdate }: ChefNotesProps) {
           </div>
         ) : (
           <p className="text-muted-foreground">
-            {recipe.chef_notes || "No chef notes yet. Click edit to add your notes."}
+            {notes || "No chef notes yet. Click edit to add your notes."}
           </p>
         )}
       </CardContent>

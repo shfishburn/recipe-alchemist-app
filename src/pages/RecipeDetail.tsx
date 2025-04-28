@@ -16,8 +16,8 @@ import { Separator } from '@/components/ui/separator';
 import { ScienceNotes } from "@/components/recipe-detail/notes/ScienceNotes";
 import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import type { Recipe } from '@/types/recipe';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -26,10 +26,12 @@ const RecipeDetail = () => {
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [localRecipe, setLocalRecipe] = useState<Recipe | null>(null);
   
   useEffect(() => {
     if (recipe) {
       document.title = `${recipe.title} | Recipe`;
+      setLocalRecipe(recipe);
     }
     return () => {
       document.title = 'Recipe App';
@@ -40,31 +42,18 @@ const RecipeDetail = () => {
     setChatOpen(true);
   };
   
-  const handleNotesUpdate = async (notes: string) => {
-    if (recipe) {
-      try {
-        const { error } = await supabase
-          .from("recipes")
-          .update({ chef_notes: notes })
-          .eq("id", recipe.id);
-
-        if (error) throw error;
-        
-        // Update local state
-        recipe.chef_notes = notes;
-        
-        toast({
-          title: "Notes saved",
-          description: "Your chef notes have been updated successfully.",
-        });
-      } catch (error) {
-        console.error("Error saving notes:", error);
-        toast({
-          title: "Error saving notes",
-          description: "There was a problem saving your notes. Please try again.",
-          variant: "destructive",
-        });
-      }
+  const handleNotesUpdate = (notes: string) => {
+    if (localRecipe) {
+      // Update the local recipe state with the new chef_notes
+      setLocalRecipe({
+        ...localRecipe,
+        chef_notes: notes
+      });
+      
+      toast({
+        title: "Notes saved",
+        description: "Your chef notes have been updated successfully.",
+      });
     }
   };
 
@@ -84,6 +73,9 @@ const RecipeDetail = () => {
     }
   }, [showAnalysis]);
 
+  // Use localRecipe instead of recipe directly for rendering
+  const currentRecipe = localRecipe || recipe;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -98,41 +90,41 @@ const RecipeDetail = () => {
               <p>Error loading recipe. Please try again later.</p>
               <p className="text-sm text-gray-500">{error instanceof Error ? error.message : 'Unknown error'}</p>
             </div>
-          ) : recipe ? (
+          ) : currentRecipe ? (
             <div className="max-w-4xl mx-auto">
-              <RecipeHeader recipe={recipe} hideReasoning={true} />
+              <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
               
               <div className="hidden">
-                <PrintRecipe recipe={recipe} />
-                <CookingMode recipe={recipe} />
+                <PrintRecipe recipe={currentRecipe} />
+                <CookingMode recipe={currentRecipe} />
               </div>
               
               <Separator className="mb-6 sm:mb-8" />
               
               <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
                 <div className="md:col-span-1">
-                  <RecipeIngredients recipe={recipe} />
+                  <RecipeIngredients recipe={currentRecipe} />
                 </div>
                 <div className="md:col-span-2">
-                  <RecipeInstructions recipe={recipe} />
+                  <RecipeInstructions recipe={currentRecipe} />
                 </div>
               </div>
 
-              <RecipeAnalysis recipe={recipe} isVisible={showAnalysis} />
+              <RecipeAnalysis recipe={currentRecipe} isVisible={showAnalysis} />
 
               <div className="mt-6 sm:mt-8 space-y-6">
-                <ScienceNotes recipe={recipe} />
-                <ChefNotes recipe={recipe} onUpdate={handleNotesUpdate} />
+                <ScienceNotes recipe={currentRecipe} />
+                <ChefNotes recipe={currentRecipe} onUpdate={handleNotesUpdate} />
               </div>
 
-              {recipe.nutrition && (
+              {currentRecipe.nutrition && (
                 <div className="mt-6 sm:mt-8 mb-24">
-                  <RecipeNutrition recipe={recipe} />
+                  <RecipeNutrition recipe={currentRecipe} />
                 </div>
               )}
 
               <RecipeActions 
-                recipe={recipe} 
+                recipe={currentRecipe} 
                 sticky={true} 
                 onOpenChat={handleOpenChat}
                 onToggleAnalysis={handleToggleAnalysis}
@@ -141,7 +133,7 @@ const RecipeDetail = () => {
               />
               
               <RecipeChatDrawer 
-                recipe={recipe} 
+                recipe={currentRecipe} 
                 open={chatOpen} 
                 onOpenChange={setChatOpen}
               />
