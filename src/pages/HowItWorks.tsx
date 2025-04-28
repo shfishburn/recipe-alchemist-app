@@ -29,10 +29,10 @@ const HowItWorks = () => {
       },
       {
         "@type": "Question",
-        "name": "How does Recipe Alchemist track nutrition?",
+        "name": "How does Recipe Alchemist craft smarter recipes?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "We calculate nutrition data based on actual cooking methods and ingredient changes to provide the most accurate nutrition information possible."
+          "text": "Our AI builds recipes with real food science — using trusted nutrition data, cooking chemistry, and precision techniques to create meals that are not just delicious, but deeply nourishing."
         }
       },
       {
@@ -78,7 +78,9 @@ const HowItWorks = () => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>

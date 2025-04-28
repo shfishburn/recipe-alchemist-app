@@ -28,11 +28,11 @@ export const ArticlesList = () => {
     },
     {
       id: 'nutrition-tracking',
-      title: 'Precise Nutrition Tracking',
-      description: 'Learn how we calculate nutrition data based on actual cooking methods and ingredient changes.',
-      icon: <Leaf className="h-10 w-10 text-recipe-green" />,
+      title: 'How Our AI Crafts Smarter Recipes',
+      description: 'Our AI builds recipes with real food science — using trusted nutrition data, cooking chemistry, and precision techniques to create meals that are not just delicious, but deeply nourishing. Real science. Real flavor. Real life.',
+      icon: <ChefHat className="h-10 w-10 text-recipe-green" />,
       slug: 'nutrition-tracking',
-      keywords: ['nutrition tracking', 'cooking methods', 'ingredient changes', 'nutrient calculation', 'food science']
+      keywords: ['AI cooking', 'food science', 'recipe generation', 'nutrition data', 'cooking chemistry', 'precision cooking']
     },
     {
       id: 'substitutions',
