@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChefHat, FlaskConical, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeActionsProps {
@@ -25,8 +26,9 @@ export function RecipeActions({
   isAnalyzing = false 
 }: RecipeActionsProps) {
   const navigate = useNavigate();
-  const { mutate: deleteRecipe } = useDeleteRecipe();
+  const { mutate: deleteRecipe, isDeleting } = useDeleteRecipe();
   const [isSticky, setIsSticky] = React.useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = React.useState(false);
   const isMobile = useIsMobile();
   
   React.useEffect(() => {
@@ -56,8 +58,21 @@ export function RecipeActions({
   };
 
   const handleDelete = () => {
-    deleteRecipe(recipe.id);
-    navigate('/recipes');
+    if (showDeleteAlert) {
+      deleteRecipe(recipe.id, {
+        onSuccess: () => {
+          // Only navigate after the mutation has successfully completed
+          setTimeout(() => navigate('/recipes'), 100);
+        }
+      });
+      setShowDeleteAlert(false);
+    } else {
+      setShowDeleteAlert(true);
+    }
+  };
+  
+  const cancelDelete = () => {
+    setShowDeleteAlert(false);
   };
 
   const containerClasses = sticky && isSticky 
@@ -67,6 +82,24 @@ export function RecipeActions({
   return (
     <div className={containerClasses}>
       <div className="container max-w-4xl mx-auto p-4 space-y-3">
+        {showDeleteAlert && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Are you sure?</AlertTitle>
+            <AlertDescription>
+              This will delete the recipe "{recipe.title}".
+              <div className="mt-2 flex gap-2">
+                <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                  {isDeleting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
+                  {isDeleting ? "Deleting..." : "Yes, delete it"}
+                </Button>
+                <Button variant="outline" onClick={cancelDelete}>
+                  Cancel
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Main action buttons - Stacked on mobile, horizontal on larger screens */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Button 
@@ -138,11 +171,16 @@ export function RecipeActions({
           <Button
             variant="outline"
             size="icon"
-            className="h-10 w-10 bg-white"
+            className={`h-10 w-10 bg-white ${showDeleteAlert ? 'ring-2 ring-destructive' : ''}`}
             onClick={handleDelete}
+            disabled={isDeleting}
             title="Delete Recipe"
           >
-            <Trash2 className="h-5 w-5" />
+            {isDeleting ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Trash2 className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
