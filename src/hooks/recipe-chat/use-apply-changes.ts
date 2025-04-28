@@ -50,13 +50,26 @@ export const useApplyChanges = (recipe: Recipe) => {
       }
 
       let imageUrl = recipe.image_url;
+      
+      // Try to generate a new image, but catch errors to prevent the entire process from failing
       if (
         chatMessage.changes_suggested.title || 
         (chatMessage.changes_suggested.ingredients && 
          chatMessage.changes_suggested.ingredients.mode === 'replace')
       ) {
         try {
-          imageUrl = await generateRecipeImage(
+          console.log("Calling generate-recipe-image function with:", {
+            title: chatMessage.changes_suggested.title || recipe.title,
+            ingredients: chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
+            instructions: Array.isArray(chatMessage.changes_suggested.instructions) 
+              ? chatMessage.changes_suggested.instructions.map(instr => 
+                  typeof instr === 'string' ? instr : instr.action
+                ) 
+              : recipe.instructions,
+            recipeId: recipe.id
+          });
+          
+          const newImageUrl = await generateRecipeImage(
             chatMessage.changes_suggested.title || recipe.title,
             chatMessage.changes_suggested.ingredients?.items || recipe.ingredients,
             Array.isArray(chatMessage.changes_suggested.instructions) 
@@ -66,16 +79,31 @@ export const useApplyChanges = (recipe: Recipe) => {
               : recipe.instructions,
             recipe.id
           );
+          
+          if (newImageUrl) {
+            imageUrl = newImageUrl;
+          } else {
+            console.log("Image generation returned null or empty URL, keeping existing image");
+          }
         } catch (error) {
-          console.error('Failed to generate new recipe image:', error);
+          console.error('Error generating image:', error);
           // Continue with existing image if generation fails
         }
       }
 
-      const newRecipe = await updateRecipe(recipe, chatMessage, user.id, imageUrl);
-      await updateChatStatus(chatMessage);
-
-      return newRecipe;
+      try {
+        const newRecipe = await updateRecipe(recipe, chatMessage, user.id, imageUrl);
+        
+        if (!newRecipe) {
+          throw new Error("Failed to update recipe - no data returned");
+        }
+        
+        await updateChatStatus(chatMessage);
+        return newRecipe;
+      } catch (error) {
+        console.error("Update recipe error:", error);
+        throw error;
+      }
     },
     onSuccess: (newRecipe) => {
       toast({
@@ -89,7 +117,9 @@ export const useApplyChanges = (recipe: Recipe) => {
       console.error("Error applying changes:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to apply changes',
+        description: error instanceof Error 
+          ? error.message 
+          : (error.message || 'Failed to apply changes'),
         variant: "destructive",
       });
     },

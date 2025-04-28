@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Check, RefreshCw, AlertTriangle, Info } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface ChatResponseProps {
@@ -23,6 +23,8 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
+  const [applyError, setApplyError] = useState<string | null>(null);
+  
   const displayText = React.useMemo(() => {
     if (!response) return '';
     
@@ -89,6 +91,28 @@ export function ChatResponse({
     setMessage(question);
   };
 
+  const handleApplyChanges = () => {
+    setApplyError(null); // Reset any previous errors
+    
+    try {
+      // Check if there are actual changes to apply
+      if (!changesSuggested || 
+          (!changesSuggested.title && 
+           !changesSuggested.instructions && 
+           (!changesSuggested.ingredients || 
+            !changesSuggested.ingredients.items || 
+            changesSuggested.ingredients.items.length === 0))) {
+        setApplyError("No changes to apply. The AI didn't suggest any specific modifications.");
+        return;
+      }
+      
+      onApplyChanges();
+    } catch (error) {
+      console.error("Error preparing to apply changes:", error);
+      setApplyError(error.message || "Failed to apply changes. Please try again.");
+    }
+  };
+
   const renderFormattedText = (text: string) => {
     return text.split(/(\*\*.*?\*\*)/).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
@@ -120,8 +144,16 @@ export function ChatResponse({
 
           {changesSuggested && (
             <div className="mt-4">
+              {applyError && (
+                <Alert variant="destructive" className="mb-4">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{applyError}</AlertDescription>
+                </Alert>
+              )}
+              
               <Button
-                onClick={onApplyChanges}
+                onClick={handleApplyChanges}
                 disabled={isApplying || applied}
                 className={`${
                   applied ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
