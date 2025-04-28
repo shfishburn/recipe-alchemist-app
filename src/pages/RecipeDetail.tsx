@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -20,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
+import { useRecipeChat } from '@/hooks/use-recipe-chat';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -178,7 +178,6 @@ const RecipeDetail = () => {
           ) : null}
         </div>
       </main>
-      {/* Footer is removed from here as it's already included in App.tsx */}
     </div>
   );
 }

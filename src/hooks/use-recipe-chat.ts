@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -82,8 +82,8 @@ export const useRecipeChat = (recipe: Recipe) => {
   const mutation = useChatMutations(recipe);
   const applyChanges = useApplyChanges(recipe);
 
-  // Clear optimistic messages when chat history is updated
-  useCallback(() => {
+  // Fixed: Changed from useCallback to useEffect to properly clear optimistic messages
+  useEffect(() => {
     if (chatHistory && chatHistory.length > 0) {
       setOptimisticMessages([]);
     }
