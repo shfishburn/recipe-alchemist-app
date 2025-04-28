@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -20,45 +21,37 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey });
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = await req.json();
 
-    let prompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, analyze and improve this recipe with precise, science-backed techniques. Your response should:
+    // Create the base prompt - this ensures that regardless of what the client sends,
+    // we format a system message that requests JSON output
+    let systemPrompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, analyze and improve this recipe with precise, science-backed techniques. Please format your response as JSON with these fields:
 
-1. Examine Chemical Processes:
-   - Explain Maillard reactions, caramelization, and enzymatic activities occurring
-   - Detail how heat transfer methods affect flavor compound development
-   - Describe protein denaturation and starch gelatinization specific to these ingredients
-   - Identify key flavor molecules and their interactions during cooking
+1. textResponse - Your main analysis including:
+   - Key chemical processes occurring (Maillard reactions, protein denaturation, etc)
+   - Temperature-dependent techniques analysis
+   - Scientific rationale for ingredient choices
 
-2. Enhance Techniques with Scientific Precision:
-   - Specify exact temperatures, timing, and visual/tactile doneness cues
-   - Explain how ingredient preparation affects texture and flavor
-   - Provide equipment recommendations based on thermal properties
-   - Include troubleshooting for common issues with scientific explanations
+2. science_notes - An array of strings with key scientific principles
 
-3. MEASUREMENT STANDARDIZATION:
-   - All measurements MUST be in imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
-   - Convert any metric values to their imperial equivalents
-   - For small quantities where precision matters, use fractions (1/4 tsp, etc.)
-   - Provide temperatures in °F with °C in parentheses where relevant
+3. troubleshooting - An array of strings with common issues and fixes
 
-4. INLINE INGREDIENTS FORMAT:
-   - Include ingredient references within instructions using **bold** text
-   - Each instruction must reference specific ingredients with exact quantities
-   - Example: "Heat a large skillet and add **2 tablespoons olive oil**. Once hot, sear **1 pound beef chuck, cubed** until browned"
-   - Maintain complete measurements in the separate ingredients list with quality specs
-   - Ensure every ingredient mentioned is properly formatted in bold
+4. changes - An object containing suggested recipe improvements
 
-5. Transform Ingredient Understanding:
-   - Explain chemical composition of key ingredients and their functional roles
-   - Detail how ingredient quality indicators affect results
-   - Provide scientifically-validated substitutions with reasoning
-   - Explain how ingredient temperature, pH, and freshness impact outcomes`;
+5. followUpQuestions - An array of strings with follow-up question suggestions
 
-    console.log("Sending request to OpenAI with prompt");
+Remember that I need your response formatted as JSON compatible with these fields.`;
+
+    // Append user message for context if provided
+    if (userMessage) {
+      systemPrompt += `\n\nUser request: ${userMessage}`;
+    }
+
+    console.log("Sending request to OpenAI with JSON format prompt");
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: prompt }
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Analyze this ${recipe.cuisine || 'standard'} recipe for ${recipe.title} in JSON format.` }
       ],
       temperature: 0.7,
       response_format: { type: "json_object" }
@@ -80,6 +73,7 @@ serve(async (req) => {
         health_insights: parsedContent.health_insights || [],
         equipmentNeeded: parsedContent.changes?.equipmentNeeded || [],
         science_notes: parsedContent.science_notes || [],
+        troubleshooting: parsedContent.troubleshooting || [],
         followUpQuestions: parsedContent.followUpQuestions || [
           "How would the science behind this recipe change if we altered the cooking temperature?",
           "What specific chemical reactions occur when cooking this dish?",
