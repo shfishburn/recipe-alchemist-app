@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -22,6 +23,15 @@ serve(async (req) => {
 
     const systemPrompt = `As a culinary scientist and registered dietitian, analyze this recipe and suggest improvements.
     
+    IMPORTANT GUIDELINES FOR RECIPE MODIFICATIONS:
+    1. ALWAYS maintain proper ingredient proportions relative to the serving size
+    2. When suggesting ingredient changes:
+       - For a serving size of ${recipe.servings}, quantities must be proportional
+       - Justify ANY significant quantity changes with culinary or scientific reasoning
+       - Flag unreasonable quantities (e.g., 3 lbs meat for 2 servings)
+       - Preserve the original recipe's core ratios unless specifically improving them
+    3. Use "add" mode for new ingredients, "replace" mode ONLY when revising the entire recipe
+    
     Format your response as JSON with these fields:
     {
       "textResponse": "Your detailed analysis and recommendations",
@@ -34,7 +44,7 @@ serve(async (req) => {
               "qty": number,
               "unit": "string",
               "item": "string",
-              "notes": "optional string"
+              "notes": "string explaining any significant changes"
             }
           ]
         },
@@ -46,18 +56,18 @@ serve(async (req) => {
     }
 
     When suggesting ingredient changes:
-    1. Use "add" mode to append new ingredients
-    2. Use "replace" mode to provide a complete new list
-    3. Always include qty, unit, and item for each ingredient
-    4. Format ingredient references in instructions with **bold** text`;
+    1. Default to "add" mode unless complete revision is needed
+    2. Include detailed notes explaining quantity changes
+    3. Format ingredient references with **bold** text
+    4. Validate all quantities against serving size`;
 
-    console.log("Sending request to OpenAI with JSON format prompt");
+    console.log("Sending request to OpenAI with enhanced prompts for proper scaling");
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Analyze this ${recipe.cuisine || 'standard'} recipe for ${recipe.title} in JSON format.` }
+        { role: "user", content: `Analyze this ${recipe.cuisine || 'standard'} recipe for ${recipe.title} with ${recipe.servings} servings in JSON format.` }
       ],
       temperature: 0.7,
       response_format: { type: "json_object" }
@@ -66,7 +76,6 @@ serve(async (req) => {
     const content = response.choices[0].message.content;
     console.log("Received response from OpenAI:", content.substring(0, 100) + "...");
     
-    // Enhanced response processing
     const parsedContent = JSON.parse(content);
     console.log("Parsed recipe chat response:", {
       hasIngredients: !!parsedContent.changes?.ingredients,

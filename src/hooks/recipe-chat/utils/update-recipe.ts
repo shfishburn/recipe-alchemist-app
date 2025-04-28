@@ -4,6 +4,41 @@ import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import type { Json } from '@/integrations/supabase/types';
 
+function validateIngredientQuantities(
+  originalRecipe: Recipe,
+  newIngredients: any[],
+  mode: 'add' | 'replace'
+): { valid: boolean; message?: string } {
+  // For replace mode, validate the entire new ingredient list
+  const ingredientsToCheck = mode === 'replace' ? newIngredients : [...originalRecipe.ingredients, ...newIngredients];
+  
+  // Calculate average quantity per serving from original recipe
+  const originalAvgQtyPerServing = originalRecipe.ingredients.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
+  
+  // Calculate new average
+  const newAvgQtyPerServing = ingredientsToCheck.reduce((acc, ing) => acc + ing.qty, 0) / originalRecipe.servings;
+  
+  // Check if the new average is significantly different (more than 3x)
+  if (newAvgQtyPerServing > originalAvgQtyPerServing * 3) {
+    return {
+      valid: false,
+      message: `Warning: New ingredient quantities seem too high for ${originalRecipe.servings} servings`
+    };
+  }
+
+  // Check individual ingredients for unreasonable quantities
+  for (const ing of newIngredients) {
+    if (ing.qty > 5 && ['lb', 'lbs', 'pound', 'pounds'].includes(ing.unit.toLowerCase())) {
+      return {
+        valid: false,
+        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high for ${originalRecipe.servings} servings`
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
 export async function updateRecipe(
   recipe: Recipe,
   chatMessage: ChatMessage,
@@ -27,7 +62,7 @@ export async function updateRecipe(
     updated_at: new Date().toISOString()
   };
 
-  // Process ingredients with validation
+  // Process ingredients with enhanced validation
   if (chatMessage.changes_suggested.ingredients?.items) {
     const { mode, items } = chatMessage.changes_suggested.ingredients;
     console.log("Processing ingredients:", { mode, itemCount: items.length });
@@ -42,6 +77,13 @@ export async function updateRecipe(
     if (!validIngredients) {
       console.error("Invalid ingredient format detected");
       throw new Error("Invalid ingredient format in suggested changes");
+    }
+
+    // Validate quantities against serving size
+    const quantityValidation = validateIngredientQuantities(recipe, items, mode);
+    if (!quantityValidation.valid) {
+      console.error("Ingredient quantity validation failed:", quantityValidation.message);
+      throw new Error(quantityValidation.message);
     }
 
     if (mode === 'add' && Array.isArray(items)) {
