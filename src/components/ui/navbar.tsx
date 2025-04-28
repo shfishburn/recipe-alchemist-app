@@ -9,8 +9,8 @@ import { MobileMenu } from '@/components/ui/mobile-menu';
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
 
-  // Define navigation links without Profile since it's in the button
   const navigationLinks = [
+    { name: 'How it Works', path: '/how-it-works', requiresAuth: false },
     { name: 'Browse Recipes', path: '/recipes', requiresAuth: false },
     { name: 'Create Recipe', path: '/build', requiresAuth: true },
     { name: 'Shopping Lists', path: '/shopping-lists', requiresAuth: true },
