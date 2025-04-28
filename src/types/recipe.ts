@@ -31,6 +31,7 @@ export interface Recipe {
   servings?: number;
   image_url?: string;
   cuisine?: string;
+  cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles";
   tags?: string[];
   user_id?: string;
   created_at?: string;
@@ -44,6 +45,7 @@ export interface Recipe {
   dietary?: string;
   flavor_tags?: string[];
   nutrition?: Nutrition;
-  science_notes: string[];  // Updated to be required string array
+  science_notes: string[];
   chef_notes?: string;
 }
+
