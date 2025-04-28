@@ -3,7 +3,23 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, onFocus, onBlur, onChange, ...props }, ref) => {
+    // Enhanced input handlers with stopPropagation to prevent event bubbling
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      if (onFocus) onFocus(e);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      if (onBlur) onBlur(e);
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      if (onChange) onChange(e);
+    };
+
     return (
       <input
         type={type}
@@ -12,6 +28,9 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onChange={handleChange}
         {...props}
       />
     )

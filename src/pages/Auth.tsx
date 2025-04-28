@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import { useAuth } from '@/hooks/use-auth';
+import { Card } from "@/components/ui/card";
 
 const Auth = () => {
   const { session, loading } = useAuth();
@@ -25,7 +26,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <AuthForm />
+      <Card className="w-full max-w-md p-6 shadow-lg">
+        <h1 className="text-2xl font-bold text-center mb-6">Welcome</h1>
+        <AuthForm standalone={true} />
+      </Card>
     </div>
   );
 };

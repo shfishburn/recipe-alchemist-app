@@ -21,6 +21,17 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Improved input change handlers with stopPropagation
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    setPassword(e.target.value);
+  };
+
   const handleAuth = async (type: 'LOGIN' | 'SIGNUP') => {
     if (!email || !password) {
       toast({
@@ -78,76 +89,83 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     }
   };
 
+  // Prevent form submission from bubbling
+  const handleSubmit = (e: React.FormEvent, type: 'LOGIN' | 'SIGNUP') => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleAuth(type);
+  };
+
   const FormContent = () => (
-    <Tabs defaultValue="login">
+    <Tabs defaultValue="login" className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-6">
         <TabsTrigger value="login">Login</TabsTrigger>
         <TabsTrigger value="signup">Sign Up</TabsTrigger>
       </TabsList>
 
       <TabsContent value="login">
-        <form onSubmit={(e) => { e.preventDefault(); handleAuth('LOGIN'); }}>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
-            </Button>
+        <form onSubmit={(e) => handleSubmit(e, 'LOGIN')} className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={handleEmailChange}
+              autoComplete="email"
+              required
+              className="mt-1"
+            />
           </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={handlePasswordChange}
+              autoComplete="current-password"
+              required
+              className="mt-1"
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </Button>
         </form>
       </TabsContent>
 
       <TabsContent value="signup">
-        <form onSubmit={(e) => { e.preventDefault(); handleAuth('SIGNUP'); }}>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="signup-email">Email</Label>
-              <Input
-                id="signup-email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="signup-password">Password</Label>
-              <Input
-                id="signup-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : 'Sign Up'}
-            </Button>
+        <form onSubmit={(e) => handleSubmit(e, 'SIGNUP')} className="space-y-4">
+          <div>
+            <Label htmlFor="signup-email">Email</Label>
+            <Input
+              id="signup-email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={handleEmailChange}
+              autoComplete="email"
+              required
+              className="mt-1"
+            />
           </div>
+          <div>
+            <Label htmlFor="signup-password">Password</Label>
+            <Input
+              id="signup-password"
+              type="password"
+              value={password}
+              onChange={handlePasswordChange}
+              autoComplete="new-password"
+              required
+              className="mt-1"
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Creating account...' : 'Sign Up'}
+          </Button>
         </form>
       </TabsContent>
     </Tabs>

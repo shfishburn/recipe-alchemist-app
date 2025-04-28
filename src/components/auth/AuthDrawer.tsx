@@ -5,7 +5,6 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 // For desktop
 import {
@@ -51,7 +50,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent className="max-h-[90vh]">
+        <DrawerContent className="min-h-[85vh] pt-4">
           <DrawerHeader className="flex items-center justify-between border-b pb-4">
             <DrawerTitle className="text-center">Account</DrawerTitle>
             <DrawerClose asChild>
@@ -61,9 +60,9 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
               </Button>
             </DrawerClose>
           </DrawerHeader>
-          <ScrollArea className="p-6 h-full max-h-[70vh]">
+          <div className="p-6">
             <AuthForm onSuccess={handleAuthSuccess} />
-          </ScrollArea>
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -81,9 +80,9 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
             </Button>
           </SheetClose>
         </SheetHeader>
-        <ScrollArea className="flex-1 p-6 h-full">
+        <div className="p-6">
           <AuthForm onSuccess={handleAuthSuccess} />
-        </ScrollArea>
+        </div>
       </SheetContent>
     </Sheet>
   );
