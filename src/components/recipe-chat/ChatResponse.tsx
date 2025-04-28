@@ -29,23 +29,33 @@ export function ChatResponse({
     if (!response) return '';
     
     try {
-      // Robust parsing of response, accounting for different formats
+      // Enhanced JSON parsing with better text extraction
       let parsedResponse;
       let text = '';
       
       try {
         parsedResponse = JSON.parse(response);
+        // Extract the text content from the parsed JSON
         text = parsedResponse.textResponse || parsedResponse.response || '';
       } catch (e) {
-        // If JSON parsing fails, use the raw response
-        console.log("Response is not valid JSON, using as plain text:", e);
+        // If it's not valid JSON, use the raw response as text
+        console.log("Response is not valid JSON, using as plain text");
         text = response;
       }
       
-      // If we still don't have text, try to extract from the raw response
+      // If we still don't have text, use the raw response
       if (!text && typeof response === 'string') {
         text = response;
       }
+      
+      // Clean up the response by removing any remaining JSON syntax markers
+      text = text
+        .replace(/^\s*{/g, '')
+        .replace(/}\s*$/g, '')
+        .replace(/"textResponse":/g, '')
+        .replace(/"response":/g, '')
+        .replace(/^["']|["']$/g, '')
+        .trim();
 
       // Enhanced ingredient highlighting
       if (changesSuggested?.ingredients?.items && Array.isArray(changesSuggested.ingredients.items)) {

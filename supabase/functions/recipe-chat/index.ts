@@ -48,7 +48,8 @@ serve(async (req) => {
     User request:
     ${userMessage}
 
-    Please analyze and respond in valid JSON format with textResponse and changes fields.
+    Please respond conversationally in plain text. If suggesting changes, include them in a separate JSON structure.
+    If relevant, provide cooking advice and tips as a culinary expert would.
     `
 
     console.log(`Sending request to OpenAI with ${prompt.length} characters`)
@@ -65,7 +66,7 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: systemPrompt,
+              content: systemPrompt + "\nIMPORTANT: Provide responses in a conversational tone. Don't format your response as JSON - use normal human-readable text.",
             },
             {
               role: 'user',
@@ -87,9 +88,24 @@ serve(async (req) => {
       const rawResponse = aiResponse.choices[0].message.content;
       console.log("Raw AI response:", rawResponse);
 
-      // Validate the response
-      const changes = validateRecipeChanges(rawResponse);
-      console.log("Validated changes:", changes);
+      // Extract any changes suggested from the response
+      const processedResponse = validateRecipeChanges(rawResponse);
+      
+      // Prepare the response data format
+      let textResponse = rawResponse;
+      let changes = { mode: "none" };
+      
+      // Check if we successfully extracted structured changes
+      if (processedResponse && typeof processedResponse === 'object') {
+        if (processedResponse.textResponse) {
+          textResponse = processedResponse.textResponse;
+        }
+        if (processedResponse.changes) {
+          changes = processedResponse.changes;
+        }
+      }
+      
+      console.log("Processed response:", { textLength: textResponse.length, hasChanges: !!changes });
       
       // For analysis requests, make sure we include the changes in the response
       const responseData = sourceType === 'analysis' 
@@ -100,7 +116,7 @@ serve(async (req) => {
             techniques: changes.techniques || [],
             troubleshooting: changes.troubleshooting || [] 
           }
-        : { success: true, changes, textResponse: rawResponse };
+        : { success: true, changes, textResponse };
 
       // Store the chat interaction if it's not an analysis
       if (sourceType !== 'analysis' && recipe.id) {
@@ -109,7 +125,7 @@ serve(async (req) => {
           .insert({
             recipe_id: recipe.id,
             user_message: userMessage,
-            ai_response: rawResponse,
+            ai_response: textResponse,
             changes_suggested: changes,
             source_type: sourceType || 'manual',
             source_url: sourceUrl,
