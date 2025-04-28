@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useRecipeDetail } from "@/hooks/use-recipe-detail";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Featured recipe ID for the Japanese Curry
+// Featured recipe ID for the Japanese Curry - update to your actual recipe ID
 const FEATURED_RECIPE_ID = "d2f44866-5ee9-4dc4-8537-21f01ed42ac2";
 
 export function FeaturedRecipe() {
@@ -66,7 +66,7 @@ export function FeaturedRecipe() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-2xl font-bold mb-2">{recipe.title}</h3>
-                <p className="text-muted-foreground">{recipe.description}</p>
+                <p className="text-muted-foreground">{recipe.tagline || recipe.description}</p>
               </div>
               
               <Table>
@@ -78,24 +78,36 @@ export function FeaturedRecipe() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recipe.ingredients.map((ingredient, index) => (
+                  {recipe.ingredients.slice(0, 5).map((ingredient, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{ingredient.qty}</TableCell>
                       <TableCell>{ingredient.unit}</TableCell>
                       <TableCell>{ingredient.item}</TableCell>
                     </TableRow>
                   ))}
+                  {recipe.ingredients.length > 5 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        +{recipe.ingredients.length - 5} more ingredients
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
 
               <div>
                 <h4 className="font-semibold mb-4">Instructions</h4>
                 <ol className="list-decimal list-inside space-y-2">
-                  {recipe.instructions.map((step, index) => (
+                  {recipe.instructions.slice(0, 3).map((step, index) => (
                     <li key={index} className="text-muted-foreground ml-4">
                       <span className="text-foreground">{step}</span>
                     </li>
                   ))}
+                  {recipe.instructions.length > 3 && (
+                    <li className="text-center text-muted-foreground mt-2">
+                      +{recipe.instructions.length - 3} more steps available in the full recipe
+                    </li>
+                  )}
                 </ol>
               </div>
             </div>

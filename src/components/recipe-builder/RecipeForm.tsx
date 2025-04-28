@@ -47,8 +47,12 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
     },
   } = useRecipeForm(onSubmit, isLoading);
 
+  const onFormSubmit = (e: React.FormEvent) => {
+    handleSubmit(e);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={onFormSubmit} className="space-y-6">
       <InputsTab
         title={formData.title}
         cuisine={formData.cuisine}
@@ -82,7 +86,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
 
       <FormFooter
         onPreview={() => setPreviewOpen(true)}
-        onSubmit={handleSubmit}
+        onSubmit={onFormSubmit}
         isLoading={isLoading}
         hasGenerated={hasGenerated}
       />

@@ -26,8 +26,7 @@ const FormFooter = ({ onPreview, onSubmit, isLoading, hasGenerated }: FormFooter
       
       {!hasGenerated && (
         <Button
-          type="button"
-          onClick={onSubmit}
+          type="submit"
           disabled={isLoading}
           className="bg-recipe-blue hover:bg-recipe-blue/90 w-full sm:w-auto"
         >
