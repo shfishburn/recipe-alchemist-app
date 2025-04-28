@@ -40,13 +40,13 @@ export function ChatMessage({ chat, setMessage, applyChanges, isApplying }: Chat
 
       <div className="flex">
         <ChatResponse
-          response={chat.ai_response}
+          response={chat.ai_response || ""}
           changesSuggested={chat.changes_suggested}
           followUpQuestions={parsedFollowUpQuestions}
           setMessage={setMessage}
           onApplyChanges={() => applyChanges(chat)}
           isApplying={isApplying}
-          applied={chat.applied}
+          applied={chat.applied || false}
         />
       </div>
     </div>
