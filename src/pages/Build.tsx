@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import RecipeForm, { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
 import BuildHeader from '@/components/recipe-builder/BuildHeader';
 import { useRecipeGenerator } from '@/hooks/use-recipe-generator';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   Breadcrumb,
   BreadcrumbItem,
@@ -18,6 +20,19 @@ import { ChevronRight } from 'lucide-react';
 const Build = () => {
   const { generateRecipe, isLoading } = useRecipeGenerator();
   const { toast } = useToast();
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create recipes.",
+        variant: "destructive",
+      });
+      navigate('/auth', { state: { from: '/build' } });
+    }
+  }, [session, loading, navigate, toast]);
 
   const handleSubmit = async (formData: RecipeFormData) => {
     // Validate minimum requirements
@@ -33,6 +48,23 @@ const Build = () => {
     // Generate the recipe (saving and navigation are handled in the hook)
     await generateRecipe(formData);
   };
+
+  // Show loading when checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Only render the form if authenticated
+  if (!session) {
+    return null; // This prevents flash before redirect
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
