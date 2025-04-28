@@ -13,7 +13,7 @@ export const useRecipeForm = (onSubmit: (formData: RecipeFormData) => void, isLo
   
   const [formData, setFormData] = useState<RecipeFormData>({
     title: '',
-    cuisine: 'italian',
+    cuisine: 'italian', // This is a valid value in our restructured cuisine data
     dietary: 'no-restrictions',
     flavorTags: [],
     ingredients: [],
