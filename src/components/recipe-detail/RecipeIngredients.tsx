@@ -1,24 +1,24 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AddToShoppingList } from './AddToShoppingList';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
+import { AddToShoppingList } from './AddToShoppingList';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeIngredientsProps {
   recipe: Recipe;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function RecipeIngredients({ recipe }: RecipeIngredientsProps) {
-  const [isOpen, setIsOpen] = useState(true);
-  
+export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredientsProps) {
   return (
-    <Card>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <Card>
         <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
               <ShoppingBag className="h-5 w-5 mr-2 text-recipe-blue" />
               Ingredients
@@ -56,7 +56,7 @@ export function RecipeIngredients({ recipe }: RecipeIngredientsProps) {
             </ul>
           </CardContent>
         </CollapsibleContent>
-      </Collapsible>
-    </Card>
+      </Card>
+    </Collapsible>
   );
 }

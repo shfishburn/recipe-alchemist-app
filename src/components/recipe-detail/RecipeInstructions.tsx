@@ -1,19 +1,20 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, BookOpen, Check } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { BookOpen, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function RecipeInstructions({ recipe }: RecipeInstructionsProps) {
+export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructionsProps) {
   const [completedSteps, setCompletedSteps] = useState<{[key: number]: boolean}>({});
-  const [isOpen, setIsOpen] = useState(true);
   
   const toggleStep = (index: number) => {
     setCompletedSteps(prev => ({
@@ -40,10 +41,10 @@ export function RecipeInstructions({ recipe }: RecipeInstructionsProps) {
   };
   
   return (
-    <Card>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <Card>
         <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold flex items-center">
               <BookOpen className="h-5 w-5 mr-2 text-recipe-blue" />
               Instructions
@@ -97,7 +98,7 @@ export function RecipeInstructions({ recipe }: RecipeInstructionsProps) {
             )}
           </CardContent>
         </CollapsibleContent>
-      </Collapsible>
-    </Card>
+      </Card>
+    </Collapsible>
   );
 }

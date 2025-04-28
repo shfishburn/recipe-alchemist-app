@@ -1,9 +1,10 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText } from "lucide-react";
+import { FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Recipe } from "@/types/recipe";
@@ -11,9 +12,11 @@ import type { Recipe } from "@/types/recipe";
 interface ChefNotesProps {
   recipe: Recipe;
   onUpdate: (notes: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function ChefNotes({ recipe, onUpdate }: ChefNotesProps) {
+export function ChefNotes({ recipe, onUpdate, isOpen, onToggle }: ChefNotesProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [notes, setNotes] = useState(recipe.chef_notes || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -48,43 +51,59 @@ export function ChefNotes({ recipe, onUpdate }: ChefNotesProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
-          <FileText className="h-5 w-5 mr-2 text-recipe-blue" />
-          Chef Notes
-        </CardTitle>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Cancel" : "Edit"}
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {isEditing ? (
-          <div className="space-y-2">
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add your personal notes about this recipe..."
-              className="min-h-[100px]"
-            />
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full sm:w-auto"
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
+            <FileText className="h-5 w-5 mr-2 text-recipe-blue" />
+            Chef Notes
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditing(!isEditing)}
             >
-              Save Notes
+              {isEditing ? "Cancel" : "Edit"}
             </Button>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                <span className="sr-only">Toggle section</span>
+              </Button>
+            </CollapsibleTrigger>
           </div>
-        ) : (
-          <p className="text-muted-foreground">
-            {notes || "No chef notes yet. Click edit to add your notes."}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent>
+            {isEditing ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add your personal notes about this recipe..."
+                  className="min-h-[100px]"
+                />
+                <Button 
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="w-full sm:w-auto"
+                >
+                  Save Notes
+                </Button>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">
+                {notes || "No chef notes yet. Click edit to add your notes."}
+              </p>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }

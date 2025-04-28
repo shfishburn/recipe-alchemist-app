@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -18,10 +17,13 @@ import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
 import { toast } from "@/hooks/use-toast";
 import type { Recipe } from '@/types/recipe';
+import { useRecipeSections } from '@/hooks/use-recipe-sections';
+import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
 
 const RecipeDetail = () => {
   const { id } = useParams();
   const { data: recipe, isLoading, error } = useRecipeDetail(id);
+  const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
   const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -44,7 +46,6 @@ const RecipeDetail = () => {
   
   const handleNotesUpdate = (notes: string) => {
     if (localRecipe) {
-      // Update the local recipe state with the new chef_notes
       setLocalRecipe({
         ...localRecipe,
         chef_notes: notes
@@ -73,7 +74,6 @@ const RecipeDetail = () => {
     }
   }, [showAnalysis]);
 
-  // Use localRecipe instead of recipe directly for rendering
   const currentRecipe = localRecipe || recipe;
 
   return (
@@ -101,25 +101,48 @@ const RecipeDetail = () => {
               
               <Separator className="mb-6 sm:mb-8" />
               
+              <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
+              
               <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
                 <div className="md:col-span-1">
-                  <RecipeIngredients recipe={currentRecipe} />
+                  <RecipeIngredients 
+                    recipe={currentRecipe}
+                    isOpen={sections.ingredients}
+                    onToggle={() => toggleSection('ingredients')}
+                  />
                 </div>
                 <div className="md:col-span-2">
-                  <RecipeInstructions recipe={currentRecipe} />
+                  <RecipeInstructions 
+                    recipe={currentRecipe}
+                    isOpen={sections.instructions}
+                    onToggle={() => toggleSection('instructions')}
+                  />
                 </div>
               </div>
 
               <RecipeAnalysis recipe={currentRecipe} isVisible={showAnalysis} />
 
               <div className="mt-6 sm:mt-8 space-y-6">
-                <ScienceNotes recipe={currentRecipe} />
-                <ChefNotes recipe={currentRecipe} onUpdate={handleNotesUpdate} />
+                <ScienceNotes 
+                  recipe={currentRecipe}
+                  isOpen={sections.science}
+                  onToggle={() => toggleSection('science')}
+                />
+                <ChefNotes 
+                  recipe={currentRecipe} 
+                  onUpdate={handleNotesUpdate}
+                  isOpen={sections.chef}
+                  onToggle={() => toggleSection('chef')}
+                />
               </div>
 
               {currentRecipe.nutrition && (
                 <div className="mt-6 sm:mt-8 mb-24">
-                  <RecipeNutrition recipe={currentRecipe} />
+                  <RecipeNutrition 
+                    recipe={currentRecipe}
+                    isOpen={sections.nutrition}
+                    onToggle={() => toggleSection('nutrition')}
+                  />
                 </div>
               )}
 
