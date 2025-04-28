@@ -178,7 +178,7 @@ const ArticleDetail = () => {
               </section>
 
               <section className="mb-8">
-                <h3 className="text-xl font-semibold mb-3">1. It Starts with Real Ingredient Science</h3>
+                <h3 className="text-xl font-semibold mb-3">It Starts with Real Ingredient Science</h3>
                 <p className="mb-3">
                   The first thing our AI does isn't chopping, stirring, or seasoning.
                   It's thinking deeply about ingredients.
@@ -203,7 +203,7 @@ const ArticleDetail = () => {
               </section>
 
               <section className="mb-8">
-                <h3 className="text-xl font-semibold mb-3">2. Cooking Changes Everything — and We Respect It</h3>
+                <h3 className="text-xl font-semibold mb-3">Cooking Changes Everything — and We Respect It</h3>
                 <p className="mb-3">
                   Cooking is magic — and it's science.
                   The sizzle of fat. The sweet collapse of roasted carrots. The crust that forms on a seared steak.
@@ -227,7 +227,7 @@ const ArticleDetail = () => {
               </section>
 
               <section className="mb-8">
-                <h3 className="text-xl font-semibold mb-3">3. Flavor Built with Chemistry</h3>
+                <h3 className="text-xl font-semibold mb-3">Flavor Built with Chemistry</h3>
                 <p className="mb-3">
                   Flavor doesn't just happen.
                   It's a chemical story, written by heat, time, and care.
@@ -250,7 +250,7 @@ const ArticleDetail = () => {
               </section>
 
               <section className="mb-8">
-                <h3 className="text-xl font-semibold mb-3">4. Smarter for Your Health Goals</h3>
+                <h3 className="text-xl font-semibold mb-3">Smarter for Your Health Goals</h3>
                 <p className="mb-3">
                   Healthy recipes aren't just low-calorie.
                   True health comes from building food that feeds your body wisely and joyfully.
@@ -274,7 +274,7 @@ const ArticleDetail = () => {
               </section>
 
               <section className="mb-8">
-                <h3 className="text-xl font-semibold mb-3">5. Measurements You Can Trust</h3>
+                <h3 className="text-xl font-semibold mb-3">Measurements You Can Trust</h3>
                 <p className="mb-3">
                   Precision isn't about being fussy.
                   It's about freedom.
