@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -22,8 +21,6 @@ const IngredientsSection = ({
 }: IngredientsSectionProps) => {
   return (
     <div className="py-4 space-y-4 border-t border-gray-100 dark:border-gray-800">
-      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Ingredients</h3>
-      
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4 text-amber-600" />
@@ -73,4 +70,3 @@ const IngredientsSection = ({
 };
 
 export default IngredientsSection;
-
