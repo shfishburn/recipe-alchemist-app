@@ -2,10 +2,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Recipe } from '@/types/recipe';
+import type { Database } from '@/integrations/supabase/types';
 
-interface RecipeCardProps {
-  recipe: Recipe;
-}
+// Allow both Recipe types to be used
+type RecipeCardProps = {
+  recipe: Recipe | Database['public']['Tables']['recipes']['Row'];
+};
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
   return (

@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CarouselDots } from './carousel/CarouselDots';
 import { RecipeCard } from './carousel/RecipeCard';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
+import type { Recipe } from '@/types/recipe';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
@@ -47,6 +48,8 @@ export function RecipeCarousel() {
     );
   }
 
+  // The recipes array is of type from the database, but we're passing it to RecipeCard
+  // which expects Recipe from @/types/recipe - the RecipeCard component now handles both types
   const featuredRecipes = recipes?.slice(0, 3) || [];
 
   return (
