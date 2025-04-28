@@ -11,9 +11,9 @@ export const NUTRITION_FIELD_NAMES = {
   protein: ['protein', 'protein_g'],
   carbs: ['carbs', 'carbs_g'],
   fat: ['fat', 'fat_g'],
-  fiber: ['fiber', 'fiber_g'],
-  sugar: ['sugar', 'sugar_g'],
-  sodium: ['sodium', 'sodium_mg']
+  fiber: ['fiber_g', 'fiber'],
+  sugar: ['sugar_g', 'sugar'],
+  sodium: ['sodium_mg', 'sodium']
 };
 
 /**
@@ -60,12 +60,12 @@ export function standardizeNutrition(input: any): Nutrition {
     output.fat_g = Number(input.fat_g);
   }
   
-  // Other nutrition fields (direct mapping)
-  if (input.fiber !== undefined) output.fiber = Number(input.fiber);
+  // Other nutrition fields - Fixed to use the correct property names
+  if (input.fiber !== undefined) output.fiber_g = Number(input.fiber);
   if (input.fiber_g !== undefined) output.fiber_g = Number(input.fiber_g);
-  if (input.sugar !== undefined) output.sugar = Number(input.sugar);
+  if (input.sugar !== undefined) output.sugar_g = Number(input.sugar);
   if (input.sugar_g !== undefined) output.sugar_g = Number(input.sugar_g);
-  if (input.sodium !== undefined) output.sodium = Number(input.sodium);
+  if (input.sodium !== undefined) output.sodium_mg = Number(input.sodium);
   if (input.sodium_mg !== undefined) output.sodium_mg = Number(input.sodium_mg);
   
   return output;

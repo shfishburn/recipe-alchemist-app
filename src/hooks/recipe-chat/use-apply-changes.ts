@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -131,7 +132,7 @@ export const useApplyChanges = (recipe: Recipe) => {
               // If image generation succeeds, update the recipe image separately
               console.log("Updating recipe with new image URL:", newImageUrl);
               await updateRecipe(
-                { ...updatedRecipe, image_url: newImageUrl }, 
+                { ...updatedRecipe, image_url: newImageUrl } as Recipe, 
                 chatMessage, 
                 user.id,
                 newImageUrl
