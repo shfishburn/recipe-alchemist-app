@@ -5,6 +5,7 @@ import { FormattedText } from './response/FormattedText';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
 import { FollowUpQuestions } from './response/FollowUpQuestions';
 import { useResponseFormatter } from './response/ResponseFormatter';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { ChangesResponse } from '@/types/chat';
 
 interface ChatResponseProps {
@@ -25,10 +26,10 @@ export function ChatResponse({
   setMessage, 
   onApplyChanges,
   isApplying,
-  applied,
-  isMobile = false
+  applied
 }: ChatResponseProps) {
   const { displayText, showWarning, changesPreview } = useResponseFormatter({ response, changesSuggested });
+  const isMobile = useIsMobile();
   
   const handleFollowUpClick = (question: string) => {
     setMessage(question);

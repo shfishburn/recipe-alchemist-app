@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -20,6 +21,7 @@ import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -30,6 +32,7 @@ const RecipeDetail = () => {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(null);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     if (recipe) {
@@ -109,11 +112,11 @@ const RecipeDetail = () => {
                 <CookingMode recipe={currentRecipe} />
               </div>
               
-              <Separator className="mb-6 sm:mb-8" />
+              <Separator className="mb-4 sm:mb-8" />
               
               <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
               
-              <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3">
                 <div className="md:col-span-1">
                   <RecipeIngredients 
                     recipe={currentRecipe}
@@ -136,7 +139,7 @@ const RecipeDetail = () => {
                 onRecipeUpdated={handleRecipeUpdate}
               />
 
-              <div className="mt-6 sm:mt-8 space-y-6">
+              <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-6">
                 <ScienceNotes 
                   recipe={currentRecipe}
                   isOpen={sections.science}
@@ -151,7 +154,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-6 sm:mt-8 mb-20">
+                <div className="mt-4 sm:mt-8 mb-24 sm:mb-20">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ChefHat, FlaskConical, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -78,10 +79,18 @@ export function RecipeActions({
   const containerClasses = sticky && isSticky 
     ? "fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg z-30 transition-all duration-300"
     : "relative w-full";
+
+  // Format button text for mobile vs desktop
+  const analyzeText = isMobile 
+    ? (isAnalyzing ? "Analyzing..." : "Analyze") 
+    : (isAnalyzing ? "Analyzing..." : "Analyze Recipe");
+  
+  const aiChatText = isMobile ? "AI Chat" : "AI Chat";
+  const cookingModeText = isMobile ? "Cooking Mode" : "Cooking Mode";
   
   return (
     <div className={containerClasses}>
-      <div className="container max-w-4xl mx-auto p-4 space-y-3">
+      <div className="container max-w-4xl mx-auto p-3 sm:p-4 space-y-3">
         {showDeleteAlert && (
           <Alert variant="destructive" className="mb-4">
             <AlertTitle>Are you sure?</AlertTitle>
@@ -105,19 +114,19 @@ export function RecipeActions({
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
             onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
           >
             <ChefHat className="h-5 w-5 mr-2" />
             <span className="whitespace-nowrap">
-              {isMobile ? "Cooking Mode" : "Cooking Mode"}
+              {cookingModeText}
             </span>
           </Button>
 
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
-            className={`w-full ${showingAnalysis ? 'bg-primary/80' : 'bg-primary'} hover:bg-primary/90 text-primary-foreground`}
+            className={`w-full ${showingAnalysis ? 'bg-primary/80' : 'bg-primary'} hover:bg-primary/90 text-primary-foreground flex items-center justify-center`}
             onClick={onToggleAnalysis}
             disabled={isAnalyzing}
           >
@@ -127,25 +136,26 @@ export function RecipeActions({
               <FlaskConical className="h-5 w-5 mr-2" />
             )}
             <span className="whitespace-nowrap">
-              {isMobile ? (isAnalyzing ? "Analyzing..." : "Analyze") : (isAnalyzing ? "Analyzing..." : "Analyze Recipe")}
+              {analyzeText}
             </span>
+            {showingAnalysis && <Badge variant="success" className="ml-2 text-[10px]">Active</Badge>}
           </Button>
           
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
             onClick={onOpenChat}
           >
             <MessageSquare className="h-5 w-5 mr-2" />
             <span className="whitespace-nowrap">
-              {isMobile ? "AI Chat" : "AI Chat"}
+              {aiChatText}
             </span>
           </Button>
         </div>
 
         {/* Secondary utility buttons */}
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-3">
           <Button
             variant="outline"
             size="icon"

@@ -2,6 +2,7 @@
 import React from 'react';
 import { NutritionToggle } from './NutritionToggle';
 import { CookingPot } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NutritionHeaderProps {
   showToggle: boolean;
@@ -12,10 +13,14 @@ interface NutritionHeaderProps {
 }
 
 export function NutritionHeader({ showToggle, viewMode, onViewModeChange, cookingMethod, totalTime }: NutritionHeaderProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex-1">
       <div className="flex flex-col">
-        <span className="text-base md:text-lg font-semibold text-slate-800">Nutrition Information</span>
+        <span className={`${isMobile ? 'text-base' : 'text-base md:text-lg'} font-semibold text-slate-800`}>
+          Nutrition Information
+        </span>
         {cookingMethod && totalTime && totalTime > 60 && (
           <div className="flex items-center text-xs text-amber-600 mt-1 font-normal">
             <CookingPot className="h-3 w-3 mr-1" />
