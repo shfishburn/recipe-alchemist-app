@@ -7,6 +7,15 @@ import RecipeCard from '@/components/recipes/RecipeCard';
 import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Link } from 'react-router-dom';
 
 const Recipes = () => {
   const { 
@@ -39,7 +48,27 @@ const Recipes = () => {
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-8">
-          <h1 className="text-3xl font-bold mb-6">Browse Recipes</h1>
+          {/* Breadcrumb Navigation */}
+          <nav className="mb-4" aria-label="Breadcrumb">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>My Kitchen</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </nav>
+          
+          <h1 className="text-2xl md:text-3xl font-bold mb-4">My Kitchen</h1>
+          <p className="text-base text-muted-foreground mb-8">
+            Browse your personalized recipes, save favorites, and discover new cooking inspiration tailored to your nutritional needs.
+          </p>
           
           {/* Search Input with Loading Indicator */}
           <div className="mb-6 relative">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +10,15 @@ import { ShoppingListCard } from '@/components/shopping-list/ShoppingListCard';
 import { ShoppingListDetail } from '@/components/shopping-list/ShoppingListDetail';
 import type { ShoppingList } from '@/types/shopping-list';
 import type { Json } from '@/integrations/supabase/types';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Link } from 'react-router-dom';
 
 const ShoppingLists = () => {
   const { session } = useAuth();
@@ -93,32 +101,53 @@ const ShoppingLists = () => {
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
-          <h1 className="text-3xl font-bold mb-6">Shopping Lists</h1>
+          {!selectedList && (
+            <nav className="mb-4" aria-label="Breadcrumb">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/">Home</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>My Market</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </nav>
+          )}
           
-          <div className="max-w-4xl mx-auto space-y-6">
-            {selectedList ? (
-              <>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setSelectedList(null)}
-                  className="mb-4"
-                >
-                  ← Back to lists
-                </Button>
-                <ShoppingListDetail 
-                  list={selectedList} 
-                  onUpdate={refetch} 
-                />
-              </>
-            ) : (
-              <>
+          {selectedList ? (
+            <>
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedList(null)}
+                className="mb-4"
+              >
+                ← Back to lists
+              </Button>
+              <ShoppingListDetail 
+                list={selectedList} 
+                onUpdate={refetch} 
+              />
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold mb-4">My Market</h1>
+              <p className="text-base text-muted-foreground mb-8">
+                Create and manage shopping lists for your recipes, and keep track of ingredients you need to purchase.
+              </p>
+              
+              <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex space-x-2">
                   <Input 
                     placeholder="New shopping list name" 
                     value={newListTitle}
                     onChange={(e) => setNewListTitle(e.target.value)}
                   />
-                  <Button onClick={createNewList}>Create List</Button>
+                  <Button onClick={() => createNewList()}>Create List</Button>
                 </div>
 
                 {isLoading ? (
@@ -136,9 +165,9 @@ const ShoppingLists = () => {
                     ))}
                   </div>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>

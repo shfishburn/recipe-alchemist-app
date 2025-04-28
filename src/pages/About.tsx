@@ -3,6 +3,15 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import Navbar from '@/components/ui/navbar';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Link } from 'react-router-dom';
 
 const About = () => {
   // Use our scroll restoration hook
@@ -16,11 +25,28 @@ const About = () => {
       </Helmet>
       <Navbar />
       <main className="flex-1 animate-fadeIn">
-        <div className="container-page py-12 md:py-16">
-          <header className="mb-12 md:mb-16">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">About Recipe Alchemy</h1>
-            <div className="w-20 h-1 bg-recipe-blue"></div>
-          </header>
+        <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
+          {/* Breadcrumb Navigation */}
+          <nav className="mb-4" aria-label="Breadcrumb">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>About</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </nav>
+
+          <h1 className="text-2xl md:text-3xl font-bold mb-4">About Recipe Alchemy</h1>
+          <p className="text-base text-muted-foreground mb-8">
+            Learn about our story, our mission, and the team behind Recipe Alchemy's innovative approach to personalized cooking and nutrition.
+          </p>
 
           {/* Who We Are */}
           <section className="mb-16">

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import { Helmet } from 'react-helmet';
@@ -57,7 +56,7 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>How It Works: AI-Powered Cooking & Nutrition | Recipe Alchemist</title>
+        <title>Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist</title>
         <meta 
           name="description" 
           content="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights." 
@@ -67,12 +66,12 @@ const HowItWorks = () => {
           content="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals" 
         />
         <link rel="canonical" href="https://recipealchemist.com/how-it-works" />
-        <meta property="og:title" content="How Recipe Alchemist Works: AI-Powered Cooking & Nutrition" />
+        <meta property="og:title" content="Our Science: AI-Powered Cooking & Nutrition" />
         <meta property="og:description" content="Discover how our AI uses food science to transform your cooking with precise nutrition tracking and smart substitutions." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://recipealchemist.com/how-it-works" />
         <meta property="og:image" content="https://recipealchemist.com/images/how-it-works-banner.jpg" />
-        <meta name="twitter:title" content="How Recipe Alchemist Works: AI-Powered Cooking & Nutrition" />
+        <meta name="twitter:title" content="Our Science: AI-Powered Cooking & Nutrition" />
         <meta name="twitter:description" content="Discover how our AI uses food science to transform your cooking experience." />
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}
@@ -82,7 +81,7 @@ const HowItWorks = () => {
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
           {/* Breadcrumb Navigation */}
-          <nav className="mb-8" aria-label="Breadcrumb">
+          <nav className="mb-4" aria-label="Breadcrumb">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -92,18 +91,16 @@ const HowItWorks = () => {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>How It Works</BreadcrumbPage>
+                  <BreadcrumbPage>Our Science</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </nav>
 
-          <section aria-labelledby="page-title">
-            <h1 id="page-title" className="text-4xl font-bold mb-6 text-center">How It Works</h1>
-            <p className="text-lg text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Explore how Recipe Alchemist combines AI and food science to transform your cooking experience.
-            </p>
-          </section>
+          <h1 className="text-2xl md:text-3xl font-bold mb-4">Our Science</h1>
+          <p className="text-base text-muted-foreground mb-8">
+            Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
+          </p>
           
           <ArticlesList />
         </div>

@@ -132,7 +132,7 @@ const FAQ = () => {
       <main className="flex-1 animate-fadeIn">
         <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
           {/* Breadcrumb Navigation */}
-          <nav className="mb-8" aria-label="Breadcrumb">
+          <nav className="mb-4" aria-label="Breadcrumb">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -149,9 +149,9 @@ const FAQ = () => {
           </nav>
 
           <section aria-labelledby="page-title">
-            <h1 id="page-title" className="text-xl sm:text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h1>
-            <p className="text-base text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Find answers to common questions about Recipe Alchemy's features, nutrition calculations, and more.
+            <h1 id="page-title" className="text-2xl md:text-3xl font-bold mb-4">Frequently Asked Questions</h1>
+            <p className="text-base text-muted-foreground mb-8">
+              Get answers to common questions about Recipe Alchemy's nutrition calculations, recipe customization, dietary accommodations, and more.
             </p>
           </section>
           

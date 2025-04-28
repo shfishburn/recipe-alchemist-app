@@ -8,6 +8,15 @@ import { ProfileBasicInfo } from '@/components/profile/ProfileBasicInfo';
 import { NutritionPreferences } from '@/components/profile/NutritionPreferences';
 import { DietaryPreferences } from '@/components/profile/DietaryPreferences';
 import { useNavigate } from 'react-router-dom';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -23,10 +32,30 @@ const ProfilePage = () => {
       <Navbar />
       <main className="flex-1 bg-gray-50">
         <div className="container-page py-8">
+          {/* Breadcrumb Navigation */}
+          <nav className="mb-4" aria-label="Breadcrumb">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Profile</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </nav>
+          
           <div className="flex flex-col md:flex-row items-start gap-8 mb-6">
             <ProfileHeader />
             <div className="w-full">
-              <h1 className="text-3xl font-bold mb-6">Profile</h1>
+              <h1 className="text-2xl md:text-3xl font-bold mb-4">My Profile</h1>
+              <p className="text-base text-muted-foreground mb-8">
+                Manage your personal information, nutrition goals, and dietary preferences to customize your cooking experience.
+              </p>
               <Tabs defaultValue="basic" className="w-full">
                 <TabsList className="mb-4">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
