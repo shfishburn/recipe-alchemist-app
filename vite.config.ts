@@ -22,4 +22,29 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Generate source maps for better debugging
+    sourcemap: true,
+    // Improve chunking strategy
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-separator',
+            'lucide-react'
+          ],
+        },
+      },
+    },
+  },
+  // SSR specific options
+  ssr: {
+    // Pre-render the specific routes that need SEO
+    target: 'node',
+    format: 'cjs',
+  },
 }));

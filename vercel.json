@@ -1,6 +1,23 @@
 
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "version": 2,
+  "routes": [
+    {
+      "src": "/how-it-works/.*",
+      "dest": "server.js"
+    },
+    {
+      "src": "/recipe/.*",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "functions": {
+    "server.js": {
+      "includeFiles": "dist/**"
+    }
+  }
 }
