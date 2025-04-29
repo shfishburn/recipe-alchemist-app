@@ -19,6 +19,7 @@ export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAna
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
+  const [activeTab, setActiveTab] = useState("chemistry");
   
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
@@ -137,19 +138,67 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     return Array.isArray(section) && section.length > 0;
   };
 
-  // Helper to extract text content from raw response if needed
-  const extractSectionFromText = (rawText: string | undefined, sectionName: string): React.ReactNode => {
-    if (!rawText) return null;
+  // Helper to format science notes with icons
+  const formatScienceNote = (note: string, index: number) => (
+    <div key={index} className="mb-4 flex items-start gap-3">
+      <div className="mt-1 flex-shrink-0">
+        <Beaker className="h-5 w-5 text-blue-500" />
+      </div>
+      <p className="flex-1">{note}</p>
+    </div>
+  );
+  
+  // Helper to format techniques with icons
+  const formatTechnique = (technique: string, index: number) => (
+    <div key={index} className="mb-4 flex items-start gap-3">
+      <div className="mt-1 flex-shrink-0">
+        <BookOpenText className="h-5 w-5 text-green-500" />
+      </div>
+      <p className="flex-1">{technique}</p>
+    </div>
+  );
+
+  // Helper to format troubleshooting with icons
+  const formatTroubleshooting = (tip: string, index: number) => (
+    <div key={index} className="mb-4 flex items-start gap-3">
+      <div className="mt-1 flex-shrink-0">
+        <AlertCircle className="h-5 w-5 text-amber-500" />
+      </div>
+      <p className="flex-1">{tip}</p>
+    </div>
+  );
+
+  // Extract text content from raw response if needed
+  const extractSectionFromText = (rawText: string | undefined, sectionName: string, defaultText?: string): React.ReactNode => {
+    if (!rawText) return defaultText ? <p>{defaultText}</p> : null;
     
-    const sectionRegex = new RegExp(`#+\\s*${sectionName}[^#]*`, 'i');
+    // Look for markdown headers (### Section Name)
+    const sectionRegex = new RegExp(`#+\\s*${sectionName}([^#]*?)(?=#+|$)`, 'i');
     const match = rawText.match(sectionRegex);
     
-    if (match) {
-      return <div dangerouslySetInnerHTML={{ __html: match[0].replace(/^#+\s*[^:]*:?\s*/i, '') }} />;
+    if (match && match[1] && match[1].trim().length > 20) {
+      const sectionContent = match[1].trim();
+      return <div dangerouslySetInnerHTML={{ __html: sectionContent.replace(/\n/g, '<br>') }} />;
     }
     
-    return null;
+    // Look for related paragraphs if no header match
+    const paragraphsRegex = new RegExp(`${sectionName}([^.!?]*[.!?])`, 'i');
+    const paragraphMatch = rawText.match(paragraphsRegex);
+    
+    if (paragraphMatch && paragraphMatch[0].length > 20) {
+      return <div dangerouslySetInnerHTML={{ __html: paragraphMatch[0] }} />;
+    }
+    
+    // Return default text if no content found
+    return defaultText ? <p>{defaultText}</p> : null;
   };
+
+  // Determine if there's any analysis content available
+  const hasAnyAnalysisContent = 
+    (analysis?.science_notes && analysis.science_notes.length > 0) || 
+    (analysis?.techniques && analysis.techniques.length > 0) || 
+    (analysis?.troubleshooting && analysis.troubleshooting.length > 0) ||
+    (analysis?.textResponse && analysis.textResponse.length > 50);
 
   return (
     <Card className="mt-6">
@@ -178,12 +227,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
           </div>
-        ) : (
-          <Tabs defaultValue="chemistry" className="w-full">
+        ) : hasAnyAnalysisContent ? (
+          <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
             <TabsList className="mb-4 w-full flex justify-between overflow-x-auto">
               <TabsTrigger value="chemistry" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Key Chemistry
+                <Beaker className="h-4 w-4" />
+                Chemistry
               </TabsTrigger>
               <TabsTrigger value="techniques" className="flex items-center gap-2">
                 <BookOpenText className="h-4 w-4" />
@@ -197,17 +246,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             
             <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
               {hasContent(analysis?.science_notes) ? (
-                <div className="space-y-3">
-                  {analysis.science_notes.map((note, i) => (
-                    <div key={i} className="mb-4">
-                      <p>{note}</p>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {analysis.science_notes.map((note, i) => formatScienceNote(note, i))}
                 </div>
               ) : analysis?.textResponse ? (
                 // Try to extract chemistry section from raw text
-                extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science)") || (
-                  <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                extractSectionFromText(
+                  analysis.textResponse, 
+                  "(Chemistry|Chemical|Science|Maillard)", 
+                  "No structured chemistry analysis available. Try regenerating the analysis."
                 )
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
@@ -219,17 +266,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             
             <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
               {hasContent(analysis?.techniques) ? (
-                <div className="space-y-3">
-                  {analysis.techniques.map((technique, i) => (
-                    <div key={i} className="mb-4">
-                      <p>{technique}</p>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {analysis.techniques.map((technique, i) => formatTechnique(technique, i))}
                 </div>
               ) : analysis?.textResponse ? (
                 // Try to extract techniques section from raw text
-                extractSectionFromText(analysis.textResponse, "(Technique|Method|Cooking)") || (
-                  <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                extractSectionFromText(
+                  analysis.textResponse, 
+                  "(Technique|Method|Cooking|Temperature)", 
+                  "No structured technique analysis available. Try regenerating the analysis."
                 )
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
@@ -241,18 +286,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             
             <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
               {hasContent(analysis?.troubleshooting) ? (
-                <div className="space-y-3">
-                  {analysis.troubleshooting.map((tip, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                      <p>{tip}</p>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {analysis.troubleshooting.map((tip, i) => formatTroubleshooting(tip, i))}
                 </div>
               ) : analysis?.textResponse ? (
                 // Try to extract troubleshooting section from raw text
-                extractSectionFromText(analysis.textResponse, "(Troubleshoot|Problem|Issue)") || (
-                  <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                extractSectionFromText(
+                  analysis.textResponse, 
+                  "(Troubleshoot|Problem|Issue)", 
+                  "No structured troubleshooting tips available. Try regenerating the analysis."
                 )
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
@@ -262,6 +304,16 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               )}
             </TabsContent>
           </Tabs>
+        ) : (
+          <div className="text-center py-6">
+            <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
+            <button
+              onClick={handleRetryAnalysis}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Generate Analysis
+            </button>
+          </div>
         )}
       </CardContent>
     </Card>

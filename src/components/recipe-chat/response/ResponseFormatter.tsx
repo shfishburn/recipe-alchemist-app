@@ -38,6 +38,19 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
         .replace(/^["']|["']$/g, '')
         .trim();
 
+      // Improved formatting for scientific analysis sections
+      const sections = [
+        { name: "Science Notes", regex: /#+\s*Science Notes/i },
+        { name: "Chemistry", regex: /#+\s*Chemistry/i },
+        { name: "Techniques", regex: /#+\s*Techniques/i },
+        { name: "Troubleshooting", regex: /#+\s*Troubleshooting/i }
+      ];
+      
+      // Apply formatting to section headers
+      sections.forEach(section => {
+        text = text.replace(section.regex, `**${section.name}:**`);
+      });
+
       // Enhanced ingredient highlighting
       if (changesSuggested?.ingredients?.items && Array.isArray(changesSuggested.ingredients.items)) {
         // Create a map of normalized ingredient names to their display text

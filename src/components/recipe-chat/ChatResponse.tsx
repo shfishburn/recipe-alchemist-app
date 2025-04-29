@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { WarningAlert } from './response/WarningAlert';
 import { FormattedText } from './response/FormattedText';
@@ -47,11 +46,17 @@ export function ChatResponse({
           
           {/* Main response text content */}
           <div className={`prose prose-sm max-w-none ${textSize} text-slate-800`}>
-            {displayText.split('\n').filter(Boolean).map((paragraph, index) => (
-              <p key={index} className="mb-1 sm:mb-2">
-                <FormattedText text={paragraph} />
-              </p>
-            ))}
+            {/* Check if response contains HTML tags */}
+            {displayText.includes('<br>') || displayText.includes('<br/>') || displayText.includes('<br />') ? (
+              <div dangerouslySetInnerHTML={{ __html: displayText }} />
+            ) : (
+              // Otherwise use paragraph formatting
+              displayText.split('\n').filter(Boolean).map((paragraph, index) => (
+                <p key={index} className="mb-1 sm:mb-2">
+                  <FormattedText text={paragraph} />
+                </p>
+              ))
+            )}
           </div>
           
           {/* Apply changes section with summary and confirmation */}
