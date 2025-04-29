@@ -16,10 +16,7 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
   return (
     <Card className="w-full border-2 border-recipe-green/20">
       <CardHeader className="pb-2">
-        <CardTitle className="text-2xl flex items-center">
-          <div className="bg-recipe-green text-white rounded px-2 py-0.5 text-sm font-medium mr-3">
-            Quick Recipe
-          </div>
+        <CardTitle className="text-2xl">
           {recipe.title}
         </CardTitle>
         <p className="text-muted-foreground">{recipe.description}</p>
