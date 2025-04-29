@@ -1,20 +1,27 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CookingPot } from 'lucide-react';
+import { CookingPot, Utensils, Leaf, Carrot, WheatOff, MilkOff } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
 
-// Simplified cuisine options - focusing on the most popular choices
-const cuisineOptions = [
-  "Italian", "Mexican", "Asian", "Mediterranean", "American"
+// Cuisine options with icons
+const CUISINES = [
+  { name: "American", value: "american", icon: Utensils },
+  { name: "Italian", value: "italian", icon: Utensils },
+  { name: "Mexican", value: "mexican", icon: Utensils },
+  { name: "Asian", value: "asian", icon: Utensils },
+  { name: "Mediterranean", value: "mediterranean", icon: Utensils },
+  { name: "Healthy", value: "healthy", icon: Carrot },
+  { name: "Vegetarian", value: "vegetarian", icon: Leaf }
 ];
 
-// Simplified dietary options - focusing on the most common restrictions
-const dietaryOptions = [
-  "No Restrictions", "Vegetarian", "Vegan", "Gluten-Free", "Low-Carb"
+// Dietary options with icons
+const DIETARY = [
+  { name: "Low-Carb", value: "low-carb", icon: Carrot },
+  { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
+  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff }
 ];
 
 interface QuickRecipeFormProps {
@@ -24,8 +31,8 @@ interface QuickRecipeFormProps {
 
 export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
   const [formData, setFormData] = useState<QuickRecipeFormData>({
-    cuisine: 'italian',
-    dietary: 'no-restrictions',
+    cuisine: [],
+    dietary: [],
     mainIngredient: '',
   });
   const isMobile = useIsMobile();
@@ -33,6 +40,32 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
+  };
+
+  const toggleCuisine = (value: string) => {
+    setFormData(prev => {
+      // If the cuisine is already selected, remove it
+      if (prev.cuisine.includes(value)) {
+        return { ...prev, cuisine: prev.cuisine.filter(c => c !== value) };
+      } 
+      // Otherwise, add it to the selection
+      else {
+        return { ...prev, cuisine: [...prev.cuisine, value] };
+      }
+    });
+  };
+
+  const toggleDietary = (value: string) => {
+    setFormData(prev => {
+      // If the dietary option is already selected, remove it
+      if (prev.dietary.includes(value)) {
+        return { ...prev, dietary: prev.dietary.filter(d => d !== value) };
+      } 
+      // Otherwise, add it to the selection
+      else {
+        return { ...prev, dietary: [...prev.dietary, value] };
+      }
+    });
   };
 
   return (
@@ -46,38 +79,44 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Select 
-          value={formData.cuisine} 
-          onValueChange={(value) => setFormData({ ...formData, cuisine: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Cuisine" />
-          </SelectTrigger>
-          <SelectContent>
-            {cuisineOptions.map((cuisine) => (
-              <SelectItem key={cuisine} value={cuisine.toLowerCase()}>
-                {cuisine}
-              </SelectItem>
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium block mb-2">Cuisine:</label>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {CUISINES.map((cuisine) => (
+              <Badge 
+                key={cuisine.value} 
+                variant="outline" 
+                className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
+                  formData.cuisine.includes(cuisine.value) ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
+                }`}
+                onClick={() => toggleCuisine(cuisine.value)}
+              >
+                <cuisine.icon className="w-3.5 h-3.5 mr-1" />
+                {cuisine.name}
+              </Badge>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </div>
 
-        <Select 
-          value={formData.dietary} 
-          onValueChange={(value) => setFormData({ ...formData, dietary: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Dietary" />
-          </SelectTrigger>
-          <SelectContent>
-            {dietaryOptions.map((diet) => (
-              <SelectItem key={diet} value={diet.toLowerCase().replace(/ /g, '-')}>
-                {diet}
-              </SelectItem>
+        <div>
+          <label className="text-sm font-medium block mb-2">Dietary Restrictions:</label>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {DIETARY.map((diet) => (
+              <Badge 
+                key={diet.value} 
+                variant="outline" 
+                className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
+                  formData.dietary.includes(diet.value) ? 'bg-recipe-orange text-white hover:bg-recipe-orange/90' : ''
+                }`}
+                onClick={() => toggleDietary(diet.value)}
+              >
+                <diet.icon className="w-3.5 h-3.5 mr-1" />
+                {diet.name}
+              </Badge>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </div>
       </div>
 
       <Button 
