@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Apple, Leaf, Utensils } from 'lucide-react';
+import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Heart, Utensils, LeafyGreen } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -17,16 +17,16 @@ const CUISINES = [
   { name: "Italian", value: "italian", icon: Pizza },
   { name: "Mexican", value: "mexican", icon: UtensilsCrossed },
   { name: "Asian", value: "asian", icon: Utensils },
-  { name: "Mediterranean", value: "mediterranean", icon: Leaf },
-  { name: "Healthy", value: "healthy", icon: TrendingUp },
-  { name: "Vegetarian", value: "vegetarian", icon: Apple }
+  { name: "Mediterranean", value: "mediterranean", icon: TrendingUp }
 ];
 
 // Dietary restrictions
 const DIETARY = [
   { name: "Low-Carb", value: "low-carb", icon: Carrot },
   { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
-  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff }
+  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff },
+  { name: "Healthy", value: "healthy", icon: Heart },
+  { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
 ];
 
 interface QuickRecipeTagFormProps {
@@ -67,9 +67,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         randomIngredient = primaryCuisine === 'italian' ? 'pasta' :
                            primaryCuisine === 'mexican' ? 'beans' :
                            primaryCuisine === 'asian' ? 'rice' :
-                           primaryCuisine === 'mediterranean' ? 'olive oil' :
-                           primaryCuisine === 'healthy' ? 'quinoa' :
-                           primaryCuisine === 'vegetarian' ? 'tofu' : 'chicken';
+                           primaryCuisine === 'mediterranean' ? 'olive oil' : 'chicken';
       }
       onSubmit({...formData, mainIngredient: randomIngredient});
     } else {

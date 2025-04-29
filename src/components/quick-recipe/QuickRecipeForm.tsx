@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Utensils, Leaf, Carrot, WheatOff, MilkOff, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Apple } from 'lucide-react';
+import { CookingPot, Utensils, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Heart, Carrot, WheatOff, MilkOff, LeafyGreen } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -13,16 +14,16 @@ const CUISINES = [
   { name: "Italian", value: "italian", icon: Pizza },
   { name: "Mexican", value: "mexican", icon: UtensilsCrossed },
   { name: "Asian", value: "asian", icon: Utensils },
-  { name: "Mediterranean", value: "mediterranean", icon: Leaf },
-  { name: "Healthy", value: "healthy", icon: TrendingUp },
-  { name: "Vegetarian", value: "vegetarian", icon: Apple }
+  { name: "Mediterranean", value: "mediterranean", icon: TrendingUp }
 ];
 
 // Dietary options with icons
 const DIETARY = [
   { name: "Low-Carb", value: "low-carb", icon: Carrot },
   { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
-  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff }
+  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff },
+  { name: "Healthy", value: "healthy", icon: Heart },
+  { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
 ];
 
 // Maximum number of selections allowed
