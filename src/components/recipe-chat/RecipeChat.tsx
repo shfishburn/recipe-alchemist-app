@@ -68,6 +68,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             onClearChat={handleClearChat} 
           />
           
+          {/* Only show EmptyChatState here, removed from ChatHistory */}
           {showEmptyState && <EmptyChatState />}
           
           <ChatHistory

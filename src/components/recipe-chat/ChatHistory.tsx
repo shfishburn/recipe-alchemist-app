@@ -2,7 +2,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
-import { EmptyChatState } from './EmptyChatState';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw } from 'lucide-react';
@@ -117,8 +116,10 @@ export function ChatHistory({
     );
   }
 
+  // Return null if there are no messages - this is the key change
+  // Parent component (RecipeChat) will handle showing EmptyChatState
   if (chatHistory.length === 0 && optimisticMessages.length === 0) {
-    return <EmptyChatState />;
+    return null;
   }
 
   // Generate content hashes for optimistic messages using the same approach
