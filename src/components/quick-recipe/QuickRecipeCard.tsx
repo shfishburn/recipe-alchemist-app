@@ -90,8 +90,9 @@ export function QuickRecipeCard({
           </div>
         )}
 
-        {/* Action buttons - now full width */}
+        {/* Action buttons - fixed for mobile */}
         <div className="pt-4 flex flex-col gap-2 w-full">
+          {/* Primary action - Start Cooking */}
           <Button 
             onClick={onCook} 
             className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
@@ -101,31 +102,35 @@ export function QuickRecipeCard({
             Start Cooking
           </Button>
           
-          <div className="flex gap-2 w-full">
+          {/* Secondary actions in a proper grid layout */}
+          <div className="grid grid-cols-3 gap-2 w-full">
             <Button 
               variant="outline" 
               onClick={onShop}
-              className="flex-1"
+              className="w-full"
             >
-              <ShoppingBag className="mr-2 h-4 w-4" />
-              Shopping List
+              <ShoppingBag className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Shopping List</span>
+              <span className="sm:hidden">Shop</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={onSave}
-              className="flex-1"
+              className="w-full"
               disabled={isSaving}
             >
-              <Bookmark className="mr-2 h-4 w-4" />
-              {isSaving ? 'Saving...' : 'Save Recipe'}
+              <Bookmark className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Save Recipe</span>
+              <span className="sm:hidden">Save</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={onPrint}
-              className="flex-1"
+              className="w-full"
             >
-              <Printer className="mr-2 h-4 w-4" />
-              Print
+              <Printer className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Print</span>
+              <span className="sm:hidden">Print</span>
             </Button>
           </div>
         </div>

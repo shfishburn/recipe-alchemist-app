@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -87,7 +88,7 @@ export function RecipeActions({
     : (isAnalyzing ? "Analyzing..." : "Scientific Analysis");
   
   const aiChatText = isMobile ? "AI Chat" : "AI Chat";
-  const cookingModeText = isMobile ? "Cooking Mode" : "Cooking Mode";
+  const cookingModeText = isMobile ? "Cooking" : "Cooking Mode";
   
   // Determine analyze button variant based on state
   const analyzeButtonVariant = isAnalysisOpen ? "outline" : "default";
@@ -113,18 +114,19 @@ export function RecipeActions({
           </Alert>
         )}
 
-        {/* Main action buttons - Stacked on mobile, horizontal on larger screens */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Main action buttons - Using grid instead of flex for better mobile layout */}
+        <div className="grid grid-cols-3 gap-2">
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
             onClick={() => window.document.getElementById('cooking-mode-trigger')?.click()}
           >
-            <ChefHat className="h-5 w-5 mr-2" />
-            <span className="whitespace-nowrap">
+            <ChefHat className="h-5 w-5 mr-1 sm:mr-2" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>
               {cookingModeText}
             </span>
+            {isMobile && <span className="sm:hidden">Cook</span>}
           </Button>
 
           <Button 
@@ -139,14 +141,15 @@ export function RecipeActions({
             disabled={isAnalyzing}
           >
             {isAnalyzing ? (
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              <Loader2 className="h-5 w-5 mr-1 sm:mr-2 animate-spin" />
             ) : (
-              <Beaker className="h-5 w-5 mr-2" />
+              <Beaker className="h-5 w-5 mr-1 sm:mr-2" />
             )}
-            <span className="whitespace-nowrap">
+            <span className={isMobile ? "hidden sm:inline" : ""}>
               {analyzeText}
             </span>
-            {isAnalysisOpen && <Badge variant="default" className="ml-2 text-[10px]">Active</Badge>}
+            {isMobile && <span className="sm:hidden">Science</span>}
+            {isAnalysisOpen && <Badge variant="default" className="ml-2 text-[10px] hidden sm:inline-flex">Active</Badge>}
           </Button>
           
           <Button 
@@ -155,50 +158,54 @@ export function RecipeActions({
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
             onClick={onOpenChat}
           >
-            <MessageSquare className="h-5 w-5 mr-2" />
-            <span className="whitespace-nowrap">
+            <MessageSquare className="h-5 w-5 mr-1 sm:mr-2" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>
               {aiChatText}
             </span>
+            {isMobile && <span className="sm:hidden">Chat</span>}
           </Button>
         </div>
 
-        {/* Secondary utility buttons */}
-        <div className="flex justify-center gap-3">
+        {/* Secondary utility buttons also using grid for mobile */}
+        <div className="grid grid-cols-3 gap-2">
           <Button
             variant="outline"
-            size="icon"
-            className="h-10 w-10 bg-white"
+            size="default"
+            className="w-full flex items-center justify-center"
             onClick={() => window.document.getElementById('print-recipe-trigger')?.click()}
             title="Print Recipe"
           >
-            <Printer className="h-5 w-5" />
+            <Printer className="h-5 w-5 mr-1 sm:mr-2" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>Print</span>
           </Button>
           
           {navigator.share && (
             <Button
               variant="outline"
-              size="icon"
-              className="h-10 w-10 bg-white"
+              size="default"
+              className="w-full flex items-center justify-center"
               onClick={shareRecipe}
               title="Share Recipe"
             >
-              <Share2 className="h-5 w-5" />
+              <Share2 className="h-5 w-5 mr-1 sm:mr-2" />
+              <span className={isMobile ? "hidden sm:inline" : ""}>Share</span>
             </Button>
           )}
           
           <Button
             variant="outline"
-            size="icon"
-            className={`h-10 w-10 bg-white ${showDeleteAlert ? 'ring-2 ring-destructive' : ''}`}
+            size="default"
+            className={`w-full flex items-center justify-center ${showDeleteAlert ? 'ring-2 ring-destructive' : ''}`}
             onClick={handleDelete}
             disabled={isDeleting}
             title="Delete Recipe"
           >
             {isDeleting ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin mr-1 sm:mr-2" />
             ) : (
-              <Trash2 className="h-5 w-5" />
+              <Trash2 className="h-5 w-5 mr-1 sm:mr-2" />
             )}
+            <span className={isMobile ? "hidden sm:inline" : ""}>Delete</span>
           </Button>
         </div>
       </div>
