@@ -11,6 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { CarouselDots } from './carousel/CarouselDots';
 import { RecipeCard } from './carousel/RecipeCard';
+import { CookingPot } from 'lucide-react';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
 
@@ -56,6 +57,12 @@ export function RecipeCarousel() {
           className="w-full"
           setApi={setCarouselApi}
         >
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <CookingPot className="h-5 w-5 text-recipe-green" />
+            <h2 className="text-xl md:text-2xl font-semibold text-center">
+              Trending in Kitchens Like Yours
+            </h2>
+          </div>
           <CarouselContent>
             {featuredRecipes.map((recipe) => (
               <CarouselItem key={recipe.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
