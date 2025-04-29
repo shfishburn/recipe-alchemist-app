@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { QuickRecipeForm } from './QuickRecipeForm';
+import { QuickRecipeTagForm } from './QuickRecipeTagForm';
 import { QuickRecipeCard } from './QuickRecipeCard';
 import { QuickCookingMode } from './QuickCookingMode';
 import { QuickShoppingList } from './QuickShoppingList';
+import { QuickRecipeLoading } from './QuickRecipeLoading';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -35,9 +36,11 @@ export function QuickRecipeGenerator() {
   };
   
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {!recipe ? (
-        <QuickRecipeForm 
+    <div className="w-full max-w-md mx-auto">
+      {isLoading ? (
+        <QuickRecipeLoading />
+      ) : !recipe ? (
+        <QuickRecipeTagForm 
           onSubmit={generateQuickRecipe} 
           isLoading={isLoading} 
         />
