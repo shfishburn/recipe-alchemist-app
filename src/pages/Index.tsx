@@ -3,11 +3,9 @@ import React, { Suspense, lazy } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Footer } from '@/components/ui/footer';
 
 // Lazy load non-critical components
 const Hero = lazy(() => import('@/components/landing/Hero'));
-const Features = lazy(() => import('@/components/landing/Features'));
 
 // Create loading placeholders for better UX
 const HeroSkeleton = () => (
@@ -31,22 +29,6 @@ const HeroSkeleton = () => (
   </section>
 );
 
-const FeaturesSkeleton = () => (
-  <section className="py-20 bg-gray-50 dark:bg-gray-900">
-    <div className="container-page">
-      <div className="max-w-3xl mx-auto text-center mb-12">
-        <Skeleton className="h-8 w-2/3 mx-auto" />
-        <Skeleton className="h-16 w-full mt-4" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array(4).fill(0).map((_, i) => (
-          <Skeleton key={i} className="h-64 w-full rounded-xl" />
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
 const Index = () => {
   console.log('Rendering Index page');
   // Use our scroll restoration hook
@@ -58,10 +40,6 @@ const Index = () => {
       <main className="flex-1 animate-fadeIn">
         <Suspense fallback={<HeroSkeleton />}>
           <Hero />
-        </Suspense>
-        
-        <Suspense fallback={<FeaturesSkeleton />}>
-          <Features />
         </Suspense>
       </main>
     </div>
