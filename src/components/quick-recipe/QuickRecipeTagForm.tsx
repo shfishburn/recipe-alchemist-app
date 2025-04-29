@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Pizza, ChefHat, Salad, Heart, Utensils, LeafyGreen } from 'lucide-react';
+import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Pizza, ChefHat, Beef, Heart, Utensils, LeafyGreen, Taco } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +14,9 @@ const MAX_DIETARY_SELECTIONS = 2;
 
 // Popular cuisines with their display names, values, and icons
 const CUISINES = [
-  { name: "American", value: "american", icon: ChefHat },
+  { name: "American", value: "american", icon: Beef },
   { name: "Italian", value: "italian", icon: Pizza },
-  { name: "Mexican", value: "mexican", icon: Salad },
+  { name: "Mexican", value: "mexican", icon: Taco },
   { name: "Asian", value: "asian", icon: Utensils },
   { name: "Mediterranean", value: "mediterranean", icon: ChefHat }
 ];
@@ -121,7 +121,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 w-full mx-auto">
       <div className="space-y-4">
         <div className="space-y-1">
           <div className="text-center text-xs text-muted-foreground mb-1">

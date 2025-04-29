@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Utensils, Pizza, Salad, ChefHat, Heart, Carrot, WheatOff, MilkOff, LeafyGreen } from 'lucide-react';
+import { CookingPot, Utensils, Pizza, Salad, ChefHat, Heart, Carrot, WheatOff, MilkOff, LeafyGreen, Beef, Taco } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 
 // Cuisine options with icons - now each has a specific icon
 const CUISINES = [
-  { name: "American", value: "american", icon: ChefHat },
+  { name: "American", value: "american", icon: Beef },
   { name: "Italian", value: "italian", icon: Pizza },
-  { name: "Mexican", value: "mexican", icon: Salad },
+  { name: "Mexican", value: "mexican", icon: Taco },
   { name: "Asian", value: "asian", icon: Utensils },
   { name: "Mediterranean", value: "mediterranean", icon: ChefHat }
 ];
@@ -94,7 +94,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-3 w-full mx-auto">
       <div className="space-y-2">
         <Input 
           placeholder="Main ingredient (e.g., chicken, pasta, etc.)"

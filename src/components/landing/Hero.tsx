@@ -25,8 +25,8 @@ const Hero = React.memo(() => {
           </p>
         </div>
         
-        {/* Recipe Generator First */}
-        <div className="w-full max-w-4xl mx-auto mb-10 md:mb-16">
+        {/* Recipe Generator First - Now full width */}
+        <div className="w-full mb-10 md:mb-16">
           <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md">
             <QuickRecipeGenerator />
           </div>
@@ -34,7 +34,7 @@ const Hero = React.memo(() => {
         
         {/* Sample Recipes Carousel - Full Width */}
         <div className="w-full">
-          <div className="relative max-w-5xl mx-auto">
+          <div className="w-full mx-auto relative">
             <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
             <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">Popular Recipes</h2>
