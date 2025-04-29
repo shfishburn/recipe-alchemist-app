@@ -13,7 +13,6 @@ import { CarouselDots } from './carousel/CarouselDots';
 import { RecipeCard } from './carousel/RecipeCard';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
-import { Loader } from 'lucide-react';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
@@ -22,7 +21,7 @@ export function RecipeCarousel() {
 
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
-    return recipes?.slice(0, 3) || [];
+    return recipes?.slice(0, 5) || [];
   }, [recipes]);
 
   React.useEffect(() => {
@@ -41,21 +40,25 @@ export function RecipeCarousel() {
   }, [carouselApi]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       {isLoading ? (
-        <RecipeCarouselSkeleton />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <RecipeCarouselSkeleton key={i} />
+          ))}
+        </div>
       ) : (
         <Carousel
           opts={{
             align: "start",
             loop: true,
           }}
-          className="relative w-full"
+          className="w-full"
           setApi={setCarouselApi}
         >
           <CarouselContent>
             {featuredRecipes.map((recipe) => (
-              <CarouselItem key={recipe.id} className="md:basis-full">
+              <CarouselItem key={recipe.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                 <RecipeCard recipe={recipe} />
               </CarouselItem>
             ))}

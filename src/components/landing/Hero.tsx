@@ -9,45 +9,36 @@ import { ChefHat } from 'lucide-react';
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
   const isMobile = useIsMobile();
-  const isTablet = useMediaQuery('(min-width: 640px) and (max-width: 1023px)');
   
   return (
-    <section className="py-6 md:py-12 lg:py-16">
-      <div className="container-page">
-        {/* Main Hero Content */}
-        <div className="flex flex-col lg:flex-row items-center gap-6 md:gap-8 lg:gap-12">
-          <div className="flex-1 text-center lg:text-left space-y-3 lg:space-y-4 w-full lg:max-w-xl">
-            <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex items-center justify-center lg:justify-start gap-2">
-              <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
-              What's in your kitchen tonight?
-            </h1>
-            
-            <p className="text-base sm:text-lg text-muted-foreground max-w-prose mx-auto lg:mx-0">
-              Instant recipes tailored to your ingredients and tastes.
-            </p>
-            
-            {/* Quick Recipe Generator - Now shows on desktop and mobile, but not tablet */}
-            <div className={`py-3 sm:py-4 ${isTablet ? 'hidden' : 'block'}`}>
-              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-md">
-                <QuickRecipeGenerator />
-              </div>
-            </div>
-          </div>
+    <section className="w-full py-6 md:py-10">
+      <div className="container-page max-w-full px-4 md:px-8">
+        {/* Hero Title Section */}
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex items-center justify-center gap-2">
+            <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
+            What's in your kitchen tonight?
+          </h1>
           
-          <div className="w-full lg:w-auto lg:flex-1">
-            {/* Recipe carousel now always displays on desktop, mobile AND tablet displays generator */}
-            <div className="relative max-w-[600px] mx-auto">
-              <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
-              <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
-              <RecipeCarousel />
-            </div>
-            
-            {/* Generator for tablet only */}
-            {isTablet && (
-              <div className="mt-8 bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-md max-w-md mx-auto">
-                <QuickRecipeGenerator />
-              </div>
-            )}
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
+            Instant recipes tailored to your ingredients and tastes.
+          </p>
+        </div>
+        
+        {/* Recipe Generator First */}
+        <div className="w-full max-w-4xl mx-auto mb-10 md:mb-16">
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md">
+            <QuickRecipeGenerator />
+          </div>
+        </div>
+        
+        {/* Sample Recipes Carousel - Full Width */}
+        <div className="w-full">
+          <div className="relative max-w-5xl mx-auto">
+            <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
+            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
+            <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">Popular Recipes</h2>
+            <RecipeCarousel />
           </div>
         </div>
       </div>
