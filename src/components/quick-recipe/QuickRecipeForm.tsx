@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Utensils, Leaf, Carrot, WheatOff, MilkOff } from 'lucide-react';
+import { CookingPot, Utensils, Leaf, Carrot, WheatOff, MilkOff, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Apple } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
-// Cuisine options with icons
+// Cuisine options with icons - now each has a specific icon
 const CUISINES = [
-  { name: "American", value: "american", icon: Utensils },
-  { name: "Italian", value: "italian", icon: Utensils },
-  { name: "Mexican", value: "mexican", icon: Utensils },
+  { name: "American", value: "american", icon: Drumstick },
+  { name: "Italian", value: "italian", icon: Pizza },
+  { name: "Mexican", value: "mexican", icon: UtensilsCrossed },
   { name: "Asian", value: "asian", icon: Utensils },
-  { name: "Mediterranean", value: "mediterranean", icon: Utensils },
-  { name: "Healthy", value: "healthy", icon: Carrot },
-  { name: "Vegetarian", value: "vegetarian", icon: Leaf }
+  { name: "Mediterranean", value: "mediterranean", icon: Leaf },
+  { name: "Healthy", value: "healthy", icon: TrendingUp },
+  { name: "Vegetarian", value: "vegetarian", icon: Apple }
 ];
 
 // Dietary options with icons
@@ -23,6 +24,10 @@ const DIETARY = [
   { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
   { name: "Dairy-Free", value: "dairy-free", icon: MilkOff }
 ];
+
+// Maximum number of selections allowed
+const MAX_CUISINE_SELECTIONS = 2;
+const MAX_DIETARY_SELECTIONS = 2;
 
 interface QuickRecipeFormProps {
   onSubmit: (data: QuickRecipeFormData) => void;
@@ -36,6 +41,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
     mainIngredient: '',
   });
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +54,16 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       if (prev.cuisine.includes(value)) {
         return { ...prev, cuisine: prev.cuisine.filter(c => c !== value) };
       } 
-      // Otherwise, add it to the selection
+      // Otherwise, check if we've reached the maximum number of selections
+      else if (prev.cuisine.length >= MAX_CUISINE_SELECTIONS) {
+        toast({
+          title: "Selection limit reached",
+          description: `You can select up to ${MAX_CUISINE_SELECTIONS} cuisines.`,
+          variant: "default"
+        });
+        return prev;
+      }
+      // Add it to the selection
       else {
         return { ...prev, cuisine: [...prev.cuisine, value] };
       }
@@ -61,7 +76,16 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       if (prev.dietary.includes(value)) {
         return { ...prev, dietary: prev.dietary.filter(d => d !== value) };
       } 
-      // Otherwise, add it to the selection
+      // Otherwise, check if we've reached the maximum number of selections
+      else if (prev.dietary.length >= MAX_DIETARY_SELECTIONS) {
+        toast({
+          title: "Selection limit reached",
+          description: `You can select up to ${MAX_DIETARY_SELECTIONS} dietary preferences.`,
+          variant: "default"
+        });
+        return prev;
+      }
+      // Add it to the selection
       else {
         return { ...prev, dietary: [...prev.dietary, value] };
       }
@@ -69,7 +93,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-3 w-full max-w-2xl mx-auto">
       <div className="space-y-2">
         <Input 
           placeholder="Main ingredient (e.g., chicken, pasta, etc.)"
@@ -81,7 +105,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
 
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium block mb-2">Cuisine:</label>
+          <label className="text-sm font-medium block mb-2">Cuisine (select up to {MAX_CUISINE_SELECTIONS}):</label>
           <div className="flex flex-wrap gap-2 justify-center">
             {CUISINES.map((cuisine) => (
               <Badge 
@@ -100,7 +124,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
         </div>
 
         <div>
-          <label className="text-sm font-medium block mb-2">Dietary Restrictions:</label>
+          <label className="text-sm font-medium block mb-2">Dietary Restrictions (select up to {MAX_DIETARY_SELECTIONS}):</label>
           <div className="flex flex-wrap gap-2 justify-center">
             {DIETARY.map((diet) => (
               <Badge 

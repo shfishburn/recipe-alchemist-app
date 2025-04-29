@@ -1,26 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CookingPot, ArrowRight, LeafyGreen, WheatOff, MilkOff } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Apple, Leaf, Utensils } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
-// Popular cuisines with their display names and values in the specified order
+// Maximum number of selections allowed
+const MAX_CUISINE_SELECTIONS = 2;
+const MAX_DIETARY_SELECTIONS = 2;
+
+// Popular cuisines with their display names, values, and icons
 const CUISINES = [
-  { name: "American", value: "american" },
-  { name: "Italian", value: "italian" },
-  { name: "Mexican", value: "mexican" },
-  { name: "Asian", value: "asian" },
-  { name: "Mediterranean", value: "mediterranean" },
-  { name: "Healthy", value: "healthy" },
-  { name: "Vegetarian", value: "vegetarian" }
+  { name: "American", value: "american", icon: Drumstick },
+  { name: "Italian", value: "italian", icon: Pizza },
+  { name: "Mexican", value: "mexican", icon: UtensilsCrossed },
+  { name: "Asian", value: "asian", icon: Utensils },
+  { name: "Mediterranean", value: "mediterranean", icon: Leaf },
+  { name: "Healthy", value: "healthy", icon: TrendingUp },
+  { name: "Vegetarian", value: "vegetarian", icon: Apple }
 ];
 
 // Dietary restrictions
 const DIETARY = [
-  { name: "Low-Carb", value: "low-carb", icon: LeafyGreen },
+  { name: "Low-Carb", value: "low-carb", icon: Carrot },
   { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
   { name: "Dairy-Free", value: "dairy-free", icon: MilkOff }
 ];
@@ -38,6 +42,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   });
   const isMobile = useIsMobile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -78,7 +83,16 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
       if (prev.cuisine.includes(value)) {
         return { ...prev, cuisine: prev.cuisine.filter(c => c !== value) };
       } 
-      // Otherwise, add it to the selection
+      // Otherwise, check if we've reached the maximum number of selections
+      else if (prev.cuisine.length >= MAX_CUISINE_SELECTIONS) {
+        toast({
+          title: "Selection limit reached",
+          description: `You can select up to ${MAX_CUISINE_SELECTIONS} cuisines.`,
+          variant: "default"
+        });
+        return prev;
+      }
+      // Add it to the selection
       else {
         return { ...prev, cuisine: [...prev.cuisine, value] };
       }
@@ -91,7 +105,16 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
       if (prev.dietary.includes(value)) {
         return { ...prev, dietary: prev.dietary.filter(d => d !== value) };
       } 
-      // Otherwise, add it to the selection
+      // Otherwise, check if we've reached the maximum number of selections
+      else if (prev.dietary.length >= MAX_DIETARY_SELECTIONS) {
+        toast({
+          title: "Selection limit reached",
+          description: `You can select up to ${MAX_DIETARY_SELECTIONS} dietary preferences.`,
+          variant: "default"
+        });
+        return prev;
+      }
+      // Add it to the selection
       else {
         return { ...prev, dietary: [...prev.dietary, value] };
       }
@@ -99,7 +122,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-2xl mx-auto">
       <div className="space-y-4">
         <div className="space-y-1">
           <div className="text-center text-xs text-muted-foreground mb-1">
@@ -120,8 +143,8 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">What flavors match your mood tonight?</label>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <label className="text-sm font-medium">What flavors match your mood tonight? (select up to {MAX_CUISINE_SELECTIONS})</label>
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             {CUISINES.map(cuisine => (
               <Badge 
                 key={cuisine.value} 
@@ -131,12 +154,14 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                 }`}
                 onClick={() => toggleCuisine(cuisine.value)}
               >
+                <cuisine.icon className="w-3.5 h-3.5 mr-1" />
                 {cuisine.name}
               </Badge>
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-center mt-3">
+          <label className="text-sm font-medium block mt-4">Any dietary preferences? (select up to {MAX_DIETARY_SELECTIONS})</label>
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
             {DIETARY.map(diet => (
               <Badge 
                 key={diet.value} 
