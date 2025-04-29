@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +7,15 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 
-// Popular cuisines with their display names and values
+// Popular cuisines with their display names and values in the specified order
 const CUISINES = [
+  { name: "American", value: "american" },
   { name: "Italian", value: "italian" },
   { name: "Mexican", value: "mexican" },
   { name: "Asian", value: "asian" },
-  { name: "American", value: "american" }
+  { name: "Mediterranean", value: "mediterranean" },
+  { name: "Healthy", value: "healthy" },
+  { name: "Vegetarian", value: "vegetarian" }
 ];
 
 interface QuickRecipeTagFormProps {
@@ -23,7 +25,7 @@ interface QuickRecipeTagFormProps {
 
 export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormProps) {
   const [formData, setFormData] = useState<QuickRecipeFormData>({
-    cuisine: 'italian',
+    cuisine: [],
     dietary: 'no-restrictions',
     mainIngredient: '',
   });
@@ -45,18 +47,35 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.mainIngredient.trim()) {
-      // Use a random ingredient from popular cuisines if user didn't enter anything
-      const randomIngredient = formData.cuisine === 'italian' ? 'pasta' :
-                              formData.cuisine === 'mexican' ? 'beans' :
-                              formData.cuisine === 'asian' ? 'rice' : 'chicken';
+      // Use a random ingredient based on selected cuisines or default to chicken
+      let randomIngredient = 'chicken';
+      if (formData.cuisine.length > 0) {
+        // Select a relevant ingredient based on the first selected cuisine
+        const primaryCuisine = formData.cuisine[0];
+        randomIngredient = primaryCuisine === 'italian' ? 'pasta' :
+                           primaryCuisine === 'mexican' ? 'beans' :
+                           primaryCuisine === 'asian' ? 'rice' :
+                           primaryCuisine === 'mediterranean' ? 'olive oil' :
+                           primaryCuisine === 'healthy' ? 'quinoa' :
+                           primaryCuisine === 'vegetarian' ? 'tofu' : 'chicken';
+      }
       onSubmit({...formData, mainIngredient: randomIngredient});
     } else {
       onSubmit(formData);
     }
   };
 
-  const selectCuisine = (value: string) => {
-    setFormData({ ...formData, cuisine: value });
+  const toggleCuisine = (value: string) => {
+    setFormData(prev => {
+      // If the cuisine is already selected, remove it
+      if (prev.cuisine.includes(value)) {
+        return { ...prev, cuisine: prev.cuisine.filter(c => c !== value) };
+      } 
+      // Otherwise, add it to the selection
+      else {
+        return { ...prev, cuisine: [...prev.cuisine, value] };
+      }
+    });
   };
 
   return (
@@ -88,9 +107,9 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                 key={cuisine.value} 
                 variant="outline" 
                 className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  formData.cuisine === cuisine.value ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
+                  formData.cuisine.includes(cuisine.value) ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
                 }`}
-                onClick={() => selectCuisine(cuisine.value)}
+                onClick={() => toggleCuisine(cuisine.value)}
               >
                 {cuisine.name}
               </Badge>

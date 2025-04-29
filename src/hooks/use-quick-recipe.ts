@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface QuickRecipeFormData {
-  cuisine: string;
+  cuisine: string[];
   dietary: string;
   mainIngredient: string;
 }
@@ -31,7 +31,7 @@ export const useQuickRecipe = () => {
       
       const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
         body: JSON.stringify({
-          cuisine: formData.cuisine,
+          cuisine: formData.cuisine.length > 0 ? formData.cuisine : ['american'], // Default to american if none selected
           dietary: formData.dietary,
           mainIngredient: formData.mainIngredient
         })
