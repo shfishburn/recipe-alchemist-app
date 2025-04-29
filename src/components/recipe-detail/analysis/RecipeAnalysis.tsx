@@ -1,17 +1,20 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { toast } from 'sonner';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import type { Recipe, Ingredient } from '@/types/recipe';
 
 interface RecipeAnalysisProps {
   recipe: Recipe;
-  isVisible: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
   onRecipeUpdated?: (updatedRecipe: Recipe) => void;
 }
 
@@ -22,11 +25,12 @@ interface TabContent {
   troubleshooting: React.ReactNode[];
 }
 
-export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAnalysisProps) {
+export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: RecipeAnalysisProps) {
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [activeTab, setActiveTab] = useState("chemistry");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   // Store parsed content to ensure consistency between tab switches
   const [parsedContent, setParsedContent] = useState<TabContent>({
@@ -41,8 +45,6 @@ export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAna
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
-      if (!isVisible) return null;
-      
       console.log('Fetching recipe analysis for', recipe.title);
       const { data, error } = await supabase.functions.invoke('recipe-chat', {
         body: { 
@@ -69,24 +71,29 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       console.log('Analysis data received:', data);
       return data;
     },
-    enabled: isVisible,
+    enabled: false, // Don't auto-fetch on mount
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 1,
   });
 
-  // Function to manually retry analysis
-  const handleRetryAnalysis = useCallback(() => {
-    // Reset content parsing state when manually retrying
-    contentParsedRef.current = false;
-    setParsedContent({
-      chemistry: [],
-      techniques: [],
-      troubleshooting: []
-    });
-    
-    refetch();
-    toast.info("Regenerating recipe analysis...");
-  }, [refetch]);
+  // Function to manually trigger analysis
+  const handleAnalyze = useCallback(() => {
+    if (!isLoading) {
+      // Reset content parsing state when manually retrying
+      contentParsedRef.current = false;
+      setParsedContent({
+        chemistry: [],
+        techniques: [],
+        troubleshooting: []
+      });
+      
+      setIsAnalyzing(true);
+      refetch().finally(() => {
+        setIsAnalyzing(false);
+      });
+      toast.info("Analyzing recipe...");
+    }
+  }, [refetch, isLoading]);
 
   // Apply analysis updates to recipe when data is available, but only once
   useEffect(() => {
@@ -186,16 +193,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   }, [analysis]);
 
-  // Reset the applied flag when the recipe changes
-  useEffect(() => {
-    if (!isVisible) {
-      setHasAppliedUpdates(false);
-      initialAnalysisRef.current = false;
-      // Reset content parsing state when visibility changes
-      contentParsedRef.current = false;
-    }
-  }, [isVisible, recipe.id]);
-  
   // Pre-process content once when analysis data is available
   useEffect(() => {
     if (analysis && !contentParsedRef.current) {
@@ -252,8 +249,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       contentParsedRef.current = true;
     }
   }, [analysis]);
-
-  if (!isVisible) return null;
 
   // Helper function to check if a data section has content
   const hasContent = (section: any[]): boolean => {
@@ -342,98 +337,129 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     (analysis?.troubleshooting && analysis.troubleshooting.length > 0) ||
     (analysis?.textResponse && analysis.textResponse.length > 50);
 
+  // Check if we should show the analysis prompt
+  const showAnalysisPrompt = !analysis && !isLoading;
+
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Beaker className="h-5 w-5" />
-            <span>Scientific Analysis</span>
-          </CardTitle>
-          {!isLoading && (
-            <button 
-              onClick={handleRetryAnalysis} 
-              className="text-xs text-primary hover:underline"
-            >
-              Regenerate
-            </button>
-          )}
-        </div>
-        <CardDescription>
-          In-depth breakdown of cooking chemistry and techniques
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
+    <Collapsible open={isOpen} onOpenChange={onToggle} className="mt-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
+              <Beaker className="h-5 w-5 mr-2 text-recipe-blue" />
+              Scientific Analysis
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              {!isLoading && hasAnyAnalysisContent && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAnalyze();
+                  }}
+                  className="text-xs"
+                >
+                  Regenerate
+                </Button>
+              )}
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">Toggle section</span>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
           </div>
-        ) : hasAnyAnalysisContent ? (
-          <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="mb-4 w-full flex justify-between overflow-x-auto">
-              <TabsTrigger value="chemistry" className="flex items-center gap-2">
-                <Beaker className="h-4 w-4" />
-                Chemistry
-              </TabsTrigger>
-              <TabsTrigger value="techniques" className="flex items-center gap-2">
-                <BookOpenText className="h-4 w-4" />
-                Techniques
-              </TabsTrigger>
-              <TabsTrigger value="troubleshooting" className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Troubleshooting
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
-              <div className="space-y-2">
-                {parsedContent.chemistry.length > 0 ? 
-                  parsedContent.chemistry : 
-                  <div className="text-center py-4 text-muted-foreground">
-                    <p>No chemical analysis available for this recipe.</p>
-                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                  </div>
-                }
+          <CardDescription>
+            In-depth breakdown of cooking chemistry and techniques
+          </CardDescription>
+        </CardHeader>
+
+        <CollapsibleContent>
+          <CardContent>
+            {isLoading || isAnalyzing ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-              <div className="space-y-2">
-                {parsedContent.techniques.length > 0 ? 
-                  parsedContent.techniques : 
-                  <div className="text-center py-4 text-muted-foreground">
-                    <p>No technique analysis available for this recipe.</p>
-                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                  </div>
-                }
+            ) : showAnalysisPrompt ? (
+              <div className="text-center py-6">
+                <p className="mb-4 text-muted-foreground">Click the Analyze Recipe button to generate a scientific analysis of this recipe.</p>
+                <Button onClick={handleAnalyze}>
+                  <Beaker className="h-5 w-5 mr-2" />
+                  Analyze Recipe
+                </Button>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
-              <div className="space-y-2">
-                {parsedContent.troubleshooting.length > 0 ? 
-                  parsedContent.troubleshooting : 
-                  <div className="text-center py-4 text-muted-foreground">
-                    <p>No troubleshooting tips available for this recipe.</p>
-                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+            ) : hasAnyAnalysisContent ? (
+              <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
+                <TabsList className="mb-4 w-full flex justify-between overflow-x-auto">
+                  <TabsTrigger value="chemistry" className="flex items-center gap-2">
+                    <Beaker className="h-4 w-4" />
+                    Chemistry
+                  </TabsTrigger>
+                  <TabsTrigger value="techniques" className="flex items-center gap-2">
+                    <BookOpenText className="h-4 w-4" />
+                    Techniques
+                  </TabsTrigger>
+                  <TabsTrigger value="troubleshooting" className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Troubleshooting
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
+                  <div className="space-y-2">
+                    {parsedContent.chemistry.length > 0 ? 
+                      parsedContent.chemistry : 
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p>No chemical analysis available for this recipe.</p>
+                        <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                      </div>
+                    }
                   </div>
-                }
+                </TabsContent>
+                
+                <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
+                  <div className="space-y-2">
+                    {parsedContent.techniques.length > 0 ? 
+                      parsedContent.techniques : 
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p>No technique analysis available for this recipe.</p>
+                        <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                      </div>
+                    }
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
+                  <div className="space-y-2">
+                    {parsedContent.troubleshooting.length > 0 ? 
+                      parsedContent.troubleshooting : 
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p>No troubleshooting tips available for this recipe.</p>
+                        <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                      </div>
+                    }
+                  </div>
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className="text-center py-6">
+                <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
+                <Button onClick={handleAnalyze}>
+                  <Beaker className="h-5 w-5 mr-2" />
+                  Generate Analysis
+                </Button>
               </div>
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <div className="text-center py-6">
-            <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
-            <button
-              onClick={handleRetryAnalysis}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-            >
-              Generate Analysis
-            </button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }

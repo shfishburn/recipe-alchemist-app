@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Recipe } from '@/types/recipe';
 import { Profile } from '@/hooks/use-auth';
 import { standardizeNutrition } from '@/types/nutrition-utils';
@@ -42,6 +43,3 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
     userPreferences
   };
 }
-
-// Add React import at the top
-import React from 'react';

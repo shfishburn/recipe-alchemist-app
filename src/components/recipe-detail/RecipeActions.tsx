@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChefHat, FlaskConical, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
+import { ChefHat, Beaker, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -14,8 +14,9 @@ interface RecipeActionsProps {
   sticky?: boolean;
   onOpenChat: () => void;
   onToggleAnalysis: () => void;
-  showingAnalysis: boolean;
+  isAnalysisOpen?: boolean;
   isAnalyzing?: boolean;
+  hasAnalysisData?: boolean;
 }
 
 export function RecipeActions({ 
@@ -23,8 +24,9 @@ export function RecipeActions({
   sticky = false, 
   onOpenChat, 
   onToggleAnalysis, 
-  showingAnalysis,
-  isAnalyzing = false 
+  isAnalysisOpen = false,
+  isAnalyzing = false,
+  hasAnalysisData = false
 }: RecipeActionsProps) {
   const navigate = useNavigate();
   const { mutate: deleteRecipe, isDeleting } = useDeleteRecipe();
@@ -82,11 +84,14 @@ export function RecipeActions({
 
   // Format button text for mobile vs desktop
   const analyzeText = isMobile 
-    ? (isAnalyzing ? "Analyzing..." : "Analyze") 
-    : (isAnalyzing ? "Analyzing..." : "Analyze Recipe");
+    ? (isAnalyzing ? "Analyzing..." : "Science") 
+    : (isAnalyzing ? "Analyzing..." : "Scientific Analysis");
   
   const aiChatText = isMobile ? "AI Chat" : "AI Chat";
   const cookingModeText = isMobile ? "Cooking Mode" : "Cooking Mode";
+  
+  // Determine analyze button variant based on state
+  const analyzeButtonVariant = isAnalysisOpen ? "outline" : "default";
   
   return (
     <div className={containerClasses}>
@@ -124,21 +129,25 @@ export function RecipeActions({
           </Button>
 
           <Button 
-            variant="default"
+            variant={analyzeButtonVariant}
             size={isMobile ? "default" : "lg"}
-            className={`w-full ${showingAnalysis ? 'bg-primary/80' : 'bg-primary'} hover:bg-primary/90 text-primary-foreground flex items-center justify-center`}
+            className={`w-full flex items-center justify-center ${
+              isAnalysisOpen 
+                ? 'bg-background border border-input hover:bg-accent hover:text-accent-foreground' 
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+            }`}
             onClick={onToggleAnalysis}
             disabled={isAnalyzing}
           >
             {isAnalyzing ? (
               <Loader2 className="h-5 w-5 mr-2 animate-spin" />
             ) : (
-              <FlaskConical className="h-5 w-5 mr-2" />
+              <Beaker className="h-5 w-5 mr-2" />
             )}
             <span className="whitespace-nowrap">
               {analyzeText}
             </span>
-            {showingAnalysis && <Badge variant="success" className="ml-2 text-[10px]">Active</Badge>}
+            {isAnalysisOpen && <Badge variant="success" className="ml-2 text-[10px]">Active</Badge>}
           </Button>
           
           <Button 

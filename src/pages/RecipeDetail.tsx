@@ -13,9 +13,8 @@ import { CookingMode } from '@/components/recipe-detail/CookingMode';
 import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
-import { ScienceNotes } from "@/components/recipe-detail/notes/ScienceNotes";
-import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
+import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 import { toast } from "@/hooks/use-toast";
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
@@ -29,9 +28,8 @@ const RecipeDetail = () => {
   const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
   const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
-  const [showAnalysis, setShowAnalysis] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const isMobile = useIsMobile();
   
   useEffect(() => {
@@ -72,22 +70,21 @@ const RecipeDetail = () => {
   };
 
   const handleToggleAnalysis = () => {
-    if (!showAnalysis) {
+    // If we're opening the analysis section and it's not already open, show loading state
+    if (!sections.analysis) {
       setIsAnalyzing(true);
+      // Set a timeout to hide the loading state after a reasonable delay
+      setTimeout(() => setIsAnalyzing(false), 500);
     }
-    setShowAnalysis(!showAnalysis);
+    toggleSection('analysis');
   };
 
-  useEffect(() => {
-    if (showAnalysis) {
-      const timer = setTimeout(() => {
-        setIsAnalyzing(false);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [showAnalysis]);
-
   const currentRecipe = localRecipe || recipe;
+  
+  // Check if the recipe has analysis data (any science_notes)
+  const hasAnalysisData = currentRecipe?.science_notes && 
+                          Array.isArray(currentRecipe.science_notes) && 
+                          currentRecipe.science_notes.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -133,18 +130,15 @@ const RecipeDetail = () => {
                 </div>
               </div>
 
+              {/* Scientific Analysis Section - Always include it but let it handle visibility */}
               <RecipeAnalysis 
-                recipe={currentRecipe} 
-                isVisible={showAnalysis} 
+                recipe={currentRecipe}
+                isOpen={sections.analysis}
+                onToggle={() => toggleSection('analysis')}
                 onRecipeUpdated={handleRecipeUpdate}
               />
 
               <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-6">
-                <ScienceNotes 
-                  recipe={currentRecipe}
-                  isOpen={sections.science}
-                  onToggle={() => toggleSection('science')}
-                />
                 <ChefNotes 
                   recipe={currentRecipe} 
                   onUpdate={handleNotesUpdate}
@@ -168,8 +162,9 @@ const RecipeDetail = () => {
                 sticky={true} 
                 onOpenChat={handleOpenChat}
                 onToggleAnalysis={handleToggleAnalysis}
-                showingAnalysis={showAnalysis}
+                isAnalysisOpen={sections.analysis}
                 isAnalyzing={isAnalyzing}
+                hasAnalysisData={hasAnalysisData}
               />
               
               <RecipeChatDrawer 

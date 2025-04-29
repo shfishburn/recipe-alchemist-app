@@ -5,24 +5,42 @@ type SectionState = {
   ingredients: boolean;
   instructions: boolean;
   nutrition: boolean;
-  science: boolean;
+  analysis: boolean; // Changed from 'science' to 'analysis'
   chef: boolean;
 };
 
 export function useRecipeSections() {
   const [sections, setSections] = useState<SectionState>(() => {
-    const saved = localStorage.getItem('recipe-sections');
-    return saved ? JSON.parse(saved) : {
-      ingredients: true,
-      instructions: true,
-      nutrition: true,
-      science: true,
-      chef: true,
-    };
+    const saved = localStorage.getItem('recipe-sections-v2'); // Updated key to prevent conflicts
+    // If we have saved settings, use them. Otherwise check if old settings exist and migrate them.
+    if (saved) {
+      return JSON.parse(saved);
+    } else {
+      const oldSaved = localStorage.getItem('recipe-sections');
+      if (oldSaved) {
+        const oldSections = JSON.parse(oldSaved);
+        // Migrate old settings, mapping 'science' to 'analysis'
+        return {
+          ingredients: oldSections.ingredients,
+          instructions: oldSections.instructions,
+          nutrition: oldSections.nutrition,
+          analysis: oldSections.science || true, // Map the old 'science' to new 'analysis'
+          chef: oldSections.chef,
+        };
+      }
+      // Default to everything open if no settings found
+      return {
+        ingredients: true,
+        instructions: true,
+        nutrition: true,
+        analysis: true, // Changed from 'science' to 'analysis'
+        chef: true,
+      };
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('recipe-sections', JSON.stringify(sections));
+    localStorage.setItem('recipe-sections-v2', JSON.stringify(sections));
   }, [sections]);
 
   const toggleSection = (section: keyof SectionState) => {
@@ -37,7 +55,7 @@ export function useRecipeSections() {
       ingredients: true,
       instructions: true,
       nutrition: true,
-      science: true,
+      analysis: true, // Changed from 'science' to 'analysis'
       chef: true,
     });
   };
@@ -47,7 +65,7 @@ export function useRecipeSections() {
       ingredients: false,
       instructions: false,
       nutrition: false,
-      science: false,
+      analysis: false, // Changed from 'science' to 'analysis'
       chef: false,
     });
   };
