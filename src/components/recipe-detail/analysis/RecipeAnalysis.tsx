@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle } from 'lucide-react';
@@ -17,6 +17,8 @@ interface RecipeAnalysisProps {
 
 export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAnalysisProps) {
   const { updateRecipe } = useRecipeUpdates(recipe.id);
+  const initialAnalysisRef = useRef(false);
+  const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
@@ -53,10 +55,18 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
   });
 
-  // Apply analysis updates to recipe when data is available
+  // Apply analysis updates to recipe when data is available, but only once
   useEffect(() => {
-    if (analysis && analysis.changes && onRecipeUpdated) {
+    // Only run this effect if we have analysis data, we haven't applied updates yet,
+    // and there's a callback for updates
+    if (analysis && 
+        analysis.changes && 
+        onRecipeUpdated && 
+        !hasAppliedUpdates && 
+        initialAnalysisRef.current) {
+      
       console.log('Applying analysis updates to recipe:', analysis.changes);
+      setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
       
       try {
         // Ensure the data has the correct structure before updating
@@ -72,28 +82,47 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             : recipe.ingredients,
         };
 
-        // Now update with properly structured data - only call this once per effect run
+        // Update with properly structured data
         updateRecipe.mutate(updatedData, {
           onSuccess: (updatedRecipe) => {
             console.log('Recipe updated with analysis data:', updatedRecipe);
-            if (onRecipeUpdated) {
-              onRecipeUpdated(updatedRecipe as Recipe);
-            }
-            // Using sonner toast here, which doesn't have the same infinite loop issue
+            onRecipeUpdated(updatedRecipe as Recipe);
             toast.success('Recipe updated with analysis insights');
           },
           onError: (error) => {
             console.error('Failed to update recipe with analysis data:', error);
             toast.error('Failed to update recipe with analysis');
+            // Reset the flag if there was an error so we can try again
+            setHasAppliedUpdates(false);
           }
         });
       } catch (e) {
         console.error("Error processing analysis data:", e);
         toast.error("Failed to process recipe analysis data");
+        setHasAppliedUpdates(false);
       }
     }
-  // Important: Dependencies are correctly set to avoid infinite loops
-  }, [analysis, updateRecipe, onRecipeUpdated, recipe.id, recipe.title, recipe.science_notes, recipe.instructions, recipe.ingredients]);
+  // Only depend on analysis and hasAppliedUpdates, not on recipe properties which change frequently
+  }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id]);
+
+  // Set initialAnalysisRef to true after initial render
+  useEffect(() => {
+    if (analysis && !initialAnalysisRef.current) {
+      // Use a small delay to ensure this runs after the data is loaded
+      const timer = setTimeout(() => {
+        initialAnalysisRef.current = true;
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [analysis]);
+
+  // Reset the applied flag when the recipe changes
+  useEffect(() => {
+    if (!isVisible) {
+      setHasAppliedUpdates(false);
+      initialAnalysisRef.current = false;
+    }
+  }, [isVisible, recipe.id]);
 
   if (!isVisible) return null;
 
