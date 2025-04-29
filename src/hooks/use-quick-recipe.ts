@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface QuickRecipeFormData {
   cuisine: string[];
-  dietary: string;
+  dietary: string[];
   mainIngredient: string;
 }
 

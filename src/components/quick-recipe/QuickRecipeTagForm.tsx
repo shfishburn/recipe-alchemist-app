@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, ArrowRight } from 'lucide-react';
+import { CookingPot, ArrowRight, LeafyGreen, WheatOff, MilkOff } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,13 @@ const CUISINES = [
   { name: "Vegetarian", value: "vegetarian" }
 ];
 
+// Dietary restrictions
+const DIETARY = [
+  { name: "Low-Carb", value: "low-carb", icon: LeafyGreen },
+  { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
+  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff }
+];
+
 interface QuickRecipeTagFormProps {
   onSubmit: (data: QuickRecipeFormData) => void;
   isLoading: boolean;
@@ -26,7 +33,7 @@ interface QuickRecipeTagFormProps {
 export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormProps) {
   const [formData, setFormData] = useState<QuickRecipeFormData>({
     cuisine: [],
-    dietary: 'no-restrictions',
+    dietary: [],
     mainIngredient: '',
   });
   const isMobile = useIsMobile();
@@ -78,6 +85,19 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     });
   };
 
+  const toggleDietary = (value: string) => {
+    setFormData(prev => {
+      // If the dietary option is already selected, remove it
+      if (prev.dietary.includes(value)) {
+        return { ...prev, dietary: prev.dietary.filter(d => d !== value) };
+      } 
+      // Otherwise, add it to the selection
+      else {
+        return { ...prev, dietary: [...prev.dietary, value] };
+      }
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto">
       <div className="space-y-4">
@@ -112,6 +132,22 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                 onClick={() => toggleCuisine(cuisine.value)}
               >
                 {cuisine.name}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 justify-center mt-3">
+            {DIETARY.map(diet => (
+              <Badge 
+                key={diet.value} 
+                variant="outline" 
+                className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
+                  formData.dietary.includes(diet.value) ? 'bg-recipe-orange text-white hover:bg-recipe-orange/90' : ''
+                }`}
+                onClick={() => toggleDietary(diet.value)}
+              >
+                <diet.icon className="w-3.5 h-3.5 mr-1" />
+                {diet.name}
               </Badge>
             ))}
           </div>

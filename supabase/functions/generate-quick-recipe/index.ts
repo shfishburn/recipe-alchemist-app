@@ -22,9 +22,14 @@ serve(async (req) => {
     
     const { cuisine, dietary, mainIngredient } = requestData;
 
+    // Format dietary restrictions for the prompt
+    const dietaryText = dietary && dietary.length > 0 
+      ? dietary.join(', ') 
+      : 'None';
+
     const prompt = `Create a quick, simplified recipe based on these parameters:
 • Cuisine: ${cuisine || 'Any'}
-• Dietary restriction: ${dietary || 'None'}
+• Dietary restriction: ${dietaryText}
 • Main ingredient: ${mainIngredient || 'Chef\'s choice'}
 
 Return a simple JSON object with:
