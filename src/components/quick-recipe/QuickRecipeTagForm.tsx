@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CookingPot, ArrowRight } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 // Popular cuisines with their display names and values
 const CUISINES = [
@@ -27,6 +28,19 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     mainIngredient: '',
   });
   const isMobile = useIsMobile();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      // Reset height to auto to get the correct scrollHeight
+      textareaRef.current.style.height = 'auto';
+      // Set the height to match content (min 48px for mobile, 56px for desktop)
+      const minHeight = isMobile ? '48px' : '56px';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.max(parseInt(minHeight), scrollHeight)}px`;
+    }
+  }, [formData.mainIngredient, isMobile]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +69,14 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
           <label htmlFor="mainIngredient" className="text-sm font-medium">
             Ingredients or meal ideas:
           </label>
-          <Input 
+          <Textarea 
             id="mainIngredient"
+            ref={textareaRef}
             placeholder="e.g., chicken thighs, pasta, tacos, stir-fry..."
             value={formData.mainIngredient}
             onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
-            className={`${isMobile ? "h-12" : "h-14 text-lg"} text-center`}
+            className={`${isMobile ? "min-h-[48px]" : "min-h-[56px]"} text-center resize-none overflow-hidden transition-all`}
+            rows={1}
           />
         </div>
 
