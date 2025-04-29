@@ -8,13 +8,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { CookingPot } from 'lucide-react';
 
-// Success metrics to show social proof
-const SUCCESS_METRICS = [
-  { label: "Recipes Created", value: "10,000+" },
-  { label: "Happy Cooks", value: "5,400+" },
-  { label: "Avg. Rating", value: "4.8/5" }
-];
-
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
   const isMobile = useIsMobile();
@@ -22,18 +15,6 @@ const Hero = React.memo(() => {
   return (
     <section className="py-8 md:py-16">
       <div className="container-page">
-        {/* Success metrics banner */}
-        <div className="flex justify-center mb-8">
-          <div className="flex flex-wrap justify-center gap-4 md:gap-12">
-            {SUCCESS_METRICS.map((metric) => (
-              <div key={metric.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-recipe-blue">{metric.value}</p>
-                <p className="text-sm text-muted-foreground">{metric.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        
         {/* Main Hero Content */}
         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
           <div className="flex-1 text-center md:text-left space-y-4">
