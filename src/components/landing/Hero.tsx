@@ -20,8 +20,10 @@ const Hero = React.memo(() => {
             What's in your kitchen tonight?
           </h1>
           
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
-            Instant recipes tailored to your ingredients and tastes.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-4xl mx-auto mt-3 md:mt-4">
+            Share what you've got and what you're craving. Pick your flavor inspiration. 
+            I'll instantly transform your ingredients into delicious, foolproof recipes—complete with 
+            easy shopping tips and helpful nutrition insights to make dinner a joy.
           </p>
         </div>
         
