@@ -102,7 +102,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         setHasAppliedUpdates(false);
       }
     }
-  // Only depend on analysis and hasAppliedUpdates, not on recipe properties which change frequently
   }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id]);
 
   // Set initialAnalysisRef to true after initial render
@@ -167,6 +166,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                     <p>{note}</p>
                   </div>
                 ))
+              ) : analysis?.textResponse ? (
+                <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No chemical analysis available for this recipe.</p>
@@ -185,7 +186,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                   ))}
                 </div>
               ) : analysis?.textResponse ? (
-                <div dangerouslySetInnerHTML={{ __html: analysis.textResponse.replace(/\n/g, '<br>') }} />
+                <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No technique analysis available for this recipe.</p>
@@ -203,6 +204,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                       <p>{tip}</p>
                     </div>
                   ))
+                ) : analysis?.textResponse ? (
+                  <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
                     <p>No troubleshooting tips available for this recipe.</p>

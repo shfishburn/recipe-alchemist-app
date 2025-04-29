@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SectionControlsProps {
   onExpandAll: () => void;
@@ -8,8 +9,10 @@ interface SectionControlsProps {
 }
 
 export function SectionControls({ onExpandAll, onCollapseAll }: SectionControlsProps) {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex gap-2 justify-end mb-4">
+    <div className={`flex gap-2 mb-4 ${isMobile ? 'justify-center' : 'justify-end'}`}>
       <Button 
         variant="outline" 
         size="sm"

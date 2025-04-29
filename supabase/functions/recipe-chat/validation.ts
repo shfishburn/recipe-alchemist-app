@@ -40,16 +40,79 @@ export function validateRecipeChanges(rawResponse: string) {
       }
     }
     
-    // If all else fails, create a fallback response object with the raw text
-    console.log("Creating fallback response object with the raw text");
+    // Enhanced extraction - if all parsing fails, extract sections intelligently from the text
+    console.log("Creating enhanced response object from raw text");
     return {
-      textResponse: rawResponse,
+      textResponse: formatResponseForDisplay(rawResponse),
       changes: { mode: "none" },
-      science_notes: extractScienceNotes(rawResponse),
-      techniques: extractTechniques(rawResponse),
-      troubleshooting: extractTroubleshooting(rawResponse)
+      science_notes: extractSectionWithHeader(rawResponse, "Chemistry", "Science", "Ingredient") || extractScienceNotes(rawResponse),
+      techniques: extractSectionWithHeader(rawResponse, "Technique", "Method", "Cooking") || extractTechniques(rawResponse),
+      troubleshooting: extractSectionWithHeader(rawResponse, "Troubleshoot", "Problem", "Issue") || extractTroubleshooting(rawResponse)
     };
   }
+}
+
+// Format the response for better display in the UI
+function formatResponseForDisplay(text: string): string {
+  // Remove any markdown code blocks
+  text = text.replace(/```[^`]*```/g, '');
+  
+  // Add paragraph breaks for better readability
+  return text.split('\n\n').filter(p => p.trim().length > 0).join('<br><br>');
+}
+
+// Extract sections with headers from the text
+function extractSectionWithHeader(text: string, ...headerKeywords: string[]): string[] | null {
+  // Pattern to match section headers like "### Something" or "## Something"
+  const headerRegex = new RegExp(`(#{1,3}\\s*(?:${headerKeywords.join('|')}).*?)(?:#{1,3}|$)`, 'gi');
+  const sections: string[] = [];
+  
+  let matches;
+  let lastIndex = 0;
+  
+  while ((matches = headerRegex.exec(text)) !== null) {
+    const startIndex = matches.index;
+    const headerText = matches[1];
+    
+    // If this is not the first match, extract the content of the previous section
+    if (lastIndex > 0) {
+      const sectionContent = text.substring(lastIndex, startIndex).trim();
+      if (sectionContent) {
+        sections.push(cleanUpSection(sectionContent));
+      }
+    }
+    
+    lastIndex = startIndex + headerText.length;
+  }
+  
+  // Extract the last section if there was at least one match
+  if (lastIndex > 0 && lastIndex < text.length) {
+    const sectionContent = text.substring(lastIndex).trim();
+    if (sectionContent) {
+      sections.push(cleanUpSection(sectionContent));
+    }
+  }
+  
+  return sections.length > 0 ? sections : null;
+}
+
+// Clean up a section by removing markdown artifacts and splitting into paragraphs
+function cleanUpSection(text: string): string {
+  // Remove markdown headers
+  text = text.replace(/^#{1,3}\s+.*$/gm, '');
+  
+  // Remove any code blocks
+  text = text.replace(/```[^`]*```/g, '');
+  
+  // Remove bullet points and numbered lists
+  text = text.replace(/^[\s-]*[-\d.]\s+/gm, '');
+  
+  // Join short lines and trim whitespace
+  return text.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join(' ')
+    .trim();
 }
 
 // Helper functions to extract information from plain text responses
