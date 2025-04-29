@@ -15,13 +15,13 @@ export const useChatMutations = (recipe: Recipe) => {
       sourceType, 
       sourceUrl, 
       sourceImage,
-      messageId // Add support for tracking message ID
+      messageId
     }: {
       message: string;
       sourceType?: 'manual' | 'image' | 'url';
       sourceUrl?: string;
       sourceImage?: string;
-      messageId?: string; // Optional message ID for tracking
+      messageId?: string;
     }) => {
       console.log("Starting recipe chat mutation:", { 
         message, 
@@ -29,26 +29,38 @@ export const useChatMutations = (recipe: Recipe) => {
         messageId: messageId || 'not-provided'
       });
       
-      toast({
+      // Enhanced error recovery - start with reduced toast time
+      const toastId = toast({
         title: "Processing your request",
         description: sourceType === 'manual' 
           ? "Our culinary scientist is analyzing your request..."
           : "Extracting recipe information...",
+        duration: 5000, // Shorter duration for better UX
       });
       
       console.log("Invoking recipe-chat edge function");
       
       try {
-        const response = await supabase.functions.invoke('recipe-chat', {
-          body: { 
-            recipe, 
-            userMessage: message,
-            sourceType,
-            sourceUrl,
-            sourceImage,
-            messageId // Pass message ID to edge function if provided
-          }
+        // Implement request timeout handling
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Request timed out")), 20000);
         });
+
+        // Race the actual API call against the timeout
+        const response = await Promise.race([
+          supabase.functions.invoke('recipe-chat', {
+            body: { 
+              recipe, 
+              userMessage: message,
+              sourceType,
+              sourceUrl,
+              sourceImage,
+              messageId,
+              retryAttempt: 0 // Track retry attempts
+            }
+          }),
+          timeoutPromise
+        ]) as { data?: any, error?: any };
 
         if (response.error) {
           console.error("Edge function returned an error:", response.error);
@@ -93,7 +105,7 @@ export const useChatMutations = (recipe: Recipe) => {
               source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
-              // Store the message ID if provided to help with optimistic updates
+              // Store the message ID to help with optimistic updates
               meta: messageId ? { optimistic_id: messageId } : null
             })
             .select()
@@ -105,14 +117,13 @@ export const useChatMutations = (recipe: Recipe) => {
           }
           
           console.log("Chat successfully saved to database with ID:", data.id);
-          // Return the data along with the original message ID for tracking
           return { data, messageId };
         } catch (dbError: any) {
           console.error("Database error when saving chat:", dbError);
-          // If we hit a database constraint error, let's provide more specific feedback
-          if (dbError.message?.includes("violates not-null constraint") && 
-              dbError.message?.includes("ai_response")) {
-            throw new Error("Failed to save chat response: AI response cannot be empty");
+          
+          // Enhanced database error handling
+          if (dbError.message?.includes("violates not-null constraint")) {
+            throw new Error("Failed to save chat response: Required field is missing");
           }
           throw dbError;
         }
@@ -129,15 +140,19 @@ export const useChatMutations = (recipe: Recipe) => {
         description: "Culinary analysis complete",
       });
     },
-    onError: (error: any, variables) => {
+    onError: (error: any, variables, context) => {
       console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
+      
+      // Enhanced error handling with better UX
+      const errorMessage = error.message || "Failed to get AI response";
       toast({
         title: "Error",
-        description: error.message || "Failed to get AI response",
+        description: errorMessage.length > 100 ? `${errorMessage.substring(0, 100)}...` : errorMessage,
         variant: "destructive",
+        duration: 8000, // Give users more time to read error messages
       });
-      // Even though there was an error, we should invalidate the query to refresh the chat history
-      // This helps clear any optimistic messages
+      
+      // Even though there was an error, invalidate the query to refresh the chat history
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
     },
   });
