@@ -1,51 +1,50 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { RecipeCarousel } from './RecipeCarousel';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '@/components/ui/badge';
-import { CookingPot } from 'lucide-react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
   const isMobile = useIsMobile();
+  const isTablet = useMediaQuery('(min-width: 640px) and (max-width: 1023px)');
   
   return (
-    <section className="py-8 md:py-16">
+    <section className="py-6 md:py-12 lg:py-16">
       <div className="container-page">
         {/* Main Hero Content */}
-        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-          <div className="flex-1 text-center md:text-left space-y-4">
-            <h1 className="font-bold tracking-tight text-3xl md:text-4xl lg:text-5xl">
-              {!isMobile ? (
-                <>
-                  What's in your kitchen?
-                </>
-              ) : (
-                <>What's in your kitchen?</>
-              )}
+        <div className="flex flex-col lg:flex-row items-center gap-6 md:gap-8 lg:gap-12">
+          <div className="flex-1 text-center lg:text-left space-y-3 lg:space-y-4 w-full lg:max-w-xl">
+            <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
+              What's in your kitchen?
             </h1>
             
-            <p className="text-lg text-muted-foreground max-w-prose">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-prose mx-auto lg:mx-0">
               Tell us one ingredient you have, we'll make something delicious.
             </p>
             
-            {/* Quick Recipe Generator - The main hook */}
-            <div className="py-4">
-              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md">
+            {/* Quick Recipe Generator - Only shows on mobile and desktop */}
+            <div className={`py-3 sm:py-4 ${isTablet ? 'hidden' : 'block'}`}>
+              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-md">
                 <QuickRecipeGenerator />
               </div>
             </div>
           </div>
           
-          <div className="w-full md:w-auto md:flex-1">
-            <div className="relative max-w-[600px] mx-auto">
-              <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
-              <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
-              <RecipeCarousel />
-            </div>
+          <div className="w-full lg:w-auto lg:flex-1">
+            {/* Recipe carousel for desktop and tablet, Generator for tablet only */}
+            {isTablet ? (
+              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-md max-w-md mx-auto">
+                <QuickRecipeGenerator />
+              </div>
+            ) : (
+              <div className="relative max-w-[600px] mx-auto">
+                <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
+                <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
+                <RecipeCarousel />
+              </div>
+            )}
           </div>
         </div>
       </div>

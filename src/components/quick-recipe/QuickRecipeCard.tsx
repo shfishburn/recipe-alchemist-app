@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CookingPot, ShoppingCart, Clock, Star } from 'lucide-react';
 import { type QuickRecipe } from '@/hooks/use-quick-recipe';
@@ -19,89 +19,100 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
   
   return (
     <Card className="w-full max-w-md mx-auto bg-white shadow-md hover:shadow-lg transition-all animate-fadeIn">
-      <div className="relative">
-        <Badge className="absolute top-3 right-3 bg-recipe-green px-2 py-1 text-white">
-          <Star className="h-3 w-3 mr-1 fill-current" /> Quick Recipe
-        </Badge>
+      {/* Recipe Header */}
+      <div className="p-4 pb-2 text-center">
+        <div className="flex items-center justify-center mb-1 gap-2">
+          <h2 className="text-2xl font-bold">Quick & Easy</h2>
+          <Badge className="bg-recipe-green px-2 py-1 text-white">
+            <Star className="h-3 w-3 mr-1 fill-current" /> Quick Recipe
+          </Badge>
+        </div>
+        <p className="text-muted-foreground text-base">{recipe.description}</p>
       </div>
       
-      <CardHeader className={`${isMobile ? "px-4 py-3" : ""} text-center`}>
-        <CardTitle className="text-xl md:text-2xl font-bold">{recipe.title}</CardTitle>
-        <p className="text-muted-foreground text-sm md:text-base">{recipe.description}</p>
-      </CardHeader>
-      
-      <CardContent className={`space-y-4 ${isMobile ? "px-4 py-2" : ""}`}>
-        <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-around">
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Prep</p>
+      {/* Timing Information */}
+      <div className="bg-gray-50 mx-4 rounded-lg my-3">
+        <div className="grid grid-cols-3 divide-x">
+          <div className="px-2 py-3 text-center">
+            <p className="text-gray-500 text-sm">Prep</p>
             <p className="font-medium flex items-center justify-center">
-              <Clock className="h-3 w-3 mr-1 text-recipe-blue" />
+              <Clock className="h-4 w-4 mr-1 text-green-500" />
               {recipe.prepTime} min
             </p>
           </div>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Cook</p>
+          <div className="px-2 py-3 text-center">
+            <p className="text-gray-500 text-sm">Cook</p>
             <p className="font-medium flex items-center justify-center">
-              <CookingPot className="h-3 w-3 mr-1 text-recipe-orange" />
+              <CookingPot className="h-4 w-4 mr-1 text-orange-500" />
               {recipe.cookTime} min
             </p>
           </div>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Total</p>
+          <div className="px-2 py-3 text-center">
+            <p className="text-gray-500 text-sm">Total</p>
             <p className="font-medium">{recipe.prepTime + recipe.cookTime} min</p>
           </div>
         </div>
-        
+      </div>
+      
+      <CardContent className="space-y-5 px-4">
+        {/* Ingredients Section */}
         <div>
-          <h3 className="font-medium mb-2 text-gray-800 flex items-center">
-            <span className="inline-block w-2 h-2 bg-recipe-green rounded-full mr-2"></span>
+          <h3 className="font-semibold mb-3 text-xl flex items-center">
+            <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
             Ingredients
           </h3>
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="space-y-1">
             {recipe.ingredients.map((ingredient, idx) => (
-              <li key={idx} className="text-sm">{ingredient}</li>
+              <li key={idx} className="flex items-baseline">
+                <span className="inline-block w-1.5 h-1.5 bg-black rounded-full mr-2 mt-2"></span>
+                {ingredient}
+              </li>
             ))}
           </ul>
         </div>
         
+        {/* Steps Section */}
         <div>
-          <h3 className="font-medium mb-2 text-gray-800 flex items-center">
-            <span className="inline-block w-2 h-2 bg-recipe-blue rounded-full mr-2"></span>
+          <h3 className="font-semibold mb-3 text-xl flex items-center">
+            <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
             Quick Steps
           </h3>
-          <ol className="list-decimal list-inside space-y-1">
+          <ol className="list-decimal list-inside space-y-2">
             {recipe.steps.map((step, idx) => (
-              <li key={idx} className="text-sm">{step}</li>
+              <li key={idx} className="text-base">
+                {step}
+              </li>
             ))}
           </ol>
         </div>
         
-        <div className="bg-recipe-green/10 p-3 rounded-md text-xs md:text-sm">
-          <span className="font-medium text-recipe-green flex items-center">
-            <Star className="h-3 w-3 mr-1" />
+        {/* Nutrition Section */}
+        <div className="bg-green-50 p-3 rounded-md">
+          <span className="font-medium text-green-700 flex items-center">
+            <Star className="h-4 w-4 mr-1" />
             Nutrition highlight:
           </span> 
           <p className="mt-1">{recipe.nutritionHighlight}</p>
         </div>
       </CardContent>
       
-      <CardFooter className="flex flex-col space-y-2">
-        <div className="grid grid-cols-2 gap-2 w-full">
+      <CardFooter className="flex flex-col space-y-3 px-4 pb-4 pt-0">
+        <div className="grid grid-cols-2 gap-3 w-full">
           <Button 
             onClick={onCook} 
-            className="bg-recipe-green hover:bg-recipe-green/90"
-            size={isMobile ? "sm" : "default"}
+            className="bg-green-500 hover:bg-green-600"
+            size="lg"
           >
-            <CookingPot className="mr-1 h-4 w-4" />
+            <CookingPot className="mr-2 h-5 w-5" />
             Start Cooking
           </Button>
           <Button 
             onClick={onShop} 
             variant="outline" 
-            className="border-recipe-blue text-recipe-blue hover:bg-recipe-blue/10"
-            size={isMobile ? "sm" : "default"}
+            className="border-2 border-green-600 text-green-700 hover:bg-green-50"
+            size="lg"
           >
-            <ShoppingCart className="mr-1 h-4 w-4" />
+            <ShoppingCart className="mr-2 h-5 w-5" />
             Get Ingredients
           </Button>
         </div>
@@ -109,8 +120,7 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
           <Button 
             onClick={onSave} 
             variant="ghost" 
-            className="w-full text-xs md:text-sm text-muted-foreground hover:text-foreground"
-            size={isMobile ? "sm" : "default"}
+            className="w-full text-gray-500 hover:text-gray-700"
           >
             Save & Customize Recipe
           </Button>
