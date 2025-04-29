@@ -15,19 +15,6 @@ const CUISINES = [
   { name: "American", value: "american" }
 ];
 
-// Common dietary preferences
-const DIETARY = [
-  { name: "Any", value: "no-restrictions" },
-  { name: "Vegetarian", value: "vegetarian" },
-  { name: "Vegan", value: "vegan" },
-  { name: "Gluten-Free", value: "gluten-free" }
-];
-
-// Popular ingredient suggestions to inspire users
-const POPULAR_INGREDIENTS = [
-  "Chicken", "Pasta", "Rice", "Beef", "Eggs", "Potatoes"
-];
-
 interface QuickRecipeTagFormProps {
   onSubmit: (data: QuickRecipeFormData) => void;
   isLoading: boolean;
@@ -44,8 +31,10 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.mainIngredient.trim()) {
-      // Use a suggestion if user didn't enter an ingredient
-      const randomIngredient = POPULAR_INGREDIENTS[Math.floor(Math.random() * POPULAR_INGREDIENTS.length)];
+      // Use a random ingredient from popular cuisines if user didn't enter anything
+      const randomIngredient = formData.cuisine === 'italian' ? 'pasta' :
+                              formData.cuisine === 'mexican' ? 'beans' :
+                              formData.cuisine === 'asian' ? 'rice' : 'chicken';
       onSubmit({...formData, mainIngredient: randomIngredient});
     } else {
       onSubmit(formData);
@@ -54,10 +43,6 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
 
   const selectCuisine = (value: string) => {
     setFormData({ ...formData, cuisine: value });
-  };
-
-  const selectDietary = (value: string) => {
-    setFormData({ ...formData, dietary: value });
   };
 
   return (
@@ -89,24 +74,6 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                 onClick={() => selectCuisine(cuisine.value)}
               >
                 {cuisine.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Dietary preference:</label>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {DIETARY.map(diet => (
-              <Badge 
-                key={diet.value} 
-                variant="outline"
-                className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  formData.dietary === diet.value ? 'bg-recipe-blue text-white hover:bg-recipe-blue/90' : ''
-                }`}
-                onClick={() => selectDietary(diet.value)}
-              >
-                {diet.name}
               </Badge>
             ))}
           </div>
