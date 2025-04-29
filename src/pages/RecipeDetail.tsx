@@ -20,6 +20,7 @@ import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
 
 const RecipeDetail = () => {
   const { id } = useParams();

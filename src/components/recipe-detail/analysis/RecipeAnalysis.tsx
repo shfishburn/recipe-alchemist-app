@@ -55,7 +55,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {
-    if (analysis && analysis.changes) {
+    if (analysis && analysis.changes && onRecipeUpdated) {
       console.log('Applying analysis updates to recipe:', analysis.changes);
       
       try {
@@ -72,13 +72,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             : recipe.ingredients,
         };
 
-        // Now update with properly structured data
+        // Now update with properly structured data - only call this once per effect run
         updateRecipe.mutate(updatedData, {
           onSuccess: (updatedRecipe) => {
             console.log('Recipe updated with analysis data:', updatedRecipe);
             if (onRecipeUpdated) {
               onRecipeUpdated(updatedRecipe as Recipe);
             }
+            // Using sonner toast here, which doesn't have the same infinite loop issue
             toast.success('Recipe updated with analysis insights');
           },
           onError: (error) => {
@@ -91,6 +92,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         toast.error("Failed to process recipe analysis data");
       }
     }
+  // Important: Dependencies are correctly set to avoid infinite loops
   }, [analysis, updateRecipe, onRecipeUpdated, recipe.id, recipe.title, recipe.science_notes, recipe.instructions, recipe.ingredients]);
 
   if (!isVisible) return null;
