@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Utensils, Pizza, Drumstick, TrendingUp, UtensilsCrossed, Heart, Carrot, WheatOff, MilkOff, LeafyGreen } from 'lucide-react';
+import { CookingPot, Taco, Hamburger, Utensils, Pizza, TrendingUp, UtensilsCrossed, Heart, Carrot, WheatOff, MilkOff, LeafyGreen } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 
 // Cuisine options with icons - now each has a specific icon
 const CUISINES = [
-  { name: "American", value: "american", icon: Drumstick },
+  { name: "American", value: "american", icon: Hamburger },
   { name: "Italian", value: "italian", icon: Pizza },
-  { name: "Mexican", value: "mexican", icon: UtensilsCrossed },
+  { name: "Mexican", value: "mexican", icon: Taco },
   { name: "Asian", value: "asian", icon: Utensils },
   { name: "Mediterranean", value: "mediterranean", icon: TrendingUp }
 ];
