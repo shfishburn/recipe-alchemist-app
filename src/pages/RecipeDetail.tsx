@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -153,7 +154,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-4 sm:mt-8 mb-36 sm:mb-28">
+                <div className="mt-4 sm:mt-8 mb-40 sm:mb-28">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}

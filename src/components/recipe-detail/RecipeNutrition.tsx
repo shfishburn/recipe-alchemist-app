@@ -10,6 +10,7 @@ import { useNutritionData } from './nutrition/useNutritionData';
 import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Recipe } from '@/types/recipe';
+import { NutritionSummaryText } from './nutrition/charts/NutritionSummaryText';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -61,6 +62,22 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
               userPreferences={userPreferences}
               viewMode={viewMode}
             />
+            
+            {/* Add direct nutrition summary with extra padding on mobile */}
+            {isMobile && recipeNutrition && (
+              <div className="mt-4 mb-14">
+                <NutritionSummaryText 
+                  calories={recipeNutrition.calories || 0}
+                  protein={recipeNutrition.protein || 0}
+                  carbs={recipeNutrition.carbs || 0}
+                  fat={recipeNutrition.fat || 0}
+                  caloriesPercentage={Math.round((recipeNutrition.calories / 2000) * 100) || 0}
+                  proteinPercentage={Math.round((recipeNutrition.protein / 50) * 100) || 0}
+                  carbsPercentage={Math.round((recipeNutrition.carbs / 300) * 100) || 0}
+                  fatPercentage={Math.round((recipeNutrition.fat / 65) * 100) || 0}
+                />
+              </div>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Card>

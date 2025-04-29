@@ -92,7 +92,7 @@ export function NutritionSummaryText({
         </p>
       </div>
       
-      <div className={`text-xs text-muted-foreground mt-2 ${isMobile ? "pb-4" : ""}`}>
+      <div className={`text-xs text-muted-foreground mt-2 ${isMobile ? "pb-8" : "pb-2"}`}>
         <p>
           {caloriesPercentage <= 25 ? 
             "This recipe is a light option that leaves room for other meals in your day." :
