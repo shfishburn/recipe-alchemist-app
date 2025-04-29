@@ -38,15 +38,6 @@ const Hero = React.memo(() => {
                 <QuickRecipeGenerator />
               </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-              <Button asChild size={isMobile ? "default" : "lg"} className="bg-recipe-blue hover:bg-recipe-blue/90">
-                <Link to="/build">Create Advanced Recipe</Link>
-              </Button>
-              <Button asChild size={isMobile ? "default" : "lg"} variant="outline">
-                <Link to="/recipes">Browse Recipes</Link>
-              </Button>
-            </div>
           </div>
           
           <div className="w-full md:w-auto md:flex-1">
