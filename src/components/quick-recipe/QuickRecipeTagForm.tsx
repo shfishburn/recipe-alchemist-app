@@ -60,10 +60,6 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     setFormData({ ...formData, dietary: value });
   };
 
-  const selectIngredient = (ingredient: string) => {
-    setFormData({ ...formData, mainIngredient: ingredient });
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto">
       <div className="space-y-4">
@@ -78,26 +74,6 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
             onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
             className={`${isMobile ? "h-12" : "h-14 text-lg"} text-center`}
           />
-        </div>
-        
-        <div className="space-y-3">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Common kitchen staples:</label>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {POPULAR_INGREDIENTS.map(ingredient => (
-                <Badge 
-                  key={ingredient} 
-                  variant="outline" 
-                  className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                    formData.mainIngredient === ingredient ? 'bg-recipe-blue text-white hover:bg-recipe-blue/90' : ''
-                  }`}
-                  onClick={() => selectIngredient(ingredient)}
-                >
-                  {ingredient}
-                </Badge>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="space-y-2">
