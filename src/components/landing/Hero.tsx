@@ -26,7 +26,7 @@ const Hero = React.memo(() => {
               Instant recipes tailored to your ingredients and tastes.
             </p>
             
-            {/* Quick Recipe Generator - Only shows on mobile and desktop */}
+            {/* Quick Recipe Generator - Now shows on desktop and mobile, but not tablet */}
             <div className={`py-3 sm:py-4 ${isTablet ? 'hidden' : 'block'}`}>
               <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-md">
                 <QuickRecipeGenerator />
@@ -35,16 +35,17 @@ const Hero = React.memo(() => {
           </div>
           
           <div className="w-full lg:w-auto lg:flex-1">
-            {/* Recipe carousel for desktop and tablet, Generator for tablet only */}
-            {isTablet ? (
-              <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-md max-w-md mx-auto">
+            {/* Recipe carousel now always displays on desktop, mobile AND tablet displays generator */}
+            <div className="relative max-w-[600px] mx-auto">
+              <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
+              <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
+              <RecipeCarousel />
+            </div>
+            
+            {/* Generator for tablet only */}
+            {isTablet && (
+              <div className="mt-8 bg-white/50 backdrop-blur-sm rounded-xl p-4 shadow-md max-w-md mx-auto">
                 <QuickRecipeGenerator />
-              </div>
-            ) : (
-              <div className="relative max-w-[600px] mx-auto">
-                <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
-                <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
-                <RecipeCarousel />
               </div>
             )}
           </div>
