@@ -55,7 +55,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
-          <CardContent className={isMobile ? 'px-3 py-2' : 'p-6'}>
+          <CardContent className={isMobile ? 'px-3 py-2 pb-4' : 'p-6'}>
             <NutritionBlock 
               recipeNutrition={recipeNutrition}
               userPreferences={userPreferences}

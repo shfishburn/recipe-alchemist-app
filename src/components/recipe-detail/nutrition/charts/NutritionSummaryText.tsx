@@ -2,6 +2,7 @@
 import React from 'react';
 import { InfoIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NutritionSummaryTextProps {
   calories: number;
@@ -24,6 +25,7 @@ export function NutritionSummaryText({
   carbsPercentage,
   fatPercentage,
 }: NutritionSummaryTextProps) {
+  const isMobile = useIsMobile();
   
   const getPercentageColor = (percentage: number) => {
     if (percentage <= 15) return "text-blue-600";
@@ -90,7 +92,7 @@ export function NutritionSummaryText({
         </p>
       </div>
       
-      <div className="text-xs text-muted-foreground mt-2">
+      <div className={`text-xs text-muted-foreground mt-2 ${isMobile ? "pb-4" : ""}`}>
         <p>
           {caloriesPercentage <= 25 ? 
             "This recipe is a light option that leaves room for other meals in your day." :
@@ -98,7 +100,7 @@ export function NutritionSummaryText({
             "This recipe provides a moderate portion of your daily caloric needs." :
             "This recipe provides a significant portion of your daily caloric needs."}
         </p>
-        <p className="mt-1">
+        <p className="mt-2 pt-1 border-t border-gray-100 font-medium text-slate-600">
           *Protein and carbs provide 4 calories per gram, while fat provides 9 calories per gram.
         </p>
       </div>

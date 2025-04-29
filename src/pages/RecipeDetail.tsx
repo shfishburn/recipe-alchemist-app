@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -19,7 +18,6 @@ import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalys
 import { toast } from "@/hooks/use-toast";
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
-import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -154,7 +152,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-4 sm:mt-8 mb-28 sm:mb-24">
+                <div className="mt-4 sm:mt-8 mb-36 sm:mb-28">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}
