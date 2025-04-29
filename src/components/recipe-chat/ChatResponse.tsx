@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { WarningAlert } from './response/WarningAlert';
 import { FormattedText } from './response/FormattedText';
@@ -36,11 +37,28 @@ export function ChatResponse({
 
   const textSize = isMobile ? "text-xs sm:text-sm" : "text-sm";
   const bubblePadding = isMobile ? "p-2 sm:p-4" : "p-4";
+  
+  // Helper to determine if text contains scientific content
+  const containsScientificContent = (text: string): boolean => {
+    const scientificTerms = [
+      'maillard', 'reaction', 'chemistry', 'temperature', 'techniques',
+      'protein', 'structure', 'starch', 'gelatinization', 'degree',
+      'celsius', 'fahrenheit', 'hydration', 'fat', 'emulsion', 'science'
+    ];
+    
+    const lowerText = text.toLowerCase();
+    return scientificTerms.some(term => lowerText.includes(term));
+  };
+  
+  // Apply special styling for scientific content
+  const isScientific = containsScientificContent(displayText);
 
   return (
     <div className="flex-1 max-w-[calc(100%-32px)]">
       <div className="flex flex-col space-y-2 sm:space-y-4">
-        <div className={`bg-white rounded-[20px] rounded-tl-[5px] ${bubblePadding} shadow-sm border border-slate-100`}>
+        <div className={`bg-white ${isScientific ? 'bg-gradient-to-br from-white to-blue-50/30' : ''} 
+                         rounded-[20px] rounded-tl-[5px] ${bubblePadding} shadow-sm border 
+                         ${isScientific ? 'border-blue-100' : 'border-slate-100'}`}>
           {/* Warning alert for ingredient issues */}
           <WarningAlert showWarning={showWarning} isMobile={isMobile} />
           

@@ -43,7 +43,8 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
         { name: "Science Notes", regex: /#+\s*Science Notes/i },
         { name: "Chemistry", regex: /#+\s*Chemistry/i },
         { name: "Techniques", regex: /#+\s*Techniques/i },
-        { name: "Troubleshooting", regex: /#+\s*Troubleshooting/i }
+        { name: "Troubleshooting", regex: /#+\s*Troubleshooting/i },
+        { name: "Analysis", regex: /#+\s*Analysis/i }
       ];
       
       // Apply formatting to section headers
@@ -51,8 +52,11 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
         text = text.replace(section.regex, `**${section.name}:**`);
       });
 
-      // Enhanced ingredient highlighting
-      if (changesSuggested?.ingredients?.items && Array.isArray(changesSuggested.ingredients.items)) {
+      // Enhanced ingredient highlighting with defensive checks
+      if (changesSuggested?.ingredients?.items && 
+          Array.isArray(changesSuggested.ingredients.items) && 
+          changesSuggested.ingredients.mode !== 'none') {
+        
         // Create a map of normalized ingredient names to their display text
         changesSuggested.ingredients.items.forEach((ingredient: any) => {
           if (ingredient && typeof ingredient.item === 'string') {
@@ -61,7 +65,7 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
             text = text.replace(regex, `**${ingredient.item}**`);
             
             // Also highlight quantity mentions
-            if (ingredient.qty && ingredient.unit) {
+            if (ingredient.qty !== undefined && ingredient.unit) {
               const qtyRegex = new RegExp(`${ingredient.qty} ${ingredient.unit}\\s+(?!\\*\\*)`, 'gi');
               text = text.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
             }
@@ -70,15 +74,22 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
       }
 
       // Format instructions with better context
-      if (changesSuggested?.instructions && Array.isArray(changesSuggested.instructions)) {
+      if (changesSuggested?.instructions && 
+          Array.isArray(changesSuggested.instructions) && 
+          changesSuggested.instructions.length > 0) {
+        
         changesSuggested.instructions.forEach((instruction: string | { action: string }) => {
           const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
           if (instructionText && !instructionText.includes('**')) {
-            const regex = new RegExp(
-              instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-              'g'
-            );
-            text = text.replace(regex, `**${instructionText}**`);
+            try {
+              const regex = new RegExp(
+                instructionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                'g'
+              );
+              text = text.replace(regex, `**${instructionText}**`);
+            } catch (err) {
+              console.warn("Error highlighting instruction text:", err);
+            }
           }
         });
       }
@@ -91,7 +102,10 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
   }, [response, changesSuggested]);
 
   const showWarning = React.useMemo(() => {
-    if (!changesSuggested?.ingredients?.items) return false;
+    if (!changesSuggested?.ingredients?.items || 
+        !Array.isArray(changesSuggested.ingredients.items)) {
+      return false;
+    }
     
     // Check for any ingredients with warning notes
     return changesSuggested.ingredients.items.some((item: any) => 
@@ -106,10 +120,14 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
     const summary = {
       hasTitle: !!changesSuggested.title,
       hasIngredients: changesSuggested.ingredients?.items && 
-                    changesSuggested.ingredients.items.length > 0,
+                    Array.isArray(changesSuggested.ingredients.items) && 
+                    changesSuggested.ingredients.items.length > 0 &&
+                    changesSuggested.ingredients.mode !== 'none',
       hasInstructions: changesSuggested.instructions && 
+                     Array.isArray(changesSuggested.instructions) && 
                      changesSuggested.instructions.length > 0,
       hasScienceNotes: changesSuggested.science_notes && 
+                     Array.isArray(changesSuggested.science_notes) && 
                      changesSuggested.science_notes.length > 0,
       ingredientCount: changesSuggested.ingredients?.items?.length || 0,
       instructionCount: changesSuggested.instructions?.length || 0,

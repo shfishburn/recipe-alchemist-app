@@ -33,5 +33,35 @@ export function FormattedText({ text }: FormattedTextProps) {
     }
   }
   
-  return <>{formattedContent}</>;
+  // Handle scientific terms with special formatting
+  const scientificTerms = [
+    'Maillard reaction', 'emulsification', 'caramelization', 'denaturation',
+    'hydration', 'gelatinization', 'fermentation', 'oxidation', 'reduction',
+    'hydrolysis', 'coagulation', 'crystallization', 'acid-base reaction'
+  ];
+  
+  // Create a regex pattern that matches any of the scientific terms (case insensitive)
+  const scientificTermPattern = new RegExp(`(${scientificTerms.join('|')})`, 'gi');
+  
+  // Apply formatting to scientific terms
+  let contentWithScientificTerms = React.Children.map(formattedContent, (child) => {
+    // Only process string children
+    if (typeof child === 'string') {
+      const parts = child.split(scientificTermPattern);
+      return parts.map((part, i) => {
+        // Check if this part matches a scientific term (case insensitive)
+        const isScientificTerm = scientificTerms.some(term => 
+          part.toLowerCase() === term.toLowerCase()
+        );
+        
+        if (isScientificTerm) {
+          return <em key={i} className="text-blue-700 font-medium not-italic">{part}</em>;
+        }
+        return part;
+      });
+    }
+    return child;
+  });
+  
+  return <>{contentWithScientificTerms}</>;
 }

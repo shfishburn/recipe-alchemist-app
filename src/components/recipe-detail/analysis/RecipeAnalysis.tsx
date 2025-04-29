@@ -73,41 +73,79 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         !hasAppliedUpdates && 
         initialAnalysisRef.current) {
       
-      console.log('Applying analysis updates to recipe:', analysis.changes);
-      setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
+      console.log('Preparing to apply analysis updates to recipe:', analysis.changes);
       
-      try {
-        // Ensure the data has the correct structure before updating
-        const updatedData: Partial<Recipe> = {
-          // Copy essential properties from existing recipe
-          id: recipe.id,
-          // Apply changes from analysis while ensuring proper types
-          title: analysis.changes.title || recipe.title,
-          science_notes: Array.isArray(analysis.science_notes) ? analysis.science_notes : recipe.science_notes,
-          instructions: Array.isArray(analysis.changes.instructions) ? analysis.changes.instructions : recipe.instructions,
-          ingredients: Array.isArray(analysis.changes.ingredients?.items) && analysis.changes.ingredients?.mode === 'replace' 
-            ? analysis.changes.ingredients.items
-            : recipe.ingredients,
-        };
-
-        // Update with properly structured data
-        updateRecipe.mutate(updatedData, {
-          onSuccess: (updatedRecipe) => {
-            console.log('Recipe updated with analysis data:', updatedRecipe);
-            onRecipeUpdated(updatedRecipe as Recipe);
-            toast.success('Recipe updated with analysis insights');
-          },
-          onError: (error) => {
-            console.error('Failed to update recipe with analysis data:', error);
-            toast.error('Failed to update recipe with analysis');
-            // Reset the flag if there was an error so we can try again
-            setHasAppliedUpdates(false);
+      // SAFETY CHECK: Only apply updates if we actually have content to apply
+      const hasNewScienceNotes = Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0;
+      const hasNewInstructions = Array.isArray(analysis.changes.instructions) && 
+                                 analysis.changes.instructions.length > 0;
+      const hasNewTitle = !!analysis.changes.title;
+      const hasNewIngredients = analysis.changes.ingredients?.mode === 'replace' && 
+                               Array.isArray(analysis.changes.ingredients.items) && 
+                               analysis.changes.ingredients.items.length > 0;
+      
+      // Only proceed if we have something meaningful to update
+      if (hasNewScienceNotes || hasNewInstructions || hasNewTitle || hasNewIngredients) {
+        setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
+        
+        try {
+          // Prepare a safe update object that won't overwrite existing data with empty values
+          const updatedData: Partial<Recipe> = {
+            // Always include the ID
+            id: recipe.id
+          };
+          
+          // Only update title if there's a new one
+          if (hasNewTitle) {
+            updatedData.title = analysis.changes.title;
           }
-        });
-      } catch (e) {
-        console.error("Error processing analysis data:", e);
-        toast.error("Failed to process recipe analysis data");
-        setHasAppliedUpdates(false);
+          
+          // Only update science notes if we have new ones
+          if (hasNewScienceNotes) {
+            updatedData.science_notes = analysis.science_notes;
+          }
+          
+          // Only update instructions if we have new ones
+          if (hasNewInstructions) {
+            // Format instructions to ensure they're all strings
+            const formattedInstructions = analysis.changes.instructions.map(instr => 
+              typeof instr === 'string' ? instr : (instr.action || '')
+            ).filter(Boolean);
+            
+            if (formattedInstructions.length > 0) {
+              updatedData.instructions = formattedInstructions;
+            }
+          }
+          
+          // Only update ingredients if we have new ones and they're set to replace mode
+          if (hasNewIngredients) {
+            updatedData.ingredients = analysis.changes.ingredients.items;
+          }
+          
+          console.log('Applying recipe updates with data:', updatedData);
+          
+          // Update with safely constructed data
+          updateRecipe.mutate(updatedData, {
+            onSuccess: (updatedRecipe) => {
+              console.log('Recipe updated with analysis data:', updatedRecipe);
+              onRecipeUpdated(updatedRecipe as Recipe);
+              toast.success('Recipe updated with analysis insights');
+            },
+            onError: (error) => {
+              console.error('Failed to update recipe with analysis data:', error);
+              toast.error('Failed to update recipe with analysis');
+              // Reset the flag if there was an error so we can try again
+              setHasAppliedUpdates(false);
+            }
+          });
+        } catch (e) {
+          console.error("Error processing analysis data:", e);
+          toast.error("Failed to process recipe analysis data");
+          setHasAppliedUpdates(false);
+        }
+      } else {
+        console.log('No meaningful updates to apply from analysis.');
+        toast.info('Analysis complete, but no changes needed.');
       }
     }
   }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id]);

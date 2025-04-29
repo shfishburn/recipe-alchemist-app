@@ -6,6 +6,26 @@ export function validateRecipeChanges(rawResponse: string) {
   try {
     // First try to parse the entire response as JSON
     const parsedResponse = JSON.parse(rawResponse);
+    
+    // Ensure that ingredients have a "mode" property and it's set to "none" if items array is empty or missing
+    if (parsedResponse.changes && parsedResponse.changes.ingredients) {
+      if (!Array.isArray(parsedResponse.changes.ingredients.items) || 
+          parsedResponse.changes.ingredients.items.length === 0) {
+        parsedResponse.changes.ingredients.mode = "none";
+      }
+    }
+    
+    // Ensure science_notes is an array
+    if (parsedResponse.science_notes && !Array.isArray(parsedResponse.science_notes)) {
+      parsedResponse.science_notes = [];
+    }
+    
+    // Ensure changes_suggested.science_notes is an array if it exists
+    if (parsedResponse.changes && parsedResponse.changes.science_notes && 
+        !Array.isArray(parsedResponse.changes.science_notes)) {
+      parsedResponse.changes.science_notes = [];
+    }
+    
     return parsedResponse;
   } catch (e) {
     console.log("Failed to parse response as direct JSON, trying to extract from text...");
@@ -19,6 +39,26 @@ export function validateRecipeChanges(rawResponse: string) {
         console.log("Found content in backticks, attempting to parse");
         const jsonContent = codeBlockMatches[1];
         const parsedContent = JSON.parse(jsonContent);
+        
+        // Apply the same safety checks as above
+        if (parsedContent.changes && parsedContent.changes.ingredients) {
+          if (!Array.isArray(parsedContent.changes.ingredients.items) || 
+              parsedContent.changes.ingredients.items.length === 0) {
+            parsedContent.changes.ingredients.mode = "none";
+          }
+        }
+        
+        // Ensure science_notes is an array
+        if (parsedContent.science_notes && !Array.isArray(parsedContent.science_notes)) {
+          parsedContent.science_notes = [];
+        }
+        
+        // Ensure changes.science_notes is an array if it exists
+        if (parsedContent.changes && parsedContent.changes.science_notes && 
+            !Array.isArray(parsedContent.changes.science_notes)) {
+          parsedContent.changes.science_notes = [];
+        }
+        
         return parsedContent;
       } catch (parseError) {
         console.error("Failed to parse JSON from backticks:", parseError);
@@ -34,6 +74,15 @@ export function validateRecipeChanges(rawResponse: string) {
         console.log("Found JSON-like structure in text, attempting to parse");
         const jsonContent = jsonMatches[0];
         const parsedContent = JSON.parse(jsonContent);
+        
+        // Apply the same safety checks
+        if (parsedContent.changes && parsedContent.changes.ingredients) {
+          if (!Array.isArray(parsedContent.changes.ingredients.items) || 
+              parsedContent.changes.ingredients.items.length === 0) {
+            parsedContent.changes.ingredients.mode = "none";
+          }
+        }
+        
         return parsedContent;
       } catch (parseError) {
         console.error("Failed to parse JSON-like structure:", parseError);
@@ -42,13 +91,20 @@ export function validateRecipeChanges(rawResponse: string) {
     
     // Enhanced extraction - extract sections intelligently from the text
     console.log("Creating enhanced response object from raw text");
-    return {
+    const response = {
       textResponse: formatResponseForDisplay(rawResponse),
       changes: { mode: "none" },
       science_notes: extractSectionContent(rawResponse, "Chemistry", "Science", "Chemical", "Maillard"),
       techniques: extractSectionContent(rawResponse, "Technique", "Method", "Cooking", "Temperature"),
       troubleshooting: extractSectionContent(rawResponse, "Troubleshoot", "Problem", "Issue")
     };
+    
+    // Ensure we set the ingredients mode to "none" to prevent data loss
+    if (!response.changes.ingredients) {
+      response.changes.ingredients = { mode: "none", items: [] };
+    }
+    
+    return response;
   }
 }
 
