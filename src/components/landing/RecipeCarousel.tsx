@@ -57,11 +57,16 @@ export function RecipeCarousel() {
           className="w-full"
           setApi={setCarouselApi}
         >
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <CookingPot className="h-5 w-5 text-recipe-green" />
-            <h2 className="text-xl md:text-2xl font-semibold text-center">
-              Trending in Kitchens Like Yours
-            </h2>
+          <div className="flex flex-col items-center justify-center gap-2 mb-6">
+            <div className="flex items-center gap-2">
+              <CookingPot className="h-5 w-5 text-recipe-green" />
+              <h2 className="text-xl md:text-2xl font-semibold text-center">
+                Trending in Kitchens Like Yours
+              </h2>
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground text-center max-w-2xl mt-2">
+              These recipes are being shared across kitchens similar to yours — find out what makes them special
+            </p>
           </div>
           <CarouselContent>
             {featuredRecipes.map((recipe) => (

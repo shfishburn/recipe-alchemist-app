@@ -39,7 +39,6 @@ const Hero = React.memo(() => {
           <div className="w-full mx-auto relative">
             <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
-            <h2 className="text-xl md:text-2xl font-semibold mb-6 text-center">Popular Recipes</h2>
             <RecipeCarousel />
           </div>
         </div>
