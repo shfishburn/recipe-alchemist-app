@@ -1,77 +1,105 @@
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface FormattedTextProps {
   text: string;
+  className?: string;
 }
 
-/**
- * Component to render text with formatting (e.g. bold sections)
- */
-export function FormattedText({ text }: FormattedTextProps) {
-  // Enhanced formatting for different patterns
-  
-  // First handle bold text with ** markers
-  let formattedContent = text.split(/(\*\*.*?\*\*)/).map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={index} className="font-semibold text-primary">{part.slice(2, -2)}</strong>;
-    }
-    return <React.Fragment key={index}>{part}</React.Fragment>;
-  });
-  
-  // Look for section headers that might be in the text (e.g. "Chemistry:" or "Techniques:")
-  const sectionHeaderRegex = /^(Science Notes|Chemistry|Techniques|Troubleshooting|Analysis):\s*/i;
-  if (sectionHeaderRegex.test(text)) {
-    const parts = text.split(sectionHeaderRegex);
-    if (parts.length >= 3) { // The regex creates 3 parts if there's a match
+export function FormattedText({ text, className }: FormattedTextProps) {
+  // Process the text to handle formatting
+  const formattedBlocks = text.split('\n\n').map((block, blockIndex) => {
+    // Check if the block is a list
+    if (block.match(/^[\-*]\s/m)) {
+      const items = block.split('\n').filter(Boolean);
       return (
-        <>
-          <strong className="font-semibold text-primary block mb-1">{parts[1]}:</strong>
-          {parts[2]}
-        </>
+        <ul key={blockIndex} className="list-disc pl-5 space-y-1">
+          {items.map((item, itemIndex) => (
+            <li key={`${blockIndex}-${itemIndex}`}>
+              {item.replace(/^[\-*]\s/, '')}
+            </li>
+          ))}
+        </ul>
       );
+    }
+    
+    // Check if the block is a numbered list
+    if (block.match(/^\d+\.\s/m)) {
+      const items = block.split('\n').filter(Boolean);
+      return (
+        <ol key={blockIndex} className="list-decimal pl-5 space-y-1">
+          {items.map((item, itemIndex) => (
+            <li key={`${blockIndex}-${itemIndex}`}>
+              {item.replace(/^\d+\.\s/, '')}
+            </li>
+          ))}
+        </ol>
+      );
+    }
+    
+    // Handle paragraphs and other text
+    return (
+      <p key={blockIndex} className={blockIndex > 0 ? 'mt-4' : undefined}>
+        {processInlineFormatting(block)}
+      </p>
+    );
+  });
+
+  return (
+    <div className={cn("text-sm text-neutral-800", className)}>
+      {formattedBlocks}
+    </div>
+  );
+}
+
+function processInlineFormatting(text: string) {
+  // Split the text based on formatting markers
+  const parts = [];
+  let currentText = '';
+  let inBold = false;
+  let inItalic = false;
+  
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '*' && text[i + 1] === '*') {
+      // Handle bold formatting
+      if (currentText) {
+        // Add current text with appropriate formatting
+        parts.push(
+          inBold ? 
+            <strong key={`bold-${parts.length}`}>{currentText}</strong> : 
+            <span key={`text-${parts.length}`}>{currentText}</span>
+        );
+        currentText = '';
+      }
+      inBold = !inBold;
+      i++; // Skip the second asterisk
+    } else if (text[i] === '_' && !inBold) {
+      // Handle italic formatting
+      if (currentText) {
+        parts.push(
+          inItalic ? 
+            <em key={`italic-${parts.length}`}>{currentText}</em> : 
+            <span key={`text-${parts.length}`}>{currentText}</span>
+        );
+        currentText = '';
+      }
+      inItalic = !inItalic;
+    } else {
+      currentText += text[i];
     }
   }
   
-  // Handle scientific terms with special formatting
-  const scientificTerms = [
-    'Maillard reaction', 'emulsification', 'caramelization', 'denaturation',
-    'hydration', 'gelatinization', 'fermentation', 'oxidation', 'reduction',
-    'hydrolysis', 'coagulation', 'crystallization', 'acid-base reaction'
-  ];
+  // Add any remaining text
+  if (currentText) {
+    parts.push(
+      inBold ? 
+        <strong key={`bold-${parts.length}`}>{currentText}</strong> : 
+        inItalic ? 
+          <em key={`italic-${parts.length}`}>{currentText}</em> :
+          <span key={`text-${parts.length}`}>{currentText}</span>
+    );
+  }
   
-  // Create a regex pattern that matches any of the scientific terms (case insensitive)
-  const scientificTermPattern = new RegExp(`(${scientificTerms.join('|')})`, 'gi');
-  
-  // Apply formatting to scientific terms with explicit type handling
-  const contentWithScientificTerms = React.Children.map(formattedContent, (child) => {
-    // Handle string child nodes
-    if (typeof child === 'string') {
-      // Explicitly split the string with proper type assertion
-      const parts = (child as string).split(scientificTermPattern);
-      
-      return parts.map((part, i) => {
-        // Check if this part matches a scientific term (case insensitive)
-        const isScientificTerm = scientificTerms.some(term => 
-          part.toLowerCase() === term.toLowerCase()
-        );
-        
-        if (isScientificTerm) {
-          return <em key={i} className="text-blue-700 font-medium not-italic">{part}</em>;
-        }
-        return part;
-      });
-    }
-    // Handle React element nodes
-    else if (React.isValidElement(child)) {
-      // If it's a React element, just return it
-      return child;
-    }
-    // Handle other node types (null, boolean, etc.)
-    else {
-      return child;
-    }
-  });
-  
-  return <>{contentWithScientificTerms}</>;
+  return <>{parts}</>;
 }
