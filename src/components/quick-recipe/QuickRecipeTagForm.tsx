@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot } from 'lucide-react';
+import { CookingPot, ArrowRight } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -48,13 +48,16 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md mx-auto">
       <div className="space-y-4">
-        <div className="space-y-2">
+        <div className="space-y-1">
+          <div className="text-center text-xs text-muted-foreground mb-1">
+            Ready in 30 mins • Easy cleanup • Ingredient-based
+          </div>
           <label htmlFor="mainIngredient" className="text-sm font-medium">
-            I have...
+            Ingredients or meal ideas:
           </label>
           <Input 
             id="mainIngredient"
-            placeholder="e.g., some chicken, leftover rice..."
+            placeholder="e.g., chicken thighs, pasta, tacos, stir-fry..."
             value={formData.mainIngredient}
             onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
             className={`${isMobile ? "h-12" : "h-14 text-lg"} text-center`}
@@ -62,7 +65,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Cuisine style:</label>
+          <label className="text-sm font-medium">What flavors match your mood tonight?</label>
           <div className="flex flex-wrap gap-2 justify-center">
             {CUISINES.map(cuisine => (
               <Badge 
@@ -86,8 +89,17 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         size={isMobile ? "lg" : "lg"}
         disabled={isLoading}
       >
-        <CookingPot className="mr-2 h-5 w-5" />
-        {isLoading ? 'Creating Recipe...' : 'Find Recipe Ideas'}
+        {isLoading ? (
+          <>
+            <CookingPot className="mr-2 h-5 w-5 animate-pulse" />
+            Creating Recipe...
+          </>
+        ) : (
+          <>
+            Show My Recipe
+            <ArrowRight className="ml-1 h-5 w-5" />
+          </>
+        )}
       </Button>
     </form>
   );

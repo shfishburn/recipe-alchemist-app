@@ -4,6 +4,7 @@ import { RecipeCarousel } from './RecipeCarousel';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { ChefHat } from 'lucide-react';
 
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
@@ -16,12 +17,13 @@ const Hero = React.memo(() => {
         {/* Main Hero Content */}
         <div className="flex flex-col lg:flex-row items-center gap-6 md:gap-8 lg:gap-12">
           <div className="flex-1 text-center lg:text-left space-y-3 lg:space-y-4 w-full lg:max-w-xl">
-            <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
-              What's in your kitchen?
+            <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex items-center justify-center lg:justify-start gap-2">
+              <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
+              What's in your kitchen tonight?
             </h1>
             
             <p className="text-base sm:text-lg text-muted-foreground max-w-prose mx-auto lg:mx-0">
-              Tell us one ingredient you have, we'll make something delicious.
+              Instant recipes tailored to your ingredients and tastes.
             </p>
             
             {/* Quick Recipe Generator - Only shows on mobile and desktop */}
