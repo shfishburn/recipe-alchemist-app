@@ -34,14 +34,25 @@ export function ChatHistory({
   const prevMessageCountRef = useRef(chatHistory.length + optimisticMessages.length);
   const scrollTimeoutRef = useRef<number | null>(null);
   const [messageIds, setMessageIds] = useState<Set<string>>(new Set());
+  const [messageHashes, setMessageHashes] = useState<Set<string>>(new Set());
   
-  // Track unique message IDs to prevent rendering duplicates
+  // Track unique message IDs AND content hashes to prevent rendering duplicates
   useEffect(() => {
     const newIds = new Set<string>();
+    const newHashes = new Set<string>();
+    
     chatHistory.forEach(msg => {
+      // Track IDs for direct matching
       if (msg.id) newIds.add(msg.id);
+      
+      // Generate content hash for deduplication by content
+      // This uses a simple hash of user message + first 100 chars of AI response
+      const contentHash = `${msg.user_message}:${msg.ai_response?.substring(0, 100)}`;
+      newHashes.add(contentHash);
     });
+    
     setMessageIds(newIds);
+    setMessageHashes(newHashes);
   }, [chatHistory]);
 
   // Enhanced auto-scroll to bottom with debounce for smoother experience
@@ -110,25 +121,47 @@ export function ChatHistory({
     return <EmptyChatState />;
   }
 
-  // Filter out duplicate optimistic messages that already appear in chatHistory
-  const filteredOptimisticMessages = optimisticMessages.filter(optMsg => {
+  // Generate content hashes for optimistic messages using the same approach
+  const optimisticHashes = optimisticMessages.map(msg => {
+    return {
+      ...msg,
+      contentHash: `${msg.user_message}:${msg.ai_response?.substring(0, 100) || ''}`
+    };
+  });
+
+  // Filter out duplicate optimistic messages using both ID and content hash matching
+  const filteredOptimisticMessages = optimisticHashes.filter(optMsg => {
+    // Skip if this message ID already exists in chat history
+    if (optMsg.id && messageIds.has(optMsg.id)) {
+      return false;
+    }
+    
+    // Skip if content hash already exists in chat history
+    if (messageHashes.has(optMsg.contentHash)) {
+      return false;
+    }
+    
     // Skip if this message text is already in chat history
     const isDuplicateContent = chatHistory.some(
       realMsg => realMsg.user_message === optMsg.user_message
     );
     
-    // Skip if we have an ID match
-    const isDuplicateId = optMsg.id && messageIds.has(optMsg.id);
-    
-    return !isDuplicateContent && !isDuplicateId;
+    return !isDuplicateContent;
   });
+
+  // Generate unique keys for chat messages that won't change on re-renders
+  const getMessageKey = (chat: ChatMessageType | OptimisticMessage, isOptimistic: boolean) => {
+    if (chat.id) return isOptimistic ? `optimistic-${chat.id}` : chat.id;
+    if (chat.created_at) return `chat-${chat.created_at}`;
+    return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  };
 
   return (
     <div className="space-y-3 sm:space-y-6">
       {/* Render confirmed chat messages */}
       {chatHistory.map((chat) => (
         <ChatMessage
-          key={chat.id || `chat-${chat.created_at}`}
+          key={getMessageKey(chat, false)}
           chat={chat}
           setMessage={setMessage}
           applyChanges={applyChanges}
@@ -138,7 +171,7 @@ export function ChatHistory({
       
       {/* Render optimistic messages that haven't been confirmed yet */}
       {filteredOptimisticMessages.map((chat) => (
-        <div key={`optimistic-${chat.id || Date.now()}`} className="opacity-90">
+        <div key={getMessageKey(chat, true)} className="opacity-90">
           <ChatMessage
             chat={chat}
             setMessage={setMessage}

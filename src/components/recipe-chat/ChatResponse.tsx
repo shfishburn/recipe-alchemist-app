@@ -43,7 +43,10 @@ export function ChatResponse({
     const scientificTerms = [
       'maillard', 'reaction', 'chemistry', 'temperature', 'techniques',
       'protein', 'structure', 'starch', 'gelatinization', 'degree',
-      'celsius', 'fahrenheit', 'hydration', 'fat', 'emulsion', 'science'
+      'celsius', 'fahrenheit', 'hydration', 'fat', 'emulsion', 'science',
+      'methodology', 'analysis', 'nutrition', 'kcal', 'calories', 'macros',
+      'standardized', 'breakdown', 'ingredient', 'carbs', 'fiber', 'sugar',
+      'sodium', 'summation', 'verification'
     ];
     
     const lowerText = text.toLowerCase();
@@ -53,8 +56,10 @@ export function ChatResponse({
   // Apply special styling for scientific content
   const isScientific = containsScientificContent(displayText);
 
-  // Split text into paragraphs for proper formatting
-  const paragraphs = displayText.split('\n').filter(Boolean);
+  // Detect if this is a structured methodology document
+  const isMethodology = displayText.includes('Methodology') || 
+                       displayText.includes('⸻') ||
+                       displayText.includes('1. Standardized Ingredient Breakdown');
 
   return (
     <div className="flex-1 max-w-[calc(100%-32px)]">
@@ -67,9 +72,10 @@ export function ChatResponse({
           
           {/* Main response text content */}
           <div className={`prose prose-sm max-w-none ${textSize} text-slate-800`}>
-            {paragraphs.map((paragraph, index) => (
-              <FormattedText key={index} text={paragraph} className={index > 0 ? "mt-2" : ""} />
-            ))}
+            <FormattedText 
+              text={displayText} 
+              preserveWhitespace={isMethodology}
+            />
           </div>
           
           {/* Apply changes section with summary and confirmation */}

@@ -10,10 +10,17 @@ interface ResponseFormatterProps {
 export function useResponseFormatter({ response, changesSuggested }: ResponseFormatterProps) {
   // Store the original processed text to ensure consistency across re-renders
   const processedTextRef = React.useRef<string | null>(null);
+  const originalResponse = React.useRef<string | null>(null);
+  
+  // Cache the response to prevent reformatting on re-renders
+  if (originalResponse.current !== response) {
+    originalResponse.current = response;
+    processedTextRef.current = null; // Reset cache when response changes
+  }
   
   const displayText = React.useMemo(() => {
     // If we've already processed this exact response, return the cached version
-    if (processedTextRef.current && response === processedTextRef.current) {
+    if (processedTextRef.current && response === originalResponse.current) {
       return processedTextRef.current;
     }
     
@@ -47,18 +54,22 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
         .replace(/^["']|["']$/g, '')
         .trim();
 
-      // Improved formatting for scientific analysis sections with more specific pattern matching
-      const sections = [
-        { name: "Science Notes", regex: /#+\s*Science Notes/i },
-        { name: "Chemistry", regex: /#+\s*Chemistry/i },
-        { name: "Techniques", regex: /#+\s*Techniques/i },
-        { name: "Troubleshooting", regex: /#+\s*Troubleshooting/i },
-        { name: "Analysis", regex: /#+\s*Analysis/i }
+      // Scientific methodology section handling
+      const methodologySections = [
+        { name: "Nutrition Analysis Methodology", regex: /#+\s*Nutrition Analysis Methodology/i },
+        { name: "Standardized Ingredient Breakdown", regex: /\d+\.\s*Standardized Ingredient Breakdown/i },
+        { name: "Calculate Raw Nutrient Totals", regex: /\d+\.\s*Calculate Raw Nutrient Totals/i },
+        { name: "Summation Across the Recipe", regex: /\d+\.\s*Summation Across the Recipe/i },
+        { name: "Per-Serving Breakdown", regex: /\d+\.\s*Per-Serving Breakdown/i },
+        { name: "Cross-Verification", regex: /\d+\.\s*Cross-Verification/i },
+        { name: "Error Identification", regex: /\d+\.\s*Error Identification/i },
+        { name: "Optimization", regex: /\d+\.\s*Optimization/i },
+        { name: "Summary of Key Principles", regex: /#+\s*Summary of Key Principles/i }
       ];
       
-      // Apply formatting to section headers with safer string replacement
-      for (const section of sections) {
-        text = text.replace(section.regex, match => `**${section.name}:**`);
+      // Preserve scientific headings with appropriate formatting
+      for (const section of methodologySections) {
+        text = text.replace(section.regex, match => `${match}`);
       }
 
       // Enhanced ingredient highlighting with defensive checks
@@ -96,6 +107,19 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
         });
       }
 
+      // Format scientific units and nutrition values
+      // Match patterns like "240 kcal", "28g fat", "0g carbs", "0g protein"
+      const scientificRegexes = [
+        { pattern: /(\d+)\s*(kcal|calories)/gi, replacement: "**$1 $2**" },
+        { pattern: /(\d+)([g])\s+(protein|carbs|fat|fiber|sugar)/gi, replacement: "**$1$2 $3**" },
+        { pattern: /(\d+)([%])/gi, replacement: "**$1$2**" },
+      ];
+      
+      // Apply scientific formatting
+      scientificRegexes.forEach(({ pattern, replacement }) => {
+        text = text.replace(pattern, replacement);
+      });
+
       // Format instructions with improved safety
       if (changesSuggested?.instructions && 
           Array.isArray(changesSuggested.instructions) && 
@@ -126,6 +150,9 @@ export function useResponseFormatter({ response, changesSuggested }: ResponseFor
           }
         });
       }
+      
+      // Preserve section dividers (commonly used in scientific methodology)
+      text = text.replace(/⸻/g, '\n⸻\n');
       
       // Cache the processed text for future re-renders
       processedTextRef.current = text;
