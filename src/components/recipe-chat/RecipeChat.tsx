@@ -56,6 +56,9 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     return <ChatLoading />;
   }
 
+  // Check if we should show the empty state
+  const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
+
   return (
     <Card className="bg-[#F9FAFB] border-slate-100 shadow-sm">
       <CardContent className="pt-2 sm:pt-6 px-2 sm:px-6">
@@ -65,9 +68,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             onClearChat={handleClearChat} 
           />
           
-          {chatHistory.length === 0 && optimisticMessages.length === 0 && (
-            <EmptyChatState />
-          )}
+          {showEmptyState && <EmptyChatState />}
           
           <ChatHistory
             chatHistory={chatHistory}

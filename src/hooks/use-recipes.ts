@@ -16,7 +16,7 @@ export const useRecipes = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
   // Memoize recipe transformation function to avoid recreating on each render
-  const transformRecipes = useCallback((dbRecipes: DbRecipe[]): Recipe[] => {
+  const transformRecipes = useCallback((dbRecipes: any[]): Recipe[] => {
     return (dbRecipes || []).map((dbRecipe: any): Recipe => {
       // Parse ingredients JSON to Ingredient array
       let ingredients: Ingredient[] = [];
