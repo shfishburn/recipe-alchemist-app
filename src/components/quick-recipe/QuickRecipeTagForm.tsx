@@ -141,9 +141,9 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <label className="text-sm font-medium">What flavors match your mood tonight? (select up to {MAX_CUISINE_SELECTIONS})</label>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start w-full">
             {CUISINES.map(cuisine => (
               <Badge 
                 key={cuisine.value} 
@@ -160,7 +160,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
           </div>
 
           <label className="text-sm font-medium block mt-4">Any dietary preferences? (select up to {MAX_DIETARY_SELECTIONS})</label>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+          <div className="flex flex-wrap gap-3 justify-center md:justify-start w-full">
             {DIETARY.map(diet => (
               <Badge 
                 key={diet.value} 

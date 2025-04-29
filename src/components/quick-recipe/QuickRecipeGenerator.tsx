@@ -45,7 +45,7 @@ export function QuickRecipeGenerator() {
           isLoading={isLoading} 
         />
       ) : (
-        <div className="animate-fadeIn">
+        <div className="animate-fadeIn w-full">
           <QuickRecipeCard 
             recipe={recipe} 
             onCook={() => setCookModeOpen(true)}

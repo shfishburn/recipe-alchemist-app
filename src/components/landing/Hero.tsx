@@ -25,9 +25,9 @@ const Hero = React.memo(() => {
           </p>
         </div>
         
-        {/* Recipe Generator First - Now full width */}
+        {/* Recipe Generator - Full width */}
         <div className="w-full mb-10 md:mb-16">
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md">
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md w-full">
             <QuickRecipeGenerator />
           </div>
         </div>

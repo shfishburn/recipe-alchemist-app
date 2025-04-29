@@ -1,131 +1,120 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { QuickRecipe } from '@/hooks/use-quick-recipe';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, CookingPot, ShoppingBag, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CookingPot, ShoppingCart, Clock, Star } from 'lucide-react';
-import { type QuickRecipe } from '@/hooks/use-quick-recipe';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '@/components/ui/badge';
 
 interface QuickRecipeCardProps {
   recipe: QuickRecipe;
   onCook: () => void;
   onShop: () => void;
-  onSave?: () => void;
+  onSave: () => void;
 }
 
 export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeCardProps) {
-  const isMobile = useIsMobile();
-  
   return (
-    <Card className="w-full max-w-md mx-auto bg-white shadow-md hover:shadow-lg transition-all animate-fadeIn">
-      {/* Recipe Header */}
-      <div className="p-4 pb-2 text-center">
-        <div className="flex items-center justify-center mb-1 gap-2">
-          <h2 className="text-2xl font-bold">Quick & Easy</h2>
-          <Badge className="bg-recipe-green px-2 py-1 text-white">
-            <Star className="h-3 w-3 mr-1 fill-current" /> Quick Recipe
-          </Badge>
-        </div>
-        <p className="text-muted-foreground text-base">{recipe.description}</p>
-      </div>
-      
-      {/* Timing Information */}
-      <div className="bg-gray-50 mx-4 rounded-lg my-3">
-        <div className="grid grid-cols-3 divide-x">
-          <div className="px-2 py-3 text-center">
-            <p className="text-gray-500 text-sm">Prep</p>
-            <p className="font-medium flex items-center justify-center">
-              <Clock className="h-4 w-4 mr-1 text-green-500" />
+    <Card className="w-full border-2 border-recipe-green/20">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-2xl flex items-center">
+          <div className="bg-recipe-green text-white rounded px-2 py-0.5 text-sm font-medium mr-3">
+            Quick Recipe
+          </div>
+          {recipe.title}
+        </CardTitle>
+        <p className="text-muted-foreground">{recipe.description}</p>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Time indicators */}
+        <div className="flex justify-between border-t border-b py-3">
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground">Prep</div>
+            <div className="flex items-center justify-center gap-1 font-medium">
+              <Clock className="h-4 w-4 text-recipe-green" />
               {recipe.prepTime} min
-            </p>
+            </div>
           </div>
-          <div className="px-2 py-3 text-center">
-            <p className="text-gray-500 text-sm">Cook</p>
-            <p className="font-medium flex items-center justify-center">
-              <CookingPot className="h-4 w-4 mr-1 text-orange-500" />
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground">Cook</div>
+            <div className="flex items-center justify-center gap-1 font-medium">
+              <CookingPot className="h-4 w-4 text-recipe-orange" />
               {recipe.cookTime} min
-            </p>
+            </div>
           </div>
-          <div className="px-2 py-3 text-center">
-            <p className="text-gray-500 text-sm">Total</p>
-            <p className="font-medium">{recipe.prepTime + recipe.cookTime} min</p>
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="font-medium">
+              {recipe.prepTime + recipe.cookTime} min
+            </div>
           </div>
         </div>
-      </div>
-      
-      <CardContent className="space-y-5 px-4">
-        {/* Ingredients Section */}
+
+        {/* Ingredients */}
         <div>
-          <h3 className="font-semibold mb-3 text-xl flex items-center">
-            <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+          <h3 className="flex items-center gap-2 font-medium text-lg mb-2">
+            <span className="bg-recipe-green h-5 w-5 rounded-full flex items-center justify-center text-white text-xs">•</span>
             Ingredients
           </h3>
-          <ul className="space-y-1">
-            {recipe.ingredients.map((ingredient, idx) => (
-              <li key={idx} className="flex items-baseline">
-                <span className="inline-block w-1.5 h-1.5 bg-black rounded-full mr-2 mt-2"></span>
-                {ingredient}
-              </li>
+          <ul className="list-disc pl-5 space-y-1">
+            {recipe.ingredients.map((ingredient, index) => (
+              <li key={index}>{ingredient}</li>
             ))}
           </ul>
         </div>
-        
-        {/* Steps Section */}
+
+        {/* Steps */}
         <div>
-          <h3 className="font-semibold mb-3 text-xl flex items-center">
-            <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+          <h3 className="flex items-center gap-2 font-medium text-lg mb-2">
+            <span className="bg-recipe-green h-5 w-5 rounded-full flex items-center justify-center text-white text-xs">•</span>
             Quick Steps
           </h3>
-          <ol className="list-decimal list-inside space-y-2">
-            {recipe.steps.map((step, idx) => (
-              <li key={idx} className="text-base">
-                {step}
-              </li>
+          <ol className="list-decimal pl-5 space-y-2">
+            {recipe.steps.map((step, index) => (
+              <li key={index}>{step}</li>
             ))}
           </ol>
         </div>
-        
-        {/* Nutrition Section */}
-        <div className="bg-green-50 p-3 rounded-md">
-          <span className="font-medium text-green-700 flex items-center">
-            <Star className="h-4 w-4 mr-1" />
-            Nutrition highlight:
-          </span> 
-          <p className="mt-1">{recipe.nutritionHighlight}</p>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="flex flex-col space-y-3 px-4 pb-4 pt-0">
-        <div className="grid grid-cols-2 gap-3 w-full">
+
+        {/* Nutrition Highlight */}
+        {recipe.nutritionHighlight && (
+          <div className="bg-slate-50 p-3 rounded-lg">
+            <p className="text-sm font-medium">Nutrition Highlight</p>
+            <p className="text-sm text-muted-foreground">{recipe.nutritionHighlight}</p>
+          </div>
+        )}
+
+        {/* Action buttons - now full width */}
+        <div className="pt-4 flex flex-col gap-2 w-full">
           <Button 
             onClick={onCook} 
-            className="bg-recipe-blue hover:bg-recipe-blue/90 text-white font-medium shadow-sm"
+            className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
             size="lg"
           >
             <CookingPot className="mr-2 h-5 w-5" />
             Start Cooking
           </Button>
-          <Button 
-            onClick={onShop} 
-            variant="outline" 
-            className="border-2 border-recipe-green text-recipe-green hover:bg-green-50 shadow-sm font-medium"
-            size="lg"
-          >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            Get Ingredients
-          </Button>
+          
+          <div className="flex gap-2 w-full">
+            <Button 
+              variant="outline" 
+              onClick={onShop}
+              className="flex-1"
+            >
+              <ShoppingBag className="mr-2 h-4 w-4" />
+              Shopping List
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onSave}
+              className="flex-1"
+            >
+              <Bookmark className="mr-2 h-4 w-4" />
+              Save Recipe
+            </Button>
+          </div>
         </div>
-        {onSave && (
-          <Button 
-            onClick={onSave} 
-            variant="ghost" 
-            className="w-full text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-          >
-            Save & Customize Recipe
-          </Button>
-        )}
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 }

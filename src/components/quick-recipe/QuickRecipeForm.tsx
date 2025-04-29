@@ -95,19 +95,19 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 w-full mx-auto">
-      <div className="space-y-2">
+      <div className="space-y-2 w-full">
         <Input 
           placeholder="Main ingredient (e.g., chicken, pasta, etc.)"
           value={formData.mainIngredient}
           onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
-          className={isMobile ? "h-10" : "h-12 text-lg"}
+          className={isMobile ? "h-10 w-full" : "h-12 text-lg w-full"}
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         <div>
           <label className="text-sm font-medium block mb-2">Cuisine (select up to {MAX_CUISINE_SELECTIONS}):</label>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full">
             {CUISINES.map((cuisine) => (
               <Badge 
                 key={cuisine.value} 
@@ -126,7 +126,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
 
         <div>
           <label className="text-sm font-medium block mb-2">Dietary Restrictions (select up to {MAX_DIETARY_SELECTIONS}):</label>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full">
             {DIETARY.map((diet) => (
               <Badge 
                 key={diet.value} 
