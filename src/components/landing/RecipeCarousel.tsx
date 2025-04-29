@@ -13,7 +13,7 @@ import { CarouselDots } from './carousel/CarouselDots';
 import { RecipeCard } from './carousel/RecipeCard';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
-import { loader } from 'lucide-react';
+import { Loader } from 'lucide-react';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();

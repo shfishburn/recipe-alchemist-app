@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -17,7 +17,7 @@ export const useRecipes = () => {
   
   // Memoize recipe transformation function to avoid recreating on each render
   const transformRecipes = useCallback((dbRecipes: DbRecipe[]): Recipe[] => {
-    return (dbRecipes || []).map((dbRecipe: DbRecipe): Recipe => {
+    return (dbRecipes || []).map((dbRecipe: any): Recipe => {
       // Parse ingredients JSON to Ingredient array
       let ingredients: Ingredient[] = [];
       try {
@@ -52,11 +52,34 @@ export const useRecipes = () => {
         console.error('Failed to parse nutrition', e);
       }
       
+      // Return a complete Recipe object with default values for missing properties
       return {
-        ...dbRecipe,
-        ingredients,
+        id: dbRecipe.id,
+        title: dbRecipe.title || '',
+        description: dbRecipe.description || '',
+        ingredients: ingredients,
+        instructions: dbRecipe.instructions || [],
+        prep_time_min: dbRecipe.prep_time_min,
+        cook_time_min: dbRecipe.cook_time_min,
+        servings: dbRecipe.servings || 1,
+        image_url: dbRecipe.image_url,
+        cuisine: dbRecipe.cuisine,
+        cuisine_category: dbRecipe.cuisine_category || "Global",
+        tags: dbRecipe.tags || [],
+        user_id: dbRecipe.user_id,
+        created_at: dbRecipe.created_at || new Date().toISOString(),
+        updated_at: dbRecipe.updated_at || new Date().toISOString(),
+        original_request: dbRecipe.original_request || '',
+        reasoning: dbRecipe.reasoning || '',
+        tagline: dbRecipe.tagline || '',
+        version_number: dbRecipe.version_number || 1,
+        previous_version_id: dbRecipe.previous_version_id,
+        deleted_at: dbRecipe.deleted_at,
+        dietary: dbRecipe.dietary || '',
+        flavor_tags: dbRecipe.flavor_tags || [],
+        nutrition: nutrition,
         science_notes: scienceNotes,
-        nutrition
+        chef_notes: dbRecipe.chef_notes || '',
       };
     });
   }, []);
