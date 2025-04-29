@@ -1,246 +1,70 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import type { Recipe } from '@/types/recipe';
-import type { ChatMessage, OptimisticMessage, ChangesResponse } from '@/types/chat';
-import { useChatMutations } from './recipe-chat/use-chat-mutations';
+
 import { useApplyChanges } from './recipe-chat/use-apply-changes';
+import { useChatHistory } from './recipe-chat/use-chat-history';
+import { useOptimisticMessages } from './recipe-chat/use-optimistic-messages';
+import { useChatActions } from './recipe-chat/use-chat-actions';
+import { useChatManagement } from './recipe-chat/use-chat-management';
+import type { Recipe } from '@/types/recipe';
+import type { ChatMessage } from '@/types/chat';
 
 export type { ChatMessage };
 
+/**
+ * Main hook for recipe chat functionality, integrating all the specialized hooks
+ */
 export const useRecipeChat = (recipe: Recipe) => {
-  const [message, setMessage] = useState('');
-  const [optimisticMessages, setOptimisticMessages] = useState<OptimisticMessage[]>([]);
-  const { toast } = useToast();
-
-  const { data: chatHistory = [], isLoading: isLoadingHistory, refetch } = useQuery({
-    queryKey: ['recipe-chats', recipe.id],
-    queryFn: async () => {
-      console.log(`Fetching chat history for recipe ${recipe.id}`);
-      // Fix: Modified query to properly handle NULL check for deleted_at
-      const { data, error } = await supabase
-        .from('recipe_chats')
-        .select('*')
-        .eq('recipe_id', recipe.id)
-        .is('deleted_at', null) // Fixed: Use .is() instead of .eq() for NULL comparison
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error("Error fetching chat history:", error);
-        throw error;
-      }
-      
-      if (data && data.length > 0) {
-        console.log(`Found ${data.length} chat messages for recipe ${recipe.id}`);
-      } else {
-        console.log(`No existing chat history for recipe ${recipe.id}`);
-      }
-      
-      // Process the chat messages to handle follow_up_questions and changes_suggested
-      return data.map(chat => {
-        // Initialize chat message with default values
-        const chatMessage: ChatMessage = {
-          id: chat.id,
-          user_message: chat.user_message,
-          ai_response: chat.ai_response,
-          changes_suggested: null,
-          applied: chat.applied || false,
-          created_at: chat.created_at,
-          follow_up_questions: [] // Default empty array
-        };
-
-        // Process changes_suggested as a properly typed object
-        if (chat.changes_suggested) {
-          try {
-            // Ensure changes_suggested is properly typed
-            chatMessage.changes_suggested = chat.changes_suggested as unknown as ChangesResponse;
-          } catch (e) {
-            console.error("Error processing changes_suggested data:", e);
-          }
-        }
-        
-        // Check if the chat response has followUpQuestions in the response data
-        if (typeof chat.ai_response === 'string') {
-          try {
-            // Try to extract follow-up questions from the AI response if they exist
-            const responseObj = JSON.parse(chat.ai_response);
-            if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
-              chatMessage.follow_up_questions = responseObj.followUpQuestions;
-            }
-          } catch (e) {
-            // If parsing fails, just continue with the empty array
-          }
-        }
-        
-        return chatMessage;
-      });
-    },
-    refetchOnWindowFocus: false,
-    staleTime: 5000, // Don't refetch too often to avoid flickering
-  });
-
-  const mutation = useChatMutations(recipe);
+  // Get chat history from the database
+  const { 
+    chatHistory, 
+    isLoadingHistory, 
+    refetchChatHistory 
+  } = useChatHistory(recipe.id);
+  
+  // Manage optimistic messages
+  const { 
+    optimisticMessages, 
+    addOptimisticMessage, 
+    clearOptimisticMessages 
+  } = useOptimisticMessages(chatHistory);
+  
+  // Handle chat actions (sending messages, uploading images, etc.)
+  const { 
+    message, 
+    setMessage, 
+    sendMessage, 
+    uploadRecipeImage, 
+    submitRecipeUrl, 
+    isSending 
+  } = useChatActions(recipe, addOptimisticMessage);
+  
+  // Handle chat management operations (clearing history)
+  const { 
+    clearChatHistory 
+  } = useChatManagement(recipe.id, refetchChatHistory, clearOptimisticMessages);
+  
+  // Apply changes from chat to the recipe
   const applyChanges = useApplyChanges(recipe);
 
-  // Improved optimistic message clearing mechanism
-  useEffect(() => {
-    if (chatHistory && chatHistory.length > 0 && optimisticMessages.length > 0) {
-      // Clear optimistic messages when we have real messages
-      // We generate a unique key based on user_message content to match them
-      const newOptimisticMessages = optimisticMessages.filter(optMsg => {
-        // Only keep optimistic messages that don't have a matching real message
-        return !chatHistory.some(realMsg => 
-          realMsg.user_message === optMsg.user_message
-        );
-      });
-      
-      // Only update state if we actually cleared some messages
-      if (newOptimisticMessages.length < optimisticMessages.length) {
-        console.log(`Cleared ${optimisticMessages.length - newOptimisticMessages.length} optimistic messages`);
-        setOptimisticMessages(newOptimisticMessages);
-      }
-    }
-  }, [chatHistory, optimisticMessages]);
-
-  const uploadRecipeImage = async (file: File) => {
-    try {
-      console.log("Processing image upload");
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Image = e.target?.result as string;
-        
-        // Create a unique message ID to help with tracking and cleanup
-        const messageId = `image-${Date.now()}`;
-        
-        // Add optimistic message
-        const optimisticMessage: OptimisticMessage = {
-          user_message: "Analyzing recipe image...",
-          pending: true,
-          id: messageId // Add unique ID to help with cleanup
-        };
-        setOptimisticMessages([...optimisticMessages, optimisticMessage]);
-        
-        mutation.mutate({
-          message: "Please analyze this recipe image",
-          sourceType: 'image',
-          sourceImage: base64Image,
-          messageId // Pass message ID to the mutation
-        });
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error("Image upload error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process image",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const submitRecipeUrl = (url: string) => {
-    console.log("Processing URL submission:", url);
-    
-    // Create a unique message ID
-    const messageId = `url-${Date.now()}`;
-    
-    // Add optimistic message
-    const optimisticMessage: OptimisticMessage = {
-      user_message: `Analyzing recipe from: ${url}`,
-      pending: true,
-      id: messageId // Track with unique ID
-    };
-    setOptimisticMessages([...optimisticMessages, optimisticMessage]);
-    
-    mutation.mutate({
-      message: "Please analyze this recipe URL",
-      sourceType: 'url',
-      sourceUrl: url,
-      messageId
-    });
-  };
-
-  const sendMessage = () => {
-    if (!message.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a message",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Create a unique ID for tracking
-    const messageId = `msg-${Date.now()}`;
-    
-    // Create optimistic message with unique ID
-    const optimisticMessage: OptimisticMessage = {
-      user_message: message,
-      pending: true,
-      id: messageId
-    };
-    
-    // Add to optimistic messages queue
-    setOptimisticMessages([...optimisticMessages, optimisticMessage]);
-    
-    console.log("Sending chat message:", message.substring(0, 30) + (message.length > 30 ? '...' : ''));
-    mutation.mutate({ 
-      message,
-      messageId
-    });
-    setMessage(''); // Clear the input after sending
-  };
-
-  const clearChatHistory = async () => {
-    try {
-      console.log("Clearing chat history for recipe:", recipe.id);
-      
-      // Soft delete all chat messages for this recipe
-      const { error } = await supabase
-        .from('recipe_chats')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('recipe_id', recipe.id)
-        .is('deleted_at', null);
-        
-      if (error) {
-        console.error("Error clearing chat history:", error);
-        throw error;
-      }
-      
-      // Clear any optimistic messages
-      setOptimisticMessages([]);
-      
-      // Refetch chat history to update UI
-      await refetch();
-      
-      toast({
-        title: "Chat cleared",
-        description: "Chat history has been cleared successfully",
-      });
-    } catch (error) {
-      console.error("Failed to clear chat history:", error);
-      toast({
-        title: "Error",
-        description: "Failed to clear chat history",
-        variant: "destructive",
-      });
-    }
-  };
-
   return {
+    // Chat state
     message,
     setMessage,
     chatHistory,
     optimisticMessages,
     isLoadingHistory,
+    
+    // Chat actions
     sendMessage,
-    isSending: mutation.isPending,
-    applyChanges,
-    isApplying: applyChanges.isPending,
+    isSending,
     uploadRecipeImage,
     submitRecipeUrl,
-    refetchChatHistory: refetch,
+    
+    // Recipe change application
+    applyChanges,
+    isApplying: applyChanges.isPending,
+    
+    // Management actions
+    refetchChatHistory,
     clearChatHistory
   };
 };
