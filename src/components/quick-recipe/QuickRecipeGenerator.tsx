@@ -8,20 +8,20 @@ import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { AuthDrawer } from '@/components/auth/AuthDrawer';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 
 export function QuickRecipeGenerator() {
   const { generateQuickRecipe, isLoading, recipe, setRecipe } = useQuickRecipe();
   const [cookModeOpen, setCookModeOpen] = useState(false);
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const authDrawer = useAuthDrawer();
   
   const handleSaveRecipe = () => {
     if (!user) {
-      setAuthOpen(true);
+      authDrawer.open();
       return;
     }
     
@@ -69,11 +69,6 @@ export function QuickRecipeGenerator() {
             recipe={recipe}
             open={shoppingListOpen}
             onOpenChange={setShoppingListOpen}
-            onSave={handleSaveRecipe}
-          />
-          <AuthDrawer 
-            open={authOpen}
-            onOpenChange={setAuthOpen}
           />
         </>
       )}

@@ -7,10 +7,12 @@ import { CookingPot } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Simplified cuisine options - focusing on the most popular choices
 const cuisineOptions = [
   "Italian", "Mexican", "Asian", "Mediterranean", "American"
 ];
 
+// Simplified dietary options - focusing on the most common restrictions
 const dietaryOptions = [
   "No Restrictions", "Vegetarian", "Vegan", "Gluten-Free", "Low-Carb"
 ];

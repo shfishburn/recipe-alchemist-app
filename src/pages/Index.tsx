@@ -4,17 +4,11 @@ import Navbar from '@/components/ui/navbar';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
-import { Brain, TestTube, HeartPulse } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load non-critical components
 const Hero = lazy(() => import('@/components/landing/Hero'));
 const Features = lazy(() => import('@/components/landing/Features'));
-const NutritionPreview = lazy(() => 
-  import('@/components/landing/NutritionPreview').then(module => ({
-    default: module.NutritionPreview
-  }))
-);
 
 // Create loading placeholders for better UX
 const HeroSkeleton = () => (
