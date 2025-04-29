@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,8 @@ export function Navbar({ className }: { className?: string }) {
 
   const navigationLinks = [
     { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
-    { name: 'My Lab', path: '/build', requiresAuth: true },
+    // Hiding My Lab route
+    // { name: 'My Lab', path: '/build', requiresAuth: true },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
     { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];

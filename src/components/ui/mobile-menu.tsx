@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -21,7 +20,8 @@ export function MobileMenu() {
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
     { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
-    { name: 'My Lab', path: '/build', requiresAuth: true },
+    // Hiding My Lab route
+    // { name: 'My Lab', path: '/build', requiresAuth: true },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
     { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];
