@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { QuickRecipeTagForm } from './QuickRecipeTagForm';
 import { QuickRecipeCard } from './QuickRecipeCard';
 import { QuickCookingMode } from './QuickCookingMode';
@@ -10,6 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
+import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 
 export function QuickRecipeGenerator() {
   const { generateQuickRecipe, isLoading, recipe, setRecipe } = useQuickRecipe();
@@ -20,6 +20,16 @@ export function QuickRecipeGenerator() {
   const navigate = useNavigate();
   const authDrawer = useAuthDrawer();
   
+  // Reference to trigger the print dialog
+  const printDialogTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Function to open print dialog
+  const handlePrint = () => {
+    if (printDialogTriggerRef.current) {
+      printDialogTriggerRef.current.click();
+    }
+  };
+
   const handleSaveRecipe = () => {
     if (!user) {
       authDrawer.open();
@@ -51,6 +61,7 @@ export function QuickRecipeGenerator() {
             onCook={() => setCookModeOpen(true)}
             onShop={() => setShoppingListOpen(true)}
             onSave={handleSaveRecipe}
+            onPrint={handlePrint}
           />
           <button 
             className="mt-6 text-sm text-center w-full text-muted-foreground hover:text-foreground"
@@ -75,6 +86,30 @@ export function QuickRecipeGenerator() {
           />
         </>
       )}
+      
+      {/* Print Recipe Dialog */}
+      <PrintRecipe 
+        recipe={{
+          id: 'quick-recipe',
+          title: recipe.title,
+          description: recipe.description,
+          ingredients: recipe.ingredients.map(ing => ({
+            qty: 1,
+            unit: '',
+            item: ing
+          })),
+          instructions: recipe.steps,
+          prep_time_min: recipe.prepTime,
+          cook_time_min: recipe.cookTime,
+          nutrition: recipe.nutritionHighlight ? {
+            // Basic placeholder for nutrition data
+            kcal: 0
+          } : undefined,
+          science_notes: [],
+          tagline: recipe.description
+        }} 
+        ref={printDialogTriggerRef}
+      />
     </div>
   );
 }

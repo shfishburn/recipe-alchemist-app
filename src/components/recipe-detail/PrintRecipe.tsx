@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+
+import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,8 +17,17 @@ interface PrintRecipeProps {
   recipe: Recipe;
 }
 
-export function PrintRecipe({ recipe }: PrintRecipeProps) {
+export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ recipe }, ref) => {
   const printContentRef = useRef<HTMLDivElement>(null);
+  const dialogTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    click: () => {
+      if (dialogTriggerRef.current) {
+        dialogTriggerRef.current.click();
+      }
+    }
+  }) as any);
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -77,7 +87,7 @@ export function PrintRecipe({ recipe }: PrintRecipeProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button id="print-recipe-trigger" className="hidden">Print Recipe</button>
+        <button ref={dialogTriggerRef} id="print-recipe-trigger" className="hidden">Print Recipe</button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
@@ -163,4 +173,6 @@ export function PrintRecipe({ recipe }: PrintRecipeProps) {
       </DialogContent>
     </Dialog>
   );
-}
+});
+
+PrintRecipe.displayName = 'PrintRecipe';
