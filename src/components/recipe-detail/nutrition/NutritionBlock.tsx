@@ -1,18 +1,11 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
-
-interface RecipeNutrition {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
+import { ExtendedNutritionData } from './useNutritionData';
 
 interface NutritionBlockProps {
-  recipeNutrition: RecipeNutrition;
+  recipeNutrition: ExtendedNutritionData;
   viewMode: 'recipe' | 'personal';
   userPreferences?: {
     dailyCalories: number;

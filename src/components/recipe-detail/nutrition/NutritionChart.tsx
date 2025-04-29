@@ -5,16 +5,11 @@ import { ComparisonChart } from './charts/ComparisonChart';
 import { DistributionCharts } from './charts/DistributionCharts';
 import { NutritionSummaryText } from './charts/NutritionSummaryText';
 import { useNutritionChartData } from './hooks/useNutritionChartData';
-
-interface RecipeNutrition {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
+import { ExtendedNutritionData } from './useNutritionData';
+import { MicronutrientsDisplay } from './MicronutrientsDisplay';
 
 interface NutritionChartProps {
-  recipeNutrition: RecipeNutrition;
+  recipeNutrition: ExtendedNutritionData;
   userPreferences?: {
     dailyCalories: number;
     macroSplit: {
@@ -40,6 +35,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
         <TabsList className="mb-2">
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="distribution">Distribution</TabsTrigger>
+          <TabsTrigger value="micronutrients">Micronutrients</TabsTrigger>
         </TabsList>
         
         <TabsContent value="comparison" className="pt-2">
@@ -52,6 +48,10 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
             targetMacros={targetMacrosData}
           />
         </TabsContent>
+        
+        <TabsContent value="micronutrients" className="pt-2">
+          <MicronutrientsDisplay nutrition={recipeNutrition} />
+        </TabsContent>
       </Tabs>
       
       <NutritionSummaryText
@@ -59,10 +59,12 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
         protein={recipeNutrition.protein}
         carbs={recipeNutrition.carbs}
         fat={recipeNutrition.fat}
+        fiber={recipeNutrition.fiber}
         caloriesPercentage={calorieData[0].percentage}
         proteinPercentage={macroData[0].percentage}
         carbsPercentage={macroData[1].percentage}
         fatPercentage={macroData[2].percentage}
+        fiberPercentage={recipeNutrition.fiberPercentage}
       />
     </div>
   );

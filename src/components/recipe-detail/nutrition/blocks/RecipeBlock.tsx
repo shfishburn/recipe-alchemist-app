@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -7,16 +8,11 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 import { InfoIcon } from 'lucide-react';
 import { ChartTooltip } from '../charts/ChartTooltip';
 import { NUTRITION_COLORS } from './personal/constants';
-
-interface RecipeNutrition {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
+import { MicronutrientsDisplay } from '../MicronutrientsDisplay';
+import { ExtendedNutritionData } from '../useNutritionData';
 
 interface RecipeBlockProps {
-  recipeNutrition: RecipeNutrition;
+  recipeNutrition: ExtendedNutritionData;
 }
 
 export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
@@ -303,10 +299,28 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
             <p className="text-xs text-muted-foreground">{fatPercent}% by weight, {Math.round((fatCalories / totalCalories) * 100)}% of calories</p>
           </div>
         </div>
+        <div className="mt-4 bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid #65a30d` }}>
+          <div className="flex justify-between">
+            <div>
+              <p className="text-xs text-gray-500">Fiber</p>
+              <p className="text-lg font-semibold">{recipeNutrition.fiber}g</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Daily Value</p>
+              <p className="text-md font-medium">{recipeNutrition.fiberPercentage}%</p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Fiber adds bulk to your diet and helps with digestion
+          </p>
+        </div>
         <p className="text-xs text-muted-foreground mt-3 italic">
           *Protein and carbs provide 4 calories per gram, while fat provides 9 calories per gram.
         </p>
       </div>
+      
+      {/* Add the micronutrients display */}
+      <MicronutrientsDisplay nutrition={recipeNutrition} />
     </div>
   );
 }

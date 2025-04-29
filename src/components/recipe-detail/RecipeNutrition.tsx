@@ -71,10 +71,12 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
                   protein={recipeNutrition.protein || 0}
                   carbs={recipeNutrition.carbs || 0}
                   fat={recipeNutrition.fat || 0}
-                  caloriesPercentage={Math.round((recipeNutrition.calories / 2000) * 100) || 0}
-                  proteinPercentage={Math.round((recipeNutrition.protein / 50) * 100) || 0}
-                  carbsPercentage={Math.round((recipeNutrition.carbs / 300) * 100) || 0}
-                  fatPercentage={Math.round((recipeNutrition.fat / 65) * 100) || 0}
+                  fiber={recipeNutrition.fiber || 0}
+                  caloriesPercentage={recipeNutrition.caloriesPercentage || 0}
+                  proteinPercentage={recipeNutrition.proteinPercentage || 0}
+                  carbsPercentage={recipeNutrition.carbsPercentage || 0}
+                  fatPercentage={recipeNutrition.fatPercentage || 0}
+                  fiberPercentage={recipeNutrition.fiberPercentage || 0}
                 />
               </div>
             )}

@@ -9,10 +9,12 @@ interface NutritionSummaryTextProps {
   protein: number;
   carbs: number;
   fat: number;
+  fiber: number;
   caloriesPercentage: number;
   proteinPercentage: number;
   carbsPercentage: number;
   fatPercentage: number;
+  fiberPercentage: number;
 }
 
 export function NutritionSummaryText({
@@ -20,10 +22,12 @@ export function NutritionSummaryText({
   protein,
   carbs,
   fat,
+  fiber,
   caloriesPercentage,
   proteinPercentage,
   carbsPercentage,
   fatPercentage,
+  fiberPercentage,
 }: NutritionSummaryTextProps) {
   const isMobile = useIsMobile();
   
@@ -90,6 +94,16 @@ export function NutritionSummaryText({
             </span>
           </span>
         </p>
+        
+        <p className="flex justify-between py-1">
+          <span className="font-medium">Fiber:</span>
+          <span>
+            {fiber}g 
+            <span className={`ml-2 font-medium ${getPercentageColor(fiberPercentage)}`}>
+              ({fiberPercentage}% of daily target)
+            </span>
+          </span>
+        </p>
       </div>
       
       <div className={`text-xs text-muted-foreground mt-2 ${isMobile ? "pb-8" : "pb-2"}`}>
@@ -99,6 +113,13 @@ export function NutritionSummaryText({
             caloriesPercentage <= 40 ? 
             "This recipe provides a moderate portion of your daily caloric needs." :
             "This recipe provides a significant portion of your daily caloric needs."}
+        </p>
+        <p className="mt-1">
+          {fiberPercentage >= 25 ? 
+            "High in fiber, which promotes digestive health and helps you feel fuller longer." :
+            fiberPercentage >= 10 ? 
+            "Contains a moderate amount of fiber, supporting digestive health." : 
+            "Low in fiber. Consider adding fiber-rich side dishes to complete your meal."}
         </p>
         <p className="mt-2 pt-1 border-t border-gray-100 font-medium text-slate-600">
           *Protein and carbs provide 4 calories per gram, while fat provides 9 calories per gram.

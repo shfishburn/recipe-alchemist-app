@@ -1,3 +1,4 @@
+
 export interface Ingredient {
   qty: number;
   unit: string;
@@ -6,6 +7,7 @@ export interface Ingredient {
 }
 
 export interface Nutrition {
+  // Basic nutrition (with both naming conventions)
   kcal?: number;
   protein_g?: number;
   carbs_g?: number;
@@ -17,6 +19,23 @@ export interface Nutrition {
   protein?: number;
   carbs?: number;
   fat?: number;
+  fiber?: number;
+  
+  // Micronutrients
+  vitamin_a_iu?: number;
+  vitamin_c_mg?: number;
+  vitamin_d_iu?: number;
+  calcium_mg?: number;
+  iron_mg?: number;
+  potassium_mg?: number;
+  
+  // Alternative naming for micronutrients
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  calcium?: number;
+  iron?: number;
+  potassium?: number;
 }
 
 export interface Recipe {
