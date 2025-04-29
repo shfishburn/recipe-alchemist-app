@@ -69,7 +69,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                 key={cuisine.value} 
                 variant="outline" 
                 className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  formData.cuisine === cuisine.value ? 'bg-recipe-blue text-white hover:bg-recipe-blue/90' : ''
+                  formData.cuisine === cuisine.value ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
                 }`}
                 onClick={() => selectCuisine(cuisine.value)}
               >
@@ -82,7 +82,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
 
       <Button 
         type="submit" 
-        className="w-full bg-recipe-blue hover:bg-recipe-blue/90 transition-all"
+        className="w-full bg-recipe-blue hover:bg-recipe-blue/90 transition-all text-white shadow-md font-medium"
         size={isMobile ? "lg" : "lg"}
         disabled={isLoading}
       >

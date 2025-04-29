@@ -100,7 +100,7 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
         <div className="grid grid-cols-2 gap-3 w-full">
           <Button 
             onClick={onCook} 
-            className="bg-green-500 hover:bg-green-600"
+            className="bg-recipe-blue hover:bg-recipe-blue/90 text-white font-medium shadow-sm"
             size="lg"
           >
             <CookingPot className="mr-2 h-5 w-5" />
@@ -109,7 +109,7 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
           <Button 
             onClick={onShop} 
             variant="outline" 
-            className="border-2 border-green-600 text-green-700 hover:bg-green-50"
+            className="border-2 border-recipe-green text-recipe-green hover:bg-green-50 shadow-sm font-medium"
             size="lg"
           >
             <ShoppingCart className="mr-2 h-5 w-5" />
@@ -120,7 +120,7 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
           <Button 
             onClick={onSave} 
             variant="ghost" 
-            className="w-full text-gray-500 hover:text-gray-700"
+            className="w-full text-gray-600 hover:text-gray-800 hover:bg-gray-50"
           >
             Save & Customize Recipe
           </Button>
