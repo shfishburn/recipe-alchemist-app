@@ -2,19 +2,19 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Utensils, Pizza, Salad, ChefHat, Heart, Carrot, WheatOff, MilkOff, LeafyGreen, Beef, Taco } from 'lucide-react';
+import { CookingPot, Carrot, WheatOff, MilkOff, Heart, LeafyGreen } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
-// Cuisine options with icons - now each has a specific icon
+// Cuisine options with flag emojis instead of icons
 const CUISINES = [
-  { name: "American", value: "american", icon: Beef },
-  { name: "Italian", value: "italian", icon: Pizza },
-  { name: "Mexican", value: "mexican", icon: Taco },
-  { name: "Asian", value: "asian", icon: Utensils },
-  { name: "Mediterranean", value: "mediterranean", icon: ChefHat }
+  { name: "American", value: "american", flag: "🇺🇸" },
+  { name: "Italian", value: "italian", flag: "🇮🇹" },
+  { name: "Mexican", value: "mexican", flag: "🇲🇽" },
+  { name: "Asian", value: "asian", flag: "🇨🇳" },
+  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" }
 ];
 
 // Dietary options with icons
@@ -117,7 +117,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
                 }`}
                 onClick={() => toggleCuisine(cuisine.value)}
               >
-                <cuisine.icon className="w-3.5 h-3.5 mr-1" />
+                <span className="mr-1">{cuisine.flag}</span>
                 {cuisine.name}
               </Badge>
             ))}

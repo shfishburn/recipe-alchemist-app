@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Pizza, ChefHat, Beef, Heart, Utensils, LeafyGreen, Taco } from 'lucide-react';
+import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Heart, LeafyGreen } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -12,13 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 const MAX_CUISINE_SELECTIONS = 2;
 const MAX_DIETARY_SELECTIONS = 2;
 
-// Popular cuisines with their display names, values, and icons
+// Popular cuisines with their display names, values, and flag emojis
 const CUISINES = [
-  { name: "American", value: "american", icon: Beef },
-  { name: "Italian", value: "italian", icon: Pizza },
-  { name: "Mexican", value: "mexican", icon: Taco },
-  { name: "Asian", value: "asian", icon: Utensils },
-  { name: "Mediterranean", value: "mediterranean", icon: ChefHat }
+  { name: "American", value: "american", flag: "🇺🇸" },
+  { name: "Italian", value: "italian", flag: "🇮🇹" },
+  { name: "Mexican", value: "mexican", flag: "🇲🇽" },
+  { name: "Asian", value: "asian", flag: "🇨🇳" },
+  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" }
 ];
 
 // Dietary restrictions
@@ -153,7 +153,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                 }`}
                 onClick={() => toggleCuisine(cuisine.value)}
               >
-                <cuisine.icon className="w-3.5 h-3.5 mr-1" />
+                <span className="mr-1">{cuisine.flag}</span>
                 {cuisine.name}
               </Badge>
             ))}
