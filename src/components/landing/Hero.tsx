@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { RecipeCarousel } from './RecipeCarousel';
 
-const Hero = () => {
+// Use React.memo to prevent unnecessary re-renders
+const Hero = React.memo(() => {
   return (
     <section className="py-12 md:py-20 lg:py-32">
       <div className="container-page">
@@ -14,7 +15,7 @@ const Hero = () => {
               Transform your meals with
               <span className="text-gradient block mt-2">AI-powered recipes</span>
             </h1>
-            <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-prose">
+            <p className="text-lg text-muted-foreground max-w-prose">
               Create healthy, personalized recipes tailored to your ingredients, 
               dietary preferences, and nutritional goals.
             </p>
@@ -38,6 +39,8 @@ const Hero = () => {
       </div>
     </section>
   );
-};
+});
+
+Hero.displayName = 'Hero';
 
 export default Hero;

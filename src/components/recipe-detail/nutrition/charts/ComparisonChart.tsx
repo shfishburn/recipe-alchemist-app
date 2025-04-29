@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
@@ -30,31 +30,40 @@ interface ComparisonChartProps {
 export function ComparisonChart({ compareData }: ComparisonChartProps) {
   const isMobile = useIsMobile();
   
-  const formatYAxisTick = (value: any) => {
+  // Memoize formatters to avoid recreating functions on each render
+  const formatYAxisTick = useMemo(() => (value: any) => {
     return value;
-  };
+  }, []);
   
-  const formatAxisValue = (value: any) => {
+  const formatAxisValue = useMemo(() => (value: any) => {
     return `${value}g`;
-  };
+  }, []);
 
-  // Add percent formatter for the labels showing percentage of target
-  const formatPercentage = (value: number, entry: any) => {
+  const formatPercentage = useMemo(() => (value: number, entry: any) => {
     if (!entry || !entry.payload) return '';
     const percentage = entry.payload.percentage;
     return `${percentage}%`;
-  };
+  }, []);
+
+  // Memoize chart config to prevent unnecessary recalculations
+  const chartConfig = useMemo(() => ({
+    protein: { color: '#9b87f5' },
+    carbs: { color: '#0EA5E9' },
+    fat: { color: '#22c55e' },
+  }), []);
+
+  // Pre-calculate ticks for Y axis
+  const yAxisTicks = useMemo(() => [0, 25, 50, 75, 100, 125, 150, 175, 200], []);
 
   return (
     <div className="h-full">
-      <ChartContainer config={{
-        protein: { color: '#9b87f5' },
-        carbs: { color: '#0EA5E9' },
-        fat: { color: '#22c55e' },
-      }} className={`${isMobile ? 'h-56' : 'h-64'} w-full`}>
+      <ChartContainer 
+        config={chartConfig} 
+        className={`${isMobile ? 'h-56' : 'h-64'} w-full`}
+      >
         <BarChart 
           data={compareData}
-          barGap={2} // Reduced from previous value for tighter grouping
+          barGap={2}
           barCategoryGap={isMobile ? "15%" : "25%"}
           margin={{ top: 5, right: 30, left: 10, bottom: 25 }}
         >
@@ -69,7 +78,7 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
           <YAxis 
             tickFormatter={formatYAxisTick}
             fontSize={isMobile ? 11 : 12}
-            ticks={[0, 25, 50, 75, 100, 125, 150, 175, 200]}
+            ticks={yAxisTicks}
             domain={[0, 'auto']}
             label={{ 
               value: 'grams', 
@@ -105,7 +114,6 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
               formatter={formatAxisValue}
               style={{ fontSize: isMobile ? 10 : 11, fontWeight: 500, fill: '#333' }}
             />
-            {/* Add percentage indicator showing proportion of target met */}
             <LabelList 
               dataKey="Recipe" 
               position="insideTop"
@@ -126,7 +134,7 @@ export function ComparisonChart({ compareData }: ComparisonChartProps) {
             fill="#94a3b8" 
             radius={[4, 4, 0, 0]}
             maxBarSize={isMobile ? 40 : 60}
-            opacity={0.7} // More transparent to create visual hierarchy
+            opacity={0.7}
           >
             <LabelList 
               dataKey="Target" 

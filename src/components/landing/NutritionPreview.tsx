@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { MacroChart } from '@/components/profile/nutrition/MacroChart';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Carousel,
   CarouselContent,
@@ -9,6 +9,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+
+// Lazy load the MacroChart component
+const MacroChart = React.lazy(() => 
+  import('@/components/profile/nutrition/MacroChart').then(module => ({
+    default: module.MacroChart
+  }))
+);
 
 // Sample data for different macro distributions
 const sampleData = [
@@ -62,7 +69,13 @@ export function NutritionPreview() {
                     <CarouselItem key={index} className="md:basis-full">
                       <div className="space-y-4">
                         <div className="max-w-md mx-auto">
-                          <MacroChart chartData={data} />
+                          <Suspense fallback={
+                            <div className="h-52 flex items-center justify-center">
+                              <Skeleton className="h-40 w-40 rounded-full" />
+                            </div>
+                          }>
+                            <MacroChart chartData={data} />
+                          </Suspense>
                         </div>
                         <p className="text-center text-sm md:text-base text-muted-foreground">
                           {nutritionDescriptions[index]}

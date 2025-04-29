@@ -8,53 +8,39 @@ export function LoadingIndicator() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Start loading
+    // Reset and start loading on location change
     setIsLoading(true);
     setProgress(0);
     
-    // Use requestAnimationFrame for smoother progress updates
-    let frameId: number;
-    
-    const startProgress = () => {
-      // Quick initial progress to 30%
-      setTimeout(() => setProgress(30), 50);
-      
-      // More gradual progress to 80%
-      setTimeout(() => {
-        let currentProgress = 30;
-        
-        const incrementProgress = () => {
-          if (currentProgress < 80) {
-            currentProgress += 1;
-            setProgress(currentProgress);
-            frameId = requestAnimationFrame(incrementProgress);
-          }
-        };
-        
-        frameId = requestAnimationFrame(incrementProgress);
-      }, 100);
+    // Track actual loading progress using document readiness
+    const documentStates = {
+      loading: 20,
+      interactive: 60,
+      complete: 100
     };
     
-    startProgress();
+    // Initial progress based on current document state
+    setProgress(documentStates[document.readyState] || 0);
     
-    // Complete loading
-    const completeTimeout = setTimeout(() => {
-      cancelAnimationFrame(frameId);
-      setProgress(100);
+    // Listen for document state changes
+    const updateProgress = () => {
+      setProgress(documentStates[document.readyState] || 100);
       
-      const hideTimeout = setTimeout(() => {
-        setIsLoading(false);
-      }, 200);
-      
-      return () => clearTimeout(hideTimeout);
-    }, 400);
-
+      // Hide the indicator after a short delay when complete
+      if (document.readyState === 'complete') {
+        setTimeout(() => setIsLoading(false), 300);
+      }
+    };
+    
+    document.addEventListener('readystatechange', updateProgress);
+    
+    // Clean up event listener
     return () => {
-      clearTimeout(completeTimeout);
-      cancelAnimationFrame(frameId);
+      document.removeEventListener('readystatechange', updateProgress);
     };
   }, [location]);
 
+  // Don't render anything when not loading
   if (!isLoading) return null;
 
   return (
@@ -63,7 +49,7 @@ export function LoadingIndicator() {
         className="nprogress-bar" 
         style={{ 
           width: `${progress}%`,
-          transition: progress < 100 ? 'width 0.2s ease-out' : 'width 0.1s ease-out'
+          transition: progress < 100 ? 'width 0.3s ease-out' : 'width 0.1s ease-out, opacity 0.3s ease-out'
         }}
       />
     </div>

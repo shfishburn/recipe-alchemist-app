@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Recipe } from '@/types/recipe';
 import type { Database } from '@/integrations/supabase/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Allow both Recipe types to be used
 type RecipeCardProps = {
@@ -10,16 +11,39 @@ type RecipeCardProps = {
 };
 
 export function RecipeCard({ recipe }: RecipeCardProps) {
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
+
+  // Handle image loading
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  // Handle image error
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <Link to={`/recipes/${recipe.id}`}>
       <div className="relative z-10 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl rounded-2xl overflow-hidden border transition-all">
-        <div className="aspect-[4/3] max-h-[300px] bg-gray-100">
-          {recipe.image_url ? (
-            <img 
-              src={recipe.image_url}
-              alt={recipe.title}
-              className="w-full h-full object-cover"
-            />
+        <div className="aspect-[4/3] max-h-[300px] bg-gray-100 relative">
+          {recipe.image_url && !imageError ? (
+            <>
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Skeleton className="w-full h-full absolute inset-0" />
+                </div>
+              )}
+              <img 
+                src={recipe.image_url}
+                alt={recipe.title}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+                loading="lazy"
+              />
+            </>
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <span className="text-gray-400">No image available</span>
