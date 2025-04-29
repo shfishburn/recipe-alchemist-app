@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import type { Recipe } from '@/hooks/use-recipe-detail';
@@ -164,7 +163,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
             .instructions ol { 
               padding-left: 25px;
               counter-reset: item;
-              list-style-type: none;
+              list-style-type: decimal;
               margin-bottom: 0;
             }
             .instructions li { 
@@ -172,15 +171,6 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
               position: relative;
               line-height: 1.8;
               font-family: 'Merriweather', Georgia, serif;
-            }
-            .instructions li::before {
-              counter-increment: item;
-              content: counter(item) ".";
-              position: absolute;
-              left: -25px;
-              top: 0;
-              font-weight: 700;
-              color: #4caf50;
             }
             .instructions .step-highlight {
               font-weight: 700;
@@ -299,7 +289,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Recipe Ready to Print</DialogTitle>
+          {/* Removed "Recipe Ready to Print" title */}
         </DialogHeader>
         
         <div ref={printContentRef} className="my-6 print:p-0">
