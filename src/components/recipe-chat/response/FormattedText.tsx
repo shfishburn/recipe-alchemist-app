@@ -45,9 +45,11 @@ export function FormattedText({ text }: FormattedTextProps) {
   
   // Apply formatting to scientific terms - with proper type checking
   const contentWithScientificTerms = React.Children.map(formattedContent, (child) => {
+    // Handle string child nodes
     if (typeof child === 'string') {
-      // Split the string by scientific terms and map each part
+      // Only proceed with split for string type
       const parts = child.split(scientificTermPattern);
+      
       return parts.map((part, i) => {
         // Check if this part matches a scientific term (case insensitive)
         const isScientificTerm = scientificTerms.some(term => 
@@ -59,11 +61,14 @@ export function FormattedText({ text }: FormattedTextProps) {
         }
         return part;
       });
-    } else if (React.isValidElement(child)) {
+    }
+    // Handle React element nodes
+    else if (React.isValidElement(child)) {
       // If it's a React element, just return it
       return child;
-    } else {
-      // For other types of children (e.g. null, boolean), just return them as is
+    }
+    // Handle other node types (null, boolean, etc.)
+    else {
       return child;
     }
   });
