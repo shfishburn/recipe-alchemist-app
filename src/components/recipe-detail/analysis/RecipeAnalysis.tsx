@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle } from 'lucide-react';
@@ -15,11 +15,28 @@ interface RecipeAnalysisProps {
   onRecipeUpdated?: (updatedRecipe: Recipe) => void;
 }
 
+// Helper type for parsed content storage
+interface TabContent {
+  chemistry: React.ReactNode[];
+  techniques: React.ReactNode[];
+  troubleshooting: React.ReactNode[];
+}
+
 export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAnalysisProps) {
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [activeTab, setActiveTab] = useState("chemistry");
+  
+  // Store parsed content to ensure consistency between tab switches
+  const [parsedContent, setParsedContent] = useState<TabContent>({
+    chemistry: [],
+    techniques: [],
+    troubleshooting: []
+  });
+  
+  // Flag to track if content has been parsed
+  const contentParsedRef = useRef(false);
   
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
@@ -58,10 +75,18 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   });
 
   // Function to manually retry analysis
-  const handleRetryAnalysis = () => {
+  const handleRetryAnalysis = useCallback(() => {
+    // Reset content parsing state when manually retrying
+    contentParsedRef.current = false;
+    setParsedContent({
+      chemistry: [],
+      techniques: [],
+      troubleshooting: []
+    });
+    
     refetch();
     toast.info("Regenerating recipe analysis...");
-  };
+  }, [refetch]);
 
   // Apply analysis updates to recipe when data is available, but only once
   useEffect(() => {
@@ -166,8 +191,67 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     if (!isVisible) {
       setHasAppliedUpdates(false);
       initialAnalysisRef.current = false;
+      // Reset content parsing state when visibility changes
+      contentParsedRef.current = false;
     }
   }, [isVisible, recipe.id]);
+  
+  // Pre-process content once when analysis data is available
+  useEffect(() => {
+    if (analysis && !contentParsedRef.current) {
+      console.log("Pre-processing analysis content for consistency");
+      
+      // Process each content section and store it for consistent display
+      const newContent: TabContent = {
+        chemistry: [],
+        techniques: [],
+        troubleshooting: []
+      };
+      
+      // Process chemistry section
+      if (analysis.science_notes && Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0) {
+        newContent.chemistry = analysis.science_notes.map((note, i) => formatScienceNote(note, i));
+      } else if (analysis.textResponse) {
+        // Try to extract chemistry section from raw text
+        const chemistryContent = extractSectionFromText(
+          analysis.textResponse, 
+          "(Chemistry|Chemical|Science|Maillard)", 
+          "No structured chemistry analysis available. Try regenerating the analysis."
+        );
+        newContent.chemistry = [chemistryContent];
+      }
+      
+      // Process techniques section
+      if (analysis.techniques && Array.isArray(analysis.techniques) && analysis.techniques.length > 0) {
+        newContent.techniques = analysis.techniques.map((technique, i) => formatTechnique(technique, i));
+      } else if (analysis.textResponse) {
+        // Try to extract techniques section from raw text
+        const techniquesContent = extractSectionFromText(
+          analysis.textResponse, 
+          "(Technique|Method|Cooking|Temperature)", 
+          "No structured technique analysis available. Try regenerating the analysis."
+        );
+        newContent.techniques = [techniquesContent];
+      }
+      
+      // Process troubleshooting section
+      if (analysis.troubleshooting && Array.isArray(analysis.troubleshooting) && analysis.troubleshooting.length > 0) {
+        newContent.troubleshooting = analysis.troubleshooting.map((tip, i) => formatTroubleshooting(tip, i));
+      } else if (analysis.textResponse) {
+        // Try to extract troubleshooting section from raw text
+        const troubleshootingContent = extractSectionFromText(
+          analysis.textResponse, 
+          "(Troubleshoot|Problem|Issue)", 
+          "No structured troubleshooting tips available. Try regenerating the analysis."
+        );
+        newContent.troubleshooting = [troubleshootingContent];
+      }
+      
+      // Update parsed content state for consistent display
+      setParsedContent(newContent);
+      contentParsedRef.current = true;
+    }
+  }, [analysis]);
 
   if (!isVisible) return null;
 
@@ -177,62 +261,82 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   };
 
   // Helper to format science notes with icons
-  const formatScienceNote = (note: string, index: number) => (
-    <div key={index} className="mb-4 flex items-start gap-3">
-      <div className="mt-1 flex-shrink-0">
-        <Beaker className="h-5 w-5 text-blue-500" />
+  function formatScienceNote(note: string, index: number) {
+    return (
+      <div key={`science-${index}`} className="mb-4 flex items-start gap-3">
+        <div className="mt-1 flex-shrink-0">
+          <Beaker className="h-5 w-5 text-blue-500" />
+        </div>
+        <p className="flex-1">{note}</p>
       </div>
-      <p className="flex-1">{note}</p>
-    </div>
-  );
+    );
+  }
   
   // Helper to format techniques with icons
-  const formatTechnique = (technique: string, index: number) => (
-    <div key={index} className="mb-4 flex items-start gap-3">
-      <div className="mt-1 flex-shrink-0">
-        <BookOpenText className="h-5 w-5 text-green-500" />
+  function formatTechnique(technique: string, index: number) {
+    return (
+      <div key={`technique-${index}`} className="mb-4 flex items-start gap-3">
+        <div className="mt-1 flex-shrink-0">
+          <BookOpenText className="h-5 w-5 text-green-500" />
+        </div>
+        <p className="flex-1">{technique}</p>
       </div>
-      <p className="flex-1">{technique}</p>
-    </div>
-  );
+    );
+  }
 
   // Helper to format troubleshooting with icons
-  const formatTroubleshooting = (tip: string, index: number) => (
-    <div key={index} className="mb-4 flex items-start gap-3">
-      <div className="mt-1 flex-shrink-0">
-        <AlertCircle className="h-5 w-5 text-amber-500" />
+  function formatTroubleshooting(tip: string, index: number) {
+    return (
+      <div key={`troubleshoot-${index}`} className="mb-4 flex items-start gap-3">
+        <div className="mt-1 flex-shrink-0">
+          <AlertCircle className="h-5 w-5 text-amber-500" />
+        </div>
+        <p className="flex-1">{tip}</p>
       </div>
-      <p className="flex-1">{tip}</p>
-    </div>
-  );
+    );
+  }
 
-  // Extract text content from raw response if needed
-  const extractSectionFromText = (rawText: string | undefined, sectionName: string, defaultText?: string): React.ReactNode => {
+  // Enhanced extract section function with better pattern matching and caching
+  function extractSectionFromText(rawText: string | undefined, sectionName: string, defaultText?: string): React.ReactNode {
     if (!rawText) return defaultText ? <p>{defaultText}</p> : null;
     
-    // Look for markdown headers (### Section Name)
-    const sectionRegex = new RegExp(`#+\\s*${sectionName}([^#]*?)(?=#+|$)`, 'i');
+    // Look for markdown headers (### Section Name) with more flexible matching
+    const sectionRegex = new RegExp(`#+\\s*${sectionName}([^#]*?)(?=(?:#+\\s|$))`, 'i');
     const match = rawText.match(sectionRegex);
     
     if (match && match[1] && match[1].trim().length > 20) {
       const sectionContent = match[1].trim();
-      return <div dangerouslySetInnerHTML={{ __html: sectionContent.replace(/\n/g, '<br>') }} />;
+      return <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sectionContent.replace(/\n/g, '<br>') }} />;
     }
     
-    // Look for related paragraphs if no header match
-    const paragraphsRegex = new RegExp(`${sectionName}([^.!?]*[.!?])`, 'i');
+    // Enhanced paragraph pattern matching
+    // First look for blocks of text that seem related to the section
+    const paragraphsRegex = new RegExp(`(${sectionName}[^.!?]*(?:[.!?][^.!?]*){1,5})`, 'i');
     const paragraphMatch = rawText.match(paragraphsRegex);
     
-    if (paragraphMatch && paragraphMatch[0].length > 20) {
-      return <div dangerouslySetInnerHTML={{ __html: paragraphMatch[0] }} />;
+    if (paragraphMatch && paragraphMatch[0].length > 40) {
+      return <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: paragraphMatch[0].replace(/\n/g, '<br>') }} />;
+    }
+    
+    // If still no content, look for keyword-rich paragraphs
+    const keywords = sectionName.replace(/[()]/g, '').split('|');
+    const paragraphs = rawText.split(/\n\n+/);
+    
+    for (const keyword of keywords) {
+      for (const paragraph of paragraphs) {
+        if (paragraph.toLowerCase().includes(keyword.toLowerCase()) && paragraph.length > 60) {
+          return <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: paragraph.replace(/\n/g, '<br>') }} />;
+        }
+      }
     }
     
     // Return default text if no content found
     return defaultText ? <p>{defaultText}</p> : null;
-  };
+  }
 
   // Determine if there's any analysis content available
   const hasAnyAnalysisContent = 
+    contentParsedRef.current || // We've parsed content already
     (analysis?.science_notes && analysis.science_notes.length > 0) || 
     (analysis?.techniques && analysis.techniques.length > 0) || 
     (analysis?.troubleshooting && analysis.troubleshooting.length > 0) ||
@@ -283,63 +387,39 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             </TabsList>
             
             <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
-              {hasContent(analysis?.science_notes) ? (
-                <div className="space-y-2">
-                  {analysis.science_notes.map((note, i) => formatScienceNote(note, i))}
-                </div>
-              ) : analysis?.textResponse ? (
-                // Try to extract chemistry section from raw text
-                extractSectionFromText(
-                  analysis.textResponse, 
-                  "(Chemistry|Chemical|Science|Maillard)", 
-                  "No structured chemistry analysis available. Try regenerating the analysis."
-                )
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  <p>No chemical analysis available for this recipe.</p>
-                  <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                {parsedContent.chemistry.length > 0 ? 
+                  parsedContent.chemistry : 
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>No chemical analysis available for this recipe.</p>
+                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                  </div>
+                }
+              </div>
             </TabsContent>
             
             <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-              {hasContent(analysis?.techniques) ? (
-                <div className="space-y-2">
-                  {analysis.techniques.map((technique, i) => formatTechnique(technique, i))}
-                </div>
-              ) : analysis?.textResponse ? (
-                // Try to extract techniques section from raw text
-                extractSectionFromText(
-                  analysis.textResponse, 
-                  "(Technique|Method|Cooking|Temperature)", 
-                  "No structured technique analysis available. Try regenerating the analysis."
-                )
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  <p>No technique analysis available for this recipe.</p>
-                  <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                {parsedContent.techniques.length > 0 ? 
+                  parsedContent.techniques : 
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>No technique analysis available for this recipe.</p>
+                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                  </div>
+                }
+              </div>
             </TabsContent>
             
             <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
-              {hasContent(analysis?.troubleshooting) ? (
-                <div className="space-y-2">
-                  {analysis.troubleshooting.map((tip, i) => formatTroubleshooting(tip, i))}
-                </div>
-              ) : analysis?.textResponse ? (
-                // Try to extract troubleshooting section from raw text
-                extractSectionFromText(
-                  analysis.textResponse, 
-                  "(Troubleshoot|Problem|Issue)", 
-                  "No structured troubleshooting tips available. Try regenerating the analysis."
-                )
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  <p>No troubleshooting tips available for this recipe.</p>
-                  <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                {parsedContent.troubleshooting.length > 0 ? 
+                  parsedContent.troubleshooting : 
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>No troubleshooting tips available for this recipe.</p>
+                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                  </div>
+                }
+              </div>
             </TabsContent>
           </Tabs>
         ) : (

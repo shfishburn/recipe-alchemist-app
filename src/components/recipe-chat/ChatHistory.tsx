@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
 import { EmptyChatState } from './EmptyChatState';
@@ -32,19 +32,48 @@ export function ChatHistory({
 }: ChatHistoryProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(chatHistory.length + optimisticMessages.length);
-
-  // Auto-scroll to bottom when new messages appear
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const [messageIds, setMessageIds] = useState<Set<string>>(new Set());
+  
+  // Track unique message IDs to prevent rendering duplicates
   useEffect(() => {
-    const currentCount = chatHistory.length + optimisticMessages.length;
+    const newIds = new Set<string>();
+    chatHistory.forEach(msg => {
+      if (msg.id) newIds.add(msg.id);
+    });
+    setMessageIds(newIds);
+  }, [chatHistory]);
+
+  // Enhanced auto-scroll to bottom with debounce for smoother experience
+  const scrollToBottom = () => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     
-    // Only scroll if message count increases or if we're sending/loading
-    if (currentCount > prevMessageCountRef.current || isSending) {
+    scrollTimeoutRef.current = window.setTimeout(() => {
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
       }
+      scrollTimeoutRef.current = null;
+    }, 100);
+  };
+  
+  // Auto-scroll to bottom when new messages appear or when sending
+  useEffect(() => {
+    const currentCount = chatHistory.length + optimisticMessages.length;
+    
+    // Scroll if message count increases or if we're sending/loading
+    if (currentCount > prevMessageCountRef.current || isSending) {
+      scrollToBottom();
     }
     
     prevMessageCountRef.current = currentCount;
+    
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
   }, [chatHistory, optimisticMessages, isSending]);
 
   if (isLoading) {
@@ -81,12 +110,25 @@ export function ChatHistory({
     return <EmptyChatState />;
   }
 
+  // Filter out duplicate optimistic messages that already appear in chatHistory
+  const filteredOptimisticMessages = optimisticMessages.filter(optMsg => {
+    // Skip if this message text is already in chat history
+    const isDuplicateContent = chatHistory.some(
+      realMsg => realMsg.user_message === optMsg.user_message
+    );
+    
+    // Skip if we have an ID match
+    const isDuplicateId = optMsg.id && messageIds.has(optMsg.id);
+    
+    return !isDuplicateContent && !isDuplicateId;
+  });
+
   return (
     <div className="space-y-3 sm:space-y-6">
       {/* Render confirmed chat messages */}
       {chatHistory.map((chat) => (
         <ChatMessage
-          key={chat.id}
+          key={chat.id || `chat-${chat.created_at}`}
           chat={chat}
           setMessage={setMessage}
           applyChanges={applyChanges}
@@ -95,8 +137,8 @@ export function ChatHistory({
       ))}
       
       {/* Render optimistic messages that haven't been confirmed yet */}
-      {optimisticMessages.map((chat) => (
-        <div key={`optimistic-${chat.id}`} className="opacity-90">
+      {filteredOptimisticMessages.map((chat) => (
+        <div key={`optimistic-${chat.id || Date.now()}`} className="opacity-90">
           <ChatMessage
             chat={chat}
             setMessage={setMessage}
