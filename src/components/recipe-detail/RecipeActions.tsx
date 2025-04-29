@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -147,7 +146,7 @@ export function RecipeActions({
             <span className="whitespace-nowrap">
               {analyzeText}
             </span>
-            {isAnalysisOpen && <Badge variant="success" className="ml-2 text-[10px]">Active</Badge>}
+            {isAnalysisOpen && <Badge variant="default" className="ml-2 text-[10px]">Active</Badge>}
           </Button>
           
           <Button 

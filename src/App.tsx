@@ -43,11 +43,6 @@ const queryClient = new QueryClient({
       retry: 1,
       staleTime: 30000, // 30 seconds
       gcTime: 300000,   // 5 minutes
-      meta: {
-        onError: (error: Error) => {
-          console.error('Query error:', error);
-        },
-      },
     },
   },
 });

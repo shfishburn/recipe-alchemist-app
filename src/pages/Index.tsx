@@ -64,7 +64,6 @@ const Index = () => {
           <Features />
         </Suspense>
       </main>
-      <Footer />
     </div>
   );
 };
