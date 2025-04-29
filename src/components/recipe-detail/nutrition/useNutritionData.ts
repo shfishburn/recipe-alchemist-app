@@ -44,7 +44,7 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
     
     console.log("Standardized nutrition:", standardizedNutrition);
     
-    // Extract values with fallbacks for different property naming conventions
+    // Extract values with better fallback handling
     const nutritionData: ExtendedNutritionData = {
       calories: standardizedNutrition.calories || 0,
       protein: standardizedNutrition.protein || 0,

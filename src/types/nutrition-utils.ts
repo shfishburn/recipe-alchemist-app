@@ -7,13 +7,13 @@ export const NUTRITION_FIELD_NAMES = {
   protein: ['protein_g', 'protein'],
   carbs: ['carbs_g', 'carbs'],
   fat: ['fat_g', 'fat'],
-  fiber: ['fiber_g', 'fiber'],
+  fiber: ['fiber_g', 'fiber', 'dietary_fiber'],
   sugar: ['sugar_g', 'sugar'],
   sodium: ['sodium_mg', 'sodium'],
   // Micronutrients
-  vitamin_a: ['vitamin_a_iu', 'vitaminA'],
-  vitamin_c: ['vitamin_c_mg', 'vitaminC'],
-  vitamin_d: ['vitamin_d_iu', 'vitaminD'],
+  vitamin_a: ['vitamin_a_iu', 'vitaminA', 'vitamin_a'],
+  vitamin_c: ['vitamin_c_mg', 'vitaminC', 'vitamin_c'],
+  vitamin_d: ['vitamin_d_iu', 'vitaminD', 'vitamin_d'],
   calcium: ['calcium_mg', 'calcium'],
   iron: ['iron_mg', 'iron'],
   potassium: ['potassium_mg', 'potassium']
@@ -95,7 +95,7 @@ export function standardizeNutrition(input: any): Nutrition {
   if (input.sodium_mg !== undefined) output.sodium_mg = Number(input.sodium_mg);
   if (input.sodium !== undefined && output.sodium_mg === undefined) output.sodium_mg = Number(input.sodium);
   
-  // Map micronutrients
+  // Map micronutrients with better fallback handling
   if (input.vitamin_a_iu !== undefined) output.vitamin_a_iu = Number(input.vitamin_a_iu);
   if (input.vitaminA !== undefined && output.vitamin_a_iu === undefined) output.vitamin_a_iu = Number(input.vitaminA);
   if (input.vitamin_a !== undefined && output.vitamin_a_iu === undefined) output.vitamin_a_iu = Number(input.vitamin_a);
@@ -152,7 +152,7 @@ export function categorizeNutrients(nutrition: Nutrition) {
       fat: nutrition.fat || 0
     },
     others: {
-      fiber: nutrition.fiber || 0,
+      fiber: nutrition.fiber || nutrition.fiber_g || 0,
       sugar: nutrition.sugar_g || 0,
       sodium: nutrition.sodium_mg || 0
     },

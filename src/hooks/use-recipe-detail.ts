@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
+import { standardizeNutrition } from '@/types/nutrition-utils';
 
 export type { Recipe, Ingredient, Nutrition };
 
@@ -55,18 +56,15 @@ export const useRecipeDetail = (id?: string) => {
       if (data.nutrition) {
         try {
           // Handle different nutrition data formats
+          let rawNutrition;
           if (typeof data.nutrition === 'string') {
-            nutrition = JSON.parse(data.nutrition);
-          } else if (typeof data.nutrition === 'object') {
-            nutrition = data.nutrition as Nutrition;
+            rawNutrition = JSON.parse(data.nutrition);
+          } else {
+            rawNutrition = data.nutrition;
           }
           
-          // Convert string numbers to actual numbers
-          Object.entries(nutrition).forEach(([key, value]) => {
-            if (typeof value === 'string' && !isNaN(Number(value))) {
-              (nutrition as any)[key] = Number(value);
-            }
-          });
+          // Standardize the nutrition data to ensure consistent property access
+          nutrition = standardizeNutrition(rawNutrition);
           
           console.log("Processed nutrition data:", nutrition);
         } catch (e) {
