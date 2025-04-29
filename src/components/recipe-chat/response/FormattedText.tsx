@@ -43,7 +43,7 @@ export function FormattedText({ text }: FormattedTextProps) {
   // Create a regex pattern that matches any of the scientific terms (case insensitive)
   const scientificTermPattern = new RegExp(`(${scientificTerms.join('|')})`, 'gi');
   
-  // Apply formatting to scientific terms
+  // Apply formatting to scientific terms - with proper type checking
   const contentWithScientificTerms = React.Children.map(formattedContent, (child) => {
     if (typeof child === 'string') {
       // Split the string by scientific terms and map each part
