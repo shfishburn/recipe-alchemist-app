@@ -49,14 +49,7 @@ export function RecipeCarousel() {
           ))}
         </div>
       ) : (
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-          setApi={setCarouselApi}
-        >
+        <div className="flex flex-col space-y-8">
           <div className="flex flex-col items-center justify-center gap-2 mb-6">
             <div className="flex items-center gap-2">
               <CookingPot className="h-5 w-5 text-recipe-green" />
@@ -68,16 +61,28 @@ export function RecipeCarousel() {
               These recipes are being shared across kitchens similar to yours — find out what makes them special
             </p>
           </div>
-          <CarouselContent>
-            {featuredRecipes.map((recipe) => (
-              <CarouselItem key={recipe.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                <RecipeCard recipe={recipe} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="-left-3 md:-left-4 lg:-left-6" />
-          <CarouselNext className="-right-3 md:-right-4 lg:-right-6" />
-          <div className="absolute -bottom-8 w-full">
+          
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+            setApi={setCarouselApi}
+          >
+            <CarouselContent>
+              {featuredRecipes.map((recipe) => (
+                <CarouselItem key={recipe.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                  <RecipeCard recipe={recipe} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-3 md:-left-4 lg:-left-6" />
+            <CarouselNext className="-right-3 md:-right-4 lg:-right-6" />
+          </Carousel>
+          
+          {/* Pagination moved outside the carousel for better positioning */}
+          <div className="w-full flex flex-col items-center mt-6">
             <CarouselDots 
               totalItems={featuredRecipes.length} 
               selectedIndex={selectedIndex} 
@@ -86,7 +91,7 @@ export function RecipeCarousel() {
               Slide {selectedIndex + 1} of {featuredRecipes.length || 0}
             </div>
           </div>
-        </Carousel>
+        </div>
       )}
     </div>
   );
