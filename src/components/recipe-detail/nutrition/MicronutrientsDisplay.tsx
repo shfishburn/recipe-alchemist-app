@@ -71,6 +71,16 @@ const NUTRIENT_INFO = {
 export function MicronutrientsDisplay({ nutrition }: MicronutrientsDisplayProps) {
   const isMobile = useIsMobile();
   
+  // Check if there's any micronutrient data
+  const hasMicronutrientData = nutrition.vitamin_a > 0 || 
+                              nutrition.vitamin_c > 0 || 
+                              nutrition.vitamin_d > 0 || 
+                              nutrition.calcium > 0 || 
+                              nutrition.iron > 0 || 
+                              nutrition.potassium > 0;
+
+  const hasFiberData = nutrition.fiber > 0;
+                              
   const getPercentageColor = (percentage: number, isLowerBetter: boolean = false) => {
     if (isLowerBetter) {
       if (percentage <= 10) return "text-green-600";
@@ -194,12 +204,60 @@ export function MicronutrientsDisplay({ nutrition }: MicronutrientsDisplayProps)
     );
   };
 
+  // If there's no nutrition data, show a message
+  if (!hasMicronutrientData && !hasFiberData) {
+    return (
+      <div className="space-y-4 mt-6">
+        <h4 className="text-sm font-medium mb-2">Dietary Fiber & Micronutrients</h4>
+        <div className="bg-slate-50 p-4 rounded-md text-center">
+          <p className="text-muted-foreground">No micronutrient data available for this recipe.</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            This may be because the recipe was created before detailed nutritional analysis was supported
+            or because the recipe ingredients don't have associated micronutrient data.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 mt-6">
       <h4 className="text-sm font-medium mb-2">Dietary Fiber & Micronutrients</h4>
       
       {/* Fiber section */}
-      {renderFiberSection()}
+      {hasFiberData ? renderFiberSection() : (
+        <div className="bg-white p-3 rounded-md shadow-sm mb-4" style={{ borderLeft: `3px solid #65a30d` }}>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium flex items-center">
+                Dietary Fiber
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoIcon className="h-3 w-3 ml-1.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">{NUTRIENT_INFO.fiber.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="flex items-baseline gap-2">
+                <p className="text-lg font-semibold">0g</p>
+                <p className="text-xs font-medium text-blue-600">0% DV</p>
+              </div>
+            </div>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+            <div className="bg-blue-500 h-2 rounded-full" style={{ width: "0%" }}></div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            No fiber data available for this recipe.
+          </p>
+        </div>
+      )}
       
       {/* Accordion for categorized micronutrients */}
       <Accordion type="multiple" defaultValue={isMobile ? [] : ['vitamins', 'minerals', 'others']} className="bg-slate-50 rounded-md">
@@ -208,7 +266,10 @@ export function MicronutrientsDisplay({ nutrition }: MicronutrientsDisplayProps)
             <span className="text-sm font-medium">Vitamins</span>
           </AccordionTrigger>
           <AccordionContent className="bg-white rounded-md p-3">
-            {vitamins.map(renderNutrientRow)}
+            {hasMicronutrientData ? 
+              vitamins.map(renderNutrientRow) :
+              <p className="text-center text-muted-foreground py-2">No vitamin data available for this recipe.</p>
+            }
           </AccordionContent>
         </AccordionItem>
         
@@ -217,7 +278,10 @@ export function MicronutrientsDisplay({ nutrition }: MicronutrientsDisplayProps)
             <span className="text-sm font-medium">Minerals</span>
           </AccordionTrigger>
           <AccordionContent className="bg-white rounded-md p-3">
-            {minerals.map(renderNutrientRow)}
+            {hasMicronutrientData ? 
+              minerals.map(renderNutrientRow) :
+              <p className="text-center text-muted-foreground py-2">No mineral data available for this recipe.</p>
+            }
           </AccordionContent>
         </AccordionItem>
         

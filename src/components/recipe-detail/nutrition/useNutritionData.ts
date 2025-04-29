@@ -42,13 +42,15 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
     // Apply standardization to ensure consistent property access
     const standardizedNutrition = standardizeNutrition(recipe.nutrition);
     
+    console.log("Standardized nutrition:", standardizedNutrition);
+    
     // Extract values with fallbacks for different property naming conventions
     const nutritionData: ExtendedNutritionData = {
       calories: standardizedNutrition.calories || 0,
       protein: standardizedNutrition.protein || 0,
       carbs: standardizedNutrition.carbs || 0,
       fat: standardizedNutrition.fat || 0,
-      fiber: standardizedNutrition.fiber || 0,
+      fiber: standardizedNutrition.fiber || standardizedNutrition.fiber_g || 0,
       sugar: standardizedNutrition.sugar_g || 0,
       sodium: standardizedNutrition.sodium_mg || 0,
       vitamin_a: standardizedNutrition.vitamin_a_iu || 0,
@@ -62,7 +64,7 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
       proteinPercentage: getDailyValuePercentage('protein', standardizedNutrition.protein || 0),
       carbsPercentage: getDailyValuePercentage('carbs', standardizedNutrition.carbs || 0),
       fatPercentage: getDailyValuePercentage('fat', standardizedNutrition.fat || 0),
-      fiberPercentage: getDailyValuePercentage('fiber', standardizedNutrition.fiber || 0),
+      fiberPercentage: getDailyValuePercentage('fiber', standardizedNutrition.fiber || standardizedNutrition.fiber_g || 0),
       sugarPercentage: getDailyValuePercentage('sugar', standardizedNutrition.sugar_g || 0),
       sodiumPercentage: getDailyValuePercentage('sodium', standardizedNutrition.sodium_mg || 0),
       vitamin_a_percentage: getDailyValuePercentage('vitamin_a', standardizedNutrition.vitamin_a_iu || 0),

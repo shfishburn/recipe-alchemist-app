@@ -82,6 +82,10 @@ export function standardizeNutrition(input: any): Nutrition {
   } else if (input.fiber_g !== undefined) {
     output.fiber_g = Number(input.fiber_g);
     output.fiber = Number(input.fiber);
+  } else if (input.dietary_fiber !== undefined) {
+    // Additional field name that could be used
+    output.fiber_g = Number(input.dietary_fiber);
+    output.fiber = Number(input.dietary_fiber);
   }
   
   // Handle other nutrition fields with proper suffixes
@@ -94,12 +98,15 @@ export function standardizeNutrition(input: any): Nutrition {
   // Map micronutrients
   if (input.vitamin_a_iu !== undefined) output.vitamin_a_iu = Number(input.vitamin_a_iu);
   if (input.vitaminA !== undefined && output.vitamin_a_iu === undefined) output.vitamin_a_iu = Number(input.vitaminA);
+  if (input.vitamin_a !== undefined && output.vitamin_a_iu === undefined) output.vitamin_a_iu = Number(input.vitamin_a);
   
   if (input.vitamin_c_mg !== undefined) output.vitamin_c_mg = Number(input.vitamin_c_mg);
   if (input.vitaminC !== undefined && output.vitamin_c_mg === undefined) output.vitamin_c_mg = Number(input.vitaminC);
+  if (input.vitamin_c !== undefined && output.vitamin_c_mg === undefined) output.vitamin_c_mg = Number(input.vitamin_c);
   
   if (input.vitamin_d_iu !== undefined) output.vitamin_d_iu = Number(input.vitamin_d_iu);
   if (input.vitaminD !== undefined && output.vitamin_d_iu === undefined) output.vitamin_d_iu = Number(input.vitaminD);
+  if (input.vitamin_d !== undefined && output.vitamin_d_iu === undefined) output.vitamin_d_iu = Number(input.vitamin_d);
   
   if (input.calcium_mg !== undefined) output.calcium_mg = Number(input.calcium_mg);
   if (input.calcium !== undefined && output.calcium_mg === undefined) output.calcium_mg = Number(input.calcium);

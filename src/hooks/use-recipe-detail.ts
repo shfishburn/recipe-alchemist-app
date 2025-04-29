@@ -50,11 +50,36 @@ export const useRecipeDetail = (id?: string) => {
         }
       }
       
+      // Enhanced nutrition data processing
+      let nutrition: Nutrition = {};
+      if (data.nutrition) {
+        try {
+          // Handle different nutrition data formats
+          if (typeof data.nutrition === 'string') {
+            nutrition = JSON.parse(data.nutrition);
+          } else if (typeof data.nutrition === 'object') {
+            nutrition = data.nutrition as Nutrition;
+          }
+          
+          // Convert string numbers to actual numbers
+          Object.entries(nutrition).forEach(([key, value]) => {
+            if (typeof value === 'string' && !isNaN(Number(value))) {
+              (nutrition as any)[key] = Number(value);
+            }
+          });
+          
+          console.log("Processed nutrition data:", nutrition);
+        } catch (e) {
+          console.error('Error parsing nutrition data:', e);
+          nutrition = {};
+        }
+      }
+      
       // Type cast the JSON fields with their proper structure
       const recipe: Recipe = {
         ...data,
         ingredients: data.ingredients as unknown as Ingredient[],
-        nutrition: data.nutrition as unknown as Nutrition,
+        nutrition: nutrition,
         science_notes: scienceNotes
       };
       
