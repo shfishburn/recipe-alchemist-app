@@ -2,7 +2,7 @@
 import React from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CookingPot, ShoppingBag, Bookmark } from 'lucide-react';
+import { Clock, CookingPot, ShoppingBag, Bookmark, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QuickRecipeCardProps {
@@ -10,9 +10,10 @@ interface QuickRecipeCardProps {
   onCook: () => void;
   onShop: () => void;
   onSave: () => void;
+  onPrint?: () => void;
 }
 
-export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeCardProps) {
+export function QuickRecipeCard({ recipe, onCook, onShop, onSave, onPrint }: QuickRecipeCardProps) {
   return (
     <Card className="w-full border-2 border-recipe-green/20">
       <CardHeader className="pb-2">
@@ -108,6 +109,14 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave }: QuickRecipeC
             >
               <Bookmark className="mr-2 h-4 w-4" />
               Save Recipe
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onPrint}
+              className="flex-1"
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print
             </Button>
           </div>
         </div>
