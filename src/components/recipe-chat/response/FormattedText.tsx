@@ -48,7 +48,7 @@ export function FormattedText({ text }: FormattedTextProps) {
     // Handle string child nodes
     if (typeof child === 'string') {
       // Explicitly split the string with proper type assertion
-      const parts = child.split(scientificTermPattern);
+      const parts = (child as string).split(scientificTermPattern);
       
       return parts.map((part, i) => {
         // Check if this part matches a scientific term (case insensitive)
