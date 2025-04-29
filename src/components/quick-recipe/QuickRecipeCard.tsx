@@ -11,9 +11,17 @@ interface QuickRecipeCardProps {
   onShop: () => void;
   onSave: () => void;
   onPrint?: () => void;
+  isSaving?: boolean;
 }
 
-export function QuickRecipeCard({ recipe, onCook, onShop, onSave, onPrint }: QuickRecipeCardProps) {
+export function QuickRecipeCard({ 
+  recipe, 
+  onCook, 
+  onShop, 
+  onSave, 
+  onPrint,
+  isSaving = false 
+}: QuickRecipeCardProps) {
   return (
     <Card className="w-full border-2 border-recipe-green/20">
       <CardHeader className="pb-2">
@@ -106,9 +114,10 @@ export function QuickRecipeCard({ recipe, onCook, onShop, onSave, onPrint }: Qui
               variant="outline" 
               onClick={onSave}
               className="flex-1"
+              disabled={isSaving}
             >
               <Bookmark className="mr-2 h-4 w-4" />
-              Save Recipe
+              {isSaving ? 'Saving...' : 'Save Recipe'}
             </Button>
             <Button 
               variant="outline" 

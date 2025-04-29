@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { QuickRecipeTagForm } from './QuickRecipeTagForm';
 import { QuickRecipeCard } from './QuickRecipeCard';
@@ -10,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
+import { supabase } from '@/integrations/supabase/client';
 
 export function QuickRecipeGenerator() {
   const { generateQuickRecipe, isLoading, recipe, setRecipe } = useQuickRecipe();
@@ -19,6 +21,7 @@ export function QuickRecipeGenerator() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const authDrawer = useAuthDrawer();
+  const [isSaving, setIsSaving] = useState(false);
   
   // Reference to trigger the print dialog
   const printDialogTriggerRef = useRef<HTMLButtonElement>(null);
@@ -30,19 +33,58 @@ export function QuickRecipeGenerator() {
     }
   };
 
-  const handleSaveRecipe = () => {
+  const handleSaveRecipe = async () => {
     if (!user) {
       authDrawer.open();
       return;
     }
     
-    // In a real implementation, we would save the recipe to the database here
-    toast({
-      title: "Recipe saved",
-      description: "Your recipe has been saved successfully",
-    });
+    // Show saving state
+    setIsSaving(true);
     
-    navigate('/build');
+    try {
+      // In a real implementation, save the recipe to the database
+      const { data, error } = await supabase
+        .from('recipes')
+        .insert({
+          user_id: user.id,
+          title: recipe.title,
+          tagline: recipe.description,
+          ingredients: recipe.ingredients.map(ingredient => ({
+            qty: 1,
+            unit: '',
+            item: ingredient
+          })),
+          instructions: recipe.steps,
+          prep_time_min: recipe.prepTime,
+          cook_time_min: recipe.cookTime,
+          servings: 4, // Default value
+          cuisine: recipe.cuisineType || 'general',
+        })
+        .select('id')
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Recipe saved",
+        description: "Your recipe has been saved to My Kitchen",
+      });
+      
+      // Navigate to the recipes page
+      navigate('/recipes');
+    } catch (error) {
+      console.error('Error saving recipe:', error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your recipe. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   return (
@@ -62,6 +104,7 @@ export function QuickRecipeGenerator() {
             onShop={() => setShoppingListOpen(true)}
             onSave={handleSaveRecipe}
             onPrint={handlePrint}
+            isSaving={isSaving}
           />
           <button 
             className="mt-6 text-sm text-center w-full text-muted-foreground hover:text-foreground"
@@ -88,28 +131,30 @@ export function QuickRecipeGenerator() {
       )}
       
       {/* Print Recipe Dialog */}
-      <PrintRecipe 
-        recipe={{
-          id: 'quick-recipe',
-          title: recipe.title,
-          description: recipe.description,
-          ingredients: recipe.ingredients.map(ing => ({
-            qty: 1,
-            unit: '',
-            item: ing
-          })),
-          instructions: recipe.steps,
-          prep_time_min: recipe.prepTime,
-          cook_time_min: recipe.cookTime,
-          nutrition: recipe.nutritionHighlight ? {
-            // Basic placeholder for nutrition data
-            kcal: 0
-          } : undefined,
-          science_notes: [],
-          tagline: recipe.description
-        }} 
-        ref={printDialogTriggerRef}
-      />
+      {recipe && (
+        <PrintRecipe 
+          recipe={{
+            id: 'quick-recipe',
+            title: recipe.title,
+            description: recipe.description,
+            ingredients: recipe.ingredients.map(ing => ({
+              qty: 1,
+              unit: '',
+              item: ing
+            })),
+            instructions: recipe.steps,
+            prep_time_min: recipe.prepTime,
+            cook_time_min: recipe.cookTime,
+            nutrition: recipe.nutritionHighlight ? {
+              // Basic placeholder for nutrition data
+              kcal: 0
+            } : undefined,
+            science_notes: [],
+            tagline: recipe.description
+          }} 
+          ref={printDialogTriggerRef}
+        />
+      )}
     </div>
   );
 }

@@ -17,6 +17,7 @@ export interface QuickRecipe {
   prepTime: number;
   cookTime: number;
   nutritionHighlight: string;
+  cuisineType?: string;
 }
 
 export const useQuickRecipe = () => {
@@ -48,8 +49,15 @@ export const useQuickRecipe = () => {
       }
       
       console.log('Recipe generated successfully:', data);
-      setRecipe(data);
-      return data;
+
+      // Add the cuisine type to the recipe data
+      const enhancedRecipe = {
+        ...data,
+        cuisineType: formData.cuisine.length > 0 ? formData.cuisine[0] : 'american'
+      };
+      
+      setRecipe(enhancedRecipe);
+      return enhancedRecipe;
     } catch (error) {
       console.error('Error generating recipe:', error);
       toast({
