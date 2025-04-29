@@ -6,7 +6,7 @@ import { RecipeCarousel } from './RecipeCarousel';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
-import { CookingPot } from 'lucide-react';
+import { CookingPot, ArrowDown } from 'lucide-react';
 
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
@@ -21,27 +21,25 @@ const Hero = React.memo(() => {
             <h1 className="font-bold tracking-tight text-3xl md:text-4xl lg:text-5xl">
               {!isMobile ? (
                 <>
-                  Create delicious meals<br/>
-                  <span className="text-gradient">in seconds</span>
+                  What's in your kitchen?
                 </>
               ) : (
-                <>Create delicious meals <span className="text-gradient">in seconds</span></>
+                <>What's in your kitchen?</>
               )}
             </h1>
             
-            {!isMobile && (
-              <p className="text-lg text-muted-foreground max-w-prose">
-                Tell us what you have in your kitchen, and we'll create a perfect recipe for you.
-              </p>
-            )}
+            <p className="text-lg text-muted-foreground max-w-prose">
+              Tell us one ingredient you have, we'll make something delicious.
+            </p>
+            
+            {/* Visual connection between headline and form */}
+            <div className="flex justify-center md:justify-start py-2">
+              <ArrowDown className="h-6 w-6 text-recipe-green animate-bounce" />
+            </div>
             
             {/* Quick Recipe Generator - The main hook */}
             <div className="py-4">
               <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <CookingPot className="h-5 w-5 text-recipe-green" />
-                  <h2 className="text-xl font-medium">Quick Recipe Generator</h2>
-                </div>
                 <QuickRecipeGenerator />
               </div>
             </div>

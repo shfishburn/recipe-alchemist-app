@@ -69,11 +69,11 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="mainIngredient" className="text-sm font-medium">
-            What would you like to cook with today?
+            I have...
           </label>
           <Input 
             id="mainIngredient"
-            placeholder="Enter main ingredient (e.g., chicken)"
+            placeholder="e.g., some chicken, leftover rice..."
             value={formData.mainIngredient}
             onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
             className={`${isMobile ? "h-12" : "h-14 text-lg"} text-center`}
@@ -82,7 +82,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         
         <div className="space-y-3">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Popular ingredients:</label>
+            <label className="text-sm font-medium">Common kitchen staples:</label>
             <div className="flex flex-wrap gap-2 justify-center">
               {POPULAR_INGREDIENTS.map(ingredient => (
                 <Badge 
@@ -144,7 +144,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         disabled={isLoading}
       >
         <CookingPot className="mr-2 h-5 w-5" />
-        {isLoading ? 'Creating Recipe...' : 'Create Quick Recipe'}
+        {isLoading ? 'Creating Recipe...' : 'Find Recipe Ideas'}
       </Button>
     </form>
   );
