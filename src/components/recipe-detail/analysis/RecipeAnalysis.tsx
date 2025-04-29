@@ -20,7 +20,7 @@ export function RecipeAnalysis({ recipe, isVisible, onRecipeUpdated }: RecipeAna
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   
-  const { data: analysis, isLoading } = useQuery({
+  const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
       if (!isVisible) return null;
@@ -52,8 +52,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       return data;
     },
     enabled: isVisible,
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: 1,
   });
+
+  // Function to manually retry analysis
+  const handleRetryAnalysis = () => {
+    refetch();
+    toast.info("Regenerating recipe analysis...");
+  };
 
   // Apply analysis updates to recipe when data is available, but only once
   useEffect(() => {
@@ -75,7 +82,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
           id: recipe.id,
           // Apply changes from analysis while ensuring proper types
           title: analysis.changes.title || recipe.title,
-          science_notes: Array.isArray(analysis.changes.science_notes) ? analysis.changes.science_notes : recipe.science_notes,
+          science_notes: Array.isArray(analysis.science_notes) ? analysis.science_notes : recipe.science_notes,
           instructions: Array.isArray(analysis.changes.instructions) ? analysis.changes.instructions : recipe.instructions,
           ingredients: Array.isArray(analysis.changes.ingredients?.items) && analysis.changes.ingredients?.mode === 'replace' 
             ? analysis.changes.ingredients.items
@@ -125,13 +132,42 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
   if (!isVisible) return null;
 
+  // Helper function to check if a data section has content
+  const hasContent = (section: any[]): boolean => {
+    return Array.isArray(section) && section.length > 0;
+  };
+
+  // Helper to extract text content from raw response if needed
+  const extractSectionFromText = (rawText: string | undefined, sectionName: string): React.ReactNode => {
+    if (!rawText) return null;
+    
+    const sectionRegex = new RegExp(`#+\\s*${sectionName}[^#]*`, 'i');
+    const match = rawText.match(sectionRegex);
+    
+    if (match) {
+      return <div dangerouslySetInnerHTML={{ __html: match[0].replace(/^#+\s*[^:]*:?\s*/i, '') }} />;
+    }
+    
+    return null;
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Beaker className="h-5 w-5" />
-          <span>Scientific Analysis</span>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Beaker className="h-5 w-5" />
+            <span>Scientific Analysis</span>
+          </CardTitle>
+          {!isLoading && (
+            <button 
+              onClick={handleRetryAnalysis} 
+              className="text-xs text-primary hover:underline"
+            >
+              Regenerate
+            </button>
+          )}
+        </div>
         <CardDescription>
           In-depth breakdown of cooking chemistry and techniques
         </CardDescription>
@@ -160,14 +196,19 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             </TabsList>
             
             <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
-              {analysis?.science_notes?.length > 0 ? (
-                analysis.science_notes.map((note, i) => (
-                  <div key={i} className="mb-4">
-                    <p>{note}</p>
-                  </div>
-                ))
+              {hasContent(analysis?.science_notes) ? (
+                <div className="space-y-3">
+                  {analysis.science_notes.map((note, i) => (
+                    <div key={i} className="mb-4">
+                      <p>{note}</p>
+                    </div>
+                  ))}
+                </div>
               ) : analysis?.textResponse ? (
-                <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                // Try to extract chemistry section from raw text
+                extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science)") || (
+                  <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                )
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No chemical analysis available for this recipe.</p>
@@ -177,8 +218,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             </TabsContent>
             
             <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-              {analysis?.techniques?.length > 0 ? (
-                <div>
+              {hasContent(analysis?.techniques) ? (
+                <div className="space-y-3">
                   {analysis.techniques.map((technique, i) => (
                     <div key={i} className="mb-4">
                       <p>{technique}</p>
@@ -186,7 +227,10 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                   ))}
                 </div>
               ) : analysis?.textResponse ? (
-                <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                // Try to extract techniques section from raw text
+                extractSectionFromText(analysis.textResponse, "(Technique|Method|Cooking)") || (
+                  <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
+                )
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No technique analysis available for this recipe.</p>
@@ -196,23 +240,26 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             </TabsContent>
             
             <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
-              <div className="space-y-4">
-                {analysis?.troubleshooting?.length > 0 ? (
-                  analysis.troubleshooting.map((tip, i) => (
+              {hasContent(analysis?.troubleshooting) ? (
+                <div className="space-y-3">
+                  {analysis.troubleshooting.map((tip, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
                       <p>{tip}</p>
                     </div>
-                  ))
-                ) : analysis?.textResponse ? (
+                  ))}
+                </div>
+              ) : analysis?.textResponse ? (
+                // Try to extract troubleshooting section from raw text
+                extractSectionFromText(analysis.textResponse, "(Troubleshoot|Problem|Issue)") || (
                   <div dangerouslySetInnerHTML={{ __html: analysis.textResponse }} />
-                ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <p>No troubleshooting tips available for this recipe.</p>
-                    <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                  </div>
-                )}
-              </div>
+                )
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p>No troubleshooting tips available for this recipe.</p>
+                  <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         )}

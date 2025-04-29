@@ -66,7 +66,7 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: systemPrompt + "\nIMPORTANT: Provide responses in a conversational tone. Don't format your response as JSON - use normal human-readable text.",
+              content: systemPrompt + "\nIMPORTANT: Provide responses in a conversational tone. For analysis requests, make sure to include explicit sections for science notes, techniques, and troubleshooting.",
             },
             {
               role: 'user',
@@ -74,7 +74,7 @@ serve(async (req) => {
             },
           ],
           temperature: 0.7,
-          max_tokens: 1000,
+          max_tokens: 2000, // Increased max tokens to ensure complete responses
           n: 1,
           stop: null,
         }),
@@ -94,6 +94,9 @@ serve(async (req) => {
       // Prepare the response data format
       let textResponse = rawResponse;
       let changes = { mode: "none" };
+      let scienceNotes = [];
+      let techniques = [];
+      let troubleshooting = [];
       
       // Check if we successfully extracted structured changes
       if (processedResponse && typeof processedResponse === 'object') {
@@ -103,18 +106,35 @@ serve(async (req) => {
         if (processedResponse.changes) {
           changes = processedResponse.changes;
         }
+        // Extract analysis sections if available
+        if (processedResponse.science_notes) {
+          scienceNotes = processedResponse.science_notes;
+        }
+        if (processedResponse.techniques) {
+          techniques = processedResponse.techniques;
+        }
+        if (processedResponse.troubleshooting) {
+          troubleshooting = processedResponse.troubleshooting;
+        }
       }
       
-      console.log("Processed response:", { textLength: textResponse.length, hasChanges: !!changes });
+      console.log("Processed response:", { 
+        textLength: textResponse.length, 
+        hasChanges: !!changes,
+        scienceNotesCount: scienceNotes.length,
+        techniquesCount: techniques.length,
+        troubleshootingCount: troubleshooting.length
+      });
       
-      // For analysis requests, make sure we include the changes in the response
+      // For analysis requests, make sure we include the extracted sections in the response
       const responseData = sourceType === 'analysis' 
         ? { 
             success: true, 
             changes,
-            science_notes: changes.science_notes || [],
-            techniques: changes.techniques || [],
-            troubleshooting: changes.troubleshooting || [] 
+            science_notes: scienceNotes,
+            techniques: techniques,
+            troubleshooting: troubleshooting,
+            textResponse: textResponse // Include text response for fallback
           }
         : { success: true, changes, textResponse };
 

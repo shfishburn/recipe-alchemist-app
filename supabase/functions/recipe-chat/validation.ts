@@ -40,14 +40,14 @@ export function validateRecipeChanges(rawResponse: string) {
       }
     }
     
-    // Enhanced extraction - if all parsing fails, extract sections intelligently from the text
+    // Enhanced extraction - extract sections intelligently from the text
     console.log("Creating enhanced response object from raw text");
     return {
       textResponse: formatResponseForDisplay(rawResponse),
       changes: { mode: "none" },
-      science_notes: extractSectionWithHeader(rawResponse, "Chemistry", "Science", "Ingredient") || extractScienceNotes(rawResponse),
-      techniques: extractSectionWithHeader(rawResponse, "Technique", "Method", "Cooking") || extractTechniques(rawResponse),
-      troubleshooting: extractSectionWithHeader(rawResponse, "Troubleshoot", "Problem", "Issue") || extractTroubleshooting(rawResponse)
+      science_notes: extractSectionContent(rawResponse, "Chemistry", "Science", "Chemical", "Maillard"),
+      techniques: extractSectionContent(rawResponse, "Technique", "Method", "Cooking", "Temperature"),
+      troubleshooting: extractSectionContent(rawResponse, "Troubleshoot", "Problem", "Issue")
     };
   }
 }
@@ -59,6 +59,85 @@ function formatResponseForDisplay(text: string): string {
   
   // Add paragraph breaks for better readability
   return text.split('\n\n').filter(p => p.trim().length > 0).join('<br><br>');
+}
+
+// Extract section content using multiple methods - returns an array of strings
+function extractSectionContent(text: string, ...sectionKeywords: string[]): string[] {
+  const results: string[] = [];
+  
+  // First try to extract by headings
+  const headingSections = extractSectionWithHeader(text, ...sectionKeywords);
+  if (headingSections && headingSections.length > 0) {
+    return headingSections;
+  }
+  
+  // Next try to extract by numbered or bulleted lists
+  const listItems = extractListItems(text, ...sectionKeywords);
+  if (listItems && listItems.length > 0) {
+    return listItems;
+  }
+  
+  // Finally, try to extract by keyword relevance
+  const keywords = new RegExp(`(${sectionKeywords.join('|')})`, 'i');
+  const paragraphs = text.split('\n\n');
+  
+  paragraphs.forEach(paragraph => {
+    if (keywords.test(paragraph) && paragraph.length > 20) {
+      // Clean the paragraph
+      const cleaned = paragraph
+        .replace(/^[#\s-]*/, '') // Remove leading hashes, spaces, dashes
+        .replace(/^\d+\.\s*/, '') // Remove leading numbers with periods
+        .trim();
+      
+      if (cleaned.length > 0) {
+        results.push(cleaned);
+      }
+    }
+  });
+  
+  // Try to extract sentences as a last resort
+  if (results.length === 0) {
+    const sentences = text.split(/[.!?]+/);
+    sentences.forEach(sentence => {
+      if (keywords.test(sentence) && sentence.length > 20) {
+        const cleaned = sentence.trim();
+        if (cleaned.length > 0) {
+          results.push(cleaned);
+        }
+      }
+    });
+  }
+  
+  // Only return up to 5 results
+  return results.slice(0, 5);
+}
+
+// Extract numbered or bulleted list items related to keywords
+function extractListItems(text: string, ...keywords: string[]): string[] | null {
+  // Find sections with relevant keywords
+  const keywordRegex = new RegExp(`(${keywords.join('|')})`, 'i');
+  const sections = text.split(/#{1,3}\s+/); // Split by headings
+  
+  for (const section of sections) {
+    if (keywordRegex.test(section)) {
+      // Extract list items (numbered or bullet points)
+      const listItemRegex = /(?:^|\n)[\s-]*(?:\d+\.|\*|\-)\s+(.+?)(?=(?:\n[\s-]*(?:\d+\.|\*|\-)\s+)|$)/g;
+      const items: string[] = [];
+      let match;
+      
+      while ((match = listItemRegex.exec(section)) !== null) {
+        if (match[1] && match[1].trim().length > 20) {
+          items.push(match[1].trim());
+        }
+      }
+      
+      if (items.length > 0) {
+        return items.slice(0, 5);
+      }
+    }
+  }
+  
+  return null;
 }
 
 // Extract sections with headers from the text
@@ -113,35 +192,4 @@ function cleanUpSection(text: string): string {
     .filter(line => line.length > 0)
     .join(' ')
     .trim();
-}
-
-// Helper functions to extract information from plain text responses
-function extractScienceNotes(text: string): string[] {
-  const scienceRegex = /chemical|reaction|maillard|protein|emulsification|enzyme|acid|temperature/gi;
-  const lines = text.split('\n').filter(line => line.match(scienceRegex));
-  
-  // Only return up to 5 extracted lines that are at least 20 characters long
-  return lines
-    .filter(line => line.length > 20)
-    .slice(0, 5);
-}
-
-function extractTechniques(text: string): string[] {
-  const techniqueRegex = /technique|method|cook|heat|simmer|boil|bake|roast|sear|temperature|timing/gi;
-  const lines = text.split('\n').filter(line => line.match(techniqueRegex));
-  
-  // Only return up to 5 extracted lines that are at least 20 characters long
-  return lines
-    .filter(line => line.length > 20)
-    .slice(0, 5);
-}
-
-function extractTroubleshooting(text: string): string[] {
-  const troubleshootRegex = /troubleshoot|problem|issue|fix|prevent|avoid|concern|error/gi;
-  const lines = text.split('\n').filter(line => line.match(troubleshootRegex));
-  
-  // Only return up to 5 extracted lines that are at least 20 characters long
-  return lines
-    .filter(line => line.length > 20)
-    .slice(0, 5);
 }
