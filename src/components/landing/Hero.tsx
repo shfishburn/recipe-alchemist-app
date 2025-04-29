@@ -6,7 +6,7 @@ import { RecipeCarousel } from './RecipeCarousel';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
-import { CookingPot, ArrowDown } from 'lucide-react';
+import { CookingPot } from 'lucide-react';
 
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
@@ -31,11 +31,6 @@ const Hero = React.memo(() => {
             <p className="text-lg text-muted-foreground max-w-prose">
               Tell us one ingredient you have, we'll make something delicious.
             </p>
-            
-            {/* Visual connection between headline and form */}
-            <div className="flex justify-center md:justify-start py-2">
-              <ArrowDown className="h-6 w-6 text-recipe-green animate-bounce" />
-            </div>
             
             {/* Quick Recipe Generator - The main hook */}
             <div className="py-4">
