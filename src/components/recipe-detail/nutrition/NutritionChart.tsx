@@ -3,8 +3,6 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ComparisonChart } from './charts/ComparisonChart';
 import { DistributionCharts } from './charts/DistributionCharts';
-import { NutritionSummaryText } from './charts/NutritionSummaryText';
-import { useNutritionChartData } from './hooks/useNutritionChartData';
 import { ExtendedNutritionData } from './useNutritionData';
 import { MicronutrientsDisplay } from './MicronutrientsDisplay';
 
@@ -53,19 +51,6 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
           <MicronutrientsDisplay nutrition={recipeNutrition} />
         </TabsContent>
       </Tabs>
-      
-      <NutritionSummaryText
-        calories={recipeNutrition.calories}
-        protein={recipeNutrition.protein}
-        carbs={recipeNutrition.carbs}
-        fat={recipeNutrition.fat}
-        fiber={recipeNutrition.fiber}
-        caloriesPercentage={calorieData[0].percentage}
-        proteinPercentage={macroData[0].percentage}
-        carbsPercentage={macroData[1].percentage}
-        fatPercentage={macroData[2].percentage}
-        fiberPercentage={recipeNutrition.fiberPercentage}
-      />
     </div>
   );
 }
