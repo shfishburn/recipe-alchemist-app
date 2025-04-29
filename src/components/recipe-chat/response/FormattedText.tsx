@@ -59,8 +59,13 @@ export function FormattedText({ text }: FormattedTextProps) {
         }
         return part;
       });
+    } else if (React.isValidElement(child)) {
+      // If it's a React element, just return it
+      return child;
+    } else {
+      // For other types of children (e.g. null, boolean), just return them as is
+      return child;
     }
-    return child;
   });
   
   return <>{contentWithScientificTerms}</>;
