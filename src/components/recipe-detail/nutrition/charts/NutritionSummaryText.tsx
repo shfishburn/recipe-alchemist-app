@@ -98,6 +98,9 @@ export function NutritionSummaryText({
             "This recipe provides a moderate portion of your daily caloric needs." :
             "This recipe provides a significant portion of your daily caloric needs."}
         </p>
+        <p className="mt-1">
+          *Protein and carbs provide 4 calories per gram, while fat provides 9 calories per gram.
+        </p>
       </div>
     </div>
   );

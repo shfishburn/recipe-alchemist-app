@@ -154,7 +154,7 @@ const RecipeDetail = () => {
               </div>
 
               {currentRecipe.nutrition && (
-                <div className="mt-4 sm:mt-8 mb-24 sm:mb-20">
+                <div className="mt-4 sm:mt-8 mb-28 sm:mb-24">
                   <RecipeNutrition 
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}
