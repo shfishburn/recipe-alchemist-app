@@ -161,11 +161,13 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             </TabsList>
             
             <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
-              {analysis?.science_notes?.map((note, i) => (
-                <div key={i} className="mb-4">
-                  <p>{note}</p>
-                </div>
-              )) || (
+              {analysis?.science_notes?.length > 0 ? (
+                analysis.science_notes.map((note, i) => (
+                  <div key={i} className="mb-4">
+                    <p>{note}</p>
+                  </div>
+                ))
+              ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <p>No chemical analysis available for this recipe.</p>
                   <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
@@ -174,7 +176,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             </TabsContent>
             
             <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-              {analysis?.techniques ? (
+              {analysis?.techniques?.length > 0 ? (
                 <div>
                   {analysis.techniques.map((technique, i) => (
                     <div key={i} className="mb-4">
