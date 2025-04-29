@@ -53,6 +53,9 @@ export function ChatResponse({
   // Apply special styling for scientific content
   const isScientific = containsScientificContent(displayText);
 
+  // Split text into paragraphs for proper formatting
+  const paragraphs = displayText.split('\n').filter(Boolean);
+
   return (
     <div className="flex-1 max-w-[calc(100%-32px)]">
       <div className="flex flex-col space-y-2 sm:space-y-4">
@@ -64,17 +67,9 @@ export function ChatResponse({
           
           {/* Main response text content */}
           <div className={`prose prose-sm max-w-none ${textSize} text-slate-800`}>
-            {/* Check if response contains HTML tags */}
-            {displayText.includes('<br>') || displayText.includes('<br/>') || displayText.includes('<br />') ? (
-              <div dangerouslySetInnerHTML={{ __html: displayText }} />
-            ) : (
-              // Otherwise use paragraph formatting
-              displayText.split('\n').filter(Boolean).map((paragraph, index) => (
-                <p key={index} className="mb-1 sm:mb-2">
-                  <FormattedText text={paragraph} />
-                </p>
-              ))
-            )}
+            {paragraphs.map((paragraph, index) => (
+              <FormattedText key={index} text={paragraph} className={index > 0 ? "mt-2" : ""} />
+            ))}
           </div>
           
           {/* Apply changes section with summary and confirmation */}

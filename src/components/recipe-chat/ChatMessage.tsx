@@ -53,19 +53,20 @@ export function ChatMessage({
 
   const avatarSize = isMobile ? "h-7 w-7" : "h-10 w-10";
   const messageGap = isMobile ? "gap-2" : "gap-4";
-  const bubblePadding = isMobile ? "p-2 sm:p-4" : "p-4";
 
   return (
     <div className="flex flex-col space-y-2 sm:space-y-4">
+      {/* User message */}
       <div className={`flex items-start ${messageGap}`}>
         <Avatar className={`${avatarSize} border-2 border-blue-100 bg-blue-50 shrink-0`}>
           <AvatarFallback className="text-blue-500 font-medium text-xs sm:text-sm">U</AvatarFallback>
         </Avatar>
         <div className="bg-blue-50 rounded-[20px] rounded-tl-[5px] p-2 sm:p-4 shadow-sm">
-          <p className="text-xs sm:text-sm text-slate-800">{chat.user_message}</p>
+          <span className="text-xs sm:text-sm text-slate-800">{chat.user_message}</span>
         </div>
       </div>
       
+      {/* AI Response */}
       {(!isOptimistic && chat.ai_response) ? (
         <div className={`flex items-start ${messageGap}`}>
           <Avatar className={`${avatarSize} bg-primary/10 border-2 border-primary/25 shrink-0`}>

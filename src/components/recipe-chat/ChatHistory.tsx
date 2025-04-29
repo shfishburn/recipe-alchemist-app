@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
+import { EmptyChatState } from './EmptyChatState';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 
 interface ChatHistoryProps {
@@ -32,6 +33,14 @@ export function ChatHistory({
     }
   }, [chatHistory, optimisticMessages]);
 
+  if (isLoading) {
+    return <div className="py-4 text-center">Loading chat history...</div>;
+  }
+
+  if (chatHistory.length === 0 && optimisticMessages.length === 0) {
+    return <EmptyChatState />;
+  }
+
   return (
     <div className="space-y-3 sm:space-y-6">
       {/* Render confirmed chat messages */}
@@ -47,7 +56,7 @@ export function ChatHistory({
       
       {/* Render optimistic messages that haven't been confirmed yet */}
       {optimisticMessages.map((chat, index) => (
-        <div key={`optimistic-${index}`} className="opacity-90">
+        <div key={`optimistic-${chat.id || index}`} className="opacity-90">
           <ChatMessage
             chat={chat}
             setMessage={setMessage}

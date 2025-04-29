@@ -55,7 +55,7 @@ export function FormattedText({ text, className }: FormattedTextProps) {
 
 function processInlineFormatting(text: string) {
   // Split the text based on formatting markers
-  const parts = [];
+  const parts: React.ReactNode[] = [];
   let currentText = '';
   let inBold = false;
   let inItalic = false;
@@ -68,7 +68,7 @@ function processInlineFormatting(text: string) {
         parts.push(
           inBold ? 
             <strong key={`bold-${parts.length}`}>{currentText}</strong> : 
-            <span key={`text-${parts.length}`}>{currentText}</span>
+            <React.Fragment key={`text-${parts.length}`}>{currentText}</React.Fragment>
         );
         currentText = '';
       }
@@ -80,7 +80,7 @@ function processInlineFormatting(text: string) {
         parts.push(
           inItalic ? 
             <em key={`italic-${parts.length}`}>{currentText}</em> : 
-            <span key={`text-${parts.length}`}>{currentText}</span>
+            <React.Fragment key={`text-${parts.length}`}>{currentText}</React.Fragment>
         );
         currentText = '';
       }
@@ -97,7 +97,7 @@ function processInlineFormatting(text: string) {
         <strong key={`bold-${parts.length}`}>{currentText}</strong> : 
         inItalic ? 
           <em key={`italic-${parts.length}`}>{currentText}</em> :
-          <span key={`text-${parts.length}`}>{currentText}</span>
+          <React.Fragment key={`text-${parts.length}`}>{currentText}</React.Fragment>
     );
   }
   
