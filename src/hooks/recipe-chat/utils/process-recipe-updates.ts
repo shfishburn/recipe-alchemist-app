@@ -11,17 +11,17 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length
   });
 
-  const updatedRecipe: Partial<Recipe> & { id: string } = {
-    id: recipe.id,
+  // Start with a complete copy of the original recipe to prevent data loss
+  const updatedRecipe: Recipe = {
+    ...recipe,
     updated_at: new Date().toISOString()
   };
 
-  // Only update title if a new one is provided
+  // Only override specific fields if they're provided in the changes
   if (chatMessage.changes_suggested?.title) {
     updatedRecipe.title = chatMessage.changes_suggested.title;
   }
 
-  // Only update nutrition if new data is provided
   if (chatMessage.changes_suggested?.nutrition) {
     updatedRecipe.nutrition = chatMessage.changes_suggested.nutrition;
   }
@@ -32,9 +32,6 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
       chatMessage.changes_suggested.science_notes.length > 0) {
     console.log("Updating science notes with", chatMessage.changes_suggested.science_notes.length, "items");
     updatedRecipe.science_notes = chatMessage.changes_suggested.science_notes;
-  } else if (recipe.science_notes && recipe.science_notes.length > 0) {
-    // Keep existing science notes if they exist
-    updatedRecipe.science_notes = recipe.science_notes;
   }
 
   // Safely update instructions - never replace with an empty array
@@ -60,17 +57,46 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     // Only update if we have valid instructions after processing
     if (formattedInstructions.length > 0) {
       updatedRecipe.instructions = formattedInstructions as string[];
-    } else {
-      // Keep existing instructions
-      updatedRecipe.instructions = recipe.instructions;
     }
-  } else {
-    // Keep existing instructions
+  }
+
+  // Process ingredients if they exist using the provided mode
+  if (chatMessage.changes_suggested?.ingredients?.items) {
+    const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
+    console.log("Processing ingredients:", { mode, itemCount: items.length });
+    
+    if (mode !== 'none' && items.length > 0) {
+      // Update ingredients based on mode
+      if (mode === 'add') {
+        console.log("Adding new ingredients to existing recipe");
+        updatedRecipe.ingredients = [...recipe.ingredients, ...items];
+      } else if (mode === 'replace') {
+        console.log("Replacing all ingredients");
+        updatedRecipe.ingredients = items;
+      }
+      // For 'none' mode, keep existing ingredients
+    }
+  }
+
+  // Data validation to ensure critical fields are always present
+  if (!updatedRecipe.ingredients || !Array.isArray(updatedRecipe.ingredients) || updatedRecipe.ingredients.length === 0) {
+    console.warn("No ingredients found in updated recipe, keeping original ingredients");
+    updatedRecipe.ingredients = recipe.ingredients;
+  }
+  
+  if (!updatedRecipe.instructions || !Array.isArray(updatedRecipe.instructions) || updatedRecipe.instructions.length === 0) {
+    console.warn("No instructions found in updated recipe, keeping original instructions");
     updatedRecipe.instructions = recipe.instructions;
   }
 
-  // Keep existing image URL
+  // Keep the image URL intact
   updatedRecipe.image_url = recipe.image_url;
+
+  console.log("Final updated recipe status:", {
+    hasIngredients: updatedRecipe.ingredients.length > 0,
+    hasInstructions: updatedRecipe.instructions.length > 0,
+    hasScienceNotes: updatedRecipe.science_notes && updatedRecipe.science_notes.length > 0,
+  });
 
   return updatedRecipe;
 }

@@ -1,4 +1,3 @@
-
 // This function validates and formats the AI response to extract structured changes
 export function validateRecipeChanges(rawResponse: string) {
   console.log("Validating response length:", rawResponse.length);
@@ -12,18 +11,54 @@ export function validateRecipeChanges(rawResponse: string) {
       if (!Array.isArray(parsedResponse.changes.ingredients.items) || 
           parsedResponse.changes.ingredients.items.length === 0) {
         parsedResponse.changes.ingredients.mode = "none";
+        parsedResponse.changes.ingredients.items = [];
+      }
+    } else if (parsedResponse.changes) {
+      // Initialize ingredients with safe defaults if missing
+      parsedResponse.changes.ingredients = { mode: "none", items: [] };
+    }
+    
+    // Ensure science_notes is always a valid array
+    if (parsedResponse.science_notes) {
+      if (!Array.isArray(parsedResponse.science_notes)) {
+        parsedResponse.science_notes = [];
+      } else {
+        // Filter out any non-string values
+        parsedResponse.science_notes = parsedResponse.science_notes
+          .filter(note => typeof note === 'string' && note.trim() !== '')
+          .map(note => note.trim());
       }
     }
     
-    // Ensure science_notes is an array
-    if (parsedResponse.science_notes && !Array.isArray(parsedResponse.science_notes)) {
-      parsedResponse.science_notes = [];
+    // Ensure changes_suggested.science_notes is always a valid array if it exists
+    if (parsedResponse.changes && parsedResponse.changes.science_notes) {
+      if (!Array.isArray(parsedResponse.changes.science_notes)) {
+        parsedResponse.changes.science_notes = [];
+      } else {
+        // Filter out any non-string values
+        parsedResponse.changes.science_notes = parsedResponse.changes.science_notes
+          .filter(note => typeof note === 'string' && note.trim() !== '')
+          .map(note => note.trim());
+      }
     }
     
-    // Ensure changes_suggested.science_notes is an array if it exists
-    if (parsedResponse.changes && parsedResponse.changes.science_notes && 
-        !Array.isArray(parsedResponse.changes.science_notes)) {
-      parsedResponse.changes.science_notes = [];
+    // Ensure instructions are valid if present
+    if (parsedResponse.changes && parsedResponse.changes.instructions) {
+      if (!Array.isArray(parsedResponse.changes.instructions)) {
+        parsedResponse.changes.instructions = [];
+      } else {
+        // Process and filter instructions to ensure they're valid
+        parsedResponse.changes.instructions = parsedResponse.changes.instructions
+          .map(instruction => {
+            if (typeof instruction === 'string') {
+              return instruction.trim();
+            } else if (instruction && typeof instruction === 'object' && instruction.action) {
+              return instruction.action.trim();
+            }
+            return null;
+          })
+          .filter(Boolean);
+      }
     }
     
     return parsedResponse;
@@ -45,18 +80,50 @@ export function validateRecipeChanges(rawResponse: string) {
           if (!Array.isArray(parsedContent.changes.ingredients.items) || 
               parsedContent.changes.ingredients.items.length === 0) {
             parsedContent.changes.ingredients.mode = "none";
+            parsedContent.changes.ingredients.items = [];
           }
+        } else if (parsedContent.changes) {
+          parsedContent.changes.ingredients = { mode: "none", items: [] };
         }
         
         // Ensure science_notes is an array
-        if (parsedContent.science_notes && !Array.isArray(parsedContent.science_notes)) {
-          parsedContent.science_notes = [];
+        if (parsedContent.science_notes) {
+          if (!Array.isArray(parsedContent.science_notes)) {
+            parsedContent.science_notes = [];
+          } else {
+            parsedContent.science_notes = parsedContent.science_notes
+              .filter(note => typeof note === 'string' && note.trim() !== '')
+              .map(note => note.trim());
+          }
         }
         
         // Ensure changes.science_notes is an array if it exists
-        if (parsedContent.changes && parsedContent.changes.science_notes && 
-            !Array.isArray(parsedContent.changes.science_notes)) {
-          parsedContent.changes.science_notes = [];
+        if (parsedContent.changes && parsedContent.changes.science_notes) {
+          if (!Array.isArray(parsedContent.changes.science_notes)) {
+            parsedContent.changes.science_notes = [];
+          } else {
+            parsedContent.changes.science_notes = parsedContent.changes.science_notes
+              .filter(note => typeof note === 'string' && note.trim() !== '')
+              .map(note => note.trim());
+          }
+        }
+        
+        // Ensure instructions are valid
+        if (parsedContent.changes && parsedContent.changes.instructions) {
+          if (!Array.isArray(parsedContent.changes.instructions)) {
+            parsedContent.changes.instructions = [];
+          } else {
+            parsedContent.changes.instructions = parsedContent.changes.instructions
+              .map(instruction => {
+                if (typeof instruction === 'string') {
+                  return instruction.trim();
+                } else if (instruction && typeof instruction === 'object' && instruction.action) {
+                  return instruction.action.trim();
+                }
+                return null;
+              })
+              .filter(Boolean);
+          }
         }
         
         return parsedContent;
@@ -65,44 +132,18 @@ export function validateRecipeChanges(rawResponse: string) {
       }
     }
     
-    // Look for JSON-like structure in the text
-    const jsonRegex = /\{[\s\S]*\}/; 
-    const jsonMatches = rawResponse.match(jsonRegex);
-    
-    if (jsonMatches && jsonMatches[0]) {
-      try {
-        console.log("Found JSON-like structure in text, attempting to parse");
-        const jsonContent = jsonMatches[0];
-        const parsedContent = JSON.parse(jsonContent);
-        
-        // Apply the same safety checks
-        if (parsedContent.changes && parsedContent.changes.ingredients) {
-          if (!Array.isArray(parsedContent.changes.ingredients.items) || 
-              parsedContent.changes.ingredients.items.length === 0) {
-            parsedContent.changes.ingredients.mode = "none";
-          }
-        }
-        
-        return parsedContent;
-      } catch (parseError) {
-        console.error("Failed to parse JSON-like structure:", parseError);
-      }
-    }
-    
     // Enhanced extraction - extract sections intelligently from the text
     console.log("Creating enhanced response object from raw text");
     const response = {
       textResponse: formatResponseForDisplay(rawResponse),
-      changes: { mode: "none" },
+      changes: { 
+        mode: "none",
+        ingredients: { mode: "none", items: [] } // Ensure ingredients are initialized safely
+      },
       science_notes: extractSectionContent(rawResponse, "Chemistry", "Science", "Chemical", "Maillard"),
       techniques: extractSectionContent(rawResponse, "Technique", "Method", "Cooking", "Temperature"),
       troubleshooting: extractSectionContent(rawResponse, "Troubleshoot", "Problem", "Issue")
     };
-    
-    // Ensure we set the ingredients mode to "none" to prevent data loss
-    if (!response.changes.ingredients) {
-      response.changes.ingredients = { mode: "none", items: [] };
-    }
     
     return response;
   }

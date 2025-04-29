@@ -2,8 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
+import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 
 export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: string }) {
+  // Ensure recipe integrity before saving to database
+  ensureRecipeIntegrity(updatedRecipe);
+  
   // Transform recipe for database storage
   const dbRecipe = {
     ...updatedRecipe,
@@ -12,7 +16,12 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     science_notes: updatedRecipe.science_notes as unknown as Json
   };
 
-  console.log("Saving recipe update with science notes:", {
+  console.log("Saving recipe update with data integrity checks passed:", {
+    id: dbRecipe.id,
+    hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
+    ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
+    hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
+    instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
     hasNotes: Array.isArray(dbRecipe.science_notes) && dbRecipe.science_notes.length > 0,
     noteCount: Array.isArray(dbRecipe.science_notes) ? dbRecipe.science_notes.length : 0
   });
@@ -29,6 +38,6 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     throw error;
   }
   
-  console.log("Recipe successfully updated");
+  console.log("Recipe successfully updated with ID:", data.id);
   return data;
 }

@@ -5,6 +5,7 @@ import { findDuplicateIngredients, validateIngredientQuantities } from './ingred
 import { processRecipeUpdates } from './process-recipe-updates';
 import { saveRecipeUpdate } from './db/save-recipe-update';
 import { validateRecipeUpdate } from './validation/validate-recipe-update';
+import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 
 export async function updateRecipe(
   recipe: Recipe,
@@ -12,7 +13,7 @@ export async function updateRecipe(
   user_id: string,
   imageUrl: string | null
 ) {
-  // Validate inputs
+  // Initial validation of inputs
   validateRecipeUpdate(recipe, chatMessage);
   
   console.log("Starting recipe update with changes:", {
@@ -26,58 +27,60 @@ export async function updateRecipe(
     scienceNoteCount: chatMessage.changes_suggested?.science_notes?.length
   });
 
-  // Process basic recipe updates
-  const updatedRecipe = processRecipeUpdates(recipe, chatMessage);
+  try {
+    // Process basic recipe updates - this now returns a complete recipe copy with changes applied
+    const updatedRecipe = processRecipeUpdates(recipe, chatMessage);
 
-  // Process ingredients if they exist
-  if (chatMessage.changes_suggested?.ingredients?.items) {
-    const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
-    console.log("Processing ingredients:", { mode, itemCount: items.length });
+    // Verify recipe integrity before saving
+    ensureRecipeIntegrity(updatedRecipe);
     
-    if (mode !== 'none' && items.length > 0) {
-      // Validate ingredients format
-      const validIngredients = items.every(item => 
-        typeof item.qty === 'number' && 
-        typeof item.unit === 'string' && 
-        typeof item.item === 'string'
-      );
+    // Advanced ingredient validations if ingredients are being modified
+    if (chatMessage.changes_suggested?.ingredients?.items) {
+      const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
+      
+      if (mode !== 'none' && items.length > 0) {
+        // Validate ingredient format
+        const validIngredients = items.every(item => 
+          typeof item.qty === 'number' && 
+          typeof item.unit === 'string' && 
+          typeof item.item === 'string'
+        );
 
-      if (!validIngredients) {
-        console.error("Invalid ingredient format detected");
-        throw new Error("Invalid ingredient format in suggested changes");
-      }
+        if (!validIngredients) {
+          console.error("Invalid ingredient format detected");
+          throw new Error("Invalid ingredient format in suggested changes");
+        }
 
-      // Check for duplicates in add mode
-      if (mode === 'add') {
-        const duplicates = findDuplicateIngredients(recipe.ingredients, items);
-        if (duplicates.length > 0) {
-          console.error("Duplicate ingredients detected:", duplicates);
-          throw new Error(
-            `These ingredients (or similar ones) already exist in the recipe: ${
-              duplicates.map(d => d.new).join(', ')
-            }`
-          );
+        // Check for duplicates in add mode
+        if (mode === 'add') {
+          const duplicates = findDuplicateIngredients(recipe.ingredients, items);
+          if (duplicates.length > 0) {
+            console.error("Duplicate ingredients detected:", duplicates);
+            throw new Error(
+              `These ingredients (or similar ones) already exist in the recipe: ${
+                duplicates.map(d => d.new).join(', ')
+              }`
+            );
+          }
+        }
+
+        // Validate quantities
+        const quantityValidation = validateIngredientQuantities(recipe, items, mode);
+        if (!quantityValidation.valid) {
+          console.error("Ingredient quantity validation failed:", quantityValidation.message);
+          throw new Error(quantityValidation.message || "Invalid ingredient quantities");
         }
       }
-
-      // Validate quantities
-      const quantityValidation = validateIngredientQuantities(recipe, items, mode);
-      if (!quantityValidation.valid) {
-        console.error("Ingredient quantity validation failed:", quantityValidation.message);
-        throw new Error(quantityValidation.message || "Invalid ingredient quantities");
-      }
-
-      if (mode === 'add') {
-        console.log("Adding new ingredients to existing recipe");
-        updatedRecipe.ingredients = [...recipe.ingredients, ...items];
-      } else if (mode === 'replace') {
-        console.log("Replacing all ingredients");
-        updatedRecipe.ingredients = items;
-      }
     }
-  }
 
-  try {
+    console.log("Final recipe update ready to save:", {
+      id: updatedRecipe.id,
+      hasIngredients: updatedRecipe.ingredients?.length > 0,
+      ingredientCount: updatedRecipe.ingredients?.length,
+      hasInstructions: updatedRecipe.instructions?.length > 0,
+      instructionCount: updatedRecipe.instructions?.length
+    });
+    
     return await saveRecipeUpdate(updatedRecipe);
   } catch (error) {
     console.error("Update recipe error:", error);

@@ -10,13 +10,24 @@ export const useChatMutations = (recipe: Recipe) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async ({ message, sourceType, sourceUrl, sourceImage }: {
+    mutationFn: async ({ 
+      message, 
+      sourceType, 
+      sourceUrl, 
+      sourceImage,
+      messageId // Add support for tracking message ID
+    }: {
       message: string;
       sourceType?: 'manual' | 'image' | 'url';
       sourceUrl?: string;
       sourceImage?: string;
+      messageId?: string; // Optional message ID for tracking
     }) => {
-      console.log("Starting recipe chat mutation:", { message, sourceType });
+      console.log("Starting recipe chat mutation:", { 
+        message, 
+        sourceType,
+        messageId: messageId || 'not-provided'
+      });
       
       toast({
         title: "Processing your request",
@@ -34,7 +45,8 @@ export const useChatMutations = (recipe: Recipe) => {
             userMessage: message,
             sourceType,
             sourceUrl,
-            sourceImage
+            sourceImage,
+            messageId // Pass message ID to edge function if provided
           }
         });
 
@@ -67,6 +79,7 @@ export const useChatMutations = (recipe: Recipe) => {
 
         // Log the exact content we're saving to help with debugging
         console.log("Saving chat message to database with response:", aiResponse.substring(0, 100) + "...");
+        console.log("Original message ID for tracking:", messageId || 'not-provided');
         
         try {
           // Insert the chat message into the database
@@ -79,7 +92,9 @@ export const useChatMutations = (recipe: Recipe) => {
               changes_suggested: response.data.changes || null,
               source_type: sourceType || 'manual',
               source_url: sourceUrl,
-              source_image: sourceImage
+              source_image: sourceImage,
+              // Store the message ID if provided to help with optimistic updates
+              meta: messageId ? { optimistic_id: messageId } : null
             })
             .select()
             .single();
@@ -90,7 +105,8 @@ export const useChatMutations = (recipe: Recipe) => {
           }
           
           console.log("Chat successfully saved to database with ID:", data.id);
-          return data;
+          // Return the data along with the original message ID for tracking
+          return { data, messageId };
         } catch (dbError: any) {
           console.error("Database error when saving chat:", dbError);
           // If we hit a database constraint error, let's provide more specific feedback
@@ -105,16 +121,16 @@ export const useChatMutations = (recipe: Recipe) => {
         throw err;
       }
     },
-    onSuccess: () => {
-      console.log("Recipe chat mutation completed successfully");
+    onSuccess: (result) => {
+      console.log("Recipe chat mutation completed successfully with messageId:", result?.messageId || 'not-provided');
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       toast({
         title: "Response received",
         description: "Culinary analysis complete",
       });
     },
-    onError: (error: any) => {
-      console.error("Recipe chat mutation error:", error);
+    onError: (error: any, variables) => {
+      console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
       toast({
         title: "Error",
         description: error.message || "Failed to get AI response",

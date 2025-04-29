@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -84,12 +83,25 @@ export const useRecipeChat = (recipe: Recipe) => {
   const mutation = useChatMutations(recipe);
   const applyChanges = useApplyChanges(recipe);
 
-  // Fixed: Changed from useCallback to useEffect to properly clear optimistic messages
+  // Improved optimistic message clearing mechanism
   useEffect(() => {
-    if (chatHistory && chatHistory.length > 0) {
-      setOptimisticMessages([]);
+    if (chatHistory && chatHistory.length > 0 && optimisticMessages.length > 0) {
+      // Clear optimistic messages when we have real messages
+      // We generate a unique key based on user_message content to match them
+      const newOptimisticMessages = optimisticMessages.filter(optMsg => {
+        // Only keep optimistic messages that don't have a matching real message
+        return !chatHistory.some(realMsg => 
+          realMsg.user_message === optMsg.user_message
+        );
+      });
+      
+      // Only update state if we actually cleared some messages
+      if (newOptimisticMessages.length < optimisticMessages.length) {
+        console.log(`Cleared ${optimisticMessages.length - newOptimisticMessages.length} optimistic messages`);
+        setOptimisticMessages(newOptimisticMessages);
+      }
     }
-  }, [chatHistory]);
+  }, [chatHistory, optimisticMessages]);
 
   const uploadRecipeImage = async (file: File) => {
     try {
@@ -98,17 +110,22 @@ export const useRecipeChat = (recipe: Recipe) => {
       reader.onload = async (e) => {
         const base64Image = e.target?.result as string;
         
+        // Create a unique message ID to help with tracking and cleanup
+        const messageId = `image-${Date.now()}`;
+        
         // Add optimistic message
         const optimisticMessage: OptimisticMessage = {
           user_message: "Analyzing recipe image...",
-          pending: true
+          pending: true,
+          id: messageId // Add unique ID to help with cleanup
         };
-        setOptimisticMessages([optimisticMessage]);
+        setOptimisticMessages([...optimisticMessages, optimisticMessage]);
         
         mutation.mutate({
           message: "Please analyze this recipe image",
           sourceType: 'image',
-          sourceImage: base64Image
+          sourceImage: base64Image,
+          messageId // Pass message ID to the mutation
         });
       };
       reader.readAsDataURL(file);
@@ -125,17 +142,22 @@ export const useRecipeChat = (recipe: Recipe) => {
   const submitRecipeUrl = (url: string) => {
     console.log("Processing URL submission:", url);
     
+    // Create a unique message ID
+    const messageId = `url-${Date.now()}`;
+    
     // Add optimistic message
     const optimisticMessage: OptimisticMessage = {
       user_message: `Analyzing recipe from: ${url}`,
-      pending: true
+      pending: true,
+      id: messageId // Track with unique ID
     };
-    setOptimisticMessages([optimisticMessage]);
+    setOptimisticMessages([...optimisticMessages, optimisticMessage]);
     
     mutation.mutate({
       message: "Please analyze this recipe URL",
       sourceType: 'url',
-      sourceUrl: url
+      sourceUrl: url,
+      messageId
     });
   };
 
@@ -149,17 +171,24 @@ export const useRecipeChat = (recipe: Recipe) => {
       return;
     }
     
-    // Create optimistic message
+    // Create a unique ID for tracking
+    const messageId = `msg-${Date.now()}`;
+    
+    // Create optimistic message with unique ID
     const optimisticMessage: OptimisticMessage = {
       user_message: message,
-      pending: true
+      pending: true,
+      id: messageId
     };
     
     // Add to optimistic messages queue
     setOptimisticMessages([...optimisticMessages, optimisticMessage]);
     
     console.log("Sending chat message:", message.substring(0, 30) + (message.length > 30 ? '...' : ''));
-    mutation.mutate({ message });
+    mutation.mutate({ 
+      message,
+      messageId
+    });
     setMessage(''); // Clear the input after sending
   };
 

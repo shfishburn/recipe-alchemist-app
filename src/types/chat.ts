@@ -30,10 +30,15 @@ export interface ChatMessage {
   changes_suggested?: ChangesResponse;
   applied?: boolean;
   follow_up_questions?: string[];
+  meta?: {
+    optimistic_id?: string;
+    [key: string]: any;
+  };
 }
 
 export interface OptimisticMessage extends ChatMessage {
   pending?: boolean;
+  id?: string; // Add explicit ID to help with tracking and cleanup
 }
 
 export interface AIResponse {
