@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +15,7 @@ import { MacroChart } from './nutrition/MacroChart';
 import { MacroSplitSliders } from './macro-details/MacroSplitSliders';
 import { MacroPieCharts } from './macro-details/MacroPieCharts';
 import { InfoPanel } from './macro-details/InfoPanel';
+import { MealTiming } from './MealTiming';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DietaryPreferencesProps {
@@ -178,6 +178,7 @@ export function DietaryPreferences({ preferences, onSave }: DietaryPreferencesPr
             <TabsTrigger value="dietary">Dietary Restrictions</TabsTrigger>
             <TabsTrigger value="macros">Basic Macros</TabsTrigger>
             <TabsTrigger value="advanced-macros">Advanced Macros</TabsTrigger>
+            <TabsTrigger value="meal-timing">Meal Timing</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dietary">
@@ -281,6 +282,13 @@ export function DietaryPreferences({ preferences, onSave }: DietaryPreferencesPr
                 </div>
               </div>
             </form>
+          </TabsContent>
+
+          <TabsContent value="meal-timing">
+            <MealTiming 
+              preferences={preferences}
+              onSave={onSave}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
