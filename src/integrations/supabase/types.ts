@@ -309,10 +309,10 @@ export type Database = {
           calories: number | null
           carbs_g: number | null
           cholesterol_mg: number | null
+          copper_mg: number | null
           created_at: string | null
           fat_g: number | null
           fiber_g: number | null
-          food_category: string | null
           food_code: string
           food_name: string
           gmwt_1: number | null
@@ -321,24 +321,32 @@ export type Database = {
           gmwt_desc2: string | null
           id: number
           iron_mg: number | null
+          magnesium_mg: number | null
+          manganese_mg: number | null
+          niacin_mg: number | null
           potassium_mg: number | null
           protein_g: number | null
+          riboflavin_mg: number | null
           sodium_mg: number | null
           sugar_g: number | null
+          thiamin_mg: number | null
           updated_at: string | null
           vitamin_a_iu: number | null
           vitamin_c_mg: number | null
           vitamin_d_iu: number | null
+          vitaminb12_mg: number | null
+          vitaminb6_mg: number | null
+          zinc_mg: number | null
         }
         Insert: {
           calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
           cholesterol_mg?: number | null
+          copper_mg?: number | null
           created_at?: string | null
           fat_g?: number | null
           fiber_g?: number | null
-          food_category?: string | null
           food_code: string
           food_name: string
           gmwt_1?: number | null
@@ -347,24 +355,32 @@ export type Database = {
           gmwt_desc2?: string | null
           id?: number
           iron_mg?: number | null
+          magnesium_mg?: number | null
+          manganese_mg?: number | null
+          niacin_mg?: number | null
           potassium_mg?: number | null
           protein_g?: number | null
+          riboflavin_mg?: number | null
           sodium_mg?: number | null
           sugar_g?: number | null
+          thiamin_mg?: number | null
           updated_at?: string | null
           vitamin_a_iu?: number | null
           vitamin_c_mg?: number | null
           vitamin_d_iu?: number | null
+          vitaminb12_mg?: number | null
+          vitaminb6_mg?: number | null
+          zinc_mg?: number | null
         }
         Update: {
           calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
           cholesterol_mg?: number | null
+          copper_mg?: number | null
           created_at?: string | null
           fat_g?: number | null
           fiber_g?: number | null
-          food_category?: string | null
           food_code?: string
           food_name?: string
           gmwt_1?: number | null
@@ -373,14 +389,22 @@ export type Database = {
           gmwt_desc2?: string | null
           id?: number
           iron_mg?: number | null
+          magnesium_mg?: number | null
+          manganese_mg?: number | null
+          niacin_mg?: number | null
           potassium_mg?: number | null
           protein_g?: number | null
+          riboflavin_mg?: number | null
           sodium_mg?: number | null
           sugar_g?: number | null
+          thiamin_mg?: number | null
           updated_at?: string | null
           vitamin_a_iu?: number | null
           vitamin_c_mg?: number | null
           vitamin_d_iu?: number | null
+          vitaminb12_mg?: number | null
+          vitaminb6_mg?: number | null
+          zinc_mg?: number | null
         }
         Relationships: []
       }

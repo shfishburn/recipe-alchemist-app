@@ -7,6 +7,8 @@ interface CalculationDisplayProps {
   dailyCalories: number;
   deficit: number;
   projectedWeightLossPerWeek: number;
+  adaptedTDEE?: number;
+  hasAdaptation?: boolean;
 }
 
 export function CalculationDisplay({ 
@@ -14,7 +16,9 @@ export function CalculationDisplay({
   tdee, 
   dailyCalories, 
   deficit, 
-  projectedWeightLossPerWeek 
+  projectedWeightLossPerWeek,
+  adaptedTDEE,
+  hasAdaptation
 }: CalculationDisplayProps) {
   return (
     <div className="p-4 bg-blue-50 rounded-md space-y-4">
@@ -28,6 +32,20 @@ export function CalculationDisplay({
           <p className="font-semibold">{tdee} calories</p>
         </div>
       </div>
+      
+      {hasAdaptation && adaptedTDEE && (
+        <div className="border-t border-blue-100 pt-3">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              TDEE with Metabolic Adaptation
+              <span className="ml-2 text-orange-500 font-medium">
+                (-{Math.round(((tdee - adaptedTDEE) / tdee) * 100)}%)
+              </span>
+            </p>
+            <p className="font-semibold">{adaptedTDEE} calories</p>
+          </div>
+        </div>
+      )}
       
       <div className="border-t pt-4">
         <div className="space-y-2">

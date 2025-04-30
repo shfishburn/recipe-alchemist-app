@@ -11,6 +11,7 @@ import { MacroChart } from './nutrition/MacroChart';
 import { PersonalDetails } from './PersonalDetails';
 import { MacroDetails } from './MacroDetails';
 import { MealTiming } from './MealTiming';
+import { BodyComposition } from './BodyComposition';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface NutritionPreferencesProps {
@@ -114,6 +115,7 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
         <TabsTrigger value="personal">Personal Details</TabsTrigger>
         <TabsTrigger value="advanced">Advanced Macros</TabsTrigger>
         <TabsTrigger value="timing">Meal Timing</TabsTrigger>
+        <TabsTrigger value="bodyComposition">Body Composition</TabsTrigger>
       </TabsList>
       
       <TabsContent value="basic">
@@ -180,6 +182,13 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
       
       <TabsContent value="timing">
         <MealTiming 
+          preferences={preferences}
+          onSave={onSave}
+        />
+      </TabsContent>
+      
+      <TabsContent value="bodyComposition">
+        <BodyComposition
           preferences={preferences}
           onSave={onSave}
         />

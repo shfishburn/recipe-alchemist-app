@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { NutritionPreferencesType } from '@/types/nutrition';
 import { WeightGoalSelector } from './personal-details/WeightGoalSelector';
 import { CalculationDisplay } from './personal-details/CalculationDisplay';
+import { calculateRMR } from '@/utils/body-composition';
 
 interface PersonalDetailsProps {
   preferences: NutritionPreferencesType;
@@ -49,6 +51,9 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   });
   
   const watchAllFields = watch();
+  
+  // Get body fat percentage if available
+  const bodyFatPercentage = preferences.bodyComposition?.bodyFatPercentage;
 
   const calculateBMR = (data: any) => {
     if (data.age && data.weight && data.height && data.gender) {
@@ -57,14 +62,32 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       const height = parseInt(data.height);
       
       let bmr = 0;
-      if (data.gender === 'male') {
-        bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+      
+      // Use the calculateRMR function if body fat percentage is available
+      if (bodyFatPercentage !== undefined) {
+        bmr = calculateRMR({
+          age,
+          gender: data.gender,
+          weight,
+          height,
+          bodyFatPercentage,
+        });
       } else {
-        bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        // Use the standard Mifflin-St Jeor equation if body fat is not available
+        if (data.gender === 'male') {
+          bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        } else {
+          bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
       }
       
-      const activityMultiplier = activityLevels.find(level => level.value === data.activityLevel)?.multiplier || 1.55;
-      const tdee = Math.round(bmr * activityMultiplier);
+      // If the user has activity components, use the more detailed calculation method
+      const tdee = preferences.activityComponents 
+        ? Math.round(bmr * (preferences.activityComponents?.occupationMultiplier || 0) 
+                         + bmr * (preferences.activityComponents?.dailyMovementMultiplier || 0)
+                         + bmr * (preferences.activityComponents?.exerciseMultiplier || 0)
+                         + bmr)
+        : Math.round(bmr * (activityLevels.find(level => level.value === data.activityLevel)?.multiplier || 1.55));
       
       const goalOption = weightGoalOptions.find(goal => goal.value === data.weightGoalType);
       const deficit = goalOption?.deficit || 0;
@@ -72,22 +95,59 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       
       const projectedWeightLossPerWeek = deficit > 0 ? (deficit * 7) / 3500 : 0;
       
+      // Account for metabolic adaptation if tracking data is available
+      let adaptedTDEE = tdee;
+      if (preferences.adaptationTracking?.adaptationPercentage) {
+        const adaptationMultiplier = 1 - (preferences.adaptationTracking.adaptationPercentage / 100);
+        adaptedTDEE = Math.round(tdee * adaptationMultiplier);
+      }
+      
       return {
         bmr: Math.round(bmr),
         tdee,
+        adaptedTDEE,
         dailyCalories,
         projectedWeightLossPerWeek,
         deficit
       };
     }
     
-    return { bmr: 0, tdee: 0, dailyCalories: 2000, projectedWeightLossPerWeek: 0, deficit: 0 };
+    return { 
+      bmr: 0, 
+      tdee: 0, 
+      adaptedTDEE: 0, 
+      dailyCalories: 2000, 
+      projectedWeightLossPerWeek: 0, 
+      deficit: 0 
+    };
   };
   
-  const { bmr, tdee, dailyCalories, projectedWeightLossPerWeek, deficit } = calculateBMR(watchAllFields);
+  const { bmr, tdee, adaptedTDEE, dailyCalories, projectedWeightLossPerWeek, deficit } = calculateBMR(watchAllFields);
 
   const onSubmit = (data: any) => {
     const calculations = calculateBMR(data);
+    
+    // If body composition data exists, calculate lean mass and fat mass
+    let bodyCompositionData = preferences.bodyComposition;
+    if (data.weight && bodyFatPercentage !== undefined) {
+      const weight = parseInt(data.weight);
+      const fatMass = Math.round((weight * bodyFatPercentage / 100) * 10) / 10;
+      const leanMass = Math.round((weight - fatMass) * 10) / 10;
+      
+      bodyCompositionData = {
+        ...bodyCompositionData,
+        fatMass,
+        leanMass,
+        bodyFatPercentage
+      };
+    }
+    
+    // Initialize or update adaptation tracking
+    const adaptationTracking = preferences.adaptationTracking || {};
+    if (!adaptationTracking.initialWeight && data.weight) {
+      adaptationTracking.initialWeight = parseInt(data.weight);
+      adaptationTracking.initialTDEE = calculations.tdee;
+    }
     
     onSave({
       personalDetails: {
@@ -101,7 +161,9 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       tdee: calculations.tdee,
       dailyCalories: calculations.dailyCalories,
       weightGoalType: data.weightGoalType,
-      weightGoalDeficit: calculations.deficit
+      weightGoalDeficit: calculations.deficit,
+      bodyComposition: bodyCompositionData,
+      adaptationTracking
     });
   };
 
@@ -190,30 +252,49 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="activityLevel">Activity Level</Label>
-            <Controller
-              control={control}
-              name="activityLevel"
-              render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select activity level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activityLevels.map((level) => (
-                      <SelectItem key={level.value} value={level.value}>
-                        {level.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {!preferences.activityComponents && (
+            <div className="space-y-2">
+              <Label htmlFor="activityLevel">Activity Level</Label>
+              <Controller
+                control={control}
+                name="activityLevel"
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select activity level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activityLevels.map((level) => (
+                        <SelectItem key={level.value} value={level.value}>
+                          {level.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {preferences.activityComponents && (
+                <p className="text-xs text-blue-600">
+                  Using detailed activity components from the Body Composition tab instead.
+                </p>
               )}
-            />
-          </div>
+            </div>
+          )}
+          
+          {preferences.activityComponents && (
+            <div className="p-3 bg-blue-50 rounded-md">
+              <p className="text-sm font-medium">Using detailed activity components:</p>
+              <div className="text-xs text-muted-foreground mt-1">
+                <p>• Occupation: {preferences.activityComponents.occupation}</p>
+                <p>• Daily Movement: {preferences.activityComponents.dailyMovement}</p>
+                <p>• Structured Exercise: {preferences.activityComponents.structuredExercise}</p>
+              </div>
+              <p className="text-xs mt-2">You can edit these in the Body Composition tab</p>
+            </div>
+          )}
           
           <WeightGoalSelector 
             control={control}
@@ -228,6 +309,8 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
               dailyCalories={dailyCalories}
               deficit={deficit}
               projectedWeightLossPerWeek={projectedWeightLossPerWeek}
+              adaptedTDEE={adaptedTDEE}
+              hasAdaptation={!!preferences.adaptationTracking?.adaptationPercentage}
             />
           )}
           
