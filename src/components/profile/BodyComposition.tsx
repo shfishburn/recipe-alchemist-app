@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,14 +58,14 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
     const updatedPreferences = {
       ...preferences,
       bodyComposition: {
-        bodyFatPercentage: parseFloat(data.bodyFatPercentage),
-        leanMass: parseFloat(data.leanMass),
-        fatMass: parseFloat(data.fatMass),
+        bodyFatPercentage: parseFloat(data.bodyFatPercentage.toString()),
+        leanMass: parseFloat(data.leanMass.toString()),
+        fatMass: parseFloat(data.fatMass.toString()),
       },
       matadorProtocol: {
         enabled: data.enableMATADOR,
-        dietPhaseLength: parseInt(data.dietPhaseLength),
-        breakPhaseLength: parseInt(data.breakPhaseLength),
+        dietPhaseLength: parseInt(data.dietPhaseLength.toString()),
+        breakPhaseLength: parseInt(data.breakPhaseLength.toString()),
         currentPhase: preferences.matadorProtocol?.currentPhase || 'diet',
         phaseStartDate: preferences.matadorProtocol?.phaseStartDate || new Date().toISOString(),
         schedule: preferences.matadorProtocol?.schedule || [],
@@ -77,8 +76,8 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
   };
 
   // Convert lean mass and fat mass for display
-  const displayLeanMass = unitSystem === 'imperial' ? kgToLbs(watch('leanMass') || 0) : watch('leanMass') || 0;
-  const displayFatMass = unitSystem === 'imperial' ? kgToLbs(watch('fatMass') || 0) : watch('fatMass') || 0;
+  const displayLeanMass = unitSystem === 'imperial' ? kgToLbs(Number(watch('leanMass') || 0)) : Number(watch('leanMass') || 0);
+  const displayFatMass = unitSystem === 'imperial' ? kgToLbs(Number(watch('fatMass') || 0)) : Number(watch('fatMass') || 0);
 
   return (
     <Tabs defaultValue="bodyComposition">

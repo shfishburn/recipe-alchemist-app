@@ -30,6 +30,9 @@ export const ChartTooltip = ({
   const nutrientColor = NUTRITION_COLORS[nutrientName.toLowerCase() as keyof typeof NUTRITION_COLORS] || '#64748b';
   const nutrientInfo = NUTRIENT_INFO[nutrientName.toLowerCase() as keyof typeof NUTRIENT_INFO];
 
+  // Convert units based on unitSystem
+  const unitLabel = unitSystem === 'metric' ? 'g' : 'g'; // Currently weight units remain the same
+
   return (
     <div className="bg-white p-3 border border-gray-200 rounded-md shadow-lg">
       <h4 className="font-medium text-sm mb-1" style={{ color: nutrientColor }}>{nutrientName}</h4>
@@ -41,12 +44,12 @@ export const ChartTooltip = ({
       <div className="text-xs space-y-1">
         <div className="flex justify-between">
           <span className="text-gray-600">Recipe:</span>
-          <span className="font-medium">{recipeValue}g</span>
+          <span className="font-medium">{recipeValue}{unitLabel}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-gray-600">Daily Target:</span>
-          <span className="font-medium">{targetValue}g</span>
+          <span className="font-medium">{targetValue}{unitLabel}</span>
         </div>
         
         <div className="flex justify-between border-t pt-1 mt-1 border-gray-100">
@@ -60,7 +63,7 @@ export const ChartTooltip = ({
           </span>
         </div>
         
-        {nutrientInfo?.caloriesPerGram && (
+        {nutrientInfo && ('caloriesPerGram' in nutrientInfo) && (
           <div className="flex justify-between text-gray-500 text-[10px] italic">
             <span>Calories per gram:</span>
             <span>{nutrientInfo.caloriesPerGram} kcal</span>
