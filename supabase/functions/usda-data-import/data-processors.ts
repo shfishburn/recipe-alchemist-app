@@ -18,8 +18,33 @@ const validationSchemas = {
   }
 };
 
+// SR28 column mappings to our database columns
+export const sr28Mappings = {
+  food_code: 'NDB_No',
+  food_name: 'Shrt_Desc',
+  calories: 'Energ_Kcal',
+  protein_g: 'Protein_(g)',
+  carbs_g: 'Carbohydrt_(g)',
+  fat_g: 'Lipid_Tot_(g)',
+  fiber_g: 'Fiber_TD_(g)',
+  sugar_g: 'Sugar_Tot_(g)',
+  sodium_mg: 'Sodium_(mg)',
+  vitamin_a_iu: 'Vit_A_IU',
+  vitamin_c_mg: 'Vit_C_(mg)',
+  vitamin_d_iu: 'Vit_D_IU',
+  calcium_mg: 'Calcium_(mg)',
+  iron_mg: 'Iron_(mg)',
+  potassium_mg: 'Potassium_(mg)'
+};
+
+// Function to check if the CSV is in SR28 format
+export function isSR28Format(headers: string[]): boolean {
+  const requiredSR28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
+  return requiredSR28Columns.every(col => headers.includes(col));
+}
+
 // Function to validate data based on table type
-export function validateData(data: any[], tableType: TableType): { isValid: boolean; errors: string[] } {
+export function validateData(data: any[], tableType: TableType, isSR28 = false): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   const schema = validationSchemas[tableType];
   
@@ -34,18 +59,21 @@ export function validateData(data: any[], tableType: TableType): { isValid: bool
   
   // Check each row against the schema
   data.forEach((row, rowIndex) => {
+    // For SR28 format, we need to map column names
+    const mappedRow = isSR28 ? mapSR28ToStandardFormat(row) : row;
+    
     // Check required fields
     schema.required.forEach(field => {
-      if (row[field] === undefined || row[field] === null || row[field] === '') {
+      if (mappedRow[field] === undefined || mappedRow[field] === null || mappedRow[field] === '') {
         errors.push(`Row ${rowIndex + 1}: Missing required field "${field}"`);
       }
     });
     
     // Check numeric fields
     schema.numeric.forEach(field => {
-      if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
-        if (isNaN(Number(row[field]))) {
-          errors.push(`Row ${rowIndex + 1}: Field "${field}" must be numeric, found: "${row[field]}"`);
+      if (mappedRow[field] !== undefined && mappedRow[field] !== null && mappedRow[field] !== '') {
+        if (isNaN(Number(mappedRow[field]))) {
+          errors.push(`Row ${rowIndex + 1}: Field "${field}" must be numeric, found: "${mappedRow[field]}"`);
         }
       }
     });
@@ -54,25 +82,68 @@ export function validateData(data: any[], tableType: TableType): { isValid: bool
   return { isValid: errors.length === 0, errors };
 }
 
+// Function to map SR28 format to our standard format
+export function mapSR28ToStandardFormat(row: any): Record<string, any> {
+  const mappedRow: Record<string, any> = {};
+  
+  for (const [ourField, sr28Field] of Object.entries(sr28Mappings)) {
+    if (row[sr28Field] !== undefined) {
+      mappedRow[ourField] = row[sr28Field];
+    }
+  }
+  
+  // Additional mappings 
+  if (row['NDB_No']) mappedRow.food_code = row['NDB_No'];
+  if (row['Shrt_Desc']) mappedRow.food_name = row['Shrt_Desc'];
+  if (row['Shrt_Desc']) mappedRow.food_category = extractFoodCategory(row['Shrt_Desc']);
+  
+  return mappedRow;
+}
+
+// Helper function to extract a basic food category from the description
+function extractFoodCategory(desc: string): string {
+  const desc_upper = desc.toUpperCase();
+  if (desc_upper.includes('BEEF')) return 'beef';
+  if (desc_upper.includes('PORK')) return 'pork';
+  if (desc_upper.includes('CHICKEN')) return 'poultry';
+  if (desc_upper.includes('TURKEY')) return 'poultry';
+  if (desc_upper.includes('FISH')) return 'seafood';
+  if (desc_upper.includes('SEAFOOD')) return 'seafood';
+  if (desc_upper.includes('VEGETABLE')) return 'vegetables';
+  if (desc_upper.includes('FRUIT')) return 'fruits';
+  if (desc_upper.includes('DAIRY')) return 'dairy';
+  if (desc_upper.includes('MILK')) return 'dairy';
+  if (desc_upper.includes('CHEESE')) return 'dairy';
+  if (desc_upper.includes('BREAD')) return 'grains';
+  if (desc_upper.includes('CEREAL')) return 'grains';
+  if (desc_upper.includes('RICE')) return 'grains';
+  if (desc_upper.includes('PASTA')) return 'grains';
+  if (desc_upper.includes('NUTS')) return 'nuts-seeds';
+  if (desc_upper.includes('SEED')) return 'nuts-seeds';
+  return 'other';
+}
+
 // Function to normalize USDA food data
-export function normalizeUsdaFoodData(row: any): Record<string, any> {
+export function normalizeUsdaFoodData(row: any, isSR28 = false): Record<string, any> {
+  const mappedRow = isSR28 ? mapSR28ToStandardFormat(row) : row;
+  
   return {
-    food_code: String(row.food_code),
-    food_name: String(row.food_name),
-    food_category: row.food_category || null,
-    calories: row.calories ? Number(row.calories) : null,
-    protein_g: row.protein_g ? Number(row.protein_g) : null,
-    carbs_g: row.carbs_g ? Number(row.carbs_g) : null,
-    fat_g: row.fat_g ? Number(row.fat_g) : null,
-    fiber_g: row.fiber_g ? Number(row.fiber_g) : null,
-    sugar_g: row.sugar_g ? Number(row.sugar_g) : null,
-    sodium_mg: row.sodium_mg ? Number(row.sodium_mg) : null,
-    vitamin_a_iu: row.vitamin_a_iu ? Number(row.vitamin_a_iu) : null,
-    vitamin_c_mg: row.vitamin_c_mg ? Number(row.vitamin_c_mg) : null,
-    vitamin_d_iu: row.vitamin_d_iu ? Number(row.vitamin_d_iu) : null,
-    calcium_mg: row.calcium_mg ? Number(row.calcium_mg) : null,
-    iron_mg: row.iron_mg ? Number(row.iron_mg) : null,
-    potassium_mg: row.potassium_mg ? Number(row.potassium_mg) : null
+    food_code: String(mappedRow.food_code),
+    food_name: String(mappedRow.food_name),
+    food_category: mappedRow.food_category || null,
+    calories: mappedRow.calories ? Number(mappedRow.calories) : null,
+    protein_g: mappedRow.protein_g ? Number(mappedRow.protein_g) : null,
+    carbs_g: mappedRow.carbs_g ? Number(mappedRow.carbs_g) : null,
+    fat_g: mappedRow.fat_g ? Number(mappedRow.fat_g) : null,
+    fiber_g: mappedRow.fiber_g ? Number(mappedRow.fiber_g) : null,
+    sugar_g: mappedRow.sugar_g ? Number(mappedRow.sugar_g) : null,
+    sodium_mg: mappedRow.sodium_mg ? Number(mappedRow.sodium_mg) : null,
+    vitamin_a_iu: mappedRow.vitamin_a_iu ? Number(mappedRow.vitamin_a_iu) : null,
+    vitamin_c_mg: mappedRow.vitamin_c_mg ? Number(mappedRow.vitamin_c_mg) : null,
+    vitamin_d_iu: mappedRow.vitamin_d_iu ? Number(mappedRow.vitamin_d_iu) : null,
+    calcium_mg: mappedRow.calcium_mg ? Number(mappedRow.calcium_mg) : null,
+    iron_mg: mappedRow.iron_mg ? Number(mappedRow.iron_mg) : null,
+    potassium_mg: mappedRow.potassium_mg ? Number(mappedRow.potassium_mg) : null
   };
 }
 

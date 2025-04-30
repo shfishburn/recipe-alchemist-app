@@ -28,6 +28,7 @@ export interface ImportResponse {
     errors: { index: number; error: string }[];
     batchResults: { batch: number; count: number }[];
   };
+  format?: 'SR28' | 'Standard';
   error?: string;
 }
 
@@ -107,7 +108,31 @@ export function validateCsvFormat(
     .split(',')
     .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
   
-  // Check for required columns
+  // Check if this is SR28 format
+  const sr28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
+  const isSR28 = sr28Columns.every(col => columns.includes(col));
+  
+  if (isSR28) {
+    // For SR28 format, we have special mappings
+    const sr28MappedColumns = {
+      'food_code': 'NDB_No',
+      'food_name': 'Shrt_Desc',
+      // Add other mappings as needed
+    };
+    
+    // Check for required columns in SR28 format
+    const missingColumns = requiredColumns.filter(col => {
+      const sr28Column = sr28MappedColumns[col as keyof typeof sr28MappedColumns];
+      return sr28Column ? !columns.includes(sr28Column) : !columns.includes(col);
+    });
+    
+    return {
+      isValid: missingColumns.length === 0,
+      missingColumns
+    };
+  }
+  
+  // Standard format validation
   const missingColumns = requiredColumns.filter(col => 
     !columns.find(c => c.toLowerCase() === col.toLowerCase())
   );
@@ -116,4 +141,24 @@ export function validateCsvFormat(
     isValid: missingColumns.length === 0,
     missingColumns
   };
+}
+
+/**
+ * Function to detect if CSV is in SR28 format
+ */
+export function isSR28Format(csvData: string): boolean {
+  if (!csvData) return false;
+  
+  // Get the header row
+  const headerRow = csvData.split('\n')[0];
+  if (!headerRow) return false;
+  
+  // Parse header columns
+  const columns = headerRow
+    .split(',')
+    .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
+  
+  // Check for key SR28 columns
+  const requiredSR28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
+  return requiredSR28Columns.every(col => columns.includes(col));
 }

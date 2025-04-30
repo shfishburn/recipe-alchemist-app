@@ -9,6 +9,7 @@ import {
   importUsdaData, 
   readCsvFile, 
   validateCsvFormat, 
+  isSR28Format,
   UsdaTableType, 
   ImportResponse 
 } from '@/utils/usda-data-import';
@@ -25,12 +26,24 @@ import { Link } from 'react-router-dom';
 import { CheckCircle2, FileUp, Info, Loader2, AlertCircle, ChevronRight, Database } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Required columns for validation by table type
 const REQUIRED_COLUMNS = {
   [UsdaTableType.USDA_FOODS]: ['food_code', 'food_name'],
   [UsdaTableType.UNIT_CONVERSIONS]: ['food_category', 'from_unit', 'to_unit', 'conversion_factor'],
   [UsdaTableType.YIELD_FACTORS]: ['food_category', 'cooking_method', 'yield_factor']
+};
+
+const SR28_REQUIRED_COLUMNS = {
+  [UsdaTableType.USDA_FOODS]: ['NDB_No', 'Shrt_Desc']
 };
 
 const DataImport = () => {
@@ -43,15 +56,30 @@ const DataImport = () => {
   const [validationResult, setValidationResult] = useState<{
     isValid: boolean;
     missingColumns: string[];
+    isSR28?: boolean;
   } | null>(null);
   const [importResult, setImportResult] = useState<ImportResponse | null>(null);
+  const [csvPreview, setCsvPreview] = useState<string[][]>([]);
 
   // Handle file selection
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0]);
+      const file = event.target.files[0];
+      setSelectedFile(file);
       setValidationResult(null);
       setImportResult(null);
+      
+      try {
+        const csvData = await readCsvFile(file);
+        // Generate a preview of the CSV data
+        const lines = csvData.split('\n').slice(0, 5);
+        const parsedPreview = lines.map(line => 
+          line.split(',').map(cell => cell.trim().replace(/^"(.+)"$/, '$1'))
+        );
+        setCsvPreview(parsedPreview);
+      } catch (error) {
+        console.error("Error reading file for preview:", error);
+      }
     }
   };
 
@@ -69,13 +97,25 @@ const DataImport = () => {
     setIsValidating(true);
     try {
       const csvData = await readCsvFile(selectedFile);
-      const result = validateCsvFormat(csvData, REQUIRED_COLUMNS[selectedTable]);
-      setValidationResult(result);
+      
+      // Check if this is SR28 format
+      const sr28Check = isSR28Format(csvData);
+      
+      // Use appropriate validation based on the format
+      const columnsToCheck = sr28Check 
+        ? SR28_REQUIRED_COLUMNS[selectedTable] || REQUIRED_COLUMNS[selectedTable]
+        : REQUIRED_COLUMNS[selectedTable];
+        
+      const result = validateCsvFormat(csvData, columnsToCheck);
+      setValidationResult({
+        ...result,
+        isSR28: sr28Check
+      });
       
       if (result.isValid) {
         toast({
           title: "Validation successful",
-          description: "CSV file is valid for import.",
+          description: `CSV file is valid for import as ${sr28Check ? 'SR28' : 'standard'} format.`,
         });
       } else {
         toast({
@@ -120,7 +160,7 @@ const DataImport = () => {
       if (result.success) {
         toast({
           title: "Import successful",
-          description: `Successfully processed ${result.results?.totalRecords} records with ${result.results?.successCount} successful inserts.`,
+          description: `Successfully processed ${result.results?.totalRecords} records with ${result.results?.successCount} successful inserts as ${result.format} format.`,
         });
       } else {
         toast({
@@ -139,6 +179,62 @@ const DataImport = () => {
     } finally {
       setIsImporting(false);
     }
+  };
+
+  // Helper function to render CSV preview
+  const renderCsvPreview = () => {
+    if (csvPreview.length === 0) return null;
+    
+    const headers = csvPreview[0];
+    const rows = csvPreview.slice(1);
+    
+    // Limit the number of columns to display to prevent overflow
+    const maxColumns = 10;
+    const truncatedHeaders = headers.slice(0, maxColumns);
+    const hasMoreColumns = headers.length > maxColumns;
+    
+    return (
+      <div className="mt-4 overflow-x-auto">
+        <h3 className="text-sm font-medium mb-2">CSV Preview (first 4 rows)</h3>
+        <Table className="border">
+          <TableHeader>
+            <TableRow>
+              {truncatedHeaders.map((header, idx) => (
+                <TableHead key={idx} className="whitespace-nowrap">
+                  {header}
+                </TableHead>
+              ))}
+              {hasMoreColumns && (
+                <TableHead>...</TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row, rowIdx) => (
+              <TableRow key={rowIdx}>
+                {row.slice(0, maxColumns).map((cell, cellIdx) => (
+                  <TableCell key={cellIdx} className="whitespace-nowrap">
+                    {cell}
+                  </TableCell>
+                ))}
+                {hasMoreColumns && (
+                  <TableCell>...</TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {validationResult?.isSR28 && (
+          <Alert className="mt-2" variant="default">
+            <Info className="h-4 w-4" />
+            <AlertTitle>SR28 Format Detected</AlertTitle>
+            <AlertDescription>
+              This CSV appears to be in USDA SR28 format. The system will automatically map SR28 columns to the required database fields.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -178,6 +274,7 @@ const DataImport = () => {
           <AlertTitle>Important Information</AlertTitle>
           <AlertDescription>
             Make sure your CSV file has the correct headers for the selected table type.
+            The system supports both standard format and USDA SR28 format (with automatic column mapping).
             For security reasons, only administrators should perform data imports.
           </AlertDescription>
         </Alert>
@@ -207,8 +304,11 @@ const DataImport = () => {
           <TabsContent value="usda_foods" className="mt-4">
             <Card className="p-6">
               <h2 className="text-lg font-semibold mb-2">USDA Foods Table</h2>
+              <p className="text-sm text-muted-foreground mb-2">
+                Standard format required columns: food_code, food_name
+              </p>
               <p className="text-sm text-muted-foreground mb-4">
-                Required columns: food_code, food_name
+                SR28 format required columns: NDB_No, Shrt_Desc
               </p>
               <p className="text-sm mb-4">
                 This table stores nutritional information for various food items including calories,
@@ -267,6 +367,8 @@ const DataImport = () => {
                 {selectedFile ? selectedFile.name : "No file selected"}
               </span>
             </div>
+            
+            {renderCsvPreview()}
           </div>
 
           <Separator className="my-6" />
@@ -303,7 +405,7 @@ const DataImport = () => {
                 </AlertTitle>
                 <AlertDescription>
                   {validationResult.isValid 
-                    ? "The CSV file has all required columns and is ready for import."
+                    ? `The CSV file has all required columns and is ready for import as ${validationResult.isSR28 ? 'SR28' : 'standard'} format.`
                     : `Missing required columns: ${validationResult.missingColumns.join(', ')}`
                   }
                 </AlertDescription>
@@ -322,11 +424,33 @@ const DataImport = () => {
                 </AlertTitle>
                 <AlertDescription>
                   {importResult.success 
-                    ? `Successfully processed ${importResult.results?.totalRecords} records with ${importResult.results?.successCount} successful inserts.`
+                    ? `Successfully processed ${importResult.results?.totalRecords} records with ${importResult.results?.successCount} successful inserts as ${importResult.format || 'standard'} format.`
                     : importResult.error
                   }
                 </AlertDescription>
               </Alert>
+            )}
+            
+            {importResult?.success && importResult.results && (
+              <div className="mt-2">
+                <h3 className="text-sm font-medium mb-2">Batch Results</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Batch</TableHead>
+                      <TableHead>Records Processed</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {importResult.results.batchResults.map((batch, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{batch.batch}</TableCell>
+                        <TableCell>{batch.count}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </div>
         </Card>

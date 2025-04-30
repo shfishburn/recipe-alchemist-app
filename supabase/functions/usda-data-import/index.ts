@@ -7,7 +7,8 @@ import {
   validateData, 
   normalizeUsdaFoodData,
   normalizeUnitConversionData,
-  normalizeYieldFactorData 
+  normalizeYieldFactorData,
+  isSR28Format
 } from "./data-processors.ts";
 import { insertBatch, TableType } from "./database.ts";
 
@@ -41,8 +42,13 @@ serve(async (req) => {
       throw new Error(`Invalid table type: ${table}. Must be one of: ${Object.values(TableType).join(', ')}`);
     }
 
+    // Check if data is in SR28 format
+    const headers = csvData.split('\n')[0].split(',').map(h => h.trim().replace(/^"(.+)"$/, '$1'));
+    const isSR28Dataset = isSR28Format(headers);
+    console.log(`Data format detected: ${isSR28Dataset ? 'USDA SR28' : 'Standard'}`);
+    
     // Validate data based on table type
-    const validationResult = validateData(parsedData, table as TableType);
+    const validationResult = validateData(parsedData, table as TableType, isSR28Dataset);
     
     if (!validationResult.isValid) {
       return new Response(
@@ -61,7 +67,7 @@ serve(async (req) => {
     let normalizedData;
     switch (table) {
       case TableType.USDA_FOODS:
-        normalizedData = parsedData.map(normalizeUsdaFoodData);
+        normalizedData = parsedData.map(row => normalizeUsdaFoodData(row, isSR28Dataset));
         break;
       case TableType.UNIT_CONVERSIONS:
         normalizedData = parsedData.map(normalizeUnitConversionData);
@@ -87,7 +93,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         processed: normalizedData.length,
-        results
+        results,
+        format: isSR28Dataset ? 'SR28' : 'Standard'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
