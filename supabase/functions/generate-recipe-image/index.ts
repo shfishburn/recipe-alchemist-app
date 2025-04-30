@@ -68,13 +68,13 @@ THIS MUST BE PURE FOOD PHOTOGRAPHY ONLY - ABSOLUTELY NO TEXT, LETTERS, NUMBERS, 
     
     console.log('Generating image with prompt:', prompt);
 
+    // Fix: Use the correct model and parameters for DALL-E 3
     const response = await openai.images.generate({
-      model: "gpt-image-1",
+      model: "dall-e-3",  // Changed from "gpt-image-1" to "dall-e-3" which is the correct model name
       prompt: prompt,
       n: 1,
-      size: "1792x1024",  // Increased to widescreen format for better composition
-      quality: "hd",      // Upgraded from "standard" to "hd" for higher detail
-      // Removed style parameter as it's no longer supported
+      size: "1792x1024",  
+      quality: "hd"
     });
 
     if (!response.data[0]?.url) {
