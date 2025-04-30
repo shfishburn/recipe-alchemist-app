@@ -10,6 +10,7 @@ import { useNutritionData } from './nutrition/useNutritionData';
 import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Recipe } from '@/types/recipe';
+import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -31,6 +32,11 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   if (!recipeNutrition) {
     return null;
   }
+  
+  // Cast to EnhancedNutrition if it has data_quality field
+  const enhancedNutrition = (recipeNutrition as any)?.data_quality 
+    ? (recipeNutrition as unknown as EnhancedNutrition) 
+    : undefined;
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
@@ -42,6 +48,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
             onViewModeChange={setViewMode}
             cookingMethod={cookingMethod}
             totalTime={totalTime}
+            nutrition={enhancedNutrition}
           />
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

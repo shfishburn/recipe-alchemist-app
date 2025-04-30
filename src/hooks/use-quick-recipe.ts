@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Nutrition } from '@/types/recipe';
+import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
 export interface QuickRecipeFormData {
   cuisine: string[];
@@ -35,7 +36,7 @@ export interface QuickRecipe {
   servings?: number;
   scienceNotes?: string[];
   calorie_check_pass?: boolean;
-  nutrition?: Nutrition;
+  nutrition?: EnhancedNutrition; // Updated to use EnhancedNutrition
 }
 
 export const useQuickRecipe = () => {
@@ -91,6 +92,43 @@ export const useQuickRecipe = () => {
         dietaryType: formData.dietary.length > 0 ? formData.dietary[0] : null,
         servings: formData.servings || 2
       };
+
+      // Enrich nutrition data using NutriSynth
+      try {
+        console.log('Enhancing nutrition data with NutriSynth analysis');
+        
+        const { data: nutritionData, error: nutritionError } = await supabase.functions.invoke('nutrisynth-analysis', {
+          body: JSON.stringify({
+            ingredients: enhancedRecipe.ingredients,
+            servings: enhancedRecipe.servings || 2
+          })
+        });
+
+        if (!nutritionError && nutritionData) {
+          console.log('NutriSynth analysis completed:', nutritionData);
+          // Add the nutrition data to the recipe
+          enhancedRecipe.nutrition = nutritionData;
+          
+          // Add nutritional highlight based on content
+          if (nutritionData?.data_quality?.overall_confidence !== 'low') {
+            // Only update nutritionHighlight if we have reasonable confidence
+            const macros = [];
+            if (nutritionData.protein_g) macros.push(`${Math.round(nutritionData.protein_g)}g protein`);
+            if (nutritionData.carbs_g) macros.push(`${Math.round(nutritionData.carbs_g)}g carbs`);
+            if (nutritionData.fat_g) macros.push(`${Math.round(nutritionData.fat_g)}g fat`);
+            
+            if (macros.length > 0) {
+              enhancedRecipe.nutritionHighlight = `${Math.round(nutritionData.calories || 0)} calories per serving with ${macros.join(', ')}`;
+            }
+          }
+        } else {
+          console.warn('NutriSynth analysis failed:', nutritionError);
+          // Fall back to the original nutrition data or estimation
+        }
+      } catch (nutritionErr) {
+        console.error('Error during NutriSynth analysis:', nutritionErr);
+        // The recipe generation can still continue without enhanced nutrition
+      }
       
       // Update both local state and store
       setRecipe(enhancedRecipe);
@@ -117,4 +155,3 @@ export const useQuickRecipe = () => {
     setRecipe
   };
 };
-

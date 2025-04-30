@@ -38,6 +38,39 @@ export type Database = {
           },
         ]
       }
+      ingredient_mappings: {
+        Row: {
+          confidence_score: number
+          created_at: string | null
+          id: number
+          ingredient_text: string
+          match_method: string
+          normalized_text: string
+          updated_at: string | null
+          usda_food_code: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string | null
+          id?: number
+          ingredient_text: string
+          match_method: string
+          normalized_text: string
+          updated_at?: string | null
+          usda_food_code: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string | null
+          id?: number
+          ingredient_text?: string
+          match_method?: string
+          normalized_text?: string
+          updated_at?: string | null
+          usda_food_code?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -246,12 +279,175 @@ export type Database = {
         }
         Relationships: []
       }
+      usda_foods: {
+        Row: {
+          calcium_mg: number | null
+          calories: number | null
+          carbs_g: number | null
+          created_at: string | null
+          fat_g: number | null
+          fiber_g: number | null
+          food_category: string | null
+          food_code: string
+          food_name: string
+          id: number
+          iron_mg: number | null
+          potassium_mg: number | null
+          protein_g: number | null
+          sodium_mg: number | null
+          sugar_g: number | null
+          updated_at: string | null
+          vitamin_a_iu: number | null
+          vitamin_c_mg: number | null
+          vitamin_d_iu: number | null
+        }
+        Insert: {
+          calcium_mg?: number | null
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          food_category?: string | null
+          food_code: string
+          food_name: string
+          id?: number
+          iron_mg?: number | null
+          potassium_mg?: number | null
+          protein_g?: number | null
+          sodium_mg?: number | null
+          sugar_g?: number | null
+          updated_at?: string | null
+          vitamin_a_iu?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_iu?: number | null
+        }
+        Update: {
+          calcium_mg?: number | null
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          food_category?: string | null
+          food_code?: string
+          food_name?: string
+          id?: number
+          iron_mg?: number | null
+          potassium_mg?: number | null
+          protein_g?: number | null
+          sodium_mg?: number | null
+          sugar_g?: number | null
+          updated_at?: string | null
+          vitamin_a_iu?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_iu?: number | null
+        }
+        Relationships: []
+      }
+      usda_unit_conversions: {
+        Row: {
+          conversion_factor: number
+          created_at: string | null
+          food_category: string
+          from_unit: string
+          id: number
+          notes: string | null
+          to_unit: string
+          updated_at: string | null
+        }
+        Insert: {
+          conversion_factor: number
+          created_at?: string | null
+          food_category: string
+          from_unit: string
+          id?: number
+          notes?: string | null
+          to_unit: string
+          updated_at?: string | null
+        }
+        Update: {
+          conversion_factor?: number
+          created_at?: string | null
+          food_category?: string
+          from_unit?: string
+          id?: number
+          notes?: string | null
+          to_unit?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      usda_yield_factors: {
+        Row: {
+          cooking_method: string
+          created_at: string | null
+          description: string | null
+          food_category: string
+          id: number
+          source: string | null
+          updated_at: string | null
+          yield_factor: number
+        }
+        Insert: {
+          cooking_method: string
+          created_at?: string | null
+          description?: string | null
+          food_category: string
+          id?: number
+          source?: string | null
+          updated_at?: string | null
+          yield_factor: number
+        }
+        Update: {
+          cooking_method?: string
+          created_at?: string | null
+          description?: string | null
+          food_category?: string
+          id?: number
+          source?: string | null
+          updated_at?: string | null
+          yield_factor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
+      }
     }
     Enums: {
       cuisine_category:

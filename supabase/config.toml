@@ -124,3 +124,6 @@ verify_jwt = true
 
 [functions.update-nutrition-data]
 verify_jwt = true
+
+[functions.nutrisynth-analysis]
+verify_jwt = true

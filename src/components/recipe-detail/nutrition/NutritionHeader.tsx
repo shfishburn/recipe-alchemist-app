@@ -1,41 +1,75 @@
 
 import React from 'react';
-import { NutritionToggle } from './NutritionToggle';
-import { CookingPot } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart2, Clock, Utensils } from 'lucide-react';
+import { NutritionConfidenceIndicator } from './NutritionConfidenceIndicator';
+import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
 interface NutritionHeaderProps {
   showToggle: boolean;
   viewMode: 'recipe' | 'personal';
-  onViewModeChange: (value: 'recipe' | 'personal') => void;
-  cookingMethod?: string;
-  totalTime?: number;
+  onViewModeChange: (mode: 'recipe' | 'personal') => void;
+  cookingMethod: string;
+  totalTime: number;
+  nutrition?: EnhancedNutrition;
 }
 
-export function NutritionHeader({ showToggle, viewMode, onViewModeChange, cookingMethod, totalTime }: NutritionHeaderProps) {
-  const isMobile = useIsMobile();
-  
+export function NutritionHeader({
+  showToggle,
+  viewMode,
+  onViewModeChange,
+  cookingMethod,
+  totalTime,
+  nutrition
+}: NutritionHeaderProps) {
   return (
-    <div className="flex-1">
-      <div className="flex flex-col">
-        <span className={`${isMobile ? 'text-base' : 'text-base md:text-lg'} font-semibold text-slate-800`}>
-          Nutrition Information
-        </span>
-        {cookingMethod && totalTime && totalTime > 60 && (
-          <div className="flex items-center text-xs text-amber-600 mt-1 font-normal">
-            <CookingPot className="h-3 w-3 mr-1" />
-            <span>{`${cookingMethod} recipe - ${Math.floor(totalTime / 60)} hr ${totalTime % 60 ? totalTime % 60 + ' min' : ''} total time`}</span>
+    <div className="flex flex-col space-y-2 flex-1">
+      <div className="flex justify-between items-center">
+        <h3 className="font-semibold text-lg">Nutrition Facts</h3>
+        
+        {nutrition?.data_quality && (
+          <NutritionConfidenceIndicator 
+            nutrition={nutrition} 
+            size="sm"
+            showTooltip={true}
+          />
+        )}
+      </div>
+      
+      <div className="flex items-center text-muted-foreground text-xs">
+        {cookingMethod && (
+          <div className="flex items-center mr-4">
+            <Utensils className="h-3.5 w-3.5 mr-1" />
+            <span className="capitalize">{cookingMethod}</span>
           </div>
         )}
-        {showToggle && (
-          <div className="mt-2">
-            <NutritionToggle 
-              viewMode={viewMode} 
-              onViewModeChange={onViewModeChange} 
-            />
+        
+        {totalTime > 0 && (
+          <div className="flex items-center">
+            <Clock className="h-3.5 w-3.5 mr-1" />
+            <span>{totalTime} min</span>
           </div>
         )}
       </div>
+      
+      {showToggle && (
+        <Tabs 
+          value={viewMode} 
+          onValueChange={(val) => onViewModeChange(val as 'recipe' | 'personal')}
+          className="mt-1"
+        >
+          <TabsList className="h-8">
+            <TabsTrigger value="recipe" className="text-xs px-3 h-6">
+              <BarChart2 className="h-3.5 w-3.5 mr-1" />
+              Recipe
+            </TabsTrigger>
+            <TabsTrigger value="personal" className="text-xs px-3 h-6">
+              <BarChart2 className="h-3.5 w-3.5 mr-1" />
+              Personalized
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
     </div>
   );
 }
