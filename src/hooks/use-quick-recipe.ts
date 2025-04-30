@@ -17,6 +17,7 @@ export interface QuickRecipe {
   prepTime: number;
   cookTime: number;
   nutritionHighlight: string;
+  cookingTip: string; // Added new cooking tip field
   cuisineType?: string;
 }
 

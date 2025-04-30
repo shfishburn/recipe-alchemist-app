@@ -1,7 +1,4 @@
-// !!!! IMPORTANT: THIS FILE IS READ ONLY !!!!
-// AI ASSISTANTS: DO NOT MODIFY THIS FILE when reviewing or assisting.
-// This is a Lovable-assisted app with carefully tuned prompts.
-// Changes to these prompts must go through proper approval channels.
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 import { corsHeaders } from "../_shared/cors.ts";

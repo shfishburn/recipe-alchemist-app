@@ -2,7 +2,7 @@
 import React from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CookingPot, ShoppingBag, Bookmark, Printer } from 'lucide-react';
+import { Clock, CookingPot, ShoppingBag, Bookmark, Printer, LightbulbIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QuickRecipeCardProps {
@@ -82,13 +82,24 @@ export function QuickRecipeCard({
           </ol>
         </div>
 
-        {/* Nutrition Highlight */}
-        {recipe.nutritionHighlight && (
-          <div className="bg-slate-50 p-3 rounded-lg">
-            <p className="text-sm font-medium">Nutrition Highlight</p>
-            <p className="text-sm text-muted-foreground">{recipe.nutritionHighlight}</p>
-          </div>
-        )}
+        {/* Nutrition Highlight & Cooking Tip */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {recipe.nutritionHighlight && (
+            <div className="bg-slate-50 p-3 rounded-lg flex-1">
+              <p className="text-sm font-medium">Nutrition Highlight</p>
+              <p className="text-sm text-muted-foreground">{recipe.nutritionHighlight}</p>
+            </div>
+          )}
+          {recipe.cookingTip && (
+            <div className="bg-recipe-orange/10 p-3 rounded-lg flex-1">
+              <p className="text-sm font-medium flex items-center gap-1">
+                <LightbulbIcon className="h-4 w-4 text-recipe-orange" />
+                Cooking Tip
+              </p>
+              <p className="text-sm text-muted-foreground">{recipe.cookingTip}</p>
+            </div>
+          )}
+        </div>
 
         {/* Action buttons - fixed for mobile */}
         <div className="pt-4 flex flex-col gap-2 w-full">

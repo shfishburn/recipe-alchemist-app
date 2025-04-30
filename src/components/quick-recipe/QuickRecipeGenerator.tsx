@@ -60,6 +60,7 @@ export function QuickRecipeGenerator() {
           cook_time_min: recipe.cookTime,
           servings: 4, // Default value
           cuisine: recipe.cuisineType || 'general',
+          cooking_tip: recipe.cookingTip || null, // Save the cooking tip
         })
         .select('id')
         .single();
@@ -150,7 +151,8 @@ export function QuickRecipeGenerator() {
               kcal: 0
             } : undefined,
             science_notes: [],
-            tagline: recipe.description
+            tagline: recipe.description,
+            cooking_tip: recipe.cookingTip // Add cooking tip to print view
           }} 
           ref={printDialogTriggerRef}
         />

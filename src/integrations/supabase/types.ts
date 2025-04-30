@@ -122,6 +122,7 @@ export type Database = {
         Row: {
           chef_notes: string | null
           cook_time_min: number | null
+          cooking_tip: string | null
           created_at: string
           cuisine: string | null
           cuisine_category:
@@ -149,6 +150,7 @@ export type Database = {
         Insert: {
           chef_notes?: string | null
           cook_time_min?: number | null
+          cooking_tip?: string | null
           created_at?: string
           cuisine?: string | null
           cuisine_category?:
@@ -176,6 +178,7 @@ export type Database = {
         Update: {
           chef_notes?: string | null
           cook_time_min?: number | null
+          cooking_tip?: string | null
           created_at?: string
           cuisine?: string | null
           cuisine_category?:
