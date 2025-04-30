@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -33,8 +34,10 @@ serve(async (req) => {
 
     const prompt = `Create an award-winning food photograph of "${title}" that exemplifies professional culinary artistry while maintaining scientific accuracy. This dish features: ${ingredientsDescription}.
 
-ESSENTIAL REQUIREMENT:
-- Image must contain ONLY the food and plating elements - absolutely NO text, watermarks, graphics, or UI elements of any kind
+!!! CRITICAL REQUIREMENT - MUST FOLLOW !!!
+- Generate ONLY photographic food imagery with NO text, words, letters, numbers, labels, graphics, charts, diagrams, or annotations of ANY kind
+- The image must contain ONLY food, ingredients, dishes, tableware, and natural food styling elements
+- Any text, including food labels, menu items, or recipe notes, IS STRICTLY PROHIBITED
 
 COMPOSITION & LIGHTING:
 - Photograph at a 45-degree hero angle capturing optimal surface textures and dimensional layers
@@ -57,7 +60,7 @@ ADVANCED STYLING:
 - Balance negative and positive space with a focal point positioned according to the golden ratio
 - Include subtle environmental elements that suggest the dining context (edge of utensil, partial table setting)
 
-The final image should appear simultaneously aspirational and achievable—a professional culinary photograph that demonstrates technical mastery while maintaining visual appeal that evokes genuine appetite response. Prioritize authentic cooking results over artificial styling techniques, with natural color grading that enhances but never exaggerates the dish's inherent characteristics. GENERATE FOOD IMAGERY ONLY - NO TEXT OR GRAPHICS OF ANY KIND.`;
+The final image should appear simultaneously aspirational and achievable—a professional culinary photograph that demonstrates technical mastery while maintaining visual appeal that evokes genuine appetite response. Prioritize authentic cooking results over artificial styling techniques, with natural color grading that enhances but never exaggerates the dish's inherent characteristics.
 
 !!! FINAL CRITICAL REMINDER !!!
 THIS MUST BE PURE FOOD PHOTOGRAPHY ONLY - ABSOLUTELY NO TEXT, LETTERS, NUMBERS, GRAPHICS, CHARTS, DIAGRAMS, LABELS, CAPTIONS, ANNOTATIONS, OR ANY KIND OF TEXTUAL/GRAPHICAL ELEMENTS WHATSOEVER. VIOLATION OF THIS REQUIREMENT RENDERS THE IMAGE UNUSABLE.`;
@@ -66,12 +69,12 @@ THIS MUST BE PURE FOOD PHOTOGRAPHY ONLY - ABSOLUTELY NO TEXT, LETTERS, NUMBERS, 
     console.log('Generating image with prompt:', prompt);
 
     const response = await openai.images.generate({
-      model: "gpt-image-1",
+      model: "dall-e-3",
       prompt: prompt,
       n: 1,
       size: "1792x1024",  // Increased to widescreen format for better composition
       quality: "hd",      // Upgraded from "standard" to "hd" for higher detail
-      style: "natural",   // Kept as "natural" for realistic food photography
+      // Removed style parameter as it's no longer supported
     });
 
     if (!response.data[0]?.url) {
