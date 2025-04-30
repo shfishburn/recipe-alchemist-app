@@ -10,7 +10,7 @@ import { NutritionPreview } from '@/components/landing/NutritionPreview';
 import { NutritionEnhancement } from '@/components/landing/NutritionEnhancement';
 import { PersonalizedSection } from '@/components/landing/PersonalizedSection';
 import { CommunitySection } from '@/components/landing/CommunitySection';
-import Footer from '@/components/ui/footer';
+import { Footer } from '@/components/ui/footer';
 import { useAuth } from '@/hooks/use-auth';
 
 const Index = () => {

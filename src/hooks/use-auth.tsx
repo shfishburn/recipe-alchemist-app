@@ -1,114 +1,65 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+// Define types
+export interface User {
+  id: string;
+  email: string;
+}
 
 export interface Profile {
   id: string;
-  username?: string;
+  user_id: string;
+  full_name?: string;
   avatar_url?: string;
-  nutrition_preferences?: any;
-  weight_goal_type?: string;
-  weight_goal_deficit?: number;
-  created_at?: string;
 }
 
-interface AuthContextType {
-  session: Session | null;
+export interface AuthContextType {
   user: User | null;
   profile: Profile | null;
+  session: any | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ 
-  session: null, 
-  user: null,
-  profile: null,
-  loading: true,
-  signOut: async () => {},
-});
+// Create context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
-  };
-
+  // Mock authentication for now
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          setTimeout(async () => {
-            try {
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentSession.user.id)
-                .single();
-              
-              setProfile(profileData);
-            } catch (error) {
-              console.error('Error fetching profile:', error);
-            }
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        try {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentSession.user.id)
-            .single();
-          
-          setProfile(profileData);
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Simulate loading auth state
+    setTimeout(() => {
+      // Uncomment to simulate a logged-in user
+      // setUser({ id: '1', email: 'user@example.com' });
+      // setProfile({ id: '1', user_id: '1', full_name: 'Test User' });
+      // setSession({ access_token: 'mock-token' });
+      setLoading(false);
+    }, 1000);
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const logout = async () => {
+    // Mock logout
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+    return Promise.resolve();
+  };
+
+  const value = {
+    user,
+    profile,
+    session,
+    loading,
+    logout
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

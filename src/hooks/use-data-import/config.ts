@@ -1,39 +1,28 @@
 
-import { UsdaTableType } from '@/utils/usda-data-import';
+import { UsdaTableType } from "@/utils/usda-data-import";
 
-// Required columns for validation by table type
-export const REQUIRED_COLUMNS = {
-  [UsdaTableType.USDA_FOODS]: ['food_code', 'food_name'],
-  [UsdaTableType.UNIT_CONVERSIONS]: ['food_category', 'from_unit', 'to_unit', 'conversion_factor'],
-  [UsdaTableType.YIELD_FACTORS]: ['food_category', 'cooking_method', 'yield_factor'],
-  // USDA Raw tables
-  [UsdaTableType.RAW_FOOD]: ['fdc_id', 'description'],
-  [UsdaTableType.RAW_MEASURE_UNIT]: ['id', 'name'],
-  [UsdaTableType.RAW_FOOD_PORTIONS]: ['id', 'fdc_id', 'measure_unit_id', 'gram_weight'],
-  [UsdaTableType.RAW_YIELD_FACTORS]: ['food_category', 'ingredient', 'cooking_method', 'yield_factor']
+export const REQUIRED_COLUMNS: Record<string, string[]> = {
+  [UsdaTableType.USDA_FOODS]: ['fdc_id', 'description', 'publication_date'],
+  [UsdaTableType.FOOD_PORTIONS]: ['id', 'fdc_id', 'amount', 'measure_unit_id', 'gram_weight'],
+  [UsdaTableType.MEASURE_UNITS]: ['id', 'name'],
+  [UsdaTableType.YIELD_FACTORS]: ['food_category', 'ingredient', 'cooking_method', 'yield_factor']
 };
 
-// SR28 columns mapping
-export const SR28_REQUIRED_COLUMNS = {
-  [UsdaTableType.USDA_FOODS]: ['food_code', 'food_name']
-};
-
-// USDA raw file format validation
-export const USDA_FILE_FORMATS = {
-  [UsdaTableType.RAW_FOOD]: { 
-    name: 'Food.csv', 
-    description: 'Contains food descriptions and IDs' 
+export const USDA_FILE_FORMATS: Record<string, { name: string, description: string }> = {
+  [UsdaTableType.USDA_FOODS]: { 
+    name: 'food.csv', 
+    description: 'USDA Foods'
   },
-  [UsdaTableType.RAW_MEASURE_UNIT]: { 
-    name: 'MeasureUnit.csv', 
-    description: 'Contains household unit names' 
+  [UsdaTableType.FOOD_PORTIONS]: { 
+    name: 'food_portion.csv', 
+    description: 'Food Portions'
   },
-  [UsdaTableType.RAW_FOOD_PORTIONS]: { 
-    name: 'FoodPortions.csv', 
-    description: 'Contains portion weights' 
+  [UsdaTableType.MEASURE_UNITS]: { 
+    name: 'measure_unit.csv', 
+    description: 'Measurement Units'
   },
-  [UsdaTableType.RAW_YIELD_FACTORS]: { 
-    name: 'yield_factors.csv', 
-    description: 'Contains cooking yield factors' 
+  [UsdaTableType.YIELD_FACTORS]: { 
+    name: 'cooking_yields.csv', 
+    description: 'Cooking Yield Factors'
   }
 };

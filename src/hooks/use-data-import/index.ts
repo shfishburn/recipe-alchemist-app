@@ -169,10 +169,15 @@ export function useDataImport(): UseDataImportReturn {
     }
   };
 
+  // Modified to match the expected type
+  const handleTableSelection = (table: string) => {
+    setSelectedTable(table as UsdaTableType);
+  };
+
   return {
     selectedFile,
     selectedTable,
-    setSelectedTable,
+    setSelectedTable: handleTableSelection,
     isValidating,
     isImporting,
     validationResult,
