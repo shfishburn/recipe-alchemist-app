@@ -1,91 +1,137 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
-import { MobileMenu } from '@/components/ui/mobile-menu';
-import { AuthDrawer } from '@/components/auth/AuthDrawer';
-import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { Database } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Button } from './button';
+import { Menu } from 'lucide-react';
 
-export function Navbar({ className }: { className?: string }) {
-  const { session } = useAuth();
-  const { isOpen, open, close } = useAuthDrawer();
+const Navbar: React.FC = () => {
+  const { user, profile, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Check if user is an admin (for now, all authenticated users can access this)
-  // In a real app, you'd check for a specific role or permission
-  const isAdmin = !!session;
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
-  const navigationLinks = [
-    { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
-    // Hiding My Lab route
-    // { name: 'My Lab', path: '/build', requiresAuth: true },
-    { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
-    { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
-  ];
-  
-  // Add Data Import link for admins
-  if (isAdmin) {
-    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true });
-  }
-
-  // Filter links based on authentication status
-  const displayedLinks = navigationLinks.filter(
-    link => !link.requiresAuth || (link.requiresAuth && session)
-  );
+  const isActive = (path: string) => {
+    return location.pathname === path ? 'text-primary font-medium' : 'text-foreground';
+  };
 
   return (
-    <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
-      <div className="container-page flex h-20 items-center">
-        <div className="flex items-center gap-4 mr-auto">
-          <MobileMenu />
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png" 
-              alt="Recipe Alchemy Logo" 
-              className="h-10 w-auto"
-            />
+    <header className="border-b bg-background">
+      <div className="container-page flex h-16 items-center justify-between">
+        {/* Logo and Nav Links */}
+        <div className="flex items-center gap-6">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <span className="text-xl font-bold text-primary">NutriSynth</span>
           </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link to="/recipes" className={`text-sm transition-colors hover:text-primary ${isActive('/recipes')}`}>
+              Recipes
+            </Link>
+            {user && (
+              <>
+                <Link to="/shopping-lists" className={`text-sm transition-colors hover:text-primary ${isActive('/shopping-lists')}`}>
+                  Shopping Lists
+                </Link>
+                <Link to="/data-import" className={`text-sm transition-colors hover:text-primary ${isActive('/data-import')}`}>
+                  Data Import
+                </Link>
+              </>
+            )}
+          </nav>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-6">
-          {displayedLinks.map((link) => (
-            <Link 
-              key={link.path} 
-              to={link.path} 
-              className="text-sm font-medium hover:text-primary transition-colors flex items-center"
-            >
-              {link.name === 'Data Import' && <Database className="h-4 w-4 mr-1" />}
-              {link.name}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Auth Button - Hidden on Mobile */}
-        <div className="hidden md:flex items-center space-x-3 ml-6">
-          {session ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/profile">Profile</Link>
-            </Button>
+        {/* Auth Buttons and Mobile Menu */}
+        <div className="flex items-center gap-4">
+          {/* Auth Buttons */}
+          {!user ? (
+            <div className="hidden md:flex items-center space-x-4">
+              <Link to="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Login
+              </Link>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/register">Sign Up</Link>
+              </Button>
+            </div>
           ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={open}>
-                Log in
+            <div className="hidden md:flex items-center space-x-4">
+              <Link to="/profile" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {profile?.full_name || user.email}
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Logout
               </Button>
-              <Button size="sm" onClick={open}>
-                Sign up
-              </Button>
-            </>
+            </div>
           )}
+
+          {/* Mobile Menu */}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="sm">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:w-2/3 md:w-1/2">
+              <SheetHeader className="text-left">
+                <SheetTitle>Menu</SheetTitle>
+                <SheetDescription>
+                  Navigate through the app
+                </SheetDescription>
+              </SheetHeader>
+              <nav className="grid gap-4 text-left pt-8">
+                <Link to="/" className="text-lg font-medium hover:text-primary transition-colors">
+                  Home
+                </Link>
+                <Link to="/recipes" className="text-lg font-medium hover:text-primary transition-colors">
+                  Recipes
+                </Link>
+                {user && (
+                  <>
+                    <Link to="/shopping-lists" className="text-lg font-medium hover:text-primary transition-colors">
+                      Shopping Lists
+                    </Link>
+                     <Link to="/data-import" className="text-lg font-medium hover:text-primary transition-colors">
+                      Data Import
+                    </Link>
+                    <Link to="/profile" className="text-lg font-medium hover:text-primary transition-colors">
+                      Profile
+                    </Link>
+                    <Button variant="destructive" size="sm" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </>
+                )}
+                {!user && (
+                  <>
+                    <Link to="/login" className="text-lg font-medium hover:text-primary transition-colors">
+                      Login
+                    </Link>
+                    <Button asChild variant="outline">
+                      <Link to="/register">Sign Up</Link>
+                    </Button>
+                  </>
+                )}
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {/* Auth Drawer */}
-      <AuthDrawer open={isOpen} setOpen={(state) => state ? open() : close()} />
     </header>
   );
-}
+};
 
 export default Navbar;

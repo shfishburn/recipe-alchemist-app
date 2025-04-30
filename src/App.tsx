@@ -1,169 +1,57 @@
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+import { AuthProvider } from '@/hooks/use-auth';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { NutritionProvider } from '@/contexts/NutritionContext';
+import { HelmetProvider } from 'react-helmet-async';
 
-import "./styles/loading.css";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/use-auth";
-import { Footer } from "@/components/ui/footer";
-import PrivateRoute from "@/components/PrivateRoute";
-import { PageTransition } from "@/components/ui/page-transition";
-import { LoadingIndicator } from "@/components/ui/loading-indicator";
-import { DefaultSeo } from "@/components/seo/DefaultSeo";
-import { Suspense, lazy } from "react";
+// Lazy load pages
+const Index = lazy(() => import('@/pages/Index'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const RecipeDetails = lazy(() => import('@/pages/RecipeDetails'));
+const RecipeCreatePage = lazy(() => import('@/pages/RecipeCreatePage'));
+const Recipes = lazy(() => import('@/pages/Recipes'));
+const ShoppingLists = lazy(() => import('@/pages/ShoppingLists'));
+const ShoppingListDetails = lazy(() => import('@/pages/ShoppingListDetails'));
+const DataImport = lazy(() => import('@/pages/DataImport'));
 
-// Lazy load non-critical pages
-const Index = lazy(() => import("./pages/Index"));
-const Recipes = lazy(() => import("./pages/Recipes"));
-const RecipeDetail = lazy(() => import("./pages/RecipeDetail"));
-const Build = lazy(() => import("./pages/Build"));
-const Profile = lazy(() => import("./pages/Profile"));
-const ShoppingLists = lazy(() => import("./pages/ShoppingLists"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
-const FAQ = lazy(() => import("./pages/FAQ"));
-const About = lazy(() => import("./pages/About"));
-const QuickRecipePage = lazy(() => import("./pages/QuickRecipePage"));
-const DataImport = lazy(() => import("./pages/DataImport"));
-
-// Default loading fallback for lazy-loaded components
-const PageLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-pulse text-center">
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  </div>
-);
-
-// Configure QueryClient with enhanced caching
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 30000, // 30 seconds
-      gcTime: 300000,   // 5 minutes
-    },
-  },
-});
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <div className="min-h-screen flex flex-col">
-          <DefaultSeo />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <LoadingIndicator />
-            <PageTransition>
+function App() {
+  return (
+    <HelmetProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <NutritionProvider>
+            <Suspense fallback={<LoadingSpinner />}>
               <Routes>
-                <Route path="/" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <Index />
-                  </Suspense>
-                } />
-                <Route path="/recipes" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <Recipes />
-                  </Suspense>
-                } />
-                <Route path="/recipes/:id" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <RecipeDetail />
-                  </Suspense>
-                } />
-                <Route path="/quick-recipe" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <QuickRecipePage />
-                  </Suspense>
-                } />
-                <Route path="/how-it-works" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <HowItWorks />
-                  </Suspense>
-                } />
-                <Route path="/how-it-works/:slug" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <ArticleDetail />
-                  </Suspense>
-                } />
-                <Route path="/faq" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <FAQ />
-                  </Suspense>
-                } />
-                <Route path="/about" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <About />
-                  </Suspense>
-                } />
-                <Route
-                  path="/build"
-                  element={
-                    <PrivateRoute>
-                      <Suspense fallback={<PageLoadingFallback />}>
-                        <Build />
-                      </Suspense>
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <PrivateRoute>
-                      <Suspense fallback={<PageLoadingFallback />}>
-                        <Profile />
-                      </Suspense>
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/shopping-lists"
-                  element={
-                    <PrivateRoute>
-                      <Suspense fallback={<PageLoadingFallback />}>
-                        <ShoppingLists />
-                      </Suspense>
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/favorites"
-                  element={
-                    <PrivateRoute>
-                      <Suspense fallback={<PageLoadingFallback />}>
-                        <Favorites />
-                      </Suspense>
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/data-import"
-                  element={
-                    <PrivateRoute>
-                      <Suspense fallback={<PageLoadingFallback />}>
-                        <DataImport />
-                      </Suspense>
-                    </PrivateRoute>
-                  }
-                />
-                <Route path="*" element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <NotFound />
-                  </Suspense>
-                } />
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/recipes" element={<Recipes />} />
+                <Route path="/recipes/:id" element={<RecipeDetails />} />
+                
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/recipes/create" element={<RecipeCreatePage />} />
+                  <Route path="/shopping-lists" element={<ShoppingLists />} />
+                  <Route path="/shopping-lists/:id" element={<ShoppingListDetails />} />
+                  <Route path="/data-import" element={<DataImport />} />
+                </Route>
+                
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </PageTransition>
-            <Footer />
-          </BrowserRouter>
-        </div>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+            </Suspense>
+            <Toaster />
+          </NutritionProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider>
+  );
+}
 
 export default App;
