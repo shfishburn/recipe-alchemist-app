@@ -7,12 +7,14 @@ import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useAuth } from '@/hooks/use-auth';
 import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const saveRecipe = async (recipe: QuickRecipe) => {
     try {
@@ -59,6 +61,9 @@ export const useQuickRecipeSave = () => {
         console.error("Error saving recipe:", error);
         throw new Error(`Failed to save recipe: ${error.message}`);
       }
+
+      // Invalidate the recipes query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
 
       toast({
         title: "Recipe saved",
