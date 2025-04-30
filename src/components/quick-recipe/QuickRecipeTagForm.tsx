@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Heart, LeafyGreen, Search } from 'lucide-react';
+import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Heart, LeafyGreen, Search, Users } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,9 @@ const DIETARY = [
   { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
 ];
 
+// Servings options
+const SERVINGS_OPTIONS = [1, 2, 4, 6, 8];
+
 interface QuickRecipeTagFormProps {
   onSubmit: (data: QuickRecipeFormData) => void;
   isLoading: boolean;
@@ -40,6 +43,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     cuisine: [],
     dietary: [],
     mainIngredient: '',
+    servings: 2, // Default to 2 servings
   });
   const isMobile = useIsMobile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -131,6 +135,13 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     });
   };
 
+  const setServings = (servings: number) => {
+    setFormData(prev => ({
+      ...prev,
+      servings
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5 w-full mx-auto">
       <div className="space-y-4">
@@ -138,7 +149,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
           <div className="text-center text-xs text-muted-foreground mb-1">
             Ready in 30 mins • Easy cleanup • Ingredient-based
           </div>
-          <label htmlFor="mainIngredient" className="text-sm font-medium block pb-1 text-center sm:text-left">
+          <label htmlFor="mainIngredient" className="text-sm font-medium block pb-1 text-left">
             What ingredients do you have today?
           </label>
           <div className={`relative ${isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : ''} rounded-md shadow-sm bg-gradient-to-r from-white to-blue-50 dark:from-gray-900 dark:to-gray-800`}>
@@ -148,17 +159,41 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
               placeholder="e.g., chicken thighs, pasta, bell peppers, onions..."
               value={formData.mainIngredient}
               onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
-              className={`${isMobile ? "min-h-[54px] text-base" : "min-h-[60px] text-lg"} pl-10 text-center resize-none overflow-hidden transition-all bg-transparent border-2 focus-within:border-recipe-blue placeholder:text-gray-500`}
+              className={`${isMobile ? "min-h-[54px] text-base" : "min-h-[60px] text-lg"} pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 focus-within:border-recipe-blue placeholder:text-gray-500`}
               rows={1}
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-recipe-blue" />
           </div>
-          <p className="text-xs text-center text-recipe-blue font-medium">Tell us what you want to cook with!</p>
+          <p className="text-xs text-left text-recipe-blue font-medium">Tell us what you want to cook with!</p>
+        </div>
+        
+        {/* Servings Selection */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-recipe-blue" />
+            <label className="text-sm font-medium">How many servings?</label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {SERVINGS_OPTIONS.map(servingOption => (
+              <Badge 
+                key={servingOption}
+                variant="outline"
+                className={`cursor-pointer px-3 py-1.5 text-sm ${
+                  formData.servings === servingOption 
+                    ? 'bg-recipe-blue text-white hover:bg-recipe-blue/90' 
+                    : 'hover:bg-accent'
+                }`}
+                onClick={() => setServings(servingOption)}
+              >
+                {servingOption} {servingOption === 1 ? 'person' : 'people'}
+              </Badge>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2 w-full">
           <label className="text-sm font-medium">What flavors match your mood tonight? (select up to {MAX_CUISINE_SELECTIONS})</label>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start w-full">
+          <div className="flex flex-wrap gap-3 justify-start w-full">
             {CUISINES.map(cuisine => (
               <Badge 
                 key={cuisine.value} 
@@ -175,7 +210,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
           </div>
 
           <label className="text-sm font-medium block mt-4">Any dietary preferences? (select up to {MAX_DIETARY_SELECTIONS})</label>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start w-full">
+          <div className="flex flex-wrap gap-3 justify-start w-full">
             {DIETARY.map(diet => (
               <Badge 
                 key={diet.value} 
@@ -214,3 +249,4 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     </form>
   );
 }
+

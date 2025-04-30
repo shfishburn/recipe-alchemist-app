@@ -9,6 +9,7 @@ export interface QuickRecipeFormData {
   cuisine: string[];
   dietary: string[];
   mainIngredient: string;
+  servings?: number;
 }
 
 export interface Ingredient {
@@ -63,7 +64,8 @@ export const useQuickRecipe = () => {
         body: JSON.stringify({
           cuisine: formData.cuisine.length > 0 ? formData.cuisine : ['american'], // Default to american if none selected
           dietary: formData.dietary,
-          mainIngredient: formData.mainIngredient
+          mainIngredient: formData.mainIngredient,
+          servings: formData.servings || 2 // Default to 2 servings if not specified
         })
       });
 
@@ -82,11 +84,12 @@ export const useQuickRecipe = () => {
       console.log('Recipe generated successfully:', data);
       console.log('Recipe steps count:', data.steps.length);
 
-      // Add the cuisine type to the recipe data
+      // Add the cuisine type and servings to the recipe data
       const enhancedRecipe = {
         ...data,
         cuisineType: formData.cuisine.length > 0 ? formData.cuisine[0] : 'american',
-        dietaryType: formData.dietary.length > 0 ? formData.dietary[0] : null
+        dietaryType: formData.dietary.length > 0 ? formData.dietary[0] : null,
+        servings: formData.servings || 2
       };
       
       // Update both local state and store
@@ -114,3 +117,4 @@ export const useQuickRecipe = () => {
     setRecipe
   };
 };
+
