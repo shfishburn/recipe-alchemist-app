@@ -127,3 +127,6 @@ verify_jwt = true
 
 [functions.nutrisynth-analysis]
 verify_jwt = true
+
+[functions.usda-data-import]
+verify_jwt = true
