@@ -7,7 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 export enum UsdaTableType {
   USDA_FOODS = 'usda_foods',
   UNIT_CONVERSIONS = 'usda_unit_conversions',
-  YIELD_FACTORS = 'usda_yield_factors'
+  YIELD_FACTORS = 'usda_yield_factors',
+  // USDA Raw tables
+  RAW_FOOD = 'usda_raw.food',
+  RAW_MEASURE_UNIT = 'usda_raw.measure_unit',
+  RAW_FOOD_PORTIONS = 'usda_raw.food_portions',
+  RAW_YIELD_FACTORS = 'usda_raw.yield_factors'
 }
 
 /**
@@ -28,7 +33,7 @@ export interface ImportResponse {
     errors: { index: number; error: string }[];
     batchResults: { batch: number; count: number }[];
   };
-  format?: 'SR28' | 'Standard';
+  format?: 'SR28' | 'Standard' | 'USDA';
   error?: string;
   details?: string[];
 }
@@ -166,7 +171,7 @@ export const sr28Mappings = {
 export function validateCsvFormat(
   csvData: string,
   requiredColumns: string[]
-): { isValid: boolean; missingColumns: string[]; isSR28?: boolean } {
+): { isValid: boolean; missingColumns: string[]; isSR28?: boolean; isUSDA?: boolean } {
   if (!csvData) {
     return { isValid: false, missingColumns: [] };
   }
@@ -182,10 +187,26 @@ export function validateCsvFormat(
     .split(',')
     .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
   
+  // Check if this is USDA format (Food.csv, MeasureUnit.csv, etc.)
+  const usdaColumns = ['fdc_id', 'publication_date', 'id', 'gram_weight'];
+  const isUSDA = usdaColumns.some(col => columns.includes(col));
+  
   // Check if this is SR28 format - updated to match your format
   const sr28Columns = ['food_code', 'food_name', 'calories', 'protein_(g)', 'fat_g'];
   const isSR28 = sr28Columns.some(col => columns.includes(col)) &&
                  columns.includes('food_code');
+  
+  if (isUSDA) {
+    // For USDA format, we have specific requirements based on the file type
+    // We'll check for key columns that should be present in each file type
+    const missingColumns = requiredColumns.filter(col => !columns.includes(col));
+    
+    return {
+      isValid: missingColumns.length === 0,
+      missingColumns,
+      isUSDA: true
+    };
+  }
   
   if (isSR28) {
     // For SR28 format, we use the direct mappings since column names already match
@@ -208,25 +229,31 @@ export function validateCsvFormat(
 
   return {
     isValid: missingColumns.length === 0,
-    missingColumns,
-    isSR28: false
+    missingColumns
   };
 }
 
 /**
  * Function to detect if CSV is in SR28 format
  */
-export function isSR28Format(csvData: string): boolean {
-  if (!csvData) return false;
+export function isSR28Format(headers: any): boolean {
+  if (!headers) return false;
   
-  // Get the header row
-  const headerRow = csvData.split('\n')[0];
-  if (!headerRow) return false;
-  
-  // Parse header columns
-  const columns = headerRow
-    .split(',')
-    .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
+  let columns: string[];
+  if (Array.isArray(headers)) {
+    columns = headers;
+  } else if (typeof headers === 'string') {
+    // Get the header row
+    const headerRow = headers.split('\n')[0];
+    if (!headerRow) return false;
+    
+    // Parse header columns
+    columns = headerRow
+      .split(',')
+      .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
+  } else {
+    return false;
+  }
   
   // Check for key SR28 columns based on your format
   const sr28Columns = ['food_code', 'food_name', 'calories', 'protein_(g)', 'fat_g'];
@@ -234,4 +261,33 @@ export function isSR28Format(csvData: string): boolean {
   const matchCount = sr28Columns.filter(col => columns.includes(col)).length;
   
   return matchCount >= 3 && columns.includes('food_code');
+}
+
+/**
+ * Function to detect if CSV is in USDA format
+ */
+export function isUSDAFormat(headers: any): boolean {
+  if (!headers) return false;
+  
+  let columns: string[];
+  if (Array.isArray(headers)) {
+    columns = headers;
+  } else if (typeof headers === 'string') {
+    // Get the header row
+    const headerRow = headers.split('\n')[0];
+    if (!headerRow) return false;
+    
+    // Parse header columns
+    columns = headerRow
+      .split(',')
+      .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
+  } else {
+    return false;
+  }
+  
+  // USDA format indicators
+  const usdaColumns = ['fdc_id', 'id', 'publication_date', 'gram_weight', 'measure_unit_id'];
+  const matchCount = usdaColumns.filter(col => columns.includes(col)).length;
+  
+  return matchCount >= 2;
 }

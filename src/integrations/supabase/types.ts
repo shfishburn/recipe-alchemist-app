@@ -499,6 +499,14 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      search_usda_foods: {
+        Args: { query_text: string; similarity_threshold?: number }
+        Returns: {
+          fdc_id: number
+          description: string
+          similarity: number
+        }[]
+      }
       set_limit: {
         Args: { "": number }
         Returns: number

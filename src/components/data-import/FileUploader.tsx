@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileUp, Download } from 'lucide-react';
 import {
@@ -21,12 +21,13 @@ import {
 } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { UsdaTableType } from '@/utils/usda-data-import';
 
 interface FileUploaderProps {
   selectedFile: File | null;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   csvPreview: string[][];
-  validationResult: { isValid: boolean; missingColumns: string[]; isSR28?: boolean } | null;
+  validationResult: { isValid: boolean; missingColumns: string[]; isSR28?: boolean; isUSDA?: boolean } | null;
   parsingError: string | null;
   selectedTable: string;
 }
@@ -47,6 +48,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   }[]>([]);
   const [loadingExamples, setLoadingExamples] = useState(false);
   const { toast } = useToast();
+
+  // Track if this is a USDA raw table
+  const isUsdaRawTable = selectedTable.startsWith('usda_raw.');
 
   // Load examples from database
   const loadExamples = async () => {
@@ -159,6 +163,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             </AlertDescription>
           </Alert>
         )}
+        {validationResult?.isUSDA && (
+          <Alert className="mt-2" variant="default">
+            <Info className="h-4 w-4" />
+            <AlertTitle>USDA FoodData Central Format Detected</AlertTitle>
+            <AlertDescription>
+              This CSV appears to be in the USDA FoodData Central format. The system will automatically process this format for the selected table.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
     );
   };
@@ -173,9 +186,58 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           <li>Include headers in the first row</li>
           <li>Enclose text with commas in double quotes</li>
           <li>Ensure all rows have the same number of columns</li>
-          <li>The system supports both standard format and USDA SR28 format</li>
+          {isUsdaRawTable ? (
+            <li>This table expects original USDA FoodData Central CSV format</li>
+          ) : (
+            <li>The system supports both standard format and USDA SR28 format</li>
+          )}
         </ul>
       </Card>
+    );
+  };
+
+  // Render USDA raw import guidelines
+  const renderUsdaImportGuidelines = () => {
+    if (!isUsdaRawTable) return null;
+    
+    let fileDescription = '';
+    let requiredColumns = '';
+    
+    switch (selectedTable) {
+      case UsdaTableType.RAW_FOOD:
+        fileDescription = 'Food.csv from FoodData Central';
+        requiredColumns = 'fdc_id, description, publication_date';
+        break;
+      case UsdaTableType.RAW_MEASURE_UNIT:
+        fileDescription = 'MeasureUnit.csv from FoodData Central';
+        requiredColumns = 'id, name';
+        break;
+      case UsdaTableType.RAW_FOOD_PORTIONS:
+        fileDescription = 'FoodPortions.csv from FoodData Central';
+        requiredColumns = 'id, fdc_id, measure_unit_id, gram_weight';
+        break;
+      case UsdaTableType.RAW_YIELD_FACTORS:
+        fileDescription = 'Manually formatted yield factors data';
+        requiredColumns = 'food_category, ingredient, cooking_method, yield_factor';
+        break;
+    }
+    
+    return (
+      <Alert className="mt-4">
+        <Info className="h-4 w-4" />
+        <AlertTitle>USDA Raw Data Import</AlertTitle>
+        <AlertDescription>
+          <p className="mb-2">
+            This table is designed to import {fileDescription}.
+          </p>
+          <p className="mb-2">
+            Required columns: <code className="bg-muted p-1 rounded">{requiredColumns}</code>
+          </p>
+          <p>
+            Download files from the <a href="https://fdc.nal.usda.gov/download-datasets.html" target="_blank" rel="noopener noreferrer" className="text-primary underline">USDA FoodData Central</a> website.
+          </p>
+        </AlertDescription>
+      </Alert>
     );
   };
 
@@ -183,8 +245,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     <div className="mb-4">
       <h2 className="text-xl font-semibold mb-2">File Upload</h2>
       <p className="text-sm text-muted-foreground mb-4">
-        Select a CSV file to import into the table.
+        {isUsdaRawTable 
+          ? "Select a USDA FoodData Central CSV file to import into the raw table." 
+          : "Select a CSV file to import into the table."}
       </p>
+      
+      {renderUsdaImportGuidelines()}
       
       <div className="flex items-center gap-4">
         <Button variant="outline" className="relative" onClick={() => document.getElementById('file-upload')?.click()}>

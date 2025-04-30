@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -7,7 +6,12 @@ import {
   normalizeUsdaFoodData,
   normalizeUnitConversionData,
   normalizeYieldFactorData,
-  isSR28Format
+  normalizeUsdaRawFoodData,
+  normalizeUsdaRawMeasureUnitData,
+  normalizeUsdaRawFoodPortionsData,
+  normalizeUsdaRawYieldFactorsData,
+  isSR28Format,
+  isUSDAFormat
 } from "./data-processors.ts";
 import { insertBatch, TableType } from "./database.ts";
 
@@ -105,8 +109,9 @@ serve(async (req) => {
     }
     
     // Validate table type
-    if (!Object.values(TableType).includes(table as TableType)) {
-      throw new Error(`Invalid table type: ${table}. Must be one of: ${Object.values(TableType).join(', ')}`);
+    if (!Object.values(TableType).includes(table as TableType) && 
+        !table.startsWith('usda_raw.')) {
+      throw new Error(`Invalid table type: ${table}. Must be one of: ${Object.values(TableType).join(', ')} or a usda_raw.* table`);
     }
 
     console.log(`Received CSV import request for table ${table}, data length: ${csvData.length}`);
@@ -117,12 +122,18 @@ serve(async (req) => {
     console.log(`Parsed ${rows.length} rows from CSV for table ${table}`);
     console.log(`CSV Headers: ${headers.join(', ')}`);
 
-    // Check if data is in SR28 format
+    // Check data format
     const isSR28Dataset = isSR28Format(headers);
-    console.log(`Data format detected: ${isSR28Dataset ? 'USDA SR28' : 'Standard'}`);
+    const isUSDADataset = isUSDAFormat(headers);
+    
+    let formatLabel = 'Standard';
+    if (isSR28Dataset) formatLabel = 'SR28';
+    if (isUSDADataset) formatLabel = 'USDA';
+    
+    console.log(`Data format detected: ${formatLabel}`);
     
     // Validate data based on table type
-    const validationResult = validateData(rows, table as TableType, isSR28Dataset);
+    const validationResult = validateData(rows, table, isSR28Dataset, isUSDADataset);
     
     if (!validationResult.isValid) {
       return new Response(
@@ -141,6 +152,7 @@ serve(async (req) => {
     // Normalize data based on the table type
     let normalizedData;
     switch (table) {
+      // Standard tables
       case TableType.USDA_FOODS:
         normalizedData = rows.map(row => normalizeUsdaFoodData(row, isSR28Dataset));
         break;
@@ -150,6 +162,21 @@ serve(async (req) => {
       case TableType.YIELD_FACTORS:
         normalizedData = rows.map(normalizeYieldFactorData);
         break;
+      
+      // USDA raw tables
+      case TableType.RAW_FOOD:
+        normalizedData = rows.map(normalizeUsdaRawFoodData);
+        break;
+      case TableType.RAW_MEASURE_UNIT:
+        normalizedData = rows.map(normalizeUsdaRawMeasureUnitData);
+        break;
+      case TableType.RAW_FOOD_PORTIONS:
+        normalizedData = rows.map(normalizeUsdaRawFoodPortionsData);
+        break;
+      case TableType.RAW_YIELD_FACTORS:
+        normalizedData = rows.map(normalizeUsdaRawYieldFactorsData);
+        break;
+        
       default:
         throw new Error(`Unsupported table type: ${table}`);
     }
@@ -158,7 +185,7 @@ serve(async (req) => {
     const results = await insertBatch({
       supabase,
       data: normalizedData,
-      table: table as TableType,
+      table,
       batchSize,
       mode: mode as 'insert' | 'upsert'
     });
@@ -169,7 +196,7 @@ serve(async (req) => {
         success: true,
         processed: normalizedData.length,
         results,
-        format: isSR28Dataset ? 'SR28' : 'Standard'
+        format: formatLabel
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

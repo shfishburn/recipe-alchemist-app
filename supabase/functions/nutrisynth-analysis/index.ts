@@ -51,6 +51,68 @@ async function findUsdaMatch(ingredient: string) {
     };
   }
   
+  // Try finding a match in the USDA raw data first - this is our new enhanced approach
+  try {
+    // Use the search_usda_foods function we created in the SQL migration
+    const { data: rawMatches, error } = await supabase
+      .rpc('search_usda_foods', {
+        query_text: normalizedText,
+        similarity_threshold: 0.3
+      });
+    
+    if (!error && rawMatches && rawMatches.length > 0) {
+      // Use the best raw match
+      const bestRawMatch = rawMatches[0];
+      
+      // Get unit conversion data if available
+      const { data: conversionData } = await supabase
+        .from('usda_raw.food_portions')
+        .select(`
+          id, 
+          amount, 
+          gram_weight,
+          modifier,
+          portion_description,
+          measure_unit_id,
+          measure_unit:measure_unit_id (name)
+        `)
+        .eq('fdc_id', bestRawMatch.fdc_id)
+        .limit(1);
+        
+      // High confidence for USDA raw data matches
+      const confidenceScore = Math.min(0.95, bestRawMatch.similarity);
+      
+      // Save this mapping for future use with a higher confidence since it's from the official USDA data
+      await saveIngredientMapping(
+        ingredient,
+        normalizedText,
+        bestRawMatch.fdc_id.toString(),
+        confidenceScore,
+        'usda_raw_match'
+      );
+      
+      // Create a synthetic match object that mimics our standard usda_foods table
+      const syntheticMatch = {
+        food_name: bestRawMatch.description,
+        food_code: bestRawMatch.fdc_id.toString(),
+        // We don't have nutrition data yet from the raw tables, but indicate this is from raw data
+        source: 'usda_raw',
+        portion_info: conversionData?.[0] || null
+      };
+      
+      return {
+        match: syntheticMatch,
+        confidence_score: confidenceScore,
+        match_method: 'usda_raw_match'
+      };
+    }
+  } catch (rawMatchError) {
+    console.error('Error searching USDA raw data:', rawMatchError);
+    // Continue to standard matching if raw matching fails
+  }
+  
+  // Our standard matching strategies continue from here
+  
   // Strategy 1: Direct exact match
   const { data: exactMatches } = await supabase
     .from('usda_foods')
@@ -170,9 +232,123 @@ async function saveIngredientMapping(
   }
 }
 
+// Find cooking yield factor for an ingredient and cooking method
+async function findYieldFactor(ingredient: string, cookingMethod: string): Promise<number | null> {
+  if (!ingredient || !cookingMethod) return null;
+  
+  const normalizedIngredient = normalizeIngredientText(ingredient);
+  const normalizedMethod = normalizeIngredientText(cookingMethod);
+  
+  try {
+    // Try to find an exact match first
+    const { data: exactMatches } = await supabase
+      .from('usda_raw.yield_factors')
+      .select('yield_factor')
+      .ilike('ingredient', normalizedIngredient)
+      .ilike('cooking_method', normalizedMethod)
+      .limit(1);
+      
+    if (exactMatches && exactMatches.length > 0) {
+      return exactMatches[0].yield_factor;
+    }
+    
+    // Try with just the ingredient (any cooking method)
+    const { data: ingredientMatches } = await supabase
+      .from('usda_raw.yield_factors')
+      .select('yield_factor')
+      .ilike('ingredient', normalizedIngredient)
+      .limit(1);
+      
+    if (ingredientMatches && ingredientMatches.length > 0) {
+      return ingredientMatches[0].yield_factor;
+    }
+    
+    // Try with general food category and specific cooking method
+    const categories = ['fruit', 'vegetable', 'meat', 'fish', 'poultry', 'grain'];
+    let detectedCategory = null;
+    
+    for (const category of categories) {
+      if (normalizedIngredient.includes(category)) {
+        detectedCategory = category;
+        break;
+      }
+    }
+    
+    if (detectedCategory) {
+      const { data: categoryMatches } = await supabase
+        .from('usda_raw.yield_factors')
+        .select('yield_factor')
+        .ilike('food_category', detectedCategory)
+        .ilike('cooking_method', normalizedMethod)
+        .limit(1);
+        
+      if (categoryMatches && categoryMatches.length > 0) {
+        return categoryMatches[0].yield_factor;
+      }
+      
+      // Try with just the category (any cooking method)
+      const { data: categoryOnlyMatches } = await supabase
+        .from('usda_raw.yield_factors')
+        .select('yield_factor')
+        .ilike('food_category', detectedCategory)
+        .limit(1);
+        
+      if (categoryOnlyMatches && categoryOnlyMatches.length > 0) {
+        return categoryOnlyMatches[0].yield_factor;
+      }
+    }
+  } catch (error) {
+    console.error('Error finding yield factor:', error);
+  }
+  
+  // No yield factor found
+  return null;
+}
+
+// Find unit conversion for an ingredient
+async function findUnitConversion(ingredient: string, fromUnit: string): Promise<number | null> {
+  if (!ingredient || !fromUnit) return null;
+  
+  const normalizedIngredient = normalizeIngredientText(ingredient);
+  const normalizedUnit = normalizeIngredientText(fromUnit);
+  
+  try {
+    // Check if we have specific conversion data from the USDA raw data
+    // This would use the views we created in the database schema
+    const { data: conversionMatches } = await supabase
+      .from('usda.unit_conversions')
+      .select('grams_per_unit, food_name')
+      .ilike('food_name', `%${normalizedIngredient}%`)
+      .ilike('from_unit', normalizedUnit)
+      .limit(1);
+      
+    if (conversionMatches && conversionMatches.length > 0) {
+      return conversionMatches[0].grams_per_unit;
+    }
+    
+    // Fall back to standard unit conversions
+    const { data: fallbackMatches } = await supabase
+      .from('usda_unit_conversions')
+      .select('conversion_factor')
+      .ilike('from_unit', normalizedUnit)
+      .eq('to_unit', 'g')
+      .limit(1);
+      
+    if (fallbackMatches && fallbackMatches.length > 0) {
+      return fallbackMatches[0].conversion_factor;
+    }
+  } catch (error) {
+    console.error('Error finding unit conversion:', error);
+  }
+  
+  // No conversion found
+  return null;
+}
+
 // Calculate nutrition data for a list of ingredients
-async function calculateNutrition(ingredients: Ingredient[], servings: number = 1) {
+async function calculateNutrition(ingredients: Ingredient[], servings: number = 1, cookingMethod: string = '') {
   console.log(`Calculating nutrition for ${ingredients.length} ingredients and ${servings} servings`);
+  console.log(`Cooking method: ${cookingMethod || 'not specified'}`);
   
   const nutritionData = {
     calories: 0,
@@ -200,11 +376,23 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
     weightedScoreSum: 0
   };
   
+  const auditLog = {
+    confidence_calculation: {
+      ingredient_scores: [] as Array<{ingredient: string, score: number, weight: number}>,
+      penalties_applied: [] as Array<{reason: string, multiplier: number}>,
+      final_calculation: ''
+    },
+    unit_conversions: {} as Record<string, any>,
+    yield_factors: {} as Record<string, any>
+  };
+  
   // Calculate per-ingredient nutrition
   for (const ingredient of ingredients) {
     const itemName = typeof ingredient.item === 'string' 
       ? ingredient.item 
       : ingredient.item.item || 'Unknown ingredient';
+      
+    const unit = ingredient.unit || '';
       
     // Estimate ingredient weight in recipe (rough heuristic)
     const estimatedWeight = ingredient.qty || 1;
@@ -221,10 +409,36 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
       
       const usdaData = matchResult.match;
       
+      // Apply unit conversion if available
+      let unitConversion = 1.0;  // Default conversion factor
+      if (unit) {
+        const conversionFactor = await findUnitConversion(itemName, unit);
+        if (conversionFactor !== null) {
+          unitConversion = conversionFactor;
+          auditLog.unit_conversions[itemName] = {
+            from: unit,
+            to: 'g',
+            factor: conversionFactor
+          };
+        }
+      }
+      
+      // Apply cooking yield factor if cooking method is specified
+      let yieldFactor = 1.0;  // Default yield factor (no change)
+      if (cookingMethod) {
+        const foundYieldFactor = await findYieldFactor(itemName, cookingMethod);
+        if (foundYieldFactor !== null) {
+          yieldFactor = foundYieldFactor;
+          auditLog.yield_factors[itemName] = {
+            cooking_method: cookingMethod,
+            factor: foundYieldFactor
+          };
+        }
+      }
+      
       // Apply quantity/portion scaling factor
-      // This is a simplified approach; ideal implementation would use
-      // proper unit conversions based on food density
-      const scaleFactor = (ingredient.qty || 1) / servings;
+      // This applies unit conversion and yield factor
+      const scaleFactor = ((ingredient.qty || 1) * unitConversion * yieldFactor) / servings;
       
       // Calculate per-ingredient nutrition
       const ingredientNutrition = {
@@ -285,6 +499,10 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
   // Penalize for unmatched ingredients
   if (penalties.unmatched_ingredients_rate > 0.25) {
     penalizedScore *= (1 - penalties.unmatched_ingredients_rate / 2);
+    auditLog.confidence_calculation.penalties_applied.push({
+      reason: 'unmatched_ingredients',
+      multiplier: 1 - penalties.unmatched_ingredients_rate / 2
+    });
   }
   
   // Determine overall confidence level
@@ -306,7 +524,14 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
       Math.abs(calculated_calories - nutritionData.calories) / nutritionData.calories > 0.2) {
     penalties.energy_check_fail = true;
     penalizedScore *= 0.8;
+    auditLog.confidence_calculation.penalties_applied.push({
+      reason: 'energy_check',
+      multiplier: 0.8
+    });
   }
+  
+  auditLog.confidence_calculation.ingredient_scores = qualityMetrics.ingredientScores;
+  auditLog.confidence_calculation.final_calculation = `${overallConfidenceScore.toFixed(2)} × penalties = ${penalizedScore.toFixed(2)}`;
   
   // Build final enhanced nutrition object
   const enhancedNutrition = {
@@ -319,18 +544,7 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
       limitations: []
     },
     per_ingredient: perIngredient,
-    audit_log: {
-      confidence_calculation: {
-        ingredient_scores: qualityMetrics.ingredientScores,
-        penalties_applied: [
-          { reason: 'unmatched_ingredients', multiplier: 1 - penalties.unmatched_ingredients_rate / 2 },
-          { reason: 'energy_check', multiplier: penalties.energy_check_fail ? 0.8 : 1 }
-        ],
-        final_calculation: `${overallConfidenceScore} × penalties = ${penalizedScore}`
-      },
-      unit_conversions: {},
-      yield_sources: {}
-    }
+    audit_log: auditLog
   };
   
   return enhancedNutrition;
@@ -343,7 +557,7 @@ serve(async (req) => {
   }
   
   try {
-    const { ingredients, servings } = await req.json();
+    const { ingredients, servings, cookingMethod } = await req.json();
     
     if (!ingredients || !Array.isArray(ingredients)) {
       throw new Error('Invalid request: ingredients array is required');
@@ -354,7 +568,8 @@ serve(async (req) => {
     // Calculate nutrition data
     const enhancedNutrition = await calculateNutrition(
       ingredients,
-      servings || 1
+      servings || 1,
+      cookingMethod || ''
     );
     
     return new Response(

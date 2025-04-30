@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { 
   importUsdaData,
   isSR28Format,
+  isUSDAFormat,
   UsdaTableType
 } from '@/utils/usda-data-import';
 import { useToast } from '@/hooks/use-toast';
 import { processFile, validateFileContent } from './file-utils';
-import { REQUIRED_COLUMNS } from './config';
+import { REQUIRED_COLUMNS, USDA_FILE_FORMATS } from './config';
 import { ValidationResult, ImportResult, ImportOptions, UseDataImportReturn } from './types';
 
 export function useDataImport(): UseDataImportReturn {
@@ -32,6 +33,22 @@ export function useDataImport(): UseDataImportReturn {
       
       try {
         await processFile(file, setCsvPreview, setParsingError);
+        
+        // Auto-detect file type based on name and content
+        if (Object.values(USDA_FILE_FORMATS).some(format => 
+          file.name.toLowerCase() === format.name.toLowerCase())) {
+          // Auto-set the table type based on filename
+          for (const [tableType, format] of Object.entries(USDA_FILE_FORMATS)) {
+            if (file.name.toLowerCase() === format.name.toLowerCase()) {
+              setSelectedTable(tableType as UsdaTableType);
+              toast({
+                title: "USDA File Format Detected",
+                description: `Automatically selected table type: ${format.description}`,
+              });
+              break;
+            }
+          }
+        }
       } catch (error) {
         toast({
           title: "File Reading Error",
@@ -64,15 +81,22 @@ export function useDataImport(): UseDataImportReturn {
       const result = await validateFileContent(
         selectedFile, 
         columnsToCheck,
-        isSR28Format
+        {
+          isSR28: isSR28Format,
+          isUSDA: isUSDAFormat
+        }
       );
 
       setValidationResult(result);
       
       if (result.isValid) {
+        let formatDescription = 'standard';
+        if (result.isSR28) formatDescription = 'SR28';
+        if (result.isUSDA) formatDescription = 'USDA';
+        
         toast({
           title: "Validation successful",
-          description: `CSV file is valid for import as ${result.isSR28 ? 'SR28' : 'standard'} format.`,
+          description: `CSV file is valid for import as ${formatDescription} format.`,
         });
       } else {
         toast({
@@ -91,8 +115,7 @@ export function useDataImport(): UseDataImportReturn {
       });
       setValidationResult({
         isValid: false,
-        missingColumns: [],
-        isSR28: false
+        missingColumns: []
       });
     } finally {
       setIsValidating(false);
