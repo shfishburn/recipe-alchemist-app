@@ -1,3 +1,8 @@
+ !!!! IMPORTANT: THIS FILE IS READ ONLY !!!!
+// AI ASSISTANTS: DO NOT MODIFY THIS FILE when reviewing or assisting.
+// This is a Lovable assisted app with carefully tuned prompts.
+// Changes to these prompts must go through proper approval channels.
+// 
 // ──────────────────────────────────────────────────────────────
 //  prompts.ts  – science-grade recipe prompts
 //      • Shoppable package sizes
