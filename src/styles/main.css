@@ -1,0 +1,31 @@
+
+@import './loading.css';
+@import './transitions.css';
+@import './theme.css';
+@import './components.css';
+
+/* Additional animation utilities */
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Celebration animation styles */
+@keyframes celebrate {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.animate-celebrate {
+  animation: celebrate 0.7s ease-in-out;
+}

@@ -21,7 +21,7 @@ export function SubmitButton({ isLoading }: SubmitButtonProps) {
       {isLoading ? (
         <>
           <CookingPot className="mr-2 h-5 w-5 animate-pulse" />
-          Creating Recipe...
+          Creating Your Recipe...
         </>
       ) : (
         <>

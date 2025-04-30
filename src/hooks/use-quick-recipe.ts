@@ -36,11 +36,10 @@ export interface QuickRecipe {
   servings?: number;
   scienceNotes?: string[];
   calorie_check_pass?: boolean;
-  nutrition?: EnhancedNutrition; // Updated to use EnhancedNutrition
+  nutrition?: EnhancedNutrition;
 }
 
 export const useQuickRecipe = () => {
-  // We still use local state for function execution, but results go to the store
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const { toast } = useToast();
   const { 
@@ -49,7 +48,8 @@ export const useQuickRecipe = () => {
     setRecipe, 
     setLoading, 
     setError,
-    setFormData 
+    setFormData,
+    updateLoadingState
   } = useQuickRecipeStore();
 
   const generateQuickRecipe = async (formData: QuickRecipeFormData) => {
@@ -61,12 +61,33 @@ export const useQuickRecipe = () => {
       
       console.log('Starting quick recipe generation with form data:', formData);
       
+      // Set initial loading state with estimated time based on complexity
+      const complexity = calculateComplexity(formData);
+      const estimatedTime = estimateGenerationTime(complexity);
+      
+      updateLoadingState({
+        step: 0,
+        totalSteps: 5,
+        stepDescription: LOADING_STEPS[0],
+        percentComplete: 0,
+        estimatedTimeRemaining: estimatedTime
+      });
+      
+      // Simulate step 1 completion (real step updates will come from the backend in a production app)
+      setTimeout(() => {
+        updateLoadingState({
+          step: 1,
+          stepDescription: LOADING_STEPS[1],
+          percentComplete: 15
+        });
+      }, 2000);
+      
       const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
         body: JSON.stringify({
-          cuisine: formData.cuisine.length > 0 ? formData.cuisine : ['american'], // Default to american if none selected
+          cuisine: formData.cuisine.length > 0 ? formData.cuisine : ['american'],
           dietary: formData.dietary,
           mainIngredient: formData.mainIngredient,
-          servings: formData.servings || 2 // Default to 2 servings if not specified
+          servings: formData.servings || 2
         })
       });
 
@@ -82,6 +103,13 @@ export const useQuickRecipe = () => {
         return null;
       }
       
+      // Simulate step 3 completion - we got the base recipe
+      updateLoadingState({
+        step: 3,
+        stepDescription: LOADING_STEPS[3],
+        percentComplete: 60
+      });
+      
       console.log('Recipe generated successfully:', data);
       console.log('Recipe steps count:', data.steps.length);
 
@@ -92,6 +120,13 @@ export const useQuickRecipe = () => {
         dietaryType: formData.dietary.length > 0 ? formData.dietary[0] : null,
         servings: formData.servings || 2
       };
+
+      // Simulate step 4 - nutrition analysis
+      updateLoadingState({
+        step: 4,
+        stepDescription: LOADING_STEPS[4],
+        percentComplete: 80
+      });
 
       // Enrich nutrition data using NutriSynth
       try {
@@ -130,6 +165,16 @@ export const useQuickRecipe = () => {
         // The recipe generation can still continue without enhanced nutrition
       }
       
+      // Final step completion - we're done!
+      updateLoadingState({
+        step: 5,
+        stepDescription: LOADING_STEPS[5],
+        percentComplete: 95
+      });
+      
+      // Simulate final step takes a moment for satisfaction
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Update both local state and store
       setRecipe(enhancedRecipe);
       return enhancedRecipe;
@@ -147,6 +192,40 @@ export const useQuickRecipe = () => {
       setLoading(false);
     }
   };
+  
+  // Calculate complexity of the recipe request
+  const calculateComplexity = (formData: QuickRecipeFormData): number => {
+    let complexity = 1; // Base complexity
+    
+    // More complexity for dietary restrictions
+    if (formData.dietary && formData.dietary.length > 0) {
+      complexity += 0.5 * formData.dietary.length;
+    }
+    
+    // More servings = slightly more complexity
+    if (formData.servings && formData.servings > 2) {
+      complexity += 0.2 * (formData.servings - 2);
+    }
+    
+    // Certain ingredients might be more complex
+    const complexIngredients = ['duck', 'lamb', 'seafood', 'scallops', 'soufflé'];
+    if (formData.mainIngredient) {
+      for (const ingredient of complexIngredients) {
+        if (formData.mainIngredient.toLowerCase().includes(ingredient)) {
+          complexity += 0.5;
+          break;
+        }
+      }
+    }
+    
+    return Math.min(5, complexity); // Cap at 5
+  };
+  
+  // Estimate generation time based on complexity
+  const estimateGenerationTime = (complexity: number): number => {
+    // Base time is 10 seconds, adjust based on complexity
+    return Math.round(10 + (complexity * 2));
+  };
 
   return {
     generateQuickRecipe,
@@ -155,3 +234,13 @@ export const useQuickRecipe = () => {
     setRecipe
   };
 };
+
+// Loading step descriptions - same as in the component for consistency
+const LOADING_STEPS = [
+  "Analyzing your ingredients...",
+  "Finding compatible recipes...",
+  "Calculating measurements...",
+  "Optimizing cooking techniques...",
+  "Adding scientific insights...",
+  "Finalizing your perfect recipe..."
+];
