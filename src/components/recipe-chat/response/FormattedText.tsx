@@ -123,7 +123,7 @@ export function FormattedText({
   );
 }
 
-// Enhanced inline formatting processor with scientific notation support
+// Enhanced inline formatting processor with improved styling for ingredients
 function processInlineFormatting(text: string): React.ReactNode[] {
   if (!text || typeof text !== 'string') {
     return [text];
@@ -205,12 +205,23 @@ function processInlineFormatting(text: string): React.ReactNode[] {
     
     // Handle end of text
     if (i === processedText.length - 1 && currentText) {
-      parts.push(boldActive ? 
-        <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-        italicActive ? <em key={`italic-${i}`}>{currentText}</em> : 
-        codeActive ? <code key={`code-${i}`} className="px-1 py-0.5 bg-gray-100 rounded">{currentText}</code> : 
-        currentText
-      );
+      if (boldActive) {
+        // Use enhanced styling for ingredients (bolded items)
+        parts.push(
+          <span 
+            key={`bold-${i}`} 
+            className="font-semibold text-recipe-blue bg-recipe-blue/5 px-1.5 py-0.5 rounded-md border border-recipe-blue/10"
+          >
+            {italicActive ? <em>{currentText}</em> : currentText}
+          </span>
+        );
+      } else if (italicActive) {
+        parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+      } else if (codeActive) {
+        parts.push(<code key={`code-${i}`} className="px-1 py-0.5 bg-gray-100 rounded">{currentText}</code>);
+      } else {
+        parts.push(currentText);
+      }
     }
   }
   

@@ -23,7 +23,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
     }));
   };
   
-  // Function to process markdown-style bold text
+  // Enhanced function to process markdown-style bold ingredient text
   const renderInstructionWithBoldIngredients = (instruction: string) => {
     // Split by bold markers
     const parts = instruction.split(/(\*\*.*?\*\*)/g);
@@ -31,9 +31,16 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
     return parts.map((part, i) => {
       // Check if this part is wrapped in bold markers
       if (part.startsWith('**') && part.endsWith('**')) {
-        // Extract content between ** markers and render as bold
+        // Extract content between ** markers and render as bold with special styling
         const content = part.substring(2, part.length - 2);
-        return <strong key={i} className="font-semibold text-recipe-blue">{content}</strong>;
+        return (
+          <span 
+            key={i} 
+            className="font-semibold text-recipe-blue bg-recipe-blue/5 px-1.5 py-0.5 rounded-md border border-recipe-blue/10"
+          >
+            {content}
+          </span>
+        );
       }
       // Return regular text
       return <React.Fragment key={i}>{part}</React.Fragment>;
@@ -79,7 +86,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                         {index + 1}
                       </div>
                       <div className="flex-1 pt-0.5 flex items-center justify-between">
-                        <p className={completedSteps[index] ? "line-through text-muted-foreground" : ""}>
+                        <p className={`leading-relaxed ${completedSteps[index] ? "line-through text-muted-foreground" : ""}`}>
                           {renderInstructionWithBoldIngredients(step)}
                         </p>
                         {completedSteps[index] && (
