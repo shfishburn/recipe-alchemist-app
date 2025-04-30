@@ -11,13 +11,18 @@ const Hero = lazy(() => import('@/components/landing/Hero'));
 const HeroSkeleton = () => (
   <section className="py-12 md:py-20 lg:py-32">
     <div className="container-page">
-      <div className="flex flex-col items-center gap-6">
-        <Skeleton className="h-10 w-3/4 max-w-xl" />
-        <Skeleton className="h-10 w-2/3 max-w-lg" />
-        <Skeleton className="h-20 w-full max-w-md" />
-        <div className="flex flex-col gap-4 w-full max-w-md">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
+      <div className="flex flex-col md:flex-row items-center gap-12">
+        <div className="flex-1 space-y-6">
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-20 w-full" />
+          <div className="flex gap-4">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <div className="w-full md:w-auto md:flex-1">
+          <Skeleton className="w-full aspect-video rounded-xl" />
         </div>
       </div>
     </div>
