@@ -59,6 +59,10 @@ ADVANCED STYLING:
 
 The final image should appear simultaneously aspirational and achievable—a professional culinary photograph that demonstrates technical mastery while maintaining visual appeal that evokes genuine appetite response. Prioritize authentic cooking results over artificial styling techniques, with natural color grading that enhances but never exaggerates the dish's inherent characteristics. GENERATE FOOD IMAGERY ONLY - NO TEXT OR GRAPHICS OF ANY KIND.`;
 
+!!! FINAL CRITICAL REMINDER !!!
+THIS MUST BE PURE FOOD PHOTOGRAPHY ONLY - ABSOLUTELY NO TEXT, LETTERS, NUMBERS, GRAPHICS, CHARTS, DIAGRAMS, LABELS, CAPTIONS, ANNOTATIONS, OR ANY KIND OF TEXTUAL/GRAPHICAL ELEMENTS WHATSOEVER. VIOLATION OF THIS REQUIREMENT RENDERS THE IMAGE UNUSABLE.`;
+
+    
     console.log('Generating image with prompt:', prompt);
 
     const response = await openai.images.generate({
