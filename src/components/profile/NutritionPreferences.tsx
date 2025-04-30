@@ -109,14 +109,28 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
   };
 
   return (
-    <Tabs defaultValue="basic">
+    <Tabs defaultValue="personal">
       <TabsList className="mb-6">
-        <TabsTrigger value="basic">Basic Macros</TabsTrigger>
         <TabsTrigger value="personal">Personal Details</TabsTrigger>
+        <TabsTrigger value="bodyComposition">Body Composition</TabsTrigger>
+        <TabsTrigger value="basic">Basic Macros</TabsTrigger>
         <TabsTrigger value="advanced">Advanced Macros</TabsTrigger>
         <TabsTrigger value="timing">Meal Timing</TabsTrigger>
-        <TabsTrigger value="bodyComposition">Body Composition</TabsTrigger>
       </TabsList>
+      
+      <TabsContent value="personal">
+        <PersonalDetails 
+          preferences={preferences}
+          onSave={onSave}
+        />
+      </TabsContent>
+
+      <TabsContent value="bodyComposition">
+        <BodyComposition
+          preferences={preferences}
+          onSave={onSave}
+        />
+      </TabsContent>
       
       <TabsContent value="basic">
         <Card>
@@ -166,13 +180,6 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
         </Card>
       </TabsContent>
       
-      <TabsContent value="personal">
-        <PersonalDetails 
-          preferences={preferences}
-          onSave={onSave}
-        />
-      </TabsContent>
-      
       <TabsContent value="advanced">
         <MacroDetails 
           preferences={preferences}
@@ -182,13 +189,6 @@ export function NutritionPreferences({ preferences, onSave }: NutritionPreferenc
       
       <TabsContent value="timing">
         <MealTiming 
-          preferences={preferences}
-          onSave={onSave}
-        />
-      </TabsContent>
-      
-      <TabsContent value="bodyComposition">
-        <BodyComposition
           preferences={preferences}
           onSave={onSave}
         />

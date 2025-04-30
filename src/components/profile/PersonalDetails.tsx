@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { NutritionPreferencesType } from '@/types/nutrition';
 import { CalculationDisplay } from './personal-details/CalculationDisplay';
 import { WeightGoalSelector } from './personal-details/WeightGoalSelector';
@@ -13,6 +15,7 @@ import { GenderSelector } from './personal-details/GenderSelector';
 import { WeightInput } from './personal-details/WeightInput';
 import { HeightInput } from './personal-details/HeightInput';
 import { ActivityLevelSelector } from './personal-details/ActivityLevelSelector';
+import { BodyFatPercentileDisplay } from './body-composition/BodyFatPercentileDisplay';
 
 interface PersonalDetailsProps {
   preferences: NutritionPreferencesType;
@@ -37,6 +40,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   });
 
   const unitSystem = preferences.unitSystem || 'metric';
+  const bodyComp = preferences.bodyComposition || {};
 
   const { register, handleSubmit, watch, setValue, control } = useForm({
     defaultValues: {
@@ -50,7 +54,10 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       gender: preferences.personalDetails?.gender || 'male',
       activityLevel: preferences.personalDetails?.activityLevel || 'moderate',
       weightGoalType: preferences.weightGoalType || 'maintenance',
-      weightGoalDeficit: preferences.weightGoalDeficit || 0
+      weightGoalDeficit: preferences.weightGoalDeficit || 0,
+      bodyFatPercentage: bodyComp.bodyFatPercentage || '',
+      leanMass: bodyComp.leanMass || '',
+      fatMass: bodyComp.fatMass || '',
     }
   });
 
@@ -63,6 +70,27 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
     { value: 'mild-gain', label: 'Mild Weight Gain', deficit: 250 },
     { value: 'moderate-gain', label: 'Moderate Weight Gain', deficit: 500 }
   ];
+
+  const weight = watch('weight');
+  const bodyFatPercentage = watch('bodyFatPercentage');
+  const gender = watch('gender');
+  const age = watch('age');
+  
+  // Calculate lean mass and fat mass when body fat percentage changes
+  React.useEffect(() => {
+    if (weight && bodyFatPercentage) {
+      const weightInKg = unitSystem === 'metric' ? Number(weight) : lbsToKg(Number(weight));
+      const bfp = parseFloat(bodyFatPercentage.toString());
+      
+      if (!isNaN(bfp)) {
+        const fatMass = Math.round((weightInKg * bfp / 100) * 10) / 10;
+        const leanMass = Math.round((weightInKg - fatMass) * 10) / 10;
+        
+        setValue('fatMass', fatMass);
+        setValue('leanMass', leanMass);
+      }
+    }
+  }, [bodyFatPercentage, weight, setValue, unitSystem]);
 
   const onSubmit = (data: any) => {
     // Convert weight to kg if using imperial
@@ -85,7 +113,13 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
         activityLevel: data.activityLevel
       },
       weightGoalType: data.weightGoalType,
-      weightGoalDeficit: Number(data.weightGoalDeficit)
+      weightGoalDeficit: Number(data.weightGoalDeficit),
+      bodyComposition: {
+        ...(preferences.bodyComposition || {}),
+        bodyFatPercentage: data.bodyFatPercentage ? parseFloat(data.bodyFatPercentage) : undefined,
+        leanMass: data.leanMass ? parseFloat(data.leanMass) : undefined,
+        fatMass: data.fatMass ? parseFloat(data.fatMass) : undefined,
+      }
     };
     
     // Calculate BMR (Basal Metabolic Rate)
@@ -117,6 +151,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <h3 className="text-lg font-medium mb-4">Personal Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AgeInput register={register} />
             <GenderSelector register={register} />
@@ -132,6 +167,65 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
             <ActivityLevelSelector register={register} />
           </div>
           
+          <h3 className="text-lg font-medium mt-6 mb-4">Body Composition</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="bodyFatPercentage">Body Fat Percentage</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="bodyFatPercentage"
+                  type="number"
+                  step="0.1"
+                  className="flex-1"
+                  {...register('bodyFatPercentage', {
+                    min: { value: 3, message: 'Minimum 3%' },
+                    max: { value: 50, message: 'Maximum 50%' },
+                  })}
+                />
+                <span>%</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="leanMass">Lean Mass (calculated)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="leanMass"
+                  type="number"
+                  step="0.1"
+                  className="flex-1"
+                  {...register('leanMass')}
+                  disabled
+                />
+                <span>kg</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="fatMass">Fat Mass (calculated)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="fatMass"
+                  type="number"
+                  step="0.1"
+                  className="flex-1"
+                  {...register('fatMass')}
+                  disabled
+                />
+                <span>kg</span>
+              </div>
+            </div>
+          </div>
+          
+          {bodyFatPercentage && gender && age && (
+            <BodyFatPercentileDisplay 
+              bodyFatPercentage={parseFloat(bodyFatPercentage.toString())} 
+              gender={gender}
+              age={Number(age)}
+            />
+          )}
+          
+          <h3 className="text-lg font-medium mt-6 mb-4">Weight Management Goal</h3>
           <div className="pt-2">
             <WeightGoalSelector 
               control={control}

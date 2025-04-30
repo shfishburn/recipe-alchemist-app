@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
@@ -208,7 +207,7 @@ const ProfilePage = () => {
                   <Skeleton className="h-40 w-full" />
                 </div>
               ) : (
-                <Tabs defaultValue="basic" className="w-full">
+                <Tabs defaultValue="nutrition" className="w-full">
                   <TabsList className="mb-4">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="nutrition">Nutrition Goals</TabsTrigger>
