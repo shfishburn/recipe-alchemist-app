@@ -7,29 +7,18 @@ import { useAuth } from '@/hooks/use-auth';
 import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { ChefHat, Database, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
+import { ChefHat, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
 
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
   const { isOpen, open, close } = useAuthDrawer();
 
-  // Check if user is an admin (for now, all authenticated users can access this)
-  // In a real app, you'd check for a specific role or permission
-  const isAdmin = !!session;
-
   const navigationLinks = [
-    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
     { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: ChefHat },
-    // Hiding My Lab route
-    // { name: 'My Lab', path: '/build', requiresAuth: true },
+    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true, icon: ShoppingCart },
     { name: 'Our Science', path: '/how-it-works', requiresAuth: false, icon: BookText },
   ];
-  
-  // Add Data Import link for admins
-  if (isAdmin) {
-    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true, icon: Database });
-  }
 
   // Filter links based on authentication status
   const displayedLinks = navigationLinks.filter(

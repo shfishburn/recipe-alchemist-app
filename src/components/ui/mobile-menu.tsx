@@ -11,30 +11,20 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Database, Menu, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
+import { ChefHat, Menu, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
   
-  // Check if user is an admin (for now, all authenticated users can access this)
-  const isAdmin = !!session;
-
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
-    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
     { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: ChefHat },
-    // Hiding My Lab route
-    // { name: 'My Lab', path: '/build', requiresAuth: true },
+    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true, icon: ShoppingCart },
     { name: 'Our Science', path: '/how-it-works', requiresAuth: false, icon: BookText },
   ];
-
-  // Add Data Import link for admins
-  if (isAdmin) {
-    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true, icon: Database });
-  }
 
   // Filter links based on authentication status
   const displayedLinks = navigationLinks.filter(
