@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,9 @@ const CUISINES = [
   { name: "Italian", value: "italian", flag: "🇮🇹" },
   { name: "Mexican", value: "mexican", flag: "🇲🇽" },
   { name: "Asian", value: "asian", flag: "🇨🇳" },
-  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" }
+  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" },
+  { name: "French", value: "french", flag: "🇫🇷" },
+  { name: "Indian", value: "indian", flag: "🇮🇳" }
 ];
 
 // Dietary options with icons

@@ -9,7 +9,9 @@ export const CUISINES = [
   { name: "Italian", value: "italian", flag: "🇮🇹" },
   { name: "Mexican", value: "mexican", flag: "🇲🇽" },
   { name: "Asian", value: "asian", flag: "🇨🇳" },
-  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" }
+  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" },
+  { name: "French", value: "french", flag: "🇫🇷" },
+  { name: "Indian", value: "indian", flag: "🇮🇳" }
 ];
 
 export const MAX_CUISINE_SELECTIONS = 2;
