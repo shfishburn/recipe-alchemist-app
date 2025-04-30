@@ -23,8 +23,18 @@ serve(async (req) => {
 
     const openai = new OpenAI({ apiKey });
 
-    let ingredientsText = Array.isArray(ingredients) 
-      ? ingredients.map(ing => `${ing.qty} ${ing.unit} ${ing.item}`).join('\n')
+    // Process ingredients to include shopping size info when available
+    const ingredientsText = Array.isArray(ingredients) 
+      ? ingredients.map(ing => {
+          // Use shop sizes if available
+          const qty = ing.shop_size_qty !== undefined ? ing.shop_size_qty : ing.qty;
+          const unit = ing.shop_size_unit || ing.unit;
+          const item = typeof ing.item === 'string' ? ing.item : 
+                      (ing.item && typeof ing.item.item === 'string' ? ing.item.item : '');
+          const notes = ing.notes || '';
+          
+          return `${qty} ${unit} ${item}${notes ? ` (${notes})` : ''}`;
+        }).join('\n')
       : "No ingredients provided";
 
     const prompt = `As a professional chef specializing in culinary science and practical shopping, organize these ingredients from the recipe "${title}" into an optimized shopping list with expert insights.

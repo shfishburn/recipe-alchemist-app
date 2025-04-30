@@ -1,125 +1,100 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { supabase } from '@/integrations/supabase/client';
-import { QuickRecipe } from '@/hooks/use-quick-recipe';
-
-// Helper function to format ingredient for database storage
-const formatIngredientForDB = (ingredient: any) => {
-  if (typeof ingredient === 'string') {
-    return {
-      qty: 1,
-      unit: '',
-      item: ingredient
-    };
-  }
-  
-  // If it's already in the right format, return it
-  if (ingredient.item && typeof ingredient.item === 'string') {
-    return {
-      qty: ingredient.qty || 1,
-      unit: ingredient.unit || '',
-      item: ingredient.item
-    };
-  }
-  
-  // Otherwise, extract what we can
-  return {
-    qty: ingredient.qty || 1,
-    unit: ingredient.unit || '',
-    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient)
-  };
-};
-
-interface QuickRecipeSaveProps {
-  recipe: QuickRecipe;
-  onSaveSuccess?: () => void;
-}
+import type { QuickRecipe } from '@/hooks/use-quick-recipe';
+import { useToast } from '@/hooks/use-toast';
 
 export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
-  const authDrawer = useAuthDrawer();
   const navigate = useNavigate();
 
   const saveRecipe = async (recipe: QuickRecipe) => {
-    if (!user) {
-      authDrawer.open();
-      return false;
-    }
-    
-    if (!recipe) return false;
-    
-    // Show saving state
-    setIsSaving(true);
-    
     try {
-      // Format ingredients for database storage
-      const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
+      setIsSaving(true);
       
-      // Save the recipe to the database
+      // Check if user is authenticated
+      const { data: userData, error: authError } = await supabase.auth.getUser();
+      if (authError || !userData.user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to save recipes",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Transform quick recipe ingredients to match the database structure
+      // Preserve shop_size_qty and shop_size_unit in the saved recipe
+      const ingredients = recipe.ingredients.map(ing => {
+        // Handle different input formats
+        if (typeof ing === 'string') {
+          return { qty: 1, unit: '', item: ing };
+        }
+        
+        // Construct properly formatted ingredient object
+        // Keep shop_size information when available
+        return {
+          qty: ing.qty,
+          unit: ing.unit,
+          item: typeof ing.item === 'string' ? ing.item : (ing.item?.item || ''),
+          notes: ing.notes,
+          // Preserve shopping-specific information
+          shop_size_qty: ing.shop_size_qty,
+          shop_size_unit: ing.shop_size_unit
+        };
+      });
+      
+      // Convert science notes to the correct format
+      const science_notes = recipe.science_notes || [];
+      
+      // Create recipe in database
       const { data, error } = await supabase
         .from('recipes')
         .insert({
-          user_id: user.id,
           title: recipe.title,
-          tagline: recipe.description,
-          ingredients: formattedIngredients,
+          description: recipe.description,
+          ingredients,
           instructions: recipe.steps,
-          prep_time_min: recipe.prepTime,
-          cook_time_min: recipe.cookTime,
-          servings: 4, // Default value
-          cuisine: recipe.cuisineType || 'general',
-          cooking_tip: recipe.cookingTip || null, // Save the cooking tip
+          prep_time_min: recipe.prep_time_min,
+          cook_time_min: recipe.cook_time_min,
+          servings: recipe.servings || 4,
+          user_id: userData.user.id,
+          science_notes,
+          cuisine: Array.isArray(recipe.cuisine) && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null,
+          dietary: Array.isArray(recipe.dietary) && recipe.dietary.length > 0 ? recipe.dietary[0] : null,
         })
-        .select('id')
+        .select()
         .single();
-        
+      
       if (error) {
-        throw error;
+        console.error('Error saving recipe:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save recipe",
+          variant: "destructive",
+        });
+        return false;
       }
       
       toast({
-        title: "Recipe saved",
-        description: "Your recipe has been saved to My Kitchen",
+        title: "Success!",
+        description: "Recipe saved successfully",
       });
       
-      setIsSaving(false);
       return true;
     } catch (error) {
-      console.error('Error saving recipe:', error);
+      console.error('Error in saveRecipe:', error);
       toast({
-        title: "Save failed",
-        description: "There was an error saving your recipe. Please try again.",
+        title: "Error",
+        description: "Something went wrong while saving the recipe",
         variant: "destructive",
       });
-      setIsSaving(false);
       return false;
+    } finally {
+      setIsSaving(false);
     }
   };
-
-  return {
-    saveRecipe,
-    isSaving,
-    navigate
-  };
-}
-
-export function QuickRecipeSave({ recipe, onSaveSuccess }: QuickRecipeSaveProps) {
-  const { saveRecipe, isSaving } = useQuickRecipeSave();
-
-  const handleSave = async () => {
-    const success = await saveRecipe(recipe);
-    if (success && onSaveSuccess) {
-      onSaveSuccess();
-    }
-  };
-
-  return {
-    handleSave,
-    isSaving
-  };
+  
+  return { saveRecipe, isSaving, navigate };
 }

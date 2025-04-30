@@ -34,15 +34,46 @@ export function useShoppingListActions(recipe: Recipe) {
             unit: item.unit,
             checked: false,
             notes: item.notes,
+            quality_indicators: item.quality_indicators,
             alternatives: item.alternatives,
             pantry_staple: item.pantry_staple,
+            storage_tips: item.storage_tips,
             department: dept.name,
             recipeId: recipe.id
           });
         });
       });
 
-      return { items, tips: data.tips };
+      // Add common staple items if they're not already in the list
+      const basicItems = [
+        'Cooking oil',
+        'Salt',
+        'Black pepper'
+      ];
+      
+      basicItems.forEach(basicItem => {
+        const hasItem = items.some(item => 
+          item.name.toLowerCase().includes(basicItem.toLowerCase())
+        );
+        
+        if (!hasItem) {
+          items.push({
+            name: basicItem,
+            quantity: 1,
+            unit: '',
+            checked: false,
+            pantry_staple: true,
+            department: 'Pantry',
+            recipeId: recipe.id
+          });
+        }
+      });
+
+      return { 
+        items, 
+        tips: data.efficiency_tips || [], 
+        preparation_notes: data.preparation_notes || [] 
+      };
     } catch (error) {
       console.error('Error in generateShoppingList:', error);
       throw error;
@@ -58,7 +89,7 @@ export function useShoppingListActions(recipe: Recipe) {
         throw new Error("User not authenticated");
       }
       
-      const { items, tips } = await generateShoppingList();
+      const { items, tips, preparation_notes } = await generateShoppingList();
       
       const { data, error } = await supabase
         .from('shopping_lists')
@@ -66,7 +97,8 @@ export function useShoppingListActions(recipe: Recipe) {
           title: newListName,
           user_id: userData.user.id,
           items: items as unknown as Json,
-          tips: tips
+          tips: tips,
+          preparation_notes: preparation_notes
         })
         .select()
         .single();
@@ -99,18 +131,19 @@ export function useShoppingListActions(recipe: Recipe) {
       // Get current list items
       const { data: currentList, error: fetchError } = await supabase
         .from('shopping_lists')
-        .select('items, tips')
+        .select('items, tips, preparation_notes')
         .eq('id', selectedListId)
         .single();
       
       if (fetchError) throw fetchError;
       
       // Generate new items with AI
-      const { items: newItems, tips: newTips } = await generateShoppingList();
+      const { items: newItems, tips: newTips, preparation_notes: newPreparationNotes } = await generateShoppingList();
       
       // Combine existing and new items, keeping department organization
       const currentItems = (currentList.items as unknown as ShoppingListItem[]) || [];
       const currentTips = (currentList.tips as string[]) || [];
+      const currentPreparationNotes = (currentList.preparation_notes as string[]) || [];
       
       // Smart merge: combine items with same name and unit within departments
       const mergedItems = [...currentItems];
@@ -133,7 +166,8 @@ export function useShoppingListActions(recipe: Recipe) {
         .from('shopping_lists')
         .update({ 
           items: mergedItems as unknown as Json,
-          tips: [...new Set([...currentTips, ...newTips])]
+          tips: [...new Set([...currentTips, ...newTips])],
+          preparation_notes: [...new Set([...currentPreparationNotes, ...newPreparationNotes])]
         })
         .eq('id', selectedListId);
       

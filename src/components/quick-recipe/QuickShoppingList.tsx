@@ -4,8 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ShoppingBag, Share2, Copy, Check } from 'lucide-react';
+import { ShoppingBag, Share2, Copy, Check, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider
+} from "@/components/ui/tooltip";
 
 interface QuickShoppingListProps {
   recipe: QuickRecipe;
@@ -23,7 +29,7 @@ const formatIngredient = (ingredient: any): string => {
   let formatted = '';
   
   // Use shop size if available, otherwise use regular quantity
-  const displayQty = shop_size_qty || qty;
+  const displayQty = shop_size_qty !== undefined ? shop_size_qty : qty;
   const displayUnit = shop_size_unit || unit;
   
   if (displayQty) {
@@ -51,7 +57,8 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   // Transform ingredients into shopping items with checked state
   const initialItems = recipe.ingredients.map(ingredient => ({
     text: formatIngredient(ingredient),
-    checked: false
+    checked: false,
+    department: 'Recipe Ingredients'
   }));
   
   // Add extra items for cooking oil, salt, and pepper if not already in the list
@@ -70,10 +77,20 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
     if (!hasItem) {
       initialItems.push({
         text: item,
-        checked: false
+        checked: false,
+        department: 'Pantry Staples',
+        pantryStaple: true
       });
     }
   });
+  
+  // Group items by department
+  const itemsByDepartment = initialItems.reduce((acc, item) => {
+    const dept = item.department || 'Recipe Ingredients';
+    if (!acc[dept]) acc[dept] = [];
+    acc[dept].push(item);
+    return acc;
+  }, {} as Record<string, typeof initialItems>);
   
   const [items, setItems] = useState(initialItems);
   const [copied, setCopied] = useState(false);
@@ -85,11 +102,16 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   };
   
   const copyToClipboard = () => {
-    const text = items
-      .map(item => `${item.checked ? '[x]' : '[ ]'} ${item.text}`)
-      .join('\n');
+    // Format list by departments
+    const textByDepartments = Object.entries(itemsByDepartment)
+      .map(([department, deptItems]) => {
+        const itemTexts = deptItems.map(item => 
+          `${item.checked ? '[x]' : '[ ]'} ${item.text}`
+        );
+        return `## ${department}\n${itemTexts.join('\n')}`;
+      }).join('\n\n');
     
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(textByDepartments)
       .then(() => {
         setCopied(true);
         toast({
@@ -113,49 +135,59 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            Shopping List
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="mt-2">
-          <div className="space-y-3">
-            {items.map((item, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <Checkbox 
-                  id={`item-${index}`}
-                  checked={item.checked}
-                  onCheckedChange={() => toggleItem(index)}
-                />
-                <label 
-                  htmlFor={`item-${index}`}
-                  className={`text-sm ${item.checked ? 'line-through text-muted-foreground' : ''}`}
-                >
-                  {item.text}
-                </label>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-6 flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5" />
+              Shopping List
+            </DialogTitle>
             <Button
               variant="outline"
+              size="sm"
               onClick={copyToClipboard}
-              className="w-full"
+              className="flex items-center gap-2"
             >
               {copied ? (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
+                  <Check className="h-4 w-4" />
                   Copied!
                 </>
               ) : (
                 <>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy to Clipboard
+                  <Copy className="h-4 w-4" />
+                  Copy
                 </>
               )}
             </Button>
+          </div>
+        </DialogHeader>
+        
+        <div className="mt-2">
+          <div className="space-y-4">
+            {Object.entries(itemsByDepartment).map(([department, deptItems]) => (
+              <div key={department} className="space-y-2">
+                <h3 className="font-medium text-sm">{department}</h3>
+                {deptItems.map((item, index) => (
+                  <div key={index} className="flex items-start gap-2 p-2 bg-muted/40 rounded-md">
+                    <Checkbox 
+                      id={`item-${index}`}
+                      checked={item.checked}
+                      onCheckedChange={() => toggleItem(items.indexOf(item))}
+                    />
+                    <label 
+                      htmlFor={`item-${index}`}
+                      className={`text-sm flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+                    >
+                      {item.text}
+                      {item.pantryStaple && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
+                          Pantry Staple
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </DialogContent>

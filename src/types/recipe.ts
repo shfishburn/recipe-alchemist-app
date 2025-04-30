@@ -4,6 +4,8 @@ export interface Ingredient {
   unit: string;
   item: string;
   notes?: string;
+  shop_size_qty?: number;
+  shop_size_unit?: string;
 }
 
 export interface Nutrition {
@@ -65,5 +67,5 @@ export interface Recipe {
   nutrition?: Nutrition;
   science_notes: string[];
   chef_notes?: string;
-  cooking_tip?: string; // Added cooking_tip field to match the database schema
+  cooking_tip?: string;
 }

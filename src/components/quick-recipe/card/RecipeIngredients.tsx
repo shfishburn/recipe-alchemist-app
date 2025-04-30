@@ -14,15 +14,19 @@ const formatIngredient = (ingredient: any): string => {
     return ingredient;
   }
   
-  const { qty, unit, item, notes } = ingredient;
+  const { qty, unit, shop_size_qty, shop_size_unit, item, notes } = ingredient;
   let formatted = '';
   
-  if (qty) {
-    formatted += qty + ' ';
+  // Use shop size if available, otherwise use regular quantity
+  const displayQty = shop_size_qty !== undefined ? shop_size_qty : qty;
+  const displayUnit = shop_size_unit || unit;
+  
+  if (displayQty) {
+    formatted += displayQty + ' ';
   }
   
-  if (unit) {
-    formatted += unit + ' ';
+  if (displayUnit) {
+    formatted += displayUnit + ' ';
   }
   
   if (typeof item === 'string') {

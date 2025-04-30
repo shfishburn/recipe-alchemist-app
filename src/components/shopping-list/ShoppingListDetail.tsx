@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
-import { Check, Plus, Trash2, Info } from 'lucide-react';
+import { Check, Plus, Trash2, Info, Copy, ClipboardCheck } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -26,6 +26,7 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
   const [newItemQuantity, setNewItemQuantity] = useState(1);
   const [newItemUnit, setNewItemUnit] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('Other');
+  const [copied, setCopied] = useState(false);
 
   // Group items by department
   const itemsByDepartment = list.items.reduce((acc, item) => {
@@ -80,10 +81,73 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
       });
     }
   };
+  
+  const copyToClipboard = () => {
+    // Format list by departments
+    const textByDepartments = Object.entries(itemsByDepartment)
+      .map(([department, items]) => {
+        const itemTexts = items.map(item => 
+          `${item.checked ? '[x]' : '[ ]'} ${item.quantity} ${item.unit} ${item.name}${item.notes ? ` (${item.notes})` : ''}`
+        );
+        return `## ${department}\n${itemTexts.join('\n')}`;
+      }).join('\n\n');
+      
+    // Add tips and preparation notes if available
+    let fullText = textByDepartments;
+    
+    if (list.tips && list.tips.length > 0) {
+      fullText += '\n\n## Shopping Tips\n';
+      fullText += list.tips.map(tip => `- ${tip}`).join('\n');
+    }
+    
+    if (list.preparation_notes && list.preparation_notes.length > 0) {
+      fullText += '\n\n## Preparation Notes\n';
+      fullText += list.preparation_notes.map(note => `- ${note}`).join('\n');
+    }
+    
+    navigator.clipboard.writeText(fullText)
+      .then(() => {
+        setCopied(true);
+        toast({
+          title: "Copied to clipboard",
+          description: "Shopping list copied to clipboard"
+        });
+        
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+        toast({
+          title: "Copy failed",
+          description: "Could not copy to clipboard",
+          variant: "destructive"
+        });
+      });
+  };
 
   return (
     <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-6">{list.title}</h2>
+      <div className="flex justify-between items-start mb-6">
+        <h2 className="text-2xl font-bold">{list.title}</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={copyToClipboard}
+          className="flex items-center gap-2"
+        >
+          {copied ? (
+            <>
+              <ClipboardCheck className="h-4 w-4" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              Copy List
+            </>
+          )}
+        </Button>
+      </div>
       
       {/* Shopping Tips */}
       {list.tips && list.tips.length > 0 && (
