@@ -4,6 +4,7 @@ import Navbar from '@/components/ui/navbar';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
+// Import the refactored hook
 import { useDataImport } from '@/hooks/use-data-import';
 
 import ImportHeader from '@/components/data-import/ImportHeader';
