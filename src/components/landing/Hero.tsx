@@ -1,45 +1,44 @@
 
 import React from 'react';
-import { RecipeCarousel } from './RecipeCarousel';
-import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { ChefHat } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 // Use React.memo to prevent unnecessary re-renders
 const Hero = React.memo(() => {
-  const isMobile = useIsMobile();
-  
   return (
     <section className="w-full py-6 md:py-10">
       <div className="container-page max-w-full px-4 md:px-8">
-        {/* Hero Title Section */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex items-center justify-center gap-2">
-            <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
-            What's in your kitchen tonight?
+        <div className="flex flex-col items-center text-center">
+          {/* Main title */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6">
+            Transform your meals with<br />
+            <span className="text-recipe-green">AI-powered recipes</span>
           </h1>
           
-          <p className="text-base sm:text-lg text-muted-foreground max-w-4xl mx-auto mt-3 md:mt-4">
-            Share what you've got and what you're craving. Pick your flavor inspiration. 
-            I'll instantly transform your ingredients into delicious, foolproof recipes—complete with 
-            easy shopping tips and helpful nutrition insights to make dinner a joy.
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-8 md:mb-12">
+            Create healthy, personalized recipes tailored to your ingredients, 
+            dietary preferences, and nutritional goals.
           </p>
-        </div>
-        
-        {/* Recipe Generator - Full width */}
-        <div className="w-full mb-10 md:mb-16">
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md w-full">
-            <QuickRecipeGenerator />
-          </div>
-        </div>
-        
-        {/* Sample Recipes Carousel - Full Width */}
-        <div className="w-full">
-          <div className="w-full mx-auto relative">
-            <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
-            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
-            <RecipeCarousel />
+          
+          {/* Call to action buttons */}
+          <div className="w-full max-w-md space-y-4">
+            <Button 
+              asChild
+              className="w-full bg-recipe-green hover:bg-recipe-green/90 text-white text-lg py-6"
+              size="lg"
+            >
+              <Link to="/build">Create Recipe</Link>
+            </Button>
+            
+            <Button 
+              asChild
+              variant="outline" 
+              className="w-full text-lg py-6 border-2"
+              size="lg"
+            >
+              <Link to="/recipes">Browse Recipes</Link>
+            </Button>
           </div>
         </div>
       </div>
