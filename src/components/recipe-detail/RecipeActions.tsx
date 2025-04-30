@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChefHat, Beaker, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
+import { ChefHat, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -83,15 +83,8 @@ export function RecipeActions({
     : "relative w-full";
 
   // Format button text for mobile vs desktop
-  const analyzeText = isMobile 
-    ? (isAnalyzing ? "Analyzing..." : "Science") 
-    : (isAnalyzing ? "Analyzing..." : "Scientific Analysis");
-  
-  const aiChatText = isMobile ? "AI Chat" : "AI Chat";
   const cookingModeText = isMobile ? "Cooking" : "Cooking Mode";
-  
-  // Determine analyze button variant based on state
-  const analyzeButtonVariant = isAnalysisOpen ? "outline" : "default";
+  const aiChatText = isMobile ? "AI Chat" : "AI Chat";
   
   return (
     <div className={containerClasses}>
@@ -115,7 +108,7 @@ export function RecipeActions({
         )}
 
         {/* Main action buttons - Using grid instead of flex for better mobile layout */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Button 
             variant="default"
             size={isMobile ? "default" : "lg"}
@@ -127,29 +120,6 @@ export function RecipeActions({
               {cookingModeText}
             </span>
             {isMobile && <span className="sm:hidden">Cook</span>}
-          </Button>
-
-          <Button 
-            variant={analyzeButtonVariant}
-            size={isMobile ? "default" : "lg"}
-            className={`w-full flex items-center justify-center ${
-              isAnalysisOpen 
-                ? 'bg-background border border-input hover:bg-accent hover:text-accent-foreground' 
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-            }`}
-            onClick={onToggleAnalysis}
-            disabled={isAnalyzing}
-          >
-            {isAnalyzing ? (
-              <Loader2 className="h-5 w-5 mr-1 sm:mr-2 animate-spin" />
-            ) : (
-              <Beaker className="h-5 w-5 mr-1 sm:mr-2" />
-            )}
-            <span className={isMobile ? "hidden sm:inline" : ""}>
-              {analyzeText}
-            </span>
-            {isMobile && <span className="sm:hidden">Science</span>}
-            {isAnalysisOpen && <Badge variant="default" className="ml-2 text-[10px] hidden sm:inline-flex">Active</Badge>}
           </Button>
           
           <Button 

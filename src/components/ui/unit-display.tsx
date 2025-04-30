@@ -34,3 +34,28 @@ export function HeightDisplay({ heightCm, unitSystem }: HeightDisplayProps) {
     return <span>{feet}'{inches}"</span>;
   }
 }
+
+// New utility function to format nutrition values as integers
+export function formatNutritionValue(value: number | undefined | null): string {
+  if (value === undefined || value === null) {
+    return "0";
+  }
+  return Math.round(value).toString();
+}
+
+// Format with appropriate units for nutrition display
+export function formatNutrientWithUnit(
+  value: number | undefined | null, 
+  unit: string, 
+  showDecimals = false
+): string {
+  if (value === undefined || value === null) {
+    return `0 ${unit}`;
+  }
+  
+  if (showDecimals) {
+    return `${value.toFixed(1)} ${unit}`;
+  }
+  
+  return `${Math.round(value)} ${unit}`;
+}

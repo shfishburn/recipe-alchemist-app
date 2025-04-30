@@ -46,7 +46,7 @@ export function NutritionConfidenceIndicator({
   };
   
   const formatScore = (score: number) => {
-    return (score * 100).toFixed(0) + '%';
+    return Math.round(score * 100) + '%';
   };
   
   const getLimitationText = () => {

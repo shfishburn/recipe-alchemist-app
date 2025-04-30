@@ -5,12 +5,22 @@ import { ListBlock } from './blocks/ListBlock';
 import { SectionBlock } from './blocks/SectionBlock';
 import { HeadingBlock, MethodologyHeading } from './blocks/HeadingBlock';
 import { processInlineFormatting, containsScientificContent } from './utils/text-formatting';
+import { formatNutritionValue } from '@/components/ui/unit-display';
 
 interface FormattedTextProps {
   text: string;
   className?: string;
   preserveWhitespace?: boolean;
 }
+
+// Helper function to format nutrition values in text
+const formatNutritionValues = (text: string): string => {
+  // Find patterns like "123.45 calories" or "67.89g protein" and round to integers
+  return text.replace(/(\d+\.\d+)(\s*)(calories|kcal|g|mg|mcg|IU)/gi, (match, number, space, unit) => {
+    const roundedValue = formatNutritionValue(parseFloat(number));
+    return `${roundedValue}${space}${unit}`;
+  });
+};
 
 export function FormattedText({ 
   text, 
@@ -23,9 +33,12 @@ export function FormattedText({
       return [<p key="empty">No content available</p>];
     }
     
+    // Format nutrition values to whole numbers before processing blocks
+    const formattedText = formatNutritionValues(text);
+    
     // Enhanced block splitting with preservation of structured content
     const blockSeparator = preserveWhitespace ? /(\n\n+|\r\n\r\n+)/ : /\n\n+/;
-    const blocks = text.split(blockSeparator).filter(block => block.trim());
+    const blocks = formattedText.split(blockSeparator).filter(block => block.trim());
     
     // Process each block with specific formatting rules
     return blocks.map((block, blockIndex) => {

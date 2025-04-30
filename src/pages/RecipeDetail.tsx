@@ -61,12 +61,21 @@ const RecipeDetail = () => {
   };
 
   const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    setLocalRecipe(updatedRecipe);
-    
-    toast({
-      title: "Recipe updated",
-      description: "Recipe has been updated with analysis insights.",
-    });
+    // Only update specific fields from the analysis to avoid overwriting core recipe data
+    if (localRecipe) {
+      const safeUpdates = {
+        ...localRecipe,
+        // Only update science_notes and not core recipe data like title or instructions
+        science_notes: updatedRecipe.science_notes
+      };
+      
+      setLocalRecipe(safeUpdates);
+      
+      toast({
+        title: "Analysis completed",
+        description: "Recipe analysis has been added.",
+      });
+    }
   };
 
   const handleToggleAnalysis = () => {
@@ -134,7 +143,7 @@ const RecipeDetail = () => {
               <RecipeAnalysis 
                 recipe={currentRecipe}
                 isOpen={sections.analysis}
-                onToggle={() => toggleSection('analysis')}
+                onToggle={handleToggleAnalysis}
                 onRecipeUpdated={handleRecipeUpdate}
               />
 

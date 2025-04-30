@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart2, Clock, Utensils } from 'lucide-react';
 import { NutritionConfidenceIndicator } from './NutritionConfidenceIndicator';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import { formatNutritionValue } from '@/components/ui/unit-display';
 
 interface NutritionHeaderProps {
   showToggle: boolean;
@@ -47,7 +48,7 @@ export function NutritionHeader({
         {totalTime > 0 && (
           <div className="flex items-center">
             <Clock className="h-3.5 w-3.5 mr-1" />
-            <span>{totalTime} min</span>
+            <span>{formatNutritionValue(totalTime)} min</span>
           </div>
         )}
       </div>
