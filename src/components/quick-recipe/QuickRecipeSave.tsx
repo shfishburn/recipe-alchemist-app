@@ -1,11 +1,11 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { QuickRecipe } from '@/hooks/use-quick-recipe';
 
-export function useQuickRecipeSave() {
+export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -14,81 +14,51 @@ export function useQuickRecipeSave() {
     try {
       setIsSaving(true);
       
-      // Check if user is authenticated
-      const { data: userData, error: authError } = await supabase.auth.getUser();
-      if (authError || !userData.user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to save recipes",
-          variant: "destructive",
-        });
-        return false;
+      if (!recipe) {
+        throw new Error("No recipe data to save");
       }
+
+      console.log("Saving recipe:", recipe);
       
-      // Transform quick recipe ingredients to match the database structure
-      // Preserve shop_size_qty and shop_size_unit in the saved recipe
-      const ingredients = recipe.ingredients.map(ing => {
-        // Handle different input formats
-        if (typeof ing === 'string') {
-          return { qty: 1, unit: '', item: ing };
-        }
-        
-        // Construct properly formatted ingredient object
-        // Keep shop_size information when available
-        return {
-          qty: ing.qty,
-          unit: ing.unit,
-          item: typeof ing.item === 'string' ? ing.item : (ing.item || ''),
-          notes: ing.notes,
-          // Preserve shopping-specific information
-          shop_size_qty: ing.shop_size_qty,
-          shop_size_unit: ing.shop_size_unit
-        };
-      });
-      
-      // Convert science notes to the correct format
-      const science_notes = recipe.scienceNotes || [];
-      
-      // Create recipe in database - fixed to use an object not an array
+      // Convert the quick recipe format to database format
+      const recipeData = {
+        title: recipe.title,
+        description: recipe.description,
+        ingredients: recipe.ingredients,
+        instructions: recipe.steps,
+        prep_time_min: recipe.prepTime,
+        cook_time_min: recipe.cookTime,
+        cuisine: recipe.cuisineType,
+        dietary: recipe.dietaryType,
+        cooking_tip: recipe.cookingTip,
+        science_notes: recipe.scienceNotes || [],
+        servings: recipe.servings || 2
+      };
+
+      // Insert the recipe into the database
       const { data, error } = await supabase
         .from('recipes')
-        .insert({
-          title: recipe.title,
-          description: recipe.description,
-          ingredients,
-          instructions: recipe.steps,
-          prep_time_min: recipe.prepTime, // Map from prepTime
-          cook_time_min: recipe.cookTime, // Map from cookTime
-          servings: recipe.servings || 4,
-          user_id: userData.user.id,
-          science_notes,
-          cuisine: recipe.cuisineType ? [recipe.cuisineType] : [],
-          dietary: recipe.dietaryType ? [recipe.dietaryType] : null,
-        })
-        .select()
+        .insert(recipeData)
+        .select('id')
         .single();
-      
+
       if (error) {
-        console.error('Error saving recipe:', error);
-        toast({
-          title: "Error",
-          description: "Failed to save recipe",
-          variant: "destructive",
-        });
-        return false;
+        console.error("Error saving recipe:", error);
+        throw new Error(`Failed to save recipe: ${error.message}`);
       }
-      
+
       toast({
-        title: "Success!",
-        description: "Recipe saved successfully",
+        title: "Recipe saved",
+        description: "Your recipe has been saved to your collection.",
       });
-      
+
+      console.log("Recipe saved successfully with ID:", data.id);
       return true;
     } catch (error) {
-      console.error('Error in saveRecipe:', error);
+      console.error("Error in saveRecipe:", error);
       toast({
-        title: "Error",
-        description: "Something went wrong while saving the recipe",
+        title: "Save failed",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -96,6 +66,6 @@ export function useQuickRecipeSave() {
       setIsSaving(false);
     }
   };
-  
+
   return { saveRecipe, isSaving, navigate };
-}
+};
