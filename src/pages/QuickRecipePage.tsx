@@ -12,7 +12,7 @@ const QuickRecipePage = () => {
   const navigate = useNavigate();
   const { recipe, isLoading, formData } = useQuickRecipeStore();
 
-  // Redirect to home if no recipe is loading and no recipe data
+  // Only redirect if not loading AND no recipe data
   useEffect(() => {
     if (!isLoading && !recipe) {
       navigate('/');

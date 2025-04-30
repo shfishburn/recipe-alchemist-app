@@ -9,19 +9,27 @@ export function useQuickRecipeForm() {
   const { generateQuickRecipe, isLoading } = useQuickRecipe();
   const navigate = useNavigate();
   const location = useLocation();
-  const { reset, recipe } = useQuickRecipeStore();
+  const { reset, recipe, setLoading } = useQuickRecipeStore();
   
   // Handle form submission
   const handleSubmit = async (formData: QuickRecipeFormData) => {
-    // Start generating the recipe
-    const recipe = await generateQuickRecipe(formData);
-    
-    // Navigate to the quick recipe page
-    if (recipe) {
+    try {
+      // Set loading state immediately so it shows the loading animation
+      setLoading(true);
+      
+      // Navigate to the quick recipe page BEFORE starting the API call
+      // This ensures the loading animation is displayed
       navigate('/quick-recipe');
+      
+      // Start generating the recipe AFTER navigation
+      const recipe = await generateQuickRecipe(formData);
+      
+      return recipe;
+    } catch (error) {
+      console.error('Error submitting quick recipe form:', error);
+      setLoading(false);
+      return null;
     }
-    
-    return recipe;
   };
 
   return {

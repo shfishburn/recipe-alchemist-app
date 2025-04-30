@@ -13,21 +13,18 @@ export function QuickRecipeGenerator() {
     if (state?.regenerate && state.formData) {
       const regenerate = async () => {
         reset(); // Clear any existing recipe
-        await generateQuickRecipe(state.formData);
-        // Navigate without the state to prevent infinite loop
+        // Navigate directly instead of waiting for the recipe
         navigate('/quick-recipe', { replace: true });
+        // Generate the recipe after navigation
+        await generateQuickRecipe(state.formData);
       };
       
       regenerate();
     }
   }, [location, generateQuickRecipe, navigate, reset]);
 
-  // If we already have a recipe, navigate to the quick recipe page
-  useEffect(() => {
-    if (recipe) {
-      navigate('/quick-recipe');
-    }
-  }, [recipe, navigate]);
+  // No need to auto-navigate when recipe exists anymore since
+  // navigation now happens before recipe generation
   
   return <QuickRecipeFormContainer />;
 }
