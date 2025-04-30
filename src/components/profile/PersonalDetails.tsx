@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -150,6 +151,14 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   const watchAge = watch('age');
   const watchActivityLevel = watch('activityLevel');
 
+  // Create unit-specific labels
+  const weightUnitLabel = unitSystem === 'metric' ? '(kg)' : '(lbs)';
+  const heightUnitLabel = unitSystem === 'metric' ? '(cm)' : '';
+  
+  // Min and max values based on unit system
+  const weightMinValue = unitSystem === 'metric' ? 40 : 90;
+  const weightMaxValue = unitSystem === 'metric' ? 200 : 440;
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -183,12 +192,12 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="weight">Weight {unitSystem === 'metric' ? '(kg)' : '(lbs)'}</Label>
+              <Label htmlFor="weight">Weight {weightUnitLabel}</Label>
               <Input
                 id="weight"
                 type="number"
-                min="40"
-                max={unitSystem === 'metric' ? "200" : "440"}
+                min={weightMinValue}
+                max={weightMaxValue}
                 step="0.1"
                 {...register('weight')}
               />
@@ -196,7 +205,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
             
             {unitSystem === 'metric' ? (
               <div className="space-y-2">
-                <Label htmlFor="height">Height (cm)</Label>
+                <Label htmlFor="height">Height {heightUnitLabel}</Label>
                 <Input
                   id="height"
                   type="number"
@@ -256,6 +265,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
               control={control}
               weightGoalOptions={weightGoalOptions} 
               setValue={setValue}
+              unitSystem={unitSystem}
             />
           </div>
           

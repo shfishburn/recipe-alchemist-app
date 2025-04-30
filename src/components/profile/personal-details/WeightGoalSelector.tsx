@@ -13,9 +13,22 @@ interface WeightGoalSelectorProps {
     deficit: number;
   }>;
   setValue: (name: string, value: any) => void;
+  unitSystem: 'metric' | 'imperial';
 }
 
-export function WeightGoalSelector({ control, weightGoalOptions, setValue }: WeightGoalSelectorProps) {
+export function WeightGoalSelector({ control, weightGoalOptions, setValue, unitSystem }: WeightGoalSelectorProps) {
+  // Function to format goal labels based on unit system
+  const formatGoalLabel = (label: string): string => {
+    if (unitSystem === 'imperial' && label.includes('kg')) {
+      // Convert kg mentions to lbs in the labels
+      return label
+        .replace('1kg/week', '2lbs/week')
+        .replace('0.5kg/week', '1lb/week')
+        .replace('0.25kg/week', '0.5lb/week');
+    }
+    return label;
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor="weightGoalType">Weight Management Goal</Label>
@@ -39,7 +52,7 @@ export function WeightGoalSelector({ control, weightGoalOptions, setValue }: Wei
             <SelectContent>
               {weightGoalOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {formatGoalLabel(option.label)}
                 </SelectItem>
               ))}
             </SelectContent>
