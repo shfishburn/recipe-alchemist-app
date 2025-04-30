@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
+import { useAuth } from '@/hooks/use-auth';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const saveRecipe = async (recipe: QuickRecipe) => {
     try {
@@ -20,10 +22,14 @@ export const useQuickRecipeSave = () => {
 
       console.log("Saving recipe:", recipe);
       
+      if (!user?.id) {
+        throw new Error("You must be logged in to save recipes");
+      }
+      
       // Convert the quick recipe format to database format
       const recipeData = {
         title: recipe.title,
-        description: recipe.description,
+        tagline: recipe.description, // Map description to tagline
         ingredients: recipe.ingredients,
         instructions: recipe.steps,
         prep_time_min: recipe.prepTime,
@@ -32,7 +38,8 @@ export const useQuickRecipeSave = () => {
         dietary: recipe.dietaryType,
         cooking_tip: recipe.cookingTip,
         science_notes: recipe.scienceNotes || [],
-        servings: recipe.servings || 2
+        servings: recipe.servings || 2,
+        user_id: user.id // Add the user_id to the recipe data
       };
 
       // Insert the recipe into the database

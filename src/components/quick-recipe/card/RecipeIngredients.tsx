@@ -5,12 +5,12 @@ import { IngredientList } from './ingredient-formatter/IngredientList';
 import { Ingredient } from '@/hooks/use-quick-recipe';
 
 interface RecipeIngredientsProps {
-  ingredients: any[];
+  ingredients: Ingredient[];
 }
 
 export function RecipeIngredients({ ingredients }: RecipeIngredientsProps) {
   return (
-    <div>
+    <div className="mb-6">
       <RecipeSectionHeader title="Ingredients" />
       <IngredientList ingredients={ingredients} />
     </div>
