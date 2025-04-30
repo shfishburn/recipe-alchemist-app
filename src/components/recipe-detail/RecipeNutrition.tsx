@@ -40,11 +40,22 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
     ? (recipeNutrition as unknown as EnhancedNutrition) 
     : undefined;
 
-  // Make sure userPreferences has unitSystem
+  // Make sure userPreferences has unitSystem, dailyCalories and macroSplit
+  const defaultPreferences = {
+    unitSystem,
+    dailyCalories: 2000,
+    macroSplit: {
+      protein: 30,
+      carbs: 40,
+      fat: 30
+    }
+  };
+  
   const updatedUserPreferences = userPreferences ? {
+    ...defaultPreferences,
     ...userPreferences,
     unitSystem: userPreferences.unitSystem || unitSystem
-  } : { unitSystem };
+  } : defaultPreferences;
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>

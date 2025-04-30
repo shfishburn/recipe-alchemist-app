@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BodyFatPercentileDisplay } from './BodyFatPercentileDisplay';
 import { WeightDisplay } from '@/components/ui/unit-display';
 import { convertWeightToKg, convertWeightFromKg } from '@/utils/unit-conversion';
 import type { NutritionPreferencesType } from '@/types/nutrition';
@@ -139,14 +138,6 @@ export function BodyCompositionForm({ preferences, onSave }: BodyCompositionForm
               </div>
             </div>
           </div>
-
-          {preferences.personalDetails?.gender && preferences.personalDetails?.age && bodyFatPercentage && (
-            <BodyFatPercentileDisplay 
-              bodyFatPercentage={parseFloat(bodyFatPercentage.toString())} 
-              gender={preferences.personalDetails.gender}
-              age={preferences.personalDetails.age}
-            />
-          )}
           
           <div className="flex justify-end">
             <Button type="submit">Save Body Composition</Button>

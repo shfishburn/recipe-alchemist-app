@@ -3,13 +3,17 @@ import React from 'react';
 import { HorizontalBarChart } from './HorizontalBarChart';
 import { NutritionSummaryText } from './NutritionSummaryText';
 
+interface ChartData {
+  name: string;
+  Recipe: number;
+  Target: number;
+  percentage: number;
+  value?: string;
+  fill?: string;
+}
+
 interface ComparisonChartProps {
-  compareData: {
-    name: string;
-    Recipe: number;
-    Target: number;
-    percentage: number;
-  }[];
+  compareData: ChartData[];
   unitSystem?: 'metric' | 'imperial';
 }
 
@@ -41,7 +45,8 @@ export function ComparisonChart({ compareData, unitSystem = 'metric' }: Comparis
         <HorizontalBarChart 
           data={compareData.map(item => ({
             ...item,
-            value: `${item.percentage}%` // Pre-formatted value
+            value: `${item.percentage}%`, // Pre-formatted value
+            fill: '#4f46e5' // Default fill color
           }))} 
           showPercentage={true}
           showValue={true}
@@ -53,7 +58,10 @@ export function ComparisonChart({ compareData, unitSystem = 'metric' }: Comparis
       <div className="space-y-1">
         <h3 className="text-sm font-medium mb-2">Recipe vs. Daily Targets</h3>
         <HorizontalBarChart 
-          data={compareData} 
+          data={compareData.map(item => ({
+            ...item,
+            fill: '#4f46e5' // Default fill color
+          }))} 
           showPercentage={false}
           height={140}
         />
