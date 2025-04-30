@@ -11,7 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info, AlertCircle } from 'lucide-react';
+import { Info, AlertCircle, FileWarning } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface FileUploaderProps {
   selectedFile: File | null;
@@ -33,7 +34,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     if (parsingError) {
       return (
         <Alert className="mt-4" variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <FileWarning className="h-4 w-4" />
           <AlertTitle>CSV Parsing Error</AlertTitle>
           <AlertDescription>
             {parsingError}
@@ -54,7 +55,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     
     return (
       <div className="mt-4 overflow-x-auto">
-        <h3 className="text-sm font-medium mb-2">CSV Preview (first 4 rows)</h3>
+        <h3 className="text-sm font-medium mb-2">CSV Preview (first {rows.length} rows)</h3>
         <Table className="border">
           <TableHeader>
             <TableRow>
@@ -96,6 +97,22 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     );
   };
 
+  // Helper to render file format guidelines
+  const renderFormatGuidelines = () => {
+    return (
+      <Card className="p-4 mt-4 bg-muted/50">
+        <h4 className="font-semibold mb-2">CSV Format Guidelines</h4>
+        <ul className="list-disc pl-5 space-y-1 text-sm">
+          <li>Use comma (,) as the delimiter</li>
+          <li>Include headers in the first row</li>
+          <li>Enclose text with commas in double quotes</li>
+          <li>Ensure all rows have the same number of columns</li>
+          <li>The system supports both standard format and USDA SR28 format</li>
+        </ul>
+      </Card>
+    );
+  };
+
   return (
     <div className="mb-4">
       <h2 className="text-xl font-semibold mb-2">File Upload</h2>
@@ -115,11 +132,20 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             className="absolute inset-0 opacity-0 cursor-pointer"
           />
         </Button>
-        <span className="text-sm">
-          {selectedFile ? selectedFile.name : "No file selected"}
-        </span>
+        <div className="flex items-center">
+          {selectedFile ? (
+            <span className="text-sm font-medium">
+              {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+            </span>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              No file selected
+            </span>
+          )}
+        </div>
       </div>
-      
+
+      {!selectedFile && renderFormatGuidelines()}
       {renderCsvPreview()}
     </div>
   );

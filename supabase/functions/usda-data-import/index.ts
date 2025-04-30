@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { parse } from "https://deno.land/std@0.177.0/encoding/csv.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { 
   validateData, 
@@ -17,6 +16,80 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Custom CSV parser to handle potential format issues
+async function safeParseCsv(csvData: string): Promise<{ headers: string[], rows: Record<string, string>[] }> {
+  try {
+    // Check if CSV is empty
+    if (!csvData || csvData.trim() === '') {
+      throw new Error('CSV data is empty');
+    }
+    
+    // Split by lines and check if we have at least two lines (header + one data row)
+    const lines = csvData.split(/\r?\n/).filter(line => line.trim() !== '');
+    if (lines.length < 2) {
+      throw new Error('CSV file must have at least a header row and one data row');
+    }
+    
+    // Parse the header row
+    const headers = parseCSVLine(lines[0]);
+    
+    if (headers.length === 0) {
+      throw new Error('CSV header row is empty or invalid');
+    }
+    
+    // Parse data rows
+    const rows: Record<string, string>[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === '') continue;
+      
+      const values = parseCSVLine(lines[i]);
+      
+      // Validate row length matches headers
+      if (values.length !== headers.length) {
+        throw new Error(`Row ${i + 1} has ${values.length} columns but header has ${headers.length} columns`);
+      }
+      
+      // Create object mapping header to value
+      const row: Record<string, string> = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] || '';
+      });
+      
+      rows.push(row);
+    }
+    
+    return { headers, rows };
+  } catch (error) {
+    console.error('Error parsing CSV:', error);
+    throw error;
+  }
+}
+
+// Helper to parse a CSV line handling quoted values
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let currentValue = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(currentValue.trim().replace(/^"(.+)"$/, '$1'));
+      currentValue = '';
+    } else {
+      currentValue += char;
+    }
+  }
+  
+  // Add the last value
+  result.push(currentValue.trim().replace(/^"(.+)"$/, '$1'));
+  
+  return result;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -31,28 +104,30 @@ serve(async (req) => {
       throw new Error('Missing required parameters: csvData and table');
     }
     
-    // Parse CSV data
-    const options = { skipFirstRow: true, columns: true };
-    const parsedData = await parse(csvData, options);
-    
-    console.log(`Parsed ${parsedData.length} rows from CSV for table ${table}`);
-
     // Validate table type
     if (!Object.values(TableType).includes(table as TableType)) {
       throw new Error(`Invalid table type: ${table}. Must be one of: ${Object.values(TableType).join(', ')}`);
     }
 
+    console.log(`Received CSV import request for table ${table}, data length: ${csvData.length}`);
+    
+    // Parse CSV data with our safer parser
+    const { headers, rows } = await safeParseCsv(csvData);
+    
+    console.log(`Parsed ${rows.length} rows from CSV for table ${table}`);
+    console.log(`CSV Headers: ${headers.join(', ')}`);
+
     // Check if data is in SR28 format
-    const headers = csvData.split('\n')[0].split(',').map(h => h.trim().replace(/^"(.+)"$/, '$1'));
     const isSR28Dataset = isSR28Format(headers);
     console.log(`Data format detected: ${isSR28Dataset ? 'USDA SR28' : 'Standard'}`);
     
     // Validate data based on table type
-    const validationResult = validateData(parsedData, table as TableType, isSR28Dataset);
+    const validationResult = validateData(rows, table as TableType, isSR28Dataset);
     
     if (!validationResult.isValid) {
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: 'Data validation failed',
           details: validationResult.errors 
         }),
@@ -67,13 +142,13 @@ serve(async (req) => {
     let normalizedData;
     switch (table) {
       case TableType.USDA_FOODS:
-        normalizedData = parsedData.map(row => normalizeUsdaFoodData(row, isSR28Dataset));
+        normalizedData = rows.map(row => normalizeUsdaFoodData(row, isSR28Dataset));
         break;
       case TableType.UNIT_CONVERSIONS:
-        normalizedData = parsedData.map(normalizeUnitConversionData);
+        normalizedData = rows.map(normalizeUnitConversionData);
         break;
       case TableType.YIELD_FACTORS:
-        normalizedData = parsedData.map(normalizeYieldFactorData);
+        normalizedData = rows.map(normalizeYieldFactorData);
         break;
       default:
         throw new Error(`Unsupported table type: ${table}`);
@@ -107,6 +182,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: error.message,
         stack: Deno.env.get('ENVIRONMENT') === 'development' ? error.stack : undefined
       }),

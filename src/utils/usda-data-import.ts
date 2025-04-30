@@ -30,6 +30,7 @@ export interface ImportResponse {
   };
   format?: 'SR28' | 'Standard';
   error?: string;
+  details?: string[];
 }
 
 /**
@@ -49,6 +50,8 @@ export async function importUsdaData(
       return { success: false, error: 'CSV data is empty' };
     }
 
+    console.log(`Invoking USDA import function with ${csvData.length} bytes of data for table ${table}`);
+    
     const { data, error } = await supabase.functions.invoke('usda-data-import', {
       body: {
         csvData,
@@ -60,7 +63,20 @@ export async function importUsdaData(
 
     if (error) {
       console.error('Error invoking USDA data import function:', error);
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: `Function error: ${error.message || 'Unknown error'}`
+      };
+    }
+
+    console.log('USDA import response:', data);
+    
+    if (!data.success) {
+      return {
+        success: false,
+        error: data.error || 'Unknown error during import',
+        details: data.details
+      };
     }
 
     return data as ImportResponse;
@@ -116,7 +132,7 @@ export function readCsvFile(file: File): Promise<string> {
 export function validateCsvFormat(
   csvData: string,
   requiredColumns: string[]
-): { isValid: boolean; missingColumns: string[] } {
+): { isValid: boolean; missingColumns: string[]; isSR28?: boolean } {
   if (!csvData) {
     return { isValid: false, missingColumns: [] };
   }
@@ -152,7 +168,8 @@ export function validateCsvFormat(
     
     return {
       isValid: missingColumns.length === 0,
-      missingColumns
+      missingColumns,
+      isSR28: true
     };
   }
   
@@ -163,7 +180,8 @@ export function validateCsvFormat(
 
   return {
     isValid: missingColumns.length === 0,
-    missingColumns
+    missingColumns,
+    isSR28: false
   };
 }
 

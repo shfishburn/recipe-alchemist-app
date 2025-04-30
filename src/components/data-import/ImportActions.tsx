@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, FileWarning, Info } from 'lucide-react';
 import { ImportResponse } from '@/utils/usda-data-import';
 import {
   Table,
@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ImportActionsProps {
   selectedFile: File | null;
@@ -73,22 +74,47 @@ const ImportActions: React.FC<ImportActionsProps> = ({
       )}
       
       {importResult && (
-        <Alert variant={importResult.success ? "default" : "destructive"}>
-          {importResult.success ? (
-            <CheckCircle2 className="h-4 w-4" />
-          ) : (
-            <AlertCircle className="h-4 w-4" />
+        <div className="space-y-4">
+          <Alert variant={importResult.success ? "default" : "destructive"}>
+            {importResult.success ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <AlertTitle>
+              {importResult.success ? "Import Successful" : "Import Failed"}
+            </AlertTitle>
+            <AlertDescription>
+              {importResult.success 
+                ? `Successfully processed ${importResult.results?.totalRecords} records with ${importResult.results?.successCount} successful inserts as ${importResult.format || 'standard'} format.`
+                : importResult.error
+              }
+            </AlertDescription>
+          </Alert>
+
+          {!importResult.success && importResult.details && importResult.details.length > 0 && (
+            <Collapsible>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Error Details</h4>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Info className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                <div className="rounded border p-3 mt-2">
+                  <ul className="text-sm space-y-1">
+                    {importResult.details.map((detail, index) => (
+                      <li key={index} className="text-destructive">• {detail}</li>
+                    ))}
+                  </ul>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
-          <AlertTitle>
-            {importResult.success ? "Import Successful" : "Import Failed"}
-          </AlertTitle>
-          <AlertDescription>
-            {importResult.success 
-              ? `Successfully processed ${importResult.results?.totalRecords} records with ${importResult.results?.successCount} successful inserts as ${importResult.format || 'standard'} format.`
-              : importResult.error
-            }
-          </AlertDescription>
-        </Alert>
+        </div>
       )}
       
       {importResult?.success && importResult.results && (
