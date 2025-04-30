@@ -78,7 +78,12 @@ Format each as object → { qty, unit, shop_size_qty, shop_size_unit, item, note
   "cookingTip": "ONE science-backed technique note",
   "calorie_check_pass": boolean
 }`;
+    
+    // Log the inputs and prompt for debugging
     console.log("Starting quick recipe generation with inputs:", { cuisine, dietary, mainIngredient });
+    console.log("Prompt being sent to OpenAI:", prompt);
+    console.log("Using model: gpt-4o");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // Upgraded from gpt-4o-mini to the more capable model
       response_format: { type: "json_object" },
@@ -93,11 +98,25 @@ Format each as object → { qty, unit, shop_size_qty, shop_size_unit, item, note
         { role: "user", content: prompt },
       ],
     });
+    
     const json = response.choices[0]?.message.content;
     if (!json) throw new Error("OpenAI returned an empty response");
+    
     console.log("OpenAI raw response length:", json.length);
+    console.log("OpenAI raw response preview (first 300 chars):", json.substring(0, 300));
+    
     const recipe = JSON.parse(json);
     console.log("Recipe generated with", recipe.steps.length, "steps");
+    
+    // Log number of tokens used for debugging
+    if (response.usage) {
+      console.log("Token usage:", {
+        prompt_tokens: response.usage.prompt_tokens,
+        completion_tokens: response.usage.completion_tokens,
+        total_tokens: response.usage.total_tokens
+      });
+    }
+    
     return new Response(JSON.stringify(recipe), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
