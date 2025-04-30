@@ -5,19 +5,14 @@ import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 export enum TableType {
   USDA_FOODS = 'usda_foods',
   UNIT_CONVERSIONS = 'usda_unit_conversions',
-  YIELD_FACTORS = 'usda_yield_factors',
-  // Raw USDA tables
-  RAW_FOOD = 'usda_raw.food',
-  RAW_MEASURE_UNIT = 'usda_raw.measure_unit',
-  RAW_FOOD_PORTIONS = 'usda_raw.food_portions',
-  RAW_YIELD_FACTORS = 'usda_raw.yield_factors'
+  YIELD_FACTORS = 'usda_yield_factors'
 }
 
 // Define interfaces for batch operations
 export interface BatchInsertOptions {
   supabase: SupabaseClient;
   data: Record<string, any>[];
-  table: TableType | string;
+  table: TableType;
   batchSize: number;
   mode: 'insert' | 'upsert';
 }
@@ -47,24 +42,14 @@ export async function insertBatch({
   };
 
   // Get conflict target columns based on table type for upsert mode
-  const getConflictTarget = (tableType: TableType | string): string[] => {
+  const getConflictTarget = (tableType: TableType): string[] => {
     switch (tableType) {
-      // Standard tables
       case TableType.USDA_FOODS:
         return ['food_code'];
       case TableType.UNIT_CONVERSIONS:
         return ['food_category', 'from_unit', 'to_unit'];
       case TableType.YIELD_FACTORS:
         return ['food_category', 'cooking_method'];
-      // USDA raw tables
-      case TableType.RAW_FOOD:
-        return ['fdc_id'];
-      case TableType.RAW_MEASURE_UNIT:
-        return ['id'];
-      case TableType.RAW_FOOD_PORTIONS:
-        return ['id'];
-      case TableType.RAW_YIELD_FACTORS:
-        return ['food_category', 'ingredient', 'cooking_method'];
       default:
         return [];
     }

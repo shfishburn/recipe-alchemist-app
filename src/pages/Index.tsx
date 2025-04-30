@@ -1,47 +1,47 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
 import Navbar from '@/components/ui/navbar';
-import { HeroSection } from '@/components/landing/HeroSection';
-import { FeaturedRecipes } from '@/components/landing/FeaturedRecipes';
-import { NutritionPreview } from '@/components/landing/NutritionPreview';
-import { NutritionEnhancement } from '@/components/landing/NutritionEnhancement';
-import { PersonalizedSection } from '@/components/landing/PersonalizedSection';
-import { CommunitySection } from '@/components/landing/CommunitySection';
-import { Footer } from '@/components/ui/footer';
-import { useAuth } from '@/hooks/use-auth';
+import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const Index = () => {
-  console.log("Rendering Index page");
-  const { user } = useAuth();
+// Lazy load non-critical components
+const Hero = lazy(() => import('@/components/landing/Hero'));
 
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow">
-        <HeroSection />
-        <FeaturedRecipes />
-        <NutritionEnhancement />
-        <NutritionPreview />
-        <PersonalizedSection />
-        <CommunitySection />
-        <div className="py-16 bg-muted/30">
-          <div className="container text-center">
-            <h2 className="text-3xl font-bold mb-4">Start Your Culinary Journey Today</h2>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Whether you're looking for quick weeknight dinners or gourmet creations, NutriSynth has you covered. Join our community of food enthusiasts!
-            </p>
-            <Button asChild size="lg">
-              <Link to={user ? "/recipes/create" : "/register"}>
-                {user ? "Create My First Recipe" : "Get Started"} <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+// Create loading placeholders for better UX
+const HeroSkeleton = () => (
+  <section className="py-12 md:py-20 lg:py-32">
+    <div className="container-page">
+      <div className="flex flex-col md:flex-row items-center gap-12">
+        <div className="flex-1 space-y-6">
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-20 w-full" />
+          <div className="flex gap-4">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
           </div>
         </div>
+        <div className="w-full md:w-auto md:flex-1">
+          <Skeleton className="w-full aspect-video rounded-xl" />
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const Index = () => {
+  console.log('Rendering Index page');
+  // Use our scroll restoration hook
+  useScrollRestoration();
+  
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1 animate-fadeIn">
+        <Suspense fallback={<HeroSkeleton />}>
+          <Hero />
+        </Suspense>
       </main>
-      <Footer />
     </div>
   );
 };

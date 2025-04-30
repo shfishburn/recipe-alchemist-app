@@ -1,3 +1,4 @@
+
 import { TableType } from "./database.ts";
 
 // Define validation schemas for each table type
@@ -14,23 +15,6 @@ const validationSchemas = {
   },
   [TableType.YIELD_FACTORS]: {
     required: ['food_category', 'cooking_method', 'yield_factor'],
-    numeric: ['yield_factor']
-  },
-  // USDA Raw tables
-  ['usda_raw.food']: {
-    required: ['fdc_id', 'description'],
-    numeric: ['fdc_id']
-  },
-  ['usda_raw.measure_unit']: {
-    required: ['id', 'name'],
-    numeric: ['id']
-  },
-  ['usda_raw.food_portions']: {
-    required: ['id', 'fdc_id', 'measure_unit_id', 'gram_weight'],
-    numeric: ['id', 'fdc_id', 'measure_unit_id', 'gram_weight', 'amount']
-  },
-  ['usda_raw.yield_factors']: {
-    required: ['food_category', 'ingredient', 'cooking_method', 'yield_factor'],
     numeric: ['yield_factor']
   }
 };
@@ -67,18 +51,10 @@ export function isSR28Format(headers: string[]): boolean {
   return matchCount >= 3 && headers.includes('food_code');
 }
 
-// Function to check if the CSV is in USDA raw format
-export function isUSDAFormat(headers: string[]): boolean {
-  // USDA key columns
-  const usdaKeyColumns = ['fdc_id', 'id', 'publication_date', 'gram_weight', 'measure_unit_id'];
-  const matchCount = usdaKeyColumns.filter(col => headers.includes(col)).length;
-  return matchCount >= 2;
-}
-
 // Function to validate data based on table type
-export function validateData(data: any[], tableType: TableType | string, isSR28 = false, isUSDA = false): { isValid: boolean; errors: string[] } {
+export function validateData(data: any[], tableType: TableType, isSR28 = false): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  const schema = validationSchemas[tableType as keyof typeof validationSchemas];
+  const schema = validationSchemas[tableType];
   
   if (!schema) {
     return { isValid: false, errors: [`No validation schema for table type: ${tableType}`] };
@@ -201,48 +177,6 @@ export function normalizeUnitConversionData(row: any): Record<string, any> {
 export function normalizeYieldFactorData(row: any): Record<string, any> {
   return {
     food_category: String(row.food_category),
-    cooking_method: String(row.cooking_method),
-    yield_factor: Number(row.yield_factor),
-    description: row.description || null,
-    source: row.source || null
-  };
-}
-
-// Function to normalize USDA raw food data
-export function normalizeUsdaRawFoodData(row: any): Record<string, any> {
-  return {
-    fdc_id: String(row.fdc_id),
-    description: String(row.description),
-    publication_date: row.publication_date || null
-  };
-}
-
-// Function to normalize USDA raw measure unit data
-export function normalizeUsdaRawMeasureUnitData(row: any): Record<string, any> {
-  return {
-    id: String(row.id),
-    name: String(row.name)
-  };
-}
-
-// Function to normalize USDA raw food portions data
-export function normalizeUsdaRawFoodPortionsData(row: any): Record<string, any> {
-  return {
-    id: String(row.id),
-    fdc_id: String(row.fdc_id),
-    amount: row.amount ? Number(row.amount) : null,
-    measure_unit_id: String(row.measure_unit_id),
-    modifier: row.modifier || null,
-    portion_description: row.portion_description || null,
-    gram_weight: row.gram_weight ? Number(row.gram_weight) : null
-  };
-}
-
-// Function to normalize USDA raw yield factors data
-export function normalizeUsdaRawYieldFactorsData(row: any): Record<string, any> {
-  return {
-    food_category: String(row.food_category),
-    ingredient: String(row.ingredient),
     cooking_method: String(row.cooking_method),
     yield_factor: Number(row.yield_factor),
     description: row.description || null,

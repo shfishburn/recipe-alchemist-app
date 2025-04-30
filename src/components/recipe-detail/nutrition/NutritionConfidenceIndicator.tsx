@@ -14,20 +14,18 @@ interface NutritionConfidenceIndicatorProps {
   nutrition: EnhancedNutrition;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
-  expanded?: boolean;
 }
 
 export function NutritionConfidenceIndicator({ 
   nutrition, 
   size = 'md',
-  showTooltip = true,
-  expanded = false
+  showTooltip = true 
 }: NutritionConfidenceIndicatorProps) {
   if (!nutrition?.data_quality) {
     return null;
   }
   
-  const { overall_confidence, overall_confidence_score, penalties } = nutrition.data_quality;
+  const { overall_confidence, overall_confidence_score } = nutrition.data_quality;
   
   const getConfidenceColor = () => {
     switch (overall_confidence) {
@@ -54,15 +52,15 @@ export function NutritionConfidenceIndicator({
   const getLimitationText = () => {
     const limitations = [];
     
-    if (penalties?.energy_check_fail) {
+    if (nutrition.data_quality.penalties.energy_check_fail) {
       limitations.push('Energy validation check failed');
     }
     
-    if (penalties?.unmatched_ingredients_rate > 0.2) {
-      limitations.push(`${Math.round(penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
+    if (nutrition.data_quality.penalties.unmatched_ingredients_rate > 0.2) {
+      limitations.push(`${Math.round(nutrition.data_quality.penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
     }
     
-    if (penalties?.low_confidence_top_ingredients) {
+    if (nutrition.data_quality.penalties.low_confidence_top_ingredients) {
       limitations.push('Low confidence in main ingredients');
     }
     
@@ -71,27 +69,6 @@ export function NutritionConfidenceIndicator({
     }
     
     return limitations.join('. ');
-  };
-  
-  // Information about how nutrition quality is enhanced with the USDA database
-  const getEnhancedInfoText = () => {
-    const usdaTables = [
-      'Raw food data from USDA FoodData Central',
-      'Household unit measurements for accurate portion sizing',
-      'Cooking yield factors to account for weight changes during cooking'
-    ];
-    
-    return (
-      <div className="space-y-3 mt-3">
-        <h4 className="font-semibold text-sm">Enhanced with USDA Database:</h4>
-        <ul className="list-disc pl-5 space-y-1 text-xs">
-          {usdaTables.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
-        <p className="text-xs text-muted-foreground">These databases improve ingredient recognition, portion accuracy, and nutrition calculations.</p>
-      </div>
-    );
   };
   
   const badge = (
@@ -125,7 +102,6 @@ export function NutritionConfidenceIndicator({
                 </p>
               </div>
             )}
-            {expanded && getEnhancedInfoText()}
           </div>
         </TooltipContent>
       </Tooltip>

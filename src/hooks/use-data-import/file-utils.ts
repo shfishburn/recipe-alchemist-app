@@ -1,81 +1,72 @@
 
-import Papa from 'papaparse';
+import { readCsvFile } from '@/utils/usda-data-import';
+import { parseCsvData } from './csv-parser';
+import { ValidationResult } from './types';
 
 export async function processFile(
-  file: File,
-  setCsvPreview: React.Dispatch<React.SetStateAction<string[][]>>,
-  setParsingError: React.Dispatch<React.SetStateAction<string | null>>
+  file: File, 
+  updateCsvPreview: (preview: string[][]) => void,
+  updateParsingError: (error: string | null) => void
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      preview: 5, // Show first 5 rows only for preview
-      header: false,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors && results.errors.length > 0) {
-          setParsingError(results.errors[0].message);
-          reject(new Error(`CSV parsing error: ${results.errors[0].message}`));
-        } else {
-          setCsvPreview(results.data as string[][]);
-          resolve();
-        }
-      },
-      error: (error) => {
-        setParsingError(error.message);
-        reject(new Error(`CSV parsing error: ${error.message}`));
-      }
-    });
-  });
+  try {
+    const csvData = await readCsvFile(file);
+    
+    // Parse and validate CSV format
+    const parseResult = parseCsvData(csvData);
+    
+    if (!parseResult.success) {
+      updateParsingError(parseResult.error || 'Failed to parse the CSV file');
+      updateCsvPreview([]);
+      return;
+    }
+    
+    // Show preview (first 5 rows)
+    const previewRows = parseResult.data.slice(0, 5);
+    updateCsvPreview(previewRows);
+    
+    // Clear any previous errors
+    updateParsingError(null);
+  } catch (error) {
+    console.error("Error reading file for preview:", error);
+    updateParsingError(error instanceof Error ? error.message : 'Error reading file');
+    updateCsvPreview([]);
+    throw error;
+  }
 }
 
 export async function validateFileContent(
-  file: File, 
+  file: File,
   requiredColumns: string[],
-  formatCheckers: {
-    isSR28: (headers: string[]) => boolean,
-    isUSDA: (headers: string[]) => boolean
-  }
-): Promise<{
-  isValid: boolean;
-  missingColumns: string[];
-  isSR28?: boolean;
-  isUSDA?: boolean;
-}> {
-  return new Promise((resolve, reject) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      preview: 1, // Just need headers for validation
-      complete: (results) => {
-        try {
-          if (!results.meta.fields || results.meta.fields.length === 0) {
-            return resolve({
-              isValid: false,
-              missingColumns: ['No fields found in CSV'],
-            });
-          }
-            
-          const headers = results.meta.fields;
-          const missingColumns = requiredColumns.filter(col => 
-            !headers.some(h => h.toLowerCase() === col.toLowerCase())
-          );
-            
-          const isSR28Format = formatCheckers.isSR28(headers);
-          const isUSDAFormat = formatCheckers.isUSDA(headers);
-            
-          resolve({
-            isValid: missingColumns.length === 0,
-            missingColumns,
-            isSR28: isSR28Format,
-            isUSDA: isUSDAFormat
-          });
-        } catch (err) {
-          reject(err);
-        }
-      },
-      error: (error) => {
-        reject(new Error(`CSV validation error: ${error.message}`));
-      }
+  checkSr28Format: (data: string) => boolean
+): Promise<ValidationResult> {
+  try {
+    const csvData = await readCsvFile(file);
+    
+    // First check if we can parse the CSV correctly
+    const parseResult = parseCsvData(csvData);
+    if (!parseResult.success) {
+      throw new Error(parseResult.error || 'Failed to parse the CSV file');
+    }
+    
+    // Check if this is SR28 format
+    const sr28Check = checkSr28Format(csvData);
+    
+    // Get headers from the parse result
+    const headers = parseResult.data[0];
+    
+    // Check if all required columns are present
+    const missingColumns = requiredColumns.filter(col => {
+      const normalized = col.toLowerCase();
+      return !headers.some(h => h.toLowerCase() === normalized);
     });
-  });
+    
+    return {
+      isValid: missingColumns.length === 0,
+      missingColumns,
+      isSR28: sr28Check
+    };
+  } catch (error) {
+    console.error("Error validating file:", error);
+    throw error;
+  }
 }

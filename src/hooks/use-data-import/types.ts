@@ -1,9 +1,10 @@
 
+import { UsdaTableType } from "@/utils/usda-data-import";
+
 export interface ValidationResult {
   isValid: boolean;
   missingColumns: string[];
   isSR28?: boolean;
-  isUSDA?: boolean;
 }
 
 export interface ImportResult {
@@ -16,7 +17,7 @@ export interface ImportResult {
     errors: { index: number; error: string }[];
     batchResults: { batch: number; count: number }[];
   };
-  format?: 'SR28' | 'Standard' | 'USDA';
+  format?: 'SR28' | 'Standard';
   error?: string;
   details?: string[];
 }
@@ -28,8 +29,8 @@ export interface ImportOptions {
 
 export interface UseDataImportReturn {
   selectedFile: File | null;
-  selectedTable: string;
-  setSelectedTable: (table: string) => void;
+  selectedTable: UsdaTableType;
+  setSelectedTable: (table: UsdaTableType) => void;
   isValidating: boolean;
   isImporting: boolean;
   validationResult: ValidationResult | null;
