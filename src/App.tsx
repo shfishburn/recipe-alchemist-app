@@ -26,6 +26,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const About = lazy(() => import("./pages/About"));
+const QuickRecipePage = lazy(() => import("./pages/QuickRecipePage"));
 
 // Default loading fallback for lazy-loaded components
 const PageLoadingFallback = () => (
@@ -72,6 +73,11 @@ const App = () => (
                 <Route path="/recipes/:id" element={
                   <Suspense fallback={<PageLoadingFallback />}>
                     <RecipeDetail />
+                  </Suspense>
+                } />
+                <Route path="/quick-recipe" element={
+                  <Suspense fallback={<PageLoadingFallback />}>
+                    <QuickRecipePage />
                   </Suspense>
                 } />
                 <Route path="/how-it-works" element={

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 export interface QuickRecipeFormData {
   cuisine: string[];
@@ -32,13 +33,23 @@ export interface QuickRecipe {
 }
 
 export const useQuickRecipe = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [recipe, setRecipe] = useState<QuickRecipe | null>(null);
+  // We still use local state for function execution, but results go to the store
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
   const { toast } = useToast();
+  const { 
+    recipe, 
+    isLoading: storeIsLoading, 
+    setRecipe, 
+    setLoading, 
+    setFormData 
+  } = useQuickRecipeStore();
 
   const generateQuickRecipe = async (formData: QuickRecipeFormData) => {
     try {
-      setIsLoading(true);
+      setIsLocalLoading(true);
+      setLoading(true);
+      setFormData(formData);
+      
       console.log('Starting quick recipe generation with form data:', formData);
       
       const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
@@ -68,6 +79,7 @@ export const useQuickRecipe = () => {
         cuisineType: formData.cuisine.length > 0 ? formData.cuisine[0] : 'american'
       };
       
+      // Update both local state and store
       setRecipe(enhancedRecipe);
       return enhancedRecipe;
     } catch (error) {
@@ -79,13 +91,14 @@ export const useQuickRecipe = () => {
       });
       return null;
     } finally {
-      setIsLoading(false);
+      setIsLocalLoading(false);
+      setLoading(false);
     }
   };
 
   return {
     generateQuickRecipe,
-    isLoading,
+    isLoading: isLocalLoading || storeIsLoading,
     recipe,
     setRecipe
   };
