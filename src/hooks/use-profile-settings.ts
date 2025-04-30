@@ -43,6 +43,12 @@ export const defaultNutritionPreferences: NutritionPreferencesType = {
   exerciseIntensity: 'moderate'
 };
 
+// Convert NutritionPreferencesType to a format compatible with Supabase's JSON storage
+const toStorageFormat = (preferences: NutritionPreferencesType): Record<string, any> => {
+  // Create a plain object from the preferences that can be serialized to JSON
+  return JSON.parse(JSON.stringify(preferences));
+};
+
 // Use profile settings hook
 export function useProfileSettings() {
   const { user, profile } = useAuth();
@@ -71,7 +77,7 @@ export function useProfileSettings() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          nutrition_preferences: updatedPreferences
+          nutrition_preferences: toStorageFormat(updatedPreferences)
         })
         .eq('id', user.id);
         
@@ -79,10 +85,6 @@ export function useProfileSettings() {
       
       // Update local state
       setNutritionPreferences(updatedPreferences);
-      
-      // Refresh profile data
-      // Note: We can't use refreshProfile as it doesn't exist in the auth context
-      // For now, we'll just update the local state
       
       toast({
         title: "Preferences saved",

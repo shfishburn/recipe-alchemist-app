@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
-import { ShoppingItem } from '@/components/quick-recipe/shopping-list/types';
+import { ShoppingItem, itemsToJson } from '@/components/recipe-detail/shopping-list/types';
 import { Ingredient } from '@/types/recipe';
 
 export function useShoppingListActions(recipe: any = null) {
@@ -38,7 +38,7 @@ export function useShoppingListActions(recipe: any = null) {
       setIsLoading(true);
       
       // Transform ingredients to shopping items
-      const shoppingItems = recipe.ingredients.map((ingredient: any): ShoppingItem => {
+      const shoppingItems: ShoppingItem[] = recipe.ingredients.map((ingredient: any): ShoppingItem => {
         // Skip string ingredients
         if (typeof ingredient === 'string') {
           return {
@@ -79,14 +79,14 @@ export function useShoppingListActions(recipe: any = null) {
         };
       });
       
-      // Create new shopping list
+      // Create new shopping list - convert ShoppingItems to JSON-serializable format
       const { data: newList, error: createError } = await supabase
         .from('shopping_lists')
-        .insert([{
+        .insert({
           title: listName,
           user_id: user.id,
-          items: shoppingItems,
-        }])
+          items: itemsToJson(shoppingItems),
+        })
         .select();
         
       if (createError) {
@@ -147,7 +147,7 @@ export function useShoppingListActions(recipe: any = null) {
       }
       
       // Transform ingredients to shopping items
-      const shoppingItems = recipe.ingredients.map((ingredient: any): ShoppingItem => {
+      const shoppingItems: ShoppingItem[] = recipe.ingredients.map((ingredient: any): ShoppingItem => {
         // Handle string ingredients
         if (typeof ingredient === 'string') {
           return {
@@ -189,7 +189,7 @@ export function useShoppingListActions(recipe: any = null) {
       });
       
       // Current items in the list
-      const currentItems = currentList.items || [];
+      const currentItems = Array.isArray(currentList.items) ? currentList.items : [];
       
       // Check for duplicates and merge
       const newItems = [...currentItems];
@@ -203,7 +203,7 @@ export function useShoppingListActions(recipe: any = null) {
         
         if (existingIndex === -1) {
           // Not a duplicate, add it
-          newItems.push(item);
+          newItems.push(itemToJson(item));
           addedCount++;
         }
       }
@@ -269,7 +269,7 @@ export function useShoppingListActions(recipe: any = null) {
       }
       
       // Transform ingredients to shopping items
-      const shoppingItems = ingredients.map((ingredient): ShoppingItem => {
+      const shoppingItems: ShoppingItem[] = ingredients.map((ingredient): ShoppingItem => {
         // Skip string ingredients
         if (typeof ingredient === 'string') {
           return {
@@ -283,7 +283,7 @@ export function useShoppingListActions(recipe: any = null) {
         // Handle structured ingredients
         const itemName = typeof ingredient.item === 'string' 
           ? ingredient.item 
-          : ingredient.item || 'Unknown item';
+          : (ingredient.item as any)?.item || 'Unknown item';
         
         // Convert recipe units to shopping units
         const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
@@ -318,7 +318,7 @@ export function useShoppingListActions(recipe: any = null) {
         listId = currentList.id;
         
         // Current items in the list
-        const currentItems = currentList.items || [];
+        const currentItems = Array.isArray(currentList.items) ? currentList.items : [];
         
         // Check for duplicates and merge
         const newItems = [...currentItems];
@@ -332,7 +332,7 @@ export function useShoppingListActions(recipe: any = null) {
           
           if (existingIndex === -1) {
             // Not a duplicate, add it
-            newItems.push(item);
+            newItems.push(itemToJson(item));
             addedCount++;
           }
         }
@@ -355,11 +355,11 @@ export function useShoppingListActions(recipe: any = null) {
         // Create new shopping list
         const { data: newList, error: createError } = await supabase
           .from('shopping_lists')
-          .insert([{
+          .insert({
             title: `Shopping List with ${recipeTitle}`,
             user_id: user.id,
-            items: shoppingItems,
-          }])
+            items: itemsToJson(shoppingItems),
+          })
           .select();
           
         if (createError) {
@@ -407,7 +407,7 @@ export function useShoppingListActions(recipe: any = null) {
       }
       
       // Find and update the item
-      const updatedItems = list.items.map((item: ShoppingItem) => {
+      const updatedItems = Array.isArray(list.items) ? list.items.map((item: any) => {
         if (item.text === itemText) {
           return {
             ...item,
@@ -415,7 +415,7 @@ export function useShoppingListActions(recipe: any = null) {
           };
         }
         return item;
-      });
+      }) : [];
       
       // Save the updated list
       const { error: updateError } = await supabase
@@ -438,6 +438,49 @@ export function useShoppingListActions(recipe: any = null) {
       return false;
     }
   };
+
+  // Helper function to determine department based on ingredient
+  const getDepartmentForIngredient = (ingredient: string): string => {
+    const lowerIngredient = ingredient.toLowerCase();
+    
+    // Produce
+    if (/lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i.test(lowerIngredient)) {
+      return 'Produce';
+    }
+    
+    // Meat & Seafood
+    if (/beef|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|steak|ground meat|bacon|sausage/i.test(lowerIngredient)) {
+      return 'Meat & Seafood';
+    }
+    
+    // Dairy & Eggs
+    if (/milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i.test(lowerIngredient)) {
+      return 'Dairy & Eggs';
+    }
+    
+    // Bakery
+    if (/bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i.test(lowerIngredient)) {
+      return 'Bakery';
+    }
+    
+    // Pantry
+    if (/flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i.test(lowerIngredient)) {
+      return 'Pantry';
+    }
+    
+    // Frozen
+    if (/frozen|ice cream|popsicle/i.test(lowerIngredient)) {
+      return 'Frozen';
+    }
+    
+    // Beverages
+    if (/water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i.test(lowerIngredient)) {
+      return 'Beverages';
+    }
+    
+    // Default
+    return 'Other';
+  };
   
   return {
     addIngredientsToShoppingList,
@@ -449,45 +492,18 @@ export function useShoppingListActions(recipe: any = null) {
   };
 }
 
-// Helper function to determine department based on ingredient
-function getDepartmentForIngredient(ingredient: string): string {
-  const lowerIngredient = ingredient.toLowerCase();
-  
-  // Produce
-  if (/lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i.test(lowerIngredient)) {
-    return 'Produce';
-  }
-  
-  // Meat & Seafood
-  if (/beef|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|steak|ground meat|bacon|sausage/i.test(lowerIngredient)) {
-    return 'Meat & Seafood';
-  }
-  
-  // Dairy & Eggs
-  if (/milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i.test(lowerIngredient)) {
-    return 'Dairy & Eggs';
-  }
-  
-  // Bakery
-  if (/bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i.test(lowerIngredient)) {
-    return 'Bakery';
-  }
-  
-  // Pantry
-  if (/flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i.test(lowerIngredient)) {
-    return 'Pantry';
-  }
-  
-  // Frozen
-  if (/frozen|ice cream|popsicle/i.test(lowerIngredient)) {
-    return 'Frozen';
-  }
-  
-  // Beverages
-  if (/water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i.test(lowerIngredient)) {
-    return 'Beverages';
-  }
-  
-  // Default
-  return 'Other';
-}
+// Adding this helper function to extract just the itemToJson function
+export const itemToJson = (item: ShoppingItem): Record<string, any> => {
+  return {
+    text: item.text,
+    checked: item.checked,
+    department: item.department || 'Other',
+    pantryStaple: !!item.pantryStaple,
+    quantity: item.quantity,
+    unit: item.unit || '',
+    item: item.item || '',
+    notes: item.notes || '',
+    ingredientData: item.ingredientData ? JSON.parse(JSON.stringify(item.ingredientData)) : null,
+    originalIngredient: item.originalIngredient ? JSON.parse(JSON.stringify(item.originalIngredient)) : null
+  };
+};
