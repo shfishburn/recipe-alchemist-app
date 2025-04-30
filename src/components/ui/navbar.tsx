@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { Database, Kitchen } from 'lucide-react';
+import { ChefHat, Database } from 'lucide-react';
 
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
@@ -19,7 +19,7 @@ export function Navbar({ className }: { className?: string }) {
 
   const navigationLinks = [
     { name: 'My Recipes', path: '/recipes', requiresAuth: false },
-    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: Kitchen },
+    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: ChefHat },
     // Hiding My Lab route
     // { name: 'My Lab', path: '/build', requiresAuth: true },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
