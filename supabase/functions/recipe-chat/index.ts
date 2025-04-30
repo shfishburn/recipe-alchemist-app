@@ -1,13 +1,50 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { validateRecipeChanges } from './validation.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 // Define CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Inline validation functions (previously imported from ./validation.ts)
+function validateRecipeChanges(rawResponse) {
+  try {
+    // Check if the raw response already looks like JSON
+    if (rawResponse.trim().startsWith('{') && rawResponse.trim().endsWith('}')) {
+      // Try to parse as JSON directly
+      const jsonResponse = JSON.parse(rawResponse);
+      // Add validation logic here if needed
+      return jsonResponse;
+    }
+
+    // Try to extract JSON from the text response using regex
+    const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        const jsonResponse = JSON.parse(jsonMatch[1]);
+        // Add textResponse to contain the original text
+        jsonResponse.textResponse = rawResponse.replace(jsonMatch[0], '').trim();
+        return jsonResponse;
+      } catch (jsonError) {
+        console.error("Error parsing JSON from code block:", jsonError);
+      }
+    }
+
+    // If we couldn't extract valid JSON, return the raw text as textResponse
+    return {
+      textResponse: rawResponse,
+      changes: { mode: "none" }
+    };
+  } catch (error) {
+    console.error("Error validating recipe changes:", error);
+    return {
+      textResponse: rawResponse,
+      changes: { mode: "none" }
+    };
+  }
+}
 
 // Inline recipe analysis prompt
 const recipeAnalysisPrompt = `You are a culinary scientist and expert chef in the López-Alt tradition, analyzing recipes through the lens of food chemistry and precision cooking techniques.
