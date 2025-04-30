@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,7 +33,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
 
   const unitSystem = preferences.unitSystem || 'metric';
 
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch, setValue, control } = useForm({
     defaultValues: {
       age: preferences.personalDetails?.age || 30,
       weight: unitSystem === 'metric' 
@@ -49,6 +48,16 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       weightGoalDeficit: preferences.weightGoalDeficit || 0
     }
   });
+
+  // Define weight goal options
+  const weightGoalOptions = [
+    { value: 'aggressive-loss', label: 'Aggressive Weight Loss (1kg/week)', deficit: -1000 },
+    { value: 'moderate-loss', label: 'Moderate Weight Loss (0.5kg/week)', deficit: -500 },
+    { value: 'mild-loss', label: 'Mild Weight Loss (0.25kg/week)', deficit: -250 },
+    { value: 'maintenance', label: 'Maintenance', deficit: 0 },
+    { value: 'mild-gain', label: 'Mild Weight Gain', deficit: 250 },
+    { value: 'moderate-gain', label: 'Moderate Weight Gain', deficit: 500 }
+  ];
 
   const onSubmit = (data: any) => {
     // Convert weight to kg if using imperial
@@ -243,7 +252,11 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
           </div>
           
           <div className="pt-2">
-            <WeightGoalSelector register={register} />
+            <WeightGoalSelector 
+              control={control}
+              weightGoalOptions={weightGoalOptions} 
+              setValue={setValue}
+            />
           </div>
           
           <div className="flex justify-end">

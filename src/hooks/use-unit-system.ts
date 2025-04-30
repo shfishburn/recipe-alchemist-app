@@ -24,7 +24,7 @@ export function useUnitSystem() {
           .single();
 
         if (!error && data?.nutrition_preferences) {
-          const prefs = data.nutrition_preferences as NutritionPreferencesType;
+          const prefs = data.nutrition_preferences as unknown as NutritionPreferencesType;
           if (prefs.unitSystem) {
             setUnitSystem(prefs.unitSystem);
           }
@@ -50,7 +50,7 @@ export function useUnitSystem() {
         .eq('id', user.id)
         .single();
 
-      const currentPrefs = (currentData?.nutrition_preferences as NutritionPreferencesType) || {};
+      const currentPrefs = (currentData?.nutrition_preferences as unknown as NutritionPreferencesType) || {};
       
       // Update with new unit system
       const updatedPrefs = {
