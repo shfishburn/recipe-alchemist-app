@@ -1,10 +1,12 @@
 
-// Define the item type for shopping list
+import { Ingredient } from '@/hooks/use-quick-recipe';
+
 export interface ShoppingItem {
   text: string;
   checked: boolean;
-  department: string;
+  department?: string;
   pantryStaple?: boolean;
+  ingredientData?: Ingredient;
 }
 
 export interface ShoppingItemsByDepartment {

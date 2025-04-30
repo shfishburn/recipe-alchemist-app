@@ -9,7 +9,9 @@ export const createShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
   const initialItems: ShoppingItem[] = recipe.ingredients.map(ingredient => ({
     text: formatIngredient(ingredient),
     checked: false,
-    department: 'Recipe Ingredients'
+    department: 'Recipe Ingredients',
+    // Save the original ingredient data to maintain shop_size info
+    ingredientData: ingredient
   }));
   
   // Add extra items for cooking oil, salt, and pepper if not already in the list

@@ -1,58 +1,64 @@
 
 import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
-import { UserCircle, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { EditIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export const ProfileHeader = () => {
-  const { user, profile, signOut } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
+interface ProfileHeaderProps {
+  profileData: any;
+  isLoading: boolean;
+}
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate('/');
-      toast({
-        title: 'Success',
-        description: 'Successfully logged out',
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to log out',
-        variant: 'destructive',
-      });
-    }
+export function ProfileHeader({ profileData, isLoading }: ProfileHeaderProps) {
+  const { user } = useAuth();
+  
+  const getInitials = (name?: string): string => {
+    if (!name) return 'U';
+    return name.split(' ')
+      .map(part => part[0] || '')
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
-
+  
+  const userName = profileData?.username || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = profileData?.avatar_url;
+  const userInitials = getInitials(userName);
+  
   return (
-    <Card className="w-full md:w-auto">
-      <CardContent className="pt-6 pb-4 flex flex-col items-center">
-        <Avatar className="h-24 w-24 mb-4">
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="Profile" />
+    <Card className="w-full md:w-[200px] flex-shrink-0">
+      <CardContent className="p-6">
+        <div className="flex flex-col items-center text-center">
+          {isLoading ? (
+            <>
+              <Skeleton className="h-24 w-24 rounded-full mb-4" />
+              <Skeleton className="h-6 w-32 mb-2" />
+              <Skeleton className="h-4 w-24" />
+            </>
           ) : (
-            <UserCircle className="h-24 w-24 text-muted-foreground" />
+            <>
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={avatarUrl} />
+                <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
+              </Avatar>
+              
+              <h2 className="mt-4 text-lg font-medium">{userName}</h2>
+              
+              <p className="text-sm text-muted-foreground mt-1">
+                {user?.email}
+              </p>
+              
+              <Button variant="outline" size="sm" className="mt-4">
+                <EditIcon className="mr-2 h-4 w-4" />
+                Edit Profile
+              </Button>
+            </>
           )}
-        </Avatar>
-        <h2 className="text-xl font-semibold">{profile?.username || user?.email}</h2>
-        <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
-        <Button 
-          variant="destructive" 
-          onClick={handleLogout}
-          className="w-full"
-          type="button"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
+        </div>
       </CardContent>
     </Card>
   );
-};
+}

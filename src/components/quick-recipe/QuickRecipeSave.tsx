@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useAuth } from '@/hooks/use-auth';
 import { Json } from '@/integrations/supabase/types';
+import { estimateNutrition } from './nutrition-estimation';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -27,6 +28,9 @@ export const useQuickRecipeSave = () => {
         throw new Error("You must be logged in to save recipes");
       }
       
+      // Estimate nutrition data if not provided
+      const nutrition = recipe.nutrition || estimateNutrition(recipe.ingredients, recipe.servings || 2);
+      
       // Convert the quick recipe format to database format
       const recipeData = {
         title: recipe.title,
@@ -40,7 +44,8 @@ export const useQuickRecipeSave = () => {
         cooking_tip: recipe.cookingTip,
         science_notes: recipe.scienceNotes as unknown as Json || [],
         servings: recipe.servings || 2,
-        user_id: user.id // Add the user_id to the recipe data
+        user_id: user.id, // Add the user_id to the recipe data
+        nutrition: nutrition as unknown as Json // Add estimated nutrition data
       };
 
       // Insert the recipe into the database

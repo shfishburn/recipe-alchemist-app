@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { Nutrition } from '@/types/recipe';
 
 export interface QuickRecipeFormData {
   cuisine: string[];
@@ -33,6 +33,7 @@ export interface QuickRecipe {
   servings?: number;
   scienceNotes?: string[];
   calorie_check_pass?: boolean;
+  nutrition?: Nutrition;
 }
 
 export const useQuickRecipe = () => {
