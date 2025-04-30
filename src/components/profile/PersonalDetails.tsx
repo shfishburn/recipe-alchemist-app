@@ -16,6 +16,8 @@ import { WeightInput } from './personal-details/WeightInput';
 import { HeightInput } from './personal-details/HeightInput';
 import { ActivityLevelSelector } from './personal-details/ActivityLevelSelector';
 import { BodyFatPercentileDisplay } from './body-composition/BodyFatPercentileDisplay';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BodyComposition } from './BodyComposition';
 
 interface PersonalDetailsProps {
   preferences: NutritionPreferencesType;
@@ -148,114 +150,130 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
     undefined;
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <h3 className="text-lg font-medium mb-4">Personal Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AgeInput register={register} />
-            <GenderSelector register={register} />
-            <WeightInput register={register} unitSystem={unitSystem} />
-            <HeightInput 
-              register={register} 
-              unitSystem={unitSystem}
-              heightFeet={heightFeet}
-              heightInches={heightInches}
-              setHeightFeet={setHeightFeet}
-              setHeightInches={setHeightInches}
-            />
-            <ActivityLevelSelector register={register} />
-          </div>
-          
-          <h3 className="text-lg font-medium mt-6 mb-4">Body Composition</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="bodyFatPercentage">Body Fat Percentage</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="bodyFatPercentage"
-                  type="number"
-                  step="0.1"
-                  className="flex-1"
-                  {...register('bodyFatPercentage', {
-                    min: { value: 3, message: 'Minimum 3%' },
-                    max: { value: 50, message: 'Maximum 50%' },
-                  })}
+    <Tabs defaultValue="basicInfo">
+      <TabsList>
+        <TabsTrigger value="basicInfo">Basic Information</TabsTrigger>
+        <TabsTrigger value="bodyComposition">Body Composition</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="basicInfo">
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <h3 className="text-lg font-medium mb-4">Personal Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AgeInput register={register} />
+                <GenderSelector register={register} />
+                <WeightInput register={register} unitSystem={unitSystem} />
+                <HeightInput 
+                  register={register} 
+                  unitSystem={unitSystem}
+                  heightFeet={heightFeet}
+                  heightInches={heightInches}
+                  setHeightFeet={setHeightFeet}
+                  setHeightInches={setHeightInches}
                 />
-                <span>%</span>
+                <ActivityLevelSelector register={register} />
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="leanMass">Lean Mass (calculated)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="leanMass"
-                  type="number"
-                  step="0.1"
-                  className="flex-1"
-                  {...register('leanMass')}
-                  disabled
+              
+              <h3 className="text-lg font-medium mt-6 mb-4">Body Composition</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="bodyFatPercentage">Body Fat Percentage</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="bodyFatPercentage"
+                      type="number"
+                      step="0.1"
+                      className="flex-1"
+                      {...register('bodyFatPercentage', {
+                        min: { value: 3, message: 'Minimum 3%' },
+                        max: { value: 50, message: 'Maximum 50%' },
+                      })}
+                    />
+                    <span>%</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="leanMass">Lean Mass (calculated)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="leanMass"
+                      type="number"
+                      step="0.1"
+                      className="flex-1"
+                      {...register('leanMass')}
+                      disabled
+                    />
+                    <span>kg</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="fatMass">Fat Mass (calculated)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="fatMass"
+                      type="number"
+                      step="0.1"
+                      className="flex-1"
+                      {...register('fatMass')}
+                      disabled
+                    />
+                    <span>kg</span>
+                  </div>
+                </div>
+              </div>
+              
+              {bodyFatPercentage && gender && age && (
+                <BodyFatPercentileDisplay 
+                  bodyFatPercentage={parseFloat(bodyFatPercentage.toString())} 
+                  gender={gender}
+                  age={Number(age)}
                 />
-                <span>kg</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="fatMass">Fat Mass (calculated)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="fatMass"
-                  type="number"
-                  step="0.1"
-                  className="flex-1"
-                  {...register('fatMass')}
-                  disabled
+              )}
+              
+              <h3 className="text-lg font-medium mt-6 mb-4">Weight Management Goal</h3>
+              <div className="pt-2">
+                <WeightGoalSelector 
+                  control={control}
+                  weightGoalOptions={weightGoalOptions} 
+                  setValue={setValue}
+                  unitSystem={unitSystem}
                 />
-                <span>kg</span>
               </div>
-            </div>
-          </div>
-          
-          {bodyFatPercentage && gender && age && (
-            <BodyFatPercentileDisplay 
-              bodyFatPercentage={parseFloat(bodyFatPercentage.toString())} 
-              gender={gender}
-              age={Number(age)}
-            />
-          )}
-          
-          <h3 className="text-lg font-medium mt-6 mb-4">Weight Management Goal</h3>
-          <div className="pt-2">
-            <WeightGoalSelector 
-              control={control}
-              weightGoalOptions={weightGoalOptions} 
-              setValue={setValue}
-              unitSystem={unitSystem}
-            />
-          </div>
-          
-          <div className="flex justify-end">
-            <Button type="submit">Calculate & Save</Button>
-          </div>
-        </form>
+              
+              <div className="flex justify-end">
+                <Button type="submit">Calculate & Save</Button>
+              </div>
+            </form>
 
-        {(calculatedBMR > 0 && calculatedTDEE > 0) && (
-          <div className="mt-8">
-            <h3 className="text-lg font-medium mb-4">Your Calculated Nutrition Values</h3>
-            <CalculationDisplay 
-              bmr={calculatedBMR}
-              tdee={calculatedTDEE}
-              dailyCalories={dailyCalories}
-              deficit={deficit}
-              projectedWeightLossPerWeek={projectedWeightLossPerWeek}
-              adaptedTDEE={adaptedTDEE}
-              hasAdaptation={hasAdaptation}
-              unitSystem={unitSystem}
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            {(calculatedBMR > 0 && calculatedTDEE > 0) && (
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-4">Your Calculated Nutrition Values</h3>
+                <CalculationDisplay 
+                  bmr={calculatedBMR}
+                  tdee={calculatedTDEE}
+                  dailyCalories={dailyCalories}
+                  deficit={deficit}
+                  projectedWeightLossPerWeek={projectedWeightLossPerWeek}
+                  adaptedTDEE={adaptedTDEE}
+                  hasAdaptation={hasAdaptation}
+                  unitSystem={unitSystem}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="bodyComposition">
+        <BodyComposition
+          preferences={preferences}
+          onSave={onSave}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
