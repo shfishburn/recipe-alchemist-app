@@ -14,6 +14,7 @@ import type { Recipe } from '@/hooks/use-recipe-detail';
 import { useShoppingLists } from './shopping-list/useShoppingLists';
 import { useShoppingListActions } from './shopping-list/useShoppingListActions';
 import { ShoppingListForm } from './shopping-list/ShoppingListForm';
+import { toast } from '@/hooks/use-toast';
 
 interface AddToShoppingListProps {
   recipe: Recipe;
@@ -39,6 +40,16 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate form before proceeding
+    if (!selectedListId && newListName.trim() === '') {
+      toast({
+        title: "Invalid form",
+        description: "Please select a list or enter a name for a new list.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       if (selectedListId) {
         await addToExistingList(selectedListId);
@@ -54,7 +65,14 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   };
   
   return (
-    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+    <Sheet open={sheetOpen} onOpenChange={(open) => {
+      setSheetOpen(open);
+      // Reset state when closing the sheet
+      if (!open) {
+        setSelectedListId(null);
+        setNewListName(`${recipe.title} Ingredients`);
+      }
+    }}>
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
@@ -74,16 +92,15 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
         </SheetHeader>
         
         <div className="my-6">
-          <form onSubmit={handleSubmit}>
-            <ShoppingListForm 
-              shoppingLists={shoppingLists}
-              newListName={newListName}
-              onNewListNameChange={setNewListName}
-              selectedListId={selectedListId}
-              onSelectedListChange={setSelectedListId}
-              isLoading={isLoading || isFetching}
-            />
-          </form>
+          <ShoppingListForm 
+            shoppingLists={shoppingLists}
+            newListName={newListName}
+            onNewListNameChange={setNewListName}
+            selectedListId={selectedListId}
+            onSelectedListChange={setSelectedListId}
+            isLoading={isLoading || isFetching}
+            onSubmit={handleSubmit}
+          />
         </div>
       </SheetContent>
     </Sheet>

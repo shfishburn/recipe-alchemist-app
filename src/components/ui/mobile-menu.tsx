@@ -11,7 +11,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Database, Menu } from 'lucide-react';
+import { Database, Kitchen, Menu } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
@@ -23,7 +23,8 @@ export function MobileMenu() {
 
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
-    { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
+    { name: 'My Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: Kitchen },
     // Hiding My Lab route
     // { name: 'My Lab', path: '/build', requiresAuth: true },
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
@@ -67,6 +68,7 @@ export function MobileMenu() {
               to={link.path} 
               className="text-sm font-medium hover:text-primary transition-colors flex items-center"
             >
+              {link.icon && <link.icon className="h-4 w-4 mr-2" />}
               {link.name === 'Data Import' && <Database className="h-4 w-4 mr-2" />}
               {link.name}
             </Link>

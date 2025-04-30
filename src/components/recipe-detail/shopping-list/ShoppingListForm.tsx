@@ -12,6 +12,7 @@ interface ShoppingListFormProps {
   selectedListId: string | null;
   onSelectedListChange: (id: string | null) => void;
   isLoading: boolean;
+  onSubmit: (e: React.FormEvent) => Promise<void>;
 }
 
 export function ShoppingListForm({
@@ -21,9 +22,10 @@ export function ShoppingListForm({
   selectedListId,
   onSelectedListChange,
   isLoading,
+  onSubmit,
 }: ShoppingListFormProps) {
   return (
-    <form className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       {shoppingLists.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Select existing list:</h3>
