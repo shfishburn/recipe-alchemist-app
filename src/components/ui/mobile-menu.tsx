@@ -11,7 +11,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { ChefHat, Database, Menu } from 'lucide-react';
+import { ChefHat, Database, Menu, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
@@ -23,17 +23,17 @@ export function MobileMenu() {
 
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
-    { name: 'My Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
     { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: ChefHat },
     // Hiding My Lab route
     // { name: 'My Lab', path: '/build', requiresAuth: true },
-    { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
-    { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
+    { name: 'My Market', path: '/shopping-lists', requiresAuth: true, icon: ShoppingCart },
+    { name: 'Our Science', path: '/how-it-works', requiresAuth: false, icon: BookText },
   ];
 
   // Add Data Import link for admins
   if (isAdmin) {
-    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true });
+    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true, icon: Database });
   }
 
   // Filter links based on authentication status
@@ -69,7 +69,6 @@ export function MobileMenu() {
               className="text-sm font-medium hover:text-primary transition-colors flex items-center"
             >
               {link.icon && <link.icon className="h-4 w-4 mr-2" />}
-              {link.name === 'Data Import' && <Database className="h-4 w-4 mr-2" />}
               {link.name}
             </Link>
           ))}
@@ -78,7 +77,10 @@ export function MobileMenu() {
         <div className="flex flex-col gap-2">
           {session ? (
             <Button variant="outline" asChild className="w-full">
-              <Link to="/profile">Profile</Link>
+              <Link to="/profile" className="flex items-center justify-center">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </Link>
             </Button>
           ) : (
             <>
