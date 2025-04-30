@@ -1,12 +1,103 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
-import { recipeGenerationPrompt } from '../_shared/recipe-prompts.ts';
 
+// Define CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Inline the recipe generation prompt that was previously imported
+const recipeGenerationPrompt = `As a culinary scientist and registered dietitian in the López-Alt tradition, create a recipe that:
+• Follows the specified dietary requirements
+• Matches the desired cuisine type
+• Uses the requested flavor profiles
+• Stays within calorie limits
+• Serves the specified number of people
+
+Create a recipe with evidence-based techniques that maximize flavor through understanding of food chemistry:
+
+1. PRECISION AND TECHNIQUE:
+   - Specify exact temperatures (°F with °C) and timing with scientific rationale
+   - Include visual/tactile/aromatic indicators for doneness
+   - Identify critical control points where technique impacts outcome
+   - Explain how ingredient preparation affects flavor development
+   - Choose appropriate cooking methods
+   - Use authentic cooking methods for traditional dishes
+
+2. INGREDIENT SCIENCE:
+   - Select ingredients with specific qualities
+   - Note when ingredient temperature matters
+   - Explain functional properties
+   - Include scientific substitutions with expected outcomes
+
+3. COOKING CHEMISTRY:
+   - Leverage specific reactions (e.g., Maillard, caramelization, gelatinization)
+   - Balance flavor molecules with precision
+   - Control moisture and heat transfer
+   - Sequence steps to build flavor compounds
+
+4. NUTRITIONAL OPTIMIZATION:
+   - Calculate accurate nutritional values using USDA data sources
+   - Preserve heat-sensitive nutrients
+   - Balance macronutrients
+   - Maximize nutrient bioavailability
+
+5. MEASUREMENT STANDARDIZATION:
+   - Use imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
+   - Include metric in parentheses
+   - Use fractions for small quantities
+   - Include °C in parentheses
+
+6. SHOPPABLE INGREDIENTS:
+   - Each item gets a typical US grocery package size
+   - \`shop_size_qty\` ≥ \`qty\` (spices/herbs exempt)
+   - Choose the nearest standard package (e.g., 14.5-oz can, 2-lb bag)
+
+7. TONE & STYLE:
+   - Generally use active voice, aim for clarity in step descriptions
+   - Include diverse sensory cues (visual, tactile, aromatic, auditory)
+   - Ingredient tags: wrap each referenced ingredient in \`**double-asterisks**\`
+   - Balance precision with approachable language
+   - Consider both novice and experienced cooks' perspectives
+
+Return ONLY valid JSON matching this schema:
+{
+  "title": string,
+  "tagline": string,
+  "servings": number,
+  "prep_time_min": number,
+  "cook_time_min": number,
+  "ingredients": [{ 
+    "qty": number, 
+    "unit": string, 
+    "shop_size_qty": number,
+    "shop_size_unit": string,
+    "item": string, 
+    "notes": string 
+  }],
+  "instructions": string[],
+  "nutrition": {
+    "kcal": number,
+    "protein_g": number,
+    "carbs_g": number,
+    "fat_g": number,
+    "fiber_g": number,
+    "sugar_g": number,
+    "sodium_mg": number,
+    "vitamin_a_iu": number,
+    "vitamin_c_mg": number,
+    "vitamin_d_iu": number,
+    "calcium_mg": number,
+    "iron_mg": number,
+    "potassium_mg": number,
+    "data_quality": "complete" | "partial",
+    "calorie_check_pass": boolean
+  },
+  "science_notes": string[],
+  "reasoning": string
+}`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -85,4 +176,3 @@ Current request:
     });
   }
 });
-

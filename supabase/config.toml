@@ -103,6 +103,24 @@ enabled = true
 # A list of custom function hooks to run when events happen, like `CREATE_PROJECT` or `INSTALL_PLUGIN`.
 hooks = {}
 
-# Explicitly configure the generate-quick-recipe function
+# Explicitly configure functions with JWT verification
 [functions.generate-quick-recipe]
+verify_jwt = true
+
+[functions.generate-recipe]
+verify_jwt = true
+
+[functions.recipe-chat]
+verify_jwt = true
+
+[functions.proxy-image]
+verify_jwt = true
+
+[functions.generate-shopping-list]
+verify_jwt = true
+
+[functions.generate-recipe-image]
+verify_jwt = true
+
+[functions.update-nutrition-data]
 verify_jwt = true
