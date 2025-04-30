@@ -23,6 +23,10 @@ export const NUTRIENT_INFO = {
         description: 'Important for hormone production and nutrient absorption',
         caloriesPerGram: 9
     },
+    calories: {
+        name: 'Calories',
+        description: 'Total energy content of food'
+    },
     fiber: {
         name: 'Fiber',
         description: 'Adds bulk to your diet and helps with digestion'

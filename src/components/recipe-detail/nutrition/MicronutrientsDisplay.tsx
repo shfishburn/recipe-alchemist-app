@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ExtendedNutritionData } from './useNutritionData';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface MicronutrientsDisplayProps {
   nutrition: ExtendedNutritionData;
@@ -148,5 +149,3 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
     </Card>
   );
 }
-
-import { Card, CardContent } from '@/components/ui/card';

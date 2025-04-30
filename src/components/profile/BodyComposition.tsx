@@ -11,6 +11,8 @@ import { ActivityComponentsInput } from './body-composition/ActivityComponentsIn
 import { AdaptationTracker } from './body-composition/AdaptationTracker';
 import { MATADORSchedule } from './body-composition/MATADORSchedule';
 import { WeightProjections } from './body-composition/WeightProjections';
+import { WeightDisplay } from '@/components/ui/unit-display';
+import { convertWeightFromKg, kgToLbs } from '@/utils/unit-conversion';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface BodyCompositionProps {
@@ -20,6 +22,7 @@ interface BodyCompositionProps {
 
 export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
   const bodyComp = preferences.bodyComposition || {};
+  const unitSystem = preferences.unitSystem || 'metric';
   
   const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
@@ -33,6 +36,9 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
   });
 
   const weight = preferences.personalDetails?.weight || 0;
+  const displayWeight = unitSystem === 'imperial' ? kgToLbs(weight) : weight;
+  const weightUnit = unitSystem === 'metric' ? 'kg' : 'lbs';
+  
   const bodyFatPercentage = watch('bodyFatPercentage');
   
   // Calculate lean mass and fat mass when body fat percentage changes
@@ -69,6 +75,10 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
     
     onSave(updatedPreferences);
   };
+
+  // Convert lean mass and fat mass for display
+  const displayLeanMass = unitSystem === 'imperial' ? kgToLbs(watch('leanMass') || 0) : watch('leanMass') || 0;
+  const displayFatMass = unitSystem === 'imperial' ? kgToLbs(watch('fatMass') || 0) : watch('fatMass') || 0;
 
   return (
     <Tabs defaultValue="bodyComposition">
@@ -113,11 +123,11 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
                     <Input
                       id="weight"
                       type="number"
-                      value={weight}
+                      value={displayWeight}
                       disabled
                       className="flex-1 bg-muted"
                     />
-                    <span>kg</span>
+                    <span>{weightUnit}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Set in the Personal Details tab
@@ -132,10 +142,10 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
                       type="number"
                       step="0.1"
                       className="flex-1"
-                      {...register('leanMass')}
-                      disabled
+                      value={displayLeanMass}
+                      readOnly
                     />
-                    <span>kg</span>
+                    <span>{weightUnit}</span>
                   </div>
                 </div>
                 
@@ -147,10 +157,10 @@ export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
                       type="number"
                       step="0.1"
                       className="flex-1"
-                      {...register('fatMass')}
-                      disabled
+                      value={displayFatMass}
+                      readOnly
                     />
-                    <span>kg</span>
+                    <span>{weightUnit}</span>
                   </div>
                 </div>
               </div>

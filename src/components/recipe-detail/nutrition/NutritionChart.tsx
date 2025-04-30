@@ -15,6 +15,7 @@ interface NutritionChartProps {
       carbs: number;
       fat: number;
     };
+    unitSystem?: 'metric' | 'imperial';
   };
 }
 
@@ -82,6 +83,8 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
     };
   }, [recipeNutrition, userPreferences]);
 
+  const unitSystem = userPreferences?.unitSystem || 'metric';
+
   return (
     <div className="space-y-4">
       <Tabs defaultValue="comparison">
@@ -103,7 +106,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
         </TabsContent>
         
         <TabsContent value="micronutrients" className="pt-2">
-          <MicronutrientsDisplay nutrition={recipeNutrition} />
+          <MicronutrientsDisplay nutrition={recipeNutrition} unitSystem={unitSystem} />
         </TabsContent>
       </Tabs>
     </div>
