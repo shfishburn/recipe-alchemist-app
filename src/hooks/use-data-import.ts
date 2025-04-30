@@ -35,6 +35,69 @@ export function useDataImport() {
   } | null>(null);
   const [importResult, setImportResult] = useState<ImportResponse | null>(null);
   const [csvPreview, setCsvPreview] = useState<string[][]>([]);
+  const [parsingError, setParsingError] = useState<string | null>(null);
+
+  // Helper function to parse CSV data with error handling
+  const parseCsvData = (csvData: string): { success: boolean; data: string[][]; error?: string } => {
+    try {
+      // Basic validation
+      if (!csvData || csvData.trim() === '') {
+        return { success: false, data: [], error: 'CSV file is empty' };
+      }
+
+      // Split by new lines
+      const lines = csvData.split(/\r?\n/);
+      if (lines.length < 2) {
+        return { success: false, data: [], error: 'CSV file must have at least a header row and one data row' };
+      }
+
+      // Parse each line
+      const parsedData = lines.map(line => {
+        // Handle quoted values with commas inside them
+        let inQuotes = false;
+        let currentValue = '';
+        const row: string[] = [];
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            row.push(currentValue.trim().replace(/^"(.+)"$/, '$1'));
+            currentValue = '';
+          } else {
+            currentValue += char;
+          }
+        }
+        
+        // Add the last value
+        row.push(currentValue.trim().replace(/^"(.+)"$/, '$1'));
+        return row;
+      });
+
+      // Check for consistency in the number of columns
+      const headerColumnCount = parsedData[0].length;
+      const inconsistentRow = parsedData.findIndex(row => row.length !== headerColumnCount);
+      
+      if (inconsistentRow > 0) {
+        return { 
+          success: false, 
+          data: [], 
+          error: `Inconsistent column count at row ${inconsistentRow + 1}: Expected ${headerColumnCount} columns, got ${parsedData[inconsistentRow].length} columns` 
+        };
+      }
+
+      return { success: true, data: parsedData };
+    } catch (error) {
+      console.error('Error parsing CSV data:', error);
+      return { 
+        success: false, 
+        data: [], 
+        error: error instanceof Error ? error.message : 'Unknown error parsing CSV data' 
+      };
+    }
+  };
 
   // Handle file selection
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,17 +106,40 @@ export function useDataImport() {
       setSelectedFile(file);
       setValidationResult(null);
       setImportResult(null);
+      setParsingError(null);
       
       try {
         const csvData = await readCsvFile(file);
-        // Generate a preview of the CSV data
-        const lines = csvData.split('\n').slice(0, 5);
-        const parsedPreview = lines.map(line => 
-          line.split(',').map(cell => cell.trim().replace(/^"(.+)"$/, '$1'))
-        );
-        setCsvPreview(parsedPreview);
+        
+        // Parse and validate CSV format
+        const parseResult = parseCsvData(csvData);
+        
+        if (!parseResult.success) {
+          setParsingError(parseResult.error || 'Failed to parse the CSV file');
+          setCsvPreview([]);
+          toast({
+            title: "CSV Parsing Error",
+            description: parseResult.error || 'Failed to parse the CSV file',
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Show preview (first 5 rows)
+        const previewRows = parseResult.data.slice(0, 5);
+        setCsvPreview(previewRows);
+        
+        // Clear any previous errors
+        setParsingError(null);
       } catch (error) {
         console.error("Error reading file for preview:", error);
+        setParsingError(error instanceof Error ? error.message : 'Error reading file');
+        setCsvPreview([]);
+        toast({
+          title: "File Reading Error",
+          description: error instanceof Error ? error.message : 'Error reading the selected file',
+          variant: "destructive"
+        });
       }
     }
   };
@@ -70,8 +156,27 @@ export function useDataImport() {
     }
 
     setIsValidating(true);
+    setParsingError(null);
+    
     try {
       const csvData = await readCsvFile(selectedFile);
+      
+      // First check if we can parse the CSV correctly
+      const parseResult = parseCsvData(csvData);
+      if (!parseResult.success) {
+        setParsingError(parseResult.error || 'Failed to parse the CSV file');
+        toast({
+          title: "CSV Parsing Error",
+          description: parseResult.error || 'Failed to parse the CSV file',
+          variant: "destructive"
+        });
+        setValidationResult({
+          isValid: false,
+          missingColumns: [],
+          isSR28: false
+        });
+        return;
+      }
       
       // Check if this is SR28 format
       const sr28Check = isSR28Format(csvData);
@@ -101,10 +206,16 @@ export function useDataImport() {
       }
     } catch (error) {
       console.error("Error validating file:", error);
+      setParsingError(error instanceof Error ? error.message : 'Unknown error during validation');
       toast({
         title: "Validation error",
         description: error instanceof Error ? error.message : "An error occurred during validation.",
         variant: "destructive"
+      });
+      setValidationResult({
+        isValid: false,
+        missingColumns: [],
+        isSR28: false
       });
     } finally {
       setIsValidating(false);
@@ -123,8 +234,23 @@ export function useDataImport() {
     }
 
     setIsImporting(true);
+    setParsingError(null);
+    
     try {
       const csvData = await readCsvFile(selectedFile);
+      
+      // Final check before sending to API
+      const parseResult = parseCsvData(csvData);
+      if (!parseResult.success) {
+        setParsingError(parseResult.error || 'Failed to parse the CSV file');
+        toast({
+          title: "CSV Parsing Error",
+          description: parseResult.error || 'Failed to parse the CSV file before import',
+          variant: "destructive"
+        });
+        return;
+      }
+      
       const result = await importUsdaData(csvData, selectedTable, {
         batchSize: 100,
         mode: 'upsert'
@@ -146,6 +272,7 @@ export function useDataImport() {
       }
     } catch (error) {
       console.error("Error importing file:", error);
+      setParsingError(error instanceof Error ? error.message : 'Unknown error during import');
       toast({
         title: "Import error",
         description: error instanceof Error ? error.message : "An error occurred during import.",
@@ -165,6 +292,7 @@ export function useDataImport() {
     validationResult,
     importResult,
     csvPreview,
+    parsingError,
     handleFileChange,
     validateFile,
     importFile,

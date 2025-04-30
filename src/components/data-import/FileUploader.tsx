@@ -11,23 +11,37 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Info, AlertCircle } from 'lucide-react';
 
 interface FileUploaderProps {
   selectedFile: File | null;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   csvPreview: string[][];
   validationResult: { isValid: boolean; missingColumns: string[]; isSR28?: boolean } | null;
+  parsingError: string | null;
 }
 
 const FileUploader: React.FC<FileUploaderProps> = ({ 
   selectedFile, 
   onFileChange,
   csvPreview,
-  validationResult
+  validationResult,
+  parsingError
 }) => {
   // Helper function to render CSV preview
   const renderCsvPreview = () => {
+    if (parsingError) {
+      return (
+        <Alert className="mt-4" variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>CSV Parsing Error</AlertTitle>
+          <AlertDescription>
+            {parsingError}
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
     if (csvPreview.length === 0) return null;
     
     const headers = csvPreview[0];

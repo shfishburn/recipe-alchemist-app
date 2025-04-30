@@ -44,6 +44,11 @@ export async function importUsdaData(
   }
 ): Promise<ImportResponse> {
   try {
+    // Basic validation before sending to server
+    if (!csvData || csvData.trim() === '') {
+      return { success: false, error: 'CSV data is empty' };
+    }
+
     const { data, error } = await supabase.functions.invoke('usda-data-import', {
       body: {
         csvData,
@@ -63,7 +68,9 @@ export async function importUsdaData(
     console.error('Unexpected error during USDA data import:', err);
     return { 
       success: false, 
-      error: err instanceof Error ? err.message : 'Unknown error during import' 
+      error: err instanceof Error 
+        ? `Import error: ${err.message}` 
+        : 'Unknown error during import. Check the console for details.' 
     };
   }
 }
@@ -73,15 +80,32 @@ export async function importUsdaData(
  */
 export function readCsvFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (!file) {
+      reject(new Error('No file provided'));
+      return;
+    }
+
+    if (file.type && file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      reject(new Error('The selected file does not appear to be a CSV file'));
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
+        // Check for basic content validation
+        if (reader.result.trim() === '') {
+          reject(new Error('The CSV file is empty'));
+          return;
+        }
         resolve(reader.result);
       } else {
         reject(new Error('Failed to read file as text'));
       }
     };
-    reader.onerror = () => reject(reader.error);
+    reader.onerror = () => {
+      reject(new Error(`File reading error: ${reader.error?.message || 'Unknown error'}`));
+    };
     reader.readAsText(file);
   });
 }
@@ -100,7 +124,7 @@ export function validateCsvFormat(
   // Get the header row
   const headerRow = csvData.split('\n')[0];
   if (!headerRow) {
-    return { isValid: false, missingColumns: [] };
+    return { isValid: false, missingColumns: ['Header row is missing'] };
   }
 
   // Parse header columns

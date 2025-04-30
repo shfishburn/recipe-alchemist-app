@@ -23,6 +23,7 @@ const DataImport = () => {
     validationResult,
     importResult,
     csvPreview,
+    parsingError,
     handleFileChange,
     validateFile,
     importFile,
@@ -45,6 +46,7 @@ const DataImport = () => {
             onFileChange={handleFileChange}
             csvPreview={csvPreview}
             validationResult={validationResult}
+            parsingError={parsingError}
           />
 
           <Separator className="my-6" />

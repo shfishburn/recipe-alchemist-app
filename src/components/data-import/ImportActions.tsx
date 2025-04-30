@@ -17,7 +17,7 @@ interface ImportActionsProps {
   selectedFile: File | null;
   isValidating: boolean;
   isImporting: boolean;
-  validationResult: { isValid: boolean; missingColumns: string[] } | null;
+  validationResult: { isValid: boolean; missingColumns: string[]; isSR28?: boolean } | null;
   importResult: ImportResponse | null;
   onValidate: () => void;
   onImport: () => void;
