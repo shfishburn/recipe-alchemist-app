@@ -17,7 +17,7 @@ export interface QuickRecipe {
   prepTime: number;
   cookTime: number;
   nutritionHighlight: string;
-  cookingTip: string; // Added new cooking tip field
+  cookingTip: string;
   cuisineType?: string;
 }
 
@@ -50,6 +50,7 @@ export const useQuickRecipe = () => {
       }
       
       console.log('Recipe generated successfully:', data);
+      console.log('Recipe steps count:', data.steps.length);
 
       // Add the cuisine type to the recipe data
       const enhancedRecipe = {
