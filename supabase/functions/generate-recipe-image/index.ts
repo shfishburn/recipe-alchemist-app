@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -32,43 +31,46 @@ serve(async (req) => {
       ? ingredients.map(ing => `${ing.qty} ${ing.unit} ${ing.item}`).join(', ')
       : "various ingredients";
 
-    const prompt = `Create a professional, appetizing photo of "${title}" that showcases both visual appeal and culinary technique. This dish contains ${ingredientsDescription}.
+    const prompt = `Create an award-winning food photograph of "${title}" that exemplifies professional culinary artistry while maintaining scientific accuracy. This dish features: ${ingredientsDescription}.
 
-VISUAL STYLE:
-- Professional food photography with 45-degree angled perspective (showing both top and side)
-- Natural, directional lighting from top-left with soft shadows for depth
-- Shallow depth of field focusing on key textural elements
-- Set on a neutral ceramic or slate surface with minimal props
-- Color harmony highlighting the dish's dominant ingredients
+ESSENTIAL REQUIREMENT:
+- Image must contain ONLY the food and plating elements - absolutely NO text, watermarks, graphics, or UI elements of any kind
 
-CULINARY ACCURACY:
-- Show scientifically correct cooking results (proper caramelization, appropriate doneness)
-- Capture texture contrasts (crispy/tender, moist/dry) based on the cooking techniques
-- Display proper garnish placement that enhances visual appeal
-- Demonstrate proper knife work and cutting techniques for ingredients
-- Include appropriate steam/moisture where relevant for freshness indicators
+COMPOSITION & LIGHTING:
+- Photograph at a 45-degree hero angle capturing optimal surface textures and dimensional layers
+- Implement split lighting technique with main light source from top-left (simulating window light) and subtle fill from right
+- Create deliberate depth of field gradient (f/2.8-4.0) that prioritizes hero elements while creating atmospheric falloff
+- Position on a context-appropriate surface that complements the cuisine's heritage (matte ceramic, slate, wooden board)
+- Maintain negative space for visual breathing room (30% of frame) that draws attention to the focal point
 
-FOOD STYLING DETAILS:
-- Include 1-2 complementary ingredients in background (whole forms of processed ingredients)
-- Show proper plating technique appropriate for cuisine style
-- Display correct sauce consistency and application
-- Capture appropriate portion size on properly scaled dishware
-- Include small details that suggest freshness (droplets, herb oils, textural variations)
+CULINARY PRECISION:
+- Demonstrate textbook execution of core cooking techniques (Maillard browning, proper reduction viscosity, temperature indicators)
+- Capture the specific doneness markers appropriate for each ingredient (translucency, moisture content, structural integrity)
+- Feature technically perfect knife work appropriate to cuisine style (brunoise, chiffonade, tourné cuts where relevant)
+- Show proper emulsion stability in sauces with authentic viscosity and suspension characteristics
+- Render precise cooking chemistry details (protein denaturation, starch gelatinization, fat rendering) visible in the final dish
 
-The image should appear professionally styled but achievable, with natural colors and textures that accurately represent the dish's scientific preparation methods.`;
+ADVANCED STYLING:
+- Incorporate 1-2 raw ingredient elements arranged naturally as visual anchors that reinforce the dish's primary components
+- Apply strategic micro-garnishes that enhance color contrast and textural dynamics without overwhelming the composition
+- Create intentional imperfections (scattered herbs, droplets, crumbs) that suggest freshly-plated authenticity
+- Balance negative and positive space with a focal point positioned according to the golden ratio
+- Include subtle environmental elements that suggest the dining context (edge of utensil, partial table setting)
+
+The final image should appear simultaneously aspirational and achievable—a professional culinary photograph that demonstrates technical mastery while maintaining visual appeal that evokes genuine appetite response. Prioritize authentic cooking results over artificial styling techniques, with natural color grading that enhances but never exaggerates the dish's inherent characteristics. GENERATE FOOD IMAGERY ONLY - NO TEXT OR GRAPHICS OF ANY KIND.`;
 
     console.log('Generating image with prompt:', prompt);
 
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt: prompt,
       n: 1,
-      size: "1024x1024",
-      quality: "standard",
-      style: "natural",
+      size: "1792x1024",  // Increased to widescreen format for better composition
+      quality: "hd",      // Upgraded from "standard" to "hd" for higher detail
+      style: "natural",   // Kept as "natural" for realistic food photography
     });
 
-    if (!response.data[0].url) {
+    if (!response.data[0]?.url) {
       throw new Error('No image URL returned from OpenAI');
     }
 
