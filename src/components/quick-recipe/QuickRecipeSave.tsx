@@ -37,7 +37,7 @@ export function useQuickRecipeSave() {
         return {
           qty: ing.qty,
           unit: ing.unit,
-          item: typeof ing.item === 'string' ? ing.item : (ing.item?.item || ''),
+          item: typeof ing.item === 'string' ? ing.item : (ing.item || ''),
           notes: ing.notes,
           // Preserve shopping-specific information
           shop_size_qty: ing.shop_size_qty,
@@ -46,7 +46,7 @@ export function useQuickRecipeSave() {
       });
       
       // Convert science notes to the correct format
-      const science_notes = recipe.science_notes || [];
+      const science_notes = recipe.scienceNotes || [];
       
       // Create recipe in database
       const { data, error } = await supabase
@@ -56,13 +56,13 @@ export function useQuickRecipeSave() {
           description: recipe.description,
           ingredients,
           instructions: recipe.steps,
-          prep_time_min: recipe.prep_time_min,
-          cook_time_min: recipe.cook_time_min,
+          prep_time_min: recipe.prepTime, // Map from prepTime
+          cook_time_min: recipe.cookTime, // Map from cookTime
           servings: recipe.servings || 4,
           user_id: userData.user.id,
           science_notes,
-          cuisine: Array.isArray(recipe.cuisine) && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null,
-          dietary: Array.isArray(recipe.dietary) && recipe.dietary.length > 0 ? recipe.dietary[0] : null,
+          cuisine: recipe.cuisineType ? [recipe.cuisineType] : [],
+          dietary: recipe.dietaryType ? [recipe.dietaryType] : null,
         })
         .select()
         .single();

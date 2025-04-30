@@ -29,11 +29,17 @@ const formatIngredient = (ingredient: any): string => {
     formatted += displayUnit + ' ';
   }
   
+  // Handle different item formats
+  let itemText = '';
   if (typeof item === 'string') {
-    formatted += `**${item}**`;  // Format with ** for ingredient highlighting
-  } else if (item && typeof item.item === 'string') {
-    formatted += `**${item.item}**`;  // Format with ** for ingredient highlighting
+    itemText = item;
+  } else if (item && typeof item === 'object' && 'item' in item) {
+    itemText = item.item;
+  } else if (item) {
+    itemText = String(item);
   }
+  
+  formatted += `**${itemText}**`;  // Format with ** for ingredient highlighting
   
   if (notes) {
     formatted += ` (${notes})`;

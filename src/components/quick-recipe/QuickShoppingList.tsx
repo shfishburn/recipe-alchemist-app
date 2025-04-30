@@ -19,6 +19,14 @@ interface QuickShoppingListProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Define the item type to include pantryStaple property
+interface ShoppingItem {
+  text: string;
+  checked: boolean;
+  department: string;
+  pantryStaple?: boolean;
+}
+
 // Helper function to format ingredient for shopping list
 const formatIngredient = (ingredient: any): string => {
   if (typeof ingredient === 'string') {
@@ -42,8 +50,8 @@ const formatIngredient = (ingredient: any): string => {
   
   if (typeof item === 'string') {
     formatted += item;
-  } else if (item && typeof item.item === 'string') {
-    formatted += item.item;
+  } else if (item && typeof item === 'object') {
+    formatted += item.toString();
   }
   
   if (notes) {
@@ -55,7 +63,7 @@ const formatIngredient = (ingredient: any): string => {
 
 export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingListProps) {
   // Transform ingredients into shopping items with checked state
-  const initialItems = recipe.ingredients.map(ingredient => ({
+  const initialItems: ShoppingItem[] = recipe.ingredients.map(ingredient => ({
     text: formatIngredient(ingredient),
     checked: false,
     department: 'Recipe Ingredients'
@@ -90,9 +98,9 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
     if (!acc[dept]) acc[dept] = [];
     acc[dept].push(item);
     return acc;
-  }, {} as Record<string, typeof initialItems>);
+  }, {} as Record<string, ShoppingItem[]>);
   
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState<ShoppingItem[]>(initialItems);
   const [copied, setCopied] = useState(false);
   
   const toggleItem = (index: number) => {

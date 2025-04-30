@@ -13,10 +13,10 @@ export interface QuickRecipeFormData {
 export interface Ingredient {
   qty: number;
   unit: string;
-  shop_size_qty: number;
-  shop_size_unit: string;
-  item: string;
-  notes: string;
+  shop_size_qty?: number;
+  shop_size_unit?: string;
+  item: string | { item: string };
+  notes?: string;
 }
 
 export interface QuickRecipe {
@@ -29,6 +29,9 @@ export interface QuickRecipe {
   nutritionHighlight: string;
   cookingTip: string;
   cuisineType?: string;
+  dietaryType?: string;
+  servings?: number;
+  scienceNotes?: string[];
   calorie_check_pass?: boolean;
 }
 
@@ -76,7 +79,8 @@ export const useQuickRecipe = () => {
       // Add the cuisine type to the recipe data
       const enhancedRecipe = {
         ...data,
-        cuisineType: formData.cuisine.length > 0 ? formData.cuisine[0] : 'american'
+        cuisineType: formData.cuisine.length > 0 ? formData.cuisine[0] : 'american',
+        dietaryType: formData.dietary.length > 0 ? formData.dietary[0] : null
       };
       
       // Update both local state and store
