@@ -1,147 +1,164 @@
 
 import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { Button } from '@/components/ui/button';
-import { 
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetClose
-} from '@/components/ui/sheet';
-import { Check, Plus, ShoppingBag, X } from 'lucide-react';
-import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { ShoppingBag, Share2, Copy, Check } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface QuickShoppingListProps {
   recipe: QuickRecipe;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave?: () => void;
 }
 
-export function QuickShoppingList({ recipe, open, onOpenChange, onSave }: QuickShoppingListProps) {
-  const [items, setItems] = useState(recipe.ingredients.map(ingredient => ({
-    text: ingredient,
-    checked: false
-  })));
-  const [customItem, setCustomItem] = useState('');
-  const { toast } = useToast();
-  const { user } = useAuth();
+// Helper function to format ingredient for shopping list
+const formatIngredient = (ingredient: any): string => {
+  if (typeof ingredient === 'string') {
+    return ingredient;
+  }
+  
+  const { qty, unit, shop_size_qty, shop_size_unit, item, notes } = ingredient;
+  let formatted = '';
+  
+  // Use shop size if available, otherwise use regular quantity
+  const displayQty = shop_size_qty || qty;
+  const displayUnit = shop_size_unit || unit;
+  
+  if (displayQty) {
+    formatted += displayQty + ' ';
+  }
+  
+  if (displayUnit) {
+    formatted += displayUnit + ' ';
+  }
+  
+  if (typeof item === 'string') {
+    formatted += item;
+  } else if (item && typeof item.item === 'string') {
+    formatted += item.item;
+  }
+  
+  if (notes) {
+    formatted += ` (${notes})`;
+  }
+  
+  return formatted.trim();
+};
 
-  const toggleItemChecked = (index: number) => {
+export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingListProps) {
+  // Transform ingredients into shopping items with checked state
+  const initialItems = recipe.ingredients.map(ingredient => ({
+    text: formatIngredient(ingredient),
+    checked: false
+  }));
+  
+  // Add extra items for cooking oil, salt, and pepper if not already in the list
+  const basicItems = [
+    'Cooking oil',
+    'Salt',
+    'Black pepper'
+  ];
+  
+  // Check if any basic items are missing from the ingredients
+  basicItems.forEach(item => {
+    const hasItem = initialItems.some(i => 
+      i.text.toLowerCase().includes(item.toLowerCase())
+    );
+    
+    if (!hasItem) {
+      initialItems.push({
+        text: item,
+        checked: false
+      });
+    }
+  });
+  
+  const [items, setItems] = useState(initialItems);
+  const [copied, setCopied] = useState(false);
+  
+  const toggleItem = (index: number) => {
     setItems(items.map((item, i) => 
       i === index ? { ...item, checked: !item.checked } : item
     ));
   };
-
-  const addCustomItem = () => {
-    if (customItem.trim()) {
-      setItems([...items, { text: customItem.trim(), checked: false }]);
-      setCustomItem('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addCustomItem();
-    }
-  };
-
-  const handleSave = () => {
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Create an account to save your shopping list",
-        variant: "default",
+  
+  const copyToClipboard = () => {
+    const text = items
+      .map(item => `${item.checked ? '[x]' : '[ ]'} ${item.text}`)
+      .join('\n');
+    
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopied(true);
+        toast({
+          title: "Copied to clipboard",
+          description: "Shopping list copied to clipboard"
+        });
+        
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+        toast({
+          title: "Copy failed",
+          description: "Could not copy to clipboard",
+          variant: "destructive"
+        });
       });
-    } else if (onSave) {
-      onSave();
-      toast({
-        title: "Shopping list saved",
-        description: "Your list has been saved to your account",
-      });
-    }
   };
-
-  const checkedCount = items.filter(item => item.checked).length;
   
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[90vw] sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="flex items-center">
-            <ShoppingBag className="mr-2 h-5 w-5" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShoppingBag className="h-5 w-5" />
             Shopping List
-          </SheetTitle>
-        </SheetHeader>
+          </DialogTitle>
+        </DialogHeader>
         
-        <div className="py-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium">Ingredients for {recipe.title}</h3>
-            <span className="text-xs text-muted-foreground">
-              {checkedCount}/{items.length} items
-            </span>
-          </div>
-          
-          <ul className="space-y-2 mt-4">
-            {items.map((item, idx) => (
-              <li key={idx} className="flex items-center gap-3">
+        <div className="mt-2">
+          <div className="space-y-3">
+            {items.map((item, index) => (
+              <div key={index} className="flex items-start gap-2">
                 <Checkbox 
-                  id={`item-${idx}`} 
+                  id={`item-${index}`}
                   checked={item.checked}
-                  onCheckedChange={() => toggleItemChecked(idx)}
+                  onCheckedChange={() => toggleItem(index)}
                 />
                 <label 
-                  htmlFor={`item-${idx}`}
-                  className={`flex-1 text-sm ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+                  htmlFor={`item-${index}`}
+                  className={`text-sm ${item.checked ? 'line-through text-muted-foreground' : ''}`}
                 >
                   {item.text}
                 </label>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
           
-          <div className="flex mt-6 gap-2">
-            <input
-              type="text"
-              value={customItem}
-              onChange={(e) => setCustomItem(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Add custom item..."
-              className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-recipe-blue focus:border-recipe-blue"
-            />
-            <Button 
-              type="button" 
-              size="sm" 
+          <div className="mt-6 flex flex-col gap-2">
+            <Button
               variant="outline"
-              onClick={addCustomItem}
+              onClick={copyToClipboard}
+              className="w-full"
             >
-              <Plus className="h-4 w-4" />
+              {copied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy to Clipboard
+                </>
+              )}
             </Button>
           </div>
         </div>
-        
-        <SheetFooter>
-          <div className="flex flex-col gap-2 w-full">
-            <Button 
-              onClick={handleSave}
-              className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
-            >
-              Save Shopping List
-            </Button>
-            <SheetClose asChild>
-              <Button variant="ghost" size="sm" className="w-full">
-                <X className="h-4 w-4 mr-2" />
-                Close
-              </Button>
-            </SheetClose>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

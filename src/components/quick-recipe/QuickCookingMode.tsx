@@ -12,6 +12,36 @@ interface QuickCookingModeProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Helper function to format ingredient display text
+const formatIngredient = (ingredient: any): string => {
+  if (typeof ingredient === 'string') {
+    return ingredient;
+  }
+  
+  const { qty, unit, item, notes } = ingredient;
+  let formatted = '';
+  
+  if (qty) {
+    formatted += qty + ' ';
+  }
+  
+  if (unit) {
+    formatted += unit + ' ';
+  }
+  
+  if (typeof item === 'string') {
+    formatted += item;
+  } else if (item && typeof item.item === 'string') {
+    formatted += item.item;
+  }
+  
+  if (notes) {
+    formatted += ` (${notes})`;
+  }
+  
+  return formatted.trim();
+};
+
 export function QuickCookingMode({ recipe, open, onOpenChange }: QuickCookingModeProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = recipe.steps.length;
@@ -61,7 +91,7 @@ export function QuickCookingMode({ recipe, open, onOpenChange }: QuickCookingMod
               <p className="font-medium mb-1">You'll need:</p>
               <ul className="pl-5 list-disc text-sm space-y-1">
                 {recipe.ingredients.map((ingredient, idx) => (
-                  <li key={idx}>{ingredient}</li>
+                  <li key={idx}>{formatIngredient(ingredient)}</li>
                 ))}
               </ul>
             </div>

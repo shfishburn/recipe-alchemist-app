@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { QuickRecipeTagForm } from './QuickRecipeTagForm';
 import { QuickRecipeCard } from './QuickRecipeCard';
@@ -12,6 +11,33 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { supabase } from '@/integrations/supabase/client';
+
+// Helper function to format ingredient for database storage
+const formatIngredientForDB = (ingredient: any) => {
+  if (typeof ingredient === 'string') {
+    return {
+      qty: 1,
+      unit: '',
+      item: ingredient
+    };
+  }
+  
+  // If it's already in the right format, return it
+  if (ingredient.item && typeof ingredient.item === 'string') {
+    return {
+      qty: ingredient.qty || 1,
+      unit: ingredient.unit || '',
+      item: ingredient.item
+    };
+  }
+  
+  // Otherwise, extract what we can
+  return {
+    qty: ingredient.qty || 1,
+    unit: ingredient.unit || '',
+    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient)
+  };
+};
 
 export function QuickRecipeGenerator() {
   const { generateQuickRecipe, isLoading, recipe, setRecipe } = useQuickRecipe();
@@ -43,6 +69,9 @@ export function QuickRecipeGenerator() {
     setIsSaving(true);
     
     try {
+      // Format ingredients for database storage
+      const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
+      
       // In a real implementation, save the recipe to the database
       const { data, error } = await supabase
         .from('recipes')
@@ -50,11 +79,7 @@ export function QuickRecipeGenerator() {
           user_id: user.id,
           title: recipe.title,
           tagline: recipe.description,
-          ingredients: recipe.ingredients.map(ingredient => ({
-            qty: 1,
-            unit: '',
-            item: ingredient
-          })),
+          ingredients: formattedIngredients,
           instructions: recipe.steps,
           prep_time_min: recipe.prepTime,
           cook_time_min: recipe.cookTime,
@@ -138,11 +163,7 @@ export function QuickRecipeGenerator() {
             id: 'quick-recipe',
             title: recipe.title,
             description: recipe.description,
-            ingredients: recipe.ingredients.map(ing => ({
-              qty: 1,
-              unit: '',
-              item: ing
-            })),
+            ingredients: recipe.ingredients.map(formatIngredientForDB),
             instructions: recipe.steps,
             prep_time_min: recipe.prepTime,
             cook_time_min: recipe.cookTime,
