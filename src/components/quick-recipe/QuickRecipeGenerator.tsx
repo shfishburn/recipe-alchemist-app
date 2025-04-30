@@ -1,15 +1,10 @@
 
 import React, { useEffect } from 'react';
-import { QuickRecipeTagForm } from './QuickRecipeTagForm';
-import { useQuickRecipe } from '@/hooks/use-quick-recipe';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { QuickRecipeFormContainer } from './QuickRecipeFormContainer';
+import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 
 export function QuickRecipeGenerator() {
-  const { generateQuickRecipe, isLoading } = useQuickRecipe();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { reset, recipe } = useQuickRecipeStore();
+  const { navigate, location, reset, recipe, generateQuickRecipe } = useQuickRecipeForm();
   
   // Check if we need to regenerate a recipe based on navigation state
   useEffect(() => {
@@ -34,24 +29,5 @@ export function QuickRecipeGenerator() {
     }
   }, [recipe, navigate]);
   
-  const handleSubmit = async (formData) => {
-    // Start generating the recipe
-    const recipe = await generateQuickRecipe(formData);
-    
-    // Navigate to the quick recipe page
-    if (recipe) {
-      navigate('/quick-recipe');
-    }
-    
-    return recipe;
-  };
-  
-  return (
-    <div className="w-full">
-      <QuickRecipeTagForm 
-        onSubmit={handleSubmit} 
-        isLoading={isLoading} 
-      />
-    </div>
-  );
+  return <QuickRecipeFormContainer />;
 }
