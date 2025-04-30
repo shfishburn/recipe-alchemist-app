@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,21 +22,35 @@ interface AddToShoppingListProps {
 export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { shoppingLists, isFetching, fetchShoppingLists } = useShoppingLists();
   const { isLoading, createNewList, addToExistingList } = useShoppingListActions(recipe);
+  
+  useEffect(() => {
+    if (sheetOpen) {
+      fetchShoppingLists();
+    }
+  }, [sheetOpen, fetchShoppingLists]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (selectedListId) {
-      await addToExistingList(selectedListId);
-    } else {
-      await createNewList(newListName);
+    try {
+      if (selectedListId) {
+        await addToExistingList(selectedListId);
+      } else {
+        await createNewList(newListName);
+      }
+      // Close the sheet on success
+      setSheetOpen(false);
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      // Sheet stays open if there's an error
     }
   };
   
   return (
-    <Sheet onOpenChange={(open) => open && fetchShoppingLists()}>
+    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
@@ -55,14 +70,16 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
         </SheetHeader>
         
         <div className="my-6">
-          <ShoppingListForm 
-            shoppingLists={shoppingLists}
-            newListName={newListName}
-            onNewListNameChange={setNewListName}
-            selectedListId={selectedListId}
-            onSelectedListChange={setSelectedListId}
-            isLoading={isLoading}
-          />
+          <form onSubmit={handleSubmit}>
+            <ShoppingListForm 
+              shoppingLists={shoppingLists}
+              newListName={newListName}
+              onNewListNameChange={setNewListName}
+              selectedListId={selectedListId}
+              onSelectedListChange={setSelectedListId}
+              isLoading={isLoading || isFetching}
+            />
+          </form>
         </div>
       </SheetContent>
     </Sheet>

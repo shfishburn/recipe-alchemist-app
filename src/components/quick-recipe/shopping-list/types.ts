@@ -7,6 +7,11 @@ export interface ShoppingItem {
   department?: string;
   pantryStaple?: boolean;
   ingredientData?: Ingredient;
+  // Add structured data fields for better accessibility
+  quantity?: number;
+  unit?: string;
+  item?: string;
+  notes?: string;
 }
 
 export interface ShoppingItemsByDepartment {

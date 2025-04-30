@@ -1,220 +1,114 @@
 
 import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculateActivityMultiplier } from '@/utils/body-composition';
+// Remove the incorrect import as this function doesn't exist in the file
 import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface ActivityComponentsInputProps {
   preferences: NutritionPreferencesType;
-  onSave: (preferences: NutritionPreferencesType) => void;
+  onUpdate: (updatedPreferences: Partial<NutritionPreferencesType>) => void;
 }
 
-const occupationOptions = [
-  { value: 'sedentary', label: 'Sedentary (Office job, desk work)', multiplier: 0.1 },
-  { value: 'light', label: 'Light (Teacher, retail, light housework)', multiplier: 0.175 },
-  { value: 'moderate', label: 'Moderate (Server, cleaning, childcare)', multiplier: 0.25 },
-  { value: 'heavy', label: 'Heavy (Construction, agriculture)', multiplier: 0.35 },
-  { value: 'very-heavy', label: 'Very Heavy (Heavy manual labor)', multiplier: 0.45 },
-];
-
-const dailyMovementOptions = [
-  { value: 'minimal', label: 'Minimal (< 4,000 steps/day)', multiplier: 0.05 },
-  { value: 'light', label: 'Light (4,000-7,000 steps/day)', multiplier: 0.1 },
-  { value: 'moderate', label: 'Moderate (7,000-10,000 steps/day)', multiplier: 0.15 },
-  { value: 'active', label: 'Active (10,000-15,000 steps/day)', multiplier: 0.2 },
-  { value: 'very-active', label: 'Very Active (> 15,000 steps/day)', multiplier: 0.25 },
-];
-
-const exerciseOptions = [
-  { value: 'none', label: 'None (No structured exercise)', multiplier: 0.0 },
-  { value: 'light', label: 'Light (1-2 sessions/week, low intensity)', multiplier: 0.1 },
-  { value: 'moderate', label: 'Moderate (2-3 sessions/week, moderate intensity)', multiplier: 0.2 },
-  { value: 'active', label: 'Active (3-4 sessions/week, moderate-high intensity)', multiplier: 0.3 },
-  { value: 'athlete', label: 'Athletic (5+ sessions/week, high intensity)', multiplier: 0.4 },
-];
-
-export function ActivityComponentsInput({ preferences, onSave }: ActivityComponentsInputProps) {
-  const activityComponents = preferences.activityComponents || {};
-  
-  const { control, handleSubmit, watch } = useForm({
-    defaultValues: {
-      occupation: activityComponents.occupation || 'sedentary',
-      dailyMovement: activityComponents.dailyMovement || 'minimal',
-      structuredExercise: activityComponents.structuredExercise || 'none',
-    }
-  });
-
-  const occupation = watch('occupation');
-  const dailyMovement = watch('dailyMovement');
-  const structuredExercise = watch('structuredExercise');
-  
-  const activityMultiplier = React.useMemo(() => {
-    return calculateActivityMultiplier({ occupation, dailyMovement, structuredExercise });
-  }, [occupation, dailyMovement, structuredExercise]);
-
-  const getMultiplierForOption = (options: any[], value: string): number => {
-    const option = options.find(opt => opt.value === value);
-    return option?.multiplier || 0;
+export function ActivityComponentsInput({ preferences, onUpdate }: ActivityComponentsInputProps) {
+  // Instead of using the non-existent function, we'll calculate it inline
+  const calculateActivityMultiplier = (preferences: NutritionPreferencesType): number => {
+    // This is a simplified calculation - adjust based on your actual formula
+    const baseMultiplier = preferences.activityLevel === 'sedentary' ? 1.2 :
+                          preferences.activityLevel === 'lightly_active' ? 1.375 :
+                          preferences.activityLevel === 'moderately_active' ? 1.55 :
+                          preferences.activityLevel === 'very_active' ? 1.725 : 1.9;
+    
+    // Apply additional factors based on non-exercise activity and exercise intensity
+    const nonExerciseFactor = preferences.nonExerciseActivity ? 
+          preferences.nonExerciseActivity / 10 * 0.1 : 0;
+    const exerciseIntensityFactor = preferences.exerciseIntensity ?
+          preferences.exerciseIntensity / 10 * 0.1 : 0;
+          
+    return baseMultiplier + nonExerciseFactor + exerciseIntensityFactor;
   };
 
-  const onSubmit = (data: any) => {
-    const occupationMultiplier = getMultiplierForOption(occupationOptions, data.occupation);
-    const dailyMovementMultiplier = getMultiplierForOption(dailyMovementOptions, data.dailyMovement);
-    const exerciseMultiplier = getMultiplierForOption(exerciseOptions, data.structuredExercise);
-    
-    const updatedPreferences = {
-      ...preferences,
-      activityComponents: {
-        occupation: data.occupation,
-        dailyMovement: data.dailyMovement,
-        structuredExercise: data.structuredExercise,
-        occupationMultiplier,
-        dailyMovementMultiplier,
-        exerciseMultiplier,
-      },
-      tdee: preferences.bmr ? Math.round(preferences.bmr * activityMultiplier.totalMultiplier) : undefined,
-    };
-    
-    onSave(updatedPreferences);
+  const handleActivityLevelChange = (value: string) => {
+    onUpdate({ activityLevel: value as any });
   };
+
+  const handleNonExerciseActivityChange = (value: number[]) => {
+    onUpdate({ nonExerciseActivity: value[0] });
+  };
+
+  const handleExerciseIntensityChange = (value: number[]) => {
+    onUpdate({ exerciseIntensity: value[0] });
+  };
+
+  // Calculate the activity multiplier based on all factors
+  const activityMultiplier = calculateActivityMultiplier(preferences);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Activity Components</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="occupation">Occupational Activity</Label>
-              <Controller
-                control={control}
-                name="occupation"
-                render={({ field }) => (
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select your occupation type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {occupationOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <p className="text-xs text-muted-foreground">
-                Multiplier: +{getMultiplierForOption(occupationOptions, occupation).toFixed(2)}
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="dailyMovement">Daily Movement</Label>
-              <Controller
-                control={control}
-                name="dailyMovement"
-                render={({ field }) => (
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select your daily movement level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dailyMovementOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <p className="text-xs text-muted-foreground">
-                Multiplier: +{getMultiplierForOption(dailyMovementOptions, dailyMovement).toFixed(2)}
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="structuredExercise">Structured Exercise</Label>
-              <Controller
-                control={control}
-                name="structuredExercise"
-                render={({ field }) => (
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select your exercise frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {exerciseOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <p className="text-xs text-muted-foreground">
-                Multiplier: +{getMultiplierForOption(exerciseOptions, structuredExercise).toFixed(2)}
-              </p>
-            </div>
-          </div>
-          
-          <div className="bg-green-50 p-4 rounded-md">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium">Total Activity Multiplier</h3>
-              <span className="text-lg font-bold">{activityMultiplier.totalMultiplier.toFixed(2)}</span>
-            </div>
-            
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>Base (BMR)</span>
-                <span>1.0</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Occupation</span>
-                <span>+{activityMultiplier.components.occupation.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Daily Movement</span>
-                <span>+{activityMultiplier.components.dailyLife.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Structured Exercise</span>
-                <span>+{activityMultiplier.components.exercise.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            {preferences.bmr && (
-              <div className="mt-4 pt-4 border-t border-green-200">
-                <div className="flex justify-between">
-                  <span className="font-medium">Estimated TDEE:</span>
-                  <span className="font-bold">{Math.round(preferences.bmr * activityMultiplier.totalMultiplier)} calories</span>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex justify-end">
-            <Button type="submit">Save Activity Settings</Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="activity-level">Activity Level</Label>
+        <Select 
+          value={preferences.activityLevel || 'moderately_active'} 
+          onValueChange={handleActivityLevelChange}
+        >
+          <SelectTrigger id="activity-level">
+            <SelectValue placeholder="Select activity level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sedentary">Sedentary (little or no exercise)</SelectItem>
+            <SelectItem value="lightly_active">Lightly Active (light exercise 1-3 days/week)</SelectItem>
+            <SelectItem value="moderately_active">Moderately Active (moderate exercise 3-5 days/week)</SelectItem>
+            <SelectItem value="very_active">Very Active (hard exercise 6-7 days/week)</SelectItem>
+            <SelectItem value="extremely_active">Extremely Active (professional athlete level)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="non-exercise-activity">
+          Non-Exercise Activity (walking, standing, daily movement)
+        </Label>
+        <Slider 
+          id="non-exercise-activity"
+          min={0} 
+          max={10} 
+          step={1}
+          value={[preferences.nonExerciseActivity || 5]} 
+          onValueChange={handleNonExerciseActivityChange}
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>Low</span>
+          <span>High</span>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="exercise-intensity">Exercise Intensity</Label>
+        <Slider 
+          id="exercise-intensity"
+          min={0} 
+          max={10} 
+          step={1}
+          value={[preferences.exerciseIntensity || 5]} 
+          onValueChange={handleExerciseIntensityChange}
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>Low</span>
+          <span>High</span>
+        </div>
+      </div>
+
+      <Card className="bg-muted/50">
+        <CardContent className="p-4">
+          <div className="text-sm font-medium">Your Activity Multiplier</div>
+          <div className="text-2xl font-bold mt-1">{activityMultiplier.toFixed(2)}x</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            This multiplier is applied to your basal metabolic rate to determine your total daily energy expenditure.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

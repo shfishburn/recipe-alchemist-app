@@ -26,14 +26,25 @@ serve(async (req) => {
     // Process ingredients to include shopping size info when available
     const ingredientsText = Array.isArray(ingredients) 
       ? ingredients.map(ing => {
-          // Use shop sizes if available
+          // Always prioritize shop sizes if available
           const qty = ing.shop_size_qty !== undefined ? ing.shop_size_qty : ing.qty;
           const unit = ing.shop_size_unit || ing.unit;
-          const item = typeof ing.item === 'string' ? ing.item : 
-                      (ing.item && typeof ing.item.item === 'string' ? ing.item.item : '');
+          
+          // Handle different item formats
+          let itemName = '';
+          if (typeof ing.item === 'string') {
+            itemName = ing.item;
+          } else if (ing.item && typeof ing.item === 'object') {
+            if (ing.item.item && typeof ing.item.item === 'string') {
+              itemName = ing.item.item;
+            } else {
+              itemName = JSON.stringify(ing.item);
+            }
+          }
+          
           const notes = ing.notes || '';
           
-          return `${qty} ${unit} ${item}${notes ? ` (${notes})` : ''}`;
+          return `${qty} ${unit} ${itemName}${notes ? ` (${notes})` : ''}`;
         }).join('\n')
       : "No ingredients provided";
 

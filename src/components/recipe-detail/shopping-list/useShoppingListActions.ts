@@ -39,7 +39,17 @@ export function useShoppingListActions(recipe: Recipe) {
             pantry_staple: item.pantry_staple,
             storage_tips: item.storage_tips,
             department: dept.name,
-            recipeId: recipe.id
+            recipeId: recipe.id,
+            // Store original ingredient data if available
+            originalIngredient: JSON.stringify(
+              recipe.ingredients.find(ing => 
+                ing.item && (typeof ing.item === 'string' ? 
+                  ing.item.toLowerCase().includes(item.name.toLowerCase()) : 
+                  (typeof ing.item.item === 'string' && 
+                   ing.item.item.toLowerCase().includes(item.name.toLowerCase()))
+                )
+              )
+            )
           });
         });
       });
@@ -91,12 +101,36 @@ export function useShoppingListActions(recipe: Recipe) {
       
       const { items, tips, preparation_notes } = await generateShoppingList();
       
+      // Enhance item data with structured information for better shopping experience
+      const enhancedItems = items.map(item => {
+        // If we have original ingredient data, parse it and extract shop sizes
+        if (item.originalIngredient) {
+          try {
+            const originalData = JSON.parse(item.originalIngredient);
+            if (originalData) {
+              // Use shop size if available
+              if (originalData.shop_size_qty !== undefined || originalData.shop_size_unit) {
+                return {
+                  ...item,
+                  quantity: originalData.shop_size_qty !== undefined ? 
+                            originalData.shop_size_qty : item.quantity,
+                  unit: originalData.shop_size_unit || item.unit
+                };
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to parse original ingredient data:", e);
+          }
+        }
+        return item;
+      });
+      
       const { data, error } = await supabase
         .from('shopping_lists')
         .insert({
           title: newListName,
           user_id: userData.user.id,
-          items: items as unknown as Json,
+          items: enhancedItems as unknown as Json,
           tips: tips,
           preparation_notes: preparation_notes
         })
@@ -140,6 +174,30 @@ export function useShoppingListActions(recipe: Recipe) {
       // Generate new items with AI
       const { items: newItems, tips: newTips, preparation_notes: newPreparationNotes } = await generateShoppingList();
       
+      // Enhance item data with structured information for better shopping experience
+      const enhancedNewItems = newItems.map(item => {
+        // If we have original ingredient data, parse it and extract shop sizes
+        if (item.originalIngredient) {
+          try {
+            const originalData = JSON.parse(item.originalIngredient);
+            if (originalData) {
+              // Use shop size if available
+              if (originalData.shop_size_qty !== undefined || originalData.shop_size_unit) {
+                return {
+                  ...item,
+                  quantity: originalData.shop_size_qty !== undefined ? 
+                            originalData.shop_size_qty : item.quantity,
+                  unit: originalData.shop_size_unit || item.unit
+                };
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to parse original ingredient data:", e);
+          }
+        }
+        return item;
+      });
+      
       // Combine existing and new items, keeping department organization
       const currentItems = (currentList.items as unknown as ShoppingListItem[]) || [];
       const currentTips = (currentList.tips as string[]) || [];
@@ -147,7 +205,7 @@ export function useShoppingListActions(recipe: Recipe) {
       
       // Smart merge: combine items with same name and unit within departments
       const mergedItems = [...currentItems];
-      newItems.forEach(newItem => {
+      enhancedNewItems.forEach(newItem => {
         const existingItemIndex = mergedItems.findIndex(item => 
           item.name === newItem.name && 
           item.unit === newItem.unit &&

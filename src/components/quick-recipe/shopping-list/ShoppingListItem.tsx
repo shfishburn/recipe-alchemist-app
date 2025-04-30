@@ -12,10 +12,17 @@ interface ShoppingListItemProps {
 }
 
 export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProps) {
-  // Extract ingredient details if available
-  const hasIngredientDetails = item.ingredientData && 
-    (item.ingredientData.notes || 
-     (typeof item.ingredientData.item === 'object' && item.ingredientData.item.item));
+  // Extract ingredient details from either the new structured fields or the original ingredientData
+  const hasDetails = !!(item.notes || item.ingredientData?.notes);
+  const notes = item.notes || (item.ingredientData?.notes || '');
+  
+  // Determine if we should show additional item details
+  const showDetails = hasDetails || (item.ingredientData && typeof item.ingredientData.item === 'object');
+  
+  // Extract item name for display
+  const itemName = typeof item.item === 'string' ? item.item : 
+                  (item.ingredientData && typeof item.ingredientData.item === 'object' ? 
+                   JSON.stringify(item.ingredientData.item) : item.text);
 
   return (
     <div className="flex items-start gap-2 p-2 bg-muted/40 rounded-md group hover:bg-muted/60 transition-colors">
@@ -32,7 +39,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
         <div className="flex items-center gap-1">
           <span>{item.text}</span>
           
-          {hasIngredientDetails && (
+          {showDetails && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -40,9 +47,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs">
-                    {item.ingredientData?.notes || 
-                     (typeof item.ingredientData?.item === 'object' ? 
-                      item.ingredientData.item.item : '')}
+                    {notes || 'Additional ingredient details'}
                   </p>
                 </TooltipContent>
               </Tooltip>

@@ -1,4 +1,3 @@
-
 /**
  * Convert from kg to pounds
  */
@@ -55,4 +54,37 @@ export function convertWeightToKg(weight: number, unitSystem: 'metric' | 'imperi
     return lbsToKg(weight);
   }
   return weight;
+}
+
+/**
+ * Convert recipe units to shopping units
+ * This is used to convert recipe measurements to practical shopping measurements
+ */
+export function getShoppingQuantity(qty: number, unit: string): { qty: number, unit: string } {
+  // Handle common conversions to more practical shopping units
+  if (unit === 'g' && qty >= 1000) {
+    return { qty: qty / 1000, unit: 'kg' };
+  }
+  
+  if (unit === 'ml' && qty >= 1000) {
+    return { qty: qty / 1000, unit: 'L' };
+  }
+  
+  if (unit === 'tsp' && qty >= 3) {
+    return { qty: qty / 3, unit: 'tbsp' };
+  }
+  
+  if (unit === 'tbsp' && qty >= 16) {
+    return { qty: qty / 16, unit: 'cup' };
+  }
+  
+  // For small amounts of spices, we often buy by container not exact measure
+  if ((unit === 'tsp' || unit === 'tbsp') && 
+      (qty <= 2) && 
+      (unit === 'tsp' || unit === 'tbsp')) {
+    return { qty: 1, unit: 'small container' };
+  }
+  
+  // Default - keep original measurement
+  return { qty, unit };
 }
