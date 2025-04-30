@@ -95,7 +95,7 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
         </TabsList>
         
         <TabsContent value="comparison" className="pt-2">
-          <ComparisonChart compareData={compareData} />
+          <ComparisonChart compareData={compareData} unitSystem={unitSystem} />
         </TabsContent>
         
         <TabsContent value="distribution" className="pt-2">

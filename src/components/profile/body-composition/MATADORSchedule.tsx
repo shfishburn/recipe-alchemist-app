@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { format, addDays } from 'date-fns';
-import { Card, CardContent } from '@/components/ui/card';
-import { generateMATADORSchedule } from '@/utils/body-composition';
+import { addDays, format, differenceInDays } from 'date-fns';
 
 interface MATADORScheduleProps {
   dietPhaseLength: number;
@@ -14,106 +12,110 @@ interface MATADORScheduleProps {
 export function MATADORSchedule({ 
   dietPhaseLength, 
   breakPhaseLength, 
-  currentPhase, 
+  currentPhase,
   phaseStartDate 
 }: MATADORScheduleProps) {
-  const scheduleDays = 90; // Show next 90 days
-  const startDate = phaseStartDate ? new Date(phaseStartDate) : new Date();
+  const today = new Date();
+  const startDate = new Date(phaseStartDate);
   
-  const schedule = React.useMemo(() => {
-    return generateMATADORSchedule(scheduleDays, {
-      dietPhaseLength,
-      breakPhaseLength,
-      startWithDiet: currentPhase === 'diet'
-    });
-  }, [dietPhaseLength, breakPhaseLength, currentPhase, scheduleDays]);
-
-  const groupedSchedule = React.useMemo(() => {
-    const groupedByWeek: Record<number, typeof schedule> = {};
+  const generateSchedule = () => {
+    const schedule = [];
+    let phaseStart = new Date(startDate);
+    let currentPhaseName = currentPhase;
+    let phaseIndex = 0;
     
-    schedule.forEach(day => {
-      if (!groupedByWeek[day.weekNumber]) {
-        groupedByWeek[day.weekNumber] = [];
-      }
-      groupedByWeek[day.weekNumber].push(day);
-    });
+    // Generate 6 phases
+    for (let i = 0; i < 6; i++) {
+      const isCurrentPhase = i === 0;
+      const phaseDuration = currentPhaseName === 'diet' ? dietPhaseLength : breakPhaseLength;
+      const phaseEnd = addDays(phaseStart, phaseDuration - 1);
+      const isActive = today >= phaseStart && today <= phaseEnd;
+      
+      schedule.push({
+        id: phaseIndex++,
+        type: currentPhaseName,
+        startDate: phaseStart,
+        endDate: phaseEnd,
+        isActive,
+      });
+      
+      // Set up for next phase
+      currentPhaseName = currentPhaseName === 'diet' ? 'break' : 'diet';
+      phaseStart = addDays(phaseEnd, 1);
+    }
     
-    return Object.values(groupedByWeek);
-  }, [schedule]);
+    return schedule;
+  };
 
+  const schedule = generateSchedule();
+  const currentScheduleItem = schedule.find(item => item.isActive);
+  const daysRemaining = currentScheduleItem 
+    ? differenceInDays(currentScheduleItem.endDate, today)
+    : 0;
+  
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">MATADOR Protocol Schedule</h3>
-      
-      <div className="overflow-auto">
-        <div className="min-w-max">
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-xs font-medium text-gray-500">
-                {day}
-              </div>
-            ))}
+      <div className="bg-blue-50 p-4 rounded-md">
+        <h3 className="font-medium mb-2">Current MATADOR Schedule</h3>
+        
+        {currentScheduleItem ? (
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium">
+                {currentScheduleItem.type === 'diet' ? '🍎 Diet Phase' : '🍔 Break Phase'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {format(currentScheduleItem.startDate, 'MMM d')} - {format(currentScheduleItem.endDate, 'MMM d, yyyy')}
+              </p>
+            </div>
+            
+            <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className={`absolute top-0 left-0 h-full ${currentScheduleItem.type === 'diet' ? 'bg-blue-500' : 'bg-green-500'}`}
+                style={{ width: `${100 - (daysRemaining * 100 / (currentScheduleItem.type === 'diet' ? dietPhaseLength : breakPhaseLength))}%` }}
+              ></div>
+            </div>
+            
+            <p className="text-xs text-center font-medium">
+              {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining in current phase
+            </p>
           </div>
-          
-          {groupedSchedule.map((week, weekIndex) => (
-            <div key={weekIndex} className="grid grid-cols-7 gap-1 mb-1">
-              {week.map(day => {
-                const date = addDays(startDate, day.day);
-                const isToday = format(new Date(), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-                
-                return (
-                  <div 
-                    key={day.day} 
-                    className={`
-                      p-1 text-center rounded-md text-xs
-                      ${day.isDeficitDay ? 'bg-orange-100 border border-orange-200' : 'bg-green-100 border border-green-200'}
-                      ${isToday ? 'ring-2 ring-blue-500' : ''}
-                    `}
-                  >
-                    <div className="font-medium">{format(date, 'd')}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {day.isDeficitDay ? 'Deficit' : 'Maintenance'}
-                    </div>
-                  </div>
-                );
-              })}
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No active phase found. The schedule may need to be updated.
+          </p>
+        )}
+      </div>
+      
+      <div className="space-y-2">
+        <h4 className="text-sm font-medium">Upcoming Schedule</h4>
+        <div className="space-y-2">
+          {schedule.slice(0, 4).map((phase) => (
+            <div 
+              key={phase.id} 
+              className={`p-2 rounded-md border text-xs ${
+                phase.isActive 
+                  ? phase.type === 'diet' 
+                    ? 'bg-blue-50 border-blue-200' 
+                    : 'bg-green-50 border-green-200'
+                  : 'border-gray-200'
+              }`}
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="font-medium">
+                    {phase.type === 'diet' ? '🍎 Diet Phase' : '🍔 Break Phase'}
+                    {phase.isActive ? ' (Current)' : ''}
+                  </span>
+                </div>
+                <div className="text-muted-foreground">
+                  {format(phase.startDate, 'MMM d')} - {format(phase.endDate, 'MMM d')}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </div>
-      
-      <div className="flex gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-sm bg-orange-100 border border-orange-200"></div>
-          <span>Deficit Phase</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-sm bg-green-100 border border-green-200"></div>
-          <span>Maintenance Phase</span>
-        </div>
-      </div>
-      
-      <Card className="bg-blue-50">
-        <CardContent className="p-4 text-sm">
-          <p className="font-medium mb-2">Upcoming Schedule</p>
-          <div className="space-y-1">
-            {schedule.slice(0, 5).map((day, index) => {
-              if (index === 0 || day.phaseType !== schedule[index - 1].phaseType) {
-                const date = addDays(startDate, day.day);
-                return (
-                  <div key={day.day} className="flex justify-between">
-                    <span>
-                      {day.phaseType === 'deficit' ? '🔻 Deficit phase' : '🟢 Maintenance phase'} starts
-                    </span>
-                    <span className="font-medium">{format(date, 'MMM d')}</span>
-                  </div>
-                );
-              }
-              return null;
-            }).filter(Boolean)}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

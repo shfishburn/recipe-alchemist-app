@@ -15,6 +15,7 @@ interface NutritionSummaryTextProps {
   carbsPercentage: number;
   fatPercentage: number;
   fiberPercentage: number;
+  unitSystem?: 'metric' | 'imperial';
 }
 
 export function NutritionSummaryText({
@@ -28,6 +29,7 @@ export function NutritionSummaryText({
   carbsPercentage,
   fatPercentage,
   fiberPercentage,
+  unitSystem = 'metric',
 }: NutritionSummaryTextProps) {
   const isMobile = useIsMobile();
   

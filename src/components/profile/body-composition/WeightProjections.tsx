@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { addDays, format } from 'date-fns';
 import { ChartContainer } from '@/components/ui/chart';
+import { convertWeightFromKg } from '@/utils/unit-conversion';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -13,6 +14,8 @@ interface WeightProjectionsProps {
 
 export function WeightProjections({ preferences }: WeightProjectionsProps) {
   const isMobile = useIsMobile();
+  const unitSystem = preferences.unitSystem || 'metric';
+  const weightUnit = unitSystem === 'metric' ? 'kg' : 'lbs';
   
   // Generate projection data based on current settings
   const generateProjectionData = React.useCallback(() => {
@@ -68,12 +71,21 @@ export function WeightProjections({ preferences }: WeightProjectionsProps) {
       
       // Only add data points for each week
       if (day % 7 === 0 || day === 84) {
+        // Convert all weight values to the selected unit system
+        const displayWeight = convertWeightFromKg(weight, unitSystem);
+        const displayFatMass = convertWeightFromKg(fatMass, unitSystem);
+        const displayLeanMass = convertWeightFromKg(leanMass, unitSystem);
+
         data.push({
           day,
           date: format(date, 'MMM d'),
-          weight: Math.round(weight * 10) / 10,
-          fatMass: Math.round(fatMass * 10) / 10,
-          leanMass: Math.round(leanMass * 10) / 10,
+          weight: Math.round(displayWeight * 10) / 10,
+          fatMass: Math.round(displayFatMass * 10) / 10,
+          leanMass: Math.round(displayLeanMass * 10) / 10,
+          // Store original values in kg for potential future conversions
+          weightKg: Math.round(weight * 10) / 10,
+          fatMassKg: Math.round(fatMass * 10) / 10,
+          leanMassKg: Math.round(leanMass * 10) / 10,
           tdee: Math.round(calculateTDEEForWeek(weekNumber)),
           adaptation: Math.round(calculateAdaptationForWeek(weekNumber) * 100)
         });
@@ -81,7 +93,7 @@ export function WeightProjections({ preferences }: WeightProjectionsProps) {
     }
     
     return data;
-  }, [preferences]);
+  }, [preferences, unitSystem]);
   
   const projectionData = React.useMemo(() => generateProjectionData(), [generateProjectionData]);
   
@@ -121,9 +133,13 @@ export function WeightProjections({ preferences }: WeightProjectionsProps) {
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="date" fontSize={12} />
-                  <YAxis fontSize={12} domain={['auto', 'auto']} />
+                  <YAxis 
+                    fontSize={12} 
+                    domain={['auto', 'auto']} 
+                    tickFormatter={(value) => `${value}`}
+                  />
                   <Tooltip 
-                    formatter={(value: number) => [`${value} kg`, undefined]}
+                    formatter={(value: number) => [`${value} ${weightUnit}`, undefined]}
                     labelFormatter={(label) => `Week ${Math.floor(projectionData.findIndex(d => d.date === label) / 2)}`}
                   />
                   <Legend />

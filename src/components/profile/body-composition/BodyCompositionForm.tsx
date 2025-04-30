@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BodyFatPercentileDisplay } from './BodyFatPercentileDisplay';
 import { WeightDisplay } from '@/components/ui/unit-display';
-import { kgToLbs } from '@/utils/unit-conversion';
+import { convertWeightToKg, convertWeightFromKg } from '@/utils/unit-conversion';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 
 interface BodyCompositionFormProps {
@@ -28,7 +28,7 @@ export function BodyCompositionForm({ preferences, onSave }: BodyCompositionForm
   });
 
   const weight = preferences.personalDetails?.weight || 0;
-  const displayWeight = unitSystem === 'imperial' ? kgToLbs(weight) : weight;
+  const displayWeight = convertWeightFromKg(weight, unitSystem);
   const weightUnit = unitSystem === 'metric' ? 'kg' : 'lbs';
   
   const bodyFatPercentage = watch('bodyFatPercentage');
@@ -61,8 +61,8 @@ export function BodyCompositionForm({ preferences, onSave }: BodyCompositionForm
   };
 
   // Convert lean mass and fat mass for display
-  const displayLeanMass = unitSystem === 'imperial' ? kgToLbs(Number(watch('leanMass') || 0)) : Number(watch('leanMass') || 0);
-  const displayFatMass = unitSystem === 'imperial' ? kgToLbs(Number(watch('fatMass') || 0)) : Number(watch('fatMass') || 0);
+  const displayLeanMass = convertWeightFromKg(Number(watch('leanMass') || 0), unitSystem);
+  const displayFatMass = convertWeightFromKg(Number(watch('fatMass') || 0), unitSystem);
 
   return (
     <Card>
@@ -98,7 +98,7 @@ export function BodyCompositionForm({ preferences, onSave }: BodyCompositionForm
                 <Input
                   id="weight"
                   type="number"
-                  value={displayWeight}
+                  value={displayWeight.toFixed(1)}
                   disabled
                   className="flex-1 bg-muted"
                 />
@@ -117,7 +117,7 @@ export function BodyCompositionForm({ preferences, onSave }: BodyCompositionForm
                   type="number"
                   step="0.1"
                   className="flex-1"
-                  value={displayLeanMass}
+                  value={displayLeanMass.toFixed(1)}
                   readOnly
                 />
                 <span>{weightUnit}</span>
@@ -132,7 +132,7 @@ export function BodyCompositionForm({ preferences, onSave }: BodyCompositionForm
                   type="number"
                   step="0.1"
                   className="flex-1"
-                  value={displayFatMass}
+                  value={displayFatMass.toFixed(1)}
                   readOnly
                 />
                 <span>{weightUnit}</span>

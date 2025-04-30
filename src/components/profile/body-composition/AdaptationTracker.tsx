@@ -3,6 +3,7 @@ import React from 'react';
 import { format, differenceInWeeks } from 'date-fns';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 import { calculateMetabolicAdaptation } from '@/utils/body-composition';
+import { WeightDisplay } from '@/components/ui/unit-display';
 
 interface AdaptationTrackerProps {
   preferences: NutritionPreferencesType;
@@ -11,6 +12,7 @@ interface AdaptationTrackerProps {
 export function AdaptationTracker({ preferences }: AdaptationTrackerProps) {
   const adaptationTracking = preferences.adaptationTracking || {};
   const weeksDieting = adaptationTracking.weeksDieting || 0;
+  const unitSystem = preferences.unitSystem || 'metric';
   
   // Calculate adaptation based on weeks dieting and weight loss
   const initialWeight = adaptationTracking.initialWeight || preferences.personalDetails?.weight;
@@ -63,7 +65,11 @@ export function AdaptationTracker({ preferences }: AdaptationTrackerProps) {
           {initialWeight && currentWeight && initialWeight > currentWeight && (
             <div className="flex justify-between">
               <span>Total weight loss</span>
-              <span>{(initialWeight - currentWeight).toFixed(1)} kg</span>
+              <WeightDisplay 
+                weightKg={initialWeight - currentWeight}
+                unitSystem={unitSystem}
+                decimals={1}
+              />
             </div>
           )}
           

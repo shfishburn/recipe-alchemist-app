@@ -9,9 +9,9 @@ import { NutritionHeader } from './nutrition/NutritionHeader';
 import { useNutritionData } from './nutrition/useNutritionData';
 import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { useUnitSystem } from '@/hooks/use-unit-system';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -44,7 +44,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   const updatedUserPreferences = userPreferences ? {
     ...userPreferences,
     unitSystem: userPreferences.unitSystem || unitSystem
-  } : undefined;
+  } : { unitSystem };
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>

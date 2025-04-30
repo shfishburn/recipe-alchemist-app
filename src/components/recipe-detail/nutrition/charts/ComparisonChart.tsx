@@ -1,166 +1,78 @@
 
-import React, { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { ChartContainer } from '@/components/ui/chart';
-import { 
-  BarChart, 
-  CartesianGrid, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Legend, 
-  Bar, 
-  LabelList,
-  Cell,
-  ReferenceLine
-} from 'recharts';
-import { ChartTooltip } from './ChartTooltip';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React from 'react';
+import { HorizontalBarChart } from './HorizontalBarChart';
+import { NutritionSummaryText } from './NutritionSummaryText';
 
 interface ComparisonChartProps {
-  compareData: Array<{
+  compareData: {
     name: string;
     Recipe: number;
     Target: number;
     percentage: number;
-    fill: string;
-  }>;
+  }[];
+  unitSystem?: 'metric' | 'imperial';
 }
 
-export function ComparisonChart({ compareData }: ComparisonChartProps) {
-  const isMobile = useIsMobile();
+export function ComparisonChart({ compareData, unitSystem = 'metric' }: ComparisonChartProps) {
+  // Extract macronutrient data for summary display
+  const proteinData = compareData.find(item => item.name === 'Protein');
+  const carbsData = compareData.find(item => item.name === 'Carbs');
+  const fatData = compareData.find(item => item.name === 'Fat');
   
-  // Memoize formatters to avoid recreating functions on each render
-  const formatYAxisTick = useMemo(() => (value: any) => {
-    return value;
-  }, []);
+  // Add fiber data if it exists, otherwise use default values
+  const fiberData = {
+    Recipe: 0,
+    Target: 25,
+    percentage: 0
+  };
   
-  const formatAxisValue = useMemo(() => (value: any) => {
-    return `${value}g`;
-  }, []);
-
-  const formatPercentage = useMemo(() => (value: number, entry: any) => {
-    if (!entry || !entry.payload) return '';
-    const percentage = entry.payload.percentage;
-    return `${percentage}%`;
-  }, []);
-
-  // Memoize chart config to prevent unnecessary recalculations
-  const chartConfig = useMemo(() => ({
-    protein: { color: '#9b87f5' },
-    carbs: { color: '#0EA5E9' },
-    fat: { color: '#22c55e' },
-  }), []);
-
-  // Pre-calculate ticks for Y axis
-  const yAxisTicks = useMemo(() => [0, 25, 50, 75, 100, 125, 150, 175, 200], []);
-
+  // Calculate calories
+  const caloriesFromProtein = (proteinData?.Recipe || 0) * 4;
+  const caloriesFromCarbs = (carbsData?.Recipe || 0) * 4;
+  const caloriesFromFat = (fatData?.Recipe || 0) * 9;
+  const totalCalories = caloriesFromProtein + caloriesFromCarbs + caloriesFromFat;
+  const dailyCalories = 2000; // Default daily calories
+  
   return (
-    <div className="h-full">
-      <ChartContainer 
-        config={chartConfig} 
-        className={`${isMobile ? 'h-56' : 'h-64'} w-full`}
-      >
-        <BarChart 
-          data={compareData}
-          barGap={2}
-          barCategoryGap={isMobile ? "15%" : "25%"}
-          margin={{ top: 5, right: 30, left: 10, bottom: 25 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="name" 
-            fontSize={isMobile ? 12 : 13}
-            tickLine={true}
-            axisLine={true}
-            fontWeight={500}
-          />
-          <YAxis 
-            tickFormatter={formatYAxisTick}
-            fontSize={isMobile ? 11 : 12}
-            ticks={yAxisTicks}
-            domain={[0, 'auto']}
-            label={{ 
-              value: 'grams', 
-              angle: -90, 
-              position: 'insideLeft',
-              style: { fontSize: isMobile ? 10 : 12, textAnchor: 'middle' } 
-            }}
-          />
-          <Tooltip content={props => <ChartTooltip {...props} />} />
-          <Legend 
-            wrapperStyle={{ 
-              paddingTop: 10,
-              fontSize: isMobile ? 11 : 13
-            }}
-            iconSize={isMobile ? 8 : 10}
-            iconType="circle"
-          />
-          
-          {/* Recipe amount bars */}
-          <Bar 
-            dataKey="Recipe" 
-            name="Recipe Amount" 
-            fill="#4f46e5"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={isMobile ? 40 : 60}
-          >
-            {compareData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} />
-            ))}
-            <LabelList 
-              dataKey="Recipe" 
-              position="top"
-              formatter={formatAxisValue}
-              style={{ fontSize: isMobile ? 10 : 11, fontWeight: 500, fill: '#333' }}
-            />
-            <LabelList 
-              dataKey="Recipe" 
-              position="insideTop"
-              formatter={formatPercentage}
-              style={{ 
-                fontSize: isMobile ? 9 : 10, 
-                fontWeight: 600, 
-                fill: '#fff',
-                textAnchor: 'middle'
-              }}
-            />
-          </Bar>
-          
-          {/* Target amount bars */}
-          <Bar 
-            dataKey="Target" 
-            name="Daily Target" 
-            fill="#94a3b8" 
-            radius={[4, 4, 0, 0]}
-            maxBarSize={isMobile ? 40 : 60}
-            opacity={0.7}
-          >
-            <LabelList 
-              dataKey="Target" 
-              position="top"
-              formatter={formatAxisValue}
-              style={{ fontSize: isMobile ? 10 : 11, fontWeight: 500, fill: '#666' }}
-            />
-          </Bar>
-          
-          {/* Add reference lines for recommended ranges */}
-          {compareData.map((entry, index) => (
-            <ReferenceLine
-              key={`ref-${index}`}
-              segment={[
-                { x: entry.name, y: entry.Target * 0.8 },  
-                { x: entry.name, y: entry.Target * 1.2 }   
-              ]}
-              stroke="#F97316"
-              strokeWidth={2}
-              strokeDasharray="3 3"
-              ifOverflow="extendDomain"
-              className="reference-optimal-range"
-            />
-          ))}
-        </BarChart>
-      </ChartContainer>
+    <div className="space-y-6">
+      {/* Percentage of daily target chart */}
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium mb-2">% of Daily Targets</h3>
+        <HorizontalBarChart 
+          data={compareData.map(item => ({
+            ...item,
+            value: `${item.percentage}%` // Pre-formatted value
+          }))} 
+          showPercentage={true}
+          showValue={true}
+          height={140}
+        />
+      </div>
+      
+      {/* Recipe vs. Target chart */}
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium mb-2">Recipe vs. Daily Targets</h3>
+        <HorizontalBarChart 
+          data={compareData} 
+          showPercentage={false}
+          height={140}
+        />
+      </div>
+      
+      {/* Text summary */}
+      <NutritionSummaryText
+        calories={Math.round(totalCalories)}
+        protein={proteinData?.Recipe || 0}
+        carbs={carbsData?.Recipe || 0} 
+        fat={fatData?.Recipe || 0}
+        fiber={fiberData.Recipe}
+        caloriesPercentage={Math.round((totalCalories / dailyCalories) * 100)}
+        proteinPercentage={proteinData?.percentage || 0}
+        carbsPercentage={carbsData?.percentage || 0}
+        fatPercentage={fatData?.percentage || 0}
+        fiberPercentage={fiberData.percentage}
+        unitSystem={unitSystem}
+      />
     </div>
   );
 }
