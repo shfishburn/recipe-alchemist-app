@@ -30,8 +30,18 @@ export const ChartTooltip = ({
   const nutrientColor = NUTRITION_COLORS[nutrientName.toLowerCase() as keyof typeof NUTRITION_COLORS] || '#64748b';
   const nutrientInfo = NUTRIENT_INFO[nutrientName.toLowerCase() as keyof typeof NUTRIENT_INFO];
 
-  // Convert units based on unitSystem
-  const unitLabel = unitSystem === 'metric' ? 'g' : 'g'; // Currently weight units remain the same
+  // Determine unit label based on nutrient type and unit system
+  let unitLabel = 'g';
+  
+  // Check if this is a micronutrient that uses mg or µg
+  if (nutrientInfo && 'unit' in nutrientInfo) {
+    unitLabel = nutrientInfo.unit;
+  } else if (unitSystem === 'imperial' && 
+            ['protein', 'carbs', 'fat'].includes(nutrientName.toLowerCase())) {
+    // For macronutrients in imperial, we could potentially convert to oz, but
+    // nutritional values are typically still shown in grams even in imperial systems
+    unitLabel = 'g';
+  }
 
   return (
     <div className="bg-white p-3 border border-gray-200 rounded-md shadow-lg">
