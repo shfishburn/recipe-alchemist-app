@@ -9,16 +9,26 @@ export interface QuickRecipeFormData {
   mainIngredient: string;
 }
 
+export interface Ingredient {
+  qty: number;
+  unit: string;
+  shop_size_qty: number;
+  shop_size_unit: string;
+  item: string;
+  notes: string;
+}
+
 export interface QuickRecipe {
   title: string;
   description: string;
-  ingredients: string[];
+  ingredients: Ingredient[];
   steps: string[];
   prepTime: number;
   cookTime: number;
   nutritionHighlight: string;
   cookingTip: string;
   cuisineType?: string;
+  calorie_check_pass?: boolean;
 }
 
 export const useQuickRecipe = () => {
