@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -217,7 +216,13 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       if (error) throw error;
       
       console.log("Login successful:", data);
-      if (onSuccess) {
+      
+      // Check for redirect path in sessionStorage first, then use onSuccess or navigate to home
+      const redirectPath = sessionStorage.getItem('redirectPath');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectPath');
+        navigate(redirectPath);
+      } else if (onSuccess) {
         onSuccess();
       } else {
         navigate('/');

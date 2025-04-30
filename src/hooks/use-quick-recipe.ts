@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +46,7 @@ export const useQuickRecipe = () => {
     isLoading: storeIsLoading, 
     setRecipe, 
     setLoading, 
+    setError,
     setFormData 
   } = useQuickRecipeStore();
 
@@ -52,6 +54,7 @@ export const useQuickRecipe = () => {
     try {
       setIsLocalLoading(true);
       setLoading(true);
+      setError(null); // Clear any previous errors
       setFormData(formData);
       
       console.log('Starting quick recipe generation with form data:', formData);
@@ -66,12 +69,14 @@ export const useQuickRecipe = () => {
 
       if (error) {
         console.error('Edge function error:', error);
-        throw new Error(`Failed to generate recipe: ${error.message}`);
+        setError(`Failed to generate recipe: ${error.message}`);
+        return null;
       }
 
       if (!data) {
         console.error('No recipe data received');
-        throw new Error('No recipe data received');
+        setError('No recipe data received from server');
+        return null;
       }
       
       console.log('Recipe generated successfully:', data);
@@ -87,8 +92,9 @@ export const useQuickRecipe = () => {
       // Update both local state and store
       setRecipe(enhancedRecipe);
       return enhancedRecipe;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating recipe:', error);
+      setError(error.message || "Something went wrong. Please try again.");
       toast({
         title: "Recipe generation failed",
         description: error.message || "Something went wrong. Please try again.",

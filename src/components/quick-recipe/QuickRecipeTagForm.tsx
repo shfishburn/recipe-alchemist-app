@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Heart, LeafyGreen } from 'lucide-react';
+import { CookingPot, ArrowRight, Carrot, WheatOff, MilkOff, Heart, LeafyGreen, Search } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +44,17 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   const isMobile = useIsMobile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  
+  // Create a pulsing effect for the textarea to draw attention
+  const [isPulsing, setIsPulsing] = useState(true);
+
+  // Stop the pulsing after a few seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPulsing(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Auto-resize textarea based on content
   useEffect(() => {
@@ -121,24 +132,28 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 w-full mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-5 w-full mx-auto">
       <div className="space-y-4">
         <div className="space-y-1">
           <div className="text-center text-xs text-muted-foreground mb-1">
             Ready in 30 mins • Easy cleanup • Ingredient-based
           </div>
-          <label htmlFor="mainIngredient" className="text-sm font-medium">
-            Ingredients or meal ideas:
+          <label htmlFor="mainIngredient" className="text-sm font-medium block pb-1 text-center sm:text-left">
+            What ingredients do you have today?
           </label>
-          <Textarea 
-            id="mainIngredient"
-            ref={textareaRef}
-            placeholder="e.g., chicken thighs, pasta, tacos, stir-fry..."
-            value={formData.mainIngredient}
-            onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
-            className={`${isMobile ? "min-h-[48px]" : "min-h-[56px]"} text-center resize-none overflow-hidden transition-all`}
-            rows={1}
-          />
+          <div className={`relative ${isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : ''} rounded-md shadow-sm bg-gradient-to-r from-white to-blue-50 dark:from-gray-900 dark:to-gray-800`}>
+            <Textarea 
+              id="mainIngredient"
+              ref={textareaRef}
+              placeholder="e.g., chicken thighs, pasta, bell peppers, onions..."
+              value={formData.mainIngredient}
+              onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
+              className={`${isMobile ? "min-h-[54px] text-base" : "min-h-[60px] text-lg"} pl-10 text-center resize-none overflow-hidden transition-all bg-transparent border-2 focus-within:border-recipe-blue placeholder:text-gray-500`}
+              rows={1}
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-recipe-blue" />
+          </div>
+          <p className="text-xs text-center text-recipe-blue font-medium">Tell us what you want to cook with!</p>
         </div>
 
         <div className="space-y-2 w-full">

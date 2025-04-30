@@ -69,12 +69,16 @@ const ProfilePage = () => {
         
         // Set nutrition preferences if available
         if (data.nutrition_preferences) {
-          // Fixed: Using type assertion instead of spread on potentially non-object value
-          const nutritionData = data.nutrition_preferences as NutritionPreferencesType;
-          setNutritionPreferences({
-            ...nutritionPreferences,
-            ...nutritionData
-          });
+          try {
+            // Convert nutrition_preferences to NutritionPreferencesType using type assertion
+            const nutritionData = data.nutrition_preferences as unknown as NutritionPreferencesType;
+            setNutritionPreferences({
+              ...nutritionPreferences,
+              ...nutritionData
+            });
+          } catch (err) {
+            console.error('Error parsing nutrition preferences:', err);
+          }
         }
       } catch (err) {
         console.error('Profile fetch error:', err);
