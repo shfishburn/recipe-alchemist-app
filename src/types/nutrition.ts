@@ -10,6 +10,7 @@ export interface NutritionPreferencesType {
   allergens: string[];
   healthGoal: string;
   mealSizePreference: string;
+  unitSystem?: 'metric' | 'imperial'; // Added unit system preference
   macroDetails?: {
     complexCarbs: number;
     simpleCarbs: number;

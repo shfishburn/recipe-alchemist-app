@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProfileBasicInfoProps {
   user: User;
@@ -17,22 +18,35 @@ interface ProfileBasicInfoProps {
 
 export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicInfoProps) {
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm({
     defaultValues: {
       username: profileData?.username || '',
       weight_goal_type: profileData?.weight_goal_type || 'maintenance',
-      weight_goal_deficit: profileData?.weight_goal_deficit || 0
+      weight_goal_deficit: profileData?.weight_goal_deficit || 0,
+      unitSystem: (profileData?.nutrition_preferences?.unitSystem as 'metric' | 'imperial') || 'metric'
     }
   });
 
+  const unitSystem = watch('unitSystem');
+  
   const onSubmit = async (data: any) => {
     try {
+      // Get current nutrition preferences
+      const currentPrefs = profileData?.nutrition_preferences || {};
+      
+      // Update nutrition preferences with unit system
+      const updatedPrefs = {
+        ...currentPrefs,
+        unitSystem: data.unitSystem
+      };
+      
       const { error } = await supabase
         .from('profiles')
         .update({
           username: data.username,
           weight_goal_type: data.weight_goal_type,
-          weight_goal_deficit: parseInt(data.weight_goal_deficit) || 0
+          weight_goal_deficit: parseInt(data.weight_goal_deficit) || 0,
+          nutrition_preferences: updatedPrefs
         })
         .eq('id', user.id);
         
@@ -46,7 +60,11 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
         return;
       }
       
-      onUpdate(data);
+      onUpdate({
+        ...data,
+        nutrition_preferences: updatedPrefs
+      });
+      
       toast({
         title: 'Success',
         description: 'Profile updated successfully',
@@ -59,6 +77,10 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
         variant: 'destructive'
       });
     }
+  };
+
+  const handleUnitSystemChange = (value: 'metric' | 'imperial') => {
+    setValue('unitSystem', value);
   };
 
   return (
@@ -109,6 +131,25 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
               />
               <p className="text-xs text-muted-foreground">
                 Calories to add/subtract per day (positive for gain, negative for loss)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unitSystem">Preferred Unit System</Label>
+              <Select 
+                onValueChange={handleUnitSystemChange} 
+                defaultValue={unitSystem}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select unit system" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="metric">Metric (kg, cm)</SelectItem>
+                  <SelectItem value="imperial">Imperial (lb, ft/in)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                This setting affects how measurements are displayed throughout the app
               </p>
             </div>
           </div>

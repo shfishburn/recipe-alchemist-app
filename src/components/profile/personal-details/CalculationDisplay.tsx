@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { formatWeight } from '@/utils/unit-conversion';
 
 interface CalculationDisplayProps {
   bmr: number;
@@ -9,6 +10,7 @@ interface CalculationDisplayProps {
   projectedWeightLossPerWeek: number;
   adaptedTDEE?: number;
   hasAdaptation?: boolean;
+  unitSystem?: 'metric' | 'imperial';
 }
 
 export function CalculationDisplay({ 
@@ -18,8 +20,14 @@ export function CalculationDisplay({
   deficit, 
   projectedWeightLossPerWeek,
   adaptedTDEE,
-  hasAdaptation
+  hasAdaptation,
+  unitSystem = 'metric'
 }: CalculationDisplayProps) {
+  // Format projected weight loss with the correct unit
+  const formattedWeightLoss = unitSystem === 'metric' 
+    ? `${projectedWeightLossPerWeek.toFixed(1)} kg` 
+    : `${(projectedWeightLossPerWeek * 2.20462).toFixed(1)} lbs`;
+
   return (
     <div className="p-4 bg-blue-50 rounded-md space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -53,7 +61,7 @@ export function CalculationDisplay({
           {deficit > 0 && (
             <div className="text-sm text-muted-foreground">
               <p>Calorie Deficit: {deficit} calories per day</p>
-              <p>Projected Weight Loss: {projectedWeightLossPerWeek.toFixed(1)} lbs per week</p>
+              <p>Projected Weight Loss: {formattedWeightLoss} per week</p>
             </div>
           )}
           {deficit < 0 && (
