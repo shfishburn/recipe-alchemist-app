@@ -142,6 +142,24 @@ export function readCsvFile(file: File): Promise<string> {
   });
 }
 
+// Updated SR28 column mappings to match your specific format
+export const sr28Mappings = {
+  food_code: 'food_code',
+  food_name: 'food_name',
+  calories: 'calories',
+  protein_g: 'protein_(g)',
+  carbs_g: 'carbs_g',
+  fat_g: 'fat_g',
+  fiber_g: 'fiber_g',
+  sugar_g: 'sugar_g',
+  sodium_mg: 'sodium_mg',
+  cholesterol_mg: 'cholesterol_mg',
+  gmwt_1: 'GmWt_1',
+  gmwt_desc1: 'GmWt_Desc1',
+  gmwt_2: 'GmWt_2',
+  gmwt_desc2: 'GmWt_Desc2'
+};
+
 /**
  * Function to validate a CSV file before import
  */
@@ -164,34 +182,15 @@ export function validateCsvFormat(
     .split(',')
     .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
   
-  // Check if this is SR28 format
-  const sr28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
+  // Check if this is SR28 format - updated to match your format
+  const sr28Columns = ['food_code', 'food_name', 'calories', 'protein_(g)', 'fat_g'];
   const isSR28 = sr28Columns.some(col => columns.includes(col)) &&
-                 (columns.includes('NDB_No') || columns.includes('Shrt_Desc'));
+                 columns.includes('food_code');
   
   if (isSR28) {
-    // For SR28 format, we have special mappings
-    const sr28MappedColumns = {
-      'food_code': 'NDB_No',
-      'food_name': 'Shrt_Desc',
-      'calories': 'Energ_Kcal',
-      'protein_g': 'Protein_(g)',
-      'carbs_g': 'Carbohydrt_(g)',
-      'fat_g': 'Lipid_Tot_(g)',
-      'fiber_g': 'Fiber_TD_(g)',
-      'sugar_g': 'Sugar_Tot_(g)',
-      'sodium_mg': 'Sodium_(mg)',
-      'vitamin_a_iu': 'Vit_A_IU',
-      'vitamin_c_mg': 'Vit_C_(mg)',
-      'vitamin_d_iu': 'Vit_D_IU',
-      'calcium_mg': 'Calcium_(mg)',
-      'iron_mg': 'Iron_(mg)',
-      'potassium_mg': 'Potassium_(mg)'
-    };
-    
-    // Check for required columns in SR28 format
+    // For SR28 format, we use the direct mappings since column names already match
     const missingColumns = requiredColumns.filter(col => {
-      const sr28Column = sr28MappedColumns[col as keyof typeof sr28MappedColumns];
+      const sr28Column = sr28Mappings[col as keyof typeof sr28Mappings];
       return sr28Column ? !columns.includes(sr28Column) : !columns.includes(col);
     });
     
@@ -229,10 +228,10 @@ export function isSR28Format(csvData: string): boolean {
     .split(',')
     .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
   
-  // Check for key SR28 columns
-  const sr28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal', 'Protein_(g)', 'Lipid_Tot_(g)'];
+  // Check for key SR28 columns based on your format
+  const sr28Columns = ['food_code', 'food_name', 'calories', 'protein_(g)', 'fat_g'];
   // If it has at least 3 of these columns, it's likely SR28 format
   const matchCount = sr28Columns.filter(col => columns.includes(col)).length;
   
-  return matchCount >= 3 && columns.includes('NDB_No');
+  return matchCount >= 3 && columns.includes('food_code');
 }

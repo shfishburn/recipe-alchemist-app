@@ -6,7 +6,8 @@ const validationSchemas = {
   [TableType.USDA_FOODS]: {
     required: ['food_code', 'food_name'],
     numeric: ['calories', 'protein_g', 'carbs_g', 'fat_g', 'fiber_g', 'sugar_g', 'sodium_mg', 
-              'vitamin_a_iu', 'vitamin_c_mg', 'vitamin_d_iu', 'calcium_mg', 'iron_mg', 'potassium_mg']
+              'vitamin_a_iu', 'vitamin_c_mg', 'vitamin_d_iu', 'calcium_mg', 'iron_mg', 'potassium_mg',
+              'cholesterol_mg', 'gmwt_1', 'gmwt_2']
   },
   [TableType.UNIT_CONVERSIONS]: {
     required: ['food_category', 'from_unit', 'to_unit', 'conversion_factor'],
@@ -18,31 +19,36 @@ const validationSchemas = {
   }
 };
 
-// SR28 column mappings to our database columns
+// SR28 column mappings to our database columns - updated for your format
 export const sr28Mappings = {
-  food_code: 'NDB_No',
-  food_name: 'Shrt_Desc',
-  calories: 'Energ_Kcal',
-  protein_g: 'Protein_(g)',
-  carbs_g: 'Carbohydrt_(g)',
-  fat_g: 'Lipid_Tot_(g)',
-  fiber_g: 'Fiber_TD_(g)',
-  sugar_g: 'Sugar_Tot_(g)',
-  sodium_mg: 'Sodium_(mg)',
-  vitamin_a_iu: 'Vit_A_IU',
-  vitamin_c_mg: 'Vit_C_(mg)',
-  vitamin_d_iu: 'Vit_D_IU',
-  calcium_mg: 'Calcium_(mg)',
-  iron_mg: 'Iron_(mg)',
-  potassium_mg: 'Potassium_(mg)'
+  food_code: 'food_code',
+  food_name: 'food_name',
+  calories: 'calories',
+  protein_g: 'protein_(g)',
+  carbs_g: 'carbs_g',
+  fat_g: 'fat_g',
+  fiber_g: 'fiber_g',
+  sugar_g: 'sugar_g',
+  sodium_mg: 'sodium_mg',
+  vitamin_a_iu: 'vit_a_iu',
+  vitamin_c_mg: 'vit_c_(mg)',
+  vitamin_d_iu: 'vit_d_iu',
+  calcium_mg: 'calcium_(mg)',
+  iron_mg: 'iron_(mg)',
+  potassium_mg: 'potassium_(mg)',
+  cholesterol_mg: 'cholesterol_mg',
+  gmwt_1: 'GmWt_1',
+  gmwt_desc1: 'GmWt_Desc1', 
+  gmwt_2: 'GmWt_2',
+  gmwt_desc2: 'GmWt_Desc2'
 };
 
 // Function to check if the CSV is in SR28 format
 export function isSR28Format(headers: string[]): boolean {
-  // SR28 key columns - if we find at least 3 of these, it's likely SR28
-  const sr28KeyColumns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal', 'Protein_(g)', 'Lipid_Tot_(g)'];
+  // SR28 key columns - updated for your format
+  const sr28KeyColumns = ['food_code', 'food_name', 'calories', 'protein_(g)', 'fat_g'];
   const matchCount = sr28KeyColumns.filter(col => headers.includes(col)).length;
-  return matchCount >= 3 && headers.includes('NDB_No');
+  return matchCount >= 3 && headers.includes('food_code');
 }
 
 // Function to validate data based on table type
@@ -95,9 +101,9 @@ export function mapSR28ToStandardFormat(row: any): Record<string, any> {
   }
   
   // Additional mappings 
-  if (row['NDB_No']) mappedRow.food_code = row['NDB_No'];
-  if (row['Shrt_Desc']) mappedRow.food_name = row['Shrt_Desc'];
-  if (row['Shrt_Desc']) mappedRow.food_category = extractFoodCategory(row['Shrt_Desc']);
+  if (row['food_code']) mappedRow.food_code = row['food_code'];
+  if (row['food_name']) mappedRow.food_name = row['food_name'];
+  if (row['food_name']) mappedRow.food_category = extractFoodCategory(row['food_name']);
   
   return mappedRow;
 }
@@ -127,7 +133,7 @@ function extractFoodCategory(desc: string): string {
   return 'other';
 }
 
-// Function to normalize USDA food data
+// Function to normalize USDA food data - updated with new fields
 export function normalizeUsdaFoodData(row: any, isSR28 = false): Record<string, any> {
   const mappedRow = isSR28 ? mapSR28ToStandardFormat(row) : row;
   
@@ -147,7 +153,12 @@ export function normalizeUsdaFoodData(row: any, isSR28 = false): Record<string, 
     vitamin_d_iu: mappedRow.vitamin_d_iu ? Number(mappedRow.vitamin_d_iu) : null,
     calcium_mg: mappedRow.calcium_mg ? Number(mappedRow.calcium_mg) : null,
     iron_mg: mappedRow.iron_mg ? Number(mappedRow.iron_mg) : null,
-    potassium_mg: mappedRow.potassium_mg ? Number(mappedRow.potassium_mg) : null
+    potassium_mg: mappedRow.potassium_mg ? Number(mappedRow.potassium_mg) : null,
+    cholesterol_mg: mappedRow.cholesterol_mg ? Number(mappedRow.cholesterol_mg) : null,
+    gmwt_1: mappedRow.gmwt_1 ? Number(mappedRow.gmwt_1) : null,
+    gmwt_desc1: mappedRow.gmwt_desc1 || null,
+    gmwt_2: mappedRow.gmwt_2 ? Number(mappedRow.gmwt_2) : null,
+    gmwt_desc2: mappedRow.gmwt_desc2 || null
   };
 }
 

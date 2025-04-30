@@ -17,9 +17,9 @@ const REQUIRED_COLUMNS = {
   [UsdaTableType.YIELD_FACTORS]: ['food_category', 'cooking_method', 'yield_factor']
 };
 
-// SR28 columns mapping
+// SR28 columns mapping - updated for your format
 const SR28_REQUIRED_COLUMNS = {
-  [UsdaTableType.USDA_FOODS]: ['NDB_No', 'Shrt_Desc']
+  [UsdaTableType.USDA_FOODS]: ['food_code', 'food_name']
 };
 
 export function useDataImport() {
