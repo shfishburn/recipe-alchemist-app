@@ -41,7 +41,8 @@ export const NUTRIENT_INFO: Record<string, NutrientInfoType> = {
     },
     calories: {
         name: 'Calories',
-        description: 'Total energy content of food'
+        description: 'Total energy content of food',
+        unit: 'kcal'
     },
     fiber: {
         name: 'Fiber',
