@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useAuth } from '@/hooks/use-auth';
+import { Json } from '@/integrations/supabase/types';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -30,14 +31,14 @@ export const useQuickRecipeSave = () => {
       const recipeData = {
         title: recipe.title,
         tagline: recipe.description, // Map description to tagline
-        ingredients: recipe.ingredients,
+        ingredients: recipe.ingredients as unknown as Json,
         instructions: recipe.steps,
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: recipe.cuisineType,
         dietary: recipe.dietaryType,
         cooking_tip: recipe.cookingTip,
-        science_notes: recipe.scienceNotes || [],
+        science_notes: recipe.scienceNotes as unknown as Json || [],
         servings: recipe.servings || 2,
         user_id: user.id // Add the user_id to the recipe data
       };
