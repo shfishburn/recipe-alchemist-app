@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,10 +7,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
+import { Database } from 'lucide-react';
 
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
   const { isOpen, open, close } = useAuthDrawer();
+
+  // Check if user is an admin (for now, all authenticated users can access this)
+  // In a real app, you'd check for a specific role or permission
+  const isAdmin = !!session;
 
   const navigationLinks = [
     { name: 'My Kitchen', path: '/recipes', requiresAuth: false },
@@ -18,6 +24,11 @@ export function Navbar({ className }: { className?: string }) {
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
     { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];
+  
+  // Add Data Import link for admins
+  if (isAdmin) {
+    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true });
+  }
 
   // Filter links based on authentication status
   const displayedLinks = navigationLinks.filter(
@@ -44,8 +55,9 @@ export function Navbar({ className }: { className?: string }) {
             <Link 
               key={link.path} 
               to={link.path} 
-              className="text-sm font-medium hover:text-primary transition-colors"
+              className="text-sm font-medium hover:text-primary transition-colors flex items-center"
             >
+              {link.name === 'Data Import' && <Database className="h-4 w-4 mr-1" />}
               {link.name}
             </Link>
           ))}

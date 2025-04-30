@@ -27,6 +27,7 @@ const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const About = lazy(() => import("./pages/About"));
 const QuickRecipePage = lazy(() => import("./pages/QuickRecipePage"));
+const DataImport = lazy(() => import("./pages/DataImport"));
 
 // Default loading fallback for lazy-loaded components
 const PageLoadingFallback = () => (
@@ -136,6 +137,16 @@ const App = () => (
                     <PrivateRoute>
                       <Suspense fallback={<PageLoadingFallback />}>
                         <Favorites />
+                      </Suspense>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/data-import"
+                  element={
+                    <PrivateRoute>
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <DataImport />
                       </Suspense>
                     </PrivateRoute>
                   }

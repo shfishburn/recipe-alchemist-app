@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,12 +11,15 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Database, Menu } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
+  
+  // Check if user is an admin (for now, all authenticated users can access this)
+  const isAdmin = !!session;
 
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
@@ -25,6 +29,11 @@ export function MobileMenu() {
     { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
     { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];
+
+  // Add Data Import link for admins
+  if (isAdmin) {
+    navigationLinks.push({ name: 'Data Import', path: '/data-import', requiresAuth: true });
+  }
 
   // Filter links based on authentication status
   const displayedLinks = navigationLinks.filter(
@@ -56,8 +65,9 @@ export function MobileMenu() {
             <Link 
               key={link.path} 
               to={link.path} 
-              className="text-sm font-medium hover:text-primary transition-colors"
+              className="text-sm font-medium hover:text-primary transition-colors flex items-center"
             >
+              {link.name === 'Data Import' && <Database className="h-4 w-4 mr-2" />}
               {link.name}
             </Link>
           ))}
