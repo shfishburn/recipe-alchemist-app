@@ -42,6 +42,9 @@ export interface NutritionPreferencesType {
     fatMass?: number;
   };
   activityComponents?: {
+    activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+    nonExerciseActivity?: 'minimal' | 'low' | 'moderate' | 'high' | 'very_high';
+    exerciseIntensity?: 'light' | 'moderate' | 'challenging' | 'intense' | 'extreme';
     occupation?: string;
     dailyMovement?: string;
     structuredExercise?: string;
@@ -79,4 +82,14 @@ export interface NutritionPreferencesType {
     metabolicAdaptation?: Array<{date: string; adaptationPercentage: number}>;
     tdeeProjection?: Array<{date: string; tdee: number}>;
   };
+}
+
+export function isNutritionPreferences(obj: any): obj is NutritionPreferencesType {
+  return obj && 
+    typeof obj === 'object' && 
+    'macroSplit' in obj && 
+    typeof obj.macroSplit === 'object' &&
+    'protein' in obj.macroSplit &&
+    'carbs' in obj.macroSplit &&
+    'fat' in obj.macroSplit;
 }

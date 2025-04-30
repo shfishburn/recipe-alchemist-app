@@ -24,7 +24,11 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { shoppingLists, isFetching, fetchShoppingLists } = useShoppingLists();
-  const { isLoading, createNewList, addToExistingList } = useShoppingListActions(recipe);
+  const { 
+    createNewList, 
+    addToExistingList, 
+    isLoading 
+  } = useShoppingListActions(recipe);
   
   useEffect(() => {
     if (sheetOpen) {

@@ -5,15 +5,239 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
-import { ShoppingItem } from './types';
+import { ShoppingItem } from '@/components/quick-recipe/shopping-list/types';
 import { Ingredient } from '@/types/recipe';
 
-export function useShoppingListActions() {
+export function useShoppingListActions(recipe: any = null) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isAddingToList, setIsAddingToList] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Add recipe ingredients to shopping list
+  // Create a new shopping list
+  const createNewList = async (listName: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Not signed in",
+          description: "Please sign in to add items to your shopping list",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (!recipe) {
+        toast({
+          title: "Recipe required",
+          description: "No recipe provided to add to shopping list",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      setIsLoading(true);
+      
+      // Transform ingredients to shopping items
+      const shoppingItems = recipe.ingredients.map((ingredient: any): ShoppingItem => {
+        // Skip string ingredients
+        if (typeof ingredient === 'string') {
+          return {
+            text: ingredient,
+            checked: false,
+            originalIngredient: undefined,
+            department: 'Other',
+          };
+        }
+        
+        // Handle structured ingredients
+        const itemName = typeof ingredient.item === 'string' 
+          ? ingredient.item 
+          : ingredient.item?.item || 'Unknown item';
+        
+        // Convert recipe units to shopping units
+        const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
+        
+        // Format the ingredient text
+        const text = formatIngredient({
+          ...ingredient,
+          qty: shoppingQty.qty,
+          unit: shoppingQty.unit
+        });
+        
+        // Determine department based on ingredient name
+        const department = getDepartmentForIngredient(itemName);
+        
+        return {
+          text,
+          checked: false,
+          originalIngredient: ingredient, // Store the original ingredient data
+          department,
+          quantity: shoppingQty.qty,
+          unit: shoppingQty.unit,
+          item: itemName,
+          notes: ingredient.notes,
+        };
+      });
+      
+      // Create new shopping list
+      const { data: newList, error: createError } = await supabase
+        .from('shopping_lists')
+        .insert([{
+          title: listName,
+          user_id: user.id,
+          items: shoppingItems,
+        }])
+        .select();
+        
+      if (createError) {
+        throw createError;
+      }
+      
+      toast({
+        title: "Created new shopping list",
+        description: `Added ${shoppingItems.length} items to a new shopping list`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error creating shopping list:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create shopping list",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Add to existing list
+  const addToExistingList = async (listId: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Not signed in",
+          description: "Please sign in to add items to your shopping list",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (!recipe) {
+        toast({
+          title: "Recipe required",
+          description: "No recipe provided to add to shopping list",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      setIsLoading(true);
+      
+      // Get the current list
+      const { data: currentList, error: listError } = await supabase
+        .from('shopping_lists')
+        .select('id, items')
+        .eq('id', listId)
+        .single();
+        
+      if (listError) {
+        throw listError;
+      }
+      
+      // Transform ingredients to shopping items
+      const shoppingItems = recipe.ingredients.map((ingredient: any): ShoppingItem => {
+        // Handle string ingredients
+        if (typeof ingredient === 'string') {
+          return {
+            text: ingredient,
+            checked: false,
+            originalIngredient: undefined,
+            department: 'Other',
+          };
+        }
+        
+        // Handle structured ingredients
+        const itemName = typeof ingredient.item === 'string' 
+          ? ingredient.item 
+          : ingredient.item?.item || 'Unknown item';
+        
+        // Convert recipe units to shopping units
+        const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
+        
+        // Format the ingredient text
+        const text = formatIngredient({
+          ...ingredient,
+          qty: shoppingQty.qty,
+          unit: shoppingQty.unit
+        });
+        
+        // Determine department based on ingredient name
+        const department = getDepartmentForIngredient(itemName);
+        
+        return {
+          text,
+          checked: false,
+          originalIngredient: ingredient,
+          department,
+          quantity: shoppingQty.qty,
+          unit: shoppingQty.unit,
+          item: itemName,
+          notes: ingredient.notes,
+        };
+      });
+      
+      // Current items in the list
+      const currentItems = currentList.items || [];
+      
+      // Check for duplicates and merge
+      const newItems = [...currentItems];
+      let addedCount = 0;
+      
+      for (const item of shoppingItems) {
+        // Check if this item is already in the list
+        const existingIndex = newItems.findIndex(
+          (existing: any) => existing.text === item.text
+        );
+        
+        if (existingIndex === -1) {
+          // Not a duplicate, add it
+          newItems.push(item);
+          addedCount++;
+        }
+      }
+      
+      // Update the list with new items
+      const { error: updateError } = await supabase
+        .from('shopping_lists')
+        .update({ items: newItems })
+        .eq('id', listId);
+        
+      if (updateError) {
+        throw updateError;
+      }
+      
+      toast({
+        title: "Added to shopping list",
+        description: `Added ${addedCount} items to your shopping list`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error adding to shopping list:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add ingredients to shopping list",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Add recipe ingredients to shopping list (legacy method)
   const addIngredientsToShoppingList = async (
     recipeId: string,
     recipeTitle: string,
@@ -59,7 +283,7 @@ export function useShoppingListActions() {
         // Handle structured ingredients
         const itemName = typeof ingredient.item === 'string' 
           ? ingredient.item 
-          : ingredient.item?.item || 'Unknown item';
+          : ingredient.item || 'Unknown item';
         
         // Convert recipe units to shopping units
         const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
@@ -103,7 +327,7 @@ export function useShoppingListActions() {
         for (const item of shoppingItems) {
           // Check if this item is already in the list
           const existingIndex = newItems.findIndex(
-            existing => existing.text === item.text
+            (existing: any) => existing.text === item.text
           );
           
           if (existingIndex === -1) {
@@ -219,6 +443,9 @@ export function useShoppingListActions() {
     addIngredientsToShoppingList,
     toggleItemChecked,
     isAddingToList,
+    createNewList,
+    addToExistingList,
+    isLoading,
   };
 }
 

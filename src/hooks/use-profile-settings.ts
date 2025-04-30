@@ -45,7 +45,7 @@ export const defaultNutritionPreferences: NutritionPreferencesType = {
 
 // Use profile settings hook
 export function useProfileSettings() {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -80,8 +80,9 @@ export function useProfileSettings() {
       // Update local state
       setNutritionPreferences(updatedPreferences);
       
-      // Refresh profile to get updated data
-      await refreshProfile();
+      // Refresh profile data
+      // Note: We can't use refreshProfile as it doesn't exist in the auth context
+      // For now, we'll just update the local state
       
       toast({
         title: "Preferences saved",
@@ -100,7 +101,7 @@ export function useProfileSettings() {
     } finally {
       setIsSaving(false);
     }
-  }, [user, refreshProfile, toast]);
+  }, [user, toast]);
 
   return {
     nutritionPreferences,

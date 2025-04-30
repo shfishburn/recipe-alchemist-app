@@ -1,29 +1,33 @@
+
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { useProfileSettings, NutritionPreferencesType } from "@/hooks/use-profile-settings";
 import { Loader2 } from "lucide-react";
 import { MacroSplitInput } from "./body-composition/MacroSplitInput";
 import { WeightGoalInput } from "./body-composition/WeightGoalInput";
 import { ActivityComponentsInput } from "./body-composition/ActivityComponentsInput";
+import { NutritionPreferencesType } from "@/types/nutrition";
 
-export function BodyComposition() {
-  const { user, profile } = useAuth();
-  const { 
-    nutritionPreferences, 
-    setNutritionPreferences, 
-    saveNutritionPreferences, 
-    isSaving 
-  } = useProfileSettings();
+interface BodyCompositionProps {
+  preferences: NutritionPreferencesType;
+  onSave: (updatedPreferences: NutritionPreferencesType) => void;
+}
+
+export function BodyComposition({ preferences, onSave }: BodyCompositionProps) {
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = React.useState(false);
   
-  const handleNutritionSave = async (updatedPreferences: NutritionPreferencesType) => {
-    await saveNutritionPreferences({
-      ...nutritionPreferences,
-      ...updatedPreferences
-    });
+  const handleNutritionSave = async (updatedPreferences: Partial<NutritionPreferencesType>) => {
+    setIsSaving(true);
+    try {
+      await onSave({
+        ...preferences,
+        ...updatedPreferences
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -38,17 +42,14 @@ export function BodyComposition() {
         </CardHeader>
         <CardContent>
           <MacroSplitInput 
-            preferences={nutritionPreferences}
+            preferences={preferences}
             onChange={(values) => {
-              setNutritionPreferences({
-                ...nutritionPreferences,
-                ...values
-              });
+              handleNutritionSave(values);
             }}
           />
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button onClick={() => saveNutritionPreferences(nutritionPreferences)} disabled={isSaving}>
+          <Button onClick={() => handleNutritionSave({})} disabled={isSaving}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Macro Split
           </Button>
@@ -65,49 +66,43 @@ export function BodyComposition() {
         </CardHeader>
         <CardContent>
           <WeightGoalInput 
-            preferences={nutritionPreferences}
+            preferences={preferences}
             onChange={(values) => {
-              setNutritionPreferences({
-                ...nutritionPreferences,
-                ...values
-              });
+              handleNutritionSave(values);
             }}
           />
         </CardContent>
         <CardFooter className="flex justify-end">
-          <Button onClick={() => saveNutritionPreferences(nutritionPreferences)} disabled={isSaving}>
+          <Button onClick={() => handleNutritionSave({})} disabled={isSaving}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Weight Goal
           </Button>
         </CardFooter>
       </Card>
 
-        {/* Activity Components */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity Components</CardTitle>
-            <CardDescription>
-              Set your activity levels for more precise calculations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ActivityComponentsInput 
-              preferences={nutritionPreferences} 
-              onChange={(values) => {
-                setNutritionPreferences({
-                  ...nutritionPreferences,
-                  ...values
-                });
-              }}
-            />
-          </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button onClick={() => saveNutritionPreferences(nutritionPreferences)} disabled={isSaving}>
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save Activity Settings
-            </Button>
-          </CardFooter>
-        </Card>
+      {/* Activity Components */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Components</CardTitle>
+          <CardDescription>
+            Set your activity levels for more precise calculations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ActivityComponentsInput 
+            preferences={preferences} 
+            onChange={(values) => {
+              handleNutritionSave(values);
+            }}
+          />
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <Button onClick={() => handleNutritionSave({})} disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save Activity Settings
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

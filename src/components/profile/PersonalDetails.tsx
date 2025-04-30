@@ -17,7 +17,7 @@ import { HeightInput } from './personal-details/HeightInput';
 import { ActivityLevelSelector } from './personal-details/ActivityLevelSelector';
 import { BodyFatPercentileDisplay } from './body-composition/BodyFatPercentileDisplay';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BodyComposition } from './BodyComposition';
+import { BodyCompositionForm } from './body-composition/BodyCompositionForm';
 
 interface PersonalDetailsProps {
   preferences: NutritionPreferencesType;
@@ -269,7 +269,7 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
       </TabsContent>
       
       <TabsContent value="bodyComposition">
-        <BodyComposition
+        <BodyCompositionForm
           preferences={preferences}
           onSave={onSave}
         />

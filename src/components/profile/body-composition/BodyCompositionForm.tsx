@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WeightDisplay } from '@/components/ui/unit-display';
 import { convertWeightToKg, convertWeightFromKg } from '@/utils/unit-conversion';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 
