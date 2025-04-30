@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ImagePlus, Loader2 } from 'lucide-react';
+import { ImagePlus, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeImage } from '@/hooks/use-recipe-image';
@@ -52,8 +52,9 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
           <PlaceholderImage hasError={imageError} />
         )}
       </div>
-      {shouldShowGenerateButton && (
-        <div className="mt-2 flex justify-end">
+      
+      <div className="mt-2 flex justify-end">
+        {shouldShowGenerateButton ? (
           <Button
             onClick={generateNewImage}
             disabled={isGenerating}
@@ -73,8 +74,28 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
               </>
             )}
           </Button>
-        </div>
-      )}
+        ) : (
+          <Button
+            onClick={generateNewImage}
+            disabled={isGenerating}
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Regenerating...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate Image
+              </>
+            )}
+          </Button>
+        )}
+      </div>
 
       <ImageDialog
         open={showImageDialog}
