@@ -125,7 +125,7 @@ const ProfilePage = () => {
     }
   };
 
-  const saveDietaryPreferences = async (prefs: Partial<NutritionPreferencesType>) => {
+  const saveDietaryPreferences = async (prefs: Partial<NutritionPreferencesType> | NutritionPreferencesType) => {
     if (!user?.id) return;
     
     const updatedPreferences = {
@@ -211,7 +211,6 @@ const ProfilePage = () => {
                   <TabsList className="mb-4">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="nutrition">Nutrition Goals</TabsTrigger>
-                    <TabsTrigger value="dietary">Dietary Preferences</TabsTrigger>
                   </TabsList>
                   <TabsContent value="basic">
                     <ProfileBasicInfo 
@@ -224,12 +223,6 @@ const ProfilePage = () => {
                     <NutritionPreferences 
                       preferences={nutritionPreferences}
                       onSave={saveNutritionPreferences}
-                    />
-                  </TabsContent>
-                  <TabsContent value="dietary">
-                    <DietaryPreferences 
-                      preferences={nutritionPreferences}
-                      onSave={saveDietaryPreferences}
                     />
                   </TabsContent>
                 </Tabs>
