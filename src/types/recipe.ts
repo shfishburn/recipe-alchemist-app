@@ -65,4 +65,5 @@ export interface Recipe {
   nutrition?: Nutrition;
   science_notes: string[];
   chef_notes?: string;
+  cooking_tip?: string; // Added cooking_tip field to match the database schema
 }
