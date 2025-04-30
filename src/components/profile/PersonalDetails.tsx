@@ -3,12 +3,16 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { NutritionPreferencesType } from '@/types/nutrition';
 import { CalculationDisplay } from './personal-details/CalculationDisplay';
 import { WeightGoalSelector } from './personal-details/WeightGoalSelector';
 import { lbsToKg, ftInToCm, cmToFtIn } from '@/utils/unit-conversion';
+import { calculateMetabolics } from '@/utils/metabolic-calculations';
+import { AgeInput } from './personal-details/AgeInput';
+import { GenderSelector } from './personal-details/GenderSelector';
+import { WeightInput } from './personal-details/WeightInput';
+import { HeightInput } from './personal-details/HeightInput';
+import { ActivityLevelSelector } from './personal-details/ActivityLevelSelector';
 
 interface PersonalDetailsProps {
   preferences: NutritionPreferencesType;
@@ -91,42 +95,6 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
     
     onSave(updatedPreferences);
   };
-
-  function calculateMetabolics(prefs: NutritionPreferencesType) {
-    const { age, weight, height, gender, activityLevel } = prefs.personalDetails || {};
-    
-    if (!age || !weight || !height || !gender) {
-      return { bmr: 0, tdee: 0 };
-    }
-    
-    // Calculate BMR using Mifflin-St Jeor Equation
-    let bmr = 0;
-    if (gender === 'male') {
-      bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-    } else {
-      bmr = 10 * weight + 6.25 * height - 5 * age - 161;
-    }
-    
-    // Activity multipliers
-    const activityMultipliers: { [key: string]: number } = {
-      sedentary: 1.2,
-      light: 1.375,
-      moderate: 1.55,
-      active: 1.725,
-      veryActive: 1.9
-    };
-    
-    // Calculate TDEE (Total Daily Energy Expenditure)
-    const tdee = bmr * (activityMultipliers[activityLevel || 'moderate'] || 1.55);
-    
-    // Calculate adapted TDEE if there's adaptation tracking
-    let adaptedTDEE = tdee;
-    if (prefs.adaptationTracking?.adaptationPercentage) {
-      adaptedTDEE = tdee * (1 - prefs.adaptationTracking.adaptationPercentage / 100);
-    }
-    
-    return { bmr, tdee, adaptedTDEE };
-  }
   
   const calculatedBMR = preferences.bmr || 0;
   const calculatedTDEE = preferences.tdee || 0;
@@ -144,120 +112,24 @@ export function PersonalDetails({ preferences, onSave }: PersonalDetailsProps) {
   const adaptedTDEE = hasAdaptation && preferences.adaptationTracking?.adaptationPercentage ?
     Math.round(calculatedTDEE * (1 - preferences.adaptationTracking.adaptationPercentage / 100)) :
     undefined;
-  
-  const watchWeight = watch('weight');
-  const watchHeight = watch('height');
-  const watchGender = watch('gender');
-  const watchAge = watch('age');
-  const watchActivityLevel = watch('activityLevel');
-
-  // Create unit-specific labels
-  const weightUnitLabel = unitSystem === 'metric' ? '(kg)' : '(lbs)';
-  const heightUnitLabel = unitSystem === 'metric' ? '(cm)' : '';
-  
-  // Min and max values based on unit system
-  const weightMinValue = unitSystem === 'metric' ? 40 : 90;
-  const weightMaxValue = unitSystem === 'metric' ? 200 : 440;
 
   return (
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
-              <Input
-                id="age"
-                type="number"
-                min="18"
-                max="100"
-                {...register('age')}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender</Label>
-              <select
-                id="gender"
-                className="w-full rounded-md border border-input bg-background px-3 h-10"
-                {...register('gender')}
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-              <p className="text-xs text-muted-foreground">
-                Used for metabolic calculations
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="weight">Weight {weightUnitLabel}</Label>
-              <Input
-                id="weight"
-                type="number"
-                min={weightMinValue}
-                max={weightMaxValue}
-                step="0.1"
-                {...register('weight')}
-              />
-            </div>
-            
-            {unitSystem === 'metric' ? (
-              <div className="space-y-2">
-                <Label htmlFor="height">Height {heightUnitLabel}</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  min="140"
-                  max="220"
-                  {...register('height')}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="height">Height (ft/in)</Label>
-                <div className="flex space-x-2">
-                  <div className="w-1/2">
-                    <select 
-                      className="w-full rounded-md border border-input bg-background px-3 h-10"
-                      value={heightFeet}
-                      onChange={(e) => setHeightFeet(Number(e.target.value))}
-                    >
-                      {[4, 5, 6, 7].map(feet => (
-                        <option key={feet} value={feet}>{feet} ft</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="w-1/2">
-                    <select 
-                      className="w-full rounded-md border border-input bg-background px-3 h-10"
-                      value={heightInches} 
-                      onChange={(e) => setHeightInches(Number(e.target.value))}
-                    >
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i} value={i}>{i} in</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="activityLevel">Activity Level</Label>
-              <select
-                id="activityLevel"
-                className="w-full rounded-md border border-input bg-background px-3 h-10"
-                {...register('activityLevel')}
-              >
-                <option value="sedentary">Sedentary (office job, little exercise)</option>
-                <option value="light">Lightly Active (light exercise 1-3 days/week)</option>
-                <option value="moderate">Moderately Active (moderate exercise 3-5 days/week)</option>
-                <option value="active">Very Active (hard exercise 6-7 days/week)</option>
-                <option value="veryActive">Extremely Active (hard daily exercise or physical job)</option>
-              </select>
-            </div>
+            <AgeInput register={register} />
+            <GenderSelector register={register} />
+            <WeightInput register={register} unitSystem={unitSystem} />
+            <HeightInput 
+              register={register} 
+              unitSystem={unitSystem}
+              heightFeet={heightFeet}
+              heightInches={heightInches}
+              setHeightFeet={setHeightFeet}
+              setHeightInches={setHeightInches}
+            />
+            <ActivityLevelSelector register={register} />
           </div>
           
           <div className="pt-2">
