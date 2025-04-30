@@ -44,7 +44,7 @@ const QuickRecipePage = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 py-4 md:py-8 animate-fadeIn">
-        <div className="container-page max-w-full px-3 md:px-6">
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {isDirectNavigation ? (
             // Show form directly when navigating from navbar
             <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md max-w-lg mx-auto">
