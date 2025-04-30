@@ -308,12 +308,17 @@ export type Database = {
           calcium_mg: number | null
           calories: number | null
           carbs_g: number | null
+          cholesterol_mg: number | null
           created_at: string | null
           fat_g: number | null
           fiber_g: number | null
           food_category: string | null
           food_code: string
           food_name: string
+          gmwt_1: number | null
+          gmwt_2: number | null
+          gmwt_desc1: string | null
+          gmwt_desc2: string | null
           id: number
           iron_mg: number | null
           potassium_mg: number | null
@@ -329,12 +334,17 @@ export type Database = {
           calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
+          cholesterol_mg?: number | null
           created_at?: string | null
           fat_g?: number | null
           fiber_g?: number | null
           food_category?: string | null
           food_code: string
           food_name: string
+          gmwt_1?: number | null
+          gmwt_2?: number | null
+          gmwt_desc1?: string | null
+          gmwt_desc2?: string | null
           id?: number
           iron_mg?: number | null
           potassium_mg?: number | null
@@ -350,12 +360,17 @@ export type Database = {
           calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
+          cholesterol_mg?: number | null
           created_at?: string | null
           fat_g?: number | null
           fiber_g?: number | null
           food_category?: string | null
           food_code?: string
           food_name?: string
+          gmwt_1?: number | null
+          gmwt_2?: number | null
+          gmwt_desc1?: string | null
+          gmwt_desc2?: string | null
           id?: number
           iron_mg?: number | null
           potassium_mg?: number | null
