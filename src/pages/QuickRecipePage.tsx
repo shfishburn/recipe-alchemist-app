@@ -22,7 +22,7 @@ const QuickRecipePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 py-6 md:py-10 animate-fadeIn">
+      <main className="flex-1 py-6 md:py-10 animate-fadeIn pb-16">
         <div className="container-page max-w-full px-4 md:px-8">
           {isLoading ? (
             <div className="flex justify-center">
@@ -31,7 +31,9 @@ const QuickRecipePage = () => {
           ) : recipe ? (
             <>
               <QuickRecipeDisplay recipe={recipe} />
-              <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
+              <div className="mt-8 mb-10">
+                <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
+              </div>
             </>
           ) : (
             <div className="text-center">

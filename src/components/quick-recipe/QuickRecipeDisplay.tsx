@@ -38,7 +38,7 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto">
+    <div className="w-full max-w-xl mx-auto mb-16">
       <QuickRecipeCard 
         recipe={recipe} 
         onCook={() => setCookModeOpen(true)}

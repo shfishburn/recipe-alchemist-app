@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +49,7 @@ export function useQuickRecipeSave() {
       // Convert science notes to the correct format
       const science_notes = recipe.scienceNotes || [];
       
-      // Create recipe in database
+      // Create recipe in database - fix the insert call to use a single object, not an array
       const { data, error } = await supabase
         .from('recipes')
         .insert({
