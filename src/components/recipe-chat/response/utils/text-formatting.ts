@@ -33,10 +33,17 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     if (processedText.substr(i, 2) === '**' && (!codeActive)) {
       // Add accumulated text before the marker
       if (currentText) {
-        parts.push(boldActive ? 
-          <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-          italicActive ? <em key={`italic-${i}`}>{currentText}</em> : currentText
-        );
+        if (boldActive) {
+          parts.push(
+            <strong key={`bold-${i}`}>
+              {italicActive ? <em>{currentText}</em> : currentText}
+            </strong>
+          );
+        } else if (italicActive) {
+          parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+        } else {
+          parts.push(currentText);
+        }
         currentText = '';
       }
       
@@ -52,10 +59,17 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
         (!processedText[i+1] || !/\s/.test(processedText[i+1]))) {
       // Add accumulated text before the marker
       if (currentText) {
-        parts.push(boldActive ? 
-          <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-          italicActive ? <em key={`italic-${i}`}>{currentText}</em> : currentText
-        );
+        if (boldActive) {
+          parts.push(
+            <strong key={`bold-${i}`}>
+              {italicActive ? <em>{currentText}</em> : currentText}
+            </strong>
+          );
+        } else if (italicActive) {
+          parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+        } else {
+          parts.push(currentText);
+        }
         currentText = '';
       }
       
@@ -68,10 +82,17 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     if (processedText[i] === '`' && (i === 0 || processedText[i-1] !== '\\')) {
       // Add accumulated text before the marker
       if (currentText) {
-        parts.push(boldActive ? 
-          <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-          italicActive ? <em key={`italic-${i}`}>{currentText}</em> : currentText
-        );
+        if (boldActive) {
+          parts.push(
+            <strong key={`bold-${i}`}>
+              {italicActive ? <em>{currentText}</em> : currentText}
+            </strong>
+          );
+        } else if (italicActive) {
+          parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+        } else {
+          parts.push(currentText);
+        }
         currentText = '';
       }
       

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { RecipeSectionHeader } from './RecipeSectionHeader';
+import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 import { Ingredient } from '@/hooks/use-quick-recipe';
 
 interface RecipeIngredientsProps {
@@ -25,9 +26,9 @@ const formatIngredient = (ingredient: any): string => {
   }
   
   if (typeof item === 'string') {
-    formatted += item;
+    formatted += `**${item}**`;  // Format with ** for ingredient highlighting
   } else if (item && typeof item.item === 'string') {
-    formatted += item.item;
+    formatted += `**${item.item}**`;  // Format with ** for ingredient highlighting
   }
   
   if (notes) {
@@ -43,7 +44,9 @@ export function RecipeIngredients({ ingredients }: RecipeIngredientsProps) {
       <RecipeSectionHeader title="Ingredients" />
       <ul className="list-disc pl-5 space-y-1">
         {ingredients.map((ingredient, index) => (
-          <li key={index}>{formatIngredient(ingredient)}</li>
+          <li key={index}>
+            <FormattedIngredientText text={formatIngredient(ingredient)} />
+          </li>
         ))}
       </ul>
     </div>
