@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
 // Import the refactored hook
 import { useDataImport } from '@/hooks/use-data-import';
+import { UsdaTableType } from '@/utils/usda-data-import';
 
 import ImportHeader from '@/components/data-import/ImportHeader';
 import TableSelection from '@/components/data-import/TableSelection';
@@ -38,7 +39,7 @@ const DataImport = () => {
 
         <TableSelection 
           selectedTable={selectedTable}
-          onSelectTable={setSelectedTable}
+          onSelectTable={(table: UsdaTableType) => setSelectedTable(table)}
         />
 
         <Card className="p-6 mb-6">

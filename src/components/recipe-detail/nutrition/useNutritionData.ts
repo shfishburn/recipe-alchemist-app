@@ -88,7 +88,8 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
         protein: profile.nutrition_preferences.macroSplit?.protein || 20, // sensible defaults based on 
         carbs: profile.nutrition_preferences.macroSplit?.carbs || 50,     // general dietary guidelines
         fat: profile.nutrition_preferences.macroSplit?.fat || 30
-      }
+      },
+      unitSystem: profile.nutrition_preferences.unitSystem || 'metric' as const
     };
   }, [profile]);
 

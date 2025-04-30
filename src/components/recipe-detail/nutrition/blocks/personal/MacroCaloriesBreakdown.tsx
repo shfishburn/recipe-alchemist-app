@@ -8,11 +8,7 @@ interface MacroCaloriesBreakdownProps {
   proteinCaloriePercent: number;
   carbCaloriePercent: number;
   fatCaloriePercent: number;
-  colors: {
-    protein: string;
-    carbs: string;
-    fat: string;
-  };
+  colors: Record<string, string>;
 }
 
 export function MacroCaloriesBreakdown({
@@ -24,30 +20,68 @@ export function MacroCaloriesBreakdown({
   fatCaloriePercent,
   colors
 }: MacroCaloriesBreakdownProps) {
+  const totalCalories = proteinCalories + carbCalories + fatCalories;
+  
   return (
-    <div className="bg-white p-3 rounded-md shadow-sm">
-      <h5 className="text-xs font-medium mb-2">Calories from Macronutrients</h5>
-      <div className="flex items-center mb-2">
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="flex h-full rounded-full overflow-hidden">
-            <div style={{ width: `${proteinCaloriePercent}%`, backgroundColor: colors.protein }} />
-            <div style={{ width: `${carbCaloriePercent}%`, backgroundColor: colors.carbs }} />
-            <div style={{ width: `${fatCaloriePercent}%`, backgroundColor: colors.fat }} />
+    <div className="mt-4">
+      <h5 className="text-xs font-semibold mb-2">Calorie Distribution</h5>
+      <div className="bg-white p-4 rounded-md shadow-sm">
+        <div className="flex mb-2">
+          <div className="w-full h-4 flex rounded-full overflow-hidden">
+            <div 
+              className="h-full" 
+              style={{ 
+                width: `${proteinCaloriePercent}%`, 
+                backgroundColor: colors.protein
+              }}
+            ></div>
+            <div 
+              className="h-full" 
+              style={{ 
+                width: `${carbCaloriePercent}%`, 
+                backgroundColor: colors.carbs
+              }}
+            ></div>
+            <div 
+              className="h-full" 
+              style={{ 
+                width: `${fatCaloriePercent}%`, 
+                backgroundColor: colors.fat
+              }}
+            ></div>
           </div>
         </div>
-      </div>
-      <div className="flex justify-between text-xs">
-        <div className="flex items-center">
-          <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: colors.protein }}></div>
-          <span>Protein: {proteinCaloriePercent}% ({proteinCalories} kcal)</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: colors.carbs }}></div>
-          <span>Carbs: {carbCaloriePercent}% ({carbCalories} kcal)</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: colors.fat }}></div>
-          <span>Fat: {fatCaloriePercent}% ({fatCalories} kcal)</span>
+        <div className="flex justify-between text-xs">
+          <div>
+            <div className="flex items-center">
+              <div 
+                className="w-3 h-3 rounded-full mr-1"
+                style={{ backgroundColor: colors.protein }}
+              ></div>
+              <span className="font-medium">Protein</span>
+            </div>
+            <div>{proteinCalories} kcal ({proteinCaloriePercent}%)</div>
+          </div>
+          <div>
+            <div className="flex items-center">
+              <div 
+                className="w-3 h-3 rounded-full mr-1"
+                style={{ backgroundColor: colors.carbs }}
+              ></div>
+              <span className="font-medium">Carbs</span>
+            </div>
+            <div>{carbCalories} kcal ({carbCaloriePercent}%)</div>
+          </div>
+          <div>
+            <div className="flex items-center">
+              <div 
+                className="w-3 h-3 rounded-full mr-1"
+                style={{ backgroundColor: colors.fat }}
+              ></div>
+              <span className="font-medium">Fat</span>
+            </div>
+            <div>{fatCalories} kcal ({fatCaloriePercent}%)</div>
+          </div>
         </div>
       </div>
     </div>

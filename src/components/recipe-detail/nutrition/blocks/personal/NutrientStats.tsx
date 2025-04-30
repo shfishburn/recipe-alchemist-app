@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { WeightDisplay } from '@/components/ui/unit-display';
 
 interface NutrientStatsProps {
   calories: number;
@@ -10,11 +11,8 @@ interface NutrientStatsProps {
   proteinPercentage: number;
   carbsPercentage: number;
   fatPercentage: number;
-  colors: {
-    protein: string;
-    carbs: string;
-    fat: string;
-  };
+  colors: Record<string, string>;
+  unitSystem: 'metric' | 'imperial';
 }
 
 export function NutrientStats({
@@ -26,29 +24,60 @@ export function NutrientStats({
   proteinPercentage,
   carbsPercentage,
   fatPercentage,
-  colors
+  colors,
+  unitSystem
 }: NutrientStatsProps) {
+  // Function to determine status color based on percentage
+  const getStatusColor = (percentage: number, nutrient: string) => {
+    if (nutrient === 'calories') {
+      if (percentage < 30) return 'text-green-600';
+      if (percentage > 80) return 'text-red-600';
+      return 'text-amber-600';
+    } else {
+      if (percentage < 50) return 'text-amber-600';
+      if (percentage > 150) return 'text-red-600';
+      return 'text-green-600';
+    }
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
       <div className="bg-white p-3 rounded-md shadow-sm">
         <p className="text-xs text-gray-500">Calories</p>
-        <p className="text-lg font-semibold">{caloriesPercentage}%</p>
-        <p className="text-xs text-muted-foreground">{calories} of daily kcal</p>
+        <p className="text-base font-semibold">{calories} kcal</p>
+        <p className={`text-xs ${getStatusColor(caloriesPercentage, 'calories')}`}>
+          {caloriesPercentage}% of daily needs
+        </p>
       </div>
-      <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${colors.protein}` }}>
+      
+      <div className="bg-white p-3 rounded-md shadow-sm">
         <p className="text-xs text-gray-500">Protein</p>
-        <p className="text-lg font-semibold">{proteinPercentage}%</p>
-        <p className="text-xs text-muted-foreground">{protein}g of daily target</p>
+        <p className="text-base font-semibold flex items-baseline gap-1">
+          <span>{protein}g</span>
+        </p>
+        <p className={`text-xs ${getStatusColor(proteinPercentage, 'protein')}`}>
+          {proteinPercentage}% of daily target
+        </p>
       </div>
-      <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${colors.carbs}` }}>
+      
+      <div className="bg-white p-3 rounded-md shadow-sm">
         <p className="text-xs text-gray-500">Carbs</p>
-        <p className="text-lg font-semibold">{carbsPercentage}%</p>
-        <p className="text-xs text-muted-foreground">{carbs}g of daily target</p>
+        <p className="text-base font-semibold flex items-baseline gap-1">
+          <span>{carbs}g</span>
+        </p>
+        <p className={`text-xs ${getStatusColor(carbsPercentage, 'carbs')}`}>
+          {carbsPercentage}% of daily target
+        </p>
       </div>
-      <div className="bg-white p-3 rounded-md shadow-sm" style={{ borderLeft: `3px solid ${colors.fat}` }}>
+      
+      <div className="bg-white p-3 rounded-md shadow-sm">
         <p className="text-xs text-gray-500">Fat</p>
-        <p className="text-lg font-semibold">{fatPercentage}%</p>
-        <p className="text-xs text-muted-foreground">{fat}g of daily target</p>
+        <p className="text-base font-semibold flex items-baseline gap-1">
+          <span>{fat}g</span>
+        </p>
+        <p className={`text-xs ${getStatusColor(fatPercentage, 'fat')}`}>
+          {fatPercentage}% of daily target
+        </p>
       </div>
     </div>
   );

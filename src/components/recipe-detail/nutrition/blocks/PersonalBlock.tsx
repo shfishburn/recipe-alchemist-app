@@ -9,6 +9,7 @@ import { InfoIcon } from 'lucide-react';
 import { NutrientStats } from './personal/NutrientStats';
 import { MacroCaloriesBreakdown } from './personal/MacroCaloriesBreakdown';
 import { NUTRITION_COLORS, NUTRIENT_INFO } from './personal/constants';
+import { WeightDisplay } from '@/components/ui/unit-display';
 
 interface RecipeNutrition {
   calories: number;
@@ -29,9 +30,10 @@ interface UserPreferences {
 interface PersonalBlockProps {
   recipeNutrition: RecipeNutrition;
   userPreferences: UserPreferences;
+  unitSystem: 'metric' | 'imperial';
 }
 
-export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBlockProps) {
+export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: PersonalBlockProps) {
   const isMobile = useIsMobile();
   
   // Calculate user's target macros in grams
@@ -163,6 +165,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
           carbsPercentage={carbsPercentage}
           fatPercentage={fatPercentage}
           colors={NUTRITION_COLORS}
+          unitSystem={unitSystem}
         />
         
         <MacroCaloriesBreakdown

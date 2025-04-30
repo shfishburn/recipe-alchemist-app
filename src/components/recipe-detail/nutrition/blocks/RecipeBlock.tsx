@@ -9,12 +9,14 @@ import { ChartTooltip } from '../charts/ChartTooltip';
 import { NUTRITION_COLORS } from './personal/constants';
 import { MicronutrientsDisplay } from '../MicronutrientsDisplay';
 import { ExtendedNutritionData } from '../useNutritionData';
+import { WeightDisplay } from '@/components/ui/unit-display';
 
 interface RecipeBlockProps {
   recipeNutrition: ExtendedNutritionData;
+  unitSystem: 'metric' | 'imperial';
 }
 
-export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
+export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const isMobile = useIsMobile();
   
   const COLORS = {
@@ -318,8 +320,8 @@ export function RecipeBlock({ recipeNutrition }: RecipeBlockProps) {
         </p>
       </div>
       
-      {/* Add the micronutrients display */}
-      <MicronutrientsDisplay nutrition={recipeNutrition} />
+      {/* Add the micronutrients display with unitSystem */}
+      <MicronutrientsDisplay nutrition={recipeNutrition} unitSystem={unitSystem} />
     </div>
   );
 }

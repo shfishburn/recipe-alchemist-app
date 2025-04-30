@@ -14,18 +14,22 @@ interface NutritionBlockProps {
       carbs: number;
       fat: number;
     };
+    unitSystem?: 'metric' | 'imperial';
   };
 }
 
 export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: NutritionBlockProps) {
+  const unitSystem = userPreferences?.unitSystem || 'metric';
+  
   return (
     <div className="space-y-4 transition-all duration-200">
       {viewMode === 'recipe' ? (
-        <RecipeBlock recipeNutrition={recipeNutrition} />
+        <RecipeBlock recipeNutrition={recipeNutrition} unitSystem={unitSystem} />
       ) : (
         <PersonalBlock
           recipeNutrition={recipeNutrition}
           userPreferences={userPreferences!}
+          unitSystem={unitSystem}
         />
       )}
     </div>
