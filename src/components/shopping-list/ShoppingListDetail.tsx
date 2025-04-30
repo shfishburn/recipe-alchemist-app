@@ -397,7 +397,7 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
                   <div className="flex items-center gap-2">
                     <Checkbox 
                       checked={deptCompleted}
-                      indeterminate={deptPartial}
+                      // Removed the indeterminate prop that was causing the error
                       onCheckedChange={(checked) => {
                         toggleAllInDepartment(department, Boolean(checked));
                         // Don't toggle the expanded state when clicking the checkbox

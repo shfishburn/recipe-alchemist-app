@@ -4,6 +4,7 @@ import { ShoppingItem } from './types';
 import { ShoppingListItem } from './ShoppingListItem';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ShoppingListDepartmentProps {
   department: string;
@@ -20,6 +21,7 @@ export function ShoppingListDepartment({
 }: ShoppingListDepartmentProps) {
   const [isOpen, setIsOpen] = React.useState(true);
   const checkedCount = items.filter(item => item.checked).length;
+  const allChecked = items.length > 0 && checkedCount === items.length;
   
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-1">

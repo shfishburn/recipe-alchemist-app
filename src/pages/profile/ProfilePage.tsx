@@ -69,9 +69,11 @@ const ProfilePage = () => {
         
         // Set nutrition preferences if available
         if (data.nutrition_preferences) {
+          // Fixed: Using type assertion instead of spread on potentially non-object value
+          const nutritionData = data.nutrition_preferences as NutritionPreferencesType;
           setNutritionPreferences({
             ...nutritionPreferences,
-            ...data.nutrition_preferences
+            ...nutritionData
           });
         }
       } catch (err) {
