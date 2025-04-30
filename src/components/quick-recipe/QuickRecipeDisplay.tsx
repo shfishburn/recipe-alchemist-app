@@ -1,38 +1,12 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
 import { QuickCookingMode } from '@/components/quick-recipe/QuickCookingMode';
 import { QuickShoppingList } from '@/components/quick-recipe/QuickShoppingList';
-import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
+import { QuickRecipePrint } from '@/components/quick-recipe/QuickRecipePrint';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { useNavigate } from 'react-router-dom';
-
-// Helper function to format ingredient for database storage
-const formatIngredientForDB = (ingredient: any) => {
-  if (typeof ingredient === 'string') {
-    return {
-      qty: 1,
-      unit: '',
-      item: ingredient
-    };
-  }
-  
-  // If it's already in the right format, return it
-  if (ingredient.item && typeof ingredient.item === 'string') {
-    return {
-      qty: ingredient.qty || 1,
-      unit: ingredient.unit || '',
-      item: ingredient.item
-    };
-  }
-  
-  // Otherwise, extract what we can
-  return {
-    qty: ingredient.qty || 1,
-    unit: ingredient.unit || '',
-    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient)
-  };
-};
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
@@ -42,12 +16,17 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   const [cookModeOpen, setCookModeOpen] = useState(false);
   const [shoppingListOpen, setShoppingListOpen] = useState(false);
   const { saveRecipe, isSaving, navigate } = useQuickRecipeSave();
-  const printDialogTriggerRef = useRef<HTMLButtonElement>(null);
+  
+  // Create a ref to the QuickRecipePrint component
+  const printRef = React.useRef<HTMLDivElement>(null);
 
-  // Function to open print dialog
+  // Function to handle print request
   const handlePrint = () => {
-    if (printDialogTriggerRef.current) {
-      printDialogTriggerRef.current.click();
+    // Access the print dialog through the DOM - this is a workaround since we can't directly
+    // return a function from our QuickRecipePrint component
+    const printElement = printRef.current?.lastChild as HTMLElement;
+    if (typeof printElement?.click === 'function') {
+      printElement.click();
     }
   };
 
@@ -81,26 +60,10 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
         onOpenChange={setShoppingListOpen}
       />
       
-      {/* Print Recipe Dialog */}
-      <PrintRecipe 
-        recipe={{
-          id: 'quick-recipe',
-          title: recipe.title,
-          description: recipe.description,
-          ingredients: recipe.ingredients.map(formatIngredientForDB),
-          instructions: recipe.steps,
-          prep_time_min: recipe.prepTime,
-          cook_time_min: recipe.cookTime,
-          nutrition: recipe.nutritionHighlight ? {
-            // Basic placeholder for nutrition data
-            kcal: 0
-          } : undefined,
-          science_notes: [],
-          tagline: recipe.description,
-          cooking_tip: recipe.cookingTip
-        }} 
-        ref={printDialogTriggerRef}
-      />
+      {/* Hidden div that contains the print functionality */}
+      <div ref={printRef} className="hidden">
+        <QuickRecipePrint recipe={recipe} />
+      </div>
     </div>
   );
 }
