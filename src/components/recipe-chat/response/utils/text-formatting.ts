@@ -35,12 +35,12 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
       if (currentText) {
         if (boldActive) {
           parts.push(
-            <strong key={`bold-${i}`}>
-              {italicActive ? <em>{currentText}</em> : currentText}
-            </strong>
+            React.createElement('strong', { key: `bold-${i}` },
+              italicActive ? React.createElement('em', null, currentText) : currentText
+            )
           );
         } else if (italicActive) {
-          parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+          parts.push(React.createElement('em', { key: `italic-${i}` }, currentText));
         } else {
           parts.push(currentText);
         }
@@ -61,12 +61,12 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
       if (currentText) {
         if (boldActive) {
           parts.push(
-            <strong key={`bold-${i}`}>
-              {italicActive ? <em>{currentText}</em> : currentText}
-            </strong>
+            React.createElement('strong', { key: `bold-${i}` },
+              italicActive ? React.createElement('em', null, currentText) : currentText
+            )
           );
         } else if (italicActive) {
-          parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+          parts.push(React.createElement('em', { key: `italic-${i}` }, currentText));
         } else {
           parts.push(currentText);
         }
@@ -84,12 +84,12 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
       if (currentText) {
         if (boldActive) {
           parts.push(
-            <strong key={`bold-${i}`}>
-              {italicActive ? <em>{currentText}</em> : currentText}
-            </strong>
+            React.createElement('strong', { key: `bold-${i}` },
+              italicActive ? React.createElement('em', null, currentText) : currentText
+            )
           );
         } else if (italicActive) {
-          parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+          parts.push(React.createElement('em', { key: `italic-${i}` }, currentText));
         } else {
           parts.push(currentText);
         }
@@ -109,17 +109,20 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
       if (boldActive) {
         // Use enhanced styling for ingredients (bolded items)
         parts.push(
-          <span 
-            key={`bold-${i}`} 
-            className="font-semibold text-recipe-blue bg-recipe-blue/5 px-1.5 py-0.5 rounded-md border border-recipe-blue/10"
-          >
-            {italicActive ? <em>{currentText}</em> : currentText}
-          </span>
+          React.createElement('span', { 
+            key: `bold-${i}`, 
+            className: "font-semibold text-recipe-blue bg-recipe-blue/5 px-1.5 py-0.5 rounded-md border border-recipe-blue/10"
+          },
+            italicActive ? React.createElement('em', null, currentText) : currentText
+          )
         );
       } else if (italicActive) {
-        parts.push(<em key={`italic-${i}`}>{currentText}</em>);
+        parts.push(React.createElement('em', { key: `italic-${i}` }, currentText));
       } else if (codeActive) {
-        parts.push(<code key={`code-${i}`} className="px-1 py-0.5 bg-gray-100 rounded">{currentText}</code>);
+        parts.push(React.createElement('code', { 
+          key: `code-${i}`, 
+          className: "px-1 py-0.5 bg-gray-100 rounded" 
+        }, currentText));
       } else {
         parts.push(currentText);
       }
