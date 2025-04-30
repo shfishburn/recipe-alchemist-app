@@ -1,66 +1,36 @@
 
 import React from 'react';
-import { kgToLbs, cmToFtIn } from '@/utils/unit-conversion';
 
 interface WeightDisplayProps {
   weightKg: number;
   unitSystem: 'metric' | 'imperial';
-  className?: string;
   decimals?: number;
 }
 
-export function WeightDisplay({ weightKg, unitSystem, className = '', decimals = 1 }: WeightDisplayProps) {
-  if (unitSystem === 'metric') {
-    return <span className={className}>{weightKg.toFixed(decimals)} kg</span>;
-  } else {
-    const weightLbs = kgToLbs(weightKg);
-    return <span className={className}>{weightLbs.toFixed(decimals)} lbs</span>;
-  }
+export function WeightDisplay({ weightKg, unitSystem, decimals = 1 }: WeightDisplayProps) {
+  const weight = unitSystem === 'metric' 
+    ? weightKg 
+    : weightKg * 2.20462;
+    
+  const unit = unitSystem === 'metric' ? 'kg' : 'lbs';
+  
+  return (
+    <span>{weight.toFixed(decimals)} {unit}</span>
+  );
 }
 
 interface HeightDisplayProps {
   heightCm: number;
   unitSystem: 'metric' | 'imperial';
-  className?: string;
-  decimals?: number;
 }
 
-export function HeightDisplay({ heightCm, unitSystem, className = '', decimals = 1 }: HeightDisplayProps) {
+export function HeightDisplay({ heightCm, unitSystem }: HeightDisplayProps) {
   if (unitSystem === 'metric') {
-    return <span className={className}>{heightCm.toFixed(decimals)} cm</span>;
+    return <span>{heightCm} cm</span>;
   } else {
-    const { feet, inches } = cmToFtIn(heightCm);
-    return <span className={className}>{feet}'{inches}"</span>;
+    const totalInches = heightCm / 2.54;
+    const feet = Math.floor(totalInches / 12);
+    const inches = Math.round(totalInches % 12);
+    return <span>{feet}'{inches}"</span>;
   }
-}
-
-interface UnitToggleProps {
-  unitSystem: 'metric' | 'imperial';
-  onChange: (unitSystem: 'metric' | 'imperial') => void;
-  className?: string;
-}
-
-export function UnitToggle({ unitSystem, onChange, className = '' }: UnitToggleProps) {
-  return (
-    <div className={`flex items-center space-x-1 ${className}`}>
-      <button
-        type="button"
-        className={`px-2 py-1 text-xs rounded ${
-          unitSystem === 'metric' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-        }`}
-        onClick={() => onChange('metric')}
-      >
-        Metric
-      </button>
-      <button
-        type="button"
-        className={`px-2 py-1 text-xs rounded ${
-          unitSystem === 'imperial' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-        }`}
-        onClick={() => onChange('imperial')}
-      >
-        Imperial
-      </button>
-    </div>
-  );
 }

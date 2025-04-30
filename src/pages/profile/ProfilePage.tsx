@@ -1,10 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ProfileHeader } from './components/ProfileHeader';
 import { ProfileBasicInfo } from '@/components/profile/ProfileBasicInfo';
-import { NutritionPreferences } from '@/components/profile/NutritionPreferences';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +20,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { NutritionPreferencesType } from '@/types/nutrition';
 import { Json } from '@/integrations/supabase/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserDashboardSummary } from '@/components/profile/UserDashboardSummary';
+import { BodyAndNutritionTabs } from '@/components/profile/BodyAndNutritionTabs';
+import { DietAndMealTabs } from '@/components/profile/DietAndMealTabs';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -154,7 +157,7 @@ const ProfilePage = () => {
       setNutritionPreferences(updatedPreferences);
       toast({
         title: 'Success',
-        description: 'Dietary preferences saved'
+        description: 'Preferences saved'
       });
     } catch (err) {
       console.error('Save error:', err);
@@ -205,34 +208,58 @@ const ProfilePage = () => {
                 <Skeleton className="h-40 w-full" />
               </div>
             ) : (
-              <div className="space-y-6">
-                {/* Profile Header and Basic Info */}
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex-shrink-0 flex justify-center md:block">
-                        <ProfileHeader profileData={profileData} isLoading={false} />
-                      </div>
-                      <div className="flex-grow">
-                        <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-                        <ProfileBasicInfo 
-                          user={user} 
-                          profileData={profileData}
-                          onUpdate={(data) => setProfileData({...profileData, ...data})} 
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Nutrition Preferences */}
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Nutrition Preferences</h2>
-                  <NutritionPreferences 
-                    preferences={nutritionPreferences}
-                    onSave={saveNutritionPreferences}
-                  />
-                </div>
+              <div className="space-y-8">
+                {/* Dashboard Summary */}
+                <UserDashboardSummary 
+                  profileData={profileData}
+                  nutritionPreferences={nutritionPreferences}
+                />
+
+                {/* Main Profile Content */}
+                <Tabs defaultValue="account">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="account">Account Information</TabsTrigger>
+                    <TabsTrigger value="body-nutrition">Body & Nutrition</TabsTrigger>
+                    <TabsTrigger value="diet-meal">Diet & Meal Planning</TabsTrigger>
+                  </TabsList>
+
+                  {/* Account Information Tab */}
+                  <TabsContent value="account">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="flex-shrink-0 flex justify-center md:block">
+                            <ProfileHeader profileData={profileData} isLoading={false} />
+                          </div>
+                          <div className="flex-grow">
+                            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+                            <ProfileBasicInfo 
+                              user={user} 
+                              profileData={profileData}
+                              onUpdate={(data) => setProfileData({...profileData, ...data})} 
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Body & Nutrition Tab */}
+                  <TabsContent value="body-nutrition">
+                    <BodyAndNutritionTabs 
+                      preferences={nutritionPreferences}
+                      onSave={saveNutritionPreferences}
+                    />
+                  </TabsContent>
+
+                  {/* Diet & Meal Planning Tab */}
+                  <TabsContent value="diet-meal">
+                    <DietAndMealTabs 
+                      preferences={nutritionPreferences}
+                      onSave={saveDietaryPreferences}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             )}
           </div>

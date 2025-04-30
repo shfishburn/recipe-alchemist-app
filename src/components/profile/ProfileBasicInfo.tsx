@@ -8,6 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { useUnitSystem } from '@/hooks/use-unit-system';
+import { Separator } from '@/components/ui/separator';
 
 interface ProfileBasicInfoProps {
   user: User;
@@ -17,16 +20,14 @@ interface ProfileBasicInfoProps {
 
 export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicInfoProps) {
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm({
+  const { unitSystem, updateUnitSystem } = useUnitSystem();
+  
+  const form = useForm({
     defaultValues: {
       username: profileData?.username || '',
-      weight_goal_type: profileData?.weight_goal_type || 'maintenance',
-      weight_goal_deficit: profileData?.weight_goal_deficit || 0,
-      unitSystem: (profileData?.nutrition_preferences?.unitSystem as 'metric' | 'imperial') || 'metric'
+      unitSystem: unitSystem || 'metric'
     }
   });
-
-  const unitSystem = watch('unitSystem');
   
   const onSubmit = async (data: any) => {
     try {
@@ -43,8 +44,6 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
         .from('profiles')
         .update({
           username: data.username,
-          weight_goal_type: data.weight_goal_type,
-          weight_goal_deficit: parseInt(data.weight_goal_deficit) || 0,
           nutrition_preferences: updatedPrefs
         })
         .eq('id', user.id);
@@ -59,8 +58,13 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
         return;
       }
       
+      // Update unit system globally
+      if (data.unitSystem !== unitSystem) {
+        updateUnitSystem(data.unitSystem);
+      }
+      
       onUpdate({
-        ...data,
+        username: data.username,
         nutrition_preferences: updatedPrefs
       });
       
@@ -78,84 +82,71 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
     }
   };
 
-  const handleUnitSystemChange = (value: 'metric' | 'imperial') => {
-    setValue('unitSystem', value);
-  };
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="username">Username</Label>
-          <Input
-            id="username"
-            {...register('username', { required: 'Username is required' })}
-          />
-          {errors.username && (
-            <p className="text-sm text-destructive">{errors.username.message?.toString()}</p>
-          )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              {...form.register('username', { required: 'Username is required' })}
+            />
+            {form.formState.errors.username && (
+              <p className="text-sm text-destructive">{form.formState.errors.username.message?.toString()}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              value={user.email || ''}
+              disabled
+            />
+            <p className="text-xs text-muted-foreground">Contact support to change your email</p>
+          </div>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            value={user.email || ''}
-            disabled
+        <Separator className="my-4" />
+        
+        <div className="space-y-4">
+          <h3 className="font-medium">Global Application Settings</h3>
+          
+          <FormField
+            control={form.control}
+            name="unitSystem"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preferred Unit System</FormLabel>
+                <FormControl>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select unit system" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="metric">Metric (kg, cm)</SelectItem>
+                      <SelectItem value="imperial">Imperial (lb, ft/in)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  This setting affects how measurements are displayed throughout the app
+                </p>
+              </FormItem>
+            )}
           />
-          <p className="text-xs text-muted-foreground">Contact support to change your email</p>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="weight_goal_type">Weight Goal</Label>
-          <select
-            id="weight_goal_type"
-            className="w-full rounded-md border border-input bg-background px-3 h-10"
-            {...register('weight_goal_type')}
-          >
-            <option value="maintenance">Maintenance</option>
-            <option value="loss">Weight Loss</option>
-            <option value="gain">Weight Gain</option>
-          </select>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="weight_goal_deficit">Daily Calorie Adjustment</Label>
-          <Input
-            id="weight_goal_deficit"
-            type="number"
-            {...register('weight_goal_deficit')}
-          />
-          <p className="text-xs text-muted-foreground">
-            Calories to add/subtract per day (positive for gain, negative for loss)
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="unitSystem">Preferred Unit System</Label>
-          <Select 
-            onValueChange={handleUnitSystemChange} 
-            defaultValue={unitSystem}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select unit system" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="metric">Metric (kg, cm)</SelectItem>
-              <SelectItem value="imperial">Imperial (lb, ft/in)</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            This setting affects how measurements are displayed throughout the app
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }
