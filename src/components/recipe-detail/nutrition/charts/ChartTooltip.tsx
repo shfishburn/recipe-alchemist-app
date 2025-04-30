@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { NUTRITION_COLORS, NUTRIENT_INFO } from '../blocks/personal/constants';
+import { 
+  NUTRITION_COLORS, 
+  NUTRIENT_INFO, 
+  isMacroNutrient,
+  isMicroNutrient 
+} from '../blocks/personal/constants';
 
 interface ChartTooltipProps {
   active?: boolean;
@@ -31,16 +36,16 @@ export const ChartTooltip = ({
   const nutrientInfo = NUTRIENT_INFO[nutrientName.toLowerCase() as keyof typeof NUTRIENT_INFO];
 
   // Determine unit label based on nutrient type and unit system
-  let unitLabel = 'g';
+  let unitLabel = 'g'; // Default unit label
   
-  // Check if this is a micronutrient that uses mg or µg
-  if (nutrientInfo && 'unit' in nutrientInfo) {
-    unitLabel = nutrientInfo.unit;
-  } else if (unitSystem === 'imperial' && 
-            ['protein', 'carbs', 'fat'].includes(nutrientName.toLowerCase())) {
-    // For macronutrients in imperial, we could potentially convert to oz, but
-    // nutritional values are typically still shown in grams even in imperial systems
-    unitLabel = 'g';
+  if (nutrientInfo) {
+    if (isMicroNutrient(nutrientInfo)) {
+      // If it's a micronutrient with a defined unit, use that
+      unitLabel = nutrientInfo.unit;
+    } else if (isMacroNutrient(nutrientInfo)) {
+      // For macronutrients, we typically use 'g' regardless of unit system
+      unitLabel = 'g';
+    }
   }
 
   return (
@@ -73,7 +78,7 @@ export const ChartTooltip = ({
           </span>
         </div>
         
-        {nutrientInfo && ('caloriesPerGram' in nutrientInfo) && (
+        {nutrientInfo && isMacroNutrient(nutrientInfo) && (
           <div className="flex justify-between text-gray-500 text-[10px] italic">
             <span>Calories per gram:</span>
             <span>{nutrientInfo.caloriesPerGram} kcal</span>
