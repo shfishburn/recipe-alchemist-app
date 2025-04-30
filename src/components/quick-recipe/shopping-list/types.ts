@@ -7,6 +7,7 @@ export interface ShoppingItem {
   department?: string;
   pantryStaple?: boolean;
   ingredientData?: Ingredient;
+  originalIngredient?: Ingredient; // Add this field to store the original ingredient data
   // Add structured data fields for better accessibility
   quantity?: number;
   unit?: string;

@@ -2,6 +2,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { Ingredient } from './types.ts';
+import { convertToGrams, WEIGHT_CONVERSIONS } from './unit-conversion.ts';
 
 // Define CORS headers
 const corsHeaders = {
@@ -170,6 +171,51 @@ async function saveIngredientMapping(
   }
 }
 
+// Calculate proper quantity scaling factor based on USDA reference weights
+function calculateScalingFactor(
+  ingredientQty: number, 
+  ingredientUnit: string, 
+  usdaData: any
+): { scaleFactor: number; conversionMethod: string; ingredientGrams: number } {
+  // Convert ingredient quantity to grams for consistent scaling
+  const ingredientGrams = convertToGrams(ingredientQty, ingredientUnit, usdaData.food_name);
+  
+  // Log the conversion for debugging
+  console.log(`Converting ${ingredientQty} ${ingredientUnit} of ${usdaData.food_name} to ${ingredientGrams} grams`);
+  
+  // USDA data is typically per 100g, but some entries have specific reference weights
+  let referenceGrams = 100; // Default reference amount (100g)
+  let conversionMethod = 'per_100g';
+  
+  // If USDA data includes a reference weight (gmwt_1), use that instead
+  // This is especially important for ingredients like spices where small amounts are used
+  if (usdaData.gmwt_1 && usdaData.gmwt_desc1) {
+    // For spices and herbs that are typically measured in small units
+    // The gmwt_1 value represents a common measure (like 1 tsp = 2.7g for many spices)
+    referenceGrams = usdaData.gmwt_1;
+    conversionMethod = `using_gmwt_1 (${usdaData.gmwt_desc1})`;
+    
+    // Convert the reference quantity to a proportion
+    // Example: if 1 tsp = 2.7g, and USDA values are per 1 tsp, 
+    // then for 15g of the ingredient, we need to scale by (15/2.7)
+  }
+  
+  // Calculate scaling factor based on ingredient grams and reference weight
+  const scaleFactor = ingredientGrams / referenceGrams;
+  
+  // Log scaling calculation for debugging
+  console.log(`Scaling ${usdaData.food_name}: ${ingredientGrams}g / ${referenceGrams}g reference = ${scaleFactor} factor (${conversionMethod})`);
+  
+  // Sanity check - if scaling factor is unreasonable, adjust it
+  if (scaleFactor > 50) {
+    // This is likely an error in conversion, cap it at a reasonable value
+    console.warn(`Unreasonably high scaling factor (${scaleFactor}) for ${usdaData.food_name}, capping at 50`);
+    return { scaleFactor: 50, conversionMethod: `${conversionMethod}_capped`, ingredientGrams };
+  }
+  
+  return { scaleFactor, conversionMethod, ingredientGrams };
+}
+
 // Calculate nutrition data for a list of ingredients
 async function calculateNutrition(ingredients: Ingredient[], servings: number = 1) {
   console.log(`Calculating nutrition for ${ingredients.length} ingredients and ${servings} servings`);
@@ -199,12 +245,22 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
     totalWeight: 0,
     weightedScoreSum: 0
   };
+
+  // Track unit conversions for debugging
+  const unitConversions: Array<{
+    ingredient: string;
+    originalQty: number;
+    originalUnit: string;
+    convertedGrams: number;
+    scaleFactor: number;
+    referenceAmount?: string;
+  }> = [];
   
   // Calculate per-ingredient nutrition
   for (const ingredient of ingredients) {
     const itemName = typeof ingredient.item === 'string' 
       ? ingredient.item 
-      : ingredient.item.item || 'Unknown ingredient';
+      : ingredient.item?.item || 'Unknown ingredient';
       
     // Estimate ingredient weight in recipe (rough heuristic)
     const estimatedWeight = ingredient.qty || 1;
@@ -221,29 +277,51 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
       
       const usdaData = matchResult.match;
       
-      // Apply quantity/portion scaling factor
-      // This is a simplified approach; ideal implementation would use
-      // proper unit conversions based on food density
-      const scaleFactor = (ingredient.qty || 1) / servings;
+      // Calculate proper scaling factor based on USDA reference weights
+      const { scaleFactor, conversionMethod, ingredientGrams } = calculateScalingFactor(
+        ingredient.qty || 1, 
+        ingredient.unit || 'g',
+        usdaData
+      );
+      
+      // Track this conversion for audit trail
+      unitConversions.push({
+        ingredient: itemName,
+        originalQty: ingredient.qty || 1,
+        originalUnit: ingredient.unit || 'g',
+        convertedGrams: ingredientGrams,
+        scaleFactor: scaleFactor,
+        referenceAmount: usdaData.gmwt_desc1 || '100g'
+      });
+      
+      // Apply scaling factor and divide by servings
+      const servingFactor = scaleFactor / servings;
       
       // Calculate per-ingredient nutrition
       const ingredientNutrition = {
         item: itemName,
-        calories: (usdaData.calories || 0) * scaleFactor,
-        protein_g: (usdaData.protein_g || 0) * scaleFactor,
-        carbs_g: (usdaData.carbs_g || 0) * scaleFactor,
-        fat_g: (usdaData.fat_g || 0) * scaleFactor,
-        fiber_g: (usdaData.fiber_g || 0) * scaleFactor,
-        sugar_g: (usdaData.sugar_g || 0) * scaleFactor,
-        sodium_mg: (usdaData.sodium_mg || 0) * scaleFactor,
-        vitamin_a_iu: (usdaData.vitamin_a_iu || 0) * scaleFactor,
-        vitamin_c_mg: (usdaData.vitamin_c_mg || 0) * scaleFactor,
-        vitamin_d_iu: (usdaData.vitamin_d_iu || 0) * scaleFactor,
-        calcium_mg: (usdaData.calcium_mg || 0) * scaleFactor,
-        iron_mg: (usdaData.iron_mg || 0) * scaleFactor,
-        potassium_mg: (usdaData.potassium_mg || 0) * scaleFactor,
+        calories: (usdaData.calories || 0) * servingFactor,
+        protein_g: (usdaData.protein_g || 0) * servingFactor,
+        carbs_g: (usdaData.carbs_g || 0) * servingFactor,
+        fat_g: (usdaData.fat_g || 0) * servingFactor,
+        fiber_g: (usdaData.fiber_g || 0) * servingFactor,
+        sugar_g: (usdaData.sugar_g || 0) * servingFactor,
+        sodium_mg: (usdaData.sodium_mg || 0) * servingFactor,
+        vitamin_a_iu: (usdaData.vitamin_a_iu || 0) * servingFactor,
+        vitamin_c_mg: (usdaData.vitamin_c_mg || 0) * servingFactor,
+        vitamin_d_iu: (usdaData.vitamin_d_iu || 0) * servingFactor,
+        calcium_mg: (usdaData.calcium_mg || 0) * servingFactor,
+        iron_mg: (usdaData.iron_mg || 0) * servingFactor,
+        potassium_mg: (usdaData.potassium_mg || 0) * servingFactor,
         confidence_score: matchResult.confidence_score,
-        match_method: matchResult.match_method
+        match_method: matchResult.match_method,
+        scaling_info: {
+          original_qty: ingredient.qty || 1,
+          original_unit: ingredient.unit || 'g',
+          grams_converted: ingredientGrams,
+          scale_factor: scaleFactor,
+          conversion_method: conversionMethod
+        }
       };
       
       // Store per-ingredient nutrition
@@ -308,6 +386,24 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
     penalizedScore *= 0.8;
   }
   
+  // Apply sanity check to the final nutrition values
+  // Round all values appropriately
+  Object.keys(nutritionData).forEach(key => {
+    const value = nutritionData[key as keyof typeof nutritionData];
+    
+    // Round to appropriate precision based on nutrient type
+    if (key.includes('_mg')) {
+      // Round milligram values to whole numbers
+      nutritionData[key as keyof typeof nutritionData] = Math.round(value);
+    } else if (key === 'calories') {
+      // Round calories to whole numbers
+      nutritionData[key as keyof typeof nutritionData] = Math.round(value);
+    } else {
+      // Round other values (g) to 1 decimal place
+      nutritionData[key as keyof typeof nutritionData] = Math.round(value * 10) / 10;
+    }
+  });
+  
   // Build final enhanced nutrition object
   const enhancedNutrition = {
     ...nutritionData,
@@ -328,7 +424,7 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
         ],
         final_calculation: `${overallConfidenceScore} × penalties = ${penalizedScore}`
       },
-      unit_conversions: {},
+      unit_conversions: unitConversions,
       yield_sources: {}
     }
   };

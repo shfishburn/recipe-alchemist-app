@@ -1,255 +1,266 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { Recipe } from '@/types/recipe';
-import type { Json } from '@/integrations/supabase/types';
-import type { ShoppingListItem } from '@/types/shopping-list';
+import { useAuth } from '@/hooks/use-auth';
+import { formatIngredient } from '@/utils/ingredient-format';
+import { getShoppingQuantity } from '@/utils/unit-conversion';
+import { ShoppingItem } from './types';
+import { Ingredient } from '@/types/recipe';
 
-export function useShoppingListActions(recipe: Recipe) {
-  const [isLoading, setIsLoading] = useState(false);
+export function useShoppingListActions() {
+  const { user } = useAuth();
   const { toast } = useToast();
-
-  const generateShoppingList = async () => {
+  const [isAddingToList, setIsAddingToList] = useState(false);
+  
+  // Add recipe ingredients to shopping list
+  const addIngredientsToShoppingList = async (
+    recipeId: string,
+    recipeTitle: string,
+    ingredients: Ingredient[]
+  ) => {
     try {
-      const response = await fetch('/api/generate-shopping-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ingredients: recipe.ingredients,
-          title: recipe.title
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate shopping list');
-      
-      const data = await response.json();
-      
-      // Convert AI-generated departments into flat list items
-      const items: ShoppingListItem[] = [];
-      data.departments.forEach(dept => {
-        dept.items.forEach(item => {
-          items.push({
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            checked: false,
-            notes: item.notes,
-            quality_indicators: item.quality_indicators,
-            alternatives: item.alternatives,
-            pantry_staple: item.pantry_staple,
-            storage_tips: item.storage_tips,
-            department: dept.name,
-            recipeId: recipe.id,
-            // Store original ingredient data if available
-            originalIngredient: JSON.stringify(
-              recipe.ingredients.find(ing => 
-                ing.item && (typeof ing.item === 'string' ? 
-                  ing.item.toLowerCase().includes(item.name.toLowerCase()) : 
-                  (typeof ing.item.item === 'string' && 
-                   ing.item.item.toLowerCase().includes(item.name.toLowerCase()))
-                )
-              )
-            )
-          });
+      if (!user) {
+        toast({
+          title: "Not signed in",
+          description: "Please sign in to add items to your shopping list",
+          variant: "destructive",
         });
-      });
+        return false;
+      }
 
-      // Add common staple items if they're not already in the list
-      const basicItems = [
-        'Cooking oil',
-        'Salt',
-        'Black pepper'
-      ];
+      setIsAddingToList(true);
+      console.log("Adding ingredients to shopping list:", ingredients);
       
-      basicItems.forEach(basicItem => {
-        const hasItem = items.some(item => 
-          item.name.toLowerCase().includes(basicItem.toLowerCase())
-        );
+      // Check if we already have a shopping list
+      const { data: existingLists, error: listError } = await supabase
+        .from('shopping_lists')
+        .select('id, items')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
         
-        if (!hasItem) {
-          items.push({
-            name: basicItem,
-            quantity: 1,
-            unit: '',
-            checked: false,
-            pantry_staple: true,
-            department: 'Pantry',
-            recipeId: recipe.id
-          });
-        }
-      });
-
-      return { 
-        items, 
-        tips: data.efficiency_tips || [], 
-        preparation_notes: data.preparation_notes || [] 
-      };
-    } catch (error) {
-      console.error('Error in generateShoppingList:', error);
-      throw error;
-    }
-  };
-
-  const createNewList = async (newListName: string) => {
-    try {
-      setIsLoading(true);
-      const { data: userData } = await supabase.auth.getUser();
-      
-      if (!userData.user) {
-        throw new Error("User not authenticated");
+      if (listError) {
+        throw listError;
       }
       
-      const { items, tips, preparation_notes } = await generateShoppingList();
+      // Transform ingredients to shopping items
+      const shoppingItems = ingredients.map((ingredient): ShoppingItem => {
+        // Skip string ingredients
+        if (typeof ingredient === 'string') {
+          return {
+            text: ingredient,
+            checked: false,
+            originalIngredient: undefined,
+            department: 'Other',
+          };
+        }
+        
+        // Handle structured ingredients
+        const itemName = typeof ingredient.item === 'string' 
+          ? ingredient.item 
+          : ingredient.item?.item || 'Unknown item';
+        
+        // Convert recipe units to shopping units
+        const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
+        
+        // Format the ingredient text
+        const text = formatIngredient({
+          ...ingredient,
+          qty: shoppingQty.qty,
+          unit: shoppingQty.unit
+        });
+        
+        // Determine department based on ingredient name
+        const department = getDepartmentForIngredient(itemName);
+        
+        return {
+          text,
+          checked: false,
+          originalIngredient: ingredient, // Store the original ingredient data
+          department,
+          quantity: shoppingQty.qty,
+          unit: shoppingQty.unit,
+          item: itemName,
+          notes: ingredient.notes,
+        };
+      });
       
-      // Enhance item data with structured information for better shopping experience
-      const enhancedItems = items.map(item => {
-        // If we have original ingredient data, parse it and extract shop sizes
-        if (item.originalIngredient) {
-          try {
-            const originalData = JSON.parse(item.originalIngredient);
-            if (originalData) {
-              // Use shop size if available
-              if (originalData.shop_size_qty !== undefined || originalData.shop_size_unit) {
-                return {
-                  ...item,
-                  quantity: originalData.shop_size_qty !== undefined ? 
-                            originalData.shop_size_qty : item.quantity,
-                  unit: originalData.shop_size_unit || item.unit
-                };
-              }
-            }
-          } catch (e) {
-            console.warn("Failed to parse original ingredient data:", e);
+      let listId;
+      
+      if (existingLists && existingLists.length > 0) {
+        // Add to existing list
+        const currentList = existingLists[0];
+        listId = currentList.id;
+        
+        // Current items in the list
+        const currentItems = currentList.items || [];
+        
+        // Check for duplicates and merge
+        const newItems = [...currentItems];
+        let addedCount = 0;
+        
+        for (const item of shoppingItems) {
+          // Check if this item is already in the list
+          const existingIndex = newItems.findIndex(
+            existing => existing.text === item.text
+          );
+          
+          if (existingIndex === -1) {
+            // Not a duplicate, add it
+            newItems.push(item);
+            addedCount++;
           }
         }
-        return item;
-      });
+        
+        // Update the list with new items
+        const { error: updateError } = await supabase
+          .from('shopping_lists')
+          .update({ items: newItems })
+          .eq('id', listId);
+          
+        if (updateError) {
+          throw updateError;
+        }
+        
+        toast({
+          title: "Added to shopping list",
+          description: `Added ${addedCount} items from "${recipeTitle}" to your shopping list`,
+        });
+      } else {
+        // Create new shopping list
+        const { data: newList, error: createError } = await supabase
+          .from('shopping_lists')
+          .insert([{
+            title: `Shopping List with ${recipeTitle}`,
+            user_id: user.id,
+            items: shoppingItems,
+          }])
+          .select();
+          
+        if (createError) {
+          throw createError;
+        }
+        
+        listId = newList?.[0]?.id;
+        
+        toast({
+          title: "Created new shopping list",
+          description: `Added ${shoppingItems.length} items from "${recipeTitle}" to a new shopping list`,
+        });
+      }
       
-      const { data, error } = await supabase
-        .from('shopping_lists')
-        .insert({
-          title: newListName,
-          user_id: userData.user.id,
-          items: enhancedItems as unknown as Json,
-          tips: tips,
-          preparation_notes: preparation_notes
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: `Created shopping list "${newListName}" with organized ingredients.`,
-      });
-      
-      return data;
+      return true;
     } catch (error) {
-      console.error('Error creating shopping list:', error);
+      console.error("Error adding to shopping list:", error);
       toast({
         title: "Error",
-        description: "Failed to create shopping list.",
+        description: "Failed to add ingredients to shopping list",
         variant: "destructive",
       });
-      return null;
+      return false;
     } finally {
-      setIsLoading(false);
+      setIsAddingToList(false);
     }
   };
   
-  const addToExistingList = async (selectedListId: string) => {
+  // Update the checked status of an item in a list
+  const toggleItemChecked = async (
+    listId: string,
+    itemText: string,
+    currentChecked: boolean
+  ) => {
     try {
-      setIsLoading(true);
-      
-      // Get current list items
-      const { data: currentList, error: fetchError } = await supabase
+      // Get the current list
+      const { data: list, error } = await supabase
         .from('shopping_lists')
-        .select('items, tips, preparation_notes')
-        .eq('id', selectedListId)
+        .select('items')
+        .eq('id', listId)
         .single();
+        
+      if (error) {
+        throw error;
+      }
       
-      if (fetchError) throw fetchError;
-      
-      // Generate new items with AI
-      const { items: newItems, tips: newTips, preparation_notes: newPreparationNotes } = await generateShoppingList();
-      
-      // Enhance item data with structured information for better shopping experience
-      const enhancedNewItems = newItems.map(item => {
-        // If we have original ingredient data, parse it and extract shop sizes
-        if (item.originalIngredient) {
-          try {
-            const originalData = JSON.parse(item.originalIngredient);
-            if (originalData) {
-              // Use shop size if available
-              if (originalData.shop_size_qty !== undefined || originalData.shop_size_unit) {
-                return {
-                  ...item,
-                  quantity: originalData.shop_size_qty !== undefined ? 
-                            originalData.shop_size_qty : item.quantity,
-                  unit: originalData.shop_size_unit || item.unit
-                };
-              }
-            }
-          } catch (e) {
-            console.warn("Failed to parse original ingredient data:", e);
-          }
+      // Find and update the item
+      const updatedItems = list.items.map((item: ShoppingItem) => {
+        if (item.text === itemText) {
+          return {
+            ...item,
+            checked: !currentChecked,
+          };
         }
         return item;
       });
       
-      // Combine existing and new items, keeping department organization
-      const currentItems = (currentList.items as unknown as ShoppingListItem[]) || [];
-      const currentTips = (currentList.tips as string[]) || [];
-      const currentPreparationNotes = (currentList.preparation_notes as string[]) || [];
-      
-      // Smart merge: combine items with same name and unit within departments
-      const mergedItems = [...currentItems];
-      enhancedNewItems.forEach(newItem => {
-        const existingItemIndex = mergedItems.findIndex(item => 
-          item.name === newItem.name && 
-          item.unit === newItem.unit &&
-          item.department === newItem.department
-        );
-        
-        if (existingItemIndex >= 0) {
-          mergedItems[existingItemIndex].quantity += newItem.quantity;
-        } else {
-          mergedItems.push(newItem);
-        }
-      });
-      
-      // Update the shopping list
+      // Save the updated list
       const { error: updateError } = await supabase
         .from('shopping_lists')
-        .update({ 
-          items: mergedItems as unknown as Json,
-          tips: [...new Set([...currentTips, ...newTips])],
-          preparation_notes: [...new Set([...currentPreparationNotes, ...newPreparationNotes])]
-        })
-        .eq('id', selectedListId);
+        .update({ items: updatedItems })
+        .eq('id', listId);
+        
+      if (updateError) {
+        throw updateError;
+      }
       
-      if (updateError) throw updateError;
-      
-      toast({
-        title: "Success",
-        description: `Added ingredients to shopping list.`,
-      });
+      return true;
     } catch (error) {
-      console.error('Error adding to shopping list:', error);
+      console.error("Error toggling item:", error);
       toast({
         title: "Error",
-        description: "Failed to add ingredients to shopping list.",
+        description: "Failed to update shopping list item",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      return false;
     }
   };
-
+  
   return {
-    isLoading,
-    createNewList,
-    addToExistingList
+    addIngredientsToShoppingList,
+    toggleItemChecked,
+    isAddingToList,
   };
+}
+
+// Helper function to determine department based on ingredient
+function getDepartmentForIngredient(ingredient: string): string {
+  const lowerIngredient = ingredient.toLowerCase();
+  
+  // Produce
+  if (/lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i.test(lowerIngredient)) {
+    return 'Produce';
+  }
+  
+  // Meat & Seafood
+  if (/beef|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|steak|ground meat|bacon|sausage/i.test(lowerIngredient)) {
+    return 'Meat & Seafood';
+  }
+  
+  // Dairy & Eggs
+  if (/milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i.test(lowerIngredient)) {
+    return 'Dairy & Eggs';
+  }
+  
+  // Bakery
+  if (/bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i.test(lowerIngredient)) {
+    return 'Bakery';
+  }
+  
+  // Pantry
+  if (/flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i.test(lowerIngredient)) {
+    return 'Pantry';
+  }
+  
+  // Frozen
+  if (/frozen|ice cream|popsicle/i.test(lowerIngredient)) {
+    return 'Frozen';
+  }
+  
+  // Beverages
+  if (/water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i.test(lowerIngredient)) {
+    return 'Beverages';
+  }
+  
+  // Default
+  return 'Other';
 }

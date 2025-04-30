@@ -1,114 +1,120 @@
 
-import React from 'react';
-import { Slider } from '@/components/ui/slider';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// Remove the incorrect import as this function doesn't exist in the file
-import type { NutritionPreferencesType } from '@/types/nutrition';
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { NutritionPreferencesType } from "@/hooks/use-profile-settings";
 
-interface ActivityComponentsInputProps {
+export interface ActivityComponentsInputProps {
   preferences: NutritionPreferencesType;
-  onUpdate: (updatedPreferences: Partial<NutritionPreferencesType>) => void;
+  onChange: (updatedValues: Partial<NutritionPreferencesType>) => void;
 }
 
-export function ActivityComponentsInput({ preferences, onUpdate }: ActivityComponentsInputProps) {
-  // Instead of using the non-existent function, we'll calculate it inline
-  const calculateActivityMultiplier = (preferences: NutritionPreferencesType): number => {
-    // This is a simplified calculation - adjust based on your actual formula
-    const baseMultiplier = preferences.activityLevel === 'sedentary' ? 1.2 :
-                          preferences.activityLevel === 'lightly_active' ? 1.375 :
-                          preferences.activityLevel === 'moderately_active' ? 1.55 :
-                          preferences.activityLevel === 'very_active' ? 1.725 : 1.9;
-    
-    // Apply additional factors based on non-exercise activity and exercise intensity
-    const nonExerciseFactor = preferences.nonExerciseActivity ? 
-          preferences.nonExerciseActivity / 10 * 0.1 : 0;
-    const exerciseIntensityFactor = preferences.exerciseIntensity ?
-          preferences.exerciseIntensity / 10 * 0.1 : 0;
-          
-    return baseMultiplier + nonExerciseFactor + exerciseIntensityFactor;
+export function ActivityComponentsInput({ 
+  preferences,
+  onChange
+}: ActivityComponentsInputProps) {
+  // Use defaults if properties don't exist
+  const activityLevel = preferences.activityLevel || 'moderate';
+  const nonExerciseActivity = preferences.nonExerciseActivity || 'moderate';
+  const exerciseIntensity = preferences.exerciseIntensity || 'moderate';
+
+  const ACTIVITY_LEVELS = ['sedentary', 'light', 'moderate', 'active', 'very_active'];
+  const NEAT_LEVELS = ['minimal', 'low', 'moderate', 'high', 'very_high'];
+  const INTENSITY_LEVELS = ['light', 'moderate', 'challenging', 'intense', 'extreme'];
+
+  const handleActivityChange = (value: number[]) => {
+    const level = ACTIVITY_LEVELS[value[0]];
+    onChange({
+      activityLevel: level
+    });
   };
 
-  const handleActivityLevelChange = (value: string) => {
-    onUpdate({ activityLevel: value as any });
+  const handleNEATChange = (value: number[]) => {
+    const level = NEAT_LEVELS[value[0]];
+    onChange({
+      nonExerciseActivity: level
+    });
   };
 
-  const handleNonExerciseActivityChange = (value: number[]) => {
-    onUpdate({ nonExerciseActivity: value[0] });
+  const handleIntensityChange = (value: number[]) => {
+    const level = INTENSITY_LEVELS[value[0]];
+    onChange({
+      exerciseIntensity: level
+    });
   };
 
-  const handleExerciseIntensityChange = (value: number[]) => {
-    onUpdate({ exerciseIntensity: value[0] });
+  const getActivityIndex = () => {
+    return ACTIVITY_LEVELS.indexOf(activityLevel);
   };
 
-  // Calculate the activity multiplier based on all factors
-  const activityMultiplier = calculateActivityMultiplier(preferences);
+  const getNEATIndex = () => {
+    return NEAT_LEVELS.indexOf(nonExerciseActivity);
+  };
+
+  const getIntensityIndex = () => {
+    return INTENSITY_LEVELS.indexOf(exerciseIntensity);
+  };
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="activity-level">Activity Level</Label>
-        <Select 
-          value={preferences.activityLevel || 'moderately_active'} 
-          onValueChange={handleActivityLevelChange}
-        >
-          <SelectTrigger id="activity-level">
-            <SelectValue placeholder="Select activity level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="sedentary">Sedentary (little or no exercise)</SelectItem>
-            <SelectItem value="lightly_active">Lightly Active (light exercise 1-3 days/week)</SelectItem>
-            <SelectItem value="moderately_active">Moderately Active (moderate exercise 3-5 days/week)</SelectItem>
-            <SelectItem value="very_active">Very Active (hard exercise 6-7 days/week)</SelectItem>
-            <SelectItem value="extremely_active">Extremely Active (professional athlete level)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="non-exercise-activity">
-          Non-Exercise Activity (walking, standing, daily movement)
-        </Label>
+        <div className="flex justify-between">
+          <Label htmlFor="activity-level">Overall Activity Level</Label>
+          <span className="text-sm text-muted-foreground capitalize">
+            {activityLevel.replace('_', ' ')}
+          </span>
+        </div>
         <Slider 
-          id="non-exercise-activity"
-          min={0} 
-          max={10} 
+          id="activity-level"
+          defaultValue={[getActivityIndex()]} 
+          max={4}
           step={1}
-          value={[preferences.nonExerciseActivity || 5]} 
-          onValueChange={handleNonExerciseActivityChange}
+          onValueChange={handleActivityChange}
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Low</span>
-          <span>High</span>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Sedentary</span>
+          <span>Very Active</span>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="exercise-intensity">Exercise Intensity</Label>
+        <div className="flex justify-between">
+          <Label htmlFor="neat-level">Non-exercise Activity (NEAT)</Label>
+          <span className="text-sm text-muted-foreground capitalize">
+            {nonExerciseActivity.replace('_', ' ')}
+          </span>
+        </div>
         <Slider 
-          id="exercise-intensity"
-          min={0} 
-          max={10} 
+          id="neat-level"
+          defaultValue={[getNEATIndex()]} 
+          max={4}
           step={1}
-          value={[preferences.exerciseIntensity || 5]} 
-          onValueChange={handleExerciseIntensityChange}
+          onValueChange={handleNEATChange}
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Low</span>
-          <span>High</span>
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Minimal</span>
+          <span>Very High</span>
         </div>
       </div>
 
-      <Card className="bg-muted/50">
-        <CardContent className="p-4">
-          <div className="text-sm font-medium">Your Activity Multiplier</div>
-          <div className="text-2xl font-bold mt-1">{activityMultiplier.toFixed(2)}x</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            This multiplier is applied to your basal metabolic rate to determine your total daily energy expenditure.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <Label htmlFor="intensity-level">Workout Intensity</Label>
+          <span className="text-sm text-muted-foreground capitalize">
+            {exerciseIntensity.replace('_', ' ')}
+          </span>
+        </div>
+        <Slider 
+          id="intensity-level"
+          defaultValue={[getIntensityIndex()]} 
+          max={4}
+          step={1}
+          onValueChange={handleIntensityChange}
+        />
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <span>Light</span>
+          <span>Extreme</span>
+        </div>
+      </div>
     </div>
   );
 }
