@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { QuickRecipeTagForm } from './QuickRecipeTagForm';
 import { QuickRecipeCard } from './QuickRecipeCard';
@@ -11,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 // Helper function to format ingredient for database storage
 const formatIngredientForDB = (ingredient: any) => {
@@ -48,6 +51,9 @@ export function QuickRecipeGenerator() {
   const navigate = useNavigate();
   const authDrawer = useAuthDrawer();
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Store the last form data for regeneration
+  const [lastFormData, setLastFormData] = useState<any>(null);
   
   // Reference to trigger the print dialog
   const printDialogTriggerRef = useRef<HTMLButtonElement>(null);
@@ -113,13 +119,31 @@ export function QuickRecipeGenerator() {
     }
   };
   
+  const handleSubmit = async (formData) => {
+    // Save the form data for potential regeneration
+    setLastFormData(formData);
+    return await generateQuickRecipe(formData);
+  };
+  
+  const handleRegenerate = async () => {
+    if (lastFormData) {
+      setRecipe(null); // Clear current recipe
+      await generateQuickRecipe(lastFormData);
+      
+      toast({
+        title: "Regenerating recipe",
+        description: "Creating a new version with the same ingredients"
+      });
+    }
+  };
+  
   return (
     <div className="w-full">
       {isLoading ? (
         <QuickRecipeLoading />
       ) : !recipe ? (
         <QuickRecipeTagForm 
-          onSubmit={generateQuickRecipe} 
+          onSubmit={handleSubmit} 
           isLoading={isLoading} 
         />
       ) : (
@@ -132,12 +156,29 @@ export function QuickRecipeGenerator() {
             onPrint={handlePrint}
             isSaving={isSaving}
           />
-          <button 
-            className="mt-6 text-sm text-center w-full text-muted-foreground hover:text-foreground"
-            onClick={() => setRecipe(null)}
-          >
-            Try a different recipe
-          </button>
+          <div className="mt-6 flex justify-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setRecipe(null)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Try a different recipe
+            </Button>
+            
+            {lastFormData && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={isLoading}
+                className="text-muted-foreground hover:text-foreground flex items-center"
+              >
+                <RefreshCw className="mr-1 h-4 w-4" />
+                Regenerate recipe
+              </Button>
+            )}
+          </div>
         </div>
       )}
       
