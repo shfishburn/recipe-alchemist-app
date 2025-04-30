@@ -49,7 +49,7 @@ export function useQuickRecipeSave() {
       // Convert science notes to the correct format
       const science_notes = recipe.scienceNotes || [];
       
-      // Create recipe in database - fix the insert call to use a single object, not an array
+      // Create recipe in database - fixed to use an object not an array
       const { data, error } = await supabase
         .from('recipes')
         .insert({

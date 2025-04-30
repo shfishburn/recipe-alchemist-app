@@ -2,50 +2,27 @@
 import React from 'react';
 import { RecipeSectionHeader } from './RecipeSectionHeader';
 import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
+import { formatIngredient } from '@/utils/ingredient-format';
 import { Ingredient } from '@/hooks/use-quick-recipe';
 
 interface RecipeIngredientsProps {
   ingredients: any[];
 }
 
-// Helper function to format ingredient display text
-const formatIngredient = (ingredient: any): string => {
-  if (typeof ingredient === 'string') {
-    return ingredient;
+// Helper function to format ingredient display text with markdown
+const formatIngredientWithMarkdown = (ingredient: any): string => {
+  const formatted = formatIngredient(ingredient);
+  
+  // Extract the item text to wrap in markdown
+  let parts = formatted.split(' ');
+  if (parts.length > 0) {
+    // Get the last part that should be the item name (without quantity/unit)
+    const lastPart = parts[parts.length - 1];
+    // Replace the last part with the marked up version
+    parts[parts.length - 1] = `**${lastPart}**`;
   }
   
-  const { qty, unit, shop_size_qty, shop_size_unit, item, notes } = ingredient;
-  let formatted = '';
-  
-  // Use shop size if available, otherwise use regular quantity
-  const displayQty = shop_size_qty !== undefined ? shop_size_qty : qty;
-  const displayUnit = shop_size_unit || unit;
-  
-  if (displayQty) {
-    formatted += displayQty + ' ';
-  }
-  
-  if (displayUnit) {
-    formatted += displayUnit + ' ';
-  }
-  
-  // Handle different item formats
-  let itemText = '';
-  if (typeof item === 'string') {
-    itemText = item;
-  } else if (item && typeof item === 'object' && 'item' in item) {
-    itemText = item.item;
-  } else if (item) {
-    itemText = String(item);
-  }
-  
-  formatted += `**${itemText}**`;  // Format with ** for ingredient highlighting
-  
-  if (notes) {
-    formatted += ` (${notes})`;
-  }
-  
-  return formatted.trim();
+  return parts.join(' ');
 };
 
 export function RecipeIngredients({ ingredients }: RecipeIngredientsProps) {
@@ -55,7 +32,7 @@ export function RecipeIngredients({ ingredients }: RecipeIngredientsProps) {
       <ul className="list-disc pl-5 space-y-1">
         {ingredients.map((ingredient, index) => (
           <li key={index}>
-            <FormattedIngredientText text={formatIngredient(ingredient)} />
+            <FormattedIngredientText text={formatIngredientWithMarkdown(ingredient)} />
           </li>
         ))}
       </ul>
