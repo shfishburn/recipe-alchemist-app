@@ -14,7 +14,10 @@ export function QuickRecipeGenerator() {
       const regenerate = async () => {
         reset(); // Clear any existing recipe
         // Navigate directly instead of waiting for the recipe
-        navigate('/quick-recipe', { replace: true });
+        navigate('/quick-recipe', { 
+          replace: true,
+          state: { regenerate: true } // Keep the state to indicate this is not a direct navigation
+        });
         // Generate the recipe after navigation
         await generateQuickRecipe(state.formData);
       };
@@ -23,8 +26,5 @@ export function QuickRecipeGenerator() {
     }
   }, [location, generateQuickRecipe, navigate, reset]);
 
-  // No need to auto-navigate when recipe exists anymore since
-  // navigation now happens before recipe generation
-  
   return <QuickRecipeFormContainer />;
 }

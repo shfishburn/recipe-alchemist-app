@@ -19,7 +19,9 @@ export function useQuickRecipeForm() {
       
       // Navigate to the quick recipe page BEFORE starting the API call
       // This ensures the loading animation is displayed
-      navigate('/quick-recipe');
+      navigate('/quick-recipe', { 
+        state: { fromForm: true } // Add state to indicate this is from form submission
+      });
       
       // Start generating the recipe AFTER navigation
       const recipe = await generateQuickRecipe(formData);

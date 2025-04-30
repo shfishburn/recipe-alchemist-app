@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading';
@@ -9,18 +9,30 @@ import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRe
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
+import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
-  const { recipe, isLoading, formData, error } = useQuickRecipeStore();
+  const location = useLocation();
+  const { recipe, isLoading, formData, error, reset } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
+  
+  // Check if we're navigating from navbar (no state)
+  const isDirectNavigation = !location.state;
+
+  // Reset loading state if navigating directly from navbar
+  useEffect(() => {
+    if (isDirectNavigation && isLoading) {
+      reset();
+    }
+  }, [isDirectNavigation, isLoading, reset]);
 
   // Only redirect if not loading AND no recipe data AND no error AND no formData
   useEffect(() => {
-    if (!isLoading && !recipe && !error && !formData) {
+    if (!isLoading && !recipe && !error && !formData && !isDirectNavigation) {
       navigate('/');
     }
-  }, [isLoading, recipe, error, formData, navigate]);
+  }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
 
   const handleRetry = async () => {
     if (formData) {
@@ -33,7 +45,12 @@ const QuickRecipePage = () => {
       <Navbar />
       <main className="flex-1 py-4 md:py-8 animate-fadeIn">
         <div className="container-page max-w-full px-3 md:px-6">
-          {isLoading ? (
+          {isDirectNavigation ? (
+            // Show form directly when navigating from navbar
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md max-w-lg mx-auto">
+              <QuickRecipeFormContainer />
+            </div>
+          ) : isLoading ? (
             <div className="flex justify-center">
               <QuickRecipeLoading />
             </div>
