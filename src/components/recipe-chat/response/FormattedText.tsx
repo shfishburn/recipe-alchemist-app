@@ -1,6 +1,10 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { ListBlock } from './blocks/ListBlock';
+import { SectionBlock } from './blocks/SectionBlock';
+import { HeadingBlock, MethodologyHeading } from './blocks/HeadingBlock';
+import { processInlineFormatting, containsScientificContent } from './utils/text-formatting';
 
 interface FormattedTextProps {
   text: string;
@@ -33,73 +37,27 @@ export function FormattedText({
       if (block.match(/^[\w\s-]+\s*Methodology$/im) || 
           block.match(/^[\w\s-]+\s*Analysis$/im) ||
           block.match(/^Summary of Key Principles$/im)) {
-        return (
-          <h3 key={blockIndex} className="font-semibold text-gray-900 mt-5 mb-3">
-            {block.trim()}
-          </h3>
-        );
+        return <MethodologyHeading block={block} blockIndex={blockIndex} />;
       }
       
       // Dedicated handling for numbered sections with numeric or dash prefixes
       if (block.match(/^\d+\.\s+[\w\s]/m)) {
-        const title = block.split('\n')[0].trim();
-        const content = block.split('\n').slice(1).join('\n').trim();
-        
-        return (
-          <div key={blockIndex} className="mb-4">
-            <h4 className="font-medium text-gray-800 mb-1">{title}</h4>
-            <div className="pl-1">
-              {processInlineFormatting(content)}
-            </div>
-          </div>
-        );
+        return <SectionBlock block={block} blockIndex={blockIndex} />;
       }
       
       // Enhanced detection of bullet point lists with better pattern matching
       if (block.match(/^[\s\t]*[•\-*]\s+\S/m)) {
-        const items = block.split(/\n/).filter(item => item.trim().match(/^[\s\t]*[•\-*]\s+\S/));
-        
-        return (
-          <ul key={blockIndex} className="list-disc pl-5 space-y-1 my-2">
-            {items.map((item, itemIndex) => {
-              // Handle nested bullets by checking for indentation
-              const indentMatch = item.match(/^(\s+)/);
-              const indent = indentMatch ? indentMatch[1].length : 0;
-              const indentClass = indent > 2 ? "ml-4" : "";
-              
-              return (
-                <li key={`${blockIndex}-${itemIndex}`} className={indentClass}>
-                  {processInlineFormatting(item.replace(/^[\s\t]*[•\-*]\s+/, ''))}
-                </li>
-              );
-            })}
-          </ul>
-        );
+        return <ListBlock block={block} blockIndex={blockIndex} type="bullet" />;
       }
       
       // Enhanced handling for numeric lists with better numbering preservation
       if (block.match(/^[\s\t]*\d+\.\s+\S/m)) {
-        const items = block.split(/\n/).filter(item => item.trim().match(/^[\s\t]*\d+\.\s+\S/));
-        
-        return (
-          <ol key={blockIndex} className="list-decimal pl-5 space-y-1 my-2">
-            {items.map((item, itemIndex) => (
-              <li key={`${blockIndex}-${itemIndex}`}>
-                {processInlineFormatting(item.replace(/^[\s\t]*\d+\.\s+/, ''))}
-              </li>
-            ))}
-          </ol>
-        );
+        return <ListBlock block={block} blockIndex={blockIndex} type="numbered" />;
       }
       
       // Enhanced heading pattern matching with scientific headers
       if (block.match(/^#{2,3}\s+[\w\s]/)) {
-        const headingText = block.replace(/^#{2,3}\s+/, '');
-        return (
-          <h3 key={blockIndex} className={`font-semibold ${blockIndex > 0 ? 'mt-4' : 'mt-2'} mb-2 text-gray-800`}>
-            {processInlineFormatting(headingText)}
-          </h3>
-        );
+        return <HeadingBlock block={block} blockIndex={blockIndex} />;
       }
       
       // Enhanced section divider handling (common in scientific content)
@@ -116,114 +74,16 @@ export function FormattedText({
     }).filter(Boolean); // Remove null entries
   }, [text, preserveWhitespace]);
 
+  // Detect if this is scientific content
+  const isScientific = text ? containsScientificContent(text) : false;
+
   return (
-    <div className={cn("text-sm text-neutral-800", className)}>
+    <div className={cn(
+      "text-sm text-neutral-800", 
+      isScientific ? 'scientific-content' : '',
+      className
+    )}>
       {formattedBlocks}
     </div>
   );
-}
-
-// Enhanced inline formatting processor with improved styling for ingredients
-function processInlineFormatting(text: string): React.ReactNode[] {
-  if (!text || typeof text !== 'string') {
-    return [text];
-  }
-  
-  // Initialize result array and processing state
-  const parts: React.ReactNode[] = [];
-  let currentText = '';
-  let boldActive = false;
-  let italicActive = false;
-  let codeActive = false;
-  
-  // Enhanced scientific notation support
-  const processedText = text
-    // Handle temperature formats like 350°F, 175°C
-    .replace(/(\d+)°([FC])/g, '$1°$2')
-    // Handle fractions like 1/2, 3/4
-    .replace(/(\d+)\/(\d+)/g, '$1/$2')
-    // Handle nutrition units like 28g, 240 kcal
-    .replace(/(\d+)(\s*)(g|mg|kg|kcal|cal)/g, '$1$2$3')
-    // Handle percentages
-    .replace(/(\d+)(\s*)(%)/g, '$1$2$3');
-  
-  // Process the text character by character for more reliable formatting
-  for (let i = 0; i < processedText.length; i++) {
-    // Handle bold formatting with **text**
-    if (processedText.substr(i, 2) === '**' && (!codeActive)) {
-      // Add accumulated text before the marker
-      if (currentText) {
-        parts.push(boldActive ? 
-          <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-          italicActive ? <em key={`italic-${i}`}>{currentText}</em> : currentText
-        );
-        currentText = '';
-      }
-      
-      // Toggle bold state
-      boldActive = !boldActive;
-      i++; // Skip the second asterisk
-      continue;
-    }
-    
-    // Handle italic formatting with _text_
-    if (processedText[i] === '_' && (!codeActive) && 
-        (!processedText[i-1] || /\s/.test(processedText[i-1])) && 
-        (!processedText[i+1] || !/\s/.test(processedText[i+1]))) {
-      // Add accumulated text before the marker
-      if (currentText) {
-        parts.push(boldActive ? 
-          <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-          italicActive ? <em key={`italic-${i}`}>{currentText}</em> : currentText
-        );
-        currentText = '';
-      }
-      
-      // Toggle italic state
-      italicActive = !italicActive;
-      continue;
-    }
-    
-    // Handle code formatting with `text`
-    if (processedText[i] === '`' && (i === 0 || processedText[i-1] !== '\\')) {
-      // Add accumulated text before the marker
-      if (currentText) {
-        parts.push(boldActive ? 
-          <strong key={`bold-${i}`}>{italicActive ? <em>{currentText}</em> : currentText}</strong> : 
-          italicActive ? <em key={`italic-${i}`}>{currentText}</em> : currentText
-        );
-        currentText = '';
-      }
-      
-      // Toggle code state
-      codeActive = !codeActive;
-      continue;
-    }
-    
-    // Add character to current text segment
-    currentText += processedText[i];
-    
-    // Handle end of text
-    if (i === processedText.length - 1 && currentText) {
-      if (boldActive) {
-        // Use enhanced styling for ingredients (bolded items)
-        parts.push(
-          <span 
-            key={`bold-${i}`} 
-            className="font-semibold text-recipe-blue bg-recipe-blue/5 px-1.5 py-0.5 rounded-md border border-recipe-blue/10"
-          >
-            {italicActive ? <em>{currentText}</em> : currentText}
-          </span>
-        );
-      } else if (italicActive) {
-        parts.push(<em key={`italic-${i}`}>{currentText}</em>);
-      } else if (codeActive) {
-        parts.push(<code key={`code-${i}`} className="px-1 py-0.5 bg-gray-100 rounded">{currentText}</code>);
-      } else {
-        parts.push(currentText);
-      }
-    }
-  }
-  
-  return parts;
 }
