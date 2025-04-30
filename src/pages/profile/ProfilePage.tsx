@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
@@ -5,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfileHeader } from './components/ProfileHeader';
 import { ProfileBasicInfo } from '@/components/profile/ProfileBasicInfo';
 import { NutritionPreferences } from '@/components/profile/NutritionPreferences';
-import { DietaryPreferences } from '@/components/profile/DietaryPreferences';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NutritionPreferencesType } from '@/types/nutrition';
 import { Json } from '@/integrations/supabase/types';
+import { Card, CardContent } from '@/components/ui/card';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -193,41 +194,55 @@ const ProfilePage = () => {
             </Breadcrumb>
           </nav>
           
-          <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
-            <ProfileHeader profileData={profileData} isLoading={isLoading} />
-            <div className="w-full">
-              <h1 className="text-2xl md:text-3xl font-bold mb-4">My Profile</h1>
-              <p className="text-base text-muted-foreground mb-6 md:mb-8">
-                Manage your personal information, nutrition goals, and dietary preferences to customize your cooking experience.
-              </p>
-              
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-40 w-full" />
+          <div className="w-full mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">My Profile</h1>
+            <p className="text-base text-muted-foreground mb-6">
+              Manage your personal information, nutrition goals, and dietary preferences to customize your cooking experience.
+            </p>
+            
+            {isLoading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Profile Header and Basic Info */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="md:col-span-1">
+                        <ProfileHeader profileData={profileData} isLoading={false} />
+                      </div>
+                      <div className="md:col-span-3">
+                        <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+                        <ProfileBasicInfo 
+                          user={user} 
+                          profileData={profileData}
+                          onUpdate={(data) => setProfileData({...profileData, ...data})} 
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Nutrition Preferences Tabs */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Nutrition Preferences</h2>
+                  <Tabs defaultValue="nutrition">
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="nutrition">Nutrition Goals</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="nutrition">
+                      <NutritionPreferences 
+                        preferences={nutritionPreferences}
+                        onSave={saveNutritionPreferences}
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </div>
-              ) : (
-                <Tabs defaultValue="nutrition" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                    <TabsTrigger value="nutrition">Nutrition Goals</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="basic">
-                    <ProfileBasicInfo 
-                      user={user} 
-                      profileData={profileData}
-                      onUpdate={(data) => setProfileData({...profileData, ...data})} 
-                    />
-                  </TabsContent>
-                  <TabsContent value="nutrition">
-                    <NutritionPreferences 
-                      preferences={nutritionPreferences}
-                      onSave={saveNutritionPreferences}
-                    />
-                  </TabsContent>
-                </Tabs>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

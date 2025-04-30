@@ -1,11 +1,9 @@
 
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { EditIcon } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProfileHeaderProps {
   profileData: any;
@@ -29,36 +27,22 @@ export function ProfileHeader({ profileData, isLoading }: ProfileHeaderProps) {
   const userInitials = getInitials(userName);
   
   return (
-    <Card className="w-full md:w-[200px] flex-shrink-0">
-      <CardContent className="p-6">
-        <div className="flex flex-col items-center text-center">
-          {isLoading ? (
-            <>
-              <Skeleton className="h-24 w-24 rounded-full mb-4" />
-              <Skeleton className="h-6 w-32 mb-2" />
-              <Skeleton className="h-4 w-24" />
-            </>
-          ) : (
-            <>
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl} />
-                <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
-              </Avatar>
-              
-              <h2 className="mt-4 text-lg font-medium">{userName}</h2>
-              
-              <p className="text-sm text-muted-foreground mt-1">
-                {user?.email}
-              </p>
-              
-              <Button variant="outline" size="sm" className="mt-4">
-                <EditIcon className="mr-2 h-4 w-4" />
-                Edit Profile
-              </Button>
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col items-center text-center">
+      <Avatar className="h-24 w-24">
+        <AvatarImage src={avatarUrl} />
+        <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
+      </Avatar>
+      
+      <h2 className="mt-4 text-lg font-medium">{userName}</h2>
+      
+      <p className="text-sm text-muted-foreground mt-1">
+        {user?.email}
+      </p>
+      
+      <Button variant="outline" size="sm" className="mt-4">
+        <EditIcon className="mr-2 h-4 w-4" />
+        Edit Profile
+      </Button>
+    </div>
   );
 }
