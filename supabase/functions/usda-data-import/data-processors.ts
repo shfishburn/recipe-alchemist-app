@@ -39,8 +39,10 @@ export const sr28Mappings = {
 
 // Function to check if the CSV is in SR28 format
 export function isSR28Format(headers: string[]): boolean {
-  const requiredSR28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
-  return requiredSR28Columns.every(col => headers.includes(col));
+  // SR28 key columns - if we find at least 3 of these, it's likely SR28
+  const sr28KeyColumns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal', 'Protein_(g)', 'Lipid_Tot_(g)'];
+  const matchCount = sr28KeyColumns.filter(col => headers.includes(col)).length;
+  return matchCount >= 3 && headers.includes('NDB_No');
 }
 
 // Function to validate data based on table type
@@ -102,6 +104,8 @@ export function mapSR28ToStandardFormat(row: any): Record<string, any> {
 
 // Helper function to extract a basic food category from the description
 function extractFoodCategory(desc: string): string {
+  if (!desc) return 'other';
+  
   const desc_upper = desc.toUpperCase();
   if (desc_upper.includes('BEEF')) return 'beef';
   if (desc_upper.includes('PORK')) return 'pork';

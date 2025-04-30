@@ -38,6 +38,30 @@ export type Database = {
           },
         ]
       }
+      import_examples: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: number
+          sample_data: string
+          table_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: number
+          sample_data: string
+          table_name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: number
+          sample_data?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       ingredient_mappings: {
         Row: {
           confidence_score: number

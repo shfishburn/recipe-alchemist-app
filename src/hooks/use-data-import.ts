@@ -223,7 +223,7 @@ export function useDataImport() {
   };
 
   // Import the validated CSV file
-  const importFile = async () => {
+  const importFile = async (options: { mode: 'insert' | 'upsert', batchSize: number }) => {
     if (!selectedFile || !validationResult?.isValid) {
       toast({
         title: "Cannot import",
@@ -252,8 +252,8 @@ export function useDataImport() {
       }
       
       const result = await importUsdaData(csvData, selectedTable, {
-        batchSize: 100,
-        mode: 'upsert'
+        batchSize: options.batchSize || 100,
+        mode: options.mode || 'insert'
       });
       
       setImportResult(result);

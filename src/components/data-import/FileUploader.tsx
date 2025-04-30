@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileUp } from 'lucide-react';
+import { FileUp, Download } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -13,6 +13,14 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, AlertCircle, FileWarning } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface FileUploaderProps {
   selectedFile: File | null;
@@ -20,6 +28,7 @@ interface FileUploaderProps {
   csvPreview: string[][];
   validationResult: { isValid: boolean; missingColumns: string[]; isSR28?: boolean } | null;
   parsingError: string | null;
+  selectedTable: string;
 }
 
 const FileUploader: React.FC<FileUploaderProps> = ({ 
@@ -27,8 +36,65 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   onFileChange,
   csvPreview,
   validationResult,
-  parsingError
+  parsingError,
+  selectedTable
 }) => {
+  const [examples, setExamples] = useState<{
+    id: number;
+    table_name: string;
+    sample_data: string;
+    description: string;
+  }[]>([]);
+  const [loadingExamples, setLoadingExamples] = useState(false);
+  const { toast } = useToast();
+
+  // Load examples from database
+  const loadExamples = async () => {
+    if (examples.length > 0) return; // Only load once
+    
+    setLoadingExamples(true);
+    try {
+      const { data, error } = await supabase
+        .from('import_examples')
+        .select('*')
+        .eq('table_name', selectedTable);
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setExamples(data);
+      }
+    } catch (error) {
+      console.error('Error loading examples:', error);
+      toast({
+        title: "Error loading examples",
+        description: error instanceof Error ? error.message : "Failed to load example templates",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingExamples(false);
+    }
+  };
+
+  // Download example as CSV
+  const downloadExample = (example: string, description: string) => {
+    const blob = new Blob([example], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `${selectedTable}_example.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast({
+      title: "Example downloaded",
+      description: `${description} CSV template has been downloaded.`
+    });
+  };
+
   // Helper function to render CSV preview
   const renderCsvPreview = () => {
     if (parsingError) {
@@ -144,6 +210,44 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           )}
         </div>
       </div>
+
+      {!selectedFile && (
+        <Accordion type="single" collapsible className="w-full mt-4">
+          <AccordionItem value="examples">
+            <AccordionTrigger 
+              onClick={loadExamples}
+              className="text-sm font-medium"
+            >
+              Download Example Templates
+            </AccordionTrigger>
+            <AccordionContent>
+              {loadingExamples ? (
+                <p className="text-sm text-muted-foreground">Loading examples...</p>
+              ) : examples.length > 0 ? (
+                <div className="space-y-2">
+                  {examples.map((example) => (
+                    <div key={example.id} className="flex items-center justify-between border p-3 rounded-md">
+                      <div>
+                        <h5 className="font-medium text-sm">{example.description}</h5>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => downloadExample(example.sample_data, example.description)}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No example templates available for this table.</p>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
 
       {!selectedFile && renderFormatGuidelines()}
       {renderCsvPreview()}

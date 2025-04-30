@@ -63,9 +63,25 @@ export async function importUsdaData(
 
     if (error) {
       console.error('Error invoking USDA data import function:', error);
+      
+      let errorMessage = error.message || 'Unknown error';
+      let errorDetails: string[] = [];
+      
+      // Try to parse the error message if it's JSON
+      try {
+        if (typeof error.message === 'string' && error.message.includes('{')) {
+          const errorJson = JSON.parse(error.message.substring(error.message.indexOf('{')));
+          errorMessage = errorJson.error || errorMessage;
+          errorDetails = errorJson.details || [];
+        }
+      } catch (parseError) {
+        console.error('Could not parse error message as JSON:', parseError);
+      }
+      
       return { 
         success: false, 
-        error: `Function error: ${error.message || 'Unknown error'}`
+        error: `Function error: ${errorMessage}`,
+        details: errorDetails
       };
     }
 
@@ -75,7 +91,7 @@ export async function importUsdaData(
       return {
         success: false,
         error: data.error || 'Unknown error during import',
-        details: data.details
+        details: data.details || [`Error processing ${table} data. Check column formats and constraints.`]
       };
     }
 
@@ -150,14 +166,27 @@ export function validateCsvFormat(
   
   // Check if this is SR28 format
   const sr28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
-  const isSR28 = sr28Columns.every(col => columns.includes(col));
+  const isSR28 = sr28Columns.some(col => columns.includes(col)) &&
+                 (columns.includes('NDB_No') || columns.includes('Shrt_Desc'));
   
   if (isSR28) {
     // For SR28 format, we have special mappings
     const sr28MappedColumns = {
       'food_code': 'NDB_No',
       'food_name': 'Shrt_Desc',
-      // Add other mappings as needed
+      'calories': 'Energ_Kcal',
+      'protein_g': 'Protein_(g)',
+      'carbs_g': 'Carbohydrt_(g)',
+      'fat_g': 'Lipid_Tot_(g)',
+      'fiber_g': 'Fiber_TD_(g)',
+      'sugar_g': 'Sugar_Tot_(g)',
+      'sodium_mg': 'Sodium_(mg)',
+      'vitamin_a_iu': 'Vit_A_IU',
+      'vitamin_c_mg': 'Vit_C_(mg)',
+      'vitamin_d_iu': 'Vit_D_IU',
+      'calcium_mg': 'Calcium_(mg)',
+      'iron_mg': 'Iron_(mg)',
+      'potassium_mg': 'Potassium_(mg)'
     };
     
     // Check for required columns in SR28 format
@@ -201,6 +230,9 @@ export function isSR28Format(csvData: string): boolean {
     .map(col => col.trim().replace(/^"(.+)"$/, '$1'));
   
   // Check for key SR28 columns
-  const requiredSR28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal'];
-  return requiredSR28Columns.every(col => columns.includes(col));
+  const sr28Columns = ['NDB_No', 'Shrt_Desc', 'Energ_Kcal', 'Protein_(g)', 'Lipid_Tot_(g)'];
+  // If it has at least 3 of these columns, it's likely SR28 format
+  const matchCount = sr28Columns.filter(col => columns.includes(col)).length;
+  
+  return matchCount >= 3 && columns.includes('NDB_No');
 }

@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, CheckCircle2, AlertCircle, FileWarning, Info } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, FileWarning, Info, RefreshCw } from 'lucide-react';
 import { ImportResponse } from '@/utils/usda-data-import';
 import {
   Table,
@@ -13,6 +13,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface ImportActionsProps {
   selectedFile: File | null;
@@ -21,7 +24,7 @@ interface ImportActionsProps {
   validationResult: { isValid: boolean; missingColumns: string[]; isSR28?: boolean } | null;
   importResult: ImportResponse | null;
   onValidate: () => void;
-  onImport: () => void;
+  onImport: (options: { mode: 'insert' | 'upsert', batchSize: number }) => void;
 }
 
 const ImportActions: React.FC<ImportActionsProps> = ({
@@ -33,8 +36,58 @@ const ImportActions: React.FC<ImportActionsProps> = ({
   onValidate,
   onImport
 }) => {
+  const [importMode, setImportMode] = useState<'insert' | 'upsert'>('insert');
+  const [batchSize, setBatchSize] = useState(100);
+  
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
+        <h3 className="text-lg font-semibold">Import Options</h3>
+        
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Import Mode</h4>
+            <RadioGroup 
+              value={importMode} 
+              onValueChange={(value) => setImportMode(value as 'insert' | 'upsert')}
+              className="flex flex-col space-y-1"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="insert" id="insert-mode" />
+                <Label htmlFor="insert-mode">Insert (Add new records only)</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="upsert" id="upsert-mode" />
+                <Label htmlFor="upsert-mode">Upsert (Update existing records)</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              Use "Insert" for initial imports. Use "Upsert" to update existing records based on unique identifiers.
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Batch Size</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {[50, 100, 250].map(size => (
+                <Button 
+                  key={size} 
+                  type="button"
+                  variant={batchSize === size ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setBatchSize(size)}
+                >
+                  {size}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Smaller batch sizes are safer but slower. Larger batches are faster but may fail with large files.
+            </p>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex gap-4">
         <Button 
           onClick={onValidate} 
@@ -45,7 +98,7 @@ const ImportActions: React.FC<ImportActionsProps> = ({
         </Button>
         
         <Button 
-          onClick={onImport} 
+          onClick={() => onImport({ mode: importMode, batchSize })} 
           disabled={!selectedFile || !validationResult?.isValid || isImporting}
           variant={validationResult?.isValid ? "default" : "outline"}
         >

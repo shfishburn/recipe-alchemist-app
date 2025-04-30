@@ -47,6 +47,7 @@ const DataImport = () => {
             csvPreview={csvPreview}
             validationResult={validationResult}
             parsingError={parsingError}
+            selectedTable={selectedTable}
           />
 
           <Separator className="my-6" />
