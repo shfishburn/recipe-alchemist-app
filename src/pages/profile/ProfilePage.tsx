@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useAuth } from '@/hooks/use-auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ProfileHeader } from './components/ProfileHeader';
 import { ProfileBasicInfo } from '@/components/profile/ProfileBasicInfo';
 import { NutritionPreferences } from '@/components/profile/NutritionPreferences';
@@ -209,11 +209,11 @@ const ProfilePage = () => {
                 {/* Profile Header and Basic Info */}
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                      <div className="md:col-span-1">
+                    <div className="flex flex-col md:flex-row gap-6">
+                      <div className="flex-shrink-0 flex justify-center md:block">
                         <ProfileHeader profileData={profileData} isLoading={false} />
                       </div>
-                      <div className="md:col-span-3">
+                      <div className="flex-grow">
                         <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
                         <ProfileBasicInfo 
                           user={user} 
@@ -225,20 +225,13 @@ const ProfilePage = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Nutrition Preferences Tabs */}
+                {/* Nutrition Preferences */}
                 <div>
                   <h2 className="text-xl font-semibold mb-4">Nutrition Preferences</h2>
-                  <Tabs defaultValue="nutrition">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="nutrition">Nutrition Goals</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="nutrition">
-                      <NutritionPreferences 
-                        preferences={nutritionPreferences}
-                        onSave={saveNutritionPreferences}
-                      />
-                    </TabsContent>
-                  </Tabs>
+                  <NutritionPreferences 
+                    preferences={nutritionPreferences}
+                    onSave={saveNutritionPreferences}
+                  />
                 </div>
               </div>
             )}
