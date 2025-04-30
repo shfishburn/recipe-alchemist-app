@@ -42,10 +42,13 @@ const TableSelection: React.FC<TableSelectionProps> = ({ selectedTable, onSelect
           <p className="text-sm text-muted-foreground mb-4">
             SR28 format required columns: food_code, food_name, calories, protein_(g), fat_g
           </p>
-          <p className="text-sm mb-4">
+          <p className="text-sm mb-2">
             This table stores nutritional information for various food items including calories,
             macronutrients, and micronutrients. Additional fields like cholesterol, portion weights
             (GmWt_1, GmWt_2) and descriptions (GmWt_Desc1, GmWt_Desc2) are also supported.
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">
+            Note: If food_category is not provided, it will be automatically derived from food_name.
           </p>
         </Card>
       </TabsContent>

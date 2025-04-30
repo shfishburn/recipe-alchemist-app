@@ -140,7 +140,7 @@ export function normalizeUsdaFoodData(row: any, isSR28 = false): Record<string, 
   return {
     food_code: String(mappedRow.food_code),
     food_name: String(mappedRow.food_name),
-    food_category: mappedRow.food_category || null,
+    food_category: mappedRow.food_category || extractFoodCategory(mappedRow.food_name),
     calories: mappedRow.calories ? Number(mappedRow.calories) : null,
     protein_g: mappedRow.protein_g ? Number(mappedRow.protein_g) : null,
     carbs_g: mappedRow.carbs_g ? Number(mappedRow.carbs_g) : null,
