@@ -29,3 +29,15 @@
 .animate-celebrate {
   animation: celebrate 0.7s ease-in-out;
 }
+
+/* Error indicator for debugging */
+.error-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 4px;
+  z-index: 9999;
+}
