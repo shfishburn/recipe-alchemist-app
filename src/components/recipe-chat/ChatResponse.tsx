@@ -4,7 +4,7 @@ import { WarningAlert } from './response/WarningAlert';
 import { FormattedText } from './response/FormattedText';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
 import { FollowUpQuestions } from './response/FollowUpQuestions';
-import { useResponseFormatter } from './response/ResponseFormatter';
+import { useResponseFormatter } from './response/hooks/useResponseFormatter';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { ChangesResponse } from '@/types/chat';
 
@@ -28,7 +28,11 @@ export function ChatResponse({
   isApplying,
   applied
 }: ChatResponseProps) {
-  const { displayText, showWarning, changesPreview } = useResponseFormatter({ response, changesSuggested });
+  const { displayText, showWarning, changesPreview, isMethodology } = useResponseFormatter({ 
+    response, 
+    changesSuggested 
+  });
+  
   const isMobile = useIsMobile();
   
   const handleFollowUpClick = (question: string) => {
@@ -39,27 +43,9 @@ export function ChatResponse({
   const bubblePadding = isMobile ? "p-2 sm:p-4" : "p-4";
   
   // Helper to determine if text contains scientific content
-  const containsScientificContent = (text: string): boolean => {
-    const scientificTerms = [
-      'maillard', 'reaction', 'chemistry', 'temperature', 'techniques',
-      'protein', 'structure', 'starch', 'gelatinization', 'degree',
-      'celsius', 'fahrenheit', 'hydration', 'fat', 'emulsion', 'science',
-      'methodology', 'analysis', 'nutrition', 'kcal', 'calories', 'macros',
-      'standardized', 'breakdown', 'ingredient', 'carbs', 'fiber', 'sugar',
-      'sodium', 'summation', 'verification'
-    ];
-    
-    const lowerText = text.toLowerCase();
-    return scientificTerms.some(term => lowerText.includes(term));
-  };
-  
-  // Apply special styling for scientific content
-  const isScientific = containsScientificContent(displayText);
-
-  // Detect if this is a structured methodology document
-  const isMethodology = displayText.includes('Methodology') || 
-                       displayText.includes('⸻') ||
-                       displayText.includes('1. Standardized Ingredient Breakdown');
+  const isScientific = displayText.toLowerCase().includes('protein') || 
+                       displayText.toLowerCase().includes('temperature') ||
+                       displayText.toLowerCase().includes('reaction');
 
   return (
     <div className="flex-1 max-w-[calc(100%-32px)]">
