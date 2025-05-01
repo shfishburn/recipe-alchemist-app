@@ -15,7 +15,7 @@ import { CookingPot } from 'lucide-react';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
+import { cn as classnames } from '@/lib/utils';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();

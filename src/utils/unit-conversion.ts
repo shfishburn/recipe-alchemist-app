@@ -1,3 +1,4 @@
+
 /**
  * Unit conversion constants
  */
@@ -22,6 +23,52 @@ export const UNIT_CONVERSIONS = {
   MILLILITERS_TO_FLOZ: 0.033814,
   FLOZ_TO_MILLILITERS: 29.5735,
 };
+
+export type UnitSystem = 'metric' | 'imperial';
+
+interface ConversionFactor {
+  factor: number;
+  unitFrom: string;
+  unitTo: string;
+}
+
+// Conversion factors for different units
+const CONVERSION_FACTORS: Record<string, ConversionFactor> = {
+  g_to_oz: { factor: 0.035274, unitFrom: 'g', unitTo: 'oz' },
+  mg_to_mg: { factor: 1, unitFrom: 'mg', unitTo: 'mg' }, // No conversion needed
+  mcg_to_mcg: { factor: 1, unitFrom: 'mcg', unitTo: 'mcg' }, // No conversion needed
+  kcal_to_kcal: { factor: 1, unitFrom: 'kcal', unitTo: 'kcal' }, // No conversion needed
+};
+
+/**
+ * Converts a nutrition value between metric and imperial units
+ */
+export function convertNutritionValue(
+  value: number,
+  unit: string,
+  targetSystem: UnitSystem
+): { value: number; unit: string } {
+  // If value is invalid, return 0 with the original unit
+  if (value === undefined || value === null || isNaN(value)) {
+    return { value: 0, unit };
+  }
+
+  // Round to one decimal place first
+  const roundedValue = Math.round(value * 10) / 10;
+
+  // Handle specific conversions based on target system
+  if (targetSystem === 'imperial') {
+    // Convert grams to ounces
+    if (unit === 'g') {
+      const ounces = roundedValue * CONVERSION_FACTORS.g_to_oz.factor;
+      // Round to 1 decimal place for ounces
+      return { value: Math.round(ounces * 10) / 10, unit: 'oz' };
+    }
+  }
+
+  // Default: no conversion needed
+  return { value: roundedValue, unit };
+}
 
 /**
  * Convert from kg to pounds
@@ -84,26 +131,46 @@ export function convertWeightToKg(weight: number, unitSystem: 'metric' | 'imperi
 /**
  * Format a nutrient value with the appropriate unit
  */
-export function formatNutrientWithUnit(value: number, unit: string, unitSystem: 'metric' | 'imperial'): string {
+export function formatNutrientWithUnit(
+  value: number | undefined | null, 
+  unit: string, 
+  unitSystem: 'metric' | 'imperial',
+  options: { 
+    decimalPlaces?: number;
+    showTrailingZero?: boolean;
+    preserveDecimals?: boolean;
+  } = {}
+): string {
   if (!value && value !== 0) return 'N/A';
   
-  // Round to 1 decimal place for most values, or to integer for larger values
-  const formattedValue = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+  const { 
+    decimalPlaces = 0, 
+    showTrailingZero = false,
+    preserveDecimals = false
+  } = options;
   
-  // Convert units if necessary based on the unit system
-  if (unitSystem === 'imperial') {
-    if (unit === 'g') {
-      // Convert grams to ounces for imperial
-      return `${(formattedValue * UNIT_CONVERSIONS.GRAMS_TO_OUNCES).toFixed(1)} oz`;
-    }
-    if (unit === 'mg' && value > 1000) {
-      // Large mg values convert to fraction of an ounce
-      return `${(formattedValue / 1000 * UNIT_CONVERSIONS.GRAMS_TO_OUNCES).toFixed(2)} oz`;
+  // Convert the value to the target unit system
+  const converted = convertNutritionValue(value, unit, unitSystem);
+  
+  // Determine how to round the value
+  let displayValue = converted.value;
+  
+  if (!preserveDecimals) {
+    // Default behavior: round to whole numbers
+    displayValue = Math.round(displayValue);
+  } else if (decimalPlaces > 0) {
+    // Apply specified decimal places
+    const factor = Math.pow(10, decimalPlaces);
+    displayValue = Math.round(displayValue * factor) / factor;
+    
+    // Format with trailing zeros if needed
+    if (showTrailingZero) {
+      return `${displayValue.toFixed(decimalPlaces)} ${converted.unit}`;
     }
   }
   
-  // Default: return the value with its original unit
-  return `${formattedValue} ${unit}`;
+  // Return formatted string with unit
+  return `${displayValue} ${converted.unit}`;
 }
 
 /**

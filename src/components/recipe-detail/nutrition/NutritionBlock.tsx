@@ -54,8 +54,25 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
       processed.data_quality = recipeNutrition.data_quality;
     }
     
-    // Return as ExtendedNutritionData with type assertion after ensuring required properties exist
-    return processed as unknown as ExtendedNutritionData;
+    // Create a properly typed ExtendedNutritionData object
+    const result: ExtendedNutritionData = {
+      calories: processed.calories || 0,
+      protein: processed.protein || 0,
+      carbs: processed.carbs || 0,
+      fat: processed.fat || 0,
+      fiber: processed.fiber || 0,
+      sugar: processed.sugar || 0,
+      sodium: processed.sodium || 0,
+      vitaminA: processed.vitaminA || 0,
+      vitaminC: processed.vitaminC || 0,
+      vitaminD: processed.vitaminD || 0,
+      calcium: processed.calcium || 0,
+      iron: processed.iron || 0,
+      potassium: processed.potassium || 0,
+      data_quality: processed.data_quality
+    };
+    
+    return result;
   }, [recipeNutrition]);
   
   // Handle case when nutrition data is null or empty

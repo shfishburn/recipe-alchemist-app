@@ -107,7 +107,7 @@ export function NutritionUpdateButton({
         toast({
           title: "Nutrition updated",
           description: "Some nutrition values may be estimates due to limited ingredient data",
-          // Fix the variant type error by using a valid variant
+          // Using a valid variant for the toast
           variant: "default"
         });
       } else {

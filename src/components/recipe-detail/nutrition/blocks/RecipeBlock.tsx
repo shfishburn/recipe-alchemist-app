@@ -8,9 +8,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakdown';
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
 import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
-import { formatNutrientWithUnit, formatNutritionValue } from '@/components/ui/unit-display';
+import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 
-// Standard daily reference values for nutrients
+// Standard daily reference values for nutrients (moved to proper constants)
 const DAILY_REFERENCE_VALUES = {
   calories: 2000,
   protein: 50, // g
@@ -19,6 +19,12 @@ const DAILY_REFERENCE_VALUES = {
   fiber: 28,   // g
   sugar: 50,   // g
   sodium: 2300, // mg
+  potassium: 4700, // mg
+  calcium: 1300, // mg
+  iron: 18, // mg
+  vitaminA: 900, // mcg RAE
+  vitaminC: 90, // mg
+  vitaminD: 20, // mcg
 };
 
 interface RecipeBlockProps {
@@ -49,13 +55,15 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const protein = Math.round(recipeNutrition.protein || 0);
   const carbs = Math.round(recipeNutrition.carbs || 0);
   const fat = Math.round(recipeNutrition.fat || 0);
+  const fiber = Math.round(recipeNutrition.fiber || 0);
   
   // Calculate daily value percentages based on standard reference values
   const proteinDailyValue = Math.round((protein / DAILY_REFERENCE_VALUES.protein) * 100);
   const carbsDailyValue = Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100);
   const fatDailyValue = Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100);
+  const fiberDailyValue = fiber ? Math.round((fiber / DAILY_REFERENCE_VALUES.fiber) * 100) : 0;
   
-  // Use default macros distribution if not available in data_quality
+  // Default macros distribution
   let proteinPercentage = 30;
   let carbsPercentage = 40;
   let fatPercentage = 30;
@@ -107,39 +115,53 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
           
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium">Protein</p>
+              <p className="text-xs font-medium" id="protein-label">Protein</p>
               <p className="text-xs text-muted-foreground">{proteinDailyValue}% DV</p>
             </div>
             <Progress 
               value={proteinDailyValue} 
               className="h-2" 
-              aria-label={`Protein: ${proteinDailyValue}% of daily value`}
+              aria-labelledby="protein-label"
             />
           </div>
           
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium">Carbs</p>
+              <p className="text-xs font-medium" id="carbs-label">Carbs</p>
               <p className="text-xs text-muted-foreground">{carbsDailyValue}% DV</p>
             </div>
             <Progress 
               value={carbsDailyValue} 
               className="h-2" 
-              aria-label={`Carbs: ${carbsDailyValue}% of daily value`}
+              aria-labelledby="carbs-label"
             />
           </div>
           
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium">Fat</p>
+              <p className="text-xs font-medium" id="fat-label">Fat</p>
               <p className="text-xs text-muted-foreground">{fatDailyValue}% DV</p>
             </div>
             <Progress 
               value={fatDailyValue} 
               className="h-2" 
-              aria-label={`Fat: ${fatDailyValue}% of daily value`}
+              aria-labelledby="fat-label"
             />
           </div>
+          
+          {fiber && fiberDailyValue ? (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-medium" id="fiber-label">Fiber</p>
+                <p className="text-xs text-muted-foreground">{fiberDailyValue}% DV</p>
+              </div>
+              <Progress 
+                value={fiberDailyValue} 
+                className="h-2" 
+                aria-labelledby="fiber-label"
+              />
+            </div>
+          ) : null}
           
           <Separator className="my-4" />
           

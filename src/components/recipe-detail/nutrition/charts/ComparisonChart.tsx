@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { formatNutrientWithUnit } from '@/components/ui/unit-display';
+import { formatNutrientWithUnit } from '@/utils/unit-conversion';
 
 interface ComparisonDataItem {
   name: string;
