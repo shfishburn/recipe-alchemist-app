@@ -20,7 +20,7 @@ export function useCreateShoppingList() {
           description: "Please sign in to add items to your shopping list",
           variant: "destructive",
         });
-        return false;
+        return { success: false, listId: null };
       }
 
       if (!recipe) {
@@ -29,7 +29,7 @@ export function useCreateShoppingList() {
           description: "No recipe provided to add to shopping list",
           variant: "destructive",
         });
-        return false;
+        return { success: false, listId: null };
       }
       
       setIsLoading(true);
@@ -56,7 +56,9 @@ export function useCreateShoppingList() {
         description: `Added ${shoppingItems.length} items to a new shopping list`,
       });
       
-      return true;
+      // Return both success status and the new list ID
+      const listId = newList?.[0]?.id || null;
+      return { success: true, listId };
     } catch (error) {
       console.error("Error creating shopping list:", error);
       toast({
@@ -64,7 +66,7 @@ export function useCreateShoppingList() {
         description: "Failed to create shopping list",
         variant: "destructive",
       });
-      return false;
+      return { success: false, listId: null };
     } finally {
       setIsLoading(false);
     }

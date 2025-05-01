@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -10,12 +10,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { useShoppingLists } from './shopping-list/useShoppingLists';
 import { useShoppingListActions } from './shopping-list/useShoppingListActions';
 import { ShoppingListForm } from './shopping-list/ShoppingListForm';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 
 interface AddToShoppingListProps {
   recipe: Recipe;
@@ -23,9 +34,12 @@ interface AddToShoppingListProps {
 
 export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [addedListId, setAddedListId] = useState<string | null>(null);
   const { shoppingLists, isFetching, fetchShoppingLists } = useShoppingLists();
   const { 
     createNewList, 
@@ -72,23 +86,31 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
     
     try {
       let success = false;
+      let listId = selectedListId;
       
       if (selectedListId) {
         success = await addToExistingList(selectedListId);
       } else {
-        success = await createNewList(newListName);
+        const result = await createNewList(newListName);
+        success = result.success;
+        if (success && result.listId) {
+          listId = result.listId;
+        }
       }
       
-      // Only close the sheet on success
+      // Only show success dialog if operation succeeded
       if (success) {
-        // Add a small delay to prevent UI flashing
+        setAddedListId(listId);
+        setSheetOpen(false);
+        
+        // Show success dialog with navigation options
         setTimeout(() => {
-          setSheetOpen(false);
-          
-          // Reset form state
-          setSelectedListId(null);
-          setNewListName(`${recipe.title} Ingredients`);
+          setSuccessDialogOpen(true);
         }, 300);
+        
+        // Reset form state
+        setSelectedListId(null);
+        setNewListName(`${recipe.title} Ingredients`);
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -105,6 +127,17 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
     if (!open) {
       setSelectedListId(null);
       setNewListName(`${recipe.title} Ingredients`);
+    }
+  };
+  
+  const handleViewList = () => {
+    setSuccessDialogOpen(false);
+    
+    // Navigate to the shopping list detail page
+    if (addedListId) {
+      navigate(`/shopping-lists/${addedListId}`);
+    } else {
+      navigate('/shopping-lists');
     }
   };
   
@@ -155,6 +188,28 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
           </div>
         </SheetContent>
       </Sheet>
+      
+      {/* Success dialog with navigation options */}
+      <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center">
+              <Check className="h-5 w-5 mr-2 text-green-500" />
+              Added to Shopping List
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Ingredients from "{recipe.title}" have been successfully added to your shopping list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
+            <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
+              View Shopping List
+              <ArrowRight className="h-4 w-4" />
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
