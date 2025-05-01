@@ -66,7 +66,7 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
     const enhancedData: ExtendedNutritionData = {
       calories: standardizedNutrition.calories || standardizedNutrition.kcal || 0,
       protein: standardizedNutrition.protein || standardizedNutrition.protein_g || 0,
-      carbs: standardizedNutrition.carbs || standardizedNutrition.carbs_g || 0,
+      carbs: standardizedNutrition.carbs || standardizedNutrition.carbohydrates || 0,
       fat: standardizedNutrition.fat || standardizedNutrition.fat_g || 0,
       fiber: standardizedNutrition.fiber || standardizedNutrition.fiber_g || 0,
       sugar: standardizedNutrition.sugar || standardizedNutrition.sugar_g || 0,
@@ -80,7 +80,7 @@ export function useNutritionData(recipe: Recipe, profile: Profile | null) {
       // Calculate percentages of daily values
       caloriesPercentage: getDailyValuePercentage('calories', standardizedNutrition.calories || standardizedNutrition.kcal || 0),
       proteinPercentage: getDailyValuePercentage('protein', standardizedNutrition.protein || standardizedNutrition.protein_g || 0),
-      carbsPercentage: getDailyValuePercentage('carbs', standardizedNutrition.carbs || standardizedNutrition.carbs_g || 0),
+      carbsPercentage: getDailyValuePercentage('carbohydrates', standardizedNutrition.carbs || standardizedNutrition.carbohydrates || 0),
       fatPercentage: getDailyValuePercentage('fat', standardizedNutrition.fat || standardizedNutrition.fat_g || 0),
       fiberPercentage: getDailyValuePercentage('fiber', standardizedNutrition.fiber || standardizedNutrition.fiber_g || 0),
       sugarPercentage: getDailyValuePercentage('sugar', standardizedNutrition.sugar || standardizedNutrition.sugar_g || 0),

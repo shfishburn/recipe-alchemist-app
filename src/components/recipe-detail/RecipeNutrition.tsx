@@ -12,7 +12,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { standardizeNutrition, ExtendedNutritionData } from '@/types/nutrition-utils';
+import { standardizeNutrition, Nutrition } from '@/types/nutrition-utils';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -54,11 +54,11 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
       // If recipeNutrition isn't available, try to standardize it ourselves
       const nutrition = recipeNutrition || standardizeNutrition(recipe.nutrition);
       
-      // Check for the existence of basic nutrition values
+      // Check for the existence of basic nutrition values - use carbs instead of carbohydrates
       return nutrition && 
              (Number(nutrition.calories) > 0 || 
               Number(nutrition.protein) > 0 || 
-              Number(nutrition.carbohydrates) > 0 || 
+              Number(nutrition.carbs) > 0 || 
               Number(nutrition.fat) > 0);
     } catch (error) {
       console.error("Error validating nutrition data:", error);
@@ -99,8 +99,8 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
     );
   }
   
-  // Cast to EnhancedNutrition if it has data_quality field
-  const standardizedNutrition = recipeNutrition as ExtendedNutritionData;
+  // Use type assertion to avoid type incompatibility
+  const standardizedNutrition = recipeNutrition as unknown as Nutrition;
   const enhancedNutrition = standardizedNutrition?.data_quality 
     ? (standardizedNutrition as unknown as EnhancedNutrition) 
     : undefined;

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { mergeShoppingItems } from '@/utils/shopping-list-merge';
 import { ingredientsToShoppingItems } from '@/utils/shopping-list-utils';
 import type { Recipe } from '@/types/recipe';
+import type { ShoppingListItem } from '@/types/shopping-list';
 
 export function useUpdateShoppingList() {
   const { user } = useAuth();
@@ -49,8 +50,20 @@ export function useUpdateShoppingList() {
       // Use the shared utility function to convert ingredients to shopping items
       const shoppingItems = ingredientsToShoppingItems(recipe.ingredients);
       
-      // Current items in the list
-      const currentItems = Array.isArray(currentList.items) ? currentList.items : [];
+      // Ensure currentItems is always an array of ShoppingListItem objects
+      const currentItems: ShoppingListItem[] = Array.isArray(currentList.items) 
+        ? currentList.items.map((item: any) => {
+            if (typeof item === 'string') {
+              return {
+                name: item,
+                quantity: 1,
+                unit: '',
+                checked: false
+              };
+            }
+            return item as ShoppingListItem;
+          })
+        : [];
       
       // Merge items using the utility function to handle duplicates
       const mergedItems = mergeShoppingItems(currentItems, shoppingItems);

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { ingredientsToShoppingItems } from '@/utils/shopping-list-utils';
 import { mergeShoppingItems } from '@/utils/shopping-list-merge'; 
 import type { Ingredient } from '@/types/recipe';
+import type { ShoppingListItem } from '@/types/shopping-list';
 
 export function useLegacyShoppingList() {
   const { user } = useAuth();
@@ -48,7 +49,20 @@ export function useLegacyShoppingList() {
       if (existingLists && existingLists.length > 0) {
         // Add to existing list
         const currentList = existingLists[0];
-        const currentItems = Array.isArray(currentList.items) ? currentList.items : [];
+        // Ensure currentItems is always an array of ShoppingListItem objects
+        const currentItems: ShoppingListItem[] = Array.isArray(currentList.items) 
+          ? currentList.items.map((item: any) => {
+              if (typeof item === 'string') {
+                return {
+                  name: item,
+                  quantity: 1,
+                  unit: '',
+                  checked: false
+                };
+              }
+              return item as ShoppingListItem;
+            })
+          : [];
         
         // Merge items
         const mergedItems = mergeShoppingItems(currentItems, shoppingItems);
