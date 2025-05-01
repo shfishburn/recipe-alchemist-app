@@ -32,7 +32,7 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
     ];
     
     // Create a new object with only the processed fields
-    const processed: Record<string, number> = {};
+    const processed: Record<string, any> = {};
     
     for (const field of fieldsToProcess) {
       const value = recipeNutrition[field as keyof ExtendedNutritionData];
@@ -51,10 +51,11 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
     
     // Preserve data quality and metadata
     if (recipeNutrition.data_quality) {
-      processed.data_quality = recipeNutrition.data_quality as any;
+      processed.data_quality = recipeNutrition.data_quality;
     }
     
-    return processed as ExtendedNutritionData;
+    // Return as ExtendedNutritionData with type assertion after ensuring required properties exist
+    return processed as unknown as ExtendedNutritionData;
   }, [recipeNutrition]);
   
   // Handle case when nutrition data is null or empty

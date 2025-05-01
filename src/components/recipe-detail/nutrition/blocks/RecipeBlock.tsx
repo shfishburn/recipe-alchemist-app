@@ -55,10 +55,17 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const carbsDailyValue = Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100);
   const fatDailyValue = Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100);
   
-  // Use macros from nutrition or calculate a standard split if not available
-  const proteinPercentage = recipeNutrition.data_quality?.recommended_macros?.protein || 30;
-  const carbsPercentage = recipeNutrition.data_quality?.recommended_macros?.carbs || 40;
-  const fatPercentage = recipeNutrition.data_quality?.recommended_macros?.fat || 30;
+  // Use default macros distribution if not available in data_quality
+  let proteinPercentage = 30;
+  let carbsPercentage = 40;
+  let fatPercentage = 30;
+  
+  // Only try to access recommended_macros if it exists in data_quality
+  if (recipeNutrition.data_quality?.recommended_macros) {
+    proteinPercentage = recipeNutrition.data_quality.recommended_macros.protein || proteinPercentage;
+    carbsPercentage = recipeNutrition.data_quality.recommended_macros.carbs || carbsPercentage;
+    fatPercentage = recipeNutrition.data_quality.recommended_macros.fat || fatPercentage;
+  }
   
   // Format protein, carbs and fat based on unit system
   const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);

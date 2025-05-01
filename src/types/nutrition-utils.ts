@@ -74,6 +74,12 @@ export type NutritionDataQuality = {
   penalties: Record<string, any>;
   unmatched_or_low_confidence_ingredients: string[];
   limitations: string[];
+  // Add the recommended_macros property to fix the type error
+  recommended_macros?: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
 } & Record<string, any>;
 
 export type ExtendedNutritionData = Nutrition & {
@@ -163,6 +169,22 @@ export const standardizeNutrition = (nutrition: any): Nutrition => {
     vitamin_c_mg: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
     vitamin_d_iu: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
   };
+};
+
+// Add validateNutritionData that was missing
+export const validateNutritionData = (nutrition: any): boolean => {
+  if (!nutrition) return false;
+  
+  // Check for essential macronutrients
+  const hasCalories = nutrition.calories !== undefined || nutrition.kcal !== undefined;
+  const hasProtein = nutrition.protein !== undefined || nutrition.protein_g !== undefined;
+  const hasFat = nutrition.fat !== undefined || nutrition.fat_g !== undefined;
+  const hasCarbs = 
+    nutrition.carbohydrates !== undefined || 
+    nutrition.carbs !== undefined || 
+    nutrition.carbs_g !== undefined;
+    
+  return hasCalories && (hasProtein || hasFat || hasCarbs);
 };
 
 export const DAILY_REFERENCE_VALUES = {

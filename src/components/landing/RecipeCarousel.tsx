@@ -43,6 +43,11 @@ export function RecipeCarousel() {
     };
   }, [carouselApi]);
 
+  // Helper function to combine class names
+  const combineClasses = (...classes: (string | boolean | undefined)[]) => {
+    return classes.filter(Boolean).join(' ');
+  };
+
   return (
     <div className="relative w-full">
       {isLoading ? (
@@ -77,7 +82,7 @@ export function RecipeCarousel() {
           >
             <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4">
               {featuredRecipes.map((recipe) => (
-                <CarouselItem key={recipe.id} className={cn(
+                <CarouselItem key={recipe.id} className={combineClasses(
                   isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
                   "hw-accelerated" // Hardware acceleration for smooth sliding
                 )}>
@@ -85,12 +90,12 @@ export function RecipeCarousel() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className={cn(
+            <CarouselPrevious className={combineClasses(
               "hidden md:flex",
               isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
               "tap-highlight-none z-10" // Remove tap highlight on mobile and ensure proper z-index
             )} />
-            <CarouselNext className={cn(
+            <CarouselNext className={combineClasses(
               "hidden md:flex",
               isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
               "tap-highlight-none z-10" // Remove tap highlight on mobile and ensure proper z-index
@@ -132,9 +137,3 @@ function RecipeCarouselSkeleton() {
     </div>
   );
 }
-
-// Helper function to prevent repeated imports
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
