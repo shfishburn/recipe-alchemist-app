@@ -67,7 +67,7 @@ export function MobileMenu() {
         <div className="flex flex-col gap-3">
           {session ? (
             <Button variant="outline" asChild className="w-full h-12 justify-start">
-              <Link to="/profile" className="flex items-center">
+              <Link to="/profile">
                 <User className="h-5 w-5 mr-3" />
                 Profile
               </Link>

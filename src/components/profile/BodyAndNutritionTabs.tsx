@@ -5,13 +5,17 @@ import { PersonalDetails } from './PersonalDetails';
 import { BodyComposition } from './BodyComposition';
 import { MacroNutrients } from './MacroNutrients';
 import { useProfileSettings } from '@/hooks/use-profile-context';
+import { NutritionPreferencesType as NutritionType } from '@/types/nutrition';
 
 export function BodyAndNutritionTabs() {
   const { nutritionPreferences, isLoading, saveNutritionPreferences } = useProfileSettings();
   
   // Handle save function with context
-  const onSave = async (updatedPreferences: typeof nutritionPreferences) => {
-    return await saveNutritionPreferences(updatedPreferences);
+  const onSave = async (updatedPreferences: Partial<NutritionType>) => {
+    return await saveNutritionPreferences({
+      ...nutritionPreferences,
+      ...updatedPreferences
+    } as NutritionType);
   };
 
   return (
@@ -24,21 +28,21 @@ export function BodyAndNutritionTabs() {
       
       <TabsContent value="personal" className="mt-6">
         <PersonalDetails 
-          preferences={nutritionPreferences}
+          preferences={nutritionPreferences as NutritionType}
           onSave={onSave}
         />
       </TabsContent>
       
       <TabsContent value="bodyComposition" className="mt-6">
         <BodyComposition 
-          preferences={nutritionPreferences}
+          preferences={nutritionPreferences as NutritionType}
           onSave={onSave}
         />
       </TabsContent>
 
       <TabsContent value="macros" className="mt-6">
         <MacroNutrients
-          preferences={nutritionPreferences}
+          preferences={nutritionPreferences as NutritionType}
           onSave={onSave}
         />
       </TabsContent>

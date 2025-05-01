@@ -10,8 +10,10 @@ export interface NutritionPreferencesType {
   macroSplit: MacroSplitType;
   dietaryRestrictions: string[];
   allergens: string[];
-  preferredCuisines: string[];
-  unitSystem: 'metric' | 'imperial';
+  healthGoal: string;
+  mealSizePreference: string;
+  preferredCuisines?: string[];
+  unitSystem?: 'metric' | 'imperial';
 }
 
 // Default values for nutrition preferences
@@ -25,5 +27,7 @@ export const DEFAULT_NUTRITION_PREFERENCES: NutritionPreferencesType = {
   dietaryRestrictions: [],
   allergens: [],
   preferredCuisines: [],
+  healthGoal: 'maintenance',
+  mealSizePreference: 'medium',
   unitSystem: 'metric'
 };

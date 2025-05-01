@@ -5,9 +5,9 @@ import { DietaryPreferences } from './dietary/DietaryPreferences';
 import { MealTiming } from './MealTiming';
 import { WeightManagementGoals } from './WeightManagementGoals';
 import { useProfileContext } from '@/contexts/ProfileContext';
-import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 import { ProfileSkeleton } from './ProfileSkeleton';
 import { ErrorDisplay } from './ErrorDisplay';
+import { NutritionPreferencesType as NutritionType } from '@/types/nutrition';
 
 export function DietAndMealTabs() {
   const { profile, isLoading, error, updateProfile, refreshProfile } = useProfileContext();
@@ -26,7 +26,7 @@ export function DietAndMealTabs() {
     mealSizePreference: 'medium',
   };
   
-  const onSave = async (prefs: Partial<NutritionPreferencesType> | NutritionPreferencesType) => {
+  const onSave = async (prefs: Partial<NutritionType>) => {
     const updatedPreferences = {
       ...preferences,
       ...prefs
@@ -60,21 +60,21 @@ export function DietAndMealTabs() {
         
         <TabsContent value="dietary" className="mt-6">
           <DietaryPreferences 
-            preferences={preferences}
+            preferences={preferences as NutritionType}
             onSave={onSave}
           />
         </TabsContent>
         
         <TabsContent value="mealTiming" className="mt-6">
           <MealTiming 
-            preferences={preferences}
+            preferences={preferences as NutritionType}
             onSave={onSave}
           />
         </TabsContent>
 
         <TabsContent value="weightGoals" className="mt-6">
           <WeightManagementGoals 
-            preferences={preferences}
+            preferences={preferences as NutritionType}
             onSave={onSave}
           />
         </TabsContent>

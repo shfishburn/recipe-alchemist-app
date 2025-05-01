@@ -39,11 +39,11 @@ export const ChartTooltip = ({
   let unitLabel = 'g'; // Default unit label
   
   if (nutrientInfo) {
-    // Check if isMicroNutrient function is expecting a string argument
-    const isNutrientMicro = typeof nutrientName === 'string' ? isMicroNutrient(nutrientName.toLowerCase()) : false;
+    // Check if the nutrient is a micronutrient
+    const isNutrientMicro = typeof nutrientName === 'string' && isMicroNutrient(nutrientName.toLowerCase());
     
-    // Check if isMacroNutrient function is expecting a string argument
-    const isNutrientMacro = typeof nutrientName === 'string' ? isMacroNutrient(nutrientName.toLowerCase()) : false;
+    // Check if the nutrient is a macronutrient
+    const isNutrientMacro = typeof nutrientName === 'string' && isMacroNutrient(nutrientName.toLowerCase());
     
     if (isNutrientMicro) {
       // If it's a micronutrient with a defined unit, use that
