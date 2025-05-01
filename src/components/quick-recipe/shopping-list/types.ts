@@ -7,12 +7,15 @@ export interface ShoppingItem {
   department?: string;
   pantryStaple?: boolean;
   ingredientData?: Ingredient;
-  originalIngredient?: Ingredient; // Keep this field to preserve original ingredient data
+  originalIngredient?: any; // Keep this field to preserve AI-generated data
   // Structured data fields for better accessibility
   quantity?: number;
   unit?: string;
   item?: string;
   notes?: string;
+  quality_indicators?: string;
+  alternatives?: string[];
+  storage_tips?: string;
 }
 
 export interface ShoppingItemsByDepartment {

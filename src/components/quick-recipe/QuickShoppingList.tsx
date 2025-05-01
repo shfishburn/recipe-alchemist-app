@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Copy, Check } from 'lucide-react';
+import { ShoppingBag, Copy, Check, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ShoppingItem, ShoppingItemsByDepartment } from './shopping-list/types';
 import { createShoppingItems, groupItemsByDepartment, formatShoppingListForClipboard } from './shopping-list/utils';
@@ -19,6 +19,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [itemsByDepartment, setItemsByDepartment] = useState<ShoppingItemsByDepartment>({});
   const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Create a mapping of item text to index for efficient lookups
   const itemIndices = items.reduce((acc, item, index) => {
@@ -28,11 +29,27 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   
   // Initialize items when the recipe changes or modal opens
   useEffect(() => {
-    if (open) {
-      const shoppingItems = createShoppingItems(recipe);
-      setItems(shoppingItems);
-      setItemsByDepartment(groupItemsByDepartment(shoppingItems));
-    }
+    const initializeItems = async () => {
+      if (open) {
+        setIsLoading(true);
+        try {
+          const shoppingItems = await createShoppingItems(recipe);
+          setItems(shoppingItems);
+          setItemsByDepartment(groupItemsByDepartment(shoppingItems));
+        } catch (error) {
+          console.error("Error creating shopping items:", error);
+          toast({
+            title: "Error",
+            description: "Failed to generate shopping list",
+            variant: "destructive"
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    initializeItems();
   }, [recipe, open]);
   
   const toggleItem = (index: number) => {
@@ -80,6 +97,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
               size="sm"
               onClick={copyToClipboard}
               className="flex items-center gap-2"
+              disabled={isLoading}
             >
               {copied ? (
                 <>
@@ -97,17 +115,24 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
         </DialogHeader>
         
         <div className="mt-2">
-          <div className="space-y-4">
-            {Object.entries(itemsByDepartment).map(([department, deptItems]) => (
-              <ShoppingListDepartment
-                key={department}
-                department={department}
-                items={deptItems}
-                onToggleItem={toggleItem}
-                itemIndices={itemIndices}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">Generating optimized shopping list...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(itemsByDepartment).map(([department, deptItems]) => (
+                <ShoppingListDepartment
+                  key={department}
+                  department={department}
+                  items={deptItems}
+                  onToggleItem={toggleItem}
+                  itemIndices={itemIndices}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

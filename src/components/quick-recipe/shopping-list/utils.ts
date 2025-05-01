@@ -2,9 +2,28 @@
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { ShoppingItem, ShoppingItemsByDepartment } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 // Transform recipe ingredients into shopping items
-export const createShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
+export const createShoppingItems = async (recipe: QuickRecipe): Promise<ShoppingItem[]> => {
+  try {
+    // First try to get AI-enhanced shopping data
+    const enhancedItems = await generateAIShoppingList(recipe);
+    if (enhancedItems && enhancedItems.length > 0) {
+      return enhancedItems;
+    }
+    
+    // Fallback to manually creating shopping items from ingredients
+    return createBasicShoppingItems(recipe);
+  } catch (error) {
+    console.error("Error generating shopping list:", error);
+    // Fallback to basic creation in case of errors
+    return createBasicShoppingItems(recipe);
+  }
+};
+
+// Transform recipe ingredients into basic shopping items (fallback method)
+export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
   // Transform ingredients into shopping items with checked state
   const initialItems: ShoppingItem[] = recipe.ingredients.map(ingredient => {
     // Extract the item name for better visibility
@@ -61,8 +80,57 @@ export const createShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
   return initialItems;
 };
 
+// Generate AI-enhanced shopping list using the edge function
+export const generateAIShoppingList = async (recipe: QuickRecipe): Promise<ShoppingItem[]> => {
+  try {
+    // Call the edge function to get AI-enhanced shopping list
+    const { data, error } = await supabase.functions.invoke('generate-shopping-list', {
+      body: {
+        ingredients: recipe.ingredients,
+        title: recipe.title
+      }
+    });
+    
+    if (error) {
+      console.error("Error invoking generate-shopping-list function:", error);
+      return [];
+    }
+    
+    if (!data || !data.departments) {
+      console.warn("No shopping data received from AI generator");
+      return [];
+    }
+    
+    console.log("AI generated shopping data:", data);
+    
+    // Transform the AI-generated data into ShoppingItem format
+    const shoppingItems: ShoppingItem[] = [];
+    
+    data.departments.forEach(dept => {
+      dept.items.forEach(item => {
+        shoppingItems.push({
+          text: `${item.quantity} ${item.unit} ${item.name}`.trim(),
+          checked: false,
+          department: dept.name,
+          pantryStaple: item.pantry_staple || false,
+          quantity: item.quantity,
+          unit: item.unit,
+          item: item.name,
+          notes: item.notes || '',
+          originalIngredient: item // Store the full AI-generated item data
+        });
+      });
+    });
+    
+    return shoppingItems;
+  } catch (error) {
+    console.error("Error generating AI shopping list:", error);
+    return [];
+  }
+};
+
 // Helper function to determine department based on ingredient name
-const getDepartmentForIngredient = (ingredient: string): string => {
+export const getDepartmentForIngredient = (ingredient: string): string => {
   const lowerIngredient = ingredient.toLowerCase();
   
   // Produce
