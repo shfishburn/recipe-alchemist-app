@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -397,10 +396,8 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
                   <div className="flex items-center gap-2">
                     <Checkbox 
                       checked={deptCompleted}
-                      // Removed the indeterminate prop that was causing the error
                       onCheckedChange={(checked) => {
                         toggleAllInDepartment(department, Boolean(checked));
-                        // Don't toggle the expanded state when clicking the checkbox
                         event?.stopPropagation();
                       }}
                       onClick={(e) => e.stopPropagation()}
@@ -437,7 +434,10 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
                             className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
                           >
                             <span className="flex items-center gap-2">
-                              <span>{item.quantity} {item.unit} {item.name}</span>
+                              <span>
+                                {item.quantity} {item.unit} <strong>{item.name}</strong>
+                                {item.notes && <span className="text-sm text-muted-foreground ml-1">({item.notes})</span>}
+                              </span>
                               {(item.quality_indicators || item.storage_tips) && (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -456,9 +456,6 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
                                 </TooltipProvider>
                               )}
                             </span>
-                            {item.notes && (
-                              <span className="block text-sm text-muted-foreground">{item.notes}</span>
-                            )}
                             {item.alternatives?.length > 0 && (
                               <span className="block text-sm text-muted-foreground">
                                 Alternatives: {item.alternatives.join(', ')}

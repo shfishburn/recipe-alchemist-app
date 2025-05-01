@@ -20,9 +20,12 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   const showDetails = hasDetails || (item.ingredientData && typeof item.ingredientData.item === 'object');
   
   // Extract item name for display
-  const itemName = typeof item.item === 'string' ? item.item : 
-                  (item.ingredientData && typeof item.ingredientData.item === 'object' ? 
-                   JSON.stringify(item.ingredientData.item) : item.text);
+  const itemName = item.item || '';
+  const quantity = item.quantity || '';
+  const unit = item.unit || '';
+
+  // Create a more readable display format
+  const displayText = item.text || `${quantity} ${unit} ${itemName}`.trim();
 
   return (
     <div className="flex items-start gap-2 p-2 bg-muted/40 rounded-md group hover:bg-muted/60 transition-colors">
@@ -37,7 +40,12 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
         className={`text-sm flex-1 cursor-pointer ${item.checked ? 'line-through text-muted-foreground' : ''}`}
       >
         <div className="flex items-center gap-1">
-          <span>{item.text}</span>
+          {/* Format to make the item name stand out */}
+          {quantity && unit ? (
+            <span>{quantity} {unit} <strong>{itemName}</strong></span>
+          ) : (
+            <span>{displayText}</span>
+          )}
           
           {showDetails && (
             <TooltipProvider>

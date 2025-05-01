@@ -1,4 +1,3 @@
-
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
@@ -32,7 +31,7 @@ export function ingredientsToShoppingItems(ingredients: Ingredient[]): ShoppingL
     const department = getDepartmentForIngredient(itemName);
     
     return {
-      name: itemName,
+      name: itemName, // Include the actual item name
       quantity: shoppingQty.qty,
       unit: shoppingQty.unit,
       checked: false,

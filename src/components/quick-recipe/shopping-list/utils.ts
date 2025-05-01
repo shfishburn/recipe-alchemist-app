@@ -7,18 +7,26 @@ import { ShoppingItem, ShoppingItemsByDepartment } from './types';
 export const createShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
   // Transform ingredients into shopping items with checked state
   const initialItems: ShoppingItem[] = recipe.ingredients.map(ingredient => {
+    // Extract the item name for better visibility
+    const itemName = typeof ingredient.item === 'string' 
+      ? ingredient.item 
+      : (typeof ingredient.item === 'object' && ingredient.item !== null)
+        ? (ingredient.item.item || JSON.stringify(ingredient.item))
+        : 'Unknown item';
+        
     // Create properly structured shopping item that preserves all ingredient data
     return {
-      text: formatIngredient(ingredient),
+      // Format the text to clearly include the item name
+      text: `${ingredient.qty || ''} ${ingredient.unit || ''} ${itemName}`.trim() + 
+            (ingredient.notes ? ` (${ingredient.notes})` : ''),
       checked: false,
-      department: 'Recipe Ingredients',
+      department: getDepartmentForIngredient(itemName),
       // Save the complete original ingredient data to maintain structured information
       ingredientData: ingredient,
       // Extract specific shopping fields for easier access
       quantity: ingredient.shop_size_qty !== undefined ? ingredient.shop_size_qty : ingredient.qty,
       unit: ingredient.shop_size_unit || ingredient.unit,
-      item: typeof ingredient.item === 'string' ? ingredient.item : 
-            (ingredient.item && typeof ingredient.item === 'object' ? JSON.stringify(ingredient.item) : ''),
+      item: itemName,
       notes: ingredient.notes || ''
     };
   });
@@ -51,6 +59,49 @@ export const createShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
   });
   
   return initialItems;
+};
+
+// Helper function to determine department based on ingredient name
+const getDepartmentForIngredient = (ingredient: string): string => {
+  const lowerIngredient = ingredient.toLowerCase();
+  
+  // Produce
+  if (/lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i.test(lowerIngredient)) {
+    return 'Produce';
+  }
+  
+  // Meat & Seafood
+  if (/beef|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|steak|ground meat|bacon|sausage/i.test(lowerIngredient)) {
+    return 'Meat & Seafood';
+  }
+  
+  // Dairy & Eggs
+  if (/milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i.test(lowerIngredient)) {
+    return 'Dairy & Eggs';
+  }
+  
+  // Bakery
+  if (/bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i.test(lowerIngredient)) {
+    return 'Bakery';
+  }
+  
+  // Pantry
+  if (/flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i.test(lowerIngredient)) {
+    return 'Pantry';
+  }
+  
+  // Frozen
+  if (/frozen|ice cream|popsicle/i.test(lowerIngredient)) {
+    return 'Frozen';
+  }
+  
+  // Beverages
+  if (/water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i.test(lowerIngredient)) {
+    return 'Beverages';
+  }
+  
+  // Default
+  return 'Other';
 };
 
 // Group items by department

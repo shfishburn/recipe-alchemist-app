@@ -1,12 +1,12 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
-import { ShoppingItem, itemsToJson } from '@/components/recipe-detail/shopping-list/types';
+import { ShoppingItem } from '@/components/recipe-detail/shopping-list/types';
 import { Ingredient } from '@/types/recipe';
+import { ingredientsToShoppingItems } from '@/utils/shopping-list-utils';
 
 export function useShoppingListActions(recipe: any = null) {
   const { user } = useAuth();
@@ -37,55 +37,16 @@ export function useShoppingListActions(recipe: any = null) {
       
       setIsLoading(true);
       
-      // Transform ingredients to shopping items
-      const shoppingItems: ShoppingItem[] = recipe.ingredients.map((ingredient: any): ShoppingItem => {
-        // Skip string ingredients
-        if (typeof ingredient === 'string') {
-          return {
-            text: ingredient,
-            checked: false,
-            originalIngredient: undefined,
-            department: 'Other',
-          };
-        }
-        
-        // Handle structured ingredients
-        const itemName = typeof ingredient.item === 'string' 
-          ? ingredient.item 
-          : ingredient.item?.item || 'Unknown item';
-        
-        // Convert recipe units to shopping units
-        const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
-        
-        // Format the ingredient text
-        const text = formatIngredient({
-          ...ingredient,
-          qty: shoppingQty.qty,
-          unit: shoppingQty.unit
-        });
-        
-        // Determine department based on ingredient name
-        const department = getDepartmentForIngredient(itemName);
-        
-        return {
-          text,
-          checked: false,
-          originalIngredient: ingredient, // Store the original ingredient data
-          department,
-          quantity: shoppingQty.qty,
-          unit: shoppingQty.unit,
-          item: itemName,
-          notes: ingredient.notes,
-        };
-      });
+      // Use the shared utility function to convert ingredients to shopping items
+      const shoppingItems = ingredientsToShoppingItems(recipe.ingredients);
       
-      // Create new shopping list - convert ShoppingItems to JSON-serializable format
+      // Create new shopping list
       const { data: newList, error: createError } = await supabase
         .from('shopping_lists')
         .insert({
           title: listName,
           user_id: user.id,
-          items: itemsToJson(shoppingItems),
+          items: shoppingItems,
         })
         .select();
         
@@ -146,72 +107,19 @@ export function useShoppingListActions(recipe: any = null) {
         throw listError;
       }
       
-      // Transform ingredients to shopping items
-      const shoppingItems: ShoppingItem[] = recipe.ingredients.map((ingredient: any): ShoppingItem => {
-        // Handle string ingredients
-        if (typeof ingredient === 'string') {
-          return {
-            text: ingredient,
-            checked: false,
-            originalIngredient: undefined,
-            department: 'Other',
-          };
-        }
-        
-        // Handle structured ingredients
-        const itemName = typeof ingredient.item === 'string' 
-          ? ingredient.item 
-          : ingredient.item?.item || 'Unknown item';
-        
-        // Convert recipe units to shopping units
-        const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
-        
-        // Format the ingredient text
-        const text = formatIngredient({
-          ...ingredient,
-          qty: shoppingQty.qty,
-          unit: shoppingQty.unit
-        });
-        
-        // Determine department based on ingredient name
-        const department = getDepartmentForIngredient(itemName);
-        
-        return {
-          text,
-          checked: false,
-          originalIngredient: ingredient,
-          department,
-          quantity: shoppingQty.qty,
-          unit: shoppingQty.unit,
-          item: itemName,
-          notes: ingredient.notes,
-        };
-      });
+      // Use the shared utility function to convert ingredients to shopping items
+      const shoppingItems = ingredientsToShoppingItems(recipe.ingredients);
       
       // Current items in the list
       const currentItems = Array.isArray(currentList.items) ? currentList.items : [];
       
-      // Check for duplicates and merge
-      const newItems = [...currentItems];
-      let addedCount = 0;
-      
-      for (const item of shoppingItems) {
-        // Check if this item is already in the list
-        const existingIndex = newItems.findIndex(
-          (existing: any) => existing.text === item.text
-        );
-        
-        if (existingIndex === -1) {
-          // Not a duplicate, add it
-          newItems.push(itemToJson(item));
-          addedCount++;
-        }
-      }
+      // Merge items using the utility function to handle duplicates
+      const mergedItems = mergeShoppingItems(currentItems, shoppingItems);
       
       // Update the list with new items
       const { error: updateError } = await supabase
         .from('shopping_lists')
-        .update({ items: newItems })
+        .update({ items: mergedItems })
         .eq('id', listId);
         
       if (updateError) {
@@ -220,7 +128,7 @@ export function useShoppingListActions(recipe: any = null) {
       
       toast({
         title: "Added to shopping list",
-        description: `Added ${addedCount} items to your shopping list`,
+        description: `Updated your shopping list with items from the recipe`,
       });
       
       return true;
@@ -254,7 +162,9 @@ export function useShoppingListActions(recipe: any = null) {
       }
 
       setIsAddingToList(true);
-      console.log("Adding ingredients to shopping list:", ingredients);
+      
+      // Use the shared utility function to convert ingredients to shopping items
+      const shoppingItems = ingredientsToShoppingItems(ingredients);
       
       // Check if we already have a shopping list
       const { data: existingLists, error: listError } = await supabase
@@ -268,80 +178,19 @@ export function useShoppingListActions(recipe: any = null) {
         throw listError;
       }
       
-      // Transform ingredients to shopping items
-      const shoppingItems: ShoppingItem[] = ingredients.map((ingredient): ShoppingItem => {
-        // Skip string ingredients
-        if (typeof ingredient === 'string') {
-          return {
-            text: ingredient,
-            checked: false,
-            originalIngredient: undefined,
-            department: 'Other',
-          };
-        }
-        
-        // Handle structured ingredients
-        const itemName = typeof ingredient.item === 'string' 
-          ? ingredient.item 
-          : (ingredient.item as any)?.item || 'Unknown item';
-        
-        // Convert recipe units to shopping units
-        const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
-        
-        // Format the ingredient text
-        const text = formatIngredient({
-          ...ingredient,
-          qty: shoppingQty.qty,
-          unit: shoppingQty.unit
-        });
-        
-        // Determine department based on ingredient name
-        const department = getDepartmentForIngredient(itemName);
-        
-        return {
-          text,
-          checked: false,
-          originalIngredient: ingredient, // Store the original ingredient data
-          department,
-          quantity: shoppingQty.qty,
-          unit: shoppingQty.unit,
-          item: itemName,
-          notes: ingredient.notes,
-        };
-      });
-      
-      let listId;
-      
       if (existingLists && existingLists.length > 0) {
         // Add to existing list
         const currentList = existingLists[0];
-        listId = currentList.id;
-        
-        // Current items in the list
         const currentItems = Array.isArray(currentList.items) ? currentList.items : [];
         
-        // Check for duplicates and merge
-        const newItems = [...currentItems];
-        let addedCount = 0;
-        
-        for (const item of shoppingItems) {
-          // Check if this item is already in the list
-          const existingIndex = newItems.findIndex(
-            (existing: any) => existing.text === item.text
-          );
-          
-          if (existingIndex === -1) {
-            // Not a duplicate, add it
-            newItems.push(itemToJson(item));
-            addedCount++;
-          }
-        }
+        // Merge items
+        const mergedItems = mergeShoppingItems(currentItems, shoppingItems);
         
         // Update the list with new items
         const { error: updateError } = await supabase
           .from('shopping_lists')
-          .update({ items: newItems })
-          .eq('id', listId);
+          .update({ items: mergedItems })
+          .eq('id', currentList.id);
           
         if (updateError) {
           throw updateError;
@@ -349,7 +198,7 @@ export function useShoppingListActions(recipe: any = null) {
         
         toast({
           title: "Added to shopping list",
-          description: `Added ${addedCount} items from "${recipeTitle}" to your shopping list`,
+          description: `Added items from "${recipeTitle}" to your shopping list`,
         });
       } else {
         // Create new shopping list
@@ -358,15 +207,13 @@ export function useShoppingListActions(recipe: any = null) {
           .insert({
             title: `Shopping List with ${recipeTitle}`,
             user_id: user.id,
-            items: itemsToJson(shoppingItems),
+            items: shoppingItems,
           })
           .select();
           
         if (createError) {
           throw createError;
         }
-        
-        listId = newList?.[0]?.id;
         
         toast({
           title: "Created new shopping list",
@@ -386,6 +233,36 @@ export function useShoppingListActions(recipe: any = null) {
     } finally {
       setIsAddingToList(false);
     }
+  };
+  
+  // Helper function to merge items from two lists
+  const mergeShoppingItems = (existingItems: any[], newItems: any[]): any[] => {
+    const result = [...existingItems];
+    let addedCount = 0;
+    
+    for (const item of newItems) {
+      // Check if this item is already in the list by name
+      const existingIndex = result.findIndex(
+        (existing) => existing.name === item.name && existing.unit === item.unit
+      );
+      
+      if (existingIndex === -1) {
+        // Not a duplicate, add it
+        result.push(item);
+        addedCount++;
+      } else {
+        // Update existing item quantity
+        result[existingIndex].quantity += item.quantity;
+        // Merge notes if they exist
+        if (item.notes && !result[existingIndex].notes?.includes(item.notes)) {
+          result[existingIndex].notes = result[existingIndex].notes 
+            ? `${result[existingIndex].notes}, ${item.notes}`
+            : item.notes;
+        }
+      }
+    }
+    
+    return result;
   };
   
   // Update the checked status of an item in a list
@@ -491,19 +368,3 @@ export function useShoppingListActions(recipe: any = null) {
     isLoading,
   };
 }
-
-// Adding this helper function to extract just the itemToJson function
-export const itemToJson = (item: ShoppingItem): Record<string, any> => {
-  return {
-    text: item.text,
-    checked: item.checked,
-    department: item.department || 'Other',
-    pantryStaple: !!item.pantryStaple,
-    quantity: item.quantity,
-    unit: item.unit || '',
-    item: item.item || '',
-    notes: item.notes || '',
-    ingredientData: item.ingredientData ? JSON.parse(JSON.stringify(item.ingredientData)) : null,
-    originalIngredient: item.originalIngredient ? JSON.parse(JSON.stringify(item.originalIngredient)) : null
-  };
-};
