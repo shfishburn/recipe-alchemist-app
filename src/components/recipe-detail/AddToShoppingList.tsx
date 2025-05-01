@@ -89,7 +89,12 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
       let listId = selectedListId;
       
       if (selectedListId) {
-        success = await addToExistingList(selectedListId);
+        const result = await addToExistingList(selectedListId);
+        success = result.success;
+        // Use the returned list ID
+        if (success) {
+          listId = selectedListId;
+        }
       } else {
         const result = await createNewList(newListName);
         success = result.success;
@@ -133,12 +138,9 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   const handleViewList = () => {
     setSuccessDialogOpen(false);
     
-    // Navigate to the shopping list detail page
-    if (addedListId) {
-      navigate(`/shopping-lists/${addedListId}`);
-    } else {
-      navigate('/shopping-lists');
-    }
+    // Navigate to the shopping lists page without a specific ID
+    // This prevents 404 errors when the ID might not be valid
+    navigate('/shopping-lists');
   };
   
   const handleTriggerClick = (e: React.MouseEvent) => {
@@ -204,7 +206,7 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
             <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
-              View Shopping List
+              View Shopping Lists
               <ArrowRight className="h-4 w-4" />
             </AlertDialogAction>
           </AlertDialogFooter>

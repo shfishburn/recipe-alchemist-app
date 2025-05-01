@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import { ShoppingListsContainer } from '@/components/shopping-list/ShoppingListsContainer';
 

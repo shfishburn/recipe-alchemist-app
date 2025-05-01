@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ShoppingListsHeader } from '@/components/shopping-list/ShoppingListsHeader';
 import { ShoppingListsView } from '@/components/shopping-list/ShoppingListsView';
 import { ShoppingListDetail } from '@/components/shopping-list/ShoppingListDetail';
@@ -28,6 +28,19 @@ export function ShoppingListsContainer() {
     refetch,
     session
   } = useShoppingLists();
+
+  // Get the list ID from URL parameters if available
+  const { id: listIdFromUrl } = useParams<{ id?: string }>();
+
+  // Effect to select the list from URL parameter when data is loaded
+  useEffect(() => {
+    if (listIdFromUrl && shoppingLists.length > 0 && !selectedList) {
+      const listFromUrl = shoppingLists.find(list => list.id === listIdFromUrl);
+      if (listFromUrl) {
+        setSelectedList(listFromUrl);
+      }
+    }
+  }, [listIdFromUrl, shoppingLists, selectedList, setSelectedList]);
 
   if (!session) {
     return (

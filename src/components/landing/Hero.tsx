@@ -11,7 +11,7 @@ const Hero = React.memo(() => {
   const isMobile = useIsMobile();
   
   return (
-    <section className="w-full py-6 md:py-10">
+    <section className="w-full py-6 md:py-10 mb-8">
       <div className="container-page max-w-full px-4 md:px-8">
         {/* Hero Title Section */}
         <div className="text-center mb-6 md:mb-8">
@@ -35,7 +35,7 @@ const Hero = React.memo(() => {
         </div>
         
         {/* Sample Recipes Carousel - Full Width */}
-        <div className="w-full">
+        <div className="w-full mb-8">
           <div className="w-full mx-auto relative">
             <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>

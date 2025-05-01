@@ -132,6 +132,16 @@ const App = () => (
                   }
                 />
                 <Route
+                  path="/shopping-lists/:id"
+                  element={
+                    <PrivateRoute>
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <ShoppingLists />
+                      </Suspense>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
                   path="/favorites"
                   element={
                     <PrivateRoute>
