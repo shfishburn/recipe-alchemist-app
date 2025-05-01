@@ -1,8 +1,9 @@
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
 import { Skeleton } from '@/components/ui/skeleton';
+import '@/styles/touch-optimizations.css';
 
 // Lazy load non-critical components
 const Hero = lazy(() => import('@/components/landing/Hero'));
@@ -34,10 +35,27 @@ const Index = () => {
   // Use our scroll restoration hook
   useScrollRestoration();
   
+  // Add touch detection
+  const [isTouch, setIsTouch] = useState(false);
+  
+  // Detect touch capability
+  useEffect(() => {
+    const isTouchDevice = 'ontouchstart' in window || 
+      navigator.maxTouchPoints > 0 || 
+      (navigator as any).msMaxTouchPoints > 0;
+      
+    setIsTouch(isTouchDevice);
+    
+    // Add touch class to body for global CSS targeting
+    if (isTouchDevice) {
+      document.body.classList.add('touch-device');
+    }
+  }, []);
+  
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col ${isTouch ? 'touch-optimized' : ''}`}>
       <Navbar />
-      <main className="flex-1 animate-fadeIn pb-8 md:pb-12">
+      <main className="flex-1 animate-fadeIn pb-8 md:pb-12 touch-scroll">
         <Suspense fallback={<HeroSkeleton />}>
           <Hero />
         </Suspense>
@@ -47,4 +65,3 @@ const Index = () => {
 };
 
 export default Index;
-

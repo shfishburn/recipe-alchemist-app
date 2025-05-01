@@ -28,14 +28,14 @@ const Hero = React.memo(() => {
         
         {/* Recipe Generator - Full width with improved mobile spacing */}
         <div className="w-full mb-8 md:mb-10 hw-accelerated">
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md w-full">
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md w-full touch-transition">
             <QuickRecipeGenerator />
           </div>
         </div>
         
         {/* Sample Recipes Carousel - Full Width with improved spacing */}
         <div className="w-full mb-6 md:mb-6">
-          <div className="w-full mx-auto relative scroll-container swipe-horizontal">
+          <div className="w-full mx-auto relative scroll-container swipe-horizontal touch-optimized">
             <div className="absolute -top-6 -left-6 w-16 h-16 md:w-24 md:h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
             <div className="absolute -bottom-6 -right-6 w-20 h-20 md:w-32 md:h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
             <RecipeCarousel />
@@ -49,4 +49,3 @@ const Hero = React.memo(() => {
 Hero.displayName = 'Hero';
 
 export default Hero;
-

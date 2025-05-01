@@ -1,5 +1,5 @@
 
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useState, useRef, useEffect } from 'react';
 import { useRecipes } from '@/hooks/use-recipes';
 import {
   Carousel,
@@ -22,11 +22,25 @@ export function RecipeCarousel() {
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [carouselApi, setCarouselApi] = React.useState<UseEmblaCarouselType[1] | null>(null);
   const isMobile = useIsMobile();
+  
+  // Add touch state tracking
+  const [isTouching, setIsTouching] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
     return recipes?.slice(0, 5) || [];
   }, [recipes]);
+
+  // Optimize carousel options
+  const carouselOptions = useMemo(() => ({
+    align: "start",
+    loop: true,
+    dragFree: true, // Enable for all devices
+    inViewThreshold: 0.6,
+    dragThreshold: 10, // Lower threshold for touch
+    speed: 15, // Faster animation for responsiveness
+  }), []);
 
   React.useEffect(() => {
     if (!carouselApi) return;
@@ -43,13 +57,27 @@ export function RecipeCarousel() {
     };
   }, [carouselApi]);
 
-  // Helper function to combine class names
-  const combineClasses = (...classes: (string | boolean | undefined)[]) => {
-    return classes.filter(Boolean).join(' ');
-  };
+  // Add touch event handling with passive listeners
+  useEffect(() => {
+    const element = carouselRef.current;
+    if (!element) return;
+    
+    const touchStartHandler = () => setIsTouching(true);
+    const touchEndHandler = () => setIsTouching(false);
+    
+    element.addEventListener('touchstart', touchStartHandler, { passive: true });
+    element.addEventListener('touchend', touchEndHandler, { passive: true });
+    element.addEventListener('touchcancel', touchEndHandler, { passive: true });
+    
+    return () => {
+      element.removeEventListener('touchstart', touchStartHandler);
+      element.removeEventListener('touchend', touchEndHandler);
+      element.removeEventListener('touchcancel', touchEndHandler);
+    };
+  }, []);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={carouselRef}>
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {[1, 2, 3].map((i) => (
@@ -71,34 +99,31 @@ export function RecipeCarousel() {
           </div>
           
           <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-              dragFree: isMobile, // Enable momentum scrolling for better mobile touch feel
-              inViewThreshold: 0.6, // More consistent slide selection on swipe
-            }}
-            className="w-full"
+            opts={carouselOptions}
+            className="w-full no-touch-delay"
             setApi={setCarouselApi}
           >
             <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4">
               {featuredRecipes.map((recipe) => (
-                <CarouselItem key={recipe.id} className={combineClasses(
+                <CarouselItem key={recipe.id} className={classnames(
                   isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
-                  "hw-accelerated" // Hardware acceleration for smooth sliding
+                  "hw-accelerated touch-optimized" // Add optimizations
                 )}>
                   <RecipeCard recipe={recipe} />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className={combineClasses(
-              "hidden md:flex",
+            
+            {/* Update arrows for better touch targets */}
+            <CarouselPrevious className={classnames(
+              "hidden md:flex touch-target",
               isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
-              "tap-highlight-none z-10" // Remove tap highlight on mobile and ensure proper z-index
+              "touch-feedback tap-highlight-none z-10" // Add touch feedback
             )} />
-            <CarouselNext className={combineClasses(
-              "hidden md:flex",
+            <CarouselNext className={classnames(
+              "hidden md:flex touch-target",
               isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
-              "tap-highlight-none z-10" // Remove tap highlight on mobile and ensure proper z-index
+              "touch-feedback tap-highlight-none z-10" // Add touch feedback
             )} />
           </Carousel>
           

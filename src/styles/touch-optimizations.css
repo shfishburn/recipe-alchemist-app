@@ -1,0 +1,69 @@
+
+/* Global touch optimizations */
+.touch-optimized {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* Hardware acceleration for critical elements */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Properly sized touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Immediate visual feedback for touch */
+.touch-feedback:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+}
+
+/* Optimized carousel touch handling */
+.swipe-horizontal {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* Fast transitions for responsive feel */
+.touch-transition {
+  transition-duration: 0.15s !important;
+}
+
+/* Remove delay on touch actions */
+.no-touch-delay {
+  touch-action: manipulation;
+}
+
+/* Hide default focus outlines on touch while preserving for keyboard */
+@media (hover: none) {
+  *:focus {
+    outline: none !important;
+  }
+}
+
+/* Card optimizations for touch devices */
+.card-touch-optimized {
+  position: relative;
+  z-index: 1;
+}
+
+.card-touch-optimized:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Better touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
