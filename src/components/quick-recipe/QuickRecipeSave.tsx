@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
+import { standardizeNutrition } from '@/types/nutrition-utils';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -30,8 +31,27 @@ export const useQuickRecipeSave = () => {
         throw new Error("You must be logged in to save recipes");
       }
       
-      // Estimate nutrition data if not provided
-      const nutrition = recipe.nutrition || estimateNutrition(recipe.ingredients, recipe.servings || 2);
+      // Ensure nutrition data is available or estimate it
+      let nutritionData = recipe.nutrition || estimateNutrition(recipe.ingredients, recipe.servings || 2);
+      
+      // Make sure nutrition data follows the expected format
+      if (nutritionData) {
+        // Standardize nutrition keys for consistency
+        nutritionData = standardizeNutrition(nutritionData);
+        
+        // Ensure we have at least basic nutrition fields
+        if (!nutritionData.calories && !nutritionData.kcal) {
+          console.log("Adding basic nutrition values from estimation");
+          const estimatedValues = estimateNutrition(recipe.ingredients, recipe.servings || 2);
+          nutritionData = {
+            ...nutritionData,
+            ...estimatedValues
+          };
+        }
+        
+        // Log the final nutrition data for debugging
+        console.log("Final nutrition data being saved:", nutritionData);
+      }
       
       // Convert the quick recipe format to database format
       const recipeData = {
@@ -47,7 +67,7 @@ export const useQuickRecipeSave = () => {
         science_notes: recipe.scienceNotes as unknown as Json || [],
         servings: recipe.servings || 2,
         user_id: user.id, // Add the user_id to the recipe data
-        nutrition: nutrition as unknown as Json // Add estimated nutrition data
+        nutrition: nutritionData as unknown as Json // Add enhanced nutrition data
       };
 
       // Insert the recipe into the database
@@ -71,6 +91,12 @@ export const useQuickRecipeSave = () => {
       });
 
       console.log("Recipe saved successfully with ID:", data.id);
+      
+      // Navigate to the newly created recipe
+      if (data.id) {
+        navigate(`/recipes/${data.id}`);
+      }
+      
       return true;
     } catch (error) {
       console.error("Error in saveRecipe:", error);

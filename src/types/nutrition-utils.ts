@@ -1,45 +1,34 @@
 
-import { Nutrition } from '@/types/recipe';
-
-// Standard nutrition field names to ensure consistency
-export const NUTRITION_FIELD_NAMES = {
-  calories: ['calories', 'kcal'],
-  protein: ['protein_g', 'protein'],
-  carbs: ['carbs_g', 'carbs'],
-  fat: ['fat_g', 'fat'],
-  fiber: ['fiber_g', 'fiber', 'dietary_fiber'],
-  sugar: ['sugar_g', 'sugar'],
-  sodium: ['sodium_mg', 'sodium'],
-  // Micronutrients
-  vitamin_a: ['vitamin_a_iu', 'vitaminA', 'vitamin_a'],
-  vitamin_c: ['vitamin_c_mg', 'vitaminC', 'vitamin_c'],
-  vitamin_d: ['vitamin_d_iu', 'vitaminD', 'vitamin_d'],
-  calcium: ['calcium_mg', 'calcium'],
-  iron: ['iron_mg', 'iron'],
-  potassium: ['potassium_mg', 'potassium']
-};
-
-// Daily reference values for nutrients (in the same units as the nutrition data)
+// Define the daily reference values for nutrients
 export const DAILY_REFERENCE_VALUES = {
-  calories: 2000,     // kcal
-  protein: 50,        // g
-  carbs: 275,         // g 
-  fat: 78,            // g
-  fiber: 28,          // g
-  sugar: 50,          // g (added sugars)
-  sodium: 2300,       // mg
-  vitamin_a: 5000,    // IU
-  vitamin_c: 90,      // mg
-  vitamin_d: 800,     // IU
-  calcium: 1300,      // mg
-  iron: 18,           // mg
-  potassium: 4700     // mg
+  calories: 2000,
+  protein: 50, // g
+  carbs: 275, // g
+  fat: 78, // g
+  fiber: 28, // g
+  sugar: 50, // g
+  sodium: 2300, // mg
+  vitamin_a: 5000, // IU
+  vitamin_c: 60, // mg
+  vitamin_d: 400, // IU
+  calcium: 1000, // mg
+  iron: 18, // mg
+  potassium: 4700 // mg
 };
 
-export function standardizeNutrition(input: any): Nutrition {
-  if (!input) return {};
+// Utility function to calculate percentage of daily value
+export function getDailyValuePercentage(nutrient: string, value: number): number {
+  const referenceValue = DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES];
+  if (!referenceValue || !value) return 0;
   
-  const output: Nutrition = {};
+  return Math.round((value / referenceValue) * 100);
+}
+
+// Function to standardize nutrition data to ensure consistent property access
+export function standardizeNutrition(input: any) {
+  if (!input || typeof input !== 'object') return {};
+  
+  const output: any = { ...input }; // Start with a copy of the input
   
   // Map calories (priority to 'calories' field, fallback to 'kcal')
   if (input.calories !== undefined) {
@@ -95,7 +84,7 @@ export function standardizeNutrition(input: any): Nutrition {
   if (input.sodium_mg !== undefined) output.sodium_mg = Number(input.sodium_mg);
   if (input.sodium !== undefined && output.sodium_mg === undefined) output.sodium_mg = Number(input.sodium);
   
-  // Map micronutrients with better fallback handling
+  // Map micronutrients
   if (input.vitamin_a_iu !== undefined) output.vitamin_a_iu = Number(input.vitamin_a_iu);
   if (input.vitaminA !== undefined && output.vitamin_a_iu === undefined) output.vitamin_a_iu = Number(input.vitaminA);
   if (input.vitamin_a !== undefined && output.vitamin_a_iu === undefined) output.vitamin_a_iu = Number(input.vitamin_a);
@@ -117,54 +106,20 @@ export function standardizeNutrition(input: any): Nutrition {
   if (input.potassium_mg !== undefined) output.potassium_mg = Number(input.potassium_mg);
   if (input.potassium !== undefined && output.potassium_mg === undefined) output.potassium_mg = Number(input.potassium);
   
-  return output;
-}
-
-export function validateNutrition(nutrition: any): boolean {
-  if (!nutrition || typeof nutrition !== 'object') return false;
-  
-  // Check if at least one valid nutrition field exists
-  const hasCalories = nutrition.calories !== undefined || nutrition.kcal !== undefined;
-  const hasProtein = nutrition.protein_g !== undefined || nutrition.protein !== undefined;
-  const hasCarbs = nutrition.carbs_g !== undefined || nutrition.carbs !== undefined;
-  const hasFat = nutrition.fat_g !== undefined || nutrition.fat !== undefined;
-  
-  // Basic validation: must have at least calories and one macronutrient
-  return hasCalories && (hasProtein || hasCarbs || hasFat);
-}
-
-// Get percentage of daily value
-export function getDailyValuePercentage(nutrient: string, value: number): number {
-  if (!value || value <= 0 || !DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) {
-    return 0;
+  // If we have any "data_quality" info, preserve it
+  if (input.data_quality) {
+    output.data_quality = input.data_quality;
   }
   
-  return Math.round((value / DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) * 100);
-}
-
-// Group nutrients by category for better organization
-export function categorizeNutrients(nutrition: Nutrition) {
-  return {
-    macros: {
-      calories: nutrition.calories || 0,
-      protein: nutrition.protein || 0,
-      carbs: nutrition.carbs || 0,
-      fat: nutrition.fat || 0
-    },
-    others: {
-      fiber: nutrition.fiber || nutrition.fiber_g || 0,
-      sugar: nutrition.sugar_g || 0,
-      sodium: nutrition.sodium_mg || 0
-    },
-    vitamins: {
-      vitamin_a: nutrition.vitamin_a_iu || 0,
-      vitamin_c: nutrition.vitamin_c_mg || 0,
-      vitamin_d: nutrition.vitamin_d_iu || 0
-    },
-    minerals: {
-      calcium: nutrition.calcium_mg || 0,
-      iron: nutrition.iron_mg || 0,
-      potassium: nutrition.potassium_mg || 0
-    }
-  };
+  // If we have per-ingredient breakdowns, preserve that data
+  if (input.per_ingredient) {
+    output.per_ingredient = input.per_ingredient;
+  }
+  
+  // If we have audit logs, preserve them
+  if (input.audit_log) {
+    output.audit_log = input.audit_log;
+  }
+  
+  return output;
 }

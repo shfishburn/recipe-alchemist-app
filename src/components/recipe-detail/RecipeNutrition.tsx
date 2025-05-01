@@ -31,9 +31,13 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   // Use cuisine as cooking method since cooking_method doesn't exist in the type
   const cookingMethod = recipe.cuisine || '';
 
-  if (!recipeNutrition) {
+  // If there's no nutrition data, we don't show the component
+  if (!recipe.nutrition || !recipeNutrition) {
+    console.log("No nutrition data available for display");
     return null;
   }
+  
+  console.log("Displaying nutrition data:", recipeNutrition);
   
   // Cast to EnhancedNutrition if it has data_quality field
   const enhancedNutrition = (recipeNutrition as any)?.data_quality 
