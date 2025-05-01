@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2, Info } from 'lucide-react';
+import { Trash2, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -10,6 +9,7 @@ import {
   TooltipProvider
 } from "@/components/ui/tooltip";
 import { ShoppingListItem } from '@/types/shopping-list';
+import { getDepartmentIcon, getDepartmentColor } from './department-utils';
 
 interface ShoppingListDepartmentProps {
   department: string;
@@ -34,24 +34,23 @@ export function ShoppingListDepartment({
 }: ShoppingListDepartmentProps) {
   const deptCompleted = items.every(item => item.checked);
   const deptPartial = items.some(item => item.checked) && !deptCompleted;
+  
+  // Get the department icon and color
+  const DepartmentIcon = getDepartmentIcon(department);
+  const departmentColorClass = getDepartmentColor(department);
 
   return (
     <div className="border rounded-md overflow-hidden">
       <div 
-        className={`px-3 py-2 flex items-center justify-between gap-2 bg-muted/30 cursor-pointer ${
-          deptCompleted ? 'bg-muted/40 text-muted-foreground' : ''
-        }`}
+        className={`px-3 py-3 flex items-center justify-between gap-2 cursor-pointer
+          ${departmentColorClass} 
+          ${deptCompleted ? 'text-muted-foreground' : ''}`}
         onClick={onToggleExpand}
       >
         <div className="flex items-center gap-2">
-          <Checkbox 
-            checked={deptCompleted}
-            onCheckedChange={(checked) => {
-              onToggleDepartment(department, Boolean(checked));
-              event?.stopPropagation();
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
+          {DepartmentIcon && (
+            <DepartmentIcon className="h-4 w-4" />
+          )}
           <h3 className="font-medium text-sm">
             {department}
             <span className="ml-2 text-xs font-normal text-muted-foreground">
@@ -59,7 +58,7 @@ export function ShoppingListDepartment({
             </span>
           </h3>
         </div>
-        <div>{isExpanded ? '▼' : '▶'}</div>
+        <div>{isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</div>
       </div>
       
       {isExpanded && (
@@ -74,9 +73,11 @@ export function ShoppingListDepartment({
                 key={`${department}-${idx}`} 
                 className="flex items-center gap-2 p-3 hover:bg-muted/20"
               >
-                <Checkbox
+                <input
+                  type="checkbox"
                   checked={item.checked}
-                  onCheckedChange={() => onToggleItem(itemIndex)}
+                  onChange={() => onToggleItem(itemIndex)}
+                  className="h-4 w-4 rounded border-gray-300"
                 />
                 <div 
                   className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
