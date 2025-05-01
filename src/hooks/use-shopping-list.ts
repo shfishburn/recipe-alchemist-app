@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
@@ -23,7 +23,7 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
   const allDepartments = Object.keys(itemsByDepartment);
   
   // Initialize expanded departments state if not done
-  React.useEffect(() => {
+  useEffect(() => {
     const initial: Record<string, boolean> = {};
     allDepartments.forEach(dept => {
       // By default all departments are expanded
