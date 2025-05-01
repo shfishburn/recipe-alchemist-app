@@ -159,15 +159,18 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
     <div className="relative">
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 transition-all duration-300"
-            onClick={handleTriggerClick}
-          >
-            <ShoppingBag className="h-4 w-4 mr-2" />
-            Add to shopping list
-          </Button>
+          {/* Fix: Wrap the Button in a div for SheetTrigger with asChild */}
+          <div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 transition-all duration-300"
+              onClick={handleTriggerClick}
+            >
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Add to shopping list
+            </Button>
+          </div>
         </SheetTrigger>
         <SheetContent className="z-[60]">
           <SheetHeader>

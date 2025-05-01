@@ -62,10 +62,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
           <DrawerHeader className="flex items-center justify-between border-b pb-4">
             <DrawerTitle className="text-center">Account</DrawerTitle>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
+              {/* Fix: Wrap Button in a div when used with DrawerClose asChild */}
+              <div>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </div>
             </DrawerClose>
           </DrawerHeader>
           <ScrollArea className="p-6 h-full max-h-[70vh]">
@@ -82,10 +85,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
         <SheetHeader className="flex items-center justify-between border-b pb-4">
           <SheetTitle>Account</SheetTitle>
           <SheetClose asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
+            {/* Fix: Wrap Button in a div when used with SheetClose asChild */}
+            <div>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
           </SheetClose>
         </SheetHeader>
         <ScrollArea className="flex-1 p-6 h-full">
