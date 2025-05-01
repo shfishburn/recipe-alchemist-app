@@ -1,158 +1,81 @@
-
-/* Base transitions */
-.transition-base {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Carousel progress animation */
+@keyframes carousel-progress {
+  from { width: 0%; }
+  to { width: 100%; }
 }
 
-/* Mobile-optimized transitions */
-@media (prefers-reduced-motion: no-preference) {
-  .mobile-optimized {
-    transition-duration: 200ms;
-    will-change: transform, opacity;
-  }
-
-  /* Hardware acceleration for critical animations */
-  .hw-accelerated {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
+.animate-carousel-progress {
+  animation: carousel-progress 5s linear;
+  width: 0%;
 }
 
-/* Reduce animations for users who prefer reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Hardware acceleration utility class */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
 }
 
-/* Touch ripple effect animation */
-@keyframes touch-ripple {
-  0% {
-    transform: scale(0);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
+/* Touch target sizing for mobile */
+.touch-target-base {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-.touch-ripple {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 50px;
-  height: 50px;
-  transform: translate(-50%, -50%) scale(0);
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* Apply the ripple effect when the parent is active */
-button:active .touch-ripple, 
-[role="button"]:active .touch-ripple {
-  animation: touch-ripple 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* Enhanced mobile transitions */
-@media (max-width: 640px) {
-  .mobile-fade-in {
-    opacity: 0;
-    animation: fadeIn 0.3s ease-out forwards;
-  }
-  
-  /* Touch feedback for all interactive elements */
-  button:active,
-  [role="button"]:active,
-  a.interactive:active,
-  .touch-effect:active {
-    transform: scale(0.97);
-    opacity: 0.9;
-    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-  }
-  
-  /* Optimized slide transitions for mobile */
-  .mobile-slide-in {
-    transform: translateX(100%);
-    animation: mobileSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    will-change: transform;
-  }
-  
-  @keyframes mobileSlideIn {
-    to {
-      transform: translateX(0);
-    }
-  }
-  
-  /* Enhanced swipe gesture transition */
-  .swipe-container {
-    touch-action: pan-y;
-    overflow-x: hidden;
-  }
-  
-  .swipe-item {
-    will-change: transform;
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-}
-
-/* Form focus transition */
-.form-focus-ring {
-  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
-}
-
-.form-focus-ring:focus-within {
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-}
-
-/* Smooth validation transitions */
-.validation-enter {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-}
-
-.validation-enter-active {
-  max-height: 50px;
-  opacity: 1;
-  transition: max-height 0.3s ease-in, opacity 0.3s ease-in;
-}
-
-.validation-exit {
-  max-height: 50px;
-  opacity: 1;
-  overflow: hidden;
-}
-
-.validation-exit-active {
-  max-height: 0;
-  opacity: 0;
-  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-}
-
-/* Mobile gesture handlers */
+/* Tap highlight utilities */
 .tap-highlight-none {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Page transitions */
-.page-transition {
-  will-change: opacity, transform;
-  transition: opacity 300ms ease, transform 300ms ease;
+/* Reduce motion utilities */
+.reduce-motion-mobile {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
 }
 
-.page-transition.fadeIn {
-  opacity: 1;
-  transform: translateY(0);
+/* Touch feedback interaction */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
 }
 
-.page-transition.fadeOut {
+.touch-feedback::after {
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
   opacity: 0;
-  transform: translateY(20px);
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.touch-feedback:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Swipe horizontal container */
+.swipe-horizontal {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+}
+
+/* Mobile content visibility */
+.content-visibility-auto {
+  content-visibility: auto;
+}
+
+.content-visibility-auto-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
 }

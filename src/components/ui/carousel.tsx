@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import useEmblaCarousel, { type UseEmblaCarouselType, type EmblaOptionsType } from "embla-carousel-react";
+import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ interface CarouselProps {
 
 interface CarouselPrevNextProps extends React.HTMLAttributes<HTMLButtonElement> {
   isBatteryLow?: boolean;
+  disabled?: boolean; // Added disabled prop to fix type error
 }
 
 export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
@@ -45,9 +46,9 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     const { lowPowerMode } = useBatteryStatus();
     
     // Apply power-saving settings when battery is low
-    const optimizedOpts: EmblaOptionsType = React.useMemo(() => {
+    const optimizedOpts: CarouselOptions = React.useMemo(() => {
       // Start with the base options
-      const baseOpts: EmblaOptionsType = {
+      const baseOpts: CarouselOptions = {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
       };
@@ -162,7 +163,22 @@ export const CarouselItem = React.forwardRef<
 ));
 CarouselItem.displayName = "CarouselItem";
 
-export function CarouselPrevious({ className, isBatteryLow, ...props }: CarouselPrevNextProps) {
+// Add the CarouselProgress component
+export const CarouselProgress = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div 
+    ref={ref}
+    className={cn("relative h-1 w-full rounded-full bg-gray-200", className)} 
+    {...props}
+  >
+    <div className="absolute h-full left-0 rounded-full bg-recipe-blue animate-carousel-progress" />
+  </div>
+));
+CarouselProgress.displayName = "CarouselProgress";
+
+export function CarouselPrevious({ className, isBatteryLow, disabled, ...props }: CarouselPrevNextProps) {
   return (
     <Button
       variant="outline"
@@ -172,6 +188,7 @@ export function CarouselPrevious({ className, isBatteryLow, ...props }: Carousel
         isBatteryLow ? "opacity-70" : "",
         className
       )}
+      disabled={disabled}
       {...props}
     >
       <ArrowLeft className="h-4 w-4" />
@@ -180,7 +197,7 @@ export function CarouselPrevious({ className, isBatteryLow, ...props }: Carousel
   );
 }
 
-export function CarouselNext({ className, isBatteryLow, ...props }: CarouselPrevNextProps) {
+export function CarouselNext({ className, isBatteryLow, disabled, ...props }: CarouselPrevNextProps) {
   return (
     <Button
       variant="outline"
@@ -190,6 +207,7 @@ export function CarouselNext({ className, isBatteryLow, ...props }: CarouselPrev
         isBatteryLow ? "opacity-70" : "",
         className
       )}
+      disabled={disabled}
       {...props}
     >
       <ArrowRight className="h-4 w-4" />
