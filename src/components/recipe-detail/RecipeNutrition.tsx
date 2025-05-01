@@ -30,7 +30,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   // Console log for debugging nutrition data issues
   useEffect(() => {
     if (recipe.nutrition) {
-      console.log("Recipe nutrition data available:", recipe.nutrition);
+      console.log("Recipe nutrition data:", recipe.nutrition);
       if (recipeNutrition) {
         console.log("Processed nutrition data:", recipeNutrition);
       } else {
@@ -47,18 +47,23 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   const cookingMethod = recipe.cuisine || '';
 
   // Enhanced check to ensure we have valid nutrition data
-  // Manually standardize the nutrition data if needed
   const hasValidNutrition = React.useMemo(() => {
-    if (!recipe.nutrition) return false;
-    
-    // If recipeNutrition isn't available, try to standardize it ourselves
-    const nutrition = recipeNutrition || standardizeNutrition(recipe.nutrition);
-    
-    return nutrition && 
-           (nutrition.calories > 0 || 
-            nutrition.protein > 0 || 
-            nutrition.carbs > 0 || 
-            nutrition.fat > 0);
+    try {
+      if (!recipe.nutrition) return false;
+      
+      // If recipeNutrition isn't available, try to standardize it ourselves
+      const nutrition = recipeNutrition || standardizeNutrition(recipe.nutrition);
+      
+      // Check for the existence of basic nutrition values
+      return nutrition && 
+             (Number(nutrition.calories) > 0 || 
+              Number(nutrition.protein) > 0 || 
+              Number(nutrition.carbs) > 0 || 
+              Number(nutrition.fat) > 0);
+    } catch (error) {
+      console.error("Error validating nutrition data:", error);
+      return false;
+    }
   }, [recipe.nutrition, recipeNutrition]);
   
   // If there's no valid nutrition data, show a placeholder instead of nothing
@@ -93,8 +98,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
       </Collapsible>
     );
   }
-  
-  console.log("Displaying nutrition data:", recipeNutrition);
   
   // Cast to EnhancedNutrition if it has data_quality field
   const enhancedNutrition = (recipeNutrition as any)?.data_quality 

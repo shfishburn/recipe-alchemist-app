@@ -36,7 +36,7 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
           </div>
         </CardHeader>
         <CollapsibleContent>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 relative">
             <div className="mb-4">
               <AddToShoppingList recipe={recipe} />
             </div>

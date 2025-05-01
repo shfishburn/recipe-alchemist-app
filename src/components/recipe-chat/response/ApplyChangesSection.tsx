@@ -40,7 +40,8 @@ export function ApplyChangesSection({
                         
   const hasChanges = hasTitle || hasInstructions || hasIngredients || hasScienceNotes;
 
-  const handleApplyChanges = () => {
+  const handleApplyChanges = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
     setApplyError(null); // Reset any previous errors
     
     try {

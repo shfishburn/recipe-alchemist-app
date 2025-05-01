@@ -31,12 +31,18 @@ export function ChangesConfirmationDialog({
 }: ChangesConfirmationDialogProps) {
   if (!changes) return null;
   
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    onConfirm();
+  };
+  
   return (
     <AlertDialog open={open} onOpenChange={(isOpen) => {
       if (isApplying && !isOpen) return; // Prevent closing while applying
       onOpenChange(isOpen);
     }}>
-      <AlertDialogContent className="max-w-lg" style={{ zIndex: 150 }}>
+      <AlertDialogContent className="max-w-lg" style={{ zIndex: 55 }}>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Recipe Changes</AlertDialogTitle>
           <AlertDialogDescription>
@@ -52,11 +58,7 @@ export function ChangesConfirmationDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isApplying}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation(); // Prevent event bubbling
-              onConfirm();
-            }}
+            onClick={handleConfirm}
             disabled={isApplying}
             className="bg-primary text-white"
           >

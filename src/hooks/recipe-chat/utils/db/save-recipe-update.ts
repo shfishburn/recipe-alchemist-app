@@ -11,33 +11,40 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   
   // Enhanced nutrition data handling with detailed logging
   if (updatedRecipe.nutrition) {
-    console.log("Original nutrition data before standardizing:", JSON.stringify(updatedRecipe.nutrition));
+    console.log("Original nutrition data:", JSON.stringify(updatedRecipe.nutrition));
     
-    // Deep clone the nutrition data to prevent reference issues
-    const nutritionCopy = JSON.parse(JSON.stringify(updatedRecipe.nutrition));
-    const standardizedNutrition = standardizeNutrition(nutritionCopy);
-    
-    console.log("Standardized nutrition data:", JSON.stringify(standardizedNutrition));
-    
-    // Validate that we have actual nutrition data
-    if (!standardizedNutrition || 
-        typeof standardizedNutrition !== 'object' || 
-        Object.keys(standardizedNutrition).length === 0) {
-      console.warn("Empty or invalid nutrition data detected, using default empty object");
-      updatedRecipe.nutrition = {};
-    } else {
-      // Ensure all numerical values are non-zero to avoid display issues
-      // Converting any zero values to small positive numbers for display purposes
-      const minValue = 0.01; // Minimum value for nutrition fields
+    try {
+      // Deep clone the nutrition data to prevent reference issues
+      const nutritionCopy = JSON.parse(JSON.stringify(updatedRecipe.nutrition));
+      const standardizedNutrition = standardizeNutrition(nutritionCopy);
       
-      for (const key in standardizedNutrition) {
-        if (typeof standardizedNutrition[key] === 'number' && standardizedNutrition[key] <= 0) {
-          console.warn(`Found zero or negative value for nutrition field ${key}, setting to minimum value`);
-          standardizedNutrition[key] = minValue;
+      console.log("Standardized nutrition data:", JSON.stringify(standardizedNutrition));
+      
+      // Validate that we have actual nutrition data
+      if (!standardizedNutrition || 
+          typeof standardizedNutrition !== 'object' || 
+          Object.keys(standardizedNutrition).length === 0) {
+        console.warn("Empty or invalid nutrition data detected, using default empty object");
+        updatedRecipe.nutrition = {};
+      } else {
+        // Ensure all numerical values are valid non-zero numbers
+        const minValue = 0.1; // Minimum value for nutrition fields
+        
+        for (const key in standardizedNutrition) {
+          if (typeof standardizedNutrition[key] === 'number') {
+            if (isNaN(standardizedNutrition[key]) || standardizedNutrition[key] <= 0) {
+              console.warn(`Found invalid value for nutrition field ${key}, setting to minimum value`);
+              standardizedNutrition[key] = minValue;
+            }
+          }
         }
+        
+        updatedRecipe.nutrition = standardizedNutrition;
       }
-      
-      updatedRecipe.nutrition = standardizedNutrition;
+    } catch (error) {
+      console.error("Error processing nutrition data:", error);
+      // Fallback to empty object if there's an error
+      updatedRecipe.nutrition = {};
     }
   }
   
@@ -49,7 +56,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     science_notes: updatedRecipe.science_notes as unknown as Json
   };
 
-  console.log("Saving recipe update with data integrity checks passed:", {
+  console.log("Saving recipe update with data:", {
     id: dbRecipe.id,
     hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
@@ -61,18 +68,23 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : []
   });
 
-  const { data, error } = await supabase
-    .from('recipes')
-    .update(dbRecipe)
-    .eq('id', updatedRecipe.id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('recipes')
+      .update(dbRecipe)
+      .eq('id', updatedRecipe.id)
+      .select()
+      .single();
 
-  if (error) {
-    console.error("Error updating recipe:", error);
+    if (error) {
+      console.error("Error updating recipe:", error);
+      throw error;
+    }
+    
+    console.log("Recipe successfully updated with ID:", data.id);
+    return data;
+  } catch (error) {
+    console.error("Database error updating recipe:", error);
     throw error;
   }
-  
-  console.log("Recipe successfully updated with ID:", data.id);
-  return data;
 }
