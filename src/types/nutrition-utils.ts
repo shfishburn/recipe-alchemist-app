@@ -18,6 +18,8 @@ export type Nutrition = {
   vitamin_d: number;
   vitamin_c: number;
   vitamin_a: number;
+  // Allow for aliased properties
+  carbs?: number;  // Alternative to carbohydrates
   // Add more nutrients as needed
 };
 
@@ -47,7 +49,6 @@ export type NutritionDataQualitySummary = {
   limitations: string[];
 };
 
-// Make sure data_quality is compatible with the required type
 export type NutritionDataQuality = {
   overall_confidence: 'high' | 'medium' | 'low';
   overall_confidence_score: number;
@@ -56,29 +57,72 @@ export type NutritionDataQuality = {
   limitations: string[];
 } & Record<string, any>;
 
+export type ExtendedNutritionData = Nutrition & {
+  data_quality?: NutritionDataQuality;
+  per_ingredient?: Record<string, any>;
+  audit_log?: any[];
+  // Legacy property aliases
+  kcal?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+  calcium_mg?: number;
+  iron_mg?: number;
+  potassium_mg?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  vitamin_a_iu?: number;
+  vitamin_c_mg?: number;
+  vitamin_d_iu?: number;
+};
+
 export type NutritionResponse = {
-  nutrition: Nutrition;
+  nutrition: Nutrition | ExtendedNutritionData;
   data_quality: NutritionDataQuality;
   total: NutritionTotals;
 };
 
 // Add these exported functions to fix build errors
 export const standardizeNutrition = (nutrition: any): Nutrition => {
+  if (!nutrition) return {
+    calories: 0,
+    protein: 0,
+    fat: 0,
+    carbohydrates: 0,
+    fiber: 0,
+    sugar: 0,
+    sodium: 0,
+    cholesterol: 0,
+    calcium: 0,
+    iron: 0,
+    potassium: 0,
+    vitamin_d: 0,
+    vitamin_c: 0,
+    vitamin_a: 0,
+    carbs: 0,
+  };
+
   return {
-    calories: nutrition?.calories || 0,
-    protein: nutrition?.protein || 0,
-    fat: nutrition?.fat || 0,
-    carbohydrates: nutrition?.carbohydrates || 0,
-    fiber: nutrition?.fiber || 0,
-    sugar: nutrition?.sugar || 0,
-    sodium: nutrition?.sodium || 0,
+    calories: nutrition?.calories || nutrition?.kcal || 0,
+    protein: nutrition?.protein || nutrition?.protein_g || 0,
+    fat: nutrition?.fat || nutrition?.fat_g || 0,
+    carbohydrates: nutrition?.carbohydrates || nutrition?.carbs || nutrition?.carbs_g || 0,
+    fiber: nutrition?.fiber || nutrition?.fiber_g || 0,
+    sugar: nutrition?.sugar || nutrition?.sugar_g || 0,
+    sodium: nutrition?.sodium || nutrition?.sodium_mg || 0,
     cholesterol: nutrition?.cholesterol || 0,
-    calcium: nutrition?.calcium || 0,
-    iron: nutrition?.iron || 0,
-    potassium: nutrition?.potassium || 0,
-    vitamin_d: nutrition?.vitamin_d || 0,
-    vitamin_c: nutrition?.vitamin_c || 0,
-    vitamin_a: nutrition?.vitamin_a || 0,
+    calcium: nutrition?.calcium || nutrition?.calcium_mg || 0,
+    iron: nutrition?.iron || nutrition?.iron_mg || 0,
+    potassium: nutrition?.potassium || nutrition?.potassium_mg || 0,
+    vitamin_d: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
+    vitamin_c: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
+    vitamin_a: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
+    // Add carbs alias for compatibility
+    carbs: nutrition?.carbohydrates || nutrition?.carbs || nutrition?.carbs_g || 0,
   };
 };
 

@@ -12,7 +12,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { standardizeNutrition } from '@/types/nutrition-utils';
+import { standardizeNutrition, ExtendedNutritionData } from '@/types/nutrition-utils';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -58,7 +58,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
       return nutrition && 
              (Number(nutrition.calories) > 0 || 
               Number(nutrition.protein) > 0 || 
-              Number(nutrition.carbs) > 0 || 
+              Number(nutrition.carbohydrates) > 0 || 
               Number(nutrition.fat) > 0);
     } catch (error) {
       console.error("Error validating nutrition data:", error);
@@ -100,8 +100,9 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   }
   
   // Cast to EnhancedNutrition if it has data_quality field
-  const enhancedNutrition = (recipeNutrition as any)?.data_quality 
-    ? (recipeNutrition as unknown as EnhancedNutrition) 
+  const standardizedNutrition = recipeNutrition as ExtendedNutritionData;
+  const enhancedNutrition = standardizedNutrition?.data_quality 
+    ? (standardizedNutrition as unknown as EnhancedNutrition) 
     : undefined;
 
   // Make sure userPreferences has unitSystem, dailyCalories and macroSplit
