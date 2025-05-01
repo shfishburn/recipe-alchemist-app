@@ -37,7 +37,7 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="pt-0">
-            <div className="mb-4">
+            <div className="mb-4 relative" style={{ zIndex: 20 }}>
               <AddToShoppingList recipe={recipe} />
             </div>
             <ul className="space-y-3">

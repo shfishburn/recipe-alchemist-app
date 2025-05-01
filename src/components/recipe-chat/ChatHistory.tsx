@@ -11,7 +11,7 @@ interface ChatHistoryProps {
   optimisticMessages: OptimisticMessage[];
   isSending: boolean;
   setMessage: (message: string) => void;
-  applyChanges: (chat: ChatMessageType) => void;
+  applyChanges: (chat: ChatMessageType) => Promise<boolean>;
   isApplying: boolean;
   isLoading?: boolean;
   hasError?: boolean;

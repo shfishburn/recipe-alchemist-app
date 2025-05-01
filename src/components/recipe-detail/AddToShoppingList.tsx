@@ -77,13 +77,14 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
         <Button 
           variant="outline" 
           size="sm"
-          className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200"
+          className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 relative"
+          style={{ zIndex: 20 }}
         >
           <ShoppingBag className="h-4 w-4 mr-2" />
           Add to shopping list
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent style={{ zIndex: 50 }}>
         <SheetHeader>
           <SheetTitle>Add to Shopping List</SheetTitle>
           <SheetDescription>

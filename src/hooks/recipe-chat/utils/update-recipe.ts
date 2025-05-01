@@ -9,12 +9,12 @@ import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 
 export async function updateRecipe(
   recipe: Recipe,
-  chatMessage: ChatMessage,
-  user_id: string,
-  imageUrl: string | null
+  chatMessage: ChatMessage
 ) {
   // Initial validation of inputs
-  validateRecipeUpdate(recipe, chatMessage);
+  if (!validateRecipeUpdate(recipe, chatMessage.changes_suggested)) {
+    throw new Error("Failed to validate recipe update");
+  }
   
   console.log("Starting recipe update with changes:", {
     hasTitle: !!chatMessage.changes_suggested?.title,

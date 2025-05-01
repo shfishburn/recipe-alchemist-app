@@ -9,7 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface ChatMessageProps {
   chat: ChatMessageType;
   setMessage: (message: string) => void;
-  applyChanges: (chat: ChatMessageType) => void;
+  applyChanges: (chat: ChatMessageType) => Promise<boolean>;
   isApplying: boolean;
   isOptimistic?: boolean;
 }
@@ -78,7 +78,7 @@ export function ChatMessage({
             changesSuggested={chat.changes_suggested}
             followUpQuestions={followUpQuestions}
             setMessage={setMessage}
-            onApplyChanges={handleApplyChanges}
+            onApplyChanges={() => handleApplyChanges()}
             isApplying={isApplying}
             applied={chat.applied || false}
             isMobile={isMobile}

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -26,15 +26,60 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   const { recipeNutrition, userPreferences } = useNutritionData(recipe, profile);
   const isMobile = useMediaQuery('(max-width: 640px)');
   
+  // Console log for debugging nutrition data issues
+  useEffect(() => {
+    if (recipe.nutrition) {
+      console.log("Recipe nutrition data available:", recipe.nutrition);
+      console.log("Processed nutrition data:", recipeNutrition);
+    } else {
+      console.log("No nutrition data in recipe");
+    }
+  }, [recipe.nutrition, recipeNutrition]);
+  
   // Calculate total time from prep + cook time
   const totalTime = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
   // Use cuisine as cooking method since cooking_method doesn't exist in the type
   const cookingMethod = recipe.cuisine || '';
 
-  // If there's no nutrition data, we don't show the component
-  if (!recipe.nutrition || !recipeNutrition) {
-    console.log("No nutrition data available for display");
-    return null;
+  // Enhanced check to ensure we have valid nutrition data
+  const hasValidNutrition = recipe.nutrition && 
+                            recipeNutrition && 
+                            (recipeNutrition.calories > 0 || 
+                             recipeNutrition.protein > 0 || 
+                             recipeNutrition.carbs > 0 || 
+                             recipeNutrition.fat > 0);
+  
+  // If there's no valid nutrition data, show a placeholder instead of nothing
+  if (!hasValidNutrition) {
+    console.log("No valid nutrition data available for display");
+    return (
+      <Collapsible open={isOpen} onOpenChange={onToggle}>
+        <Card className="w-full">
+          <div className={`flex items-center justify-between ${isMobile ? 'p-3 pb-2' : 'p-6 pb-3'}`}>
+            <div className="flex items-center">
+              <h3 className="text-lg font-medium">Nutrition Information</h3>
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                <span className="sr-only">Toggle nutrition section</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">
+                Nutrition information is not available for this recipe.
+              </p>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+    );
   }
   
   console.log("Displaying nutrition data:", recipeNutrition);

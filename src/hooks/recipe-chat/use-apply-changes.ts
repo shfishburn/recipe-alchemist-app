@@ -9,6 +9,7 @@ import { Recipe } from '@/types/recipe';
 import { updateRecipe } from './utils/update-recipe';
 import { validateRecipeUpdate } from './utils/validation/validate-recipe-update';
 import { standardizeNutrition } from '@/types/nutrition-utils';
+import { ChatMessage } from '@/types/chat';
 
 interface Update {
   path: string;
@@ -21,18 +22,25 @@ export const useApplyChanges = () => {
   const { refetch: refetchRecipeDetail } = useRecipeDetail();
 
   const mutation = useMutation({
-    mutationFn: async ({ recipeId, updates, originalRecipe }: { 
+    mutationFn: async ({ recipeId, changes, originalRecipe }: { 
       recipeId: string, 
-      updates: Update[], 
+      changes: ChatMessage, 
       originalRecipe: Recipe 
     }) => {
-      if (!recipeId || !updates || updates.length === 0) {
-        console.warn("No recipe ID or updates provided.");
+      if (!recipeId || !changes) {
+        console.warn("No recipe ID or changes provided.");
         return false;
       }
 
+      console.log("Applying changes:", { 
+        recipeId, 
+        changeTitle: changes.changes_suggested?.title,
+        changeIngredients: changes.changes_suggested?.ingredients ? 'present' : 'none',
+        changeInstructions: changes.changes_suggested?.instructions ? 'present' : 'none',
+      });
+
       // Validate updates before applying
-      const validationResult = validateRecipeUpdate(originalRecipe, updates);
+      const validationResult = validateRecipeUpdate(originalRecipe, changes.changes_suggested);
       if (!validationResult) {
         toast({
           title: "Validation Error",
@@ -42,25 +50,24 @@ export const useApplyChanges = () => {
         return false;
       }
 
-      // Optimistically apply updates to local state
-      let updatedRecipe = { ...originalRecipe };
-      updates.forEach(update => {
-        updatedRecipe = updateRecipe(updatedRecipe, update.path, update.value);
-      });
+      try {
+        // Process and apply updates to the recipe
+        const updatedRecipe = await updateRecipe(originalRecipe, changes);
 
-      // Standardize nutrition data after applying updates
-      if (updatedRecipe.nutrition) {
-        updatedRecipe.nutrition = standardizeNutrition(updatedRecipe.nutrition);
-      }
+        // Revalidate cache after successful update
+        await refetchRecipes();
+        if (recipeId) {
+          await refetchRecipeDetail(recipeId);
+        }
 
-      // Send updates to Supabase
-      const { error } = await supabase
-        .from('recipes')
-        .update(updatedRecipe)
-        .eq('id', recipeId);
+        toast({
+          title: "Recipe Updated",
+          description: "Your recipe has been successfully updated.",
+        });
 
-      if (error) {
-        console.error("Failed to update recipe in Supabase:", error);
+        return true;
+      } catch (error) {
+        console.error("Error applying changes:", error);
         toast({
           title: "Update Failed",
           description: "Failed to update recipe. Please try again.",
@@ -68,17 +75,6 @@ export const useApplyChanges = () => {
         });
         return false;
       }
-
-      // Revalidate cache
-      await refetchRecipes();
-      await refetchRecipeDetail(recipeId);
-
-      toast({
-        title: "Recipe Updated",
-        description: "Your recipe has been successfully updated.",
-      });
-
-      return true;
     },
     onError: (error) => {
       console.error("Error applying changes:", error);
@@ -90,8 +86,29 @@ export const useApplyChanges = () => {
     }
   });
 
-  const applyChanges = useCallback((recipeId: string, updates: Update[], originalRecipe: Recipe) => {
-    return mutation.mutateAsync({ recipeId, updates, originalRecipe });
+  const applyChanges = useCallback((chat: ChatMessage) => {
+    if (!chat.recipe_id) {
+      console.error("Missing recipe ID in chat message");
+      return Promise.resolve(false);
+    }
+    
+    // We need the original recipe for the update
+    return supabase
+      .from('recipes')
+      .select('*')
+      .eq('id', chat.recipe_id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error fetching recipe:", error);
+          throw error;
+        }
+        return mutation.mutateAsync({ 
+          recipeId: chat.recipe_id as string, 
+          changes: chat, 
+          originalRecipe: data as Recipe 
+        });
+      });
   }, [mutation]);
 
   return { applyChanges, isPending: mutation.isPending };
