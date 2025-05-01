@@ -3,7 +3,8 @@ import { useContext } from 'react';
 import { ProfileContext } from '@/contexts/ProfileContext';
 import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 
-export { useProfileContext } from '@/contexts/ProfileContext';
+// Import useProfileContext directly from the context file
+import { useProfileContext } from '@/contexts/ProfileContext';
 
 // Create a hook specifically for profile settings
 export function useProfileSettings() {
