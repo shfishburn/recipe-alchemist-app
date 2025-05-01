@@ -48,7 +48,78 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Standard loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
 /* Optimized content visibility for non-visible elements */
 .content-visibility-auto {
   content-visibility: auto;
+}
+
+/* Mobile touch optimization */
+@media (max-width: 768px) {
+  /* Increase touch target sizes */
+  button,
+  .button,
+  [role="button"],
+  .clickable,
+  a.nav-link,
+  label,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve spacing between touch targets */
+  .touch-friendly-gap > * + * {
+    margin-left: 8px;
+    margin-top: 8px;
+  }
+  
+  /* Enhance button focus/tap states */
+  .touch-feedback:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+    transition: transform 0.1s, opacity 0.1s;
+  }
 }

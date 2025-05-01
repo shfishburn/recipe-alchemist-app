@@ -34,12 +34,12 @@ export function MobileMenu() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
+          <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+      <SheetContent side="left" className="w-[85vw] max-w-[300px] sm:max-w-[320px]">
         <SheetHeader>
           <SheetTitle>
             <Link to="/" className="flex items-center">
@@ -51,33 +51,33 @@ export function MobileMenu() {
             </Link>
           </SheetTitle>
         </SheetHeader>
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="mt-8 flex flex-col gap-6">
           {displayedLinks.map((link) => (
             <Link 
               key={link.path} 
               to={link.path} 
-              className="text-sm font-medium hover:text-primary transition-colors flex items-center"
+              className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
             >
-              {link.icon && <link.icon className="h-4 w-4 mr-2" />}
+              {link.icon && <link.icon className="h-5 w-5 mr-3" />}
               {link.name}
             </Link>
           ))}
         </div>
-        <Separator className="my-4" />
-        <div className="flex flex-col gap-2">
+        <Separator className="my-6" />
+        <div className="flex flex-col gap-3">
           {session ? (
-            <Button variant="outline" asChild className="w-full">
-              <Link to="/profile" className="flex items-center justify-center">
-                <User className="h-4 w-4 mr-2" />
+            <Button variant="outline" asChild className="w-full h-12 justify-start">
+              <Link to="/profile" className="flex items-center">
+                <User className="h-5 w-5 mr-3" />
                 Profile
               </Link>
             </Button>
           ) : (
             <>
-              <Button variant="outline" className="w-full" onClick={() => openAuthDrawer()}>
+              <Button variant="outline" className="w-full h-12" onClick={() => openAuthDrawer()}>
                 Log in
               </Button>
-              <Button className="w-full" onClick={() => openAuthDrawer()}>
+              <Button className="w-full h-12" onClick={() => openAuthDrawer()}>
                 Sign up
               </Button>
             </>

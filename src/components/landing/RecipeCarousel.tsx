@@ -14,11 +14,13 @@ import { RecipeCard } from './carousel/RecipeCard';
 import { CookingPot } from 'lucide-react';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [carouselApi, setCarouselApi] = React.useState<UseEmblaCarouselType[1] | null>(null);
+  const isMobile = useIsMobile();
 
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
@@ -72,13 +74,13 @@ export function RecipeCarousel() {
           >
             <CarouselContent>
               {featuredRecipes.map((recipe) => (
-                <CarouselItem key={recipe.id} className="sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                <CarouselItem key={recipe.id} className={isMobile ? "basis-full" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4"}>
                   <RecipeCard recipe={recipe} />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="-left-3 md:-left-4 lg:-left-6" />
-            <CarouselNext className="-right-3 md:-right-4 lg:-right-6" />
+            <CarouselPrevious className={isMobile ? "-left-1 h-10 w-10" : "-left-3 md:-left-4 lg:-left-6"} />
+            <CarouselNext className={isMobile ? "-right-1 h-10 w-10" : "-right-3 md:-right-4 lg:-right-6"} />
           </Carousel>
           
           {/* Pagination moved outside the carousel for better positioning */}

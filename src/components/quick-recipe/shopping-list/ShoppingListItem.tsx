@@ -83,30 +83,37 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   const displayText = item.text || `${converted.value} ${converted.unit} ${itemName}`.trim();
 
   return (
-    <div className="flex items-start gap-2 p-2 bg-muted/40 rounded-md group hover:bg-muted/60 transition-colors">
-      <Checkbox 
-        id={`item-${index}`}
-        checked={item.checked}
-        onCheckedChange={() => onToggle(index)}
-        className="mt-0.5"
-      />
+    <div className="flex items-start gap-2 p-4 bg-muted/40 rounded-md group hover:bg-muted/60 transition-colors">
+      <div className="flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
+        <Checkbox 
+          id={`item-${index}`}
+          checked={item.checked}
+          onCheckedChange={() => onToggle(index)}
+          className="h-5 w-5"
+        />
+      </div>
       <label 
         htmlFor={`item-${index}`}
-        className={`text-sm flex-1 cursor-pointer ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+        className={`text-sm flex-1 cursor-pointer pt-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {/* Format to make the item name stand out */}
           {converted.value && converted.unit ? (
-            <span>{converted.value} {converted.unit} <strong>{itemName}</strong></span>
+            <span className="text-base">
+              {converted.value} {converted.unit}{' '}
+              <strong>{itemName}</strong>
+            </span>
           ) : (
-            <span>{displayText}</span>
+            <span className="text-base">{displayText}</span>
           )}
           
           {showDetails && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 text-muted-foreground inline-block cursor-help" />
+                  <span className="inline-flex items-center justify-center h-5 w-5 ml-1">
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   {qualityIndicators && (
@@ -130,14 +137,14 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
         </div>
         
         {item.pantryStaple && (
-          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
+          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2 mt-1 inline-block">
             Pantry Staple
           </span>
         )}
         
         {/* Always show alternatives in the UI itself for better visibility */}
         {alternatives && alternatives.length > 0 && (
-          <div className="text-xs text-muted-foreground mt-0.5">
+          <div className="text-xs text-muted-foreground mt-1.5">
             Alternatives: {alternatives.join(', ')}
           </div>
         )}

@@ -130,9 +130,10 @@ export function useUpdateShoppingList() {
       // Toggle the checked status of the specific item
       if (updatedItems[itemIndex] && typeof updatedItems[itemIndex] === 'object') {
         // Safely toggle the checked property
+        const item = updatedItems[itemIndex] as any;
         updatedItems[itemIndex] = {
-          ...updatedItems[itemIndex],
-          checked: !updatedItems[itemIndex].checked
+          ...item,
+          checked: item.checked !== undefined ? !item.checked : true
         };
       }
       

@@ -8,6 +8,8 @@ function Skeleton({
   return (
     <div
       className={cn("animate-pulse rounded-md bg-muted", className)}
+      aria-hidden="true" // Hide from screen readers as this is a visual-only element
+      role="presentation" // Indicate this is presentational only
       {...props}
     />
   )

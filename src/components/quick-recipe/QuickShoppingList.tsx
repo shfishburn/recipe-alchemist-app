@@ -97,7 +97,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={isMobile ? "w-[95vw] max-w-md p-4" : "sm:max-w-md"}>
+      <DialogContent className={isMobile ? "w-[95vw] max-w-md p-6" : "sm:max-w-md"}>
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
               variant="outline"
               size="sm"
               onClick={copyToClipboard}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-10 px-4"
               disabled={isLoading}
             >
               {copied ? (
@@ -126,14 +126,14 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
           </div>
         </DialogHeader>
         
-        <div className="mt-2">
+        <div className="mt-4">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground">Generating optimized shopping list...</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {Object.entries(itemsByDepartment).length > 0 ? (
                 Object.entries(itemsByDepartment).map(([department, deptItems]) => (
                   <ShoppingListDepartment

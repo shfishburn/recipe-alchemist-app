@@ -40,9 +40,11 @@ html {
   [role="button"], 
   a.clickable, 
   input[type="checkbox"], 
-  input[type="radio"] {
+  input[type="radio"],
+  .touch-target {
     min-height: 44px;
     min-width: 44px;
+    padding: 0.5rem;
   }
   
   /* Improve form controls */
@@ -67,5 +69,67 @@ html {
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
     overflow-x: auto;
+  }
+  
+  /* Fix form spacing */
+  .form-group + .form-group {
+    margin-top: 1rem;
+  }
+  
+  /* Improve interactivity feedback */
+  button:active, [role="button"]:active, a.clickable:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+    transition: all 0.1s ease;
+  }
+  
+  /* Responsive text adjustments */
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  /* Prevent horizontal overflow */
+  .container-page {
+    overflow-x: hidden;
+  }
+}
+
+/* Global loading indicator */
+.global-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  background: linear-gradient(to right, #38bdf8, #22c55e);
+  transform-origin: left;
+}
+
+/* Consistent focus outlines */
+:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+/* Improved tap highlight */
+@media (hover: none) {
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+  }
+  
+  a:active, button:active, [role="button"]:active {
+    -webkit-tap-highlight-color: rgba(56, 189, 248, 0.2) !important;
   }
 }

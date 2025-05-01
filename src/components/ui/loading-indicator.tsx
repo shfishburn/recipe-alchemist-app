@@ -12,10 +12,15 @@ export function LoadingIndicator() {
     setIsLoading(true);
     setProgress(0);
     
+    // Start initial animation
+    const initialTimer = setTimeout(() => {
+      setProgress(30);
+    }, 50);
+    
     // Track actual loading progress using document readiness
     const documentStates = {
-      loading: 20,
-      interactive: 60,
+      loading: 30,
+      interactive: 75,
       complete: 100
     };
     
@@ -34,9 +39,17 @@ export function LoadingIndicator() {
     
     document.addEventListener('readystatechange', updateProgress);
     
-    // Clean up event listener
+    // Fallback to ensure the progress bar completes eventually
+    const fallbackTimer = setTimeout(() => {
+      setProgress(100);
+      setTimeout(() => setIsLoading(false), 300);
+    }, 3000);
+    
+    // Clean up event listener and timers
     return () => {
       document.removeEventListener('readystatechange', updateProgress);
+      clearTimeout(initialTimer);
+      clearTimeout(fallbackTimer);
     };
   }, [location]);
 
@@ -51,6 +64,10 @@ export function LoadingIndicator() {
           width: `${progress}%`,
           transition: progress < 100 ? 'width 0.3s ease-out' : 'width 0.1s ease-out, opacity 0.3s ease-out'
         }}
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
       />
     </div>
   );
