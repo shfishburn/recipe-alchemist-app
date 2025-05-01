@@ -1,4 +1,6 @@
+
 import { useCallback } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useRecipes } from '@/hooks/use-recipes';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
@@ -18,8 +20,12 @@ export const useApplyChanges = () => {
   const { refetch: refetchRecipes } = useRecipes();
   const { refetch: refetchRecipeDetail } = useRecipeDetail();
 
-  const applyChanges = useCallback(async (recipeId: string, updates: Update[], originalRecipe: Recipe) => {
-    try {
+  const mutation = useMutation({
+    mutationFn: async ({ recipeId, updates, originalRecipe }: { 
+      recipeId: string, 
+      updates: Update[], 
+      originalRecipe: Recipe 
+    }) => {
       if (!recipeId || !updates || updates.length === 0) {
         console.warn("No recipe ID or updates provided.");
         return false;
@@ -27,10 +33,10 @@ export const useApplyChanges = () => {
 
       // Validate updates before applying
       const validationResult = validateRecipeUpdate(originalRecipe, updates);
-      if (!validationResult.isValid) {
+      if (!validationResult) {
         toast({
           title: "Validation Error",
-          description: validationResult.errorMessage || "Failed to validate updates.",
+          description: "Failed to validate updates.",
           variant: "destructive",
         });
         return false;
@@ -73,17 +79,20 @@ export const useApplyChanges = () => {
       });
 
       return true;
-
-    } catch (err) {
-      console.error("Error applying changes:", err);
+    },
+    onError: (error) => {
+      console.error("Error applying changes:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      return false;
     }
-  }, [supabase, toast, refetchRecipes, refetchRecipeDetail]);
+  });
 
-  return { applyChanges };
+  const applyChanges = useCallback((recipeId: string, updates: Update[], originalRecipe: Recipe) => {
+    return mutation.mutateAsync({ recipeId, updates, originalRecipe });
+  }, [mutation]);
+
+  return { applyChanges, isPending: mutation.isPending };
 };

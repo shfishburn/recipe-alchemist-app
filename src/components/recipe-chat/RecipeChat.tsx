@@ -76,7 +76,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             optimisticMessages={optimisticMessages}
             isSending={isSending}
             setMessage={setMessage}
-            applyChanges={applyChanges.mutate}
+            applyChanges={applyChanges}
             isApplying={isApplying}
           />
 

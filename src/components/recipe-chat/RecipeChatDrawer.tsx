@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Drawer,
@@ -8,7 +9,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { X, Loader2, Trash2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { RecipeChat } from './RecipeChat';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -24,8 +25,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   const isMobile = useIsMobile();
   const {
     isSending,
-    isApplying,
-    clearChatHistory
+    isApplying
   } = useRecipeChat(recipe);
   
   const isPending = isSending || isApplying;

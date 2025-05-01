@@ -43,7 +43,7 @@ export const useRecipeChat = (recipe: Recipe) => {
   } = useChatManagement(recipe.id, refetchChatHistory, clearOptimisticMessages);
   
   // Apply changes from chat to the recipe
-  const applyChanges = useApplyChanges(recipe);
+  const { applyChanges, isPending: isApplying } = useApplyChanges();
 
   return {
     // Chat state
@@ -61,7 +61,7 @@ export const useRecipeChat = (recipe: Recipe) => {
     
     // Recipe change application
     applyChanges,
-    isApplying: applyChanges.isPending,
+    isApplying,
     
     // Management actions
     refetchChatHistory,
