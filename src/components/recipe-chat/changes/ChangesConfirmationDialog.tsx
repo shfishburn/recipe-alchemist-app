@@ -32,8 +32,11 @@ export function ChangesConfirmationDialog({
   if (!changes) return null;
   
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-lg">
+    <AlertDialog open={open} onOpenChange={(isOpen) => {
+      if (isApplying && !isOpen) return; // Prevent closing while applying
+      onOpenChange(isOpen);
+    }}>
+      <AlertDialogContent className="max-w-lg" style={{ zIndex: 150 }}>
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Recipe Changes</AlertDialogTitle>
           <AlertDialogDescription>
@@ -50,7 +53,8 @@ export function ChangesConfirmationDialog({
           <AlertDialogCancel disabled={isApplying}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={(e) => {
-              e.preventDefault(); 
+              e.preventDefault();
+              e.stopPropagation(); // Prevent event bubbling
               onConfirm();
             }}
             disabled={isApplying}

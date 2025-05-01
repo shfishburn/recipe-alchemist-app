@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ interface RecipeIngredientsProps {
 
 export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredientsProps) {
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
+    <Collapsible open={isOpen} onOpenChange={onToggle} className="relative">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -37,7 +37,7 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="pt-0">
-            <div className="mb-4 relative" style={{ zIndex: 50 }}>
+            <div className="mb-4">
               <AddToShoppingList recipe={recipe} />
             </div>
             <ul className="space-y-3">
@@ -47,8 +47,14 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
                     key={index}
                     className="text-sm sm:text-base"
                   >
-                    <span className="font-medium">{ingredient.qty} {ingredient.unit}</span>{' '}
-                    {ingredient.item}
+                    {typeof ingredient === 'string' ? (
+                      <span>{ingredient}</span>
+                    ) : (
+                      <>
+                        <span className="font-medium">{ingredient.qty} {ingredient.unit}</span>{' '}
+                        {ingredient.item}
+                      </>
+                    )}
                   </li>
                 )) : 
                 <li className="text-muted-foreground">No ingredients listed</li>

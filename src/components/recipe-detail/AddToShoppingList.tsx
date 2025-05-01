@@ -39,6 +39,7 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     
     // Validate form before proceeding
     if (!selectedListId && newListName.trim() === '') {
@@ -65,45 +66,47 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   };
   
   return (
-    <Sheet open={sheetOpen} onOpenChange={(open) => {
-      setSheetOpen(open);
-      // Reset state when closing the sheet
-      if (!open) {
-        setSelectedListId(null);
-        setNewListName(`${recipe.title} Ingredients`);
-      }
-    }}>
-      <SheetTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 relative"
-          style={{ zIndex: 30 }}
-        >
-          <ShoppingBag className="h-4 w-4 mr-2" />
-          Add to shopping list
-        </Button>
-      </SheetTrigger>
-      <SheetContent style={{ zIndex: 50 }}>
-        <SheetHeader>
-          <SheetTitle>Add to Shopping List</SheetTitle>
-          <SheetDescription>
-            Add all ingredients from "{recipe.title}" to a shopping list.
-          </SheetDescription>
-        </SheetHeader>
-        
-        <div className="my-6">
-          <ShoppingListForm 
-            shoppingLists={shoppingLists}
-            newListName={newListName}
-            onNewListNameChange={setNewListName}
-            selectedListId={selectedListId}
-            onSelectedListChange={setSelectedListId}
-            isLoading={isLoading || isFetching}
-            onSubmit={handleSubmit}
-          />
-        </div>
-      </SheetContent>
-    </Sheet>
+    <div className="relative" style={{ zIndex: 200 }}>
+      <Sheet open={sheetOpen} onOpenChange={(open) => {
+        setSheetOpen(open);
+        // Reset state when closing the sheet
+        if (!open) {
+          setSelectedListId(null);
+          setNewListName(`${recipe.title} Ingredients`);
+        }
+      }}>
+        <SheetTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200"
+            style={{ zIndex: 100, position: "relative" }}
+          >
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            Add to shopping list
+          </Button>
+        </SheetTrigger>
+        <SheetContent style={{ zIndex: 200 }}>
+          <SheetHeader>
+            <SheetTitle>Add to Shopping List</SheetTitle>
+            <SheetDescription>
+              Add all ingredients from "{recipe.title}" to a shopping list.
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="my-6">
+            <ShoppingListForm 
+              shoppingLists={shoppingLists}
+              newListName={newListName}
+              onNewListNameChange={setNewListName}
+              selectedListId={selectedListId}
+              onSelectedListChange={setSelectedListId}
+              isLoading={isLoading || isFetching}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 }

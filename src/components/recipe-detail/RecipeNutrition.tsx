@@ -12,6 +12,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import { standardizeNutrition } from '@/types/nutrition-utils';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -30,7 +31,11 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   useEffect(() => {
     if (recipe.nutrition) {
       console.log("Recipe nutrition data available:", recipe.nutrition);
-      console.log("Processed nutrition data:", recipeNutrition);
+      if (recipeNutrition) {
+        console.log("Processed nutrition data:", recipeNutrition);
+      } else {
+        console.log("No processed nutrition data available");
+      }
     } else {
       console.log("No nutrition data in recipe");
     }
@@ -42,12 +47,19 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   const cookingMethod = recipe.cuisine || '';
 
   // Enhanced check to ensure we have valid nutrition data
-  const hasValidNutrition = recipe.nutrition && 
-                            recipeNutrition && 
-                            (recipeNutrition.calories > 0 || 
-                             recipeNutrition.protein > 0 || 
-                             recipeNutrition.carbs > 0 || 
-                             recipeNutrition.fat > 0);
+  // Manually standardize the nutrition data if needed
+  const hasValidNutrition = React.useMemo(() => {
+    if (!recipe.nutrition) return false;
+    
+    // If recipeNutrition isn't available, try to standardize it ourselves
+    const nutrition = recipeNutrition || standardizeNutrition(recipe.nutrition);
+    
+    return nutrition && 
+           (nutrition.calories > 0 || 
+            nutrition.protein > 0 || 
+            nutrition.carbs > 0 || 
+            nutrition.fat > 0);
+  }, [recipe.nutrition, recipeNutrition]);
   
   // If there's no valid nutrition data, show a placeholder instead of nothing
   if (!hasValidNutrition) {

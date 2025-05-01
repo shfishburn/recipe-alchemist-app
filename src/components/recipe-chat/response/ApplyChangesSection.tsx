@@ -69,7 +69,6 @@ export function ApplyChangesSection({
     setConfirmationOpen(false);
   };
 
-  // Use relative positioning and set a lower z-index to prevent blocking other elements
   return (
     <div className="mt-2 sm:mt-4 relative" style={{ zIndex: 10 }}>
       {applyError && (

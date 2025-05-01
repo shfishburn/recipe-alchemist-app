@@ -40,7 +40,10 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto z-50`}>
+      <DrawerContent 
+        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto`} 
+        style={{ zIndex: 100 }} // Set an explicit z-index that's lower than shopping list
+      >
         <DrawerHeader className="border-b flex items-center justify-between bg-white py-2">
           <div className="flex items-center gap-2">
             <DrawerTitle className="text-primary font-medium text-base">
