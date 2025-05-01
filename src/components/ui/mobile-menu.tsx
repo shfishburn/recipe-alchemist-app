@@ -33,11 +33,14 @@ export function MobileMenu() {
 
   return (
     <Sheet>
+      {/* Fix: Wrap the Menu icon in a div for SheetTrigger with asChild */}
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
-          <Menu className="h-6 w-6" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
+        <div>
+          <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        </div>
       </SheetTrigger>
       <SheetContent side="left" className="w-[85vw] max-w-[300px] sm:max-w-[320px]">
         <SheetHeader>
@@ -66,8 +69,8 @@ export function MobileMenu() {
         <Separator className="my-6" />
         <div className="flex flex-col gap-3">
           {session ? (
-            <Button variant="outline" asChild className="w-full h-12 justify-start">
-              <Link to="/profile">
+            <Button variant="outline" asChild>
+              <Link to="/profile" className="w-full h-12 justify-start flex items-center">
                 <User className="h-5 w-5 mr-3" />
                 <span>Profile</span>
               </Link>
