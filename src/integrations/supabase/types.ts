@@ -62,10 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ingredient_embeddings: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          embedding: string | null
+          id: string
+          ingredient_text: string
+          normalized_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          ingredient_text: string
+          normalized_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          ingredient_text?: string
+          normalized_text?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ingredient_mappings: {
         Row: {
+          alternative_matches: Json | null
           confidence_score: number
           created_at: string | null
+          feedback_count: number | null
           id: number
           ingredient_text: string
           match_method: string
@@ -74,8 +106,10 @@ export type Database = {
           usda_food_code: string
         }
         Insert: {
+          alternative_matches?: Json | null
           confidence_score: number
           created_at?: string | null
+          feedback_count?: number | null
           id?: number
           ingredient_text: string
           match_method: string
@@ -84,8 +118,10 @@ export type Database = {
           usda_food_code: string
         }
         Update: {
+          alternative_matches?: Json | null
           confidence_score?: number
           created_at?: string | null
+          feedback_count?: number | null
           id?: number
           ingredient_text?: string
           match_method?: string
@@ -314,6 +350,7 @@ export type Database = {
           cholesterol_mg: number | null
           copper_mg: number | null
           created_at: string | null
+          embedding: string | null
           fat_g: number | null
           fiber_g: number | null
           food_code: string
@@ -348,6 +385,7 @@ export type Database = {
           cholesterol_mg?: number | null
           copper_mg?: number | null
           created_at?: string | null
+          embedding?: string | null
           fat_g?: number | null
           fiber_g?: number | null
           food_code: string
@@ -382,6 +420,7 @@ export type Database = {
           cholesterol_mg?: number | null
           copper_mg?: number | null
           created_at?: string | null
+          embedding?: string | null
           fat_g?: number | null
           fiber_g?: number | null
           food_code?: string
@@ -482,6 +521,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
       gtrgm_compress: {
         Args: { "": unknown }
         Returns: unknown
@@ -502,6 +545,87 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
+      }
+      match_ingredient_embeddings: {
+        Args: {
+          query_embedding: string
+          similarity_threshold?: number
+          match_count?: number
+        }
+        Returns: {
+          ingredient_text: string
+          normalized_text: string
+          food_code: string
+          food_name: string
+          similarity: number
+        }[]
+      }
+      search_foods: {
+        Args: { query_text: string; similarity_threshold?: number }
+        Returns: {
+          id: number
+          food_code: string
+          food_name: string
+          food_category: string
+          calories: number
+          protein_g: number
+          carbs_g: number
+          fat_g: number
+          fiber_g: number
+          similarity: number
+        }[]
+      }
       search_usda_foods: {
         Args: { query_text: string; similarity_threshold?: number }
         Returns: {
@@ -521,6 +645,42 @@ export type Database = {
       show_trgm: {
         Args: { "": string }
         Returns: string[]
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {
