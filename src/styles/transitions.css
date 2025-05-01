@@ -6,6 +6,30 @@
   transition-duration: 150ms;
 }
 
+/* Mobile-optimized transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-optimized {
+    transition-duration: 200ms;
+    will-change: transform, opacity;
+  }
+
+  /* Hardware acceleration for critical animations */
+  .hw-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}
+
+/* Reduce animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Touch ripple effect animation */
 @keyframes touch-ripple {
   0% {
@@ -33,7 +57,7 @@
 /* Apply the ripple effect when the parent is active */
 button:active .touch-ripple, 
 [role="button"]:active .touch-ripple {
-  animation: touch-ripple 0.5s ease-out;
+  animation: touch-ripple 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Enhanced mobile transitions */
@@ -51,6 +75,30 @@ button:active .touch-ripple,
     transform: scale(0.97);
     opacity: 0.9;
     transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+  }
+  
+  /* Optimized slide transitions for mobile */
+  .mobile-slide-in {
+    transform: translateX(100%);
+    animation: mobileSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    will-change: transform;
+  }
+  
+  @keyframes mobileSlideIn {
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  /* Enhanced swipe gesture transition */
+  .swipe-container {
+    touch-action: pan-y;
+    overflow-x: hidden;
+  }
+  
+  .swipe-item {
+    will-change: transform;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
 
@@ -86,4 +134,25 @@ button:active .touch-ripple,
   max-height: 0;
   opacity: 0;
   transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* Mobile gesture handlers */
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Page transitions */
+.page-transition {
+  will-change: opacity, transform;
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.page-transition.fadeIn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition.fadeOut {
+  opacity: 0;
+  transform: translateY(20px);
 }

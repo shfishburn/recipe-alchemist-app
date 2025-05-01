@@ -30,8 +30,27 @@
   }
 }
 
+/* Performance-optimized pulse animation */
+@keyframes optimizedPulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
 .animate-pulse {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Mobile-optimized pulse animation */
+.animate-pulse-mobile {
+  animation: optimizedPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: opacity;
 }
 
 /* Fade-in animation */
@@ -46,6 +65,7 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-in-out;
+  will-change: opacity;
 }
 
 /* Loading spinner animation */
@@ -57,6 +77,13 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+/* More performant spin for mobile */
+.animate-spin-mobile {
+  animation: spin 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  will-change: transform;
 }
 
 /* Loading shimmer effect */
@@ -73,6 +100,15 @@
   background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+  will-change: background-position;
+}
+
+/* Mobile-optimized shimmer */
+.animate-shimmer-mobile {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  will-change: background-position;
 }
 
 /* Standard loading overlay */
@@ -88,6 +124,13 @@
   background-color: rgba(255, 255, 255, 0.7);
   z-index: 10;
   backdrop-filter: blur(2px);
+}
+
+/* Mobile optimized loading overlay with reduced blur */
+@media (max-width: 640px) {
+  .loading-overlay {
+    backdrop-filter: blur(1px);
+  }
 }
 
 /* Optimized content visibility for non-visible elements */
@@ -121,5 +164,46 @@
     transform: scale(0.97);
     opacity: 0.8;
     transition: transform 0.1s, opacity 0.1s;
+  }
+  
+  /* Reduced motion loading animations */
+  .animate-pulse {
+    animation-duration: 2s;
+  }
+  
+  .animate-spin {
+    animation-duration: 1.5s;
+  }
+  
+  /* Optimize shimmer effect */
+  .animate-shimmer {
+    animation-duration: 3s;
+  }
+
+  /* Progress bar with reduced animation */
+  .progress-bar-mobile {
+    transition-property: width;
+    transition-duration: 0.5s;
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: width;
+  }
+}
+
+/* Low power mode detection and optimization */
+@media (prefers-reduced-motion) {
+  .animate-pulse,
+  .animate-spin,
+  .animate-shimmer,
+  .animate-fadeIn {
+    animation: none !important;
+  }
+  
+  .loading-overlay {
+    backdrop-filter: none;
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .nprogress-bar {
+    transition: none !important;
   }
 }

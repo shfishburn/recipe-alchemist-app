@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -26,6 +27,8 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  slideProgress: number
+  isPressed: boolean
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -60,19 +63,33 @@ const Carousel = React.forwardRef<
       {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
+        dragFree: true,  // Enable momentum scrolling
+        rubberband: true, // Bounce effect at edges
       },
       plugins
     )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
+    const [slideProgress, setSlideProgress] = React.useState(0)
+    const [isPressed, setIsPressed] = React.useState(false)
 
     const onSelect = React.useCallback((api: CarouselApi) => {
-      if (!api) {
-        return
-      }
+      if (!api) return
 
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
+      
+      // Calculate progress through the carousel
+      const progress = api.scrollProgress()
+      setSlideProgress(progress)
+    }, [])
+    
+    const onDragStart = React.useCallback(() => {
+      setIsPressed(true)
+    }, [])
+    
+    const onDragEnd = React.useCallback(() => {
+      setIsPressed(false)
     }, [])
 
     const scrollPrev = React.useCallback(() => {
@@ -97,26 +114,27 @@ const Carousel = React.forwardRef<
     )
 
     React.useEffect(() => {
-      if (!api || !setApi) {
-        return
-      }
-
+      if (!api || !setApi) return
       setApi(api)
     }, [api, setApi])
 
     React.useEffect(() => {
-      if (!api) {
-        return
-      }
+      if (!api) return
 
       onSelect(api)
       api.on("reInit", onSelect)
       api.on("select", onSelect)
+      api.on("scroll", () => onSelect(api))
+      api.on("pointerDown", onDragStart)
+      api.on("pointerUp", onDragEnd)
 
       return () => {
         api?.off("select", onSelect)
+        api?.off("scroll", () => onSelect(api))
+        api?.off("pointerDown", onDragStart)
+        api?.off("pointerUp", onDragEnd)
       }
-    }, [api, onSelect])
+    }, [api, onSelect, onDragStart, onDragEnd])
 
     return (
       <CarouselContext.Provider
@@ -130,12 +148,18 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          slideProgress,
+          isPressed
         }}
       >
         <div
           ref={ref}
           onKeyDownCapture={handleKeyDown}
-          className={cn("relative", className)}
+          className={cn(
+            "relative",
+            isPressed && "cursor-grabbing hw-accelerated",
+            className
+          )}
           role="region"
           aria-roledescription="carousel"
           {...props}
@@ -152,14 +176,15 @@ const CarouselContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
-  const { carouselRef, orientation } = useCarousel()
+  const { carouselRef, orientation, isPressed } = useCarousel()
 
   return (
-    <div ref={carouselRef} className="overflow-hidden">
+    <div ref={carouselRef} className="overflow-hidden swipe-container">
       <div
         ref={ref}
         className={cn(
           "flex",
+          isPressed && "hw-accelerated",
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
           className
         )}
@@ -182,7 +207,7 @@ const CarouselItem = React.forwardRef<
       role="group"
       aria-roledescription="slide"
       className={cn(
-        "min-w-0 shrink-0 grow-0 basis-full",
+        "min-w-0 shrink-0 grow-0 basis-full swipe-item",
         orientation === "horizontal" ? "pl-4" : "pt-4",
         className
       )}
@@ -204,7 +229,7 @@ const CarouselPrevious = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute  h-8 w-8 rounded-full",
+        "absolute h-8 w-8 rounded-full tap-highlight-none",
         orientation === "horizontal"
           ? "-left-12 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
@@ -233,7 +258,7 @@ const CarouselNext = React.forwardRef<
       variant={variant}
       size={size}
       className={cn(
-        "absolute h-8 w-8 rounded-full",
+        "absolute h-8 w-8 rounded-full tap-highlight-none",
         orientation === "horizontal"
           ? "-right-12 top-1/2 -translate-y-1/2"
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
@@ -250,6 +275,28 @@ const CarouselNext = React.forwardRef<
 })
 CarouselNext.displayName = "CarouselNext"
 
+// Progress dots component that shows scroll position
+const CarouselProgress = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  const { slideProgress } = useCarousel()
+  
+  return (
+    <div
+      ref={ref}
+      className={cn("w-full bg-muted h-1 rounded-full overflow-hidden", className)}
+      {...props}
+    >
+      <div 
+        className="bg-primary h-full transition-transform duration-100 hw-accelerated"
+        style={{ transform: `translateX(${slideProgress * 100 - 100}%)` }}
+      />
+    </div>
+  )
+})
+CarouselProgress.displayName = "CarouselProgress"
+
 export {
   type CarouselApi,
   Carousel,
@@ -257,4 +304,5 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselProgress
 }

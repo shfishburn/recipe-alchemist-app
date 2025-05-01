@@ -12,16 +12,19 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
   const [transitionStage, setTransitionStage] = useState("fadeIn");
   const containerRef = useRef<HTMLDivElement>(null);
   const transitionTimeRef = useRef<number | null>(null);
+  const scrollPositionsRef = useRef<Record<string, number>>({});
   
   useEffect(() => {
     if (location !== displayLocation) {
       // Store scroll position before transition
-      sessionStorage.setItem(`scroll_${displayLocation.pathname}`, window.scrollY.toString());
+      scrollPositionsRef.current[displayLocation.pathname] = window.scrollY;
       
-      // Preserve container height to prevent layout shifts
+      // Optimize performance by using will-change
       if (containerRef.current) {
+        // Preserve container height to prevent layout shifts
         const height = containerRef.current.offsetHeight;
         containerRef.current.style.minHeight = `${height}px`;
+        containerRef.current.style.willChange = 'opacity, transform';
       }
       
       // Start exit animation
@@ -31,28 +34,36 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
       if (transitionTimeRef.current) clearTimeout(transitionTimeRef.current);
       
       transitionTimeRef.current = window.setTimeout(() => {
+        // Batch state updates for better performance
         setDisplayLocation(location);
         setTransitionStage("fadeIn");
         
-        // Restoration happens in one synchronized step
+        // Synchronized restoration
         transitionTimeRef.current = window.setTimeout(() => {
           // Restore scroll position
-          const savedScrollY = sessionStorage.getItem(`scroll_${location.pathname}`);
+          const savedScrollY = scrollPositionsRef.current[location.pathname] || 0;
           
-          if (savedScrollY) {
-            window.scrollTo(0, parseInt(savedScrollY));
-          } else {
-            window.scrollTo(0, 0);
-          }
-          
-          // Reset min-height after scroll is restored and animation completes
-          if (containerRef.current) {
-            containerRef.current.style.minHeight = '';
-          }
+          requestAnimationFrame(() => {
+            window.scrollTo({
+              top: savedScrollY,
+              behavior: 'auto' // Use auto for performance
+            });
+            
+            // Reset min-height and will-change after scroll is restored
+            if (containerRef.current) {
+              containerRef.current.style.minHeight = '';
+              // Remove will-change to free up resources
+              requestAnimationFrame(() => {
+                if (containerRef.current) {
+                  containerRef.current.style.willChange = 'auto';
+                }
+              });
+            }
+          });
           
           transitionTimeRef.current = null;
-        }, 320); // Slightly longer than the animation to ensure animation completes
-      }, 300); // Exactly match animation duration
+        }, 300); // Match animation duration
+      }, 280); // Slightly shorter for smoother transitions
     }
     
     // Clean up timeouts
@@ -63,17 +74,31 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
     };
   }, [location, displayLocation]);
 
-  // Scroll to top on initial component mount only
+  // Scroll to top on initial component mount
   useEffect(() => {
     if (location.pathname === displayLocation.pathname) {
       window.scrollTo(0, 0);
     }
+    
+    // Handle back/forward navigation to restore scroll position
+    const handlePopState = () => {
+      const savedPosition = scrollPositionsRef.current[location.pathname];
+      if (savedPosition !== undefined) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, savedPosition);
+        });
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   return (
     <div 
       ref={containerRef}
-      className={`page-transition ${transitionStage}`}
+      className={`page-transition ${transitionStage} hw-accelerated`}
+      aria-live="polite"
     >
       {children}
     </div>

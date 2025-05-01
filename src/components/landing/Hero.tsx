@@ -10,12 +10,12 @@ const Hero = React.memo(() => {
   const isMobile = useIsMobile();
   
   return (
-    <section className="w-full py-6 md:py-10">
+    <section className="w-full py-6 md:py-10 content-visibility-auto">
       <div className="container-page max-w-full px-4 md:px-8">
         {/* Hero Title Section */}
-        <div className="text-center mb-6 md:mb-8">
+        <div className="text-center mb-6 md:mb-8 animate-fade-in">
           <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex items-center justify-center gap-2">
-            <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
+            <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green hw-accelerated" />
             What's in your kitchen tonight?
           </h1>
           
@@ -27,7 +27,7 @@ const Hero = React.memo(() => {
         </div>
         
         {/* Recipe Generator - Full width */}
-        <div className="w-full mb-8 md:mb-10">
+        <div className="w-full mb-8 md:mb-10 hw-accelerated">
           <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md w-full">
             <QuickRecipeGenerator />
           </div>
@@ -35,7 +35,7 @@ const Hero = React.memo(() => {
         
         {/* Sample Recipes Carousel - Full Width */}
         <div className="w-full mb-6">
-          <div className="w-full mx-auto relative">
+          <div className="w-full mx-auto relative scroll-container swipe-horizontal">
             <div className="absolute -top-6 -left-6 w-24 h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
             <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
             <RecipeCarousel />

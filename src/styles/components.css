@@ -21,6 +21,15 @@
     @apply transform scale-[0.97] opacity-80;
   }
   
+  /* Performance-optimized feedback for mobile */
+  .touch-feedback-optimized {
+    @apply transition-transform duration-150 will-change-transform;
+  }
+  
+  .touch-feedback-optimized:active {
+    @apply transform scale-[0.97];
+  }
+  
   /* Standardized responsive spacing */
   .spacing-y-responsive {
     @apply space-y-3 sm:space-y-4 md:space-y-6;
@@ -42,5 +51,48 @@
   /* Touch-friendly form elements */
   .form-touch {
     @apply py-3 px-4 rounded-lg;
+  }
+  
+  /* Touch-optimized gestures */
+  .drag-none {
+    @apply touch-none select-none;
+  }
+  
+  .drag-x {
+    @apply touch-pan-x select-none;
+  }
+  
+  .drag-y {
+    @apply touch-pan-y select-none;
+  }
+  
+  /* Visual gesture indicators */
+  .swipe-indicator::after {
+    content: "";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 20px;
+    background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.1));
+    border-radius: 4px;
+    opacity: 0.5;
+  }
+  
+  /* Hardware acceleration utility */
+  .hw-boost {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+  }
+  
+  /* Mobile touch target classes */
+  .touch-target-base {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .touch-target-lg {
+    @apply min-h-[54px] min-w-[54px];
   }
 }

@@ -56,6 +56,34 @@
   z-index: 9999;
 }
 
+/* Mobile performance optimizations */
+@media (max-width: 640px) {
+  /* Disable hover effects on mobile for performance */
+  .hover-only {
+    @apply transition-none;
+  }
+  
+  /* Optimize repaints for elements with animations */
+  .mobile-optimized {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Reduce motion for elements with continuous animations */
+  .reduce-motion-mobile {
+    animation-duration: 0.5s !important;
+    transition-duration: 0.3s !important;
+  }
+  
+  /* Optimize scroll performance */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+  }
+}
+
 /* Touch-friendly styles for mobile */
 @media (max-width: 640px) {
   .touch-target {
@@ -78,4 +106,65 @@
   .tap-highlight:active {
     @apply opacity-70;
   }
+  
+  /* Active state visual feedback */
+  .touch-active:active {
+    @apply bg-gray-100 dark:bg-gray-800;
+    transition: background-color 0.1s ease-out;
+  }
+  
+  /* Remove default tap highlight on mobile */
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Gesture hints for swipeable content */
+  .swipeable-hint::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    height: 50px;
+    width: 30px;
+    transform: translateY(-50%);
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1));
+    pointer-events: none;
+    opacity: 0.8;
+  }
+}
+
+/* Content visibility optimizations */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+.content-visibility-auto-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+/* Animation performance class */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Mobile-friendly gestures */
+.swipe-horizontal {
+  touch-action: pan-x;
+}
+
+.swipe-vertical {
+  touch-action: pan-y;
+}
+
+.swipe-none {
+  touch-action: none;
+}
+
+/* Consistent overscroll behavior to prevent rubber band effect */
+.prevent-overscroll {
+  overscroll-behavior: contain;
 }

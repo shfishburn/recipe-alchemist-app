@@ -7,6 +7,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  CarouselProgress
 } from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CarouselDots } from './carousel/CarouselDots';
@@ -68,28 +69,48 @@ export function RecipeCarousel() {
             opts={{
               align: "start",
               loop: true,
+              dragFree: true,  // Enable momentum scrolling for better touch feel
+              inViewThreshold: 0.5, // More consistent slide selection on swipe
             }}
             className="w-full"
             setApi={setCarouselApi}
           >
-            <CarouselContent>
+            <CarouselContent className="swipe-horizontal hw-accelerated">
               {featuredRecipes.map((recipe) => (
-                <CarouselItem key={recipe.id} className={isMobile ? "basis-full" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4"}>
+                <CarouselItem key={recipe.id} className={cn(
+                  isMobile ? "basis-full" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4",
+                  "hw-accelerated" // Hardware acceleration for smooth sliding
+                )}>
                   <RecipeCard recipe={recipe} />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className={isMobile ? "-left-1 h-10 w-10" : "-left-3 md:-left-4 lg:-left-6"} />
-            <CarouselNext className={isMobile ? "-right-1 h-10 w-10" : "-right-3 md:-right-4 lg:-right-6"} />
+            <CarouselPrevious className={cn(
+              isMobile ? "-left-1 h-10 w-10" : "-left-3 md:-left-4 lg:-left-6",
+              "tap-highlight-none" // Remove tap highlight on mobile
+            )} />
+            <CarouselNext className={cn(
+              isMobile ? "-right-1 h-10 w-10" : "-right-3 md:-right-4 lg:-right-6",
+              "tap-highlight-none" // Remove tap highlight on mobile
+            )} />
+            
+            {/* Visual progress indicator for swipe position */}
+            {isMobile && <CarouselProgress className="mt-4 mb-2 max-w-[80%] mx-auto" />}
           </Carousel>
           
           {/* Pagination moved outside the carousel for better positioning */}
           <div className="w-full flex flex-col items-center mt-6">
-            <CarouselDots 
-              totalItems={featuredRecipes.length} 
-              selectedIndex={selectedIndex} 
-            />
-            <div className="text-center text-xs md:text-sm text-muted-foreground mt-2" aria-live="polite">
+            {/* Only show dots on desktop */}
+            {!isMobile && (
+              <CarouselDots 
+                totalItems={featuredRecipes.length} 
+                selectedIndex={selectedIndex} 
+              />
+            )}
+            <div 
+              className="text-center text-xs md:text-sm text-muted-foreground mt-2" 
+              aria-live="polite"
+            >
               Slide {selectedIndex + 1} of {featuredRecipes.length || 0}
             </div>
           </div>
@@ -101,7 +122,7 @@ export function RecipeCarousel() {
 
 function RecipeCarouselSkeleton() {
   return (
-    <div className="relative z-10 bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden border">
+    <div className="relative z-10 bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden border content-visibility-auto-card">
       <div className="aspect-[4/3] max-h-[300px]">
         <Skeleton className="w-full h-full" />
       </div>
@@ -111,4 +132,9 @@ function RecipeCarouselSkeleton() {
       </div>
     </div>
   );
+}
+
+// Helper function to prevent repeated imports
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(' ');
 }
