@@ -61,11 +61,18 @@ export function NutritionUpdateButton({
 
       console.log('Nutrition data updated:', response.data);
 
-      // Update the recipe with the new nutrition data
+      // Make sure we merge with existing nutrition data rather than replacing it entirely
+      const existingNutrition = recipe.nutrition || {};
+      const updatedNutrition = {
+        ...existingNutrition,
+        ...response.data
+      };
+
+      // Update the recipe with the merged nutrition data
       const { error: updateError } = await supabase
         .from('recipes')
         .update({
-          nutrition: response.data,
+          nutrition: updatedNutrition,
           updated_at: new Date().toISOString()
         })
         .eq('id', recipe.id);
@@ -81,7 +88,7 @@ export function NutritionUpdateButton({
       });
       
       // Pass the updated data to the parent component
-      onUpdateComplete(response.data);
+      onUpdateComplete(updatedNutrition);
     } catch (error) {
       console.error('Error updating nutrition data:', error);
       toast({

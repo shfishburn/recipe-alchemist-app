@@ -1,11 +1,19 @@
 
 import { useState, useEffect } from 'react';
 
-interface BatteryManagerExtended extends BatteryManager {
+// Define the BatteryManager interface
+interface BatteryManagerInterface {
   charging: boolean;
   chargingTime: number;
   dischargingTime: number;
   level: number;
+  addEventListener: (type: string, listener: EventListener) => void;
+  removeEventListener: (type: string, listener: EventListener) => void;
+}
+
+// Augment the navigator interface
+interface NavigatorWithBattery extends Navigator {
+  getBattery?: () => Promise<BatteryManagerInterface>;
 }
 
 interface BatteryStatus {
@@ -29,7 +37,12 @@ export function useBatteryStatus(): BatteryStatus {
       const getBatteryStatus = async () => {
         try {
           // Access battery API
-          const battery = await (navigator as any).getBattery() as BatteryManagerExtended;
+          const battery = await (navigator as NavigatorWithBattery).getBattery?.();
+          
+          if (!battery) {
+            console.log('Battery API not supported or permission denied');
+            return;
+          }
           
           // Initial state
           updateBatteryStatus(battery);
@@ -91,7 +104,7 @@ export function useBatteryStatus(): BatteryStatus {
   }, []);
 
   // Helper to update battery status
-  const updateBatteryStatus = (battery: BatteryManagerExtended) => {
+  const updateBatteryStatus = (battery: BatteryManagerInterface) => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setStatus({
       charging: battery.charging,

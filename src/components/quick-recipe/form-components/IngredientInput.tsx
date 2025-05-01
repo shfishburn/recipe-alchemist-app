@@ -40,7 +40,11 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
   return (
     <div className="space-y-1">
       <div className="text-center text-xs text-muted-foreground mb-1">
-        Ready in 30 mins • Easy cleanup • Ingredient-based
+        <span className="bg-recipe-green/10 rounded-full px-2 py-0.5">Ready in 30 mins</span>
+        {" • "}
+        <span className="bg-recipe-blue/10 rounded-full px-2 py-0.5">Easy cleanup</span>
+        {" • "}
+        <span className="bg-recipe-orange/10 rounded-full px-2 py-0.5">Ingredient-based</span>
       </div>
       <label htmlFor="mainIngredient" className={cn(
         "block pb-1 text-left",
@@ -49,7 +53,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
         What ingredients do you have today?
       </label>
       <div className={cn(
-        "relative rounded-md shadow-sm transition-all duration-200",
+        "relative rounded-xl shadow-md transition-all duration-200",
         isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
         isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
         error ? 'ring-2 ring-red-500' : '',
@@ -65,8 +69,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           onBlur={() => setIsFocused(false)}
           className={cn(
             isMobile ? "min-h-[56px] text-base py-3 px-4" : "min-h-[60px] text-lg",
-            "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2",
-            "focus-within:border-recipe-blue placeholder:text-gray-500",
+            "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl",
+            "focus-within:border-recipe-blue placeholder:text-gray-500 touch-feedback",
             error ? "border-red-500" : "focus:border-recipe-blue"
           )}
           rows={1}
