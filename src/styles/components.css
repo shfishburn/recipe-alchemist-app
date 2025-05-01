@@ -11,4 +11,36 @@
   .recipe-card {
     @apply bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg dark:bg-gray-800;
   }
+  
+  /* Enhanced touch interaction feedback */
+  .touch-feedback {
+    @apply transition-all duration-150;
+  }
+  
+  .touch-feedback:active {
+    @apply transform scale-[0.97] opacity-80;
+  }
+  
+  /* Standardized responsive spacing */
+  .spacing-y-responsive {
+    @apply space-y-3 sm:space-y-4 md:space-y-6;
+  }
+  
+  .spacing-x-responsive {
+    @apply space-x-2 sm:space-x-3 md:space-x-4;
+  }
+  
+  /* Form validation styles */
+  .form-error {
+    @apply text-red-500 text-sm mt-1 animate-fade-in;
+  }
+  
+  .input-error {
+    @apply border-red-500 ring-red-200 focus:ring-red-200;
+  }
+  
+  /* Touch-friendly form elements */
+  .form-touch {
+    @apply py-3 px-4 rounded-lg;
+  }
 }

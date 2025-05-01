@@ -1,8 +1,9 @@
 
-@import './loading.css';
-@import './transitions.css';
+/* Base styles and utilities */
 @import './theme.css';
+@import './transitions.css';
 @import './components.css';
+@import './loading.css';
 
 /* Additional animation utilities */
 .animate-scale-in {
@@ -30,6 +31,19 @@
   animation: celebrate 0.7s ease-in-out;
 }
 
+/* Standardized responsive spacing classes */
+.responsive-spacing-y {
+  @apply space-y-3 sm:space-y-4 md:space-y-6;
+}
+
+.responsive-padding {
+  @apply p-3 sm:p-4 md:p-6;
+}
+
+.responsive-margin {
+  @apply m-3 sm:m-4 md:m-6;
+}
+
 /* Error indicator for debugging */
 .error-indicator {
   position: fixed;
@@ -40,4 +54,28 @@
   padding: 10px 15px;
   border-radius: 4px;
   z-index: 9999;
+}
+
+/* Touch-friendly styles for mobile */
+@media (max-width: 640px) {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .touch-spacing > * + * {
+    margin-top: 12px;
+  }
+  
+  .touch-padding {
+    padding: 16px;
+  }
+  
+  /* Improved tap/touch states */
+  .tap-highlight {
+    @apply transition-opacity duration-100;
+  }
+  
+  .tap-highlight:active {
+    @apply opacity-70;
+  }
 }
