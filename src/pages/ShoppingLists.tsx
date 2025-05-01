@@ -21,6 +21,16 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Search, Plus, Loader2 } from 'lucide-react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ShoppingLists = () => {
   const { session } = useAuth();
@@ -28,6 +38,9 @@ const ShoppingLists = () => {
   const [newListTitle, setNewListTitle] = useState('');
   const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [listToDelete, setListToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { 
     data: shoppingLists = [], 
@@ -41,6 +54,7 @@ const ShoppingLists = () => {
       const { data, error } = await supabase
         .from('shopping_lists')
         .select('*')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -94,6 +108,55 @@ const ShoppingLists = () => {
         description: 'Something went wrong',
         variant: 'destructive'
       });
+    }
+  };
+
+  const handleDeleteList = async (listId: string) => {
+    setListToDelete(listId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteList = async () => {
+    if (!listToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Soft delete the list
+      const { error } = await supabase
+        .from('shopping_lists')
+        .update({ 
+          deleted_at: new Date().toISOString() 
+        })
+        .eq('id', listToDelete);
+
+      if (error) {
+        throw error;
+      }
+
+      // Refresh the list
+      await refetch();
+      
+      toast({
+        title: 'List deleted',
+        description: 'Shopping list has been deleted'
+      });
+    } catch (error) {
+      console.error('Error deleting list:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete shopping list',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setListToDelete(null);
+      
+      // If we deleted the currently selected list, go back to the list view
+      if (selectedList?.id === listToDelete) {
+        setSelectedList(null);
+      }
     }
   };
 
@@ -156,6 +219,7 @@ const ShoppingLists = () => {
               <ShoppingListDetail 
                 list={selectedList} 
                 onUpdate={refetch} 
+                onDelete={handleDeleteList}
               />
             </>
           ) : (
@@ -216,6 +280,7 @@ const ShoppingLists = () => {
                         key={list.id}
                         list={list}
                         onClick={() => setSelectedList(list)}
+                        onDelete={handleDeleteList}
                       />
                     ))}
                   </div>
@@ -225,6 +290,34 @@ const ShoppingLists = () => {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete the shopping list. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteList}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

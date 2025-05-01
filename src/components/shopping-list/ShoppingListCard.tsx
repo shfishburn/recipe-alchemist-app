@@ -3,15 +3,17 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { ShoppingList } from '@/types/shopping-list';
-import { Check, Calendar, ShoppingBag } from 'lucide-react';
+import { Check, Calendar, ShoppingBag, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 interface ShoppingListCardProps {
   list: ShoppingList;
   onClick: () => void;
+  onDelete?: (id: string) => Promise<void>;
 }
 
-export function ShoppingListCard({ list, onClick }: ShoppingListCardProps) {
+export function ShoppingListCard({ list, onClick, onDelete }: ShoppingListCardProps) {
   const completedItems = list.items.filter(item => item.checked).length;
   const progress = list.items.length ? Math.round((completedItems / list.items.length) * 100) : 0;
   const createdAt = new Date(list.created_at);
@@ -25,6 +27,13 @@ export function ShoppingListCard({ list, onClick }: ShoppingListCardProps) {
     }
   });
   
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(list.id);
+    }
+  };
+  
   return (
     <Card 
       className="cursor-pointer hover:border-primary transition-colors overflow-hidden"
@@ -33,7 +42,20 @@ export function ShoppingListCard({ list, onClick }: ShoppingListCardProps) {
       <CardHeader className="pb-2">
         <CardTitle className="flex justify-between items-center">
           <span className="truncate">{list.title}</span>
-          {progress === 100 && <Check className="h-4 w-4 text-green-500" />}
+          <div className="flex items-center gap-2">
+            {progress === 100 && <Check className="h-4 w-4 text-green-500" />}
+            {onDelete && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 hover:bg-destructive/10"
+                onClick={handleDelete}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+                <span className="sr-only">Delete list</span>
+              </Button>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="pb-3">

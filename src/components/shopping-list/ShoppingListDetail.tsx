@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -21,9 +22,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 interface ShoppingListDetailProps {
   list: ShoppingList;
   onUpdate: () => void;
+  onDelete?: (id: string) => Promise<void>;
 }
 
-export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) {
+export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDetailProps) {
   const { toast } = useToast();
   const [newItemName, setNewItemName] = useState('');
   const [newItemQuantity, setNewItemQuantity] = useState(1);
@@ -235,24 +237,38 @@ export function ShoppingListDetail({ list, onUpdate }: ShoppingListDetailProps) 
       <CardHeader className="px-0 pt-0">
         <div className="flex justify-between items-start flex-wrap gap-4">
           <CardTitle className="text-2xl font-bold">{list.title}</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copyToClipboard}
-            className="flex items-center gap-2"
-          >
-            {copied ? (
-              <>
-                <ClipboardCheck className="h-4 w-4" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4" />
-                Copy List
-              </>
+          <div className="flex gap-2">
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDelete(list.id)}
+                className="flex items-center gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete List
+              </Button>
             )}
-          </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyToClipboard}
+              className="flex items-center gap-2"
+            >
+              {copied ? (
+                <>
+                  <ClipboardCheck className="h-4 w-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy List
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       
