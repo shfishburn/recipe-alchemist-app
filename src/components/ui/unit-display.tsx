@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface WeightDisplayProps {
@@ -82,9 +81,10 @@ export function formatNutrientWithUnit(
       displayUnit = 'fl oz';
       showDecimals = true;
     }
+    // Other units like mg, IU don't change between systems
   }
   
-  if (showDecimals) {
+  if (showDecimals || displayValue < 10) {
     return `${displayValue.toFixed(1)} ${displayUnit}`;
   }
   

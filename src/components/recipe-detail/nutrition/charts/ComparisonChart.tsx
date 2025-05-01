@@ -1,86 +1,97 @@
 
 import React from 'react';
-import { HorizontalBarChart } from './HorizontalBarChart';
-import { NutritionSummaryText } from './NutritionSummaryText';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 
-interface ChartData {
+interface ComparisonDataItem {
   name: string;
   Recipe: number;
   Target: number;
   percentage: number;
-  value?: string;
-  fill?: string;
+  fill: string;
 }
 
 interface ComparisonChartProps {
-  compareData: ChartData[];
+  compareData: ComparisonDataItem[];
   unitSystem?: 'metric' | 'imperial';
 }
 
 export function ComparisonChart({ compareData, unitSystem = 'metric' }: ComparisonChartProps) {
-  // Extract macronutrient data for summary display
-  const proteinData = compareData.find(item => item.name === 'Protein');
-  const carbsData = compareData.find(item => item.name === 'Carbs');
-  const fatData = compareData.find(item => item.name === 'Fat');
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      
+      let formattedRecipe: string;
+      let formattedTarget: string;
+      
+      if (label === 'Calories') {
+        formattedRecipe = `${Math.round(dataPoint.Recipe)} kcal`;
+        formattedTarget = `${Math.round(dataPoint.Target)} kcal`;
+      } else {
+        formattedRecipe = formatNutrientWithUnit(dataPoint.Recipe, 'g', unitSystem);
+        formattedTarget = formatNutrientWithUnit(dataPoint.Target, 'g', unitSystem);
+      }
+      
+      return (
+        <div className="custom-tooltip bg-white p-2 shadow border rounded text-xs">
+          <p className="label font-medium">{`${label}`}</p>
+          <p className="value">{`Recipe: ${formattedRecipe}`}</p>
+          <p className="value">{`Target: ${formattedTarget}`}</p>
+          <p className="percentage">{`${dataPoint.percentage}% of daily target`}</p>
+        </div>
+      );
+    }
   
-  // Add fiber data if it exists, otherwise use default values
-  const fiberData = {
-    Recipe: 0,
-    Target: 25,
-    percentage: 0
+    return null;
   };
-  
-  // Calculate calories
-  const caloriesFromProtein = (proteinData?.Recipe || 0) * 4;
-  const caloriesFromCarbs = (carbsData?.Recipe || 0) * 4;
-  const caloriesFromFat = (fatData?.Recipe || 0) * 9;
-  const totalCalories = caloriesFromProtein + caloriesFromCarbs + caloriesFromFat;
-  const dailyCalories = 2000; // Default daily calories
-  
+
+  // Function to format values with the correct unit
+  const formatYAxis = (value: number) => {
+    // Since this function is used for the Y-axis which shows grams, use 'g' as the unit
+    if (value === 0) return '0';
+    
+    const formatted = formatNutrientWithUnit(value, 'g', unitSystem);
+    // Remove the unit for the axis labels for cleaner display
+    return formatted.replace(' g', '').replace(' oz', '');
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Percentage of daily target chart */}
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium mb-2">% of Daily Targets</h3>
-        <HorizontalBarChart 
-          data={compareData.map(item => ({
-            ...item,
-            value: `${item.percentage}%`, // Pre-formatted value
-            fill: '#4f46e5' // Default fill color
-          }))} 
-          showPercentage={true}
-          showValue={true}
-          height={140}
-        />
-      </div>
-      
-      {/* Recipe vs. Target chart */}
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium mb-2">Recipe vs. Daily Targets</h3>
-        <HorizontalBarChart 
-          data={compareData.map(item => ({
-            ...item,
-            fill: '#4f46e5' // Default fill color
-          }))} 
-          showPercentage={false}
-          height={140}
-        />
-      </div>
-      
-      {/* Text summary */}
-      <NutritionSummaryText
-        calories={Math.round(totalCalories)}
-        protein={proteinData?.Recipe || 0}
-        carbs={carbsData?.Recipe || 0} 
-        fat={fatData?.Recipe || 0}
-        fiber={fiberData.Recipe}
-        caloriesPercentage={Math.round((totalCalories / dailyCalories) * 100)}
-        proteinPercentage={proteinData?.percentage || 0}
-        carbsPercentage={carbsData?.percentage || 0}
-        fatPercentage={fatData?.percentage || 0}
-        fiberPercentage={fiberData.percentage}
-        unitSystem={unitSystem}
-      />
-    </div>
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart
+        data={compareData}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis tickFormatter={formatYAxis} />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend />
+        <Bar dataKey="Recipe" fill="#8884d8" name="Recipe" />
+        <Bar dataKey="Target" fill="#82ca9d" name="Daily Target" />
+        {compareData.map((item, index) => (
+          <ReferenceLine
+            key={`ref-upper-${index}`}
+            y={item.Target * 1.2}
+            stroke="#ff7300"
+            strokeDasharray="3 3"
+            label={{ value: '+20%', position: 'insideTopRight', fill: '#ff7300', fontSize: 10 }}
+          />
+        ))}
+        {compareData.map((item, index) => (
+          <ReferenceLine
+            key={`ref-lower-${index}`}
+            y={item.Target * 0.8}
+            stroke="#ff7300"
+            strokeDasharray="3 3"
+            label={{ value: '-20%', position: 'insideBottomRight', fill: '#ff7300', fontSize: 10 }}
+          />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
   );
 }

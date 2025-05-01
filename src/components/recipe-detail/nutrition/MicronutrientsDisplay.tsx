@@ -2,6 +2,7 @@
 import React from 'react';
 import { ExtendedNutritionData } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
+import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 
 interface MicronutrientsDisplayProps {
   nutrition: ExtendedNutritionData;
@@ -93,13 +94,13 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   
   // Component to display a micronutrient
   const MicronutrientItem = ({ item }: { item: any }) => {
-    const displayValue = typeof item.value === 'number' ? item.value.toFixed(1) : '0.0';
+    const formattedValue = formatNutrientWithUnit(item.value, item.unit, unitSystem);
     return (
       <div className="mb-2">
         <div className="flex justify-between text-xs mb-1">
           <div className="font-medium">{item.name}</div>
           <div className="text-right">
-            {displayValue} {item.unit} <span className="text-muted-foreground">({item.percentage}% DV)</span>
+            {formattedValue} <span className="text-muted-foreground">({item.percentage}% DV)</span>
           </div>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-1">

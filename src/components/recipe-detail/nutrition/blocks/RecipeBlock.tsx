@@ -8,6 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakdown';
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
 import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
+import { formatNutrientWithUnit, formatNutritionValue } from '@/components/ui/unit-display';
 
 interface RecipeBlockProps {
   recipeNutrition: ExtendedNutritionData;
@@ -46,6 +47,11 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const carbsDailyValue = Math.round((carbs / (carbsCalories / 4)) * 100);
   const fatDailyValue = Math.round((fat / (fatCalories / 9)) * 100);
   
+  // Format protein, carbs and fat based on unit system
+  const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);
+  const formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
+  const formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
+  
   return (
     <Card>
       <CardHeader>
@@ -65,15 +71,15 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="text-center">
               <p className="text-xs uppercase text-muted-foreground">Protein</p>
-              <p className="text-sm font-medium">{Math.round(protein)}g</p>
+              <p className="text-sm font-medium">{formattedProtein}</p>
             </div>
             <div className="text-center">
               <p className="text-xs uppercase text-muted-foreground">Carbs</p>
-              <p className="text-sm font-medium">{Math.round(carbs)}g</p>
+              <p className="text-sm font-medium">{formattedCarbs}</p>
             </div>
             <div className="text-center">
               <p className="text-xs uppercase text-muted-foreground">Fat</p>
-              <p className="text-sm font-medium">{Math.round(fat)}g</p>
+              <p className="text-sm font-medium">{formattedFat}</p>
             </div>
           </div>
           

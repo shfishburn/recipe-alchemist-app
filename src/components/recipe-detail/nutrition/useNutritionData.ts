@@ -4,6 +4,7 @@ import { standardizeNutrition } from '@/types/nutrition-utils';
 import type { Recipe } from '@/types/recipe';
 import type { Profile } from '@/hooks/use-auth';
 import { useUnitSystem } from '@/hooks/use-unit-system';
+import { isNutritionPreferences } from '@/types/nutrition';
 
 export interface UserNutritionPreferences {
   dailyCalories: number;
@@ -73,15 +74,32 @@ export function useNutritionData(recipe: Recipe, profile?: Profile | null) {
 
     // Process user preferences
     if (profile) {
-      // Extract user preferences from profile, with defaults if not present
-      // Use optional chaining and nullish coalescing to safely access properties
-      const dailyCalories = profile.daily_calories as number || 2000;
-      
-      const macroSplit = {
-        protein: profile.macro_protein as number || 30,
-        carbs: profile.macro_carbs as number || 40,
-        fat: profile.macro_fat as number || 30,
+      let dailyCalories = 2000;
+      let macroSplit = {
+        protein: 30,
+        carbs: 40,
+        fat: 30,
       };
+
+      // Try to get nutrition preferences from the profile
+      if (profile.nutrition_preferences) {
+        try {
+          // Check if nutrition_preferences is properly structured
+          if (isNutritionPreferences(profile.nutrition_preferences)) {
+            const nutritionPrefs = profile.nutrition_preferences;
+            
+            // Extract values from nutrition preferences
+            dailyCalories = nutritionPrefs.dailyCalories || 2000;
+            macroSplit = {
+              protein: nutritionPrefs.macroSplit?.protein || 30,
+              carbs: nutritionPrefs.macroSplit?.carbs || 40,
+              fat: nutritionPrefs.macroSplit?.fat || 30,
+            };
+          }
+        } catch (error) {
+          console.error('Error processing nutrition preferences:', error);
+        }
+      }
 
       setUserPreferences({
         dailyCalories,

@@ -10,6 +10,7 @@ import { NutrientStats } from './personal/NutrientStats';
 import { MacroCaloriesBreakdown } from './personal/MacroCaloriesBreakdown';
 import { NUTRITION_COLORS, NUTRIENT_INFO } from './personal/constants';
 import { WeightDisplay } from '@/components/ui/unit-display';
+import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 
 interface RecipeNutrition {
   calories: number;
@@ -47,6 +48,15 @@ export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: 
   const carbsPercentage = Math.round((recipeNutrition.carbs / carbsTarget) * 100);
   const fatPercentage = Math.round((recipeNutrition.fat / fatTarget) * 100);
   
+  // Format nutrition values with appropriate units
+  const formattedProtein = formatNutrientWithUnit(recipeNutrition.protein, 'g', unitSystem);
+  const formattedCarbs = formatNutrientWithUnit(recipeNutrition.carbs, 'g', unitSystem);
+  const formattedFat = formatNutrientWithUnit(recipeNutrition.fat, 'g', unitSystem);
+  
+  const formattedProteinTarget = formatNutrientWithUnit(proteinTarget, 'g', unitSystem);
+  const formattedCarbsTarget = formatNutrientWithUnit(carbsTarget, 'g', unitSystem);
+  const formattedFatTarget = formatNutrientWithUnit(fatTarget, 'g', unitSystem);
+  
   const compareData = [
     {
       name: 'Protein',
@@ -54,7 +64,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: 
       Target: proteinTarget,
       percentage: proteinPercentage,
       fill: NUTRITION_COLORS.protein,
-      value: `${proteinPercentage}% (${recipeNutrition.protein}g of ${proteinTarget}g)`
+      value: `${proteinPercentage}% (${formattedProtein} of ${formattedProteinTarget})`
     },
     {
       name: 'Carbs',
@@ -62,7 +72,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: 
       Target: carbsTarget,
       percentage: carbsPercentage,
       fill: NUTRITION_COLORS.carbs,
-      value: `${carbsPercentage}% (${recipeNutrition.carbs}g of ${carbsTarget}g)`
+      value: `${carbsPercentage}% (${formattedCarbs} of ${formattedCarbsTarget})`
     },
     {
       name: 'Fat',
@@ -70,7 +80,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: 
       Target: fatTarget,
       percentage: fatPercentage,
       fill: NUTRITION_COLORS.fat,
-      value: `${fatPercentage}% (${recipeNutrition.fat}g of ${fatTarget}g)`
+      value: `${fatPercentage}% (${formattedFat} of ${formattedFatTarget})`
     }
   ];
   
@@ -81,7 +91,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: 
       Target: userPreferences.dailyCalories,
       percentage: caloriesPercentage,
       fill: NUTRITION_COLORS.calories,
-      value: `${caloriesPercentage}% (${recipeNutrition.calories} of ${userPreferences.dailyCalories} kcal)`
+      value: `${caloriesPercentage}% (${Math.round(recipeNutrition.calories)} of ${userPreferences.dailyCalories} kcal)`
     }
   ];
   
@@ -143,9 +153,9 @@ export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: 
             </TooltipProvider>
           </div>
           <p className="text-xs text-muted-foreground mb-3">
-            Side by side comparison in grams <span className="italic">(per serving)</span>
+            Side by side comparison in {unitSystem === 'metric' ? 'grams' : 'US units'} <span className="italic">(per serving)</span>
           </p>
-          <ComparisonChart compareData={compareData} />
+          <ComparisonChart compareData={compareData} unitSystem={unitSystem} />
           <p className="text-xs text-gray-500 mt-2 italic">
             * Dotted lines show recommended range (±20% of your target)
           </p>

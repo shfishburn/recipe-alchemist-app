@@ -3,7 +3,6 @@ import React from 'react';
 import { Clock, Users, BookOpen, ChefHat, Utensils } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { RecipeImage } from './RecipeImage';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface RecipeHeaderProps {
@@ -37,7 +36,7 @@ export function RecipeHeader({ recipe, hideReasoning = false }: RecipeHeaderProp
         <p className="text-base sm:text-lg text-muted-foreground italic mb-4">{recipe.tagline}</p>
       )}
       
-      <RecipeImage recipe={recipe} />
+      {/* RecipeImage component was removed from here to avoid duplication */}
       
       {/* Recipe Overview Card */}
       <Card className="mt-4 sm:mt-6">
