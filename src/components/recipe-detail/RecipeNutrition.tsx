@@ -25,7 +25,17 @@ interface RecipeNutritionProps {
 
 export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: RecipeNutritionProps) {
   const { user } = useAuth();
-  const { nutritionPreferences } = useProfileSettings();
+  let nutritionPreferences = null;
+  
+  try {
+    // Try to get nutrition preferences from profile context, but don't crash if unavailable
+    const profileSettings = useProfileSettings();
+    nutritionPreferences = profileSettings?.nutritionPreferences;
+  } catch (error) {
+    // If ProfileContext is not available, continue without profile settings
+    console.log("ProfileContext not available, using default settings");
+  }
+  
   const { unitSystem } = useUnitSystem();
   const [viewMode, setViewMode] = useState<'recipe' | 'personal'>('recipe');
   const { recipeNutrition, refetchNutrition } = useNutritionData(recipe);
