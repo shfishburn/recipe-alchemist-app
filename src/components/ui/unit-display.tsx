@@ -2,6 +2,12 @@
 import React from 'react';
 import { formatNutrientWithUnit, getWeightDisplay, getHeightDisplay } from '@/utils/unit-conversion';
 
+// Function to format a nutrition value (rounding to integers for readability)
+export function formatNutritionValue(value: number): string {
+  if (!value && value !== 0) return 'N/A';
+  return value >= 10 ? Math.round(value).toString() : value.toFixed(1);
+}
+
 interface UnitValueProps {
   value: number;
   unit: string;
@@ -70,3 +76,6 @@ export function NutrientDisplay({ value, unitSystem, unit = 'g', className }: Nu
     />
   );
 }
+
+// Make sure to export the formatNutrientWithUnit function from this file too
+export { formatNutrientWithUnit, getWeightDisplay, getHeightDisplay };

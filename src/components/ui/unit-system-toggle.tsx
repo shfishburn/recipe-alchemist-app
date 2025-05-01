@@ -2,7 +2,7 @@
 import React from 'react';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { Button } from '@/components/ui/button';
-import { Metric, Ruler } from 'lucide-react';
+import { Ruler, BarChart } from 'lucide-react';
 
 interface UnitSystemToggleProps {
   variant?: 'default' | 'outline' | 'secondary';
@@ -31,7 +31,7 @@ export function UnitSystemToggle({
         </span>
       )}
       {unitSystem === 'metric' ? (
-        <Metric className="h-4 w-4" />
+        <BarChart className="h-4 w-4" />
       ) : (
         <Ruler className="h-4 w-4" />
       )}
