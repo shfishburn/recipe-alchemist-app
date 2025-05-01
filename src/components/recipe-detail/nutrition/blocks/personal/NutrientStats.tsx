@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { WeightDisplay } from '@/components/ui/unit-display';
+import { Progress } from '@/components/ui/progress';
+import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 
 interface NutrientStatsProps {
   calories: number;
@@ -11,7 +12,12 @@ interface NutrientStatsProps {
   proteinPercentage: number;
   carbsPercentage: number;
   fatPercentage: number;
-  colors: Record<string, string>;
+  colors: {
+    protein: string;
+    carbs: string;
+    fat: string;
+    calories: string;
+  };
   unitSystem: 'metric' | 'imperial';
 }
 
@@ -27,57 +33,56 @@ export function NutrientStats({
   colors,
   unitSystem
 }: NutrientStatsProps) {
-  // Function to determine status color based on percentage
-  const getStatusColor = (percentage: number, nutrient: string) => {
-    if (nutrient === 'calories') {
-      if (percentage < 30) return 'text-green-600';
-      if (percentage > 80) return 'text-red-600';
-      return 'text-amber-600';
-    } else {
-      if (percentage < 50) return 'text-amber-600';
-      if (percentage > 150) return 'text-red-600';
-      return 'text-green-600';
-    }
-  };
+  const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);
+  const formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
+  const formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-      <div className="bg-white p-3 rounded-md shadow-sm">
-        <p className="text-xs text-gray-500">Calories</p>
-        <p className="text-base font-semibold">{calories} kcal</p>
-        <p className={`text-xs ${getStatusColor(caloriesPercentage, 'calories')}`}>
-          {caloriesPercentage}% of daily needs
-        </p>
+    <div className="space-y-4">
+      <h5 className="text-xs font-semibold">Nutrient Coverage</h5>
+      
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs">Calories</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium">{calories} kcal</span>
+            <span className="text-xs text-muted-foreground">{caloriesPercentage}%</span>
+          </div>
+        </div>
+        <Progress value={caloriesPercentage} className="h-1.5" indicatorClassName="bg-calories" />
       </div>
       
-      <div className="bg-white p-3 rounded-md shadow-sm">
-        <p className="text-xs text-gray-500">Protein</p>
-        <p className="text-base font-semibold flex items-baseline gap-1">
-          <span>{protein}g</span>
-        </p>
-        <p className={`text-xs ${getStatusColor(proteinPercentage, 'protein')}`}>
-          {proteinPercentage}% of daily target
-        </p>
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs">Protein</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium">{formattedProtein}</span>
+            <span className="text-xs text-muted-foreground">{proteinPercentage}%</span>
+          </div>
+        </div>
+        <Progress value={proteinPercentage} className="h-1.5" indicatorClassName="bg-blue-600" />
       </div>
       
-      <div className="bg-white p-3 rounded-md shadow-sm">
-        <p className="text-xs text-gray-500">Carbs</p>
-        <p className="text-base font-semibold flex items-baseline gap-1">
-          <span>{carbs}g</span>
-        </p>
-        <p className={`text-xs ${getStatusColor(carbsPercentage, 'carbs')}`}>
-          {carbsPercentage}% of daily target
-        </p>
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs">Carbs</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium">{formattedCarbs}</span>
+            <span className="text-xs text-muted-foreground">{carbsPercentage}%</span>
+          </div>
+        </div>
+        <Progress value={carbsPercentage} className="h-1.5" indicatorClassName="bg-amber-500" />
       </div>
       
-      <div className="bg-white p-3 rounded-md shadow-sm">
-        <p className="text-xs text-gray-500">Fat</p>
-        <p className="text-base font-semibold flex items-baseline gap-1">
-          <span>{fat}g</span>
-        </p>
-        <p className={`text-xs ${getStatusColor(fatPercentage, 'fat')}`}>
-          {fatPercentage}% of daily target
-        </p>
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs">Fat</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium">{formattedFat}</span>
+            <span className="text-xs text-muted-foreground">{fatPercentage}%</span>
+          </div>
+        </div>
+        <Progress value={fatPercentage} className="h-1.5" indicatorClassName="bg-emerald-500" />
       </div>
     </div>
   );

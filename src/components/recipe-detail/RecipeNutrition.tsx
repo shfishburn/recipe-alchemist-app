@@ -14,6 +14,7 @@ import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition, Nutrition, validateNutritionData } from '@/types/nutrition-utils';
 import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
+import { useProfileSettings } from '@/hooks/use-profile-context';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -23,10 +24,11 @@ interface RecipeNutritionProps {
 }
 
 export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: RecipeNutritionProps) {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { nutritionPreferences } = useProfileSettings();
   const { unitSystem } = useUnitSystem();
   const [viewMode, setViewMode] = useState<'recipe' | 'personal'>('recipe');
-  const { recipeNutrition, userPreferences, refetchNutrition } = useNutritionData(recipe, profile);
+  const { recipeNutrition, refetchNutrition } = useNutritionData(recipe);
   const isMobile = useMediaQuery('(max-width: 640px)');
   
   // Calculate total time from prep + cook time
@@ -121,10 +123,10 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
     }
   };
   
-  const updatedUserPreferences = userPreferences ? {
+  const updatedUserPreferences = nutritionPreferences ? {
     ...defaultPreferences,
-    ...userPreferences,
-    unitSystem: userPreferences.unitSystem || unitSystem
+    ...nutritionPreferences,
+    unitSystem: nutritionPreferences.unitSystem || unitSystem
   } : defaultPreferences;
 
   return (

@@ -4,12 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { EditIcon } from 'lucide-react';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useProfileSettings } from '@/hooks/use-profile-context';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function ProfileHeader() {
   const { user } = useAuth();
-  const { profile, isLoading } = useProfile();
+  const { profile, isLoading } = useProfileSettings();
   
   const getInitials = (name?: string): string => {
     if (!name) return 'U';

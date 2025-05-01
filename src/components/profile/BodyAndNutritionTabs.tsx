@@ -4,30 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PersonalDetails } from './PersonalDetails';
 import { BodyComposition } from './BodyComposition';
 import { MacroNutrients } from './MacroNutrients';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useProfileSettings } from '@/hooks/use-profile-context';
 
 export function BodyAndNutritionTabs() {
-  const { profile, isLoading, error, updateProfile } = useProfile();
-  
-  // Extract nutrition preferences or use defaults
-  const preferences = profile?.nutrition_preferences || {
-    dailyCalories: 2000,
-    macroSplit: {
-      protein: 30,
-      carbs: 40,
-      fat: 30,
-    },
-    dietaryRestrictions: [],
-    allergens: [],
-    healthGoal: 'maintenance',
-    mealSizePreference: 'medium',
-  };
+  const { nutritionPreferences, isLoading, saveNutritionPreferences } = useProfileSettings();
   
   // Handle save function with context
-  const onSave = async (updatedPreferences: typeof preferences) => {
-    return await updateProfile({
-      nutrition_preferences: updatedPreferences
-    });
+  const onSave = async (updatedPreferences: typeof nutritionPreferences) => {
+    return await saveNutritionPreferences(updatedPreferences);
   };
 
   return (
@@ -40,25 +24,22 @@ export function BodyAndNutritionTabs() {
       
       <TabsContent value="personal" className="mt-6">
         <PersonalDetails 
-          preferences={preferences}
+          preferences={nutritionPreferences}
           onSave={onSave}
-          isLoading={isLoading}
         />
       </TabsContent>
       
       <TabsContent value="bodyComposition" className="mt-6">
         <BodyComposition 
-          preferences={preferences}
+          preferences={nutritionPreferences}
           onSave={onSave}
-          isLoading={isLoading}
         />
       </TabsContent>
 
       <TabsContent value="macros" className="mt-6">
         <MacroNutrients
-          preferences={preferences}
+          preferences={nutritionPreferences}
           onSave={onSave}
-          isLoading={isLoading}
         />
       </TabsContent>
     </Tabs>
