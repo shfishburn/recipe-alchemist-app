@@ -9,23 +9,7 @@ import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakd
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
 import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
-
-// Standard daily reference values for nutrients (moved to proper constants)
-const DAILY_REFERENCE_VALUES = {
-  calories: 2000,
-  protein: 50, // g
-  carbs: 275,  // g
-  fat: 78,     // g
-  fiber: 28,   // g
-  sugar: 50,   // g
-  sodium: 2300, // mg
-  potassium: 4700, // mg
-  calcium: 1300, // mg
-  iron: 18, // mg
-  vitaminA: 900, // mcg RAE
-  vitaminC: 90, // mg
-  vitaminD: 20, // mcg
-};
+import { DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 
 interface RecipeBlockProps {
   recipeNutrition: ExtendedNutritionData;
@@ -68,8 +52,9 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   let carbsPercentage = 40;
   let fatPercentage = 30;
   
-  // Only try to access recommended_macros if it exists in data_quality
-  if (recipeNutrition.data_quality?.recommended_macros) {
+  // Safely access recommended_macros with proper type checking
+  if (recipeNutrition.data_quality && 
+      recipeNutrition.data_quality.recommended_macros) {
     proteinPercentage = recipeNutrition.data_quality.recommended_macros.protein || proteinPercentage;
     carbsPercentage = recipeNutrition.data_quality.recommended_macros.carbs || carbsPercentage;
     fatPercentage = recipeNutrition.data_quality.recommended_macros.fat || fatPercentage;
