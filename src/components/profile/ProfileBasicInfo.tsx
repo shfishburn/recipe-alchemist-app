@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { Separator } from '@/components/ui/separator';
+import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
 
 interface ProfileBasicInfoProps {
   user: User;
@@ -133,9 +134,12 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
                     </SelectContent>
                   </Select>
                 </FormControl>
-                <p className="text-xs text-muted-foreground">
-                  This setting affects how measurements are displayed throughout the app
-                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    This setting affects how measurements are displayed throughout the app
+                  </p>
+                  <UnitSystemToggle size="sm" />
+                </div>
               </FormItem>
             )}
           />

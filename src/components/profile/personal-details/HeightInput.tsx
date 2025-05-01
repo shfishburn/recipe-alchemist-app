@@ -2,6 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ftInToCm, cmToFtIn } from '@/utils/unit-conversion';
 
 interface HeightInputProps {
   register: any;
@@ -45,7 +46,13 @@ export function HeightInput({
           <select 
             className="w-full rounded-md border border-input bg-background px-3 h-10"
             value={heightFeet}
-            onChange={(e) => setHeightFeet(Number(e.target.value))}
+            onChange={(e) => {
+              const newFeet = Number(e.target.value);
+              setHeightFeet(newFeet);
+              // Update the hidden height input with equivalent in cm
+              const heightCm = ftInToCm(newFeet, heightInches);
+              register('height').onChange({ target: { value: heightCm } });
+            }}
           >
             {[4, 5, 6, 7].map(feet => (
               <option key={feet} value={feet}>{feet} ft</option>
@@ -55,8 +62,14 @@ export function HeightInput({
         <div className="w-1/2">
           <select 
             className="w-full rounded-md border border-input bg-background px-3 h-10"
-            value={heightInches} 
-            onChange={(e) => setHeightInches(Number(e.target.value))}
+            value={heightInches}
+            onChange={(e) => {
+              const newInches = Number(e.target.value);
+              setHeightInches(newInches);
+              // Update the hidden height input with equivalent in cm
+              const heightCm = ftInToCm(heightFeet, newInches);
+              register('height').onChange({ target: { value: heightCm } });
+            }}
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i} value={i}>{i} in</option>
