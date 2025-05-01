@@ -25,6 +25,7 @@ import { SectionControls } from '@/components/recipe-detail/controls/SectionCont
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ProfileProvider } from '@/contexts/ProfileContext';
 
 const RecipeDetail = () => {
   const navigate = useNavigate();
@@ -176,82 +177,84 @@ const RecipeDetail = () => {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : currentRecipe ? (
-            <div className="max-w-4xl mx-auto">
-              <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
-              
-              {/* Recipe Image - Moved above recipe overview */}
-              <RecipeImage recipe={currentRecipe} />
-              
-              <div className="hidden">
-                <PrintRecipe recipe={currentRecipe} />
-                <CookingMode recipe={currentRecipe} />
-              </div>
-              
-              <Separator className="mb-4 sm:mb-8" />
-              
-              <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
-              
-              <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3">
-                <div className="md:col-span-1">
-                  <RecipeIngredients 
-                    recipe={currentRecipe}
-                    isOpen={sections.ingredients}
-                    onToggle={() => toggleSection('ingredients')}
+            <ProfileProvider>
+              <div className="max-w-4xl mx-auto">
+                <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
+                
+                {/* Recipe Image - Moved above recipe overview */}
+                <RecipeImage recipe={currentRecipe} />
+                
+                <div className="hidden">
+                  <PrintRecipe recipe={currentRecipe} />
+                  <CookingMode recipe={currentRecipe} />
+                </div>
+                
+                <Separator className="mb-4 sm:mb-8" />
+                
+                <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
+                
+                <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3">
+                  <div className="md:col-span-1">
+                    <RecipeIngredients 
+                      recipe={currentRecipe}
+                      isOpen={sections.ingredients}
+                      onToggle={() => toggleSection('ingredients')}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <RecipeInstructions 
+                      recipe={currentRecipe}
+                      isOpen={sections.instructions}
+                      onToggle={() => toggleSection('instructions')}
+                    />
+                  </div>
+                </div>
+
+                {/* Scientific Analysis Section - Always include it but let it handle visibility */}
+                <RecipeAnalysis 
+                  recipe={currentRecipe}
+                  isOpen={sections.analysis}
+                  onToggle={handleToggleAnalysis}
+                  onRecipeUpdated={handleRecipeUpdate}
+                />
+
+                <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-6">
+                  <ChefNotes 
+                    recipe={currentRecipe} 
+                    onUpdate={handleNotesUpdate}
+                    isOpen={sections.chef}
+                    onToggle={() => toggleSection('chef')}
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <RecipeInstructions 
-                    recipe={currentRecipe}
-                    isOpen={sections.instructions}
-                    onToggle={() => toggleSection('instructions')}
-                  />
-                </div>
-              </div>
 
-              {/* Scientific Analysis Section - Always include it but let it handle visibility */}
-              <RecipeAnalysis 
-                recipe={currentRecipe}
-                isOpen={sections.analysis}
-                onToggle={handleToggleAnalysis}
-                onRecipeUpdated={handleRecipeUpdate}
-              />
+                {currentRecipe.nutrition && (
+                  <div className="mt-4 sm:mt-8 mb-40 sm:mb-28">
+                    <RecipeNutrition 
+                      recipe={currentRecipe}
+                      isOpen={sections.nutrition}
+                      onToggle={() => toggleSection('nutrition')}
+                      onRecipeUpdate={handleRecipeUpdate}
+                    />
+                  </div>
+                )}
 
-              <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-6">
-                <ChefNotes 
+                <RecipeActions 
                   recipe={currentRecipe} 
-                  onUpdate={handleNotesUpdate}
-                  isOpen={sections.chef}
-                  onToggle={() => toggleSection('chef')}
+                  sticky={true} 
+                  onOpenChat={handleOpenChat}
+                  onToggleAnalysis={handleToggleAnalysis}
+                  isAnalysisOpen={sections.analysis}
+                  isAnalyzing={isAnalyzing}
+                  hasAnalysisData={hasAnalysisData}
+                />
+                
+                <RecipeChatDrawer 
+                  recipe={currentRecipe} 
+                  open={chatOpen} 
+                  onOpenChange={setChatOpen}
                 />
               </div>
-
-              {currentRecipe.nutrition && (
-                <div className="mt-4 sm:mt-8 mb-40 sm:mb-28">
-                  <RecipeNutrition 
-                    recipe={currentRecipe}
-                    isOpen={sections.nutrition}
-                    onToggle={() => toggleSection('nutrition')}
-                    onRecipeUpdate={handleRecipeUpdate}
-                  />
-                </div>
-              )}
-
-              <RecipeActions 
-                recipe={currentRecipe} 
-                sticky={true} 
-                onOpenChat={handleOpenChat}
-                onToggleAnalysis={handleToggleAnalysis}
-                isAnalysisOpen={sections.analysis}
-                isAnalyzing={isAnalyzing}
-                hasAnalysisData={hasAnalysisData}
-              />
-              
-              <RecipeChatDrawer 
-                recipe={currentRecipe} 
-                open={chatOpen} 
-                onOpenChange={setChatOpen}
-              />
-            </div>
+            </ProfileProvider>
           ) : null}
         </div>
       </main>
