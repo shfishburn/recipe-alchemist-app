@@ -14,6 +14,7 @@ import { RecipeChat } from './RecipeChat';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
+import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 interface RecipeChatDrawerProps {
   recipe: Recipe;
@@ -60,8 +61,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {/* Fix: Wrap Button in a div when used with TooltipTrigger asChild */}
-                  <div>
+                  <RadixWrapper>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -76,7 +76,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
                       )}
                       <span className="sr-only">Close</span>
                     </Button>
-                  </div>
+                  </RadixWrapper>
                 </TooltipTrigger>
                 {isPending && (
                   <TooltipContent>

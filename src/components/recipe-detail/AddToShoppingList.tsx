@@ -27,6 +27,7 @@ import { ShoppingListForm } from './shopping-list/ShoppingListForm';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
+import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 interface AddToShoppingListProps {
   recipe: Recipe;
@@ -159,8 +160,7 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
     <div className="relative">
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetTrigger asChild>
-          {/* Fix: Wrap the Button in a div for SheetTrigger with asChild */}
-          <div>
+          <RadixWrapper>
             <Button 
               variant="outline" 
               size="sm"
@@ -170,7 +170,7 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
               <ShoppingBag className="h-4 w-4 mr-2" />
               Add to shopping list
             </Button>
-          </div>
+          </RadixWrapper>
         </SheetTrigger>
         <SheetContent className="z-[60]">
           <SheetHeader>
