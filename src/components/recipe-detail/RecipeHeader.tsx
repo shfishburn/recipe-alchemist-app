@@ -36,8 +36,6 @@ export function RecipeHeader({ recipe, hideReasoning = false }: RecipeHeaderProp
         <p className="text-base sm:text-lg text-muted-foreground italic mb-4">{recipe.tagline}</p>
       )}
       
-      {/* RecipeImage component was removed from here to avoid duplication */}
-      
       {/* Recipe Overview Card */}
       <Card className="mt-4 sm:mt-6">
         <CardContent className="pt-4 sm:pt-6">

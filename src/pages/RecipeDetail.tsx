@@ -137,6 +137,7 @@ const RecipeDetail = () => {
             <div className="max-w-4xl mx-auto">
               <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
               
+              {/* Recipe Image - Moved above recipe overview */}
               <RecipeImage recipe={currentRecipe} />
               
               <div className="hidden">
