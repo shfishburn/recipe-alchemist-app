@@ -1,6 +1,37 @@
 
 import { Nutrition } from '@/types/recipe';
 
+// Daily reference values for nutrients
+export const DAILY_REFERENCE_VALUES = {
+  calories: 2000,     // kcal
+  protein: 50,        // g
+  carbs: 275,         // g 
+  fat: 78,            // g
+  fiber: 28,          // g
+  sugar: 50,          // g (added sugars)
+  sodium: 2300,       // mg
+  vitamin_a: 5000,    // IU
+  vitamin_c: 90,      // mg
+  vitamin_d: 800,     // IU
+  calcium: 1300,      // mg
+  iron: 18,           // mg
+  potassium: 4700     // mg
+};
+
+/**
+ * Calculates percentage of daily value for a given nutrient
+ */
+export function getDailyValuePercentage(nutrient: string, value: number): number {
+  if (!value || value <= 0 || isNaN(value)) return 0;
+  
+  // Get the reference value from our constants
+  const referenceValue = DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES];
+  if (!referenceValue) return 0;
+  
+  // Calculate the percentage
+  return Math.round((value / referenceValue) * 100);
+}
+
 /**
  * Standardizes nutrition data format by normalizing field names and ensuring numeric values
  */
@@ -58,20 +89,20 @@ export function standardizeNutrition(nutritionData: any): Nutrition {
   
   // Sugar
   if (nutrition.sugar_g !== undefined && !isNaN(Number(nutrition.sugar_g))) {
-    nutrition.sugar = Number(nutrition.sugar_g);
-  } else if (nutrition.sugar === undefined || isNaN(Number(nutrition.sugar))) {
-    nutrition.sugar = 0;
+    nutrition.sugar_g = Number(nutrition.sugar_g);
+  } else if (nutrition.sugar_g === undefined || isNaN(Number(nutrition.sugar_g))) {
+    nutrition.sugar_g = 0;
   } else {
-    nutrition.sugar = Number(nutrition.sugar);
+    nutrition.sugar_g = Number(nutrition.sugar_g);
   }
   
   // Sodium
   if (nutrition.sodium_mg !== undefined && !isNaN(Number(nutrition.sodium_mg))) {
-    nutrition.sodium = Number(nutrition.sodium_mg);
-  } else if (nutrition.sodium === undefined || isNaN(Number(nutrition.sodium))) {
-    nutrition.sodium = 0;
+    nutrition.sodium_mg = Number(nutrition.sodium_mg);
+  } else if (nutrition.sodium_mg === undefined || isNaN(Number(nutrition.sodium_mg))) {
+    nutrition.sodium_mg = 0;
   } else {
-    nutrition.sodium = Number(nutrition.sodium);
+    nutrition.sodium_mg = Number(nutrition.sodium_mg);
   }
   
   // Standardize micronutrients

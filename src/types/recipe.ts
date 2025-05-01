@@ -22,6 +22,8 @@ export interface Nutrition {
   carbs?: number;
   fat?: number;
   fiber?: number;
+  sugar?: number;
+  sodium?: number;
   
   // Micronutrients
   vitamin_a_iu?: number;
@@ -38,6 +40,20 @@ export interface Nutrition {
   calcium?: number;
   iron?: number;
   potassium?: number;
+  
+  // Enhanced nutrition data properties
+  data_quality?: {
+    overall_confidence: 'high' | 'medium' | 'low';
+    overall_confidence_score: number;
+    penalties: Record<string, any>;
+    unmatched_or_low_confidence_ingredients: string[];
+    limitations: string[];
+  };
+  per_ingredient?: Record<string, any>;
+  audit_log?: Record<string, any>;
+  vitamin_a?: number;
+  vitamin_c?: number;
+  vitamin_d?: number;
 }
 
 export interface Recipe {
