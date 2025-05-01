@@ -69,9 +69,9 @@ export function ApplyChangesSection({
     setConfirmationOpen(false);
   };
 
-  // Use relative positioning and set a specific z-index to prevent blocking other elements
+  // Use relative positioning and set a lower z-index to prevent blocking other elements
   return (
-    <div className="mt-2 sm:mt-4 relative" style={{ zIndex: 10 }}>
+    <div className="mt-2 sm:mt-4 relative" style={{ zIndex: 5 }}>
       {applyError && (
         <Alert variant="destructive" className="mb-2 sm:mb-4 text-xs sm:text-sm">
           <Info className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -89,8 +89,8 @@ export function ApplyChangesSection({
         disabled={isApplying || applied || !hasChanges}
         className={`${
           applied ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'
-        } text-white text-xs sm:text-sm h-7 sm:h-9 mt-2 relative`}
-        style={{ zIndex: 10 }}
+        } text-white text-xs sm:text-sm h-7 sm:h-9 mt-2`}
+        style={{ zIndex: 5 }}
         size={isMobile ? "sm" : "default"}
       >
         {isApplying ? (

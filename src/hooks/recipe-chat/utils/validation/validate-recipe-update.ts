@@ -34,6 +34,21 @@ export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | 
         console.error("Missing or empty ingredients items array");
         return false;
       }
+      
+      // Validate each ingredient item structure
+      if (mode !== 'none' && Array.isArray(items)) {
+        for (const item of items) {
+          if (typeof item === 'string') {
+            continue; // String ingredients are valid
+          }
+          
+          // Basic structure validation for object ingredients
+          if (!item || typeof item !== 'object') {
+            console.error("Invalid ingredient item format");
+            return false;
+          }
+        }
+      }
     }
     
     // Validate instructions changes

@@ -9,14 +9,28 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   // Ensure recipe integrity before saving to database
   ensureRecipeIntegrity(updatedRecipe);
   
-  // Standardize nutrition data before saving
+  // Enhanced nutrition data handling with detailed logging
   if (updatedRecipe.nutrition) {
-    console.log("Standardizing nutrition data before saving:", updatedRecipe.nutrition);
-    updatedRecipe.nutrition = standardizeNutrition(updatedRecipe.nutrition);
-    console.log("Standardized nutrition data:", updatedRecipe.nutrition);
+    console.log("Original nutrition data before standardizing:", JSON.stringify(updatedRecipe.nutrition));
+    
+    // Deep clone the nutrition data to prevent reference issues
+    const nutritionCopy = JSON.parse(JSON.stringify(updatedRecipe.nutrition));
+    const standardizedNutrition = standardizeNutrition(nutritionCopy);
+    
+    console.log("Standardized nutrition data:", JSON.stringify(standardizedNutrition));
+    
+    // Validate that we have actual nutrition data
+    if (!standardizedNutrition || 
+        typeof standardizedNutrition !== 'object' || 
+        Object.keys(standardizedNutrition).length === 0) {
+      console.warn("Empty or invalid nutrition data detected, using default empty object");
+      updatedRecipe.nutrition = {};
+    } else {
+      updatedRecipe.nutrition = standardizedNutrition;
+    }
   }
   
-  // Transform recipe for database storage
+  // Transform recipe for database storage with improved type safety
   const dbRecipe = {
     ...updatedRecipe,
     ingredients: updatedRecipe.ingredients as unknown as Json,
@@ -32,7 +46,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
     hasNotes: Array.isArray(dbRecipe.science_notes) && dbRecipe.science_notes.length > 0,
     noteCount: Array.isArray(dbRecipe.science_notes) ? dbRecipe.science_notes.length : 0,
-    hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0
+    hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
+    nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : []
   });
 
   const { data, error } = await supabase

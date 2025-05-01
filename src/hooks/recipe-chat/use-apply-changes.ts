@@ -8,13 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Recipe } from '@/types/recipe';
 import { updateRecipe } from './utils/update-recipe';
 import { validateRecipeUpdate } from './utils/validation/validate-recipe-update';
-import { standardizeNutrition } from '@/types/nutrition-utils';
 import { ChatMessage } from '@/types/chat';
-
-interface Update {
-  path: string;
-  value: any;
-}
 
 export const useApplyChanges = () => {
   const { toast } = useToast();
@@ -57,7 +51,7 @@ export const useApplyChanges = () => {
         // Revalidate cache after successful update
         await refetchRecipes();
         if (recipeId) {
-          await refetchRecipeDetail(recipeId);
+          await refetchRecipeDetail();
         }
 
         toast({
@@ -86,7 +80,7 @@ export const useApplyChanges = () => {
     }
   });
 
-  const applyChanges = useCallback((chat: ChatMessage) => {
+  const applyChanges = useCallback((chat: ChatMessage): Promise<boolean> => {
     if (!chat.recipe_id) {
       console.error("Missing recipe ID in chat message");
       return Promise.resolve(false);
@@ -103,10 +97,14 @@ export const useApplyChanges = () => {
           console.error("Error fetching recipe:", error);
           throw error;
         }
+        
+        // Cast the data to Recipe type to ensure type safety
+        const recipeData = data as unknown as Recipe;
+        
         return mutation.mutateAsync({ 
           recipeId: chat.recipe_id as string, 
           changes: chat, 
-          originalRecipe: data as Recipe 
+          originalRecipe: recipeData 
         });
       });
   }, [mutation]);
