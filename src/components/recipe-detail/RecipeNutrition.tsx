@@ -14,7 +14,19 @@ import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition, Nutrition, validateNutritionData } from '@/types/nutrition-utils';
 import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
-import { useProfileSettings } from '@/hooks/use-profile-context';
+
+// Safe import for ProfileContext - don't throw errors if not available
+let useProfileSettings: () => any | null = () => null;
+try {
+  // Dynamically import the profile context hook
+  import('@/hooks/use-profile-context').then(module => {
+    useProfileSettings = module.useProfileSettings;
+  }).catch(error => {
+    console.log("ProfileContext not available, using default settings");
+  });
+} catch (error) {
+  console.log("Error importing ProfileContext, using default settings");
+}
 
 interface RecipeNutritionProps {
   recipe: Recipe;
@@ -29,7 +41,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   
   try {
     // Try to get nutrition preferences from profile context, but don't crash if unavailable
-    const profileSettings = useProfileSettings();
+    const profileSettings = useProfileSettings?.();
     nutritionPreferences = profileSettings?.nutritionPreferences;
   } catch (error) {
     // If ProfileContext is not available, continue without profile settings
