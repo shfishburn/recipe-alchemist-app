@@ -17,8 +17,8 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   const notes = item.notes || (item.ingredientData?.notes || '');
   
   // Extract quality indicators and storage tips if available
-  const qualityIndicators = item.originalIngredient?.quality_indicators;
-  const storageTips = item.originalIngredient?.storage_tips;
+  const qualityIndicators = item.quality_indicators || item.originalIngredient?.quality_indicators;
+  const storageTips = item.storage_tips || item.originalIngredient?.storage_tips;
   const alternatives = item.originalIngredient?.alternatives;
   
   // Determine if we should show additional item details

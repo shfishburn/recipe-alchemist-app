@@ -117,6 +117,9 @@ export const generateAIShoppingList = async (recipe: QuickRecipe): Promise<Shopp
           unit: item.unit,
           item: item.name,
           notes: item.notes || '',
+          quality_indicators: item.quality_indicators,
+          storage_tips: item.storage_tips,
+          alternatives: item.alternatives,
           originalIngredient: item // Store the full AI-generated item data
         });
       });
