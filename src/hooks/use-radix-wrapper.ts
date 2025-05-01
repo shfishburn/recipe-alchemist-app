@@ -1,32 +1,27 @@
 
-import { useCallback } from 'react';
-import React from 'react';
+import React, { forwardRef } from 'react';
+import * as RadixDialog from '@radix-ui/react-dialog';
+import * as RadixSelect from '@radix-ui/react-select';
+import * as RadixDropdownMenu from '@radix-ui/react-dropdown-menu';
 
-export function useRadixWrapper() {
-  /**
-   * Helper function to ensure a component is wrapped with ButtonWrapper when using asChild
-   * @param component React component that might use asChild
-   * @param props Component props including asChild
-   * @returns Boolean indicating if component needs wrapping
-   */
-  const needsWrapper = useCallback((props: any) => {
-    return props?.asChild === true;
-  }, []);
+// Utility function to create a forwardRef wrapper for Radix components
+export function createForwardRef<T, P>(
+  Component: React.ComponentType<P>
+) {
+  return forwardRef<T, P>((props, ref) => {
+    return <Component {...props} ref={ref} />;
+  });
+}
 
-  /**
-   * Helper function to safely wrap a child in a component that expects a single child
-   * @param children React node(s) to be wrapped
-   * @returns React.ReactElement
-   */
-  const wrapSingleChild = useCallback((children: React.ReactNode) => {
-    // Ensure we pass only a single React element to components that expect one
-    // This helps prevent "React.Children.only expected to receive a single React element child" errors
-    const childArray = React.Children.toArray(children);
-    if (childArray.length === 0) {
-      return <span />;
-    }
-    return childArray[0] as React.ReactElement;
-  }, []);
+// Example usage: Dialog component with forwardRef
+export const DialogContent = createForwardRef<
+  HTMLDivElement,
+  RadixDialog.DialogContentProps
+>(RadixDialog.Content);
 
-  return { needsWrapper, wrapSingleChild };
+// Utility function to wrap Radix components with TypeScript safety
+export function wrapRadixComponent<T, P>(
+  Component: React.ComponentType<P>
+) {
+  return Component as unknown as React.ComponentType<P & { ref?: React.Ref<T> }>;
 }

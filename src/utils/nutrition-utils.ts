@@ -88,6 +88,23 @@ export function deepMergeNutrition(
     }
   }
 
+  // Apply minimum thresholds for critical macronutrients when values are present but very low
+  const minThresholds: Record<string, number> = {
+    calories: 1,
+    protein: 0.1,
+    fat: 0.1,
+    carbohydrates: 0.1,
+    fiber: 0.1,
+    sugar: 0.1
+  };
+
+  for (const [nutrient, threshold] of Object.entries(minThresholds)) {
+    // Only apply threshold if the value exists but is below the threshold
+    if (merged[nutrient] !== undefined && merged[nutrient] < threshold && merged[nutrient] > 0) {
+      merged[nutrient] = threshold;
+    }
+  }
+
   return merged as Nutrition;
 }
 
@@ -143,6 +160,8 @@ export function validateNutritionDataQuality(nutrition: any): string[] {
   const calories = nutrition.calories || nutrition.kcal || 0;
   if (calories > 5000) {
     issues.push("Calorie value exceeds reasonable range");
+  } else if (calories === 0) {
+    issues.push("Calorie value is zero, which is unlikely for food");
   }
   
   const protein = nutrition.protein || nutrition.protein_g || 0;
@@ -164,6 +183,23 @@ export function validateNutritionDataQuality(nutrition: any): string[] {
     }
   }
   
+  // Check for reasonable micronutrient ranges
+  const sodium = nutrition.sodium || nutrition.sodium_mg || 0;
+  if (sodium > 10000) {
+    issues.push("Sodium value exceeds reasonable range");
+  }
+  
+  // Check for zeros across all nutrients (possible indication of missing data)
+  const allMainNutrientsZero = 
+    calories === 0 && 
+    protein === 0 && 
+    carbs === 0 && 
+    fat === 0;
+  
+  if (allMainNutrientsZero) {
+    issues.push("All main nutrients are zero, which is unlikely for food");
+  }
+  
   return issues;
 }
 
@@ -174,6 +210,25 @@ export function validateNutritionDataQuality(nutrition: any): string[] {
 export function formatNutritionValue(value: number | undefined | null): string {
   if (value === undefined || value === null) return "0";
   return Math.round(value).toString();
+}
+
+/**
+ * Enhanced nutrition value formatter that handles different precision needs
+ */
+export function formatNutritionValuePrecise(
+  value: number | undefined | null, 
+  precision: number = 0,
+  showTraceAmounts: boolean = true
+): string {
+  if (value === undefined || value === null) return "0";
+  
+  // Handle very small values that aren't zero
+  if (value > 0 && value < 0.1 && showTraceAmounts) {
+    return "<0.1";
+  }
+  
+  // Format based on precision
+  return value.toFixed(precision);
 }
 
 /**
@@ -195,4 +250,67 @@ export function logNutritionChanges(oldData: any, newData: any): void {
       console.log(`  ${key}: ${oldValue} → ${newValue}`);
     }
   }
+}
+
+/**
+ * Creates a standardized nutrition object with consistent field naming
+ * This helps ensure frontend components receive properly structured data
+ * regardless of the source
+ */
+export function createStandardizedNutrition(nutrition: any): Nutrition {
+  if (!nutrition) {
+    // Return an object with zeros instead of null/undefined
+    return {
+      calories: 0,
+      protein: 0,
+      fat: 0,
+      carbohydrates: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+      cholesterol: 0,
+      calcium: 0,
+      iron: 0,
+      potassium: 0,
+      vitamin_a: 0,
+      vitamin_c: 0,
+      vitamin_d: 0
+    };
+  }
+  
+  // Normalize numeric values and handle both naming conventions
+  return {
+    calories: getNutrientValue(nutrition, ["calories", "kcal", "energy"]),
+    protein: getNutrientValue(nutrition, ["protein", "protein_g"]),
+    fat: getNutrientValue(nutrition, ["fat", "fat_g", "total_fat"]),
+    carbohydrates: getNutrientValue(nutrition, ["carbohydrates", "carbs", "carbs_g"]),
+    fiber: getNutrientValue(nutrition, ["fiber", "fiber_g", "dietary_fiber"]),
+    sugar: getNutrientValue(nutrition, ["sugar", "sugar_g", "sugars"]),
+    sodium: getNutrientValue(nutrition, ["sodium", "sodium_mg"]),
+    cholesterol: getNutrientValue(nutrition, ["cholesterol", "cholesterol_mg"]),
+    calcium: getNutrientValue(nutrition, ["calcium", "calcium_mg"]),
+    iron: getNutrientValue(nutrition, ["iron", "iron_mg"]),
+    potassium: getNutrientValue(nutrition, ["potassium", "potassium_mg"]),
+    vitamin_a: getNutrientValue(nutrition, ["vitamin_a", "vitaminA", "vitamin_a_iu"]),
+    vitamin_c: getNutrientValue(nutrition, ["vitamin_c", "vitaminC", "vitamin_c_mg"]),
+    vitamin_d: getNutrientValue(nutrition, ["vitamin_d", "vitaminD", "vitamin_d_iu"]),
+    
+    // Add aliases for backward compatibility
+    carbs: getNutrientValue(nutrition, ["carbohydrates", "carbs", "carbs_g"]),
+    kcal: getNutrientValue(nutrition, ["calories", "kcal", "energy"]),
+  };
+}
+
+/**
+ * Helper function to get a nutrient value from various possible field names
+ */
+function getNutrientValue(nutrition: any, fieldNames: string[]): number {
+  for (const name of fieldNames) {
+    if (nutrition[name] !== undefined) {
+      const value = nutrition[name];
+      // Convert string to number if needed
+      return typeof value === "string" ? parseFloat(value) || 0 : (value || 0);
+    }
+  }
+  return 0; // Default to zero if not found
 }
