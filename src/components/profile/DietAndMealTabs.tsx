@@ -4,13 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DietaryPreferences } from './dietary/DietaryPreferences';
 import { MealTiming } from './MealTiming';
 import { WeightManagementGoals } from './WeightManagementGoals';
-import { useProfile } from '@/contexts/ProfileContext';
-import { NutritionPreferencesType } from '@/types/nutrition';
+import { useProfileContext } from '@/contexts/ProfileContext';
+import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 import { ProfileSkeleton } from './ProfileSkeleton';
 import { ErrorDisplay } from './ErrorDisplay';
 
 export function DietAndMealTabs() {
-  const { profile, isLoading, error, updateProfile, refreshProfile } = useProfile();
+  const { profile, isLoading, error, updateProfile, refreshProfile } = useProfileContext();
   
   // Extract nutrition preferences or use defaults
   const preferences = profile?.nutrition_preferences || {

@@ -39,10 +39,16 @@ export const ChartTooltip = ({
   let unitLabel = 'g'; // Default unit label
   
   if (nutrientInfo) {
-    if (isMicroNutrient(nutrientInfo)) {
+    // Check if isMicroNutrient function is expecting a string argument
+    const isNutrientMicro = typeof nutrientName === 'string' ? isMicroNutrient(nutrientName.toLowerCase()) : false;
+    
+    // Check if isMacroNutrient function is expecting a string argument
+    const isNutrientMacro = typeof nutrientName === 'string' ? isMacroNutrient(nutrientName.toLowerCase()) : false;
+    
+    if (isNutrientMicro) {
       // If it's a micronutrient with a defined unit, use that
       unitLabel = nutrientInfo.unit;
-    } else if (isMacroNutrient(nutrientInfo)) {
+    } else if (isNutrientMacro) {
       // For macronutrients, we typically use 'g' regardless of unit system
       unitLabel = 'g';
     }
@@ -78,7 +84,7 @@ export const ChartTooltip = ({
           </span>
         </div>
         
-        {nutrientInfo && isMacroNutrient(nutrientInfo) && (
+        {nutrientInfo && typeof nutrientName === 'string' && isMacroNutrient(nutrientName.toLowerCase()) && (
           <div className="flex justify-between text-gray-500 text-[10px] italic">
             <span>Calories per gram:</span>
             <span>{nutrientInfo.caloriesPerGram} kcal</span>

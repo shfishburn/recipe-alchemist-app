@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { NutritionPreferencesType, DEFAULT_NUTRITION_PREFERENCES } from '@/types/nutrition-preferences';
 import { useToast } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
 
 // Define the Profile type with proper typing
 export interface Profile {
@@ -20,13 +21,13 @@ interface ProfileContextType {
   profile: Profile | null;
   isLoading: boolean;
   error: Error | null;
-  updateProfile: (data: Partial<Omit<Profile, 'id' | 'created_at'>>) => Promise<void>;
-  saveNutritionPreferences: (preferences: NutritionPreferencesType) => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<boolean>;
+  saveNutritionPreferences: (preferences: NutritionPreferencesType) => Promise<boolean>;
   refreshProfile: () => Promise<void>;
   nutritionPreferences: NutritionPreferencesType;
 }
 
-const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
+export const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -83,14 +84,21 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const updateProfile = async (updateData: Partial<Omit<Profile, 'id' | 'created_at'>>) => {
-    if (!user?.id || !profile) return;
+  const updateProfile = async (updateData: Partial<Profile>): Promise<boolean> => {
+    if (!user?.id || !profile) return false;
     
     try {
       setIsLoading(true);
+      
+      // Convert nutrition_preferences to a format that Supabase can store
+      const dataToUpdate: Record<string, any> = { ...updateData };
+      if (updateData.nutrition_preferences) {
+        dataToUpdate.nutrition_preferences = updateData.nutrition_preferences as unknown as Json;
+      }
+      
       const { error: updateError } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update(dataToUpdate)
         .eq('id', user.id);
         
       if (updateError) throw updateError;
@@ -102,6 +110,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         title: "Profile updated",
         description: "Your profile has been successfully updated",
       });
+      
+      return true;
     } catch (err) {
       console.error('Error updating profile:', err);
       toast({
@@ -109,20 +119,20 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         description: err instanceof Error ? err.message : "Failed to update profile",
         variant: "destructive",
       });
-      throw err;
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const saveNutritionPreferences = async (preferences: NutritionPreferencesType) => {
+  const saveNutritionPreferences = async (preferences: NutritionPreferencesType): Promise<boolean> => {
     try {
-      await updateProfile({ 
+      return await updateProfile({ 
         nutrition_preferences: preferences 
       });
     } catch (err) {
       console.error('Error saving nutrition preferences:', err);
-      throw err;
+      return false;
     }
   };
   
@@ -154,6 +164,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Export the useProfileContext hook
 export function useProfileContext() {
   const context = useContext(ProfileContext);
   if (context === undefined) {
@@ -163,14 +174,6 @@ export function useProfileContext() {
 }
 
 // Create a hook specifically for profile settings
-export function useProfileSettings() {
-  const context = useProfileContext();
-  
-  return {
-    profile: context.profile,
-    isLoading: context.isLoading,
-    error: context.error,
-    nutritionPreferences: context.nutritionPreferences,
-    saveNutritionPreferences: context.saveNutritionPreferences,
-  };
+export function useProfile() {
+  return useProfileContext();
 }

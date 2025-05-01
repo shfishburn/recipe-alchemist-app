@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useProfileContext } from '@/contexts/ProfileContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Form,
@@ -36,10 +36,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function ProfileBasicInfo() {
   const { user } = useAuth();
-  const { profile, isLoading, isSaving, error, updateProfile, refreshProfile } = useProfile();
+  const { profile, isLoading, error, updateProfile, refreshProfile } = useProfileContext();
   const { unitSystem, updateUnitSystem } = useUnitSystem();
   const { toast } = useToast();
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,6 +64,7 @@ export function ProfileBasicInfo() {
     if (!user?.id) return;
 
     try {
+      setIsSaving(true);
       // Get current nutrition preferences
       const currentPrefs = profile?.nutrition_preferences || {};
       
@@ -88,6 +90,8 @@ export function ProfileBasicInfo() {
       }
     } catch (err) {
       console.error('Profile update error:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 

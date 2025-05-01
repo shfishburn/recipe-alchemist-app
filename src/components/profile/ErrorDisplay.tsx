@@ -4,13 +4,14 @@ import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-interface ErrorDisplayProps {
+export interface ErrorDisplayProps {
   error: Error | null;
   onRetry?: () => void;
   className?: string;
+  title?: string;
 }
 
-export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
+export function ErrorDisplay({ error, onRetry, className, title }: ErrorDisplayProps) {
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
   
@@ -44,7 +45,7 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
     )}>
       <div className="flex flex-col items-center text-center gap-4">
         <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
-        <h3 className="text-lg font-semibold">{getErrorMessage()}</h3>
+        <h3 className="text-lg font-semibold">{title || getErrorMessage()}</h3>
         <p className="text-sm text-muted-foreground">
           {retryCount >= maxRetries 
             ? 'Maximum retry attempts reached. Please try again later.' 
@@ -54,8 +55,8 @@ export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
           <Button 
             onClick={handleRetry} 
             variant="outline"
-            leftIcon={<AlertTriangle className="h-4 w-4" />}
           >
+            <AlertTriangle className="mr-2 h-4 w-4" />
             Try Again
           </Button>
         )}

@@ -1,15 +1,9 @@
 
 import { useContext } from 'react';
-import { ProfileContext, Profile } from '@/contexts/ProfileContext';
+import { useProfileContext, ProfileContext } from '@/contexts/ProfileContext';
 import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 
-export function useProfileContext() {
-  const context = useContext(ProfileContext);
-  if (context === undefined) {
-    throw new Error('useProfileContext must be used within a ProfileProvider');
-  }
-  return context;
-}
+export { useProfileContext } from '@/contexts/ProfileContext';
 
 // Create a hook specifically for profile settings
 export function useProfileSettings() {

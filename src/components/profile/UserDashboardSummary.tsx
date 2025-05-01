@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useProfileContext } from '@/contexts/ProfileContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function UserDashboardSummary() {
-  const { profile, isLoading } = useProfile();
+  const { profile, isLoading } = useProfileContext();
   const isMobile = useIsMobile();
   
   if (isLoading) {
