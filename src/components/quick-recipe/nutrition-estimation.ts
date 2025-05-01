@@ -1,7 +1,6 @@
 
 import { Ingredient } from '@/hooks/use-quick-recipe';
 import { Nutrition } from '@/types/recipe';
-import { convertToGrams } from '@/utils/unit-conversion';
 
 // Basic nutrition estimates per common ingredient type (per 100g)
 const NUTRITION_ESTIMATES: Record<string, Partial<Nutrition>> = {
@@ -37,6 +36,54 @@ const NUTRITION_ESTIMATES: Record<string, Partial<Nutrition>> = {
   // Default for unknown ingredients
   'default': { calories: 50, protein_g: 2, fat_g: 2, carbs_g: 5 }
 };
+
+// Helper function to estimate grams from unit and quantity
+function estimateGramsFromUnit(qty: number, unit: string, item: string): number {
+  const standardUnit = unit.toLowerCase();
+  
+  // Basic conversion table for common units to grams
+  const simpleConversions: Record<string, number> = {
+    'g': 1,
+    'kg': 1000,
+    'oz': 28.35,
+    'lb': 453.6,
+    'cup': 240,
+    'cups': 240,
+    'tbsp': 15,
+    'tsp': 5,
+    'ml': 1,
+    'l': 1000,
+    'piece': 30,
+    'slice': 20,
+    'clove': 3
+  };
+
+  // Item-specific conversions
+  const itemSpecificConversions: Record<string, Record<string, number>> = {
+    'onion': { 'medium': 110, 'large': 150, 'small': 70 },
+    'potato': { 'medium': 150, 'large': 300, 'small': 100 },
+    'carrot': { 'medium': 60, 'large': 80, 'small': 40 },
+    'egg': { 'medium': 50, 'large': 60, 'small': 40 },
+    'apple': { 'medium': 180, 'large': 220, 'small': 150 },
+    'garlic': { 'clove': 3, 'head': 50 }
+  };
+  
+  // Check for item-specific conversions
+  for (const itemName in itemSpecificConversions) {
+    if (item.toLowerCase().includes(itemName)) {
+      const sizeConversions = itemSpecificConversions[itemName];
+      for (const size in sizeConversions) {
+        if (unit.toLowerCase().includes(size)) {
+          return qty * sizeConversions[size];
+        }
+      }
+    }
+  }
+  
+  // Fall back to simple conversions
+  const conversionFactor = simpleConversions[standardUnit] || 1;
+  return qty * conversionFactor;
+}
 
 // Function to estimate nutrition for a recipe
 export function estimateNutrition(ingredients: Ingredient[], servings: number): Nutrition {
@@ -86,33 +133,8 @@ export function estimateNutrition(ingredients: Ingredient[], servings: number): 
       }
     }
     
-    // Calculate quantity in grams - use our more accurate unit conversion utility
-    let quantityInGrams;
-    
-    try {
-      // Try to use the more accurate conversion utility
-      quantityInGrams = convertToGrams(qty, unit || 'g', itemName);
-    } catch (error) {
-      // Fallback to simple estimation
-      const standardUnit = unit.toLowerCase();
-      const simpleConversions: Record<string, number> = {
-        'g': 1,
-        'kg': 1000,
-        'oz': 28.35,
-        'lb': 453.6,
-        'cup': 240,
-        'tbsp': 15,
-        'tsp': 5,
-        'ml': 1,
-        'l': 1000,
-        'piece': 30,
-        'slice': 20,
-        'clove': 3
-      };
-      
-      const conversionFactor = simpleConversions[standardUnit] || 1;
-      quantityInGrams = qty * conversionFactor;
-    }
+    // Calculate quantity in grams - use our custom estimation function
+    let quantityInGrams = estimateGramsFromUnit(qty, unit || 'g', itemName);
     
     // Apply scaling factor for more reasonable values
     const scalingFactor = 0.6; // Reduce inflated values

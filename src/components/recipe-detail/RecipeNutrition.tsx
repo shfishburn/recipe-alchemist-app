@@ -13,18 +13,20 @@ import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition, Nutrition } from '@/types/nutrition-utils';
+import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
 
 interface RecipeNutritionProps {
   recipe: Recipe;
   isOpen: boolean;
   onToggle: () => void;
+  onRecipeUpdate?: (updatedRecipe: Recipe) => void;
 }
 
-export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionProps) {
+export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: RecipeNutritionProps) {
   const { user, profile } = useAuth();
   const { unitSystem } = useUnitSystem();
   const [viewMode, setViewMode] = useState<'recipe' | 'personal'>('recipe');
-  const { recipeNutrition, userPreferences } = useNutritionData(recipe, profile);
+  const { recipeNutrition, userPreferences, refetchNutrition } = useNutritionData(recipe, profile);
   const isMobile = useMediaQuery('(max-width: 640px)');
   
   // Calculate total time from prep + cook time
@@ -51,6 +53,19 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
       return false;
     }
   }, [recipe.nutrition, recipeNutrition]);
+
+  const handleNutritionUpdate = (updatedNutrition: any) => {
+    if (onRecipeUpdate && updatedNutrition) {
+      // Create updated recipe with new nutrition data
+      const updatedRecipe = {
+        ...recipe,
+        nutrition: updatedNutrition
+      };
+      
+      onRecipeUpdate(updatedRecipe);
+      refetchNutrition();
+    }
+  };
   
   // If there's no valid nutrition data, show a placeholder instead of nothing
   if (!hasValidNutrition) {
@@ -61,16 +76,22 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
             <div className="flex items-center">
               <h3 className="text-lg font-medium">Nutrition Information</h3>
             </div>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-                <span className="sr-only">Toggle nutrition section</span>
-              </Button>
-            </CollapsibleTrigger>
+            <div className="flex items-center gap-2">
+              <NutritionUpdateButton 
+                recipe={recipe}
+                onUpdateComplete={handleNutritionUpdate}
+              />
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">Toggle nutrition section</span>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
           </div>
           <CollapsibleContent>
             <CardContent className="text-center py-6">
@@ -119,16 +140,22 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
             totalTime={totalTime}
             nutrition={enhancedNutrition}
           />
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              {isOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-              <span className="sr-only">Toggle nutrition section</span>
-            </Button>
-          </CollapsibleTrigger>
+          <div className="flex items-center gap-2">
+            <NutritionUpdateButton 
+              recipe={recipe}
+              onUpdateComplete={handleNutritionUpdate}
+            />
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                <span className="sr-only">Toggle nutrition section</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
         </div>
         <CollapsibleContent>
           <CardContent className="p-4">

@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { ImagePlus, Loader2, RefreshCw } from 'lucide-react';
+import { ImagePlus, Loader2, RefreshCw, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeImage } from '@/hooks/use-recipe-image';
 import { LoadingState } from './recipe-image/LoadingState';
 import { PlaceholderImage } from './recipe-image/PlaceholderImage';
 import { ImageDialog } from './recipe-image/ImageDialog';
+import { ImageRegenerationForm } from './recipe-image/ImageRegenerationForm';
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -14,6 +15,7 @@ interface RecipeImageProps {
 
 export function RecipeImage({ recipe }: RecipeImageProps) {
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showRegenerationForm, setShowRegenerationForm] = useState(false);
   const {
     isGenerating,
     imageError,
@@ -31,6 +33,10 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     if (imageUrl && !imageError) {
       setShowImageDialog(true);
     }
+  };
+
+  const handleRegenerationComplete = () => {
+    window.location.reload();
   };
 
   const shouldShowGenerateButton = !imageUrl || imageError;
@@ -53,7 +59,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         )}
       </div>
       
-      <div className="mt-2 flex justify-end">
+      <div className="mt-2 flex justify-end gap-2">
         {shouldShowGenerateButton ? (
           <Button
             onClick={generateNewImage}
@@ -75,25 +81,37 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
             )}
           </Button>
         ) : (
-          <Button
-            onClick={generateNewImage}
-            disabled={isGenerating}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground hover:bg-muted"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Regenerating...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate Image
-              </>
-            )}
-          </Button>
+          <>
+            <Button
+              onClick={() => setShowRegenerationForm(true)}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
+              disabled={isGenerating}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Customize Image
+            </Button>
+            <Button
+              onClick={generateNewImage}
+              disabled={isGenerating}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Regenerate Image
+                </>
+              )}
+            </Button>
+          </>
         )}
       </div>
 
@@ -104,7 +122,14 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         title={recipe.title}
         onError={handleImageError}
       />
+
+      <ImageRegenerationForm
+        open={showRegenerationForm}
+        onOpenChange={setShowRegenerationForm}
+        recipeId={recipe.id}
+        recipeTitle={recipe.title}
+        onRegenerationComplete={handleRegenerationComplete}
+      />
     </div>
   );
 }
-

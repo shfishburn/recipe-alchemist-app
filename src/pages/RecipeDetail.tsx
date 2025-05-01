@@ -15,7 +15,9 @@ import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
 import { Separator } from '@/components/ui/separator';
 import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
 import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
+import { RecipeImage } from '@/components/recipe-detail/RecipeImage';
 import { toast } from "@/hooks/use-toast";
+import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -24,13 +26,14 @@ import { SectionControls } from '@/components/recipe-detail/controls/SectionCont
 
 const RecipeDetail = () => {
   const { id } = useParams();
-  const { data: recipe, isLoading, error } = useRecipeDetail(id);
+  const { data: recipe, isLoading, error, refetch } = useRecipeDetail(id);
   const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
   const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const isMobile = useIsMobile();
+  const { updateRecipe } = useRecipeUpdates(id || '');
   
   useEffect(() => {
     if (recipe) {
@@ -61,20 +64,41 @@ const RecipeDetail = () => {
   };
 
   const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    // Only update specific fields from the analysis to avoid overwriting core recipe data
     if (localRecipe) {
-      const safeUpdates = {
+      // Update local state
+      setLocalRecipe({
         ...localRecipe,
-        // Only update science_notes and not core recipe data like title or instructions
-        science_notes: updatedRecipe.science_notes
-      };
-      
-      setLocalRecipe(safeUpdates);
-      
-      toast({
-        title: "Analysis completed",
-        description: "Recipe analysis has been added.",
+        ...updatedRecipe
       });
+      
+      // If the recipe has an ID, update it in the database
+      if (id) {
+        const fieldsToUpdate = {};
+        
+        // Only include fields that have changed to avoid unnecessary updates
+        if (updatedRecipe.nutrition !== localRecipe.nutrition) {
+          Object.assign(fieldsToUpdate, { nutrition: updatedRecipe.nutrition });
+        }
+        
+        if (updatedRecipe.science_notes !== localRecipe.science_notes) {
+          Object.assign(fieldsToUpdate, { science_notes: updatedRecipe.science_notes });
+        }
+        
+        // Add any other fields that might have been updated
+        
+        // Only update if there are changes
+        if (Object.keys(fieldsToUpdate).length > 0) {
+          updateRecipe.mutate(fieldsToUpdate, {
+            onSuccess: () => {
+              toast({
+                title: "Recipe updated",
+                description: "Recipe has been updated successfully.",
+              });
+              refetch();
+            }
+          });
+        }
+      }
     }
   };
 
@@ -112,6 +136,8 @@ const RecipeDetail = () => {
           ) : currentRecipe ? (
             <div className="max-w-4xl mx-auto">
               <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
+              
+              <RecipeImage recipe={currentRecipe} />
               
               <div className="hidden">
                 <PrintRecipe recipe={currentRecipe} />
@@ -162,6 +188,7 @@ const RecipeDetail = () => {
                     recipe={currentRecipe}
                     isOpen={sections.nutrition}
                     onToggle={() => toggleSection('nutrition')}
+                    onRecipeUpdate={handleRecipeUpdate}
                   />
                 </div>
               )}
