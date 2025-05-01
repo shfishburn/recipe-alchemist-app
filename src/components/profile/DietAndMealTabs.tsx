@@ -4,42 +4,83 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DietaryPreferences } from './dietary/DietaryPreferences';
 import { MealTiming } from './MealTiming';
 import { WeightManagementGoals } from './WeightManagementGoals';
+import { useProfile } from '@/contexts/ProfileContext';
 import { NutritionPreferencesType } from '@/types/nutrition';
+import { ProfileSkeleton } from './ProfileSkeleton';
+import { ErrorDisplay } from './ErrorDisplay';
 
-interface DietAndMealTabsProps {
-  preferences: NutritionPreferencesType;
-  onSave: (preferences: Partial<NutritionPreferencesType> | NutritionPreferencesType) => void;
-}
+export function DietAndMealTabs() {
+  const { profile, isLoading, error, updateProfile, refreshProfile } = useProfile();
+  
+  // Extract nutrition preferences or use defaults
+  const preferences = profile?.nutrition_preferences || {
+    dailyCalories: 2000,
+    macroSplit: {
+      protein: 30,
+      carbs: 40,
+      fat: 30,
+    },
+    dietaryRestrictions: [],
+    allergens: [],
+    healthGoal: 'maintenance',
+    mealSizePreference: 'medium',
+  };
+  
+  const onSave = async (prefs: Partial<NutritionPreferencesType> | NutritionPreferencesType) => {
+    const updatedPreferences = {
+      ...preferences,
+      ...prefs
+    };
+    
+    return await updateProfile({
+      nutrition_preferences: updatedPreferences
+    });
+  };
 
-export function DietAndMealTabs({ preferences, onSave }: DietAndMealTabsProps) {
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
+
   return (
-    <Tabs defaultValue="dietary">
-      <TabsList>
-        <TabsTrigger value="dietary">Dietary Restrictions</TabsTrigger>
-        <TabsTrigger value="mealTiming">Meal Timing</TabsTrigger>
-        <TabsTrigger value="weightGoals">Weight Goals</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="dietary" className="mt-6">
-        <DietaryPreferences 
-          preferences={preferences}
-          onSave={onSave}
+    <>
+      {error && (
+        <ErrorDisplay 
+          error={error}
+          onRetry={refreshProfile}
+          className="mb-6"
         />
-      </TabsContent>
+      )}
       
-      <TabsContent value="mealTiming" className="mt-6">
-        <MealTiming 
-          preferences={preferences}
-          onSave={onSave}
-        />
-      </TabsContent>
+      <Tabs defaultValue="dietary">
+        <TabsList>
+          <TabsTrigger value="dietary">Dietary Restrictions</TabsTrigger>
+          <TabsTrigger value="mealTiming">Meal Timing</TabsTrigger>
+          <TabsTrigger value="weightGoals">Weight Goals</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="dietary" className="mt-6">
+          <DietaryPreferences 
+            preferences={preferences}
+            onSave={onSave}
+          />
+        </TabsContent>
+        
+        <TabsContent value="mealTiming" className="mt-6">
+          <MealTiming 
+            preferences={preferences}
+            onSave={onSave}
+          />
+        </TabsContent>
 
-      <TabsContent value="weightGoals" className="mt-6">
-        <WeightManagementGoals 
-          preferences={preferences}
-          onSave={onSave}
-        />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="weightGoals" className="mt-6">
+          <WeightManagementGoals 
+            preferences={preferences}
+            onSave={onSave}
+          />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }
+
+export default DietAndMealTabs;

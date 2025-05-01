@@ -4,14 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { EditIcon } from 'lucide-react';
+import { useProfile } from '@/contexts/ProfileContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface ProfileHeaderProps {
-  profileData: any;
-  isLoading: boolean;
-}
-
-export function ProfileHeader({ profileData, isLoading }: ProfileHeaderProps) {
+export function ProfileHeader() {
   const { user } = useAuth();
+  const { profile, isLoading } = useProfile();
   
   const getInitials = (name?: string): string => {
     if (!name) return 'U';
@@ -22,14 +20,24 @@ export function ProfileHeader({ profileData, isLoading }: ProfileHeaderProps) {
       .slice(0, 2);
   };
   
-  const userName = profileData?.username || user?.email?.split('@')[0] || 'User';
-  const avatarUrl = profileData?.avatar_url;
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center text-center">
+        <Skeleton className="h-24 w-24 rounded-full" />
+        <Skeleton className="h-5 w-24 mt-4" />
+        <Skeleton className="h-4 w-32 mt-1" />
+      </div>
+    );
+  }
+  
+  const userName = profile?.username || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = profile?.avatar_url;
   const userInitials = getInitials(userName);
   
   return (
     <div className="flex flex-col items-center text-center">
       <Avatar className="h-24 w-24">
-        <AvatarImage src={avatarUrl} />
+        <AvatarImage src={avatarUrl || ''} alt={userName} />
         <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
       </Avatar>
       

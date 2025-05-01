@@ -4,14 +4,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PersonalDetails } from './PersonalDetails';
 import { BodyComposition } from './BodyComposition';
 import { MacroNutrients } from './MacroNutrients';
-import { NutritionPreferencesType } from '@/types/nutrition';
+import { useProfile } from '@/contexts/ProfileContext';
 
-interface BodyAndNutritionTabsProps {
-  preferences: NutritionPreferencesType;
-  onSave: (preferences: NutritionPreferencesType) => void;
-}
+export function BodyAndNutritionTabs() {
+  const { profile, isLoading, error, updateProfile } = useProfile();
+  
+  // Extract nutrition preferences or use defaults
+  const preferences = profile?.nutrition_preferences || {
+    dailyCalories: 2000,
+    macroSplit: {
+      protein: 30,
+      carbs: 40,
+      fat: 30,
+    },
+    dietaryRestrictions: [],
+    allergens: [],
+    healthGoal: 'maintenance',
+    mealSizePreference: 'medium',
+  };
+  
+  // Handle save function with context
+  const onSave = async (updatedPreferences: typeof preferences) => {
+    return await updateProfile({
+      nutrition_preferences: updatedPreferences
+    });
+  };
 
-export function BodyAndNutritionTabs({ preferences, onSave }: BodyAndNutritionTabsProps) {
   return (
     <Tabs defaultValue="personal">
       <TabsList>
@@ -24,6 +42,7 @@ export function BodyAndNutritionTabs({ preferences, onSave }: BodyAndNutritionTa
         <PersonalDetails 
           preferences={preferences}
           onSave={onSave}
+          isLoading={isLoading}
         />
       </TabsContent>
       
@@ -31,6 +50,7 @@ export function BodyAndNutritionTabs({ preferences, onSave }: BodyAndNutritionTa
         <BodyComposition 
           preferences={preferences}
           onSave={onSave}
+          isLoading={isLoading}
         />
       </TabsContent>
 
@@ -38,8 +58,11 @@ export function BodyAndNutritionTabs({ preferences, onSave }: BodyAndNutritionTa
         <MacroNutrients
           preferences={preferences}
           onSave={onSave}
+          isLoading={isLoading}
         />
       </TabsContent>
     </Tabs>
   );
 }
+
+export default BodyAndNutritionTabs;

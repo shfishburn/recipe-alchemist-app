@@ -1,39 +1,70 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@supabase/supabase-js';
+import { useAuth } from '@/hooks/use-auth';
+import { useProfile } from '@/contexts/ProfileContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { Separator } from '@/components/ui/separator';
 import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
+import { SaveLoader } from './SaveLoader';
+import { ErrorDisplay } from './ErrorDisplay';
 
-interface ProfileBasicInfoProps {
-  user: User;
-  profileData: any;
-  onUpdate: (data: any) => void;
-}
+// Form validation schema
+const formSchema = z.object({
+  username: z.string().min(3, {
+    message: "Username must be at least 3 characters.",
+  }).max(50),
+  unitSystem: z.enum(['metric', 'imperial'])
+});
 
-export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicInfoProps) {
-  const { toast } = useToast();
+type FormValues = z.infer<typeof formSchema>;
+
+export function ProfileBasicInfo() {
+  const { user } = useAuth();
+  const { profile, isLoading, isSaving, error, updateProfile, refreshProfile } = useProfile();
   const { unitSystem, updateUnitSystem } = useUnitSystem();
+  const { toast } = useToast();
+  const [saveSuccess, setSaveSuccess] = useState(false);
   
-  const form = useForm({
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      username: profileData?.username || '',
-      unitSystem: unitSystem || 'metric'
+      username: '',
+      unitSystem: unitSystem as 'metric' | 'imperial'
     }
   });
   
-  const onSubmit = async (data: any) => {
+  // Update form values when profile data is loaded
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        username: profile.username || '',
+        unitSystem: (profile.nutrition_preferences?.unitSystem as 'metric' | 'imperial') || unitSystem as 'metric' | 'imperial'
+      });
+    }
+  }, [profile, form, unitSystem]);
+  
+  const onSubmit = async (data: FormValues) => {
+    if (!user?.id) return;
+
     try {
       // Get current nutrition preferences
-      const currentPrefs = profileData?.nutrition_preferences || {};
+      const currentPrefs = profile?.nutrition_preferences || {};
       
       // Update nutrition preferences with unit system
       const updatedPrefs = {
@@ -41,116 +72,134 @@ export function ProfileBasicInfo({ user, profileData, onUpdate }: ProfileBasicIn
         unitSystem: data.unitSystem
       };
       
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          username: data.username,
-          nutrition_preferences: updatedPrefs
-        })
-        .eq('id', user.id);
-        
-      if (error) {
-        console.error('Error updating profile:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to update profile',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      // Update unit system globally
-      if (data.unitSystem !== unitSystem) {
-        updateUnitSystem(data.unitSystem);
-      }
-      
-      onUpdate({
+      const success = await updateProfile({
         username: data.username,
         nutrition_preferences: updatedPrefs
       });
       
-      toast({
-        title: 'Success',
-        description: 'Profile updated successfully',
-      });
+      if (success) {
+        // Update unit system globally
+        if (data.unitSystem !== unitSystem) {
+          updateUnitSystem(data.unitSystem);
+        }
+        
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
     } catch (err) {
       console.error('Profile update error:', err);
-      toast({
-        title: 'Error',
-        description: 'Something went wrong',
-        variant: 'destructive'
-      });
     }
   };
 
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              {...form.register('username', { required: 'Username is required' })}
-            />
-            {form.formState.errors.username && (
-              <p className="text-sm text-destructive">{form.formState.errors.username.message?.toString()}</p>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={user.email || ''}
-              disabled
-            />
-            <p className="text-xs text-muted-foreground">Contact support to change your email</p>
-          </div>
+  if (isLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-5 w-24 bg-gray-200 rounded"></div>
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
         </div>
-        
-        <Separator className="my-4" />
-        
-        <div className="space-y-4">
-          <h3 className="font-medium">Global Application Settings</h3>
+        <div className="space-y-2 mt-6">
+          <div className="h-5 w-32 bg-gray-200 rounded"></div>
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {error && (
+        <ErrorDisplay 
+          error={error} 
+          onRetry={refreshProfile}
+          title="Error Loading Profile" 
+        />
+      )}
+    
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="username">Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="username"
+                      placeholder="Enter username"
+                      aria-describedby="username-description"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription id="username-description">
+                    This is your public username that other users will see.
+                  </FormDescription>
+                  <FormMessage aria-live="polite" />
+                </FormItem>
+              )}
+            />
+            
+            <div className="space-y-2">
+              <FormLabel htmlFor="email">Email</FormLabel>
+              <Input
+                id="email"
+                value={user?.email || ''}
+                disabled
+                aria-disabled="true"
+              />
+              <p className="text-xs text-muted-foreground">Contact support to change your email</p>
+            </div>
+          </div>
           
-          <FormField
-            control={form.control}
-            name="unitSystem"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Preferred Unit System</FormLabel>
-                <FormControl>
+          <Separator className="my-4" />
+          
+          <div className="space-y-4">
+            <h3 className="font-medium">Global Application Settings</h3>
+            
+            <FormField
+              control={form.control}
+              name="unitSystem"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel htmlFor="unitSystem">Preferred Unit System</FormLabel>
                   <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value} 
+                    onValueChange={field.onChange}
+                    disabled={isSaving}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select unit system" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger id="unitSystem" className="w-full">
+                        <SelectValue placeholder="Select unit system" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       <SelectItem value="metric">Metric (kg, cm)</SelectItem>
                       <SelectItem value="imperial">Imperial (lb, ft/in)</SelectItem>
                     </SelectContent>
                   </Select>
-                </FormControl>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-muted-foreground">
-                    This setting affects how measurements are displayed throughout the app
-                  </p>
-                  <UnitSystemToggle size="sm" />
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="flex justify-end">
-          <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
-      </form>
-    </Form>
+                  <div className="flex items-center justify-between mt-2">
+                    <FormDescription>
+                      This setting affects how measurements are displayed throughout the app
+                    </FormDescription>
+                    <UnitSystemToggle size="sm" />
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="flex items-center justify-end gap-4 pt-2">
+            <SaveLoader isSaving={isSaving} showSuccess={saveSuccess} />
+            <Button type="submit" disabled={isLoading || isSaving}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }
+
+export default ProfileBasicInfo;
