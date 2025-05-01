@@ -47,11 +47,24 @@ export function useUpdateShoppingList() {
       // Convert ingredients to shopping items
       const newItems = ingredientsToShoppingItems(recipe.ingredients);
       
-      // Combine with existing items
-      // Fix the type issue by properly handling the JSON data structure
-      const existingItems = Array.isArray(currentList.items) ? currentList.items : [];
+      // Ensure we're working with arrays for the existing items
+      let existingItems = [];
       
-      // Convert existingItems to a proper array if it's not already
+      // Handle different types of data from the database
+      if (currentList && currentList.items) {
+        if (Array.isArray(currentList.items)) {
+          existingItems = currentList.items;
+        } else if (typeof currentList.items === 'object') {
+          // Try to convert object to array if possible
+          try {
+            existingItems = Object.values(currentList.items);
+          } catch (e) {
+            console.error('Error converting items to array:', e);
+          }
+        }
+      }
+      
+      // Combine with existing items safely
       const combinedItems = [...existingItems, ...newItems];
       
       // Update the shopping list
@@ -115,7 +128,8 @@ export function useUpdateShoppingList() {
       const updatedItems = Array.isArray(currentList.items) ? [...currentList.items] : [];
       
       // Toggle the checked status of the specific item
-      if (updatedItems[itemIndex]) {
+      if (updatedItems[itemIndex] && typeof updatedItems[itemIndex] === 'object') {
+        // Safely toggle the checked property
         updatedItems[itemIndex] = {
           ...updatedItems[itemIndex],
           checked: !updatedItems[itemIndex].checked
