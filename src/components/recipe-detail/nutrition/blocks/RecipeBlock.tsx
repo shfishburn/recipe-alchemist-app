@@ -16,6 +16,20 @@ interface RecipeBlockProps {
   unitSystem: 'metric' | 'imperial';
 }
 
+// Define the shape of the data_quality.recommended_macros property
+interface RecommendedMacros {
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
+// Extend the data_quality type to include recommended_macros
+interface NutritionDataQuality {
+  overall_confidence: "high" | "medium" | "low";
+  overall_confidence_score: number;
+  recommended_macros?: RecommendedMacros;
+}
+
 export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const isMobile = useIsMobile();
   
@@ -53,11 +67,12 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   let fatPercentage = 30;
   
   // Safely access recommended_macros with proper type checking
-  if (recipeNutrition.data_quality && 
-      recipeNutrition.data_quality.recommended_macros) {
-    proteinPercentage = recipeNutrition.data_quality.recommended_macros.protein || proteinPercentage;
-    carbsPercentage = recipeNutrition.data_quality.recommended_macros.carbs || carbsPercentage;
-    fatPercentage = recipeNutrition.data_quality.recommended_macros.fat || fatPercentage;
+  const dataQuality = recipeNutrition.data_quality as NutritionDataQuality | undefined;
+  
+  if (dataQuality?.recommended_macros) {
+    proteinPercentage = dataQuality.recommended_macros.protein || proteinPercentage;
+    carbsPercentage = dataQuality.recommended_macros.carbs || carbsPercentage;
+    fatPercentage = dataQuality.recommended_macros.fat || fatPercentage;
   }
   
   // Format protein, carbs and fat based on unit system
