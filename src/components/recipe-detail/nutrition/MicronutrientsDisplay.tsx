@@ -13,23 +13,23 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   const vitamins = [
     {
       name: 'Vitamin A',
-      value: nutrition.vitamin_a || 0,
+      value: nutrition.vitaminA || 0,
       unit: 'IU',
-      percentage: nutrition.vitamin_a_percentage || 0,
+      percentage: 0, // We'll calculate percentages in a future update
       description: 'Important for vision and immune function'
     },
     {
       name: 'Vitamin C',
-      value: nutrition.vitamin_c || 0,
+      value: nutrition.vitaminC || 0,
       unit: 'mg',
-      percentage: nutrition.vitamin_c_percentage || 0,
+      percentage: 0,
       description: 'Helps with immune function and iron absorption'
     },
     {
       name: 'Vitamin D',
-      value: nutrition.vitamin_d || 0,
+      value: nutrition.vitaminD || 0,
       unit: 'IU',
-      percentage: nutrition.vitamin_d_percentage || 0,
+      percentage: 0,
       description: 'Essential for bone health and immune function'
     }
   ];
@@ -39,21 +39,21 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
       name: 'Calcium',
       value: nutrition.calcium || 0,
       unit: 'mg',
-      percentage: nutrition.calcium_percentage || 0,
+      percentage: 0,
       description: 'Essential for bone health and muscle function'
     },
     {
       name: 'Iron',
       value: nutrition.iron || 0,
       unit: 'mg',
-      percentage: nutrition.iron_percentage || 0,
+      percentage: 0,
       description: 'Needed for oxygen transport in blood'
     },
     {
       name: 'Potassium',
       value: nutrition.potassium || 0,
       unit: 'mg',
-      percentage: nutrition.potassium_percentage || 0,
+      percentage: 0,
       description: 'Helps regulate fluid balance and nerve signals'
     }
   ];
@@ -63,21 +63,21 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
       name: 'Sodium',
       value: nutrition.sodium || 0,
       unit: 'mg',
-      percentage: nutrition.sodiumPercentage || 0,
+      percentage: 0,
       description: 'Important for fluid balance, but limit intake'
     },
     {
       name: 'Fiber',
       value: nutrition.fiber || 0,
       unit: 'g',
-      percentage: nutrition.fiberPercentage || 0,
+      percentage: 0,
       description: 'Aids in digestion and helps you feel full'
     },
     {
       name: 'Sugar',
       value: nutrition.sugar || 0,
       unit: 'g',
-      percentage: nutrition.sugarPercentage || 0,
+      percentage: 0,
       description: 'Naturally occurring or added sweeteners'
     }
   ];

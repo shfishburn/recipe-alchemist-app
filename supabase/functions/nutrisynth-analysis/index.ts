@@ -407,6 +407,20 @@ async function calculateNutrition(ingredients: Ingredient[], servings: number = 
   // Build final enhanced nutrition object
   const enhancedNutrition = {
     ...nutritionData,
+    // Map to standardized field names
+    calories: nutritionData.calories,
+    protein: nutritionData.protein_g,
+    carbs: nutritionData.carbs_g,
+    fat: nutritionData.fat_g,
+    fiber: nutritionData.fiber_g,
+    sugar: nutritionData.sugar_g,
+    sodium: nutritionData.sodium_mg,
+    vitamin_a: nutritionData.vitamin_a_iu,
+    vitamin_c: nutritionData.vitamin_c_mg,
+    vitamin_d: nutritionData.vitamin_d_iu,
+    calcium: nutritionData.calcium_mg,
+    iron: nutritionData.iron_mg,
+    potassium: nutritionData.potassium_mg,
     data_quality: {
       overall_confidence: confidenceLevel,
       overall_confidence_score: penalizedScore,

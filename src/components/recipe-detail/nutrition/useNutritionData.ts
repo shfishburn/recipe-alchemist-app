@@ -74,12 +74,13 @@ export function useNutritionData(recipe: Recipe, profile?: Profile | null) {
     // Process user preferences
     if (profile) {
       // Extract user preferences from profile, with defaults if not present
-      const dailyCalories = (profile.daily_calories || 2000) as number;
+      // Use optional chaining and nullish coalescing to safely access properties
+      const dailyCalories = profile.daily_calories as number || 2000;
       
       const macroSplit = {
-        protein: (profile.macro_protein || 30) as number,
-        carbs: (profile.macro_carbs || 40) as number,
-        fat: (profile.macro_fat || 30) as number,
+        protein: profile.macro_protein as number || 30,
+        carbs: profile.macro_carbs as number || 40,
+        fat: profile.macro_fat as number || 30,
       };
 
       setUserPreferences({

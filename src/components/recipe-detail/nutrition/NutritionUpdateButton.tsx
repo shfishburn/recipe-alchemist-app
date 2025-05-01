@@ -40,6 +40,8 @@ export function NutritionUpdateButton({
 
     setIsUpdating(true);
     try {
+      console.log("Sending ingredients to analyze:", recipe.ingredients);
+      
       const response = await supabase.functions.invoke('nutrisynth-analysis', {
         body: { 
           ingredients: recipe.ingredients,
@@ -48,7 +50,13 @@ export function NutritionUpdateButton({
       });
 
       if (response.error) {
+        console.error("Nutrition analysis error:", response.error);
         throw new Error(response.error.message || 'Failed to update nutrition data');
+      }
+
+      if (!response.data) {
+        console.error("No data returned from nutrition analysis");
+        throw new Error('No nutrition data was returned from analysis');
       }
 
       console.log('Nutrition data updated:', response.data);
@@ -63,6 +71,7 @@ export function NutritionUpdateButton({
         .eq('id', recipe.id);
 
       if (updateError) {
+        console.error("DB update error:", updateError);
         throw new Error(updateError.message || 'Failed to save updated nutrition data');
       }
 
