@@ -27,14 +27,14 @@ export function Navbar({ className }: { className?: string }) {
 
   return (
     <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
-      <div className="container-page flex h-16 sm:h-20 items-center">
-        <div className="flex items-center gap-4 mr-auto">
+      <div className="container-page flex h-14 sm:h-16 md:h-20 items-center">
+        <div className="flex items-center gap-2 md:gap-4 mr-auto">
           <MobileMenu />
           <Link to="/" className="flex items-center">
             <img 
               src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png" 
               alt="Recipe Alchemy Logo" 
-              className="h-10 w-auto"
+              className="h-8 w-auto md:h-10"
             />
           </Link>
         </div>

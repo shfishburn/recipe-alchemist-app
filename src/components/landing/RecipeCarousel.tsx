@@ -7,7 +7,6 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  CarouselProgress
 } from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CarouselDots } from './carousel/CarouselDots';
@@ -46,21 +45,21 @@ export function RecipeCarousel() {
   return (
     <div className="relative w-full">
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {[1, 2, 3].map((i) => (
             <RecipeCarouselSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col space-y-8">
-          <div className="flex flex-col items-center justify-center gap-2 mb-6">
-            <div className="flex items-center gap-2">
-              <CookingPot className="h-5 w-5 text-recipe-green" />
-              <h2 className="text-xl md:text-2xl font-semibold text-center">
+        <div className="flex flex-col space-y-4 md:space-y-8">
+          <div className="flex flex-col items-center justify-center gap-1 md:gap-2 mb-3 md:mb-6">
+            <div className="flex items-center gap-1 md:gap-2">
+              <CookingPot className="h-4 w-4 md:h-5 md:w-5 text-recipe-green" />
+              <h2 className="text-lg md:text-2xl font-semibold text-center">
                 Trending in Kitchens Like Yours
               </h2>
             </div>
-            <p className="text-sm md:text-base text-muted-foreground text-center max-w-2xl mt-2">
+            <p className="text-xs md:text-base text-muted-foreground text-center max-w-2xl mt-1 md:mt-2 px-2">
               These recipes are being shared across kitchens similar to yours — find out what makes them special
             </p>
           </div>
@@ -78,7 +77,7 @@ export function RecipeCarousel() {
             <CarouselContent className="swipe-horizontal hw-accelerated">
               {featuredRecipes.map((recipe) => (
                 <CarouselItem key={recipe.id} className={cn(
-                  isMobile ? "basis-full" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4",
+                  isMobile ? "basis-full px-1" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4",
                   "hw-accelerated" // Hardware acceleration for smooth sliding
                 )}>
                   <RecipeCard recipe={recipe} />
@@ -86,20 +85,17 @@ export function RecipeCarousel() {
               ))}
             </CarouselContent>
             <CarouselPrevious className={cn(
-              isMobile ? "-left-1 h-10 w-10" : "-left-3 md:-left-4 lg:-left-6",
+              isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
               "tap-highlight-none" // Remove tap highlight on mobile
             )} />
             <CarouselNext className={cn(
-              isMobile ? "-right-1 h-10 w-10" : "-right-3 md:-right-4 lg:-right-6",
+              isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
               "tap-highlight-none" // Remove tap highlight on mobile
             )} />
-            
-            {/* Visual progress indicator for swipe position */}
-            {isMobile && <CarouselProgress className="mt-4 mb-2 max-w-[80%] mx-auto" />}
           </Carousel>
           
           {/* Pagination moved outside the carousel for better positioning */}
-          <div className="w-full flex flex-col items-center mt-6">
+          <div className="w-full flex flex-col items-center mt-3 md:mt-6">
             {/* Only show dots on desktop */}
             {!isMobile && (
               <CarouselDots 
@@ -108,7 +104,7 @@ export function RecipeCarousel() {
               />
             )}
             <div 
-              className="text-center text-xs md:text-sm text-muted-foreground mt-2" 
+              className="text-center text-xs md:text-sm text-muted-foreground mt-1 md:mt-2" 
               aria-live="polite"
             >
               Slide {selectedIndex + 1} of {featuredRecipes.length || 0}
@@ -122,13 +118,13 @@ export function RecipeCarousel() {
 
 function RecipeCarouselSkeleton() {
   return (
-    <div className="relative z-10 bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden border content-visibility-auto-card">
-      <div className="aspect-[4/3] max-h-[300px]">
+    <div className="relative z-10 bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border content-visibility-auto-card">
+      <div className="aspect-[4/3] max-h-[200px] md:max-h-[300px]">
         <Skeleton className="w-full h-full" />
       </div>
-      <div className="p-4 md:p-6">
-        <Skeleton className="h-6 w-2/3 mb-4" />
-        <Skeleton className="h-4 w-full" />
+      <div className="p-3 md:p-6">
+        <Skeleton className="h-5 md:h-6 w-2/3 mb-2 md:mb-4" />
+        <Skeleton className="h-3 md:h-4 w-full" />
       </div>
     </div>
   );
