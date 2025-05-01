@@ -14,6 +14,7 @@ import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition, Nutrition, validateNutritionData } from '@/types/nutrition-utils';
 import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
+import { NutritionFeedback } from './nutrition/NutritionFeedback';
 
 // Safe import for ProfileContext - don't throw errors if not available
 let useProfileSettings: () => any | null = () => null;
@@ -164,10 +165,17 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             nutrition={enhancedNutrition}
           />
           <div className="flex items-center gap-2">
+            {/* Add feedback button */}
+            <NutritionFeedback 
+              recipeId={recipe.id}
+              ingredientData={recipeNutrition?.per_ingredient}
+            />
+            
             <NutritionUpdateButton 
               recipe={recipe}
               onUpdateComplete={handleNutritionUpdate}
             />
+            
             <CollapsibleTrigger asChild>
               <Button 
                 variant="ghost" 

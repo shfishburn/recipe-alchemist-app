@@ -19,18 +19,23 @@ serve(async (req) => {
 
   try {
     // Parse request body
-    const { text } = await req.json();
+    const requestData = await req.json();
     
-    if (!text) {
+    // Check if we have text input
+    if (!requestData.text) {
       return new Response(
         JSON.stringify({ error: 'Text input is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // Generate embedding using OpenAI API
-    const embedding = await generateEmbedding(text);
+    // Extract main text and optional context
+    const { text, context } = normalizeInput(requestData);
     
+    // Generate embedding using OpenAI API
+    const embedding = await generateEmbedding(text, context);
+    
+    // Return the embedding vector
     return new Response(
       JSON.stringify({ embedding }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -46,16 +51,69 @@ serve(async (req) => {
 });
 
 /**
- * Generate text embedding using OpenAI API
+ * Normalize input data from various request formats
  */
-async function generateEmbedding(text: string): Promise<number[]> {
+function normalizeInput(data: any): { text: string; context?: Record<string, any> } {
+  // If data is a simple string or has only 'text' field
+  if (typeof data === 'string') {
+    return { text: data };
+  }
+  
+  // If data includes text property
+  if (typeof data.text === 'string') {
+    const { text, ...context } = data;
+    
+    // Return the text and any additional fields as context
+    return { 
+      text,
+      context: Object.keys(context).length > 0 ? context : undefined 
+    };
+  }
+  
+  // Handle incompatible input format
+  throw new Error('Invalid input format. Provide text as a string or object with "text" property.');
+}
+
+/**
+ * Generate text embedding using OpenAI API with optional context
+ */
+async function generateEmbedding(
+  text: string, 
+  context?: Record<string, any>
+): Promise<number[]> {
   if (!OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY environment variable not set');
   }
   
   try {
     // Clean and normalize the input text
-    const cleanedText = text.trim().toLowerCase();
+    let cleanedText = text.trim().toLowerCase();
+    
+    // If we have context, enhance the prompt with relevant details
+    if (context) {
+      const contextParts = [];
+      
+      if (context.title) {
+        contextParts.push(`Recipe: ${context.title}`);
+      }
+      
+      if (context.cuisine) {
+        contextParts.push(`Cuisine: ${context.cuisine}`);
+      }
+      
+      if (context.cookingMethod) {
+        contextParts.push(`Cooking Method: ${context.cookingMethod}`);
+      }
+      
+      if (context.otherIngredients && Array.isArray(context.otherIngredients)) {
+        contextParts.push(`Other Ingredients: ${context.otherIngredients.join(', ')}`);
+      }
+      
+      if (contextParts.length > 0) {
+        // Append context to the input text
+        cleanedText = `${cleanedText} (${contextParts.join('; ')})`;
+      }
+    }
     
     // Call OpenAI's embedding API
     const response = await fetch('https://api.openai.com/v1/embeddings', {
