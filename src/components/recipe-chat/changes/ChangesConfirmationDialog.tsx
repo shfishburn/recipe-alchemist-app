@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -29,20 +29,35 @@ export function ChangesConfirmationDialog({
   changes,
   isApplying,
 }: ChangesConfirmationDialogProps) {
+  // Use local state to debounce the isApplying state
+  const [isLocalApplying, setIsLocalApplying] = useState(isApplying);
+  
+  // Use effect to debounce the applying state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLocalApplying(isApplying);
+    }, 100); // Small debounce to prevent flashing
+    
+    return () => clearTimeout(timer);
+  }, [isApplying]);
+  
   if (!changes) return null;
   
   const handleConfirm = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Prevent event bubbling
+    
+    // Set local applying immediately for better UX
+    setIsLocalApplying(true);
     onConfirm();
   };
   
   return (
     <AlertDialog open={open} onOpenChange={(isOpen) => {
-      if (isApplying && !isOpen) return; // Prevent closing while applying
+      if (isLocalApplying && !isOpen) return; // Prevent closing while applying
       onOpenChange(isOpen);
     }}>
-      <AlertDialogContent className="max-w-lg" style={{ zIndex: 55 }}>
+      <AlertDialogContent className="max-w-lg">
         <AlertDialogHeader>
           <AlertDialogTitle>Confirm Recipe Changes</AlertDialogTitle>
           <AlertDialogDescription>
@@ -56,13 +71,13 @@ export function ChangesConfirmationDialog({
         </div>
         
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isApplying}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLocalApplying}>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleConfirm}
-            disabled={isApplying}
-            className="bg-primary text-white"
+            disabled={isLocalApplying}
+            className={`bg-primary text-white transition-opacity duration-300 ${isLocalApplying ? "opacity-70" : "opacity-100"}`}
           >
-            {isApplying ? (
+            {isLocalApplying ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Applying...

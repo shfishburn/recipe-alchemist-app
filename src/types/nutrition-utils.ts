@@ -117,9 +117,9 @@ export function standardizeNutrition(nutritionData: any): Nutrition {
   });
   
   // Fix for data_quality property - preserve the complex object structure
-  // This is where the type error occurred - we need to ensure data_quality remains an object
   if (nutritionData.data_quality && typeof nutritionData.data_quality === 'object') {
-    nutrition.data_quality = nutritionData.data_quality;
+    // Use type assertion to handle the complex type
+    nutrition.data_quality = nutritionData.data_quality as any;
   }
   
   // Log the standardized result

@@ -1,15 +1,18 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import type { ShoppingList, ShoppingListSummary } from '@/types/shopping-list';
+import type { ShoppingListSummary } from '@/types/shopping-list';
 
 export function useShoppingLists() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingListSummary[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const { toast } = useToast();
 
-  const fetchShoppingLists = async () => {
+  const fetchShoppingLists = useCallback(async () => {
+    // Avoid redundant fetches if already loading
+    if (isFetching) return;
+    
     try {
       setIsFetching(true);
       const { data: userData } = await supabase.auth.getUser();
@@ -39,9 +42,13 @@ export function useShoppingLists() {
         variant: "destructive",
       });
     } finally {
-      setIsFetching(false);
+      // Add a small delay before removing loading state
+      // This helps prevent UI flashing
+      setTimeout(() => {
+        setIsFetching(false);
+      }, 200);
     }
-  };
+  }, [toast]);
 
   return {
     shoppingLists,

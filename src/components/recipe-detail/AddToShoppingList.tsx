@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,16 +33,23 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
     isLoading 
   } = useShoppingListActions(recipe);
   
+  // Memoize fetch shopping lists to prevent unnecessary re-renders
+  const fetchLists = useCallback(async () => {
+    if (user) {
+      await fetchShoppingLists();
+    }
+  }, [fetchShoppingLists, user]);
+  
   // Fetch shopping lists when sheet opens
   useEffect(() => {
-    if (sheetOpen && user) {
-      fetchShoppingLists();
+    if (sheetOpen) {
+      fetchLists();
     }
-  }, [sheetOpen, fetchShoppingLists, user]);
+  }, [sheetOpen, fetchLists]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     
     if (!user) {
       toast({
@@ -64,25 +71,36 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
     }
     
     try {
-      if (selectedListId) {
-        await addToExistingList(selectedListId);
-      } else {
-        await createNewList(newListName);
-      }
-      // Close the sheet on success
-      setSheetOpen(false);
+      let success = false;
       
-      // Reset form state
-      setSelectedListId(null);
-      setNewListName(`${recipe.title} Ingredients`);
+      if (selectedListId) {
+        success = await addToExistingList(selectedListId);
+      } else {
+        success = await createNewList(newListName);
+      }
+      
+      // Only close the sheet on success
+      if (success) {
+        // Add a small delay to prevent UI flashing
+        setTimeout(() => {
+          setSheetOpen(false);
+          
+          // Reset form state
+          setSelectedListId(null);
+          setNewListName(`${recipe.title} Ingredients`);
+        }, 300);
+      }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      // Sheet stays open if there's an error
     }
   };
   
   const handleSheetOpenChange = (open: boolean) => {
+    // Prevent closing the sheet if loading is in progress
+    if (isLoading && !open) return;
+    
     setSheetOpen(open);
+    
     // Reset state when closing the sheet
     if (!open) {
       setSelectedListId(null);
@@ -99,7 +117,6 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
         description: "Please sign in to add items to a shopping list.",
         variant: "destructive",
       });
-      return;
     }
   };
   
@@ -110,7 +127,7 @@ export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
           <Button 
             variant="outline" 
             size="sm"
-            className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200"
+            className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 transition-all duration-300"
             onClick={handleTriggerClick}
           >
             <ShoppingBag className="h-4 w-4 mr-2" />
