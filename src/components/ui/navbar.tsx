@@ -27,7 +27,7 @@ export function Navbar({ className }: { className?: string }) {
 
   return (
     <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
-      <div className="container-page flex h-14 sm:h-16 md:h-20 items-center">
+      <div className="container-page flex h-14 sm:h-16 md:h-16 items-center">
         <div className="flex items-center gap-2 md:gap-4 mr-auto">
           <MobileMenu />
           <Link to="/" className="flex items-center">
@@ -47,7 +47,7 @@ export function Navbar({ className }: { className?: string }) {
               to={link.path} 
               className="text-sm font-medium hover:text-primary transition-colors flex items-center px-3 py-2 rounded-md"
             >
-              {link.icon && <link.icon className="h-4 w-4 mr-1" />}
+              {link.icon && <link.icon className="h-4 w-4 mr-1.5" />}
               {link.name}
             </Link>
           ))}
@@ -56,18 +56,18 @@ export function Navbar({ className }: { className?: string }) {
         {/* Auth Button - Hidden on Mobile */}
         <div className="hidden md:flex items-center space-x-3 ml-6">
           {session ? (
-            <Button variant="outline" size="sm" asChild className="h-10 py-2 px-4">
-              <Link to="/profile" className="flex items-center gap-1">
+            <Button variant="outline" size="sm" asChild className="h-9 py-2 px-4">
+              <Link to="/profile" className="flex items-center gap-1.5">
                 <User className="h-4 w-4" />
                 Profile
               </Link>
             </Button>
           ) : (
             <>
-              <Button variant="outline" size="sm" onClick={open} className="h-10 py-2 px-4">
+              <Button variant="outline" size="sm" onClick={open} className="h-9 py-2 px-4">
                 Log in
               </Button>
-              <Button size="sm" onClick={open} className="h-10 py-2 px-4">
+              <Button size="sm" onClick={open} className="h-9 py-2 px-4">
                 Sign up
               </Button>
             </>
@@ -82,3 +82,4 @@ export function Navbar({ className }: { className?: string }) {
 }
 
 export default Navbar;
+

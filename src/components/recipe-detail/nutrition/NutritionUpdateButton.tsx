@@ -5,6 +5,7 @@ import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { deepMergeNutrition, logNutritionChanges } from '@/utils/nutrition-utils';
 import type { Recipe } from '@/types/recipe';
 
 interface NutritionUpdateButtonProps {
@@ -59,14 +60,14 @@ export function NutritionUpdateButton({
         throw new Error('No nutrition data was returned from analysis');
       }
 
-      console.log('Nutrition data updated:', response.data);
-
-      // Make sure we merge with existing nutrition data rather than replacing it entirely
+      console.log('New nutrition data received:', response.data);
+      
+      // Use our deep merge utility to properly combine nutrition data
       const existingNutrition = recipe.nutrition || {};
-      const updatedNutrition = {
-        ...existingNutrition,
-        ...response.data
-      };
+      const updatedNutrition = deepMergeNutrition(existingNutrition, response.data);
+      
+      // Log the differences for debugging
+      logNutritionChanges(existingNutrition, updatedNutrition);
 
       // Update the recipe with the merged nutrition data
       const { error: updateError } = await supabase
@@ -84,7 +85,7 @@ export function NutritionUpdateButton({
 
       toast({
         title: "Nutrition updated",
-        description: "Recipe nutrition data has been updated with enhanced analysis",
+        description: "Recipe nutrition data has been enhanced with detailed analysis",
       });
       
       // Pass the updated data to the parent component
@@ -107,14 +108,15 @@ export function NutritionUpdateButton({
       size="sm"
       onClick={handleUpdateNutrition}
       disabled={isUpdating}
-      className="flex items-center gap-1 text-xs"
+      className="flex items-center gap-1 text-xs md:text-sm h-8 md:h-9 px-2 md:px-3 touch-target"
     >
       {isUpdating ? (
-        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+        <Loader2 className="h-3 w-3 md:h-4 md:w-4 animate-spin mr-1" />
       ) : (
-        <RefreshCw className="h-3 w-3 mr-1" />
+        <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1" />
       )}
       {isUpdating ? "Updating..." : "Update Nutrition"}
     </Button>
   );
 }
+

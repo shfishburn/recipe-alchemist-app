@@ -15,6 +15,7 @@ import { CookingPot } from 'lucide-react';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
@@ -51,15 +52,15 @@ export function RecipeCarousel() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col space-y-4 md:space-y-8">
-          <div className="flex flex-col items-center justify-center gap-1 md:gap-2 mb-3 md:mb-6">
-            <div className="flex items-center gap-1 md:gap-2">
-              <CookingPot className="h-4 w-4 md:h-5 md:w-5 text-recipe-green" />
+        <div className="flex flex-col space-y-5 md:space-y-8">
+          <div className="flex flex-col items-center justify-center gap-2 md:gap-2 mb-4 md:mb-6">
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <CookingPot className="h-5 w-5 md:h-5 md:w-5 text-recipe-green" />
               <h2 className="text-lg md:text-2xl font-semibold text-center">
                 Trending in Kitchens Like Yours
               </h2>
             </div>
-            <p className="text-xs md:text-base text-muted-foreground text-center max-w-2xl mt-1 md:mt-2 px-2">
+            <p className="text-sm md:text-base text-muted-foreground text-center max-w-2xl mt-1.5 md:mt-2 px-2">
               These recipes are being shared across kitchens similar to yours — find out what makes them special
             </p>
           </div>
@@ -68,16 +69,16 @@ export function RecipeCarousel() {
             opts={{
               align: "start",
               loop: true,
-              dragFree: true,  // Enable momentum scrolling for better touch feel
-              inViewThreshold: 0.5, // More consistent slide selection on swipe
+              dragFree: isMobile, // Enable momentum scrolling for better mobile touch feel
+              inViewThreshold: 0.6, // More consistent slide selection on swipe
             }}
             className="w-full"
             setApi={setCarouselApi}
           >
-            <CarouselContent className="swipe-horizontal hw-accelerated">
+            <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4">
               {featuredRecipes.map((recipe) => (
                 <CarouselItem key={recipe.id} className={cn(
-                  isMobile ? "basis-full px-1" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4",
+                  isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
                   "hw-accelerated" // Hardware acceleration for smooth sliding
                 )}>
                   <RecipeCard recipe={recipe} />
@@ -85,17 +86,19 @@ export function RecipeCarousel() {
               ))}
             </CarouselContent>
             <CarouselPrevious className={cn(
+              "hidden md:flex",
               isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
-              "tap-highlight-none" // Remove tap highlight on mobile
+              "tap-highlight-none z-10" // Remove tap highlight on mobile and ensure proper z-index
             )} />
             <CarouselNext className={cn(
+              "hidden md:flex",
               isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
-              "tap-highlight-none" // Remove tap highlight on mobile
+              "tap-highlight-none z-10" // Remove tap highlight on mobile and ensure proper z-index
             )} />
           </Carousel>
           
           {/* Pagination moved outside the carousel for better positioning */}
-          <div className="w-full flex flex-col items-center mt-3 md:mt-6">
+          <div className="w-full flex flex-col items-center mt-4 md:mt-6">
             {/* Only show dots on desktop */}
             {!isMobile && (
               <CarouselDots 
@@ -104,7 +107,7 @@ export function RecipeCarousel() {
               />
             )}
             <div 
-              className="text-center text-xs md:text-sm text-muted-foreground mt-1 md:mt-2" 
+              className="text-center text-xs md:text-sm text-muted-foreground mt-2" 
               aria-live="polite"
             >
               Slide {selectedIndex + 1} of {featuredRecipes.length || 0}
@@ -122,7 +125,7 @@ function RecipeCarouselSkeleton() {
       <div className="aspect-[4/3] max-h-[200px] md:max-h-[300px]">
         <Skeleton className="w-full h-full" />
       </div>
-      <div className="p-3 md:p-6">
+      <div className="p-4 md:p-6">
         <Skeleton className="h-5 md:h-6 w-2/3 mb-2 md:mb-4" />
         <Skeleton className="h-3 md:h-4 w-full" />
       </div>
@@ -134,3 +137,4 @@ function RecipeCarouselSkeleton() {
 function cn(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(' ');
 }
+

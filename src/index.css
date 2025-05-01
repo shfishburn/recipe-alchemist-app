@@ -15,8 +15,8 @@ html {
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 @media (min-width: 640px) {
@@ -33,7 +33,7 @@ html {
   }
 }
 
-/* Mobile-friendly fixes */
+/* Improved mobile UX */
 @media (max-width: 640px) {
   /* Improve touch targets */
   button, 
@@ -42,8 +42,8 @@ html {
   input[type="checkbox"], 
   input[type="radio"],
   .touch-target {
-    min-height: 42px;
-    min-width: 42px;
+    min-height: 44px;
+    min-width: 44px;
   }
   
   /* Improve form controls */
@@ -61,7 +61,7 @@ html {
   /* Improve spacing */
   .card-content,
   .dialog-content {
-    padding: 0.75rem !important;
+    padding: 1rem !important;
   }
   
   /* Fix overflow issues */
@@ -72,7 +72,7 @@ html {
   
   /* Fix form spacing */
   .form-group + .form-group {
-    margin-top: 0.75rem;
+    margin-top: 1rem;
   }
   
   /* Improve interactivity feedback */
@@ -105,8 +105,8 @@ html {
 
   /* Additional responsive spacing improvements */
   section {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
   }
 
   .card {
@@ -142,3 +142,33 @@ html {
     -webkit-tap-highlight-color: rgba(56, 189, 248, 0.2) !important;
   }
 }
+
+/* Improved touch target classes for consistency */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Spacing utilities for mobile-first design */
+.spacing-y-mobile {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.spacing-x-mobile {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.padding-mobile {
+  padding: 1rem;
+}
+
+/* Hardware acceleration utility */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+}
+

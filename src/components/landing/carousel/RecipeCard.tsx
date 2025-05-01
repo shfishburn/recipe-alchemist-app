@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import type { Recipe } from '@/types/recipe';
 import type { Database } from '@/integrations/supabase/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 // Allow both Recipe types to be used
 type RecipeCardProps = {
@@ -13,6 +15,7 @@ type RecipeCardProps = {
 export function RecipeCard({ recipe }: RecipeCardProps) {
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
+  const isMobile = useIsMobile();
 
   // Handle image loading
   const handleImageLoad = () => {
@@ -25,9 +28,12 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
   };
 
   return (
-    <Link to={`/recipes/${recipe.id}`}>
-      <div className="h-full relative z-10 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl rounded-2xl overflow-hidden border transition-all flex flex-col">
-        <div className="aspect-[4/3] max-h-[300px] bg-gray-100 relative">
+    <Link to={`/recipes/${recipe.id}`} className="block h-full touch-feedback-optimized">
+      <div className={cn(
+        "h-full relative z-10 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl rounded-xl overflow-hidden border transition-all flex flex-col",
+        isMobile ? "touch-active" : ""
+      )}>
+        <div className="aspect-[4/3] max-h-[200px] md:max-h-[300px] bg-gray-100 relative">
           {recipe.image_url && !imageError ? (
             <>
               {!imageLoaded && (
@@ -46,16 +52,16 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
             </>
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No image available</span>
+              <span className="text-gray-400 text-sm">No image available</span>
             </div>
           )}
         </div>
-        <div className="p-4 md:p-6 flex flex-col flex-grow">
+        <div className="p-3 md:p-4 flex flex-col flex-grow">
           <h3 className="font-medium text-base md:text-lg mb-2 line-clamp-2">{recipe.title}</h3>
           <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground mt-auto">
             {recipe.dietary && (
               <span className="flex items-center">
-                <span className="w-2 h-2 bg-recipe-green rounded-full mr-2"></span>
+                <span className="w-2 h-2 bg-recipe-green rounded-full mr-1.5"></span>
                 {recipe.dietary}
               </span>
             )}
@@ -79,3 +85,4 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
     </Link>
   );
 }
+

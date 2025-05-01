@@ -9,7 +9,7 @@ const Hero = lazy(() => import('@/components/landing/Hero'));
 
 // Create loading placeholders for better UX
 const HeroSkeleton = () => (
-  <section className="py-6 md:py-20 lg:py-32">
+  <section className="py-6 md:py-12 lg:py-20">
     <div className="container-page">
       <div className="flex flex-col md:flex-row items-center gap-4 md:gap-12">
         <div className="flex-1 space-y-3 md:space-y-6">
@@ -37,7 +37,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 animate-fadeIn pb-6 md:pb-0">
+      <main className="flex-1 animate-fadeIn pb-8 md:pb-12">
         <Suspense fallback={<HeroSkeleton />}>
           <Hero />
         </Suspense>
@@ -47,3 +47,4 @@ const Index = () => {
 };
 
 export default Index;
+
