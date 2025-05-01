@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ShoppingList } from '@/types/shopping-list';
 import { ShoppingListHeader } from './detail/ShoppingListHeader';
 import { ShoppingListNotes } from './detail/ShoppingListNotes';
 import { ShoppingListControls } from './detail/ShoppingListControls';
 import { AddItemForm } from './detail/AddItemForm';
 import { ShoppingListItemsView } from './detail/ShoppingListItemsView';
+import { ShoppingListProgress } from './detail/ShoppingListProgress';
 import { useShoppingList } from '@/hooks/use-shopping-list';
 
 interface ShoppingListDetailProps {
@@ -31,8 +34,19 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     toggleAllInDepartment,
     toggleDeptExpanded,
     copyToClipboard,
-    getItemIndex
+    getItemIndex,
+    activeItems,
+    completedItems
   } = useShoppingList(list, onUpdate);
+
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  // Calculate completion stats
+  const totalItems = list.items.length;
+  const completedCount = list.items.filter(item => item.checked).length;
+  const completionPercentage = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
 
   return (
     <Card className="p-4 md:p-6">
@@ -41,32 +55,114 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         onDelete={onDelete}
         itemsByDepartment={itemsByDepartment}
         onCopyToClipboard={copyToClipboard}
+        completionPercentage={completionPercentage}
+        completedCount={completedCount}
+        totalItems={totalItems}
       />
       
-      <CardContent className="px-0">
-        <ShoppingListNotes list={list} />
-        
-        <ShoppingListControls 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
+      <CardContent className="px-0 pt-2">
+        <ShoppingListProgress
+          completedCount={completedCount}
+          totalItems={totalItems}
+          completionPercentage={completionPercentage}
         />
+
+        <div className="mb-4">
+          <ShoppingListControls 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+          />
+        </div>
         
-        <AddItemForm 
-          onAddItem={handleAddItem}
-          availableDepartments={allDepartments}
-        />
+        {/* Active Items Section */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-3">Active Items</h3>
+          <ShoppingListItemsView
+            groupedItems={activeItems}
+            expandedDepts={expandedDepts}
+            onToggleDept={toggleDeptExpanded}
+            onToggleDepartmentItems={toggleAllInDepartment}
+            onToggleItem={handleToggleItem}
+            onDeleteItem={handleDeleteItem}
+            getItemIndex={getItemIndex}
+          />
+        </div>
+
+        {/* Add Item Button/Form */}
+        <div className="mb-6 border rounded-md">
+          <Button 
+            variant="ghost" 
+            className="w-full flex items-center justify-between p-3"
+            onClick={() => setShowAddItemForm(!showAddItemForm)}
+          >
+            <span className="flex items-center">
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Item
+            </span>
+            {showAddItemForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          
+          {showAddItemForm && (
+            <div className="p-4">
+              <AddItemForm 
+                onAddItem={handleAddItem}
+                availableDepartments={allDepartments}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Completed Items Section */}
+        {completedItems && Object.keys(completedItems).some(dept => completedItems[dept].length > 0) && (
+          <div className="mb-6 border rounded-md">
+            <Button 
+              variant="ghost" 
+              className="w-full flex items-center justify-between p-3"
+              onClick={() => setShowCompleted(!showCompleted)}
+            >
+              <span className="flex items-center">
+                <span className="font-medium">Completed Items ({completedCount})</span>
+              </span>
+              {showCompleted ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+            
+            {showCompleted && (
+              <div className="p-4">
+                <ShoppingListItemsView
+                  groupedItems={completedItems}
+                  expandedDepts={expandedDepts}
+                  onToggleDept={toggleDeptExpanded}
+                  onToggleDepartmentItems={toggleAllInDepartment}
+                  onToggleItem={handleToggleItem}
+                  onDeleteItem={handleDeleteItem}
+                  getItemIndex={getItemIndex}
+                />
+              </div>
+            )}
+          </div>
+        )}
         
-        <ShoppingListItemsView
-          groupedItems={groupedItems}
-          expandedDepts={expandedDepts}
-          onToggleDept={toggleDeptExpanded}
-          onToggleDepartmentItems={toggleAllInDepartment}
-          onToggleItem={handleToggleItem}
-          onDeleteItem={handleDeleteItem}
-          getItemIndex={getItemIndex}
-        />
+        {/* Notes Section */}
+        <div className="mb-6 border rounded-md">
+          <Button 
+            variant="ghost" 
+            className="w-full flex items-center justify-between p-3"
+            onClick={() => setShowNotes(!showNotes)}
+          >
+            <span className="flex items-center">
+              <span className="font-medium">Notes & Tips</span>
+            </span>
+            {showNotes ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          
+          {showNotes && (
+            <div className="p-4">
+              <ShoppingListNotes list={list} />
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

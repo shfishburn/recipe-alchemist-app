@@ -18,11 +18,11 @@ export function ShoppingListControls({
   onSortOrderChange 
 }: ShoppingListControlsProps) {
   return (
-    <div className="mb-4 flex flex-col sm:flex-row gap-3">
+    <div className="flex flex-col sm:flex-row gap-2">
       <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
-          placeholder="Search items"
+          placeholder="Filter items"
           className="pl-8"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -33,8 +33,8 @@ export function ShoppingListControls({
         value={sortOrder} 
         onValueChange={(value) => onSortOrderChange(value as 'asc' | 'desc' | 'dept')}
       >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Sort by" />
+        <SelectTrigger className="w-full sm:w-32">
+          <SelectValue placeholder="Sort" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="dept">By Department</SelectItem>

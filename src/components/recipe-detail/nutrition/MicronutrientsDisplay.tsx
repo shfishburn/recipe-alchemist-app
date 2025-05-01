@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ExtendedNutritionData } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
@@ -110,7 +109,7 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
     </div>
   );
   
-  const hasMicronutrients = vitamins.some(v => v.value > 0) || minerals.some(m => m.value > 0);
+  const hasMicronutrients = vitamins.some(v => typeof v.value === 'number' && v.value > 0) || minerals.some(m => typeof m.value === 'number' && m.value > 0);
   
   if (!hasMicronutrients) return null;
   

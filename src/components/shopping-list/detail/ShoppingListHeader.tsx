@@ -11,9 +11,20 @@ interface ShoppingListHeaderProps {
   onDelete?: (id: string) => Promise<void>;
   itemsByDepartment: Record<string, any[]>;
   onCopyToClipboard: () => void;
+  completionPercentage?: number;
+  completedCount?: number;
+  totalItems?: number;
 }
 
-export function ShoppingListHeader({ list, onDelete, itemsByDepartment, onCopyToClipboard }: ShoppingListHeaderProps) {
+export function ShoppingListHeader({ 
+  list, 
+  onDelete, 
+  itemsByDepartment, 
+  onCopyToClipboard,
+  completionPercentage = 0,
+  completedCount = 0,
+  totalItems = 0
+}: ShoppingListHeaderProps) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
@@ -24,9 +35,14 @@ export function ShoppingListHeader({ list, onDelete, itemsByDepartment, onCopyTo
   };
 
   return (
-    <CardHeader className="px-0 pt-0">
+    <CardHeader className="px-0 pt-0 sticky top-0 z-10 pb-1">
       <div className="flex justify-between items-start flex-wrap gap-4">
-        <CardTitle className="text-2xl font-bold">{list.title}</CardTitle>
+        <div>
+          <CardTitle className="text-2xl font-bold">{list.title}</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {totalItems} items • {completedCount} completed
+          </p>
+        </div>
         <div className="flex gap-2">
           {onDelete && (
             <Button
@@ -36,7 +52,7 @@ export function ShoppingListHeader({ list, onDelete, itemsByDepartment, onCopyTo
               className="flex items-center gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
-              Delete List
+              Delete
             </Button>
           )}
           
@@ -54,7 +70,7 @@ export function ShoppingListHeader({ list, onDelete, itemsByDepartment, onCopyTo
             ) : (
               <>
                 <Copy className="h-4 w-4" />
-                Copy List
+                Copy
               </>
             )}
           </Button>
