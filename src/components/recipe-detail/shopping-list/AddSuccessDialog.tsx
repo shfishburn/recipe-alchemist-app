@@ -43,15 +43,11 @@ export function AddSuccessDialog({ open, setOpen, recipeTitle }: AddSuccessDialo
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <ButtonWrapper asChild>
-            <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
-          </ButtonWrapper>
-          <ButtonWrapper asChild>
-            <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
-              View Shopping Lists
-              <ArrowRight className="h-4 w-4" />
-            </AlertDialogAction>
-          </ButtonWrapper>
+          <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
+          <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
+            View Shopping Lists
+            <ArrowRight className="h-4 w-4" />
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

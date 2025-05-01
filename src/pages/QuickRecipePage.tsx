@@ -7,7 +7,6 @@ import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { Button } from '@/components/ui/button';
-import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
@@ -77,25 +76,21 @@ const QuickRecipePage = () => {
               <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
               <p className="text-muted-foreground mb-6">{error}</p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <ButtonWrapper asChild>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2"
+                >
+                  Start Over
+                </Button>
+                {formData && (
                   <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/')}
+                    onClick={handleRetry}
                     className="flex items-center gap-2"
                   >
-                    Start Over
+                    <RefreshCw className="h-4 w-4" />
+                    Try Again
                   </Button>
-                </ButtonWrapper>
-                {formData && (
-                  <ButtonWrapper asChild>
-                    <Button 
-                      onClick={handleRetry}
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      Try Again
-                    </Button>
-                  </ButtonWrapper>
                 )}
               </div>
             </div>
@@ -109,15 +104,13 @@ const QuickRecipePage = () => {
           ) : (
             <div className="text-center">
               <p className="text-muted-foreground">No recipe found. 
-                <ButtonWrapper asChild>
-                  <Button 
-                    variant="link" 
-                    onClick={() => navigate('/')}
-                    className="p-0 h-auto text-primary underline"
-                  >
-                    &nbsp;Return to home
-                  </Button>
-                </ButtonWrapper>
+                <Button 
+                  variant="link" 
+                  onClick={() => navigate('/')}
+                  className="p-0 h-auto text-primary underline"
+                >
+                  &nbsp;Return to home
+                </Button>
               </p>
             </div>
           )}
@@ -132,6 +125,6 @@ const QuickRecipePage = () => {
       </main>
     </div>
   );
-};
+}
 
 export default QuickRecipePage;

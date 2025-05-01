@@ -60,23 +60,21 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <ButtonWrapper asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="rounded-full h-8 w-8"
-                      onClick={() => !isPending && onOpenChange(false)}
-                      disabled={isPending}
-                    >
-                      {isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <X className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">Close</span>
-                    </Button>
-                  </ButtonWrapper>
+                <TooltipTrigger>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-8 w-8"
+                    onClick={() => !isPending && onOpenChange(false)}
+                    disabled={isPending}
+                  >
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">Close</span>
+                  </Button>
                 </TooltipTrigger>
                 {isPending && (
                   <TooltipContent>

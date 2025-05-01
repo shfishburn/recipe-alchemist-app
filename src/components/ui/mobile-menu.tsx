@@ -35,13 +35,11 @@ export function MobileMenu() {
 
   return (
     <Sheet>
-      <SheetTrigger asChild>
-        <ButtonWrapper asChild>
-          <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
-            <Menu className="h-6 w-6" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        </ButtonWrapper>
+      <SheetTrigger>
+        <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
+          <Menu className="h-6 w-6" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[85vw] max-w-[300px] sm:max-w-[320px]">
         <SheetHeader>
@@ -57,25 +55,28 @@ export function MobileMenu() {
         </SheetHeader>
         <div className="mt-8 flex flex-col gap-6">
           {displayedLinks.map((link) => (
-            <Link 
-              key={link.path} 
-              to={link.path} 
-              className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
-            >
-              {link.icon && React.createElement(link.icon, { className: "h-5 w-5 mr-3" })}
-              {link.name}
-            </Link>
+            <SheetClose asChild key={link.path}>
+              <Link 
+                to={link.path} 
+                className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
+              >
+                {link.icon && React.createElement(link.icon, { className: "h-5 w-5 mr-3" })}
+                {link.name}
+              </Link>
+            </SheetClose>
           ))}
         </div>
         <Separator className="my-6" />
         <div className="flex flex-col gap-3">
           {session ? (
-            <Button variant="outline" asChild>
-              <Link to="/profile" className="w-full h-12 justify-start flex items-center">
-                <User className="h-5 w-5 mr-3" />
-                <span>Profile</span>
-              </Link>
-            </Button>
+            <SheetClose asChild>
+              <Button variant="outline" asChild>
+                <Link to="/profile" className="w-full h-12 justify-start flex items-center">
+                  <User className="h-5 w-5 mr-3" />
+                  <span>Profile</span>
+                </Link>
+              </Button>
+            </SheetClose>
           ) : (
             <>
               <Button variant="outline" className="w-full h-12" onClick={() => openAuthDrawer()}>

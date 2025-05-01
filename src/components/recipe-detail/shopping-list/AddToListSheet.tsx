@@ -45,19 +45,16 @@ export function AddToListSheet({
 }: AddToListSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <ButtonWrapper 
+      <SheetTrigger>
+        <Button 
           variant="outline" 
           size="sm"
           className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 transition-all duration-300"
           onClick={onTriggerClick}
-          asChild
         >
-          <button>
-            <ShoppingBag className="h-4 w-4 mr-2" />
-            Add to shopping list
-          </button>
-        </ButtonWrapper>
+          <ShoppingBag className="h-4 w-4 mr-2" />
+          Add to shopping list
+        </Button>
       </SheetTrigger>
       <SheetContent className="z-[60]">
         <SheetHeader>

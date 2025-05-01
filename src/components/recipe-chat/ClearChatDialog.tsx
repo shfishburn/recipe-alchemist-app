@@ -33,16 +33,12 @@ export function ClearChatDialog({ open, onOpenChange, onConfirm }: ClearChatDial
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <ButtonWrapper>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-          </ButtonWrapper>
-          <ButtonWrapper>
-            <Button variant="destructive" onClick={handleConfirm}>
-              Clear Chat
-            </Button>
-          </ButtonWrapper>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleConfirm}>
+            Clear Chat
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
