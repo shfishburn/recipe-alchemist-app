@@ -32,9 +32,9 @@ export function RecipeCarousel() {
     return recipes?.slice(0, 5) || [];
   }, [recipes]);
 
-  // Optimize carousel options
+  // Optimize carousel options with correct TypeScript types
   const carouselOptions = useMemo(() => ({
-    align: "start",
+    align: "start" as const, // Specify literal type
     loop: true,
     dragFree: true, // Enable for all devices
     inViewThreshold: 0.6,
