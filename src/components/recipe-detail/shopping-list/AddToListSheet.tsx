@@ -9,9 +9,9 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { ShoppingBag } from 'lucide-react';
 import { ShoppingListForm } from './ShoppingListForm';
-import { RadixWrapper } from '@/components/ui/radix-wrapper';
 import type { ShoppingListSummary } from '@/types/shopping-list';
 
 interface AddToListSheetProps {
@@ -46,17 +46,18 @@ export function AddToListSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <RadixWrapper>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 transition-all duration-300"
-            onClick={onTriggerClick}
-          >
+        <ButtonWrapper 
+          variant="outline" 
+          size="sm"
+          className="w-full text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border-slate-200 transition-all duration-300"
+          onClick={onTriggerClick}
+          asChild
+        >
+          <button>
             <ShoppingBag className="h-4 w-4 mr-2" />
             Add to shopping list
-          </Button>
-        </RadixWrapper>
+          </button>
+        </ButtonWrapper>
       </SheetTrigger>
       <SheetContent className="z-[60]">
         <SheetHeader>

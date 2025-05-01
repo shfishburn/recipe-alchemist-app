@@ -1,23 +1,30 @@
 
 import React, { forwardRef } from 'react';
 import { Button, ButtonProps } from '@/components/ui/button';
-import { RadixWrapper } from '@/components/ui/radix-wrapper';
+import { Slot } from '@radix-ui/react-slot';
 
 interface ButtonWrapperProps extends ButtonProps {
   asChild?: boolean;
 }
 
+// Improved ButtonWrapper that properly handles the asChild prop
 const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonWrapperProps>(
-  ({ asChild, ...props }, ref) => {
+  ({ asChild, className, children, ...props }, ref) => {
+    // When asChild is true, use Slot directly instead of using RadixWrapper
     if (asChild) {
       return (
-        <RadixWrapper>
-          <Button ref={ref} asChild {...props} />
-        </RadixWrapper>
+        <Slot
+          className={className} 
+          ref={ref} 
+          {...props}
+        >
+          {React.Children.only(children)}
+        </Slot>
       );
     }
     
-    return <Button ref={ref} {...props} />;
+    // Regular button when asChild is false
+    return <Button ref={ref} className={className} {...props}>{children}</Button>;
   }
 );
 

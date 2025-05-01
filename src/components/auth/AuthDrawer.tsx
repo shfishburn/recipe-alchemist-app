@@ -4,9 +4,9 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ButtonWrapper } from "@/components/ui/button-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCallback, useEffect, useMemo } from "react";
-import { RadixWrapper } from "@/components/ui/radix-wrapper";
 
 // For desktop
 import {
@@ -63,12 +63,12 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
           <DrawerHeader className="flex items-center justify-between border-b pb-4">
             <DrawerTitle className="text-center">Account</DrawerTitle>
             <DrawerClose asChild>
-              <RadixWrapper>
+              <ButtonWrapper asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
                 </Button>
-              </RadixWrapper>
+              </ButtonWrapper>
             </DrawerClose>
           </DrawerHeader>
           <ScrollArea className="p-6 h-full max-h-[70vh]">
@@ -85,12 +85,12 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
         <SheetHeader className="flex items-center justify-between border-b pb-4">
           <SheetTitle>Account</SheetTitle>
           <SheetClose asChild>
-            <RadixWrapper>
+            <ButtonWrapper asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </Button>
-            </RadixWrapper>
+            </ButtonWrapper>
           </SheetClose>
         </SheetHeader>
         <ScrollArea className="flex-1 p-6 h-full">

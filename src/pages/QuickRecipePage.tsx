@@ -7,11 +7,11 @@ import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { Button } from '@/components/ui/button';
+import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { RecipeCarousel } from '@/components/landing/RecipeCarousel';
-import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
@@ -77,7 +77,7 @@ const QuickRecipePage = () => {
               <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
               <p className="text-muted-foreground mb-6">{error}</p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <RadixWrapper>
+                <ButtonWrapper asChild>
                   <Button 
                     variant="outline" 
                     onClick={() => navigate('/')}
@@ -85,9 +85,9 @@ const QuickRecipePage = () => {
                   >
                     Start Over
                   </Button>
-                </RadixWrapper>
+                </ButtonWrapper>
                 {formData && (
-                  <RadixWrapper>
+                  <ButtonWrapper asChild>
                     <Button 
                       onClick={handleRetry}
                       className="flex items-center gap-2"
@@ -95,7 +95,7 @@ const QuickRecipePage = () => {
                       <RefreshCw className="h-4 w-4" />
                       Try Again
                     </Button>
-                  </RadixWrapper>
+                  </ButtonWrapper>
                 )}
               </div>
             </div>
@@ -109,7 +109,7 @@ const QuickRecipePage = () => {
           ) : (
             <div className="text-center">
               <p className="text-muted-foreground">No recipe found. 
-                <RadixWrapper>
+                <ButtonWrapper asChild>
                   <Button 
                     variant="link" 
                     onClick={() => navigate('/')}
@@ -117,7 +117,7 @@ const QuickRecipePage = () => {
                   >
                     &nbsp;Return to home
                   </Button>
-                </RadixWrapper>
+                </ButtonWrapper>
               </p>
             </div>
           )}

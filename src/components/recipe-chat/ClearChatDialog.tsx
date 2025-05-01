@@ -9,6 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ButtonWrapper } from '@/components/ui/button-wrapper';
 
 interface ClearChatDialogProps {
   open: boolean;
@@ -32,12 +33,16 @@ export function ClearChatDialog({ open, onOpenChange, onConfirm }: ClearChatDial
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleConfirm}>
-            Clear Chat
-          </Button>
+          <ButtonWrapper>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          </ButtonWrapper>
+          <ButtonWrapper>
+            <Button variant="destructive" onClick={handleConfirm}>
+              Clear Chat
+            </Button>
+          </ButtonWrapper>
         </DialogFooter>
       </DialogContent>
     </Dialog>

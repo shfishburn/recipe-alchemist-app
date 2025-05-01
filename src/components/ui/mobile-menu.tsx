@@ -12,9 +12,9 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { ChefHat, Menu, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 export function MobileMenu() {
   const { session } = useAuth();
@@ -36,12 +36,12 @@ export function MobileMenu() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <RadixWrapper>
+        <ButtonWrapper asChild>
           <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
             <Menu className="h-6 w-6" />
             <span className="sr-only">Toggle menu</span>
           </Button>
-        </RadixWrapper>
+        </ButtonWrapper>
       </SheetTrigger>
       <SheetContent side="left" className="w-[85vw] max-w-[300px] sm:max-w-[320px]">
         <SheetHeader>

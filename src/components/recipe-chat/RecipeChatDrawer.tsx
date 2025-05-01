@@ -8,13 +8,13 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X, Loader2 } from 'lucide-react';
 import { RecipeChat } from './RecipeChat';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
-import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 interface RecipeChatDrawerProps {
   recipe: Recipe;
@@ -61,7 +61,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <RadixWrapper>
+                  <ButtonWrapper asChild>
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -76,7 +76,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
                       )}
                       <span className="sr-only">Close</span>
                     </Button>
-                  </RadixWrapper>
+                  </ButtonWrapper>
                 </TooltipTrigger>
                 {isPending && (
                   <TooltipContent>
