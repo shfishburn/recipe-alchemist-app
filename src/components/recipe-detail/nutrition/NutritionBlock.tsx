@@ -57,7 +57,10 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
   return (
     <div className="space-y-4 transition-all duration-200">
       {viewMode === 'recipe' ? (
-        <RecipeBlock recipeNutrition={processedNutrition} unitSystem={unitSystem} />
+        <RecipeBlock 
+          recipeNutrition={processedNutrition} 
+          unitSystem={unitSystem} 
+        />
       ) : (
         <PersonalBlock
           recipeNutrition={processedNutrition}

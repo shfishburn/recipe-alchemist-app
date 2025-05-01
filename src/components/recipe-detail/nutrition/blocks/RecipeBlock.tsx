@@ -1,24 +1,21 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { MetricIcon } from '@/components/ui/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakdown';
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
-import type { Recipe } from '@/types/recipe';
-import type { Profile } from '@/hooks/use-auth';
+import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
 
 interface RecipeBlockProps {
-  recipe: Recipe;
-  profile?: Profile | null;
+  recipeNutrition: ExtendedNutritionData;
+  unitSystem: 'metric' | 'imperial';
 }
 
-export function RecipeBlock({ recipe, profile }: RecipeBlockProps) {
+export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const isMobile = useIsMobile();
-  const { recipeNutrition, userPreferences } = useNutritionData(recipe, profile);
   
   if (!recipeNutrition) {
     return (
@@ -36,10 +33,10 @@ export function RecipeBlock({ recipe, profile }: RecipeBlockProps) {
   }
   
   const { calories, protein, carbs, fat } = recipeNutrition;
-  const dailyCalories = userPreferences?.dailyCalories || 2000;
-  const proteinPercentage = userPreferences?.macroSplit?.protein || 30;
-  const carbsPercentage = userPreferences?.macroSplit?.carbs || 40;
-  const fatPercentage = userPreferences?.macroSplit?.fat || 30;
+  const dailyCalories = 2000; // Default daily calories
+  const proteinPercentage = 30;
+  const carbsPercentage = 40;
+  const fatPercentage = 30;
   
   const proteinCalories = (dailyCalories * proteinPercentage) / 100;
   const carbsCalories = (dailyCalories * carbsPercentage) / 100;
@@ -61,7 +58,7 @@ export function RecipeBlock({ recipe, profile }: RecipeBlockProps) {
               <span className="text-lg">{Math.round(calories)}</span> calories
             </p>
             <Badge variant="secondary">
-              {userPreferences?.unitSystem === 'imperial' ? 'US' : 'Metric'}
+              {unitSystem === 'imperial' ? 'US' : 'Metric'}
             </Badge>
           </div>
           
@@ -117,7 +114,10 @@ export function RecipeBlock({ recipe, profile }: RecipeBlockProps) {
           <Separator className="my-4" />
         </div>
         
-        <MicronutrientsDisplay nutrition={recipeNutrition} />
+        <MicronutrientsDisplay 
+          nutrition={recipeNutrition} 
+          unitSystem={unitSystem} 
+        />
       </CardContent>
     </Card>
   );

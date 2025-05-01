@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ExtendedNutritionData } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,23 +13,23 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   const vitamins = [
     {
       name: 'Vitamin A',
-      value: nutrition.vitamin_a,
+      value: nutrition.vitamin_a || 0,
       unit: 'IU',
-      percentage: nutrition.vitamin_a_percentage,
+      percentage: nutrition.vitamin_a_percentage || 0,
       description: 'Important for vision and immune function'
     },
     {
       name: 'Vitamin C',
-      value: nutrition.vitamin_c,
+      value: nutrition.vitamin_c || 0,
       unit: 'mg',
-      percentage: nutrition.vitamin_c_percentage,
+      percentage: nutrition.vitamin_c_percentage || 0,
       description: 'Helps with immune function and iron absorption'
     },
     {
       name: 'Vitamin D',
-      value: nutrition.vitamin_d,
+      value: nutrition.vitamin_d || 0,
       unit: 'IU',
-      percentage: nutrition.vitamin_d_percentage,
+      percentage: nutrition.vitamin_d_percentage || 0,
       description: 'Essential for bone health and immune function'
     }
   ];
@@ -36,23 +37,23 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   const minerals = [
     {
       name: 'Calcium',
-      value: nutrition.calcium,
+      value: nutrition.calcium || 0,
       unit: 'mg',
-      percentage: nutrition.calcium_percentage,
+      percentage: nutrition.calcium_percentage || 0,
       description: 'Essential for bone health and muscle function'
     },
     {
       name: 'Iron',
-      value: nutrition.iron,
+      value: nutrition.iron || 0,
       unit: 'mg',
-      percentage: nutrition.iron_percentage,
+      percentage: nutrition.iron_percentage || 0,
       description: 'Needed for oxygen transport in blood'
     },
     {
       name: 'Potassium',
-      value: nutrition.potassium,
+      value: nutrition.potassium || 0,
       unit: 'mg',
-      percentage: nutrition.potassium_percentage,
+      percentage: nutrition.potassium_percentage || 0,
       description: 'Helps regulate fluid balance and nerve signals'
     }
   ];
@@ -60,23 +61,23 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   const others = [
     {
       name: 'Sodium',
-      value: nutrition.sodium,
+      value: nutrition.sodium || 0,
       unit: 'mg',
-      percentage: nutrition.sodiumPercentage,
+      percentage: nutrition.sodiumPercentage || 0,
       description: 'Important for fluid balance, but limit intake'
     },
     {
       name: 'Fiber',
-      value: nutrition.fiber,
+      value: nutrition.fiber || 0,
       unit: 'g',
-      percentage: nutrition.fiberPercentage,
+      percentage: nutrition.fiberPercentage || 0,
       description: 'Aids in digestion and helps you feel full'
     },
     {
       name: 'Sugar',
-      value: nutrition.sugar,
+      value: nutrition.sugar || 0,
       unit: 'g',
-      percentage: nutrition.sugarPercentage,
+      percentage: nutrition.sugarPercentage || 0,
       description: 'Naturally occurring or added sweeteners'
     }
   ];
@@ -91,25 +92,30 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   };
   
   // Component to display a micronutrient
-  const MicronutrientItem = ({ item }: { item: any }) => (
-    <div className="mb-2">
-      <div className="flex justify-between text-xs mb-1">
-        <div className="font-medium">{item.name}</div>
-        <div className="text-right">
-          {item.value.toFixed(1)} {item.unit} <span className="text-muted-foreground">({item.percentage}% DV)</span>
+  const MicronutrientItem = ({ item }: { item: any }) => {
+    const displayValue = typeof item.value === 'number' ? item.value.toFixed(1) : '0.0';
+    return (
+      <div className="mb-2">
+        <div className="flex justify-between text-xs mb-1">
+          <div className="font-medium">{item.name}</div>
+          <div className="text-right">
+            {displayValue} {item.unit} <span className="text-muted-foreground">({item.percentage}% DV)</span>
+          </div>
         </div>
+        <div className="w-full bg-gray-100 rounded-full h-1">
+          <div 
+            className={`${getStatusColor(item.percentage)} h-1 rounded-full`} 
+            style={{ width: `${Math.min(item.percentage, 100)}%` }}
+          ></div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
       </div>
-      <div className="w-full bg-gray-100 rounded-full h-1">
-        <div 
-          className={`${getStatusColor(item.percentage)} h-1 rounded-full`} 
-          style={{ width: `${Math.min(item.percentage, 100)}%` }}
-        ></div>
-      </div>
-      <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-    </div>
-  );
+    );
+  };
   
-  const hasMicronutrients = vitamins.some(v => typeof v.value === 'number' && v.value > 0) || minerals.some(m => typeof m.value === 'number' && m.value > 0);
+  // Check if we have any micronutrient data to display
+  const hasMicronutrients = vitamins.some(v => typeof v.value === 'number' && v.value > 0) || 
+                           minerals.some(m => typeof m.value === 'number' && m.value > 0);
   
   if (!hasMicronutrients) return null;
   
@@ -143,6 +149,7 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
         
         <p className="text-xs text-muted-foreground mt-4 italic">
           DV = Daily Value, based on a 2,000 calorie diet. Your personal needs may vary.
+          {unitSystem === 'imperial' ? ' (US units)' : ' (Metric units)'}
         </p>
       </CardContent>
     </Card>
