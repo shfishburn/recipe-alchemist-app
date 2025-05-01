@@ -1,11 +1,41 @@
 
 import React from 'react';
-import { formatNutrientWithUnit, getWeightDisplay, getHeightDisplay } from '@/utils/unit-conversion';
+import { getWeightDisplay, getHeightDisplay } from '@/utils/unit-conversion';
 
-// Function to format a nutrition value (rounding to integers for readability)
-export function formatNutritionValue(value: number): string {
-  if (!value && value !== 0) return 'N/A';
-  return value >= 10 ? Math.round(value).toString() : value.toFixed(1);
+/**
+ * Format a nutrition value for display, rounding to integer for cleaner UI
+ */
+export function formatNutritionValue(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value)) {
+    return '0';
+  }
+  return Math.round(value).toString();
+}
+
+/**
+ * Format a nutrient with its unit for display
+ * Handles unit conversion based on unit system preference
+ */
+export function formatNutrientWithUnit(
+  value: number | undefined | null, 
+  unit: string,
+  unitSystem: 'metric' | 'imperial' = 'metric'
+): string {
+  // Handle null/undefined values
+  if (value === undefined || value === null || isNaN(Number(value))) {
+    return `0${unit}`;
+  }
+
+  // Round to integer for cleaner display
+  const roundedValue = Math.round(Number(value));
+
+  // Convert units if needed based on unit system
+  if (unitSystem === 'imperial' && unit === 'g' && roundedValue >= 1000) {
+    // Convert to pounds for large values
+    return `${(roundedValue / 453.592).toFixed(1)} lb`;
+  }
+
+  return `${roundedValue}${unit}`;
 }
 
 interface UnitValueProps {
@@ -77,5 +107,5 @@ export function NutrientDisplay({ value, unitSystem, unit = 'g', className }: Nu
   );
 }
 
-// Make sure to export the formatNutrientWithUnit function from this file too
-export { formatNutrientWithUnit, getWeightDisplay, getHeightDisplay };
+// Export other utility functions
+export { getWeightDisplay, getHeightDisplay };

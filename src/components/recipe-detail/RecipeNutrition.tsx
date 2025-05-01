@@ -12,7 +12,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { standardizeNutrition, Nutrition } from '@/types/nutrition-utils';
+import { standardizeNutrition, Nutrition, validateNutritionData } from '@/types/nutrition-utils';
 import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
 
 interface RecipeNutritionProps {
@@ -42,12 +42,8 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
       // If recipeNutrition isn't available, try to standardize it ourselves
       const nutrition = recipeNutrition || standardizeNutrition(recipe.nutrition);
       
-      // Check for the existence of basic nutrition values - use carbs instead of carbohydrates
-      return nutrition && 
-             (Number(nutrition.calories) > 0 || 
-              Number(nutrition.protein) > 0 || 
-              Number(nutrition.carbs) > 0 || 
-              Number(nutrition.fat) > 0);
+      // Use validateNutritionData utility for consistent validation
+      return validateNutritionData(nutrition);
     } catch (error) {
       console.error("Error validating nutrition data:", error);
       return false;
@@ -70,7 +66,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   // If there's no valid nutrition data, show a placeholder instead of nothing
   if (!hasValidNutrition) {
     return (
-      <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <Collapsible open={isOpen} onOpenChange={onToggle} className="w-full">
         <Card className="w-full">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center">
@@ -97,6 +93,9 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             <CardContent className="text-center py-6">
               <p className="text-muted-foreground">
                 Nutrition information is not available for this recipe.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Click the "Update Nutrition" button to analyze this recipe's ingredients.
               </p>
             </CardContent>
           </CollapsibleContent>
@@ -129,7 +128,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   } : defaultPreferences;
 
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
+    <Collapsible open={isOpen} onOpenChange={onToggle} className="w-full">
       <Card className="w-full">
         <div className="flex items-center justify-between p-4">
           <NutritionHeader
@@ -146,7 +145,12 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
               onUpdateComplete={handleNutritionUpdate}
             />
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 touch-target"
+                aria-label="Toggle nutrition section"
+              >
                 {isOpen ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
@@ -158,7 +162,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
           </div>
         </div>
         <CollapsibleContent>
-          <CardContent className="p-4">
+          <CardContent className={isMobile ? "p-2" : "p-4"}>
             <NutritionBlock 
               recipeNutrition={recipeNutrition}
               userPreferences={updatedUserPreferences}

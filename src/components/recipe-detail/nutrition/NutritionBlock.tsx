@@ -21,38 +21,50 @@ interface NutritionBlockProps {
 export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: NutritionBlockProps) {
   const unitSystem = userPreferences?.unitSystem || 'metric';
   
-  // Round all numerical values in recipeNutrition to integers
+  // Process nutrition data more efficiently without deep cloning
   const processedNutrition = React.useMemo(() => {
-    // Create a deep copy to avoid modifying the original data
-    const processed = JSON.parse(JSON.stringify(recipeNutrition));
+    if (!recipeNutrition) return null;
     
-    // Function to recursively round numbers in an object
-    const roundNumbers = (obj: any): any => {
-      if (obj === null || obj === undefined) return obj;
-      
-      if (typeof obj === 'number') {
-        return Math.round(obj);
-      }
-      
-      if (Array.isArray(obj)) {
-        return obj.map(item => roundNumbers(item));
-      }
-      
-      if (typeof obj === 'object') {
-        const result: any = {};
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            result[key] = roundNumbers(obj[key]);
-          }
-        }
-        return result;
-      }
-      
-      return obj;
-    };
+    // Only process fields that will be displayed
+    const fieldsToProcess = [
+      'calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium',
+      'vitaminA', 'vitaminC', 'vitaminD', 'calcium', 'iron', 'potassium'
+    ];
     
-    return roundNumbers(processed);
+    // Create a new object with only the processed fields
+    const processed: Record<string, number> = {};
+    
+    for (const field of fieldsToProcess) {
+      const value = recipeNutrition[field as keyof ExtendedNutritionData];
+      
+      // Only process numeric values and ensure they're rounded for display
+      if (typeof value === 'number') {
+        processed[field] = Math.round(value);
+      } else if (value !== undefined && value !== null) {
+        // Try to convert to number if possible
+        const numValue = Number(value);
+        processed[field] = !isNaN(numValue) ? Math.round(numValue) : 0;
+      } else {
+        processed[field] = 0;
+      }
+    }
+    
+    // Preserve data quality and metadata
+    if (recipeNutrition.data_quality) {
+      processed.data_quality = recipeNutrition.data_quality as any;
+    }
+    
+    return processed as ExtendedNutritionData;
   }, [recipeNutrition]);
+  
+  // Handle case when nutrition data is null or empty
+  if (!recipeNutrition || !processedNutrition) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-muted-foreground">No nutrition information available</p>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4 transition-all duration-200">

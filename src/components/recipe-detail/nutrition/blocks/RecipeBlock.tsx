@@ -10,6 +10,17 @@ import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/Micr
 import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { formatNutrientWithUnit, formatNutritionValue } from '@/components/ui/unit-display';
 
+// Standard daily reference values for nutrients
+const DAILY_REFERENCE_VALUES = {
+  calories: 2000,
+  protein: 50, // g
+  carbs: 275,  // g
+  fat: 78,     // g
+  fiber: 28,   // g
+  sugar: 50,   // g
+  sodium: 2300, // mg
+};
+
 interface RecipeBlockProps {
   recipeNutrition: ExtendedNutritionData;
   unitSystem: 'metric' | 'imperial';
@@ -33,19 +44,21 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
     );
   }
   
-  const { calories, protein, carbs, fat } = recipeNutrition;
-  const dailyCalories = 2000; // Default daily calories
-  const proteinPercentage = 30;
-  const carbsPercentage = 40;
-  const fatPercentage = 30;
+  // Extract values and ensure they're numbers
+  const calories = Math.round(recipeNutrition.calories || 0);
+  const protein = Math.round(recipeNutrition.protein || 0);
+  const carbs = Math.round(recipeNutrition.carbs || 0);
+  const fat = Math.round(recipeNutrition.fat || 0);
   
-  const proteinCalories = (dailyCalories * proteinPercentage) / 100;
-  const carbsCalories = (dailyCalories * carbsPercentage) / 100;
-  const fatCalories = (dailyCalories * fatPercentage) / 100;
+  // Calculate daily value percentages based on standard reference values
+  const proteinDailyValue = Math.round((protein / DAILY_REFERENCE_VALUES.protein) * 100);
+  const carbsDailyValue = Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100);
+  const fatDailyValue = Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100);
   
-  const proteinDailyValue = Math.round((protein / (proteinCalories / 4)) * 100);
-  const carbsDailyValue = Math.round((carbs / (carbsCalories / 4)) * 100);
-  const fatDailyValue = Math.round((fat / (fatCalories / 9)) * 100);
+  // Use macros from nutrition or calculate a standard split if not available
+  const proteinPercentage = recipeNutrition.data_quality?.recommended_macros?.protein || 30;
+  const carbsPercentage = recipeNutrition.data_quality?.recommended_macros?.carbs || 40;
+  const fatPercentage = recipeNutrition.data_quality?.recommended_macros?.fat || 30;
   
   // Format protein, carbs and fat based on unit system
   const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);
@@ -54,14 +67,14 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className={isMobile ? "px-3 py-3" : "px-6 py-4"}>
         <CardTitle>Nutrition Facts</CardTitle>
       </CardHeader>
       <CardContent className="px-0">
-        <div className="px-4">
+        <div className={isMobile ? "px-3" : "px-6"}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium">
-              <span className="text-lg">{Math.round(calories)}</span> calories
+              <span className="text-lg">{calories}</span> calories
             </p>
             <Badge variant="secondary">
               {unitSystem === 'imperial' ? 'US' : 'Metric'}
@@ -90,7 +103,11 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               <p className="text-xs font-medium">Protein</p>
               <p className="text-xs text-muted-foreground">{proteinDailyValue}% DV</p>
             </div>
-            <Progress value={proteinDailyValue} />
+            <Progress 
+              value={proteinDailyValue} 
+              className="h-2" 
+              aria-label={`Protein: ${proteinDailyValue}% of daily value`}
+            />
           </div>
           
           <div className="mb-4">
@@ -98,7 +115,11 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               <p className="text-xs font-medium">Carbs</p>
               <p className="text-xs text-muted-foreground">{carbsDailyValue}% DV</p>
             </div>
-            <Progress value={carbsDailyValue} />
+            <Progress 
+              value={carbsDailyValue} 
+              className="h-2" 
+              aria-label={`Carbs: ${carbsDailyValue}% of daily value`}
+            />
           </div>
           
           <div className="mb-4">
@@ -106,7 +127,11 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               <p className="text-xs font-medium">Fat</p>
               <p className="text-xs text-muted-foreground">{fatDailyValue}% DV</p>
             </div>
-            <Progress value={fatDailyValue} />
+            <Progress 
+              value={fatDailyValue} 
+              className="h-2" 
+              aria-label={`Fat: ${fatDailyValue}% of daily value`}
+            />
           </div>
           
           <Separator className="my-4" />
