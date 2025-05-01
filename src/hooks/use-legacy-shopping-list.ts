@@ -39,6 +39,7 @@ export function useLegacyShoppingList() {
         .from('shopping_lists')
         .select('id, items')
         .eq('user_id', user.id)
+        .is('deleted_at', null) // Filter out deleted lists
         .order('created_at', { ascending: false })
         .limit(1);
         

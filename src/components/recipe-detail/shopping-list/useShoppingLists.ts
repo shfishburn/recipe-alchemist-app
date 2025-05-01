@@ -29,6 +29,7 @@ export function useShoppingLists() {
       const { data: lists, error } = await supabase
         .from('shopping_lists')
         .select('id, title')
+        .is('deleted_at', null) // Filter out deleted lists
         .order('created_at', { ascending: false });
       
       if (error) throw error;

@@ -41,6 +41,7 @@ export function useUpdateShoppingList() {
         .from('shopping_lists')
         .select('id, items')
         .eq('id', listId)
+        .is('deleted_at', null) // Filter out deleted lists
         .single();
         
       if (listError) {
@@ -109,6 +110,7 @@ export function useUpdateShoppingList() {
         .from('shopping_lists')
         .select('items')
         .eq('id', listId)
+        .is('deleted_at', null) // Filter out deleted lists
         .single();
         
       if (error) {
