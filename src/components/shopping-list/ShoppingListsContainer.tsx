@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ShoppingListsHeader } from '@/components/shopping-list/ShoppingListsHeader';
 import { ShoppingListsView } from '@/components/shopping-list/ShoppingListsView';
 import { ShoppingListDetail } from '@/components/shopping-list/ShoppingListDetail';
@@ -10,6 +10,7 @@ import { DeleteListDialog } from '@/components/shopping-list/DeleteListDialog';
 import { useShoppingLists } from '@/hooks/use-shopping-lists';
 
 export function ShoppingListsContainer() {
+  const navigate = useNavigate();
   const {
     shoppingLists,
     isLoading,
@@ -34,13 +35,23 @@ export function ShoppingListsContainer() {
 
   // Effect to select the list from URL parameter when data is loaded
   useEffect(() => {
-    if (listIdFromUrl && shoppingLists.length > 0 && !selectedList) {
+    if (listIdFromUrl && shoppingLists?.length > 0) {
       const listFromUrl = shoppingLists.find(list => list.id === listIdFromUrl);
       if (listFromUrl) {
         setSelectedList(listFromUrl);
+      } else {
+        // If list ID is not found, redirect to the main shopping lists page
+        console.warn(`Shopping list with ID ${listIdFromUrl} not found`);
+        navigate('/shopping-lists');
       }
     }
-  }, [listIdFromUrl, shoppingLists, selectedList, setSelectedList]);
+  }, [listIdFromUrl, shoppingLists, setSelectedList, navigate]);
+
+  // Handle back click - update both the UI state and URL
+  const handleBackClick = () => {
+    setSelectedList(null);
+    navigate('/shopping-lists');
+  };
 
   if (!session) {
     return (
@@ -60,7 +71,7 @@ export function ShoppingListsContainer() {
     <>
       <ShoppingListsHeader 
         showBreadcrumb={!selectedList} 
-        onBackClick={selectedList ? () => setSelectedList(null) : undefined} 
+        onBackClick={selectedList ? handleBackClick : undefined} 
       />
       
       {selectedList ? (
@@ -78,7 +89,11 @@ export function ShoppingListsContainer() {
           newListTitle={newListTitle}
           onNewListTitleChange={setNewListTitle}
           onCreateList={createNewList}
-          onSelectList={setSelectedList}
+          onSelectList={(list) => {
+            setSelectedList(list);
+            // Update URL when selecting a list
+            navigate(`/shopping-lists/${list.id}`);
+          }}
           onDeleteList={handleDeleteList}
         />
       )}

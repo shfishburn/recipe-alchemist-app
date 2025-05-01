@@ -48,7 +48,10 @@ export function useUpdateShoppingList() {
       const newItems = ingredientsToShoppingItems(recipe.ingredients);
       
       // Combine with existing items
+      // Fix the type issue by properly handling the JSON data structure
       const existingItems = Array.isArray(currentList.items) ? currentList.items : [];
+      
+      // Convert existingItems to a proper array if it's not already
       const combinedItems = [...existingItems, ...newItems];
       
       // Update the shopping list
@@ -108,8 +111,8 @@ export function useUpdateShoppingList() {
         throw fetchError;
       }
       
-      // Make a copy of the items array
-      const updatedItems = [...currentList.items];
+      // Ensure items is an array before proceeding
+      const updatedItems = Array.isArray(currentList.items) ? [...currentList.items] : [];
       
       // Toggle the checked status of the specific item
       if (updatedItems[itemIndex]) {

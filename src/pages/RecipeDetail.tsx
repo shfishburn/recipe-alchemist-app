@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
@@ -20,11 +20,14 @@ import { toast } from "@/hooks/use-toast";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
-import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
+import { Button } from '@/components/ui/button';
+import { Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const RecipeDetail = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const { data: recipe, isLoading, error, refetch } = useRecipeDetail(id);
   const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
@@ -44,6 +47,24 @@ const RecipeDetail = () => {
       document.title = 'Recipe App';
     };
   }, [recipe]);
+
+  useEffect(() => {
+    // If there's an error, handle it with an appropriate timeout
+    if (error) {
+      console.error("Recipe detail error:", error);
+      
+      // Show error toast after a short delay
+      const timer = setTimeout(() => {
+        toast({
+          title: "Error loading recipe",
+          description: "We couldn't load this recipe. Please try again later.",
+          variant: "destructive",
+        });
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleOpenChat = () => {
     setChatOpen(true);
@@ -84,8 +105,6 @@ const RecipeDetail = () => {
           Object.assign(fieldsToUpdate, { science_notes: updatedRecipe.science_notes });
         }
         
-        // Add any other fields that might have been updated
-        
         // Only update if there are changes
         if (Object.keys(fieldsToUpdate).length > 0) {
           updateRecipe.mutate(fieldsToUpdate, {
@@ -95,6 +114,14 @@ const RecipeDetail = () => {
                 description: "Recipe has been updated successfully.",
               });
               refetch();
+            },
+            onError: (error) => {
+              console.error("Failed to update recipe:", error);
+              toast({
+                title: "Update failed",
+                description: "Could not update the recipe. Please try again.",
+                variant: "destructive",
+              });
             }
           });
         }
@@ -119,6 +146,26 @@ const RecipeDetail = () => {
                           Array.isArray(currentRecipe.science_notes) && 
                           currentRecipe.science_notes.length > 0;
 
+  // Handle the case where recipe is not found
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center p-6">
+            <h2 className="text-2xl font-semibold mb-4">Recipe Not Found</h2>
+            <p className="text-muted-foreground mb-6">
+              We couldn't find the recipe you're looking for. It may have been deleted or moved.
+            </p>
+            <Button asChild>
+              <Link to="/recipes"><Home className="mr-2 h-4 w-4" /> Back to Recipes</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -127,11 +174,6 @@ const RecipeDetail = () => {
           {isLoading ? (
             <div className="flex justify-center my-8 sm:my-12">
               <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : error ? (
-            <div className="text-center text-red-500 my-8 sm:my-12">
-              <p>Error loading recipe. Please try again later.</p>
-              <p className="text-sm text-gray-500">{error instanceof Error ? error.message : 'Unknown error'}</p>
             </div>
           ) : currentRecipe ? (
             <div className="max-w-4xl mx-auto">
