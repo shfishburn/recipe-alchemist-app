@@ -16,10 +16,10 @@ export function BodyAndNutritionTabs() {
 
   return (
     <Tabs defaultValue="personal">
-      <TabsList>
-        <TabsTrigger value="personal">Personal Details</TabsTrigger>
-        <TabsTrigger value="bodyComposition">Body Composition</TabsTrigger>
-        <TabsTrigger value="macros">Macro Nutrients</TabsTrigger>
+      <TabsList className="w-full md:w-auto">
+        <TabsTrigger value="personal" className="flex-1 md:flex-initial">Personal Details</TabsTrigger>
+        <TabsTrigger value="bodyComposition" className="flex-1 md:flex-initial">Body Composition</TabsTrigger>
+        <TabsTrigger value="macros" className="flex-1 md:flex-initial">Macro Nutrients</TabsTrigger>
       </TabsList>
       
       <TabsContent value="personal" className="mt-6">

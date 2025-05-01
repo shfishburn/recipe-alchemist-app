@@ -1,70 +1,67 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface ErrorDisplayProps {
   error: Error | null;
   onRetry?: () => void;
-  title?: string;
   className?: string;
 }
 
-export function ErrorDisplay({ error, onRetry, title = "Error", className = "" }: ErrorDisplayProps) {
+export function ErrorDisplay({ error, onRetry, className }: ErrorDisplayProps) {
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
   
   if (!error) return null;
   
   const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount(count => count + 1);
     if (onRetry) onRetry();
   };
   
   const getErrorMessage = () => {
-    if (!error) return "";
-    
-    const message = error.message || 'An unexpected error occurred.';
-    
-    // Handle specific error types
-    if (message.includes('PGRST301')) {
-      return 'Could not find your profile data. It may have been deleted.';
+    if (error?.message?.includes('PGRST301')) {
+      return 'Could not find your profile. It may have been deleted.';
     }
     
-    if (message.includes('PGRST401') || message.includes('JWT')) {
-      return 'You are not authorized to access this data. Please log in again.';
+    if (error?.message?.includes('PGRST401') || error?.message?.includes('auth')) {
+      return 'You are not authorized to access this profile.';
     }
     
-    if (message.includes('network') || message.includes('fetch')) {
-      return 'Network error. Please check your connection and try again.';
+    if (error?.message?.includes('network') || error?.message?.includes('connection')) {
+      return 'Network error. Please check your connection.';
     }
     
-    return message;
+    return error?.message || 'An unexpected error occurred.';
   };
   
   return (
-    <Alert variant="destructive" className={`mb-4 ${className}`}>
-      <AlertTriangle className="h-5 w-5" />
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription className="mt-2">
-        <div className="text-sm mb-3">{getErrorMessage()}</div>
-        {onRetry && retryCount < maxRetries && (
+    <div className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm p-6",
+      className
+    )}>
+      <div className="flex flex-col items-center text-center gap-4">
+        <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
+        <h3 className="text-lg font-semibold">{getErrorMessage()}</h3>
+        <p className="text-sm text-muted-foreground">
+          {retryCount >= maxRetries 
+            ? 'Maximum retry attempts reached. Please try again later.' 
+            : 'We encountered an error while loading your profile.'}
+        </p>
+        {retryCount < maxRetries && onRetry && (
           <Button 
             onClick={handleRetry} 
-            variant="outline" 
-            size="sm"
-            className="mt-2 bg-background/50 hover:bg-background/80 border-destructive"
+            variant="outline"
+            leftIcon={<AlertTriangle className="h-4 w-4" />}
           >
             Try Again
           </Button>
         )}
-        {retryCount >= maxRetries && (
-          <p className="text-xs mt-2 italic">
-            Maximum retry attempts reached. Please try again later.
-          </p>
-        )}
-      </AlertDescription>
-    </Alert>
+      </div>
+    </div>
   );
 }
+
+export default ErrorDisplay;
