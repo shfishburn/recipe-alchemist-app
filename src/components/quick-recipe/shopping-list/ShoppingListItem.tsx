@@ -19,7 +19,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   // Extract quality indicators and storage tips if available
   const qualityIndicators = item.quality_indicators || item.originalIngredient?.quality_indicators;
   const storageTips = item.storage_tips || item.originalIngredient?.storage_tips;
-  const alternatives = item.originalIngredient?.alternatives;
+  const alternatives = item.alternatives || item.originalIngredient?.alternatives;
   
   // Determine if we should show additional item details
   const showDetails = hasDetails || qualityIndicators || storageTips || alternatives || 
@@ -86,6 +86,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
           </span>
         )}
         
+        {/* Always show alternatives in the UI itself for better visibility */}
         {alternatives && alternatives.length > 0 && (
           <div className="text-xs text-muted-foreground mt-0.5">
             Alternatives: {alternatives.join(', ')}

@@ -7,12 +7,16 @@ import { supabase } from '@/integrations/supabase/client';
 // Transform recipe ingredients into shopping items
 export const createShoppingItems = async (recipe: QuickRecipe): Promise<ShoppingItem[]> => {
   try {
+    console.log("Starting shopping list generation for recipe:", recipe.title);
+    
     // First try to get AI-enhanced shopping data
     const enhancedItems = await generateAIShoppingList(recipe);
     if (enhancedItems && enhancedItems.length > 0) {
+      console.log("AI-enhanced shopping list generated successfully with", enhancedItems.length, "items");
       return enhancedItems;
     }
     
+    console.log("Falling back to basic shopping items");
     // Fallback to manually creating shopping items from ingredients
     return createBasicShoppingItems(recipe);
   } catch (error) {
@@ -83,6 +87,8 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
 // Generate AI-enhanced shopping list using the edge function
 export const generateAIShoppingList = async (recipe: QuickRecipe): Promise<ShoppingItem[]> => {
   try {
+    console.log("Calling generate-shopping-list edge function");
+    
     // Call the edge function to get AI-enhanced shopping list
     const { data, error } = await supabase.functions.invoke('generate-shopping-list', {
       body: {

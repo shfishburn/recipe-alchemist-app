@@ -33,9 +33,14 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
       if (open) {
         setIsLoading(true);
         try {
+          console.log("Fetching shopping items for recipe:", recipe.title);
           const shoppingItems = await createShoppingItems(recipe);
+          console.log("Shopping items created:", shoppingItems.length);
           setItems(shoppingItems);
-          setItemsByDepartment(groupItemsByDepartment(shoppingItems));
+          
+          const grouped = groupItemsByDepartment(shoppingItems);
+          console.log("Items grouped by department:", Object.keys(grouped).length, "departments");
+          setItemsByDepartment(grouped);
         } catch (error) {
           console.error("Error creating shopping items:", error);
           toast({
@@ -122,15 +127,19 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
             </div>
           ) : (
             <div className="space-y-4">
-              {Object.entries(itemsByDepartment).map(([department, deptItems]) => (
-                <ShoppingListDepartment
-                  key={department}
-                  department={department}
-                  items={deptItems}
-                  onToggleItem={toggleItem}
-                  itemIndices={itemIndices}
-                />
-              ))}
+              {Object.entries(itemsByDepartment).length > 0 ? (
+                Object.entries(itemsByDepartment).map(([department, deptItems]) => (
+                  <ShoppingListDepartment
+                    key={department}
+                    department={department}
+                    items={deptItems}
+                    onToggleItem={toggleItem}
+                    itemIndices={itemIndices}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No items found</p>
+              )}
             </div>
           )}
         </div>
