@@ -7,9 +7,10 @@ import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
+import { RecipeCarousel } from '@/components/landing/RecipeCarousel';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
@@ -43,11 +44,26 @@ const QuickRecipePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 py-4 md:py-8 animate-fadeIn">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 py-6 md:py-10 animate-fadeIn">
+        <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Hero Title Section - Always show this */}
+          <div className="text-center mb-8 md:mb-10">
+            <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl flex items-center justify-center gap-2">
+              <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
+              {recipe ? "Your Custom Recipe" : "What's in your kitchen tonight?"}
+            </h1>
+            
+            {!recipe && (
+              <p className="text-base sm:text-lg text-muted-foreground max-w-4xl mx-auto mt-3 md:mt-4">
+                Share what you've got and what you're craving. Pick your flavor inspiration. 
+                I'll instantly transform your ingredients into delicious, foolproof recipes.
+              </p>
+            )}
+          </div>
+
           {isDirectNavigation ? (
             // Show form directly when navigating from navbar
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md max-w-lg mx-auto">
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md max-w-lg mx-auto mb-10">
               <QuickRecipeFormContainer />
             </div>
           ) : isLoading ? (
@@ -81,7 +97,7 @@ const QuickRecipePage = () => {
           ) : recipe ? (
             <>
               <QuickRecipeDisplay recipe={recipe} />
-              <div className="mt-6 mb-8">
+              <div className="mt-6 mb-10">
                 <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
               </div>
             </>
@@ -96,6 +112,13 @@ const QuickRecipePage = () => {
                   &nbsp;Return to home
                 </Button>
               </p>
+            </div>
+          )}
+          
+          {/* Popular Recipes section - Only show when showing form or no recipe */}
+          {(isDirectNavigation || !recipe) && (
+            <div className="mt-12 md:mt-16">
+              <RecipeCarousel />
             </div>
           )}
         </div>

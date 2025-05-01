@@ -1,103 +1,89 @@
-
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-import type { Recipe, Ingredient } from '@/types/recipe';
-import type { ChatMessage } from '@/types/chat';
-import { generateRecipeImage } from './utils/generate-recipe-image';
+import { useRecipes } from '@/hooks/use-recipes';
+import { useRecipeDetail } from '@/hooks/use-recipe-detail';
+import { supabase } from '@/integrations/supabase/client';
+import { Recipe } from '@/types/recipe';
 import { updateRecipe } from './utils/update-recipe';
-import { updateChatStatus } from './utils/update-chat-status';
-import { standardizeNutrition, validateNutrition } from '@/types/nutrition-utils';
+import { validateRecipeUpdate } from './utils/validation/validate-recipe-update';
+import { standardizeNutrition } from '@/types/nutrition-utils';
 
-export const useApplyChanges = (recipe: Recipe) => {
+interface Update {
+  path: string;
+  value: any;
+}
+
+export const useApplyChanges = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { refetch: refetchRecipes } = useRecipes();
+  const { refetch: refetchRecipeDetail } = useRecipeDetail();
 
-  const applyChanges = useMutation({
-    mutationFn: async (chatMessage: ChatMessage) => {
-      if (!chatMessage.changes_suggested) {
-        console.error("No changes to apply in this chat message");
-        throw new Error("No changes to apply");
-      }
-      
-      if (!user) {
-        console.error("User not authenticated");
-        throw new Error("You must be logged in to apply changes");
+  const applyChanges = useCallback(async (recipeId: string, updates: Update[], originalRecipe: Recipe) => {
+    try {
+      if (!recipeId || !updates || updates.length === 0) {
+        console.warn("No recipe ID or updates provided.");
+        return false;
       }
 
-      const hasTitle = !!chatMessage.changes_suggested.title;
-      const hasIngredients = !!chatMessage.changes_suggested.ingredients?.items?.length;
-      const hasInstructions = !!chatMessage.changes_suggested.instructions?.length;
-      const hasNutrition = !!chatMessage.changes_suggested.nutrition;
-      const hasScienceNotes = !!chatMessage.changes_suggested.science_notes?.length;
-      
-      const changeType = hasTitle ? 'title' : 
-                          hasIngredients ? 'ingredients' :
-                          hasInstructions ? 'instructions' :
-                          hasNutrition ? 'nutrition information' :
-                          hasScienceNotes ? 'science notes' : 'recipe';
+      // Validate updates before applying
+      const validationResult = validateRecipeUpdate(originalRecipe, updates);
+      if (!validationResult.isValid) {
+        toast({
+          title: "Validation Error",
+          description: validationResult.errorMessage || "Failed to validate updates.",
+          variant: "destructive",
+        });
+        return false;
+      }
 
-      toast({
-        title: "Applying changes",
-        description: `Updating ${changeType}...`,
+      // Optimistically apply updates to local state
+      let updatedRecipe = { ...originalRecipe };
+      updates.forEach(update => {
+        updatedRecipe = updateRecipe(updatedRecipe, update.path, update.value);
       });
 
-      console.log("Starting to apply changes from chat:", chatMessage.id);
-
-      // Create a properly typed recipe update object
-      const recipeUpdate: Recipe = {
-        ...recipe,
-        id: recipe.id,
-        title: recipe.title, // Keep existing title
-        ingredients: recipe.ingredients, // Keep existing ingredients
-        instructions: recipe.instructions, // Keep existing instructions
-        nutrition: recipe.nutrition, // Keep existing nutrition
-        science_notes: recipe.science_notes || [], // Keep existing science notes
-        image_url: recipe.image_url,
-        version_number: recipe.version_number
-      };
-
-      try {
-        const updatedRecipe = await updateRecipe(
-          recipeUpdate,
-          chatMessage,
-          user.id,
-          recipe.image_url
-        );
-
-        if (!updatedRecipe) {
-          throw new Error("Failed to update recipe - no data returned");
-        }
-
-        // Mark chat message as applied
-        await updateChatStatus(chatMessage);
-        
-        return updatedRecipe;
-      } catch (error) {
-        console.error("Update recipe error:", error);
-        throw error;
+      // Standardize nutrition data after applying updates
+      if (updatedRecipe.nutrition) {
+        updatedRecipe.nutrition = standardizeNutrition(updatedRecipe.nutrition);
       }
-    },
-    onSuccess: (newRecipe) => {
+
+      // Send updates to Supabase
+      const { error } = await supabase
+        .from('recipes')
+        .update(updatedRecipe)
+        .eq('id', recipeId);
+
+      if (error) {
+        console.error("Failed to update recipe in Supabase:", error);
+        toast({
+          title: "Update Failed",
+          description: "Failed to update recipe. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Revalidate cache
+      await refetchRecipes();
+      await refetchRecipeDetail(recipeId);
+
       toast({
         title: "Recipe Updated",
-        description: "Recipe has been updated successfully",
+        description: "Your recipe has been successfully updated.",
       });
-      queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
-      queryClient.invalidateQueries({ queryKey: ['recipe', recipe.id] });
-    },
-    onError: (error) => {
-      console.error("Error applying changes:", error);
+
+      return true;
+
+    } catch (err) {
+      console.error("Error applying changes:", err);
       toast({
         title: "Error",
-        description: error instanceof Error 
-          ? error.message 
-          : "Failed to apply changes",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    },
-  });
+      return false;
+    }
+  }, [supabase, toast, refetchRecipes, refetchRecipeDetail]);
 
-  return applyChanges;
+  return { applyChanges };
 };
