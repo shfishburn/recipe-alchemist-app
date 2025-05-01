@@ -26,6 +26,17 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
       console.warn("Empty or invalid nutrition data detected, using default empty object");
       updatedRecipe.nutrition = {};
     } else {
+      // Ensure all numerical values are non-zero to avoid display issues
+      // Converting any zero values to small positive numbers for display purposes
+      const minValue = 0.01; // Minimum value for nutrition fields
+      
+      for (const key in standardizedNutrition) {
+        if (typeof standardizedNutrition[key] === 'number' && standardizedNutrition[key] <= 0) {
+          console.warn(`Found zero or negative value for nutrition field ${key}, setting to minimum value`);
+          standardizedNutrition[key] = minValue;
+        }
+      }
+      
       updatedRecipe.nutrition = standardizedNutrition;
     }
   }

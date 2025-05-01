@@ -87,26 +87,36 @@ export const useApplyChanges = () => {
     }
     
     // We need the original recipe for the update
-    return supabase
-      .from('recipes')
-      .select('*')
-      .eq('id', chat.recipe_id)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error fetching recipe:", error);
-          throw error;
-        }
-        
-        // Cast the data to Recipe type to ensure type safety
-        const recipeData = data as unknown as Recipe;
-        
-        return mutation.mutateAsync({ 
-          recipeId: chat.recipe_id as string, 
-          changes: chat, 
-          originalRecipe: recipeData 
+    return new Promise<boolean>((resolve) => {
+      supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', chat.recipe_id)
+        .single()
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error fetching recipe:", error);
+            resolve(false);
+            return;
+          }
+          
+          // Cast the data to Recipe type to ensure type safety
+          const recipeData = data as unknown as Recipe;
+          
+          mutation.mutateAsync({ 
+            recipeId: chat.recipe_id as string, 
+            changes: chat, 
+            originalRecipe: recipeData 
+          })
+          .then(result => {
+            resolve(result);
+          })
+          .catch(err => {
+            console.error("Error in mutation:", err);
+            resolve(false);
+          });
         });
-      });
+    });
   }, [mutation]);
 
   return { applyChanges, isPending: mutation.isPending };

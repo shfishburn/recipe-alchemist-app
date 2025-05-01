@@ -63,6 +63,28 @@ export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | 
       return false;
     }
     
+    // Validate nutrition data if present
+    if (changes.nutrition) {
+      // Ensure it's an object
+      if (typeof changes.nutrition !== 'object' || changes.nutrition === null) {
+        console.error("Nutrition must be a valid object");
+        return false;
+      }
+      
+      // Check for minimum required nutrition fields
+      const requiredFields = ['calories', 'protein', 'carbs', 'fat'];
+      
+      // Log for debugging
+      console.log("Validating nutrition data:", changes.nutrition);
+      
+      // We don't strictly enforce these fields, just log warnings
+      for (const field of requiredFields) {
+        if (!(field in changes.nutrition) || changes.nutrition[field] === undefined) {
+          console.warn(`Missing nutrition field: ${field}`);
+        }
+      }
+    }
+    
     return true;
   } catch (error) {
     console.error("Validation error:", error);
