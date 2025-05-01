@@ -8,3 +8,64 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Consistent layout padding */
+.container-page {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-page {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-page {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Mobile-friendly fixes */
+@media (max-width: 640px) {
+  /* Improve touch targets */
+  button, 
+  [role="button"], 
+  a.clickable, 
+  input[type="checkbox"], 
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve form controls */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents mobile zoom on focus */
+  }
+  
+  /* Fix tooltip positioning */
+  .tooltip-content {
+    max-width: 280px !important;
+  }
+  
+  /* Improve spacing */
+  .card-content,
+  .dialog-content {
+    padding: 1rem !important;
+  }
+  
+  /* Fix overflow issues */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+}

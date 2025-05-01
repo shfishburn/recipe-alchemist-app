@@ -1,6 +1,7 @@
 
 import { Ingredient } from '@/hooks/use-quick-recipe';
 import { Nutrition } from '@/types/recipe';
+import { convertToGrams } from '@/utils/unit-conversion';
 
 // Basic nutrition estimates per common ingredient type (per 100g)
 const NUTRITION_ESTIMATES: Record<string, Partial<Nutrition>> = {
@@ -34,29 +35,7 @@ const NUTRITION_ESTIMATES: Record<string, Partial<Nutrition>> = {
   'cream': { calories: 340, protein_g: 2.1, fat_g: 37, carbs_g: 2.8 },
   
   // Default for unknown ingredients
-  'default': { calories: 100, protein_g: 5, fat_g: 5, carbs_g: 10 }
-};
-
-// Unit conversion estimates (to grams)
-const UNIT_TO_GRAM: Record<string, number> = {
-  'g': 1,
-  'kg': 1000,
-  'oz': 28.35,
-  'lb': 453.6,
-  'cup': 240,
-  'tbsp': 15,
-  'tsp': 5,
-  'ml': 1,
-  'l': 1000,
-  'piece': 50,
-  'slice': 30,
-  'clove': 5,
-  'pound': 453.6,
-  'pounds': 453.6,
-  'tablespoon': 15,
-  'tablespoons': 15,
-  'teaspoon': 5,
-  'teaspoons': 5
+  'default': { calories: 50, protein_g: 2, fat_g: 2, carbs_g: 5 }
 };
 
 // Function to estimate nutrition for a recipe
@@ -73,26 +52,26 @@ export function estimateNutrition(ingredients: Ingredient[], servings: number): 
   
   if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
     console.warn("No ingredients provided for nutrition estimation");
-    // Return base values even if no ingredients
-    totalNutrition.calories = 200;
-    totalNutrition.protein_g = 10;
-    totalNutrition.carbs_g = 20;
-    totalNutrition.fat_g = 10;
+    // Return minimal base values instead of inflated ones
+    totalNutrition.calories = 100;
+    totalNutrition.protein_g = 5;
+    totalNutrition.carbs_g = 10;
+    totalNutrition.fat_g = 5;
     return totalNutrition;
   }
   
   // Process each ingredient
   ingredients.forEach(ingredient => {
     if (typeof ingredient === 'string') {
-      // For string ingredients, use default estimates
-      totalNutrition.calories! += NUTRITION_ESTIMATES.default.calories || 0;
-      totalNutrition.protein_g! += NUTRITION_ESTIMATES.default.protein_g || 0;
-      totalNutrition.carbs_g! += NUTRITION_ESTIMATES.default.carbs_g || 0;
-      totalNutrition.fat_g! += NUTRITION_ESTIMATES.default.fat_g || 0;
+      // For string ingredients, use reduced default estimates
+      totalNutrition.calories! += NUTRITION_ESTIMATES.default.calories! * 0.5;
+      totalNutrition.protein_g! += NUTRITION_ESTIMATES.default.protein_g! * 0.5;
+      totalNutrition.carbs_g! += NUTRITION_ESTIMATES.default.carbs_g! * 0.5;
+      totalNutrition.fat_g! += NUTRITION_ESTIMATES.default.fat_g! * 0.5;
       return;
     }
     
-    const { qty, unit, item } = ingredient;
+    const { qty = 1, unit = 'g', item } = ingredient;
     
     // Find matching ingredient type
     let ingredientType = 'default';
@@ -107,14 +86,39 @@ export function estimateNutrition(ingredients: Ingredient[], servings: number): 
       }
     }
     
-    // Calculate quantity in grams
-    let unitLower = (unit || '').toLowerCase();
-    // If unit isn't recognized, default to 'piece'
-    const conversionFactor = UNIT_TO_GRAM[unitLower] || UNIT_TO_GRAM['piece'];
-    const quantityInGrams = (qty || 1) * conversionFactor;
+    // Calculate quantity in grams - use our more accurate unit conversion utility
+    let quantityInGrams;
+    
+    try {
+      // Try to use the more accurate conversion utility
+      quantityInGrams = convertToGrams(qty, unit || 'g', itemName);
+    } catch (error) {
+      // Fallback to simple estimation
+      const standardUnit = unit.toLowerCase();
+      const simpleConversions: Record<string, number> = {
+        'g': 1,
+        'kg': 1000,
+        'oz': 28.35,
+        'lb': 453.6,
+        'cup': 240,
+        'tbsp': 15,
+        'tsp': 5,
+        'ml': 1,
+        'l': 1000,
+        'piece': 30,
+        'slice': 20,
+        'clove': 3
+      };
+      
+      const conversionFactor = simpleConversions[standardUnit] || 1;
+      quantityInGrams = qty * conversionFactor;
+    }
+    
+    // Apply scaling factor for more reasonable values
+    const scalingFactor = 0.6; // Reduce inflated values
     
     // Calculate nutrition based on quantity
-    const nutritionScale = quantityInGrams / 100; // Nutrition is per 100g
+    const nutritionScale = (quantityInGrams / 100) * scalingFactor; // per 100g, with scaling
     const ingredientNutrition = NUTRITION_ESTIMATES[ingredientType];
     
     totalNutrition.calories! += (ingredientNutrition.calories || 0) * nutritionScale;
@@ -133,17 +137,28 @@ export function estimateNutrition(ingredients: Ingredient[], servings: number): 
     totalNutrition.sugar_g = Math.round((totalNutrition.sugar_g || 0) / servings);
   }
   
+  // Cap maximum values to avoid ridiculous estimates
+  const maxCalories = 800; // per serving
+  if (totalNutrition.calories! > maxCalories) {
+    // Scale all values proportionally if calories are too high
+    const scaleFactor = maxCalories / totalNutrition.calories!;
+    totalNutrition.calories = maxCalories;
+    totalNutrition.protein_g = Math.round(totalNutrition.protein_g! * scaleFactor);
+    totalNutrition.carbs_g = Math.round(totalNutrition.carbs_g! * scaleFactor);
+    totalNutrition.fat_g = Math.round(totalNutrition.fat_g! * scaleFactor);
+  }
+  
   // Also include kcal as an alias for calories
   totalNutrition.kcal = totalNutrition.calories;
   
-  // Add some placeholder values for other nutrients to ensure display
-  totalNutrition.sodium_mg = Math.round(totalNutrition.calories * 1.2); // rough estimate
-  totalNutrition.vitamin_a_iu = 100;
-  totalNutrition.vitamin_c_mg = 10;
-  totalNutrition.vitamin_d_iu = 40;
-  totalNutrition.calcium_mg = 100;
-  totalNutrition.iron_mg = 2;
-  totalNutrition.potassium_mg = 300;
+  // Add reasonable placeholder values for other nutrients
+  totalNutrition.sodium_mg = Math.round(totalNutrition.calories * 0.8);
+  totalNutrition.vitamin_a_iu = 50;
+  totalNutrition.vitamin_c_mg = 5;
+  totalNutrition.vitamin_d_iu = 20;
+  totalNutrition.calcium_mg = 50;
+  totalNutrition.iron_mg = 1;
+  totalNutrition.potassium_mg = 150;
   
   return totalNutrition;
 }

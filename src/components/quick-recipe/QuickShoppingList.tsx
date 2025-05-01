@@ -8,6 +8,8 @@ import { toast } from '@/hooks/use-toast';
 import { ShoppingItem, ShoppingItemsByDepartment } from './shopping-list/types';
 import { createShoppingItems, groupItemsByDepartment, formatShoppingListForClipboard } from './shopping-list/utils';
 import { ShoppingListDepartment } from './shopping-list/ShoppingListDepartment';
+import { useUnitSystem } from '@/hooks/use-unit-system';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuickShoppingListProps {
   recipe: QuickRecipe;
@@ -20,6 +22,8 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   const [itemsByDepartment, setItemsByDepartment] = useState<ShoppingItemsByDepartment>({});
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { unitSystem } = useUnitSystem();
+  const isMobile = useIsMobile();
   
   // Create a mapping of item text to index for efficient lookups
   const itemIndices = items.reduce((acc, item, index) => {
@@ -51,11 +55,14 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
         } finally {
           setIsLoading(false);
         }
+      } else {
+        // Reset when closed
+        setCopied(false);
       }
     };
     
     initializeItems();
-  }, [recipe, open]);
+  }, [recipe, open, unitSystem]); // Include unitSystem to regenerate when preference changes
   
   const toggleItem = (index: number) => {
     const updatedItems = items.map((item, i) => 
@@ -66,7 +73,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   };
   
   const copyToClipboard = () => {
-    const textByDepartments = formatShoppingListForClipboard(itemsByDepartment);
+    const textByDepartments = formatShoppingListForClipboard(itemsByDepartment, unitSystem);
     
     navigator.clipboard.writeText(textByDepartments)
       .then(() => {
@@ -90,7 +97,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={isMobile ? "w-[95vw] max-w-md p-4" : "sm:max-w-md"}>
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle className="flex items-center gap-2">

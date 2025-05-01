@@ -192,13 +192,54 @@ export const groupItemsByDepartment = (items: ShoppingItem[]): ShoppingItemsByDe
 };
 
 // Format shopping list as text for clipboard
-export const formatShoppingListForClipboard = (itemsByDepartment: ShoppingItemsByDepartment): string => {
+export const formatShoppingListForClipboard = (
+  itemsByDepartment: ShoppingItemsByDepartment, 
+  unitSystem: 'metric' | 'imperial' = 'metric'
+): string => {
   return Object.entries(itemsByDepartment)
     .map(([department, deptItems]) => {
       const itemTexts = deptItems.map(item => {
-        // Use structured data for more accurate clipboard text format
-        const quantityText = item.quantity ? `${item.quantity} ` : '';
-        const unitText = item.unit ? `${item.unit} ` : '';
+        // Apply unit conversion based on user preferences
+        let quantityText = '';
+        let unitText = '';
+        
+        if (item.quantity) {
+          const qty = typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity;
+          const unit = item.unit || '';
+          
+          // Convert units based on user preference if needed
+          if (unitSystem === 'imperial' && !isNaN(qty)) {
+            if (unit === 'g' && qty >= 100) {
+              quantityText = (qty / 453.59).toFixed(2);
+              unitText = 'lb ';
+            } else if (unit === 'g') {
+              quantityText = (qty / 28.35).toFixed(1);
+              unitText = 'oz ';
+            } else if (unit === 'kg') {
+              quantityText = (qty * 2.20462).toFixed(2);
+              unitText = 'lb ';
+            } else if (unit === 'ml' && qty >= 240) {
+              quantityText = (qty / 240).toFixed(2);
+              unitText = 'cup ';
+            } else if (unit === 'ml') {
+              quantityText = (qty / 29.57).toFixed(1);
+              unitText = 'fl oz ';
+            } else if (unit === 'l') {
+              quantityText = (qty * 4.22675).toFixed(2);
+              unitText = 'cup ';
+            } else if (unit === 'cm') {
+              quantityText = (qty / 2.54).toFixed(1);
+              unitText = 'in ';
+            } else {
+              quantityText = qty.toString() + ' ';
+              unitText = unit ? unit + ' ' : '';
+            }
+          } else {
+            quantityText = qty.toString() + ' ';
+            unitText = unit ? unit + ' ' : '';
+          }
+        }
+        
         const itemName = item.item || '';
         const notesText = item.notes ? ` (${item.notes})` : '';
         const formattedText = `${quantityText}${unitText}${itemName}${notesText}`;

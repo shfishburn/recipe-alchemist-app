@@ -27,20 +27,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   const { recipeNutrition, userPreferences } = useNutritionData(recipe, profile);
   const isMobile = useMediaQuery('(max-width: 640px)');
   
-  // Console log for debugging nutrition data issues
-  useEffect(() => {
-    if (recipe.nutrition) {
-      console.log("Recipe nutrition data:", recipe.nutrition);
-      if (recipeNutrition) {
-        console.log("Processed nutrition data:", recipeNutrition);
-      } else {
-        console.log("No processed nutrition data available");
-      }
-    } else {
-      console.log("No nutrition data in recipe");
-    }
-  }, [recipe.nutrition, recipeNutrition]);
-  
   // Calculate total time from prep + cook time
   const totalTime = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
   // Use cuisine as cooking method since cooking_method doesn't exist in the type
@@ -68,11 +54,10 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   
   // If there's no valid nutrition data, show a placeholder instead of nothing
   if (!hasValidNutrition) {
-    console.log("No valid nutrition data available for display");
     return (
       <Collapsible open={isOpen} onOpenChange={onToggle}>
         <Card className="w-full">
-          <div className={`flex items-center justify-between ${isMobile ? 'p-3 pb-2' : 'p-6 pb-3'}`}>
+          <div className="flex items-center justify-between p-4">
             <div className="flex items-center">
               <h3 className="text-lg font-medium">Nutrition Information</h3>
             </div>
@@ -88,7 +73,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent>
-            <CardContent className="text-center py-8">
+            <CardContent className="text-center py-6">
               <p className="text-muted-foreground">
                 Nutrition information is not available for this recipe.
               </p>
@@ -125,7 +110,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card className="w-full">
-        <div className={`flex items-center justify-between ${isMobile ? 'p-3 pb-2' : 'p-6 pb-3'}`}>
+        <div className="flex items-center justify-between p-4">
           <NutritionHeader
             showToggle={!!user && !!updatedUserPreferences}
             viewMode={viewMode}
@@ -146,7 +131,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle }: RecipeNutritionPro
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
-          <CardContent className={isMobile ? 'px-3 py-2 pb-4' : 'p-6'}>
+          <CardContent className="p-4">
             <NutritionBlock 
               recipeNutrition={recipeNutrition}
               userPreferences={updatedUserPreferences}
