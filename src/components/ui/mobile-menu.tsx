@@ -58,7 +58,7 @@ export function MobileMenu() {
               to={link.path} 
               className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
             >
-              {link.icon && <link.icon className="h-5 w-5 mr-3" />}
+              {link.icon && React.createElement(link.icon, { className: "h-5 w-5 mr-3" })}
               {link.name}
             </Link>
           ))}
@@ -69,7 +69,7 @@ export function MobileMenu() {
             <Button variant="outline" asChild className="w-full h-12 justify-start">
               <Link to="/profile">
                 <User className="h-5 w-5 mr-3" />
-                Profile
+                <span>Profile</span>
               </Link>
             </Button>
           ) : (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
 import { SaveLoader } from './SaveLoader';
 import { ErrorDisplay } from './ErrorDisplay';
+import { DEFAULT_NUTRITION_PREFERENCES, NutritionPreferencesType } from '@/types/nutrition-preferences';
 
 // Form validation schema
 const formSchema = z.object({
@@ -66,10 +66,10 @@ export function ProfileBasicInfo() {
     try {
       setIsSaving(true);
       // Get current nutrition preferences
-      const currentPrefs = profile?.nutrition_preferences || {};
+      const currentPrefs = profile?.nutrition_preferences || DEFAULT_NUTRITION_PREFERENCES;
       
       // Update nutrition preferences with unit system
-      const updatedPrefs = {
+      const updatedPrefs: NutritionPreferencesType = {
         ...currentPrefs,
         unitSystem: data.unitSystem
       };

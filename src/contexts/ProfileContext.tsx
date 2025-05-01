@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +46,11 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     dietaryRestrictions: profile?.nutrition_preferences?.dietaryRestrictions || DEFAULT_NUTRITION_PREFERENCES.dietaryRestrictions,
     allergens: profile?.nutrition_preferences?.allergens || DEFAULT_NUTRITION_PREFERENCES.allergens,
     preferredCuisines: profile?.nutrition_preferences?.preferredCuisines || DEFAULT_NUTRITION_PREFERENCES.preferredCuisines,
-    unitSystem: profile?.nutrition_preferences?.unitSystem || DEFAULT_NUTRITION_PREFERENCES.unitSystem
+    healthGoal: profile?.nutrition_preferences?.healthGoal || DEFAULT_NUTRITION_PREFERENCES.healthGoal,
+    mealSizePreference: profile?.nutrition_preferences?.mealSizePreference || DEFAULT_NUTRITION_PREFERENCES.mealSizePreference,
+    unitSystem: profile?.nutrition_preferences?.unitSystem || DEFAULT_NUTRITION_PREFERENCES.unitSystem,
+    weightGoalType: profile?.nutrition_preferences?.weightGoalType || DEFAULT_NUTRITION_PREFERENCES.weightGoalType,
+    weightGoalDeficit: profile?.nutrition_preferences?.weightGoalDeficit || DEFAULT_NUTRITION_PREFERENCES.weightGoalDeficit
   };
 
   const fetchProfile = async () => {

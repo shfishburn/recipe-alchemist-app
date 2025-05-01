@@ -14,6 +14,12 @@ export interface NutritionPreferencesType {
   mealSizePreference: string;
   preferredCuisines?: string[];
   unitSystem?: 'metric' | 'imperial';
+  // Optional fields
+  weightGoalType?: string;
+  weightGoalDeficit?: number;
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+  nonExerciseActivity?: 'minimal' | 'low' | 'moderate' | 'high' | 'very_high';
+  exerciseIntensity?: 'light' | 'moderate' | 'challenging' | 'intense' | 'extreme';
 }
 
 // Default values for nutrition preferences
@@ -29,5 +35,7 @@ export const DEFAULT_NUTRITION_PREFERENCES: NutritionPreferencesType = {
   preferredCuisines: [],
   healthGoal: 'maintenance',
   mealSizePreference: 'medium',
-  unitSystem: 'metric'
+  unitSystem: 'metric',
+  weightGoalType: 'maintenance',
+  weightGoalDeficit: 0
 };

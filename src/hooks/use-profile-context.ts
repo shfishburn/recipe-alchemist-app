@@ -1,7 +1,7 @@
 
 import { useContext } from 'react';
-import { useProfileContext, ProfileContext } from '@/contexts/ProfileContext';
-import { NutritionPreferencesType } from '@/types/nutrition';
+import { ProfileContext } from '@/contexts/ProfileContext';
+import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 
 export { useProfileContext } from '@/contexts/ProfileContext';
 
@@ -20,6 +20,8 @@ export function useProfileSettings() {
     allergens: [],
     healthGoal: 'maintenance',
     mealSizePreference: 'medium',
+    preferredCuisines: [],
+    unitSystem: 'metric',
   };
   
   return {

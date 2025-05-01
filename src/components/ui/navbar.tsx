@@ -47,7 +47,7 @@ export function Navbar({ className }: { className?: string }) {
               to={link.path} 
               className="text-sm font-medium hover:text-primary transition-colors flex items-center px-3 py-2 rounded-md"
             >
-              {link.icon && <link.icon className="h-4 w-4 mr-1.5" />}
+              {link.icon && React.createElement(link.icon, { className: "h-4 w-4 mr-1.5" })}
               {link.name}
             </Link>
           ))}
@@ -59,7 +59,7 @@ export function Navbar({ className }: { className?: string }) {
             <Button variant="outline" size="sm" asChild className="h-9 py-2 px-4">
               <Link to="/profile" className="flex items-center gap-1.5">
                 <User className="h-4 w-4" />
-                Profile
+                <span>Profile</span>
               </Link>
             </Button>
           ) : (
