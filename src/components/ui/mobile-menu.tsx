@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ChefHat, Menu, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';

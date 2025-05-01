@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from 'react-router-dom';
+import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 interface AddSuccessDialogProps {
   open: boolean;
@@ -42,11 +43,15 @@ export function AddSuccessDialog({ open, setOpen, recipeTitle }: AddSuccessDialo
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
-          <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
-            View Shopping Lists
-            <ArrowRight className="h-4 w-4" />
-          </AlertDialogAction>
+          <RadixWrapper>
+            <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
+          </RadixWrapper>
+          <RadixWrapper>
+            <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
+              View Shopping Lists
+              <ArrowRight className="h-4 w-4" />
+            </AlertDialogAction>
+          </RadixWrapper>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

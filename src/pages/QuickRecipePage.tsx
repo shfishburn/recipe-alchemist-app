@@ -11,6 +11,7 @@ import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { RecipeCarousel } from '@/components/landing/RecipeCarousel';
+import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
@@ -76,21 +77,25 @@ const QuickRecipePage = () => {
               <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
               <p className="text-muted-foreground mb-6">{error}</p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/')}
-                  className="flex items-center gap-2"
-                >
-                  Start Over
-                </Button>
-                {formData && (
+                <RadixWrapper>
                   <Button 
-                    onClick={handleRetry}
+                    variant="outline" 
+                    onClick={() => navigate('/')}
                     className="flex items-center gap-2"
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    Try Again
+                    Start Over
                   </Button>
+                </RadixWrapper>
+                {formData && (
+                  <RadixWrapper>
+                    <Button 
+                      onClick={handleRetry}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Try Again
+                    </Button>
+                  </RadixWrapper>
                 )}
               </div>
             </div>
@@ -104,13 +109,15 @@ const QuickRecipePage = () => {
           ) : (
             <div className="text-center">
               <p className="text-muted-foreground">No recipe found. 
-                <Button 
-                  variant="link" 
-                  onClick={() => navigate('/')}
-                  className="p-0 h-auto text-primary underline"
-                >
-                  &nbsp;Return to home
-                </Button>
+                <RadixWrapper>
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate('/')}
+                    className="p-0 h-auto text-primary underline"
+                  >
+                    &nbsp;Return to home
+                  </Button>
+                </RadixWrapper>
               </p>
             </div>
           )}

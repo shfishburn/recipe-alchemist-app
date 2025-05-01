@@ -8,6 +8,7 @@ import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { ChefHat, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
+import { RadixWrapper } from '@/components/ui/radix-wrapper';
 
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
@@ -56,12 +57,14 @@ export function Navbar({ className }: { className?: string }) {
         {/* Auth Button - Hidden on Mobile */}
         <div className="hidden md:flex items-center space-x-3 ml-6">
           {session ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/profile" className="flex items-center gap-1.5 h-9 py-2 px-4">
-                <User className="h-4 w-4" />
-                <span>Profile</span>
-              </Link>
-            </Button>
+            <RadixWrapper>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/profile" className="flex items-center gap-1.5 h-9 py-2 px-4">
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </Button>
+            </RadixWrapper>
           ) : (
             <>
               <Button variant="outline" size="sm" onClick={open} className="h-9 py-2 px-4">
