@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -134,15 +133,14 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     const servings = formData.servings || 2;
     
     // Increase timeout for the request to prevent premature timeouts
-    const TIMEOUT_DURATION = 60000; // 60 seconds timeout (increased from 55 seconds)
+    const TIMEOUT_DURATION = 60000; // 60 seconds timeout
     
     // Set a timeout for the request to prevent indefinite loading
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), TIMEOUT_DURATION);
     });
     
-    // *** FIXED: Process cuisine values properly ***
-    // Convert "any" to empty array for cuisine
+    // Process cuisine values properly
     let cuisineValue: string | string[] = formData.cuisine;
     if (typeof cuisineValue === 'string') {
       if (cuisineValue.toLowerCase() === 'any') {
@@ -152,8 +150,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       }
     }
     
-    // *** FIXED: Process dietary values properly ***
-    // Convert "any" to empty array for dietary
+    // Process dietary values properly
     let dietaryValue: string | string[] = formData.dietary;
     if (typeof dietaryValue === 'string') {
       if (dietaryValue.toLowerCase() === 'any') {
@@ -179,7 +176,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       dietaryProcessed: dietaryString 
     });
     
-    // Define the request body with properly formatted values and ensure all fields are included
+    // Define the request body with properly formatted values
     const requestBody = {
       cuisine: cuisineString || "Any",
       dietary: dietaryString || "",
@@ -190,108 +187,91 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Call the Supabase Edge Function with debugging headers
-    const responsePromise = supabase.functions.invoke('generate-quick-recipe', {
-      body: requestBody,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Info': 'quick-recipe-request-' + Date.now()
+    // Create a direct fetch function that we'll race against the timeout
+    const directFetchPromise = async () => {
+      try {
+        // Get auth token for request
+        const token = await supabase.auth.getSession().then(res => res.data.session?.access_token || '');
+        
+        console.log("Testing direct fetch to edge function");
+        
+        // Make the direct fetch request
+        const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'X-Debug-Info': 'direct-fetch-production-' + Date.now()
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        console.log("Direct fetch response status:", response.status);
+        const responseText = await response.text();
+        console.log("Direct fetch response:", responseText);
+        
+        // Check if the response is OK
+        if (!response.ok) {
+          try {
+            const errorJson = JSON.parse(responseText);
+            throw new Error(errorJson.error || `API returned status ${response.status}`);
+          } catch (e) {
+            throw new Error(`API returned status ${response.status}: ${responseText.substring(0, 100)}`);
+          }
+        }
+        
+        // Parse and return the successful response
+        try {
+          const data = JSON.parse(responseText);
+          console.log("Direct fetch parsed JSON:", data);
+          return data;
+        } catch (parseError) {
+          console.error("Direct fetch response is not valid JSON:", responseText);
+          throw new Error("Invalid JSON response from API");
+        }
+      } catch (fetchError) {
+        console.error("Direct fetch error:", fetchError);
+        throw fetchError;
       }
-    });
+    };
     
-    // DEBUGGING: Add direct fetch call to test the edge function
-    console.log("Testing direct fetch to edge function");
-    try {
-      const directResponse = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
-        method: 'POST',
+    // Try with Supabase functions API as fallback
+    const supabaseFetchPromise = async () => {
+      const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+        body: requestBody,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await supabase.auth.getSession().then(res => res.data.session?.access_token || '')}`,
-          'X-Debug-Info': 'direct-fetch-test'
-        },
-        body: JSON.stringify(requestBody)
+          'X-Debug-Info': 'supabase-invoke-' + Date.now()
+        }
       });
-      
-      console.log("Direct fetch response status:", directResponse.status);
-      const responseText = await directResponse.text();
-      console.log("Direct fetch response:", responseText);
-      
-      try {
-        // If direct fetch worked but supabase invoke failed, use the direct fetch response
-        const directJson = JSON.parse(responseText);
-        console.log("Direct fetch parsed JSON:", directJson);
-        
-        // If we get a successful direct fetch response, normalize it and return
-        if (directResponse.status === 200 && directJson) {
-          return normalizeRecipeResponse(directJson);
-        }
-      } catch (e) {
-        console.log("Direct fetch response is not valid JSON");
+
+      if (error) {
+        console.error('Supabase functions error:', error);
+        throw error;
       }
-    } catch (directError) {
-      console.error("Direct fetch error:", directError);
-    }
+
+      if (!data) {
+        throw new Error('No data returned from recipe generation');
+      }
+
+      return data;
+    };
     
-    // Race the response against the timeout
-    const { data, error } = await Promise.race([
-      responsePromise, 
-      timeoutPromise.then(() => { throw new Error("Recipe generation timed out. Please try again with a simpler recipe."); })
+    // Race both approaches against the timeout
+    const data = await Promise.race([
+      directFetchPromise().catch(err => {
+        console.warn("Direct fetch failed, trying Supabase invoke:", err);
+        return supabaseFetchPromise();
+      }),
+      timeoutPromise
     ]);
-
-    if (error) {
-      console.error('Error generating recipe:', error);
-      
-      // Add more detailed error logging
-      if (error.message) {
-        console.error('Error message:', error.message);
-      }
-      
-      if (error.context) {
-        console.error('Error context:', error.context);
-      }
-      
-      // ENHANCED ERROR INSPECTION: Capture and log the full response body
-      if (error.context?.response) {
-        try {
-          console.error('Error response status:', error.context.response.status);
-          const responseClone = error.context.response.clone();
-          responseClone.text().then(responseText => {
-            console.error('Full error response:', responseText);
-            try {
-              const errorJson = JSON.parse(responseText);
-              console.error('Parsed error response:', errorJson);
-              
-              // Use error details from response if available
-              if (errorJson.error) {
-                throw new Error(errorJson.error);
-              }
-            } catch (e) {
-              console.error('Response is not JSON:', responseText);
-            }
-          });
-        } catch (e) {
-          console.error('Could not read response body:', e);
-        }
-      }
-      
-      // Check for empty body errors
-      if (error.message?.includes('Empty request body')) {
-        console.error('CRITICAL: Empty request body error');
-        throw new Error('Recipe request failed: Empty request body. Please try again.');
-      }
-      
-      throw error;
-    }
-
+    
+    // Check for error in data
     if (!data) {
       console.error('No data returned from recipe generation');
       throw new Error('No recipe data returned. Please try again.');
     }
     
-    // Log the raw response for debugging
-    console.log('Raw recipe data received:', data);
-    
-    // Check for error in data
     if (data.error) {
       console.error('Error in recipe data:', data.error);
       throw new Error(data.error);
@@ -313,18 +293,29 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         status: error.status || "No status",
       });
       
-      if (error.context?.response?.text) {
+      if (error.context?.response) {
         try {
-          // Try to parse the response text as JSON
-          const errorResponseBody = JSON.parse(error.context.response.text);
-          console.error("Error response body:", errorResponseBody);
+          // Log full response information
+          console.error('Error response status:', error.context.response.status);
           
-          // Use the error message from the response body if available
-          if (errorResponseBody.error) {
-            throw new Error(errorResponseBody.error);
+          const responseClone = error.context.response.clone();
+          responseText = await responseClone.text();
+          console.error('Full error response:', responseText);
+          
+          try {
+            // Try to parse the response text as JSON
+            const errorResponseBody = JSON.parse(responseText);
+            console.error("Error response body:", errorResponseBody);
+            
+            // Use the error message from the response body if available
+            if (errorResponseBody.error) {
+              throw new Error(errorResponseBody.error);
+            }
+          } catch (parseError) {
+            console.error("Could not parse error response:", parseError);
           }
-        } catch (parseError) {
-          console.error("Could not parse error response:", parseError);
+        } catch (e) {
+          console.error("Could not read response body:", e);
         }
       }
     }
@@ -336,9 +327,9 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
     } else if (error.message?.includes("fetch")) {
       errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
-    } else if (error.status === 500) {
+    } else if (error.status === 500 || error.message?.includes("500")) {
       errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
-    } else if (error.status === 400) {
+    } else if (error.status === 400 || error.message?.includes("400")) {
       errorMessage = "Invalid request format. Please check your inputs and try again.";
     } else if (error.message?.includes("SyntaxError") || error.message?.includes("JSON")) {
       errorMessage = "Error processing the recipe. The AI generated an invalid response format. Please try again.";

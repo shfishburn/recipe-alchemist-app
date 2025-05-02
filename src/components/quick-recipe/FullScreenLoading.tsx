@@ -17,14 +17,16 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
   
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-50 animate-fadeIn">
-      {/* Add proper accessibility labels */}
-      <h1 className="sr-only">Recipe Generation Loading Screen</h1>
+      {/* Accessible title for screen readers */}
+      <h1 className="sr-only">
+        {error ? "Recipe Generation Failed" : "Recipe Generation Loading Screen"}
+      </h1>
       
       <div className="w-full max-w-md mx-auto text-center">
         {error ? (
           <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6">
             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
-            {/* Add accessible title */}
+            {/* Accessible title */}
             <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
             <p className="text-muted-foreground mb-6">{error}</p>
             
@@ -53,7 +55,7 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
           </div>
         ) : (
           <>
-            {/* Add accessible title */}
+            {/* Accessible title */}
             <h2 className="mb-4 text-xl font-semibold">Creating Your Recipe</h2>
             <p className="text-muted-foreground mb-8">
               Our AI chef is crafting your recipe...
