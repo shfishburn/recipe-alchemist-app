@@ -8,6 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Improved prompt with additional adaptations for Build page migration
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,23 +17,42 @@ serve(async (req) => {
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) throw new Error("OpenAI API key is not configured");
     const openai = new OpenAI({ apiKey });
-    const { cuisine = "Any", dietary = [], mainIngredient = "Chef's choice" } =
-      await req.json();
+    const { 
+      cuisine = "Any", 
+      dietary = [], 
+      mainIngredient = "Chef's choice", 
+      servings = 4,
+      maxCalories,
+      flavorTags = []
+    } = await req.json();
+    
     // Escape user inputs to prevent prompt-injection
     const safeCuisine = JSON.stringify(cuisine).slice(1, -1);
     const safeMain   = JSON.stringify(mainIngredient).slice(1, -1);
     const safeDiet   = dietary.length
       ? dietary.map((d: string) => JSON.stringify(d).slice(1, -1)).join(", ")
       : "None";
+    const safeServings = servings || 4;
+    const safeTags = flavorTags.length
+      ? flavorTags.map((t: string) => JSON.stringify(t).slice(1, -1)).join(", ")
+      : "Chef's choice";
     
     // Generate a unique ID to prevent prompt caching
     const uniqueId = Date.now().toString();
+    
+    // Build calorie constraint if provided
+    const calorieConstraint = maxCalories 
+      ? `• Maximum calories per serving – ${maxCalories} kcal`
+      : "";
       
     const prompt = `
 As a culinary scientist in the López-Alt tradition, create a comprehensive recipe:
 • Cuisine – ${safeCuisine}  
 • Dietary – ${safeDiet}  
 • Main ingredient – ${safeMain}
+• Flavor profile – ${safeTags}
+• Servings – ${safeServings}
+${calorieConstraint}
 • Unique Generation ID – ${uniqueId}
 
 ──────── MANDATORY INSTRUCTION DETAILS ────────
@@ -92,25 +112,70 @@ Then for EACH step include:
 • DO NOT consolidate steps - use AT LEAST 10-15 separate steps for a complete recipe
 • NO vague terms ("until hot" ✗) - always use precise descriptors
 
+──────── MEASUREMENT STANDARDIZATION (mandatory) ────────
+• ALWAYS provide BOTH imperial AND metric measurements for each ingredient
+• For imperial: use oz, lb, cups, tbsp, tsp, inches, °F
+• For metric: use g, kg, ml, L, cm, °C
+• Include both systems using qty_metric, unit_metric, qty_imperial, unit_imperial for each ingredient
+• Use fractions for small quantities in imperial
+
 ──────── SHOPPABLE INGREDIENTS ────────
-Format each as object → { qty, unit, shop_size_qty, shop_size_unit, item, notes }  
+Format each as object → { 
+  qty_imperial: number, 
+  unit_imperial: string, 
+  qty_metric: number, 
+  unit_metric: string, 
+  shop_size_qty: number, 
+  shop_size_unit: string, 
+  item: string, 
+  notes: string 
+}  
 \`shop_size_qty\` ≥ recipe qty (spices/herbs exempt).
 
 ──────── RETURN JSON (schema fixed) ────────
 {
   "title": "string",
   "description": "ONE sentence of the key science insight",
-  "ingredients": [ { qty, unit, shop_size_qty, shop_size_unit, item, notes } ],
+  "ingredients": [{ 
+    qty_imperial: number, 
+    unit_imperial: string, 
+    qty_metric: number, 
+    unit_metric: string, 
+    shop_size_qty: number, 
+    shop_size_unit: string, 
+    item: string, 
+    notes: string 
+  }],
   "steps": [ "DETAILED instruction strings with scientific explanations" ],
   "prepTime": number,
   "cookTime": number,
+  "prep_time_min": number,
+  "cook_time_min": number,
+  "servings": number,
   "nutritionHighlight": "ONE evidence-based benefit",
   "cookingTip": "ONE science-backed technique note",
+  "nutrition": {
+    "kcal": number,
+    "protein_g": number,
+    "carbs_g": number,
+    "fat_g": number,
+    "fiber_g": number,
+    "sugar_g": number,
+    "sodium_mg": number,
+    "vitamin_a_iu": number,
+    "vitamin_c_mg": number,
+    "vitamin_d_iu": number,
+    "calcium_mg": number,
+    "iron_mg": number,
+    "potassium_mg": number,
+    "data_quality": "complete" | "partial",
+    "calorie_check_pass": boolean
+  },
   "calorie_check_pass": boolean
 }`;
     
     // Log the inputs and prompt for debugging
-    console.log("Starting quick recipe generation with inputs:", { cuisine, dietary, mainIngredient });
+    console.log("Starting quick recipe generation with inputs:", { cuisine, dietary, mainIngredient, servings, maxCalories, flavorTags });
     console.log("Prompt being sent to OpenAI with unique ID:", uniqueId);
     console.log("Using model: gpt-4o");
     
@@ -137,6 +202,12 @@ Format each as object → { qty, unit, shop_size_qty, shop_size_unit, item, note
     
     const recipe = JSON.parse(json);
     console.log("Recipe generated with", recipe.steps.length, "steps");
+    
+    // Normalize fields to ensure consistency between old and new formats
+    recipe.instructions = recipe.steps; // Add instructions alias for Build compatibility
+    recipe.tagline = recipe.description; // Add tagline alias for Build compatibility
+    recipe.prep_time_min = recipe.prepTime; // Ensure both time formats exist
+    recipe.cook_time_min = recipe.cookTime; // Ensure both time formats exist
     
     // Log number of tokens used for debugging
     if (response.usage) {

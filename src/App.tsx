@@ -18,7 +18,7 @@ import { useQuickRecipeStore } from "@/store/use-quick-recipe-store";
 const Index = lazy(() => import("./pages/Index"));
 const Recipes = lazy(() => import("./pages/Recipes"));
 const RecipeDetail = lazy(() => import("./pages/RecipeDetail"));
-const Build = lazy(() => import("./pages/Build"));
+const Build = lazy(() => import("./pages/Build")); // Keeping this for backwards compatibility
 const Profile = lazy(() => import("./pages/Profile"));
 const ShoppingLists = lazy(() => import("./pages/ShoppingLists"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -118,11 +118,9 @@ const App = () => (
                 <Route
                   path="/build"
                   element={
-                    <PrivateRoute>
-                      <Suspense fallback={<PageLoadingFallback />}>
-                        <Build />
-                      </Suspense>
-                    </PrivateRoute>
+                    <Suspense fallback={<PageLoadingFallback />}>
+                      <Build />
+                    </Suspense>
                   }
                 />
                 <Route
