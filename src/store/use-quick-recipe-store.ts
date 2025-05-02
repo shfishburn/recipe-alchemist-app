@@ -35,7 +35,7 @@ const initialLoadingState: LoadingState = {
   totalSteps: 6,
   stepDescription: "Analyzing your ingredients...",
   percentComplete: 0,
-  estimatedTimeRemaining: 25 // increased to give more time for generation
+  estimatedTimeRemaining: 30 // setting a reasonable time for recipe generation
 };
 
 export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
@@ -80,19 +80,29 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
     // Keep formData and navigate as is for regeneration purposes
   }),
   isRecipeValid: (recipe) => {
-    if (!recipe) return false;
-    
-    // Check for required fields
-    if (!recipe.title || !Array.isArray(recipe.ingredients) || 
-        (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))) {
-      console.error("Recipe validation failed: missing required fields", recipe);
+    if (!recipe) {
+      console.error("Recipe validation failed: recipe is null or undefined");
       return false;
     }
     
-    // Recipe must have at least one ingredient and one step
-    if (recipe.ingredients.length === 0 && 
-       (recipe.steps?.length === 0 && recipe.instructions?.length === 0)) {
-      console.error("Recipe validation failed: no ingredients or steps", recipe);
+    // Check for required fields
+    if (!recipe.title) {
+      console.error("Recipe validation failed: missing title", recipe);
+      return false;
+    }
+
+    // Check ingredients
+    if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+      console.error("Recipe validation failed: missing or empty ingredients array", recipe);
+      return false;
+    }
+    
+    // Check instructions/steps
+    const hasInstructions = Array.isArray(recipe.instructions) && recipe.instructions.length > 0;
+    const hasSteps = Array.isArray(recipe.steps) && recipe.steps.length > 0;
+    
+    if (!hasInstructions && !hasSteps) {
+      console.error("Recipe validation failed: missing or empty instructions/steps", recipe);
       return false;
     }
     

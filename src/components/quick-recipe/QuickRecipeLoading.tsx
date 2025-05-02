@@ -18,13 +18,17 @@ const LOADING_STEPS = [
   "Finalizing your perfect recipe..."
 ];
 
+// Maximum time to wait before showing error (in seconds)
+const MAX_LOADING_TIME = 45;
+
 export function QuickRecipeLoading() {
-  const { loadingState, formData, updateLoadingState, completedLoading, setCompletedLoading } = useQuickRecipeStore();
+  const { loadingState, formData, updateLoadingState, completedLoading, setCompletedLoading, setError } = useQuickRecipeStore();
   const isMobile = useIsMobile();
   const { session } = useAuth();
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   
   // Initialize sound effect for typing with mobile-friendly settings
@@ -58,6 +62,24 @@ export function QuickRecipeLoading() {
       document.removeEventListener('click', enableAudio);
     };
   }, [audioEnabled, completedLoading, playTypingSound]);
+  
+  // Set a timeout to prevent infinite loading
+  useEffect(() => {
+    // Set a timeout to prevent infinite loading state
+    timeoutTimerRef.current = setTimeout(() => {
+      if (!completedLoading) {
+        console.error("Recipe generation timeout after", MAX_LOADING_TIME, "seconds");
+        pauseTypingSound();
+        setError("Recipe generation timed out. Please try again.");
+      }
+    }, MAX_LOADING_TIME * 1000);
+    
+    return () => {
+      if (timeoutTimerRef.current) {
+        clearTimeout(timeoutTimerRef.current);
+      }
+    };
+  }, [completedLoading, pauseTypingSound, setError]);
   
   // Update progress every second
   useEffect(() => {

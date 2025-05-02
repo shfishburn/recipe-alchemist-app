@@ -63,6 +63,15 @@ export interface QuickRecipeOptions {
 const normalizeRecipeResponse = (data: any): QuickRecipe => {
   console.log("Normalizing recipe response:", data);
   
+  if (!data) {
+    throw new Error("Invalid recipe data: Received empty response");
+  }
+  
+  if (!data.title || !data.ingredients) {
+    console.error("Invalid recipe data:", data);
+    throw new Error("Invalid recipe data: Missing required fields");
+  }
+  
   // Handle different response formats
   const ingredients = data.ingredients?.map((ingredient: any) => {
     // If already in the correct format with metric/imperial units
@@ -117,9 +126,13 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
   try {
     console.log("Generating quick recipe with form data:", formData);
     
+    if (!formData.mainIngredient) {
+      throw new Error("Please provide a main ingredient");
+    }
+    
     // Set a timeout for the request to prevent indefinite loading
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), 30000);
+      setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), 25000);
     });
     
     // Call the Supabase Edge Function to generate the recipe
@@ -158,13 +171,13 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     console.log('Normalized recipe:', normalizedRecipe);
     
     return normalizedRecipe;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     throw error;
   }
 };
 
-// Hook to fetch a recipe by ID
+// Hook to use with Quick Recipe functionality
 export const useQuickRecipe = (id?: string) => {
   const fetchRecipe = async (id: string) => {
     if (!id) {
