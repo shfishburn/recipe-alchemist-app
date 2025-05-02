@@ -13,6 +13,12 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
+interface FullScreenLoadingProps {
+  onCancel?: () => void;
+  onRetry?: () => void;
+  error?: string | null;
+}
+
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -220,6 +226,6 @@ const QuickRecipePage = () => {
       </main>
     </div>
   );
-}
+};
 
 export default QuickRecipePage;

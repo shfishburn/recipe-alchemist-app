@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,12 +53,14 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
 
   const toggleCuisine = (value: string) => {
     setFormData(prev => {
+      const cuisineArray = Array.isArray(prev.cuisine) ? prev.cuisine : prev.cuisine ? [prev.cuisine] : [];
+      
       // If the cuisine is already selected, remove it
-      if (prev.cuisine.includes(value)) {
-        return { ...prev, cuisine: prev.cuisine.filter(c => c !== value) };
+      if (cuisineArray.includes(value)) {
+        return { ...prev, cuisine: cuisineArray.filter(c => c !== value) };
       } 
       // Otherwise, check if we've reached the maximum number of selections
-      else if (prev.cuisine.length >= MAX_CUISINE_SELECTIONS) {
+      else if (cuisineArray.length >= MAX_CUISINE_SELECTIONS) {
         toast({
           title: "Selection limit reached",
           description: `You can select up to ${MAX_CUISINE_SELECTIONS} cuisines.`,
@@ -69,19 +70,21 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       }
       // Add it to the selection
       else {
-        return { ...prev, cuisine: [...prev.cuisine, value] };
+        return { ...prev, cuisine: [...cuisineArray, value] };
       }
     });
   };
 
   const toggleDietary = (value: string) => {
     setFormData(prev => {
+      const dietaryArray = Array.isArray(prev.dietary) ? prev.dietary : prev.dietary ? [prev.dietary] : [];
+      
       // If the dietary option is already selected, remove it
-      if (prev.dietary.includes(value)) {
-        return { ...prev, dietary: prev.dietary.filter(d => d !== value) };
+      if (dietaryArray.includes(value)) {
+        return { ...prev, dietary: dietaryArray.filter(d => d !== value) };
       } 
       // Otherwise, check if we've reached the maximum number of selections
-      else if (prev.dietary.length >= MAX_DIETARY_SELECTIONS) {
+      else if (dietaryArray.length >= MAX_DIETARY_SELECTIONS) {
         toast({
           title: "Selection limit reached",
           description: `You can select up to ${MAX_DIETARY_SELECTIONS} dietary preferences.`,
@@ -91,9 +94,24 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       }
       // Add it to the selection
       else {
-        return { ...prev, dietary: [...prev.dietary, value] };
+        return { ...prev, dietary: [...dietaryArray, value] };
       }
     });
+  };
+
+  // Helper function to check if a value is selected
+  const isCuisineSelected = (value: string): boolean => {
+    if (Array.isArray(formData.cuisine)) {
+      return formData.cuisine.includes(value);
+    }
+    return formData.cuisine === value;
+  };
+
+  const isDietarySelected = (value: string): boolean => {
+    if (Array.isArray(formData.dietary)) {
+      return formData.dietary.includes(value);
+    }
+    return formData.dietary === value;
   };
 
   return (
@@ -116,7 +134,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
                 key={cuisine.value} 
                 variant="outline" 
                 className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  formData.cuisine.includes(cuisine.value) ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
+                  isCuisineSelected(cuisine.value) ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
                 }`}
                 onClick={() => toggleCuisine(cuisine.value)}
               >
@@ -135,7 +153,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
                 key={diet.value} 
                 variant="outline" 
                 className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  formData.dietary.includes(diet.value) ? 'bg-recipe-orange text-white hover:bg-recipe-orange/90' : ''
+                  isDietarySelected(diet.value) ? 'bg-recipe-orange text-white hover:bg-recipe-orange/90' : ''
                 }`}
                 onClick={() => toggleDietary(diet.value)}
               >

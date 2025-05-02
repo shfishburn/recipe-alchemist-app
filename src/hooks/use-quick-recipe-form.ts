@@ -93,8 +93,8 @@ export function useQuickRecipeForm() {
           errorMessage = "We're having trouble connecting to our recipe service. Please try again shortly.";
         }
         
-        // Set descriptive error with timeout flag if applicable
-        setError(errorMessage, isTimeout);
+        // Set descriptive error with timeout flag
+        setError(errorMessage);
         
         // Keep error toast only
         toast({

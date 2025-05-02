@@ -146,8 +146,13 @@ export function LoadingTipCard() {
     let tips = [...genericTips];
     
     // Add cuisine-specific tips if we have cuisine data
-    if (formData?.cuisine && formData.cuisine.length > 0) {
-      formData.cuisine.forEach(cuisine => {
+    if (formData?.cuisine) {
+      // Handle both string and array formats
+      const cuisines = Array.isArray(formData.cuisine) 
+        ? formData.cuisine 
+        : (formData.cuisine ? [formData.cuisine] : []);
+        
+      cuisines.forEach(cuisine => {
         const cuisineLower = cuisine.toLowerCase();
         if (cuisineTips[cuisineLower]) {
           tips = [...tips, ...cuisineTips[cuisineLower]];
