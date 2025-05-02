@@ -63,7 +63,7 @@ export async function findSimilarIngredients(
     const { data: matches, error } = await supabase.rpc(
       'match_ingredient_embeddings',
       {
-        query_embedding: embedding,
+        query_embedding: JSON.stringify(embedding), // Convert number[] to string to match expected type
         similarity_threshold: threshold,
         match_count: maxMatches
       }
