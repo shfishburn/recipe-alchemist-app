@@ -98,7 +98,7 @@ serve(async (req) => {
       cuisine = "Any", 
       dietary = [], 
       mainIngredient = "Chef's choice", 
-      servings = 4,
+      servings = 2,
       maxCalories,
       flavorTags = []
     } = requestBody;
@@ -159,7 +159,7 @@ serve(async (req) => {
     const safeDiet = processDietary.length
       ? processDietary.map((d) => JSON.stringify(d).slice(1, -1)).join(", ")
       : "None";
-    const safeServings = servings || 4;
+    const safeServings = servings || 2;
     const safeTags = processFlavorTags.length
       ? processFlavorTags.map((t) => JSON.stringify(t).slice(1, -1)).join(", ")
       : "Chef's choice";

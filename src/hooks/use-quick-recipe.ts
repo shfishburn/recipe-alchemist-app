@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -200,31 +201,36 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     // DEBUGGING: Add direct fetch call to test the edge function
     console.log("Testing direct fetch to edge function");
-    fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${await supabase.auth.getSession().then(res => res.data.session?.access_token || '')}`,
-        'X-Debug-Info': 'direct-fetch-test'
-      },
-      body: JSON.stringify(requestBody)
-    })
-    .then(response => {
-      console.log("Direct fetch response status:", response.status);
-      return response.text();
-    })
-    .then(text => {
-      console.log("Direct fetch response:", text);
+    try {
+      const directResponse = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await supabase.auth.getSession().then(res => res.data.session?.access_token || '')}`,
+          'X-Debug-Info': 'direct-fetch-test'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      console.log("Direct fetch response status:", directResponse.status);
+      const responseText = await directResponse.text();
+      console.log("Direct fetch response:", responseText);
+      
       try {
-        const json = JSON.parse(text);
-        console.log("Direct fetch parsed JSON:", json);
+        // If direct fetch worked but supabase invoke failed, use the direct fetch response
+        const directJson = JSON.parse(responseText);
+        console.log("Direct fetch parsed JSON:", directJson);
+        
+        // If we get a successful direct fetch response, normalize it and return
+        if (directResponse.status === 200 && directJson) {
+          return normalizeRecipeResponse(directJson);
+        }
       } catch (e) {
         console.log("Direct fetch response is not valid JSON");
       }
-    })
-    .catch(error => {
-      console.error("Direct fetch error:", error);
-    });
+    } catch (directError) {
+      console.error("Direct fetch error:", directError);
+    }
     
     // Race the response against the timeout
     const { data, error } = await Promise.race([
