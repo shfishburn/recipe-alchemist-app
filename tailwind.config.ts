@@ -64,10 +64,13 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				recipe: {
-					blue: '#04a118', // Updated to primary green color
+					blue: '#04a118', // Primary green color
 					orange: '#fb923c',
-					green: '#59a52c', // Updated to secondary green color
-					yellow: '#facc15'
+					green: '#59a52c', // Secondary green color
+					yellow: '#facc15',
+                    purple: '#9b87f5', // New purple color for servings
+                    teal: '#14b8a6', // New teal color for cuisine
+                    amber: '#d97706'  // New amber color for dietary
 				}
 			},
 			borderRadius: {

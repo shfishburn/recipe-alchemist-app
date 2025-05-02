@@ -49,8 +49,8 @@ export function CuisineSelector({ selectedCuisines, onCuisineToggle }: CuisineSe
   return (
     <div className="space-y-2 w-full">
       <div className="flex items-center gap-2">
-        <Globe className="h-5 w-5 text-recipe-green" />
-        <label className="text-base font-medium text-recipe-green">
+        <Globe className="h-5 w-5 text-teal-600" />
+        <label className="text-base font-medium text-teal-600">
           What flavors match your mood tonight? <span className="text-gray-600 text-sm">(select up to {MAX_CUISINE_SELECTIONS})</span>
         </label>
       </div>
@@ -60,7 +60,7 @@ export function CuisineSelector({ selectedCuisines, onCuisineToggle }: CuisineSe
             key={cuisine.value} 
             variant="outline" 
             className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-              selectedCuisines.includes(cuisine.value) ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
+              selectedCuisines.includes(cuisine.value) ? 'bg-teal-600 text-white hover:bg-teal-700' : ''
             }`}
             onClick={() => handleToggle(cuisine.value)}
           >

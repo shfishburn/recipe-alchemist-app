@@ -47,8 +47,8 @@ export function DietarySelector({ selectedDietary, onDietaryToggle }: DietarySel
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
-        <LeafyGreen className="h-5 w-5 text-recipe-orange" />
-        <label className="text-base font-medium text-recipe-orange">
+        <LeafyGreen className="h-5 w-5 text-amber-600" />
+        <label className="text-base font-medium text-amber-600">
           Any dietary preferences? <span className="text-gray-600 text-sm">(select up to {MAX_DIETARY_SELECTIONS})</span>
         </label>
       </div>
@@ -58,7 +58,7 @@ export function DietarySelector({ selectedDietary, onDietaryToggle }: DietarySel
             key={diet.value} 
             variant="outline" 
             className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-              selectedDietary.includes(diet.value) ? 'bg-recipe-orange text-white hover:bg-recipe-orange/90' : ''
+              selectedDietary.includes(diet.value) ? 'bg-amber-600 text-white hover:bg-amber-700' : ''
             }`}
             onClick={() => handleToggle(diet.value)}
           >
