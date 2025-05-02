@@ -9,7 +9,7 @@ export function createForwardRef<T, P>(
   Component: React.ComponentType<P>
 ) {
   return forwardRef<T, P>((props, ref) => {
-    return <Component {...props} ref={ref} />;
+    return React.createElement(Component, { ...props, ref });
   });
 }
 
