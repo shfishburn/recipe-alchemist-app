@@ -23,7 +23,12 @@ const Icon = ({
     return null;
   }
 
-  return <LucideIcon size={size} strokeWidth={strokeWidth} color={color} {...props} />;
+  return React.createElement(LucideIcon, { 
+    size, 
+    strokeWidth, 
+    color, 
+    ...props 
+  });
 };
 
 export { Icon };

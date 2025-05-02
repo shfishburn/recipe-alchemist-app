@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,7 +13,7 @@ export interface Ingredient {
   qty?: number;
   unit?: string;
   // Common fields
-  item: string;
+  item: string | Record<string, any>;
   notes?: string;
   shop_size_qty?: number;
   shop_size_unit?: string;
@@ -84,14 +85,14 @@ const normalizeRecipeResponse = (data: any): QuickRecipe => {
       shop_size_qty: ingredient.shop_size_qty,
       shop_size_unit: ingredient.shop_size_unit
     };
-  });
+  }) || [];
   
   // Normalize the recipe structure
   return {
     title: data.title,
     tagline: data.tagline || data.description,
     description: data.description,
-    ingredients: ingredients || [],
+    ingredients: ingredients,
     // Handle different property names for instructions/steps
     instructions: data.instructions || data.steps || [],
     steps: data.steps || data.instructions || [],
@@ -185,16 +186,19 @@ export const useQuickRecipe = (id?: string) => {
     const recipe: QuickRecipe = {
       title: data.title,
       tagline: data.tagline,
-      ingredients: data.ingredients,
-      instructions: data.instructions,
-      steps: data.instructions, // Ensure both properties are set for compatibility
+      // Handle potential JSON string conversion
+      ingredients: Array.isArray(data.ingredients) ? data.ingredients : 
+                  (typeof data.ingredients === 'string' ? JSON.parse(data.ingredients) : []),
+      instructions: Array.isArray(data.instructions) ? data.instructions :
+                  (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []),
+      steps: Array.isArray(data.instructions) ? data.instructions : 
+             (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []), // Ensure both properties are set for compatibility
       servings: data.servings,
       prep_time_min: data.prep_time_min,
       cook_time_min: data.cook_time_min,
       nutrition: data.nutrition,
-      science_notes: Array.isArray(data.science_notes) 
-        ? data.science_notes 
-        : [],
+      science_notes: Array.isArray(data.science_notes) ? data.science_notes :
+                    (typeof data.science_notes === 'string' ? JSON.parse(data.science_notes) : []),
       cuisine: data.cuisine,
       dietary: data.dietary,
       flavor_tags: data.flavor_tags,

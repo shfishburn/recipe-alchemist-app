@@ -61,10 +61,10 @@ export const useQuickRecipeSave = () => {
         instructions: recipe.steps,
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
-        cuisine: recipe.cuisineType,
-        dietary: recipe.dietaryType,
+        cuisine: recipe.cuisine, // Use cuisine instead of cuisineType
+        dietary: recipe.dietary, // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
-        science_notes: recipe.scienceNotes as unknown as Json || [],
+        science_notes: recipe.science_notes as unknown as Json || [], // Use science_notes instead of scienceNotes
         servings: recipe.servings || 2,
         user_id: user.id, // Add the user_id to the recipe data
         nutrition: nutritionData as unknown as Json // Add enhanced nutrition data

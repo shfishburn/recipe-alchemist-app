@@ -15,10 +15,10 @@ export const formatIngredientWithMarkdown = (ingredient: Ingredient): string => 
     const parts = formatted.split(' ');
     let itemText = '';
     
-    // Find the item part to highlight
-    if (typeof ingredient.item === 'string') {
+    // Find the item part to highlight - handle null safety
+    if (ingredient && typeof ingredient.item === 'string') {
       itemText = ingredient.item;
-    } else if (ingredient.item && typeof ingredient.item === 'object') {
+    } else if (ingredient && ingredient.item && typeof ingredient.item === 'object') {
       itemText = typeof ingredient.item.item === 'string' ? ingredient.item.item : String(ingredient.item);
     }
     
@@ -40,7 +40,9 @@ export const formatIngredientWithMarkdown = (ingredient: Ingredient): string => 
     return parts.join(' ');
   } catch (error) {
     console.error("Error formatting ingredient:", error);
-    return ingredient.item ? `**${typeof ingredient.item === 'string' ? ingredient.item : JSON.stringify(ingredient.item)}**` : "Unknown ingredient";
+    return ingredient && ingredient.item ? 
+      `**${typeof ingredient.item === 'string' ? ingredient.item : JSON.stringify(ingredient.item)}**` 
+      : "Unknown ingredient";
   }
 };
 

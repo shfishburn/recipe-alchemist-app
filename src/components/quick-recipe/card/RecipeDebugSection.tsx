@@ -63,7 +63,7 @@ export function RecipeDebugSection({ recipe }: RecipeDebugSectionProps) {
                 <li>Steps count: {recipe.steps.length}</li>
                 <li>Ingredients count: {recipe.ingredients.length}</li>
                 <li>Has cooking tip: {recipe.cookingTip ? 'Yes' : 'No'}</li>
-                <li>Recipe type: {recipe.cuisineType || 'Not specified'}</li>
+                <li>Recipe type: {recipe.cuisine || 'Not specified'}</li> {/* Use cuisine instead of cuisineType */}
               </ul>
             </div>
           </div>

@@ -5,9 +5,11 @@ import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 export function QuickRecipeFormContainer() {
-  const { handleSubmit, isLoading } = useQuickRecipeForm();
+  const { handleSubmit } = useQuickRecipeForm();
+  const { isLoading } = useQuickRecipeStore(); // Get isLoading from the store instead
   const isMobile = useIsMobile();
 
   return (
@@ -34,4 +36,3 @@ export function QuickRecipeFormContainer() {
     </div>
   );
 }
-

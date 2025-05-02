@@ -14,10 +14,10 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
   
   return React.cloneElement(children, { 
     ...rest, 
-    ref: (childRef: React.Ref<unknown>) => {
+    ref: (childRef: any) => {
       // Handle refs properly
       if (typeof ref === "function") {
-        ref(childRef as any);
+        ref(childRef);
       } else if (ref) {
         (ref as React.MutableRefObject<unknown>).current = childRef;
       }

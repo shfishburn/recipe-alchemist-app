@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
@@ -43,6 +44,13 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
     }
   };
 
+  // Convert ingredients to expected format for PrintRecipe
+  const formattedIngredients = recipe.ingredients.map(ingredient => ({
+    qty: ingredient.qty || 1,
+    unit: ingredient.unit || '',
+    item: typeof ingredient.item === 'string' ? ingredient.item : JSON.stringify(ingredient.item) 
+  }));
+
   return (
     <>
       {/* Print Recipe Dialog */}
@@ -51,7 +59,7 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           id: 'quick-recipe',
           title: recipe.title,
           description: recipe.description,
-          ingredients: recipe.ingredients.map(formatIngredientForDB),
+          ingredients: formattedIngredients,
           instructions: recipe.steps,
           prep_time_min: recipe.prepTime,
           cook_time_min: recipe.cookTime,

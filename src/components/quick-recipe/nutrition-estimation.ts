@@ -1,4 +1,3 @@
-
 import { Ingredient } from '@/hooks/use-quick-recipe';
 import { Nutrition } from '@/types/recipe';
 
@@ -109,7 +108,7 @@ export function estimateNutrition(ingredients: Ingredient[], servings: number): 
   
   // Process each ingredient
   ingredients.forEach(ingredient => {
-    if (typeof ingredient === 'string') {
+    if (!ingredient || typeof ingredient === 'string') {
       // For string ingredients, use reduced default estimates
       totalNutrition.calories! += NUTRITION_ESTIMATES.default.calories! * 0.5;
       totalNutrition.protein_g! += NUTRITION_ESTIMATES.default.protein_g! * 0.5;
@@ -118,14 +117,18 @@ export function estimateNutrition(ingredients: Ingredient[], servings: number): 
       return;
     }
     
-    const { qty = 1, unit = 'g', item } = ingredient;
+    const { qty = 1, unit = 'g' } = ingredient;
+    
+    // Safely extract item name
+    const itemName = ingredient.item ? 
+      (typeof ingredient.item === 'string' ? ingredient.item.toLowerCase() : 
+       typeof ingredient.item === 'object' && ingredient.item ? 
+       (typeof ingredient.item.item === 'string' ? ingredient.item.item.toLowerCase() : 'default') :
+       'default') :
+      'default';
     
     // Find matching ingredient type
     let ingredientType = 'default';
-    const itemName = typeof item === 'string' ? item.toLowerCase() : 
-                     typeof item === 'object' && item && typeof item.item === 'string' ? 
-                     item.item.toLowerCase() : 'default';
-    
     for (const key of Object.keys(NUTRITION_ESTIMATES)) {
       if (itemName.includes(key)) {
         ingredientType = key;
