@@ -51,18 +51,21 @@ export function NutritionConfidenceIndicator({
   
   const getLimitationText = () => {
     const limitations = [];
-    const penalties = nutrition.data_quality.penalties || {};
+    // Initialize penalties with empty object if undefined
+    const penalties = nutrition.data_quality?.penalties || {};
     
     // Add proper null checks for all properties
-    if (penalties.energy_check_fail) {
+    if (penalties && 'energy_check_fail' in penalties && penalties.energy_check_fail) {
       limitations.push('Energy validation check failed');
     }
     
-    if (penalties.unmatched_ingredients_rate && penalties.unmatched_ingredients_rate > 0.2) {
+    if (penalties && 'unmatched_ingredients_rate' in penalties && 
+        typeof penalties.unmatched_ingredients_rate === 'number' && 
+        penalties.unmatched_ingredients_rate > 0.2) {
       limitations.push(`${Math.round(penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
     }
     
-    if (penalties.low_confidence_top_ingredients) {
+    if (penalties && 'low_confidence_top_ingredients' in penalties && penalties.low_confidence_top_ingredients) {
       limitations.push('Low confidence in main ingredients');
     }
     
@@ -84,7 +87,7 @@ export function NutritionConfidenceIndicator({
   }
   
   // Safety check for unmatched_or_low_confidence_ingredients
-  const unmatchedIngredients = nutrition.data_quality.unmatched_or_low_confidence_ingredients || [];
+  const unmatchedIngredients = nutrition.data_quality?.unmatched_or_low_confidence_ingredients || [];
   
   return (
     <TooltipProvider>
