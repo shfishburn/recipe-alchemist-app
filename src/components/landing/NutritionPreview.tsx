@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChartPie, Activity, BarChartHorizontal, Utensils } from 'lucide-react';
+import { ChartPie, Activity } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -25,8 +25,9 @@ export function NutritionPreview() {
   // Auto-scroll carousel
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % macroDistributionData.length);
-      api?.scrollTo(activeSlide);
+      const nextSlide = (activeSlide + 1) % macroDistributionData.length;
+      setActiveSlide(nextSlide);
+      api?.scrollTo(nextSlide);
     }, 5000); // Change slide every 5 seconds
     
     return () => clearInterval(interval);
@@ -86,16 +87,16 @@ export function NutritionPreview() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            
-            <CarouselPagination 
-              totalItems={macroDistributionData.length}
-              activeSlide={activeSlide}
-              onSelectSlide={(index) => {
-                setActiveSlide(index);
-                api?.scrollTo(index);
-              }}
-            />
           </Carousel>
+          
+          <CarouselPagination 
+            totalItems={macroDistributionData.length}
+            activeSlide={activeSlide}
+            onSelectSlide={(index) => {
+              setActiveSlide(index);
+              api?.scrollTo(index);
+            }}
+          />
           
           <MacroLegend />
         </CardContent>

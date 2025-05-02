@@ -40,7 +40,7 @@ interface MacroCarouselItemProps {
 
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 md:px-8 py-4">
       <h3 className="text-center text-xl font-semibold text-recipe-purple">{item.title}</h3>
       
       <div className="flex flex-col md:flex-row items-center justify-center gap-6">
@@ -73,9 +73,12 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
               <ul className="space-y-2">
                 {item.data.map((macro, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: macro.color }}></span>
-                    <span className="text-sm">{macro.name}: <strong>{macro.value}%</strong></span>
+                  <li key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: macro.color }}></span>
+                      <span className="text-sm">{macro.name}</span>
+                    </div>
+                    <span className="font-semibold text-sm">{macro.value}%</span>
                   </li>
                 ))}
               </ul>
