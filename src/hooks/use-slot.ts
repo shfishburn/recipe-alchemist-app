@@ -9,11 +9,11 @@ export const useSlot = () => {
   >((props, ref) => {
     const { asChild, children, ...otherProps } = props;
     
-    return asChild ? (
-      <Slot ref={ref} {...otherProps}>{children}</Slot>
-    ) : (
-      <>{children}</>
-    );
+    if (asChild) {
+      return <Slot ref={ref} {...otherProps}>{children}</Slot>;
+    }
+    
+    return <>{children}</>;
   });
   
   SlotWrapper.displayName = 'SlotWrapper';
