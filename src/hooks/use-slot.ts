@@ -1,19 +1,38 @@
 
 import React from 'react';
-import { Slot } from '@/components/ui/slot';
 
 export const useSlot = () => {
   const SlotWrapper = React.forwardRef<
-    HTMLElement,
-    { asChild?: boolean; children: React.ReactNode } & React.HTMLAttributes<HTMLElement>
+    HTMLDivElement,
+    { asChild?: boolean; children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>
   >((props, ref) => {
     const { asChild, children, ...otherProps } = props;
     
-    if (asChild) {
-      return <Slot ref={ref} {...otherProps}>{children}</Slot>;
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        ...otherProps,
+        ref: (innerRef: any) => {
+          // Handle refs properly
+          if (typeof ref === "function") {
+            ref(innerRef);
+          } else if (ref) {
+            (ref as React.MutableRefObject<unknown>).current = innerRef;
+          }
+          
+          // Forward the ref to the child if it has one
+          const childRef = (children as any).ref;
+          if (childRef) {
+            if (typeof childRef === "function") {
+              childRef(innerRef);
+            } else {
+              childRef.current = innerRef;
+            }
+          }
+        }
+      });
     }
     
-    return <>{children}</>;
+    return <div ref={ref as React.RefObject<HTMLDivElement>} {...otherProps}>{children}</div>;
   });
   
   SlotWrapper.displayName = 'SlotWrapper';
