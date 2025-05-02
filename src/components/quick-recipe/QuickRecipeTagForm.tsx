@@ -6,6 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export interface QuickRecipeFormData {
   ingredients: string;
@@ -45,11 +46,12 @@ const QuickRecipeTagForm = ({
   isLoading = false
 }: QuickRecipeTagFormProps) => {
   const [localIngredients, setLocalIngredients] = useState(ingredients);
+  const debouncedIngredients = useDebounce(localIngredients, 300);
 
-  // Update ingredients after input changes
+  // Update ingredients after debounced input changes
   React.useEffect(() => {
-    onIngredientsChange(localIngredients);
-  }, [localIngredients, onIngredientsChange]);
+    onIngredientsChange(debouncedIngredients);
+  }, [debouncedIngredients, onIngredientsChange]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalIngredients(e.target.value);
@@ -70,54 +72,49 @@ const QuickRecipeTagForm = ({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="ingredients">Ingredients</Label>
+        <Label htmlFor="ingredients" className="text-sm font-medium">Ingredients</Label>
         <Input 
           id="ingredients" 
           placeholder="e.g., chicken, rice, vegetables"
           value={localIngredients}
           onChange={handleInputChange}
           aria-label="Enter your ingredients"
+          className="h-10"
         />
       </div>
       
-      <div className="flex flex-wrap gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Servings Selector */}
-        <div className="flex-1 min-w-[180px]">
-          <Label htmlFor="servings">Servings</Label>
-          <div className="mt-2">
-            <ServingsSelector 
-              selectedServings={selectedServings} 
-              onServingsChange={onServingsSelect} 
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="servings" className="text-sm font-medium">Servings</Label>
+          <ServingsSelector 
+            selectedServings={selectedServings} 
+            onServingsChange={onServingsSelect} 
+          />
         </div>
 
         {/* Cuisine Selector */}
-        <div className="flex-1 min-w-[180px]">
-          <Label htmlFor="cuisine">Cuisine</Label>
-          <div className="mt-2">
-            <CuisineSelector 
-              value={selectedCuisine} 
-              onChange={onCuisineSelect}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="cuisine" className="text-sm font-medium">Cuisine</Label>
+          <CuisineSelector 
+            value={selectedCuisine} 
+            onChange={onCuisineSelect}
+          />
         </div>
 
         {/* Dietary Selector */}
-        <div className="flex-1 min-w-[180px]">
-          <Label htmlFor="dietary">Dietary</Label>
-          <div className="mt-2">
-            <DietarySelector
-              value={selectedDietary}
-              onChange={onDietarySelect}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="dietary" className="text-sm font-medium">Dietary</Label>
+          <DietarySelector
+            value={selectedDietary}
+            onChange={onDietarySelect}
+          />
         </div>
       </div>
 
       {/* Prep Time Slider */}
-      <div className="space-y-2">
-        <Label htmlFor="prep-time">Prep Time (minutes)</Label>
+      <div className="space-y-2 pt-2">
+        <Label htmlFor="prep-time" className="text-sm font-medium">Prep Time (minutes)</Label>
         <Slider
           id="prep-time"
           defaultValue={[prepTime]}
@@ -145,6 +142,6 @@ const QuickRecipeTagForm = ({
       )}
     </div>
   );
-};
+}
 
 export default QuickRecipeTagForm;

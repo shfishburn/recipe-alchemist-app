@@ -36,10 +36,10 @@ export function MacronutrientItem({ type, value, percentage, label }: Macronutri
       >
         {getIcon()}
       </div>
-      <div className="flex-1">
-        <p className="text-sm font-medium">{label}</p>
+      <div className="flex-1 flex flex-col">
+        <p className="text-sm font-medium line-clamp-1">{label}</p>
         <div className="flex items-center space-x-2">
-          <p className="text-sm">{value}</p>
+          <p className="text-sm font-medium">{value}</p>
           <p className="text-xs text-muted-foreground">{percentage}% DV</p>
         </div>
       </div>

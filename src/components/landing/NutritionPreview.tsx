@@ -62,7 +62,7 @@ export function NutritionPreview() {
         </p>
       </div>
       
-      <Card className="mx-4 md:mx-auto max-w-5xl w-full border-purple-100 dark:border-purple-900 shadow-md">
+      <Card className="mx-auto max-w-5xl w-full md:w-11/12 border-purple-100 dark:border-purple-900 shadow-md">
         <CardContent className="p-4 md:p-6">
           <div className="mb-6 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm">
             <strong className="text-purple-700 dark:text-purple-300">Personal Nutrition Features:</strong> Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
@@ -74,7 +74,7 @@ export function NutritionPreview() {
                 align: "center",
                 loop: true,
               }}
-              className="w-full max-w-4xl"
+              className="w-full"
               setApi={setApi}
             >
               <CarouselContent>
@@ -91,16 +91,20 @@ export function NutritionPreview() {
             </Carousel>
           </div>
           
-          <CarouselPagination 
-            totalItems={macroDistributionData.length}
-            activeSlide={activeSlide}
-            onSelectSlide={(index) => {
-              setActiveSlide(index);
-              api?.scrollTo(index);
-            }}
-          />
+          <div className="flex justify-center w-full">
+            <CarouselPagination 
+              totalItems={macroDistributionData.length}
+              activeSlide={activeSlide}
+              onSelectSlide={(index) => {
+                setActiveSlide(index);
+                api?.scrollTo(index);
+              }}
+            />
+          </div>
           
-          <MacroLegend />
+          <div className="flex justify-center w-full mt-4">
+            <MacroLegend />
+          </div>
         </CardContent>
       </Card>
     </div>
