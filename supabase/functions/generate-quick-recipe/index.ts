@@ -39,15 +39,12 @@ serve(async (req) => {
     // Safely parse request body
     let requestBody;
     try {
-      requestBody = await req.text();
-      console.log("Raw request body:", requestBody.substring(0, 200) + "...");
+      requestBody = await req.json();
+      console.log("Request body received:", JSON.stringify(requestBody).substring(0, 200) + "...");
       
-      if (!requestBody || requestBody.trim() === "") {
+      if (!requestBody) {
         throw new Error("Empty request body");
       }
-      
-      // Attempt to parse JSON
-      requestBody = JSON.parse(requestBody);
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
       return new Response(

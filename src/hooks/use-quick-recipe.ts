@@ -131,19 +131,19 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     }
     
     // Increase timeout for the request to prevent premature timeouts
-    const TIMEOUT_DURATION = 50000; // 50 seconds timeout (increased from 40)
+    const TIMEOUT_DURATION = 55000; // 55 seconds timeout (increased from previous value)
     
     // Set a timeout for the request to prevent indefinite loading
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), TIMEOUT_DURATION);
     });
     
-    // Define the request body
+    // Define the request body - ensure it's properly formatted
     const requestBody = {
-      cuisine: formData.cuisine.join(', '),
-      dietary: formData.dietary.join(', '),
+      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine.join(', ') : formData.cuisine,
+      dietary: Array.isArray(formData.dietary) ? formData.dietary.join(', ') : formData.dietary,
       mainIngredient: formData.mainIngredient,
-      servings: formData.servings,
+      servings: formData.servings || 4,
       maxCalories: formData.maxCalories
     };
     
@@ -192,6 +192,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
     } else if (error.status === 500) {
       errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
+    } else if (error.message?.includes("SyntaxError") || error.message?.includes("JSON")) {
+      errorMessage = "Error processing the recipe. The AI generated an invalid response format. Please try again.";
     }
     
     console.error('Error in generateQuickRecipe:', error);

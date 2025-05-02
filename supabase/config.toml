@@ -13,7 +13,7 @@ verify_jwt = false
 [functions.convert-units]
 verify_jwt = false
 
-# Register the generate-quick-recipe function properly
+# Recipe generation function
 [functions.generate-quick-recipe]
 verify_jwt = false
 
