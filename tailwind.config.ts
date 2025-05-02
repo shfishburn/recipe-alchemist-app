@@ -68,9 +68,9 @@ export default {
 					orange: '#fb923c',
 					green: '#59a52c', // Secondary green color
 					yellow: '#facc15',
-                    purple: '#9b87f5', // New purple color for servings
-                    teal: '#14b8a6', // New teal color for cuisine
-                    amber: '#d97706'  // New amber color for dietary
+                    purple: '#9b87f5', // Purple color for servings
+                    teal: '#14b8a6', // Teal color for cuisine
+                    amber: '#d97706'  // Amber color for dietary
 				}
 			},
 			borderRadius: {

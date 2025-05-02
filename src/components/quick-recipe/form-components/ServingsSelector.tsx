@@ -1,93 +1,80 @@
+
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
-// Servings options (removed 6 as requested)
-export const SERVINGS_OPTIONS = [1, 2, 4, 8];
+const SERVING_OPTIONS = [1, 2, 4];
 
 interface ServingsSelectorProps {
   selectedServings: number;
-  onServingsSelect: (servings: number) => void;
+  onServingsChange: (servings: number) => void;
 }
 
-export function ServingsSelector({ selectedServings, onServingsSelect }: ServingsSelectorProps) {
+export function ServingsSelector({ selectedServings, onServingsChange }: ServingsSelectorProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customServings, setCustomServings] = useState('');
+  const [customValue, setCustomValue] = useState<string>(""); 
 
-  const handleCustomServingsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Only allow numeric input
-    if (/^\d*$/.test(value)) {
-      setCustomServings(value);
-      
-      // If there's a valid number, update the selected servings
-      if (value && parseInt(value) > 0) {
-        onServingsSelect(parseInt(value));
-      }
+  const handleBadgeClick = (value: number | string) => {
+    if (value === "other") {
+      setShowCustomInput(true);
+      return;
     }
-  };
-
-  const handleCustomServingsSelect = () => {
-    setShowCustomInput(true);
-    // If there's no previous custom value, don't change the selection yet
-    if (!customServings) return;
     
-    const servings = parseInt(customServings);
-    if (servings > 0) {
-      onServingsSelect(servings);
-    }
+    onServingsChange(value as number);
+    setShowCustomInput(false);
+    setCustomValue("");
   };
 
-  // Reset custom input when selecting a predefined option
-  const handlePredefinedSelect = (servings: number) => {
-    setShowCustomInput(false);
-    onServingsSelect(servings);
+  const handleCustomValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomValue(value);
+    
+    const numValue = parseInt(value);
+    if (numValue > 0) {
+      onServingsChange(numValue);
+    }
   };
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mb-2">
         <Users className="h-5 w-5 text-purple-600" />
         <label className="text-base font-medium text-purple-600">How many servings?</label>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {SERVINGS_OPTIONS.map(servingOption => (
+      <div className="flex flex-wrap gap-3">
+        {SERVING_OPTIONS.map(option => (
           <Badge 
-            key={servingOption}
-            variant="outline"
-            className={`cursor-pointer px-3 py-1.5 text-sm ${
-              selectedServings === servingOption && !showCustomInput
-                ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                : 'hover:bg-accent'
+            key={option} 
+            variant="outline" 
+            className={`cursor-pointer hover:bg-accent py-1.5 px-4 text-sm ${
+              selectedServings === option && !showCustomInput ? 'bg-purple-600 text-white hover:bg-purple-700' : ''
             }`}
-            onClick={() => handlePredefinedSelect(servingOption)}
+            onClick={() => handleBadgeClick(option)}
           >
-            {servingOption} {servingOption === 1 ? 'person' : 'people'}
+            {option}
           </Badge>
         ))}
-        
-        {/* Other (custom) option */}
         <Badge 
-          variant="outline"
-          className={`cursor-pointer px-3 py-1.5 text-sm ${
-            showCustomInput ? 'bg-purple-600 text-white hover:bg-purple-700' : 'hover:bg-accent'
+          variant="outline" 
+          className={`cursor-pointer hover:bg-accent py-1.5 px-4 text-sm ${
+            showCustomInput ? 'bg-purple-600 text-white hover:bg-purple-700' : ''
           }`}
-          onClick={handleCustomServingsSelect}
+          onClick={() => handleBadgeClick("other")}
         >
           Other
         </Badge>
       </div>
-
-      {/* Custom servings input */}
+      
       {showCustomInput && (
         <div className="mt-2">
           <Input
-            type="text"
-            value={customServings}
-            onChange={handleCustomServingsChange}
-            placeholder="Enter number of servings"
-            className="w-full max-w-[200px] border-purple-300 focus:border-purple-500"
+            type="number"
+            min="1"
+            placeholder="Enter servings..."
+            value={customValue}
+            onChange={handleCustomValueChange}
+            className="w-32"
             autoFocus
           />
         </div>
