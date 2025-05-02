@@ -131,6 +131,53 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          feedback_type: string
+          id: string
+          ingredient_feedback: Json | null
+          recipe_id: string
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          feedback_type: string
+          id?: string
+          ingredient_feedback?: Json | null
+          recipe_id: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          feedback_type?: string
+          id?: string
+          ingredient_feedback?: Json | null
+          recipe_id?: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_feedback_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -518,7 +565,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      nutrition_feedback_stats: {
+        Row: {
+          accuracy_rate: number | null
+          accurate_count: number | null
+          inaccurate_count: number | null
+          recipe_id: string | null
+          total_feedback: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_feedback_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       binary_quantize: {

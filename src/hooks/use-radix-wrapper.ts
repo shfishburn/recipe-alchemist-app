@@ -9,7 +9,7 @@ export function createForwardRef<T, P>(
   Component: React.ComponentType<P>
 ) {
   return forwardRef<T, P>((props, ref) => {
-    return React.createElement(Component, { ...props, ref });
+    return <Component {...props} ref={ref as React.Ref<HTMLElement>} />;
   });
 }
 
@@ -23,5 +23,5 @@ export const DialogContent = createForwardRef<
 export function wrapRadixComponent<T, P>(
   Component: React.ComponentType<P>
 ) {
-  return Component as unknown as React.ComponentType<P & { ref?: React.Ref<T> }>;
+  return Component as unknown as React.FC<P & { ref?: React.RefObject<T> }>;
 }

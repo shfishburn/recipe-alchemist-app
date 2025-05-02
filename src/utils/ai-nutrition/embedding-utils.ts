@@ -59,8 +59,7 @@ export async function findSimilarIngredients(
   }
 
   try {
-    // Convert the embedding array to a PostgreSQL vector
-    // We need to use raw query due to the vector type complexity
+    // We need to use an RPC call here as it handles the vector type conversion properly
     const { data: matches, error } = await supabase.rpc(
       'match_ingredient_embeddings',
       {
