@@ -60,15 +60,21 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
           <>
             {/* Main loading animation */}
             <div className="flex flex-col items-center space-y-6 mb-8">
-              {/* Improved animated cooking pot icon */}
+              {/* Enhanced animated cooking pot icon with chef hat */}
               <div className="relative">
                 <div className="relative h-20 w-20 flex items-center justify-center">
                   <div className="absolute inset-0 rounded-full bg-recipe-green/10 animate-pulse"></div>
-                  <ChefHat className="h-12 w-12 text-recipe-green animate-bounce" />
+                  <ChefHat className="h-12 w-12 text-recipe-green animate-cooking-pot" />
                   
-                  {/* Animated 'steam' effect */}
-                  <div className="absolute -top-2 -right-1">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green/80 animate-ping"></div>
+                  {/* Animated 'steam' effects */}
+                  <div className="absolute -top-2 left-0">
+                    <div className="h-2 w-2 rounded-full bg-recipe-green/60 animate-steam"></div>
+                  </div>
+                  <div className="absolute -top-1 right-0">
+                    <div className="h-2 w-2 rounded-full bg-recipe-green/70 animate-steam delay-150"></div>
+                  </div>
+                  <div className="absolute -top-3 left-2">
+                    <div className="h-3 w-3 rounded-full bg-recipe-green/50 animate-steam delay-300"></div>
                   </div>
                 </div>
               </div>
@@ -82,7 +88,7 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
               </div>
             </div>
             
-            {/* Loading progress */}
+            {/* Enhanced loading progress */}
             <div className="mb-8">
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-medium">
@@ -96,13 +102,13 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
               
               <Progress
                 value={loadingState?.percentComplete || 10}
-                className="h-2 bg-gray-100"
-                indicatorClassName="bg-recipe-green transition-all duration-500"
+                className="h-2 bg-gray-100 glow-recipe-green"
+                indicatorClassName="bg-recipe-green animate-progress-pulse transition-all duration-500"
               />
             </div>
             
-            {/* Cooking tip card */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto">
+            {/* Cooking tip card with animation */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto animate-float">
               <LoadingTipCard />
             </div>
             

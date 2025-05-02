@@ -27,75 +27,88 @@ interface QuickRecipeState {
   setLoading: (isLoading: boolean) => void;
   setNavigate: (navigate: NavigateFunction) => void;
   setHasTimeoutError: (hasTimeoutError: boolean) => void;
-  updateLoadingState: (partialState: Partial<LoadingState>) => void;
-  setCompletedLoading: (completedLoading: boolean) => void;
+  updateLoadingState: (state: Partial<LoadingState>) => void;
+  setCompletedLoading: (value: boolean) => void;
   reset: () => void;
   
   // Helper functions
   isRecipeValid: (recipe: any) => boolean;
 }
 
-export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
-  recipe: null,
-  formData: null,
-  error: null,
-  isLoading: false,
-  navigate: null,
-  hasTimeoutError: false,
-  loadingState: {
-    step: 0,
-    stepDescription: "Analyzing your ingredients...",
-    percentComplete: 0,
-    estimatedTimeRemaining: 30
-  },
-  completedLoading: false,
-  
-  setRecipe: (recipe) => set({ recipe, isLoading: false }),
-  setFormData: (formData) => set({ formData }),
-  setError: (error) => set({ error, isLoading: false }),
-  setLoading: (isLoading) => set({ isLoading }),
-  setNavigate: (navigate) => set({ navigate }),
-  setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
-  updateLoadingState: (partialState) => set((state) => ({ 
-    loadingState: { ...state.loadingState, ...partialState }
-  })),
-  setCompletedLoading: (completedLoading) => set({ completedLoading }),
-  
-  reset: () => set({ 
-    recipe: null, 
-    error: null, 
-    isLoading: false,
-    hasTimeoutError: false,
-    completedLoading: false,
-    loadingState: {
-      step: 0,
-      stepDescription: "Analyzing your ingredients...",
-      percentComplete: 0,
-      estimatedTimeRemaining: 30
-    }
-  }),
-  
-  isRecipeValid: (recipe) => {
-    if (!recipe) return false;
-    
-    const requiredFields = ['title', 'ingredients', 'steps'];
-    for (const field of requiredFields) {
-      if (!recipe[field]) {
-        console.error(`Recipe validation failed: missing ${field}`);
-        return false;
+export const useQuickRecipeStore = create<QuickRecipeState & {
+  updateLoadingState: (state: Partial<LoadingState>) => void;
+  setCompletedLoading: (value: boolean) => void;
+}>(
+  devtools(
+    persist(
+      (set, get) => ({
+        recipe: null,
+        formData: null,
+        error: null,
+        isLoading: false,
+        navigate: null,
+        hasTimeoutError: false,
+        loadingState: {
+          step: 0,
+          stepDescription: "Analyzing your ingredients...",
+          percentComplete: 0,
+          estimatedTimeRemaining: 30,
+        },
+        completedLoading: false,
+        
+        setRecipe: (recipe) => set({ recipe, isLoading: false }),
+        setFormData: (formData) => set({ formData }),
+        setError: (error) => set({ error, isLoading: false }),
+        setLoading: (isLoading) => set({ isLoading }),
+        setNavigate: (navigate) => set({ navigate }),
+        setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
+        updateLoadingState: (state) => 
+          set((prev) => ({ 
+            loadingState: { ...prev.loadingState, ...state } 
+          })),
+        setCompletedLoading: (value) => 
+          set({ completedLoading: value }),
+        reset: () => set({ 
+          recipe: null, 
+          error: null, 
+          isLoading: false,
+          hasTimeoutError: false,
+          completedLoading: false,
+          loadingState: {
+            step: 0,
+            stepDescription: "Analyzing your ingredients...",
+            percentComplete: 0,
+            estimatedTimeRemaining: 30
+          }
+        }),
+        
+        isRecipeValid: (recipe) => {
+          if (!recipe) return false;
+          
+          const requiredFields = ['title', 'ingredients', 'steps'];
+          for (const field of requiredFields) {
+            if (!recipe[field]) {
+              console.error(`Recipe validation failed: missing ${field}`);
+              return false;
+            }
+          }
+          
+          if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+            console.error('Recipe validation failed: ingredients is not a valid array');
+            return false;
+          }
+          
+          if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions)) {
+            console.error('Recipe validation failed: neither steps nor instructions is a valid array');
+            return false;
+          }
+          
+          return true;
+        }
+      }),
+      {
+        name: 'quick-recipe-storage',
       }
-    }
-    
-    if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-      console.error('Recipe validation failed: ingredients is not a valid array');
-      return false;
-    }
-    
-    if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions)) {
-      console.error('Recipe validation failed: neither steps nor instructions is a valid array');
-      return false;
-    }
-    
-    return true;
-  }
-}));
+    )
+  )
+);

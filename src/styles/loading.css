@@ -40,6 +40,21 @@
   100% { transform: translateY(0px); }
 }
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes ping {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
 /* Animation classes */
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-in-out;
@@ -72,6 +87,27 @@
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.animate-ping {
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Delay utilities */
+.delay-150 {
+  animation-delay: 150ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
 }
 
 /* Touch ripple effect */
@@ -107,4 +143,12 @@
 @keyframes glow {
   from { box-shadow: 0 0 10px 2px rgba(75, 175, 80, 0.2); }
   to { box-shadow: 0 0 20px 5px rgba(75, 175, 80, 0.4); }
+}
+
+/* Hardware acceleration for smoother animations */
+.hw-accelerated {
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
