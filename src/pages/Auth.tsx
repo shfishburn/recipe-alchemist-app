@@ -10,7 +10,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || '/';
   
-  // Store the complete referring location in sessionStorage on component mount
+  // Store the complete referring location on component mount
   // This includes pathname, search params, and state
   useEffect(() => {
     if (location.state?.from) {
@@ -23,7 +23,7 @@ const Auth = () => {
       };
       
       // Store as stringified JSON to preserve all properties
-      sessionStorage.setItem('redirectLocation', JSON.stringify(locationData));
+      sessionStorage.setItem('redirectAfterAuth', JSON.stringify(locationData));
       console.log('Stored redirect location:', locationData);
     }
   }, [location.state]);
@@ -43,7 +43,8 @@ const Auth = () => {
     let redirectState = {};
     
     // Try to get the stored location data
-    const storedLocationData = sessionStorage.getItem('redirectLocation');
+    const storedLocationData = sessionStorage.getItem('redirectAfterAuth');
+    
     if (storedLocationData) {
       try {
         const locationData = JSON.parse(storedLocationData);
@@ -58,6 +59,13 @@ const Auth = () => {
           redirectState = locationData.state;
         }
         
+        // Check if we need to resume recipe generation
+        if (locationData.recipeGenerationData) {
+          // Store recipe data to be picked up after navigation
+          sessionStorage.setItem('recipeGenerationSource', 
+            JSON.stringify(locationData.recipeGenerationData));
+        }
+        
         console.log("Redirecting to:", redirectTo, "with state:", redirectState);
       } catch (error) {
         console.error("Error parsing stored location:", error);
@@ -65,7 +73,7 @@ const Auth = () => {
     }
     
     // Clear the stored path after using it
-    sessionStorage.removeItem('redirectLocation');
+    sessionStorage.removeItem('redirectAfterAuth');
     
     return <Navigate to={redirectTo} state={redirectState} replace />;
   }

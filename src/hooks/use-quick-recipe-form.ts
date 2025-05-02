@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -37,6 +38,12 @@ export function useQuickRecipeForm() {
       
       // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");
+      
+      // Save current path to session storage in case user needs to log in
+      sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
+        path: location.pathname,
+        formData: formData
+      }));
       
       // Navigate to the quick recipe page BEFORE starting the API call
       // This ensures the loading animation is displayed
@@ -81,7 +88,7 @@ export function useQuickRecipeForm() {
       setError(error.message || "Failed to submit recipe request. Please try again.");
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname]);
 
   return {
     handleSubmit,

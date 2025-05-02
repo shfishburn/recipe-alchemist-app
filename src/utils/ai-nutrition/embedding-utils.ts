@@ -105,15 +105,14 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
-    // Convert the embedding array to a properly formatted string for PostgreSQL
-    const vectorString = JSON.stringify(embedding);
-
+    // For PostgreSQL vector columns, we need to pass the array directly
+    // The pg-vector extension handles the conversion on the database side
     const { error } = await supabase
       .from('ingredient_embeddings')
       .insert({
         ingredient_text: ingredientText,
         normalized_text: normalizedText,
-        embedding: vectorString, // Fix: This properly stringifies the array
+        embedding: embedding, // Pass the array directly
         confidence_score: confidenceScore
       });
 

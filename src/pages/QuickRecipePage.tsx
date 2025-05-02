@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
@@ -10,12 +9,15 @@ import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { recipe, isLoading, formData, error, reset, setFormData } = useQuickRecipeStore();
+  const { recipe, isLoading, formData, error, reset, setFormData, setLoading } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
+  const { session } = useAuth();
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
@@ -28,6 +30,39 @@ const QuickRecipePage = () => {
     isDirectNavigation,
     locationState: location.state
   });
+
+  // Check if we need to resume recipe generation after login
+  useEffect(() => {
+    if (session) {
+      const storedGenerationData = sessionStorage.getItem('recipeGenerationSource');
+      if (storedGenerationData && !isLoading && !recipe) {
+        try {
+          const parsedData = JSON.parse(storedGenerationData);
+          if (parsedData.formData) {
+            console.log("Resuming recipe generation after login:", parsedData);
+            // Clear the stored data
+            sessionStorage.removeItem('recipeGenerationSource');
+            
+            // Start the generation process
+            setLoading(true);
+            setFormData(parsedData.formData);
+            
+            // Start an async generation
+            generateQuickRecipe(parsedData.formData).catch(err => {
+              console.error("Error resuming recipe generation:", err);
+              toast({
+                title: "Recipe generation failed",
+                description: err.message || "Please try again later.",
+                variant: "destructive",
+              });
+            });
+          }
+        } catch (err) {
+          console.error("Error parsing stored recipe data:", err);
+        }
+      }
+    }
+  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData]);
 
   // Reset loading state if navigating directly from navbar
   useEffect(() => {
@@ -54,13 +89,17 @@ const QuickRecipePage = () => {
         reset();
         
         // Start the recipe generation with proper loading state
-        const { setLoading } = useQuickRecipeStore.getState();
         setLoading(true);
         
         // Start the recipe generation immediately
         await generateQuickRecipe(formData);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error retrying recipe generation:", err);
+        toast({
+          title: "Recipe generation failed",
+          description: err.message || "Please try again later.",
+          variant: "destructive",
+        });
       }
     }
   };

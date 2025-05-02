@@ -20,6 +20,19 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     // Store the current full location before redirecting to login
     // This includes pathname, search params, hash, and state
     console.log("Not authenticated, redirecting to login from:", location.pathname);
+    
+    // Store any form data that was being processed
+    const recipeGenerationData = sessionStorage.getItem('recipeGenerationSource');
+    
+    // Store route with current navigation state to restore after login
+    sessionStorage.setItem('redirectAfterAuth', JSON.stringify({
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      state: location.state,
+      recipeGenerationData: recipeGenerationData ? JSON.parse(recipeGenerationData) : null
+    }));
+    
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
