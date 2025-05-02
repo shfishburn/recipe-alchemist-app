@@ -3,7 +3,9 @@ import React from 'react';
 import { ExtendedNutritionData } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
-import { DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
+import { DAILY_REFERENCE_VALUES, NUTRIENT_DESCRIPTIONS, NUTRIENT_DISPLAY_NAMES, NUTRIENT_UNITS } from '@/constants/nutrition';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoCircle } from 'lucide-react';
 
 interface MicronutrientsDisplayProps {
   nutrition: ExtendedNutritionData;
@@ -17,78 +19,113 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
     return Math.round((value / DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) * 100);
   };
   
+  // Helper function to get nutrient description
+  const getNutrientDescription = (nutrient: string): string => {
+    const key = nutrient.toLowerCase().replace(/[^a-z0-9]/g, '') as keyof typeof NUTRIENT_DESCRIPTIONS;
+    return NUTRIENT_DESCRIPTIONS[key] || 
+           `Essential nutrient for overall health`;
+  };
+  
   // Group the micronutrients into categories
   const vitamins = [
     {
       name: 'Vitamin A',
       value: nutrition.vitaminA || 0,
-      unit: 'IU',
+      unit: NUTRIENT_UNITS.vitaminA || 'μg RAE',
       percentage: calculateDailyValuePercentage(nutrition.vitaminA, 'vitaminA'),
-      description: 'Important for vision and immune function'
+      description: getNutrientDescription('vitaminA')
     },
     {
       name: 'Vitamin C',
       value: nutrition.vitaminC || 0,
-      unit: 'mg',
+      unit: NUTRIENT_UNITS.vitaminC || 'mg',
       percentage: calculateDailyValuePercentage(nutrition.vitaminC, 'vitaminC'),
-      description: 'Helps with immune function and iron absorption'
+      description: getNutrientDescription('vitaminC')
     },
     {
       name: 'Vitamin D',
       value: nutrition.vitaminD || 0,
-      unit: 'IU',
+      unit: NUTRIENT_UNITS.vitaminD || 'μg',
       percentage: calculateDailyValuePercentage(nutrition.vitaminD, 'vitaminD'),
-      description: 'Essential for bone health and immune function'
+      description: getNutrientDescription('vitaminD')
+    },
+    {
+      name: 'Vitamin E',
+      value: nutrition.vitaminE || 0,
+      unit: NUTRIENT_UNITS.vitaminE || 'mg',
+      percentage: calculateDailyValuePercentage(nutrition.vitaminE, 'vitaminE'),
+      description: getNutrientDescription('vitaminE')
+    },
+    {
+      name: 'Vitamin K',
+      value: nutrition.vitaminK || 0,
+      unit: NUTRIENT_UNITS.vitaminK || 'μg',
+      percentage: calculateDailyValuePercentage(nutrition.vitaminK, 'vitaminK'),
+      description: getNutrientDescription('vitaminK')
     }
-  ];
+  ].filter(vitamin => vitamin.value > 0); // Only show vitamins with values
   
   const minerals = [
     {
       name: 'Calcium',
       value: nutrition.calcium || 0,
-      unit: 'mg',
+      unit: NUTRIENT_UNITS.calcium || 'mg',
       percentage: calculateDailyValuePercentage(nutrition.calcium, 'calcium'),
-      description: 'Essential for bone health and muscle function'
+      description: getNutrientDescription('calcium')
     },
     {
       name: 'Iron',
       value: nutrition.iron || 0,
-      unit: 'mg',
+      unit: NUTRIENT_UNITS.iron || 'mg',
       percentage: calculateDailyValuePercentage(nutrition.iron, 'iron'),
-      description: 'Needed for oxygen transport in blood'
+      description: getNutrientDescription('iron')
     },
     {
       name: 'Potassium',
       value: nutrition.potassium || 0,
-      unit: 'mg',
+      unit: NUTRIENT_UNITS.potassium || 'mg',
       percentage: calculateDailyValuePercentage(nutrition.potassium, 'potassium'),
-      description: 'Helps regulate fluid balance and nerve signals'
+      description: getNutrientDescription('potassium')
+    },
+    {
+      name: 'Magnesium',
+      value: nutrition.magnesium || 0,
+      unit: NUTRIENT_UNITS.magnesium || 'mg',
+      percentage: calculateDailyValuePercentage(nutrition.magnesium, 'magnesium'),
+      description: getNutrientDescription('magnesium')
+    },
+    {
+      name: 'Zinc',
+      value: nutrition.zinc || 0,
+      unit: NUTRIENT_UNITS.zinc || 'mg',
+      percentage: calculateDailyValuePercentage(nutrition.zinc, 'zinc'),
+      description: getNutrientDescription('zinc')
     }
-  ];
+  ].filter(mineral => mineral.value > 0); // Only show minerals with values
   
   const others = [
     {
       name: 'Sodium',
       value: nutrition.sodium || 0,
-      unit: 'mg',
+      unit: NUTRIENT_UNITS.sodium || 'mg',
       percentage: calculateDailyValuePercentage(nutrition.sodium, 'sodium'),
-      description: 'Important for fluid balance, but limit intake'
+      description: getNutrientDescription('sodium')
     },
     {
       name: 'Fiber',
       value: nutrition.fiber || 0,
-      unit: 'g',
+      unit: NUTRIENT_UNITS.fiber || 'g',
       percentage: calculateDailyValuePercentage(nutrition.fiber, 'fiber'),
-      description: 'Aids in digestion and helps you feel full'
+      description: getNutrientDescription('fiber')
     },
     {
       name: 'Sugar',
       value: nutrition.sugar || 0,
-      unit: 'g',
+      unit: NUTRIENT_UNITS.sugar || 'g',
       percentage: calculateDailyValuePercentage(nutrition.sugar, 'sugar'),
-      description: 'Naturally occurring or added sweeteners'
+      description: getNutrientDescription('sugar')
     }
-  ];
+  ].filter(other => other.value > 0); // Only show nutrients with values
   
   // Helper function to determine the status color based on percentage
   const getStatusColor = (percentage: number) => {
@@ -102,10 +139,23 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   // Component to display a micronutrient
   const MicronutrientItem = ({ item }: { item: any }) => {
     const formattedValue = formatNutrientWithUnit(item.value, item.unit, unitSystem);
+    
     return (
       <div className="mb-2">
         <div className="flex justify-between text-xs mb-1">
-          <div className="font-medium">{item.name}</div>
+          <div className="font-medium flex items-center gap-1">
+            {item.name}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs max-w-xs">{item.description}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="text-right">
             {formattedValue} <span className="text-muted-foreground">({item.percentage}% DV)</span>
           </div>
@@ -117,7 +167,6 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
             aria-hidden="true"
           ></div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
       </div>
     );
   };
@@ -134,30 +183,36 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
         <h4 className="text-sm font-medium mb-3">Micronutrients</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <h5 className="text-xs font-semibold mb-3">Vitamins</h5>
-            {vitamins.map((vitamin, idx) => (
-              <MicronutrientItem key={idx} item={vitamin} />
-            ))}
-          </div>
+          {vitamins.length > 0 && (
+            <div>
+              <h5 className="text-xs font-semibold mb-3">Vitamins</h5>
+              {vitamins.map((vitamin, idx) => (
+                <MicronutrientItem key={idx} item={vitamin} />
+              ))}
+            </div>
+          )}
           
-          <div>
-            <h5 className="text-xs font-semibold mb-3">Minerals</h5>
-            {minerals.map((mineral, idx) => (
-              <MicronutrientItem key={idx} item={mineral} />
-            ))}
-          </div>
+          {minerals.length > 0 && (
+            <div>
+              <h5 className="text-xs font-semibold mb-3">Minerals</h5>
+              {minerals.map((mineral, idx) => (
+                <MicronutrientItem key={idx} item={mineral} />
+              ))}
+            </div>
+          )}
           
-          <div>
-            <h5 className="text-xs font-semibold mb-3">Other Nutrients</h5>
-            {others.map((other, idx) => (
-              <MicronutrientItem key={idx} item={other} />
-            ))}
-          </div>
+          {others.length > 0 && (
+            <div>
+              <h5 className="text-xs font-semibold mb-3">Other Nutrients</h5>
+              {others.map((other, idx) => (
+                <MicronutrientItem key={idx} item={other} />
+              ))}
+            </div>
+          )}
         </div>
         
         <p className="text-xs text-muted-foreground mt-4 italic">
-          DV = Daily Value, based on a 2,000 calorie diet. Your personal needs may vary.
+          DV = Daily Value, based on recommended daily intakes for adults. Your personal needs may vary based on age, gender, and health status.
           {unitSystem === 'imperial' ? ' (US units)' : ' (Metric units)'}
         </p>
       </CardContent>
