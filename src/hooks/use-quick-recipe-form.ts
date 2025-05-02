@@ -14,9 +14,9 @@ export function useQuickRecipeForm() {
     setRecipe, 
     setFormData, 
     setError,
-    setNavigate
+    setNavigate,
+    isRecipeValid
   } = useQuickRecipeStore();
-  const [isLoading, setIsLoadingLocal] = useState(false);
   
   // Store navigate function in the global store for use in other components
   useEffect(() => {
@@ -26,12 +26,13 @@ export function useQuickRecipeForm() {
   // Handle form submission
   const handleSubmit = async (formData: QuickRecipeFormData) => {
     try {
+      console.log("Handling form submission:", formData);
+      
       // Reset any previous state
       reset();
       
       // Set loading state immediately so it shows the loading animation
       setLoading(true);
-      setIsLoadingLocal(true);
       setFormData(formData);
       
       // Navigate to the quick recipe page BEFORE starting the API call
@@ -43,28 +44,31 @@ export function useQuickRecipeForm() {
       // Start generating the recipe immediately after navigation
       try {
         const generatedRecipe = await generateQuickRecipe(formData);
+        
+        // Validate the recipe structure before setting it
+        if (!isRecipeValid(generatedRecipe)) {
+          throw new Error("The recipe format returned from the API was invalid. Please try again.");
+        }
+        
+        console.log("Recipe generation successful:", generatedRecipe);
         setRecipe(generatedRecipe);
-        setIsLoadingLocal(false);
         return generatedRecipe;
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error generating recipe:', error);
         setLoading(false);
-        setIsLoadingLocal(false);
-        setError(error.message || "Failed to generate recipe");
+        setError(error.message || "Failed to generate recipe. Please try again.");
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
-      setIsLoadingLocal(false);
-      setError(error.message || "Failed to generate recipe");
+      setError(error.message || "Failed to generate recipe. Please try again.");
       return null;
     }
   };
 
   return {
     handleSubmit,
-    isLoading: isLoading,
     navigate,
     location,
     reset,

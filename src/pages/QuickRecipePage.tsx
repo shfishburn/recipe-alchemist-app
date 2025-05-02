@@ -3,19 +3,19 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
+import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { recipe, isLoading, formData, error, reset, setLoading, setFormData } = useQuickRecipeStore();
-  const { generateQuickRecipe } = useQuickRecipe(); // Properly use hook at the top level
+  const { generateQuickRecipe } = useQuickRecipe();
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
@@ -47,6 +47,7 @@ const QuickRecipePage = () => {
         // Start the recipe generation immediately
         generateQuickRecipe(formData).then(generatedRecipe => {
           // Handle successful generation in the store
+          console.log("Recipe regeneration successful");
         }).catch(err => {
           console.error("Error retrying recipe generation:", err);
         });
@@ -55,6 +56,11 @@ const QuickRecipePage = () => {
       }
     }
   };
+
+  // Show full-screen loading when generating a recipe
+  if (isLoading) {
+    return <FullScreenLoading />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -80,10 +86,6 @@ const QuickRecipePage = () => {
             // Show form directly when navigating from navbar
             <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md max-w-lg mx-auto mb-10">
               <QuickRecipeFormContainer />
-            </div>
-          ) : isLoading ? (
-            <div className="flex justify-center">
-              <QuickRecipeLoading />
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 border rounded-xl bg-red-50 dark:bg-red-900/10">
