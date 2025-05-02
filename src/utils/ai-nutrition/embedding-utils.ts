@@ -105,9 +105,9 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
-    // Convert the embedding array to a PostgreSQL vector type string
-    // This syntax is specific to PostgreSQL's vector type
-    const vectorString = `[${embedding.join(',')}]`;
+    // Convert the embedding array to a string for PostgreSQL's vector representation
+    // This resolves the type mismatch error
+    const vectorString = JSON.stringify(embedding);
 
     const { error } = await supabase
       .from('ingredient_embeddings')

@@ -9,31 +9,34 @@ export const useSlot = () => {
     const { asChild, children, ...otherProps } = props;
     
     if (asChild && React.isValidElement(children)) {
-      // Use type assertion to make TypeScript happy with ref handling
-      const childProps = {
-        ...otherProps,
-        // Properly handle the ref merging
-        ref: (innerRef: any) => {
-          // Handle refs properly using type-safe approach
-          if (typeof ref === "function") {
-            ref(innerRef);
-          } else if (ref) {
-            (ref as React.MutableRefObject<unknown>).current = innerRef;
-          }
-          
-          // Forward the ref to the child if it has one
-          const childRef = (children as any).ref;
+      // Clone the child, but handle ref separately
+      const clonedChild = React.cloneElement(children, otherProps);
+      
+      // Use effect to handle ref forwarding properly
+      React.useEffect(() => {
+        const childElement = children as React.ReactElement & { ref?: React.Ref<any> };
+        const childRef = childElement.ref;
+        
+        if (ref) {
           if (childRef) {
-            if (typeof childRef === "function") {
-              childRef(innerRef);
-            } else {
-              childRef.current = innerRef;
+            // Merge refs if both exist
+            if (typeof ref === 'function' && typeof childRef === 'function') {
+              const originalChildRef = childRef;
+              childRef((value: any) => {
+                originalChildRef(value);
+                ref(value);
+              });
+            } else if (typeof ref !== 'function' && typeof childRef !== 'function') {
+              // For object refs
+              if (ref.current) {
+                childRef.current = ref.current;
+              }
             }
           }
         }
-      };
+      }, [children, ref]);
       
-      return React.cloneElement(children, childProps);
+      return clonedChild;
     }
     
     // Return a div when not using asChild
