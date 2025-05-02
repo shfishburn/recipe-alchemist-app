@@ -22,8 +22,12 @@ export function NutritionPreview() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [api, setApi] = useState<any>(null);
   
-  // Auto-scroll carousel
+  // Auto-scroll carousel with pause on hover
+  const [isPaused, setIsPaused] = useState(false);
+  
   useEffect(() => {
+    if (isPaused) return;
+    
     const interval = setInterval(() => {
       const nextSlide = (activeSlide + 1) % macroDistributionData.length;
       setActiveSlide(nextSlide);
@@ -31,7 +35,7 @@ export function NutritionPreview() {
     }, 5000); // Change slide every 5 seconds
     
     return () => clearInterval(interval);
-  }, [api, activeSlide]);
+  }, [api, activeSlide, isPaused]);
   
   // Handle API events
   useEffect(() => {
@@ -65,10 +69,15 @@ export function NutritionPreview() {
       <Card className="mx-auto max-w-5xl w-full md:w-11/12 border-purple-100 dark:border-purple-900 shadow-md">
         <CardContent className="p-4 md:p-6">
           <div className="mb-6 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm">
-            <strong className="text-purple-700 dark:text-purple-300">Personal Nutrition Features:</strong> Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
+            <strong className="text-purple-700 dark:text-purple-300">Personal Nutrition Features:</strong>{' '}
+            Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
           </div>
           
-          <div className="flex justify-center w-full">
+          <div 
+            className="w-full"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
             <Carousel
               opts={{
                 align: "center",
@@ -91,13 +100,15 @@ export function NutritionPreview() {
             </Carousel>
           </div>
           
-          <div className="flex justify-center w-full">
+          <div className="flex justify-center w-full mt-2">
             <CarouselPagination 
               totalItems={macroDistributionData.length}
               activeSlide={activeSlide}
               onSelectSlide={(index) => {
                 setActiveSlide(index);
                 api?.scrollTo(index);
+                setIsPaused(true); // Pause auto-scroll when user navigates
+                setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
               }}
             />
           </div>

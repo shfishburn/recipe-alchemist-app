@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface ServingsSelectorProps {
   selectedServings: number | undefined;
@@ -8,8 +9,13 @@ export interface ServingsSelectorProps {
 }
 
 export function ServingsSelector({ selectedServings, onServingsChange }: ServingsSelectorProps) {
-  // Ensure selectedServings has a valid value for toString()
+  const isMobile = useIsMobile();
+  
+  // Ensure selectedServings has a valid value
   const servingValue = selectedServings !== undefined ? selectedServings.toString() : '2';
+  
+  // Define common serving options
+  const servingOptions = [1, 2, 3, 4, 6, 8];
 
   return (
     <div className="w-full">
@@ -17,12 +23,23 @@ export function ServingsSelector({ selectedServings, onServingsChange }: Serving
         value={servingValue} 
         onValueChange={(value) => onServingsChange(parseInt(value, 10))}
       >
-        <SelectTrigger className="w-full h-10">
+        <SelectTrigger 
+          className={`w-full ${isMobile ? 'h-9 text-sm' : 'h-10'}`}
+          aria-label="Select number of servings"
+        >
           <SelectValue placeholder="Select servings" />
         </SelectTrigger>
-        <SelectContent className="bg-white dark:bg-gray-800">
-          {[1, 2, 3, 4, 6, 8].map((servings) => (
-            <SelectItem key={servings} value={servings.toString()} className="px-3 py-2">
+        
+        <SelectContent 
+          position={isMobile ? "popper" : "item-aligned"}
+          className="bg-white dark:bg-gray-800"
+        >
+          {servingOptions.map((servings) => (
+            <SelectItem 
+              key={servings} 
+              value={servings.toString()} 
+              className="px-3 py-2"
+            >
               {servings} {servings === 1 ? 'serving' : 'servings'}
             </SelectItem>
           ))}
