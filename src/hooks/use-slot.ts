@@ -32,7 +32,7 @@ export const useSlot = () => {
       });
     }
     
-    return <div ref={ref as React.RefObject<HTMLDivElement>} {...otherProps}>{children}</div>;
+    return <div ref={ref} {...otherProps}>{children}</div>;
   });
   
   SlotWrapper.displayName = 'SlotWrapper';
