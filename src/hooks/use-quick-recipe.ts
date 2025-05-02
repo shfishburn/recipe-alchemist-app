@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -129,6 +130,9 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       throw new Error("Please provide a main ingredient");
     }
     
+    // Ensure servings is set to a default value if not provided
+    const servings = formData.servings || 2;
+    
     // Increase timeout for the request to prevent premature timeouts
     const TIMEOUT_DURATION = 60000; // 60 seconds timeout (increased from 55 seconds)
     
@@ -147,22 +151,23 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       ? formData.dietary.join(', ') 
       : formData.dietary || "";
     
-    // Define the request body with properly formatted values
+    // Define the request body with properly formatted values and ensure all fields are included
     const requestBody = {
       cuisine: cuisineValue,
       dietary: dietaryValue,
       mainIngredient: formData.mainIngredient.trim(),
-      servings: formData.servings || 4,
+      servings: servings,
       maxCalories: formData.maxCalories
     };
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Call the Supabase Edge Function to generate the recipe
+    // Call the Supabase Edge Function with debugging headers
     const responsePromise = supabase.functions.invoke('generate-quick-recipe', {
       body: requestBody,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Debug-Info': 'quick-recipe-request-' + Date.now()
       }
     });
     
@@ -182,6 +187,12 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       
       if (error.context) {
         console.error('Error context:', error.context);
+      }
+      
+      // Check for empty body errors
+      if (error.message?.includes('Empty request body')) {
+        console.error('CRITICAL: Empty request body error');
+        throw new Error('Recipe request failed: Empty request body. Please try again.');
       }
       
       throw error;
@@ -248,6 +259,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       errorMessage = "Error processing the recipe. The AI generated an invalid response format. Please try again.";
     } else if (error.message?.includes("OpenAI API key")) {
       errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
+    } else if (error.message?.includes("Empty request body")) {
+      errorMessage = "The request couldn't be processed because it was empty. Please try again.";
     }
     
     console.error('Error in generateQuickRecipe:', error);

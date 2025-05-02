@@ -17,7 +17,8 @@ export function useQuickRecipeForm() {
     setError,
     setNavigate,
     isRecipeValid,
-    setHasTimeoutError
+    setHasTimeoutError,
+    updateLoadingState
   } = useQuickRecipeStore();
   
   // Store navigate function in the global store for use in other components
@@ -46,6 +47,14 @@ export function useQuickRecipeForm() {
       setLoading(true);
       setFormData(formData);
       
+      // Initialize loading state with estimated time
+      updateLoadingState({
+        step: 0,
+        stepDescription: "Analyzing your ingredients...",
+        percentComplete: 0,
+        estimatedTimeRemaining: 30
+      });
+      
       // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");
       
@@ -67,7 +76,7 @@ export function useQuickRecipeForm() {
           cuisine: formData.cuisine,
           dietary: formData.dietary,
           mainIngredient: formData.mainIngredient,
-          servings: formData.servings
+          servings: formData.servings || 2 // Ensure servings has a default value
         });
         
         // Add a small delay to ensure navigation completes
@@ -107,6 +116,9 @@ export function useQuickRecipeForm() {
           errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
           // Log specifically for API key issues
           console.error("CRITICAL: OpenAI API key issue detected");
+        } else if (error.message?.includes('Empty request body')) {
+          errorMessage = "The recipe request couldn't be sent correctly. Please try again.";
+          console.error("CRITICAL: Empty request body detected");
         }
         
         // Set descriptive error with timeout flag
@@ -127,7 +139,7 @@ export function useQuickRecipeForm() {
       setError(error.message || "Failed to submit recipe request. Please try again.");
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError, updateLoadingState]);
 
   return {
     handleSubmit,

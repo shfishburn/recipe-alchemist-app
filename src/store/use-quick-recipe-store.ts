@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { NavigateFunction } from 'react-router-dom';
 
+interface LoadingState {
+  step: number;
+  stepDescription: string;
+  percentComplete: number;
+  estimatedTimeRemaining: number;
+}
+
 interface QuickRecipeState {
   // State properties
   recipe: QuickRecipe | null;
@@ -10,6 +17,8 @@ interface QuickRecipeState {
   isLoading: boolean;
   navigate: NavigateFunction | null;
   hasTimeoutError: boolean;
+  loadingState: LoadingState;
+  completedLoading: boolean;
   
   // Actions
   setRecipe: (recipe: QuickRecipe) => void;
@@ -18,6 +27,8 @@ interface QuickRecipeState {
   setLoading: (isLoading: boolean) => void;
   setNavigate: (navigate: NavigateFunction) => void;
   setHasTimeoutError: (hasTimeoutError: boolean) => void;
+  updateLoadingState: (partialState: Partial<LoadingState>) => void;
+  setCompletedLoading: (completedLoading: boolean) => void;
   reset: () => void;
   
   // Helper functions
@@ -31,6 +42,13 @@ export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
   isLoading: false,
   navigate: null,
   hasTimeoutError: false,
+  loadingState: {
+    step: 0,
+    stepDescription: "Analyzing your ingredients...",
+    percentComplete: 0,
+    estimatedTimeRemaining: 30
+  },
+  completedLoading: false,
   
   setRecipe: (recipe) => set({ recipe, isLoading: false }),
   setFormData: (formData) => set({ formData }),
@@ -38,13 +56,23 @@ export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setNavigate: (navigate) => set({ navigate }),
   setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
+  updateLoadingState: (partialState) => set((state) => ({ 
+    loadingState: { ...state.loadingState, ...partialState }
+  })),
+  setCompletedLoading: (completedLoading) => set({ completedLoading }),
   
   reset: () => set({ 
     recipe: null, 
     error: null, 
     isLoading: false,
-    hasTimeoutError: false
-    // Keep formData and navigate
+    hasTimeoutError: false,
+    completedLoading: false,
+    loadingState: {
+      step: 0,
+      stepDescription: "Analyzing your ingredients...",
+      percentComplete: 0,
+      estimatedTimeRemaining: 30
+    }
   }),
   
   isRecipeValid: (recipe) => {

@@ -1,10 +1,11 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
 // Define CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-debug-info',
 };
 
 // Improved prompt with additional adaptations for Build page migration
@@ -14,12 +15,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   
+  // Get debug info from headers if present
+  const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
+  console.log(`Request received with debug info: ${debugInfo}`);
+  
   // Check content type
   const contentType = req.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
     console.error("Invalid content type:", contentType);
     return new Response(
-      JSON.stringify({ error: "Content-Type must be application/json" }),
+      JSON.stringify({ 
+        error: "Content-Type must be application/json",
+        debugInfo: debugInfo
+      }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
@@ -32,7 +40,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "OpenAI API key is not configured",
-          details: "The OPENAI_API_KEY environment variable is missing or empty"
+          details: "The OPENAI_API_KEY environment variable is missing or empty",
+          debugInfo: debugInfo
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -48,6 +57,10 @@ serve(async (req) => {
     let requestBody;
     let requestText = "";
     try {
+      // Log the request details
+      console.log("Request headers:", [...req.headers.entries()].map(([k, v]) => `${k}: ${v}`).join(', '));
+      console.log("Request method:", req.method);
+      
       // Get the request body as text first for debugging
       requestText = await req.text();
       console.log("Raw request body:", requestText.length > 0 ? 
@@ -55,6 +68,7 @@ serve(async (req) => {
         "EMPTY REQUEST BODY");
       
       if (!requestText || requestText.trim() === "") {
+        console.error("Empty request body received");
         throw new Error("Empty request body");
       }
       
@@ -72,7 +86,8 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Invalid JSON in request body", 
           details: parseError.message,
-          requestText: requestText.substring(0, 100) // Include part of the raw request for debugging
+          requestText: requestText.substring(0, 100), // Include part of the raw request for debugging
+          debugInfo: debugInfo
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -92,7 +107,10 @@ serve(async (req) => {
     if (!mainIngredient) {
       console.error("Missing main ingredient");
       return new Response(
-        JSON.stringify({ error: "Main ingredient is required" }),
+        JSON.stringify({ 
+          error: "Main ingredient is required",
+          debugInfo: debugInfo 
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -362,6 +380,7 @@ Format each as object → {
         JSON.stringify({
           error: errorMessage,
           details: errorDetails,
+          debugInfo: debugInfo
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -372,6 +391,7 @@ Format each as object → {
       JSON.stringify({
         error: err.message || "Unexpected error",
         details: err.stack || "No stack trace available",
+        debugInfo: debugInfo
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

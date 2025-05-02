@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +41,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
     cuisine: [],
     dietary: [],
     mainIngredient: '',
-    servings: 2, // Adding required servings property with default value
+    servings: 2, // Default value for servings
   });
   const isMobile = useIsMobile();
   const { toast } = useToast();
