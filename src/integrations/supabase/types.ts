@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      embedding_versions: {
+        Row: {
+          is_production: boolean | null
+          model_id: string
+          parameters: Json
+          performance_metrics: Json | null
+          schema_version: number
+          text_template: string
+          timestamp: string
+          version_id: string
+        }
+        Insert: {
+          is_production?: boolean | null
+          model_id: string
+          parameters: Json
+          performance_metrics?: Json | null
+          schema_version: number
+          text_template: string
+          timestamp: string
+          version_id: string
+        }
+        Update: {
+          is_production?: boolean | null
+          model_id?: string
+          parameters?: Json
+          performance_metrics?: Json | null
+          schema_version?: number
+          text_template?: string
+          timestamp?: string
+          version_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -37,6 +70,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      food_embeddings: {
+        Row: {
+          created_at: string | null
+          embedding: string
+          embedding_id: string
+          embedding_model: string
+          embedding_text: string
+          embedding_version: number
+          food_code: string
+          id: number
+          is_current: boolean | null
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          embedding: string
+          embedding_id: string
+          embedding_model: string
+          embedding_text: string
+          embedding_version: number
+          food_code: string
+          id?: number
+          is_current?: boolean | null
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          embedding?: string
+          embedding_id?: string
+          embedding_model?: string
+          embedding_text?: string
+          embedding_version?: number
+          food_code?: string
+          id?: number
+          is_current?: boolean | null
+          metadata?: Json | null
+        }
+        Relationships: []
       }
       import_examples: {
         Row: {
@@ -177,6 +249,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nutrition_vectors: {
+        Row: {
+          created_at: string | null
+          food_code: string
+          id: number
+          nutrition_sparse: Json | null
+          nutrition_vector: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          food_code: string
+          id?: number
+          nutrition_sparse?: Json | null
+          nutrition_vector: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          food_code?: string
+          id?: number
+          nutrition_sparse?: Json | null
+          nutrition_vector?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -588,6 +687,30 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      find_similar_foods_by_embedding: {
+        Args: {
+          query_embedding: string
+          similarity_threshold?: number
+          max_results?: number
+        }
+        Returns: {
+          food_code: string
+          food_name: string
+          similarity: number
+        }[]
+      }
+      find_similar_foods_by_nutrition: {
+        Args: {
+          query_nutrition: string
+          similarity_threshold?: number
+          max_results?: number
+        }
+        Returns: {
+          food_code: string
+          food_name: string
+          similarity: number
+        }[]
       }
       gtrgm_compress: {
         Args: { "": unknown }

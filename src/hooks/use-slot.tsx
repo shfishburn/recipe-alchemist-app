@@ -11,31 +11,32 @@ export const useSlot = () => {
     // Only clone if children is a valid React element and asChild is true
     if (asChild && React.isValidElement(children)) {
       // When asChild is true, we clone the child element
-      // and forward all props to it
+      // and forward all props to it with proper TypeScript typing
       return React.cloneElement(children, {
         ...otherProps,
-        // Forward the ref
-        ref: (node: any) => {
+        // Forward the ref with proper TypeScript typing
+        ref: (node: unknown) => {
           // Handle ref forwarding
-          if (ref) {
-            if (typeof ref === 'function') {
-              ref(node);
-            } else {
-              (ref as React.MutableRefObject<any>).current = node;
-            }
+          if (typeof ref === 'function') {
+            ref(node as HTMLDivElement);
+          } else if (ref) {
+            (ref as React.MutableRefObject<HTMLDivElement>).current = node as HTMLDivElement;
           }
           
           // Also forward to child's existing ref if it exists
-          const childRef = (children as any).ref;
+          const childRef = (children as React.ReactElement<any>).ref;
           if (childRef) {
             if (typeof childRef === 'function') {
               childRef(node);
-            } else if (childRef.current !== undefined) {
-              childRef.current = node;
+            } else {
+              const refObject = childRef as React.MutableRefObject<unknown>;
+              if (refObject && 'current' in refObject) {
+                refObject.current = node;
+              }
             }
           }
         }
-      } as React.HTMLAttributes<HTMLDivElement> & { ref?: any });
+      } as React.HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<unknown> });
     }
     
     // When asChild is false or not provided, render a div

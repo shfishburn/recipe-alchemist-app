@@ -14,27 +14,33 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
   }
   
   // Clone the element and pass down props
+  // Use proper TypeScript casting to ensure type safety
   return React.cloneElement(children, {
     ...rest,
-    ref: (value: unknown) => {
-      // Handle ref forwarding
+    // Use the appropriate approach for ref merging that TypeScript understands
+    ref: (node: unknown) => {
+      // Handle our forwarded ref
       if (typeof ref === 'function') {
-        ref(value as HTMLElement);
+        ref(node as HTMLElement);
       } else if (ref) {
-        (ref as React.MutableRefObject<HTMLElement>).current = value as HTMLElement;
+        (ref as React.MutableRefObject<HTMLElement>).current = node as HTMLElement;
       }
       
-      // Forward to child ref if it exists
-      const childRef = (children as any).ref;
+      // Forward to child's existing ref if it exists
+      const childRef = (children as React.ReactElement<any>).ref;
       if (childRef) {
         if (typeof childRef === 'function') {
-          childRef(value);
-        } else if (childRef) {
-          childRef.current = value;
+          childRef(node);
+        } else {
+          // Make sure childRef exists and has current property
+          const refObject = childRef as React.MutableRefObject<unknown>;
+          if (refObject && 'current' in refObject) {
+            refObject.current = node;
+          }
         }
       }
     }
-  });
+  } as React.HTMLAttributes<HTMLElement> & { ref?: React.Ref<unknown> });
 });
 
 Slot.displayName = "Slot";
