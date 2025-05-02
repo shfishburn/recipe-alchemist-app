@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { DAILY_REFERENCE_VALUES, NUTRIENT_DESCRIPTIONS, NUTRIENT_DISPLAY_NAMES, NUTRIENT_UNITS } from '@/constants/nutrition';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { InfoCircle } from 'lucide-react';
+import { Info } from 'lucide-react';
 
 interface MicronutrientsDisplayProps {
   nutrition: ExtendedNutritionData;
@@ -16,7 +16,7 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   // Calculate the percentage of daily value for each nutrient
   const calculateDailyValuePercentage = (value: number | undefined, nutrient: string): number => {
     if (!value || !DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) return 0;
-    return Math.round((value / DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) * 100);
+    return Math.round((value / (DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES] as number)) * 100);
   };
   
   // Helper function to get nutrient description
@@ -48,21 +48,8 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
       unit: NUTRIENT_UNITS.vitaminD || 'μg',
       percentage: calculateDailyValuePercentage(nutrition.vitaminD, 'vitaminD'),
       description: getNutrientDescription('vitaminD')
-    },
-    {
-      name: 'Vitamin E',
-      value: nutrition.vitaminE || 0,
-      unit: NUTRIENT_UNITS.vitaminE || 'mg',
-      percentage: calculateDailyValuePercentage(nutrition.vitaminE, 'vitaminE'),
-      description: getNutrientDescription('vitaminE')
-    },
-    {
-      name: 'Vitamin K',
-      value: nutrition.vitaminK || 0,
-      unit: NUTRIENT_UNITS.vitaminK || 'μg',
-      percentage: calculateDailyValuePercentage(nutrition.vitaminK, 'vitaminK'),
-      description: getNutrientDescription('vitaminK')
     }
+    // Removed Vitamin E and K since they don't exist in the ExtendedNutritionData type
   ].filter(vitamin => vitamin.value > 0); // Only show vitamins with values
   
   const minerals = [
@@ -86,21 +73,8 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
       unit: NUTRIENT_UNITS.potassium || 'mg',
       percentage: calculateDailyValuePercentage(nutrition.potassium, 'potassium'),
       description: getNutrientDescription('potassium')
-    },
-    {
-      name: 'Magnesium',
-      value: nutrition.magnesium || 0,
-      unit: NUTRIENT_UNITS.magnesium || 'mg',
-      percentage: calculateDailyValuePercentage(nutrition.magnesium, 'magnesium'),
-      description: getNutrientDescription('magnesium')
-    },
-    {
-      name: 'Zinc',
-      value: nutrition.zinc || 0,
-      unit: NUTRIENT_UNITS.zinc || 'mg',
-      percentage: calculateDailyValuePercentage(nutrition.zinc, 'zinc'),
-      description: getNutrientDescription('zinc')
     }
+    // Removed magnesium and zinc since they don't exist in the ExtendedNutritionData type
   ].filter(mineral => mineral.value > 0); // Only show minerals with values
   
   const others = [
@@ -148,7 +122,7 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                  <Info className="h-3 w-3 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="text-xs max-w-xs">{item.description}</p>
