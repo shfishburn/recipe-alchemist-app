@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -228,10 +229,7 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
         navigate('/');
       }
       
-      toast({
-        title: "Success",
-        description: "Successfully logged in",
-      });
+      // Removed the success toast here
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
