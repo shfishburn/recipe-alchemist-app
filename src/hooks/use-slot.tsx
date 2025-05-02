@@ -9,13 +9,13 @@ export const useSlot = () => {
     const { asChild, children, ...otherProps } = props;
     
     if (asChild && React.isValidElement(children)) {
-      // When asChild is true, we want to clone the child element
+      // When asChild is true, we clone the child element
       // and forward all props to it
       return React.cloneElement(children, {
         ...otherProps,
-        // Properly merge refs using a callback ref
+        // TypeScript doesn't know about ref in cloneElement's second argument
+        // So we need to handle it manually via a callback
         ref: (node: any) => {
-          // Handle forwarding ref to the child component
           if (ref) {
             if (typeof ref === 'function') {
               ref(node);
@@ -24,17 +24,17 @@ export const useSlot = () => {
             }
           }
           
-          // Forward to child's ref if it exists
+          // Also forward to child's existing ref if it exists
           const childRef = (children as any).ref;
           if (childRef) {
             if (typeof childRef === 'function') {
               childRef(node);
-            } else {
+            } else if (childRef.current !== undefined) {
               childRef.current = node;
             }
           }
         }
-      });
+      } as React.HTMLAttributes<HTMLDivElement> & { ref?: any });
     }
     
     // When asChild is false or not provided, render a div
