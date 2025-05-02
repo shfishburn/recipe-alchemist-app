@@ -16,6 +16,8 @@ export const DAILY_REFERENCE_VALUES = {
   vitaminA: 900, // mcg RAE
   vitaminC: 90, // mg
   vitaminD: 20, // mcg
+  vitaminE: 15, // mg
+  vitaminK: 120, // mcg
 };
 
 /**
@@ -35,6 +37,8 @@ export const NUTRIENT_UNITS = {
   vitaminA: 'mcg',
   vitaminC: 'mg',
   vitaminD: 'mcg',
+  vitaminE: 'mg',
+  vitaminK: 'mcg',
 };
 
 /**

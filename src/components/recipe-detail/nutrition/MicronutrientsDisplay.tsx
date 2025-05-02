@@ -3,6 +3,7 @@ import React from 'react';
 import { ExtendedNutritionData } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
+import { DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 
 interface MicronutrientsDisplayProps {
   nutrition: ExtendedNutritionData;
@@ -10,27 +11,33 @@ interface MicronutrientsDisplayProps {
 }
 
 export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsDisplayProps) {
+  // Calculate the percentage of daily value for each nutrient
+  const calculateDailyValuePercentage = (value: number | undefined, nutrient: string): number => {
+    if (!value || !DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) return 0;
+    return Math.round((value / DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES]) * 100);
+  };
+  
   // Group the micronutrients into categories
   const vitamins = [
     {
       name: 'Vitamin A',
       value: nutrition.vitaminA || 0,
       unit: 'IU',
-      percentage: 0, // We'll calculate percentages in a future update
+      percentage: calculateDailyValuePercentage(nutrition.vitaminA, 'vitaminA'),
       description: 'Important for vision and immune function'
     },
     {
       name: 'Vitamin C',
       value: nutrition.vitaminC || 0,
       unit: 'mg',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.vitaminC, 'vitaminC'),
       description: 'Helps with immune function and iron absorption'
     },
     {
       name: 'Vitamin D',
       value: nutrition.vitaminD || 0,
       unit: 'IU',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.vitaminD, 'vitaminD'),
       description: 'Essential for bone health and immune function'
     }
   ];
@@ -40,21 +47,21 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
       name: 'Calcium',
       value: nutrition.calcium || 0,
       unit: 'mg',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.calcium, 'calcium'),
       description: 'Essential for bone health and muscle function'
     },
     {
       name: 'Iron',
       value: nutrition.iron || 0,
       unit: 'mg',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.iron, 'iron'),
       description: 'Needed for oxygen transport in blood'
     },
     {
       name: 'Potassium',
       value: nutrition.potassium || 0,
       unit: 'mg',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.potassium, 'potassium'),
       description: 'Helps regulate fluid balance and nerve signals'
     }
   ];
@@ -64,31 +71,31 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
       name: 'Sodium',
       value: nutrition.sodium || 0,
       unit: 'mg',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.sodium, 'sodium'),
       description: 'Important for fluid balance, but limit intake'
     },
     {
       name: 'Fiber',
       value: nutrition.fiber || 0,
       unit: 'g',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.fiber, 'fiber'),
       description: 'Aids in digestion and helps you feel full'
     },
     {
       name: 'Sugar',
       value: nutrition.sugar || 0,
       unit: 'g',
-      percentage: 0,
+      percentage: calculateDailyValuePercentage(nutrition.sugar, 'sugar'),
       description: 'Naturally occurring or added sweeteners'
     }
   ];
   
-  // Helper function to determine the status color
+  // Helper function to determine the status color based on percentage
   const getStatusColor = (percentage: number) => {
-    if (percentage < 10) return 'bg-gray-200';
-    if (percentage < 30) return 'bg-red-200';
-    if (percentage < 60) return 'bg-yellow-200';
-    if (percentage < 100) return 'bg-green-200';
+    if (percentage === 0) return 'bg-gray-200';
+    if (percentage < 10) return 'bg-red-200';
+    if (percentage < 30) return 'bg-yellow-200';
+    if (percentage < 60) return 'bg-green-200';
     return 'bg-blue-200';
   };
   
@@ -107,6 +114,7 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
           <div 
             className={`${getStatusColor(item.percentage)} h-1 rounded-full`} 
             style={{ width: `${Math.min(item.percentage, 100)}%` }}
+            aria-hidden="true"
           ></div>
         </div>
         <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
