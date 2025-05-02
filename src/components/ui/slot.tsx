@@ -17,28 +17,45 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
     ...rest 
   });
   
-  // Use React.useEffect to handle ref merging instead of directly in props
+  // Use React.useEffect to handle ref forwarding properly
   React.useEffect(() => {
+    if (!ref) return;
+    
     const childElement = children as React.ReactElement & { ref?: React.Ref<any> };
     const childRef = childElement.ref;
     
-    if (ref && childRef) {
-      // Handle refs properly based on their type
-      if (typeof childRef === 'function' && typeof ref === 'function') {
-        // If both are function refs
-        const originalChildRef = childRef;
-        childRef((value: any) => {
-          originalChildRef(value);
-          ref(value);
-        });
-      } else {
-        // For object refs
-        const currentRef = typeof ref === 'function' ? null : ref.current;
-        if (typeof childRef !== 'function') {
-          childRef.current = currentRef;
-        }
+    // Get the underlying DOM node
+    let node: any = null;
+    
+    // Wait until the component is mounted and we can access its DOM node
+    const getNode = () => {
+      if (typeof ref === 'function') {
+        // For function refs, we need a way to get the DOM node
+        // This is difficult without modifying the original element
+        return;
+      } else if (ref && 'current' in ref) {
+        // For object refs, we can directly access the DOM node
+        node = ref.current;
       }
-    }
+      
+      // Now handle forwarding this ref to the child's ref if it exists
+      if (childRef) {
+        if (typeof childRef === 'function') {
+          childRef(node);
+        }
+        // We can't modify childRef.current as it's readonly
+      }
+    };
+    
+    // Call once to set initial ref
+    getNode();
+    
+    // Cleanup
+    return () => {
+      if (childRef && typeof childRef === 'function') {
+        childRef(null);
+      }
+    };
   }, [children, ref]);
   
   return clonedElement;

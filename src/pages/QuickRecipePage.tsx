@@ -14,15 +14,25 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { recipe, isLoading, formData, error, reset, setLoading, setFormData } = useQuickRecipeStore();
+  const { recipe, isLoading, formData, error, reset, setFormData } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
+  
+  console.log("QuickRecipePage - Current state:", { 
+    isLoading, 
+    recipe: !!recipe, 
+    error, 
+    formData: !!formData, 
+    isDirectNavigation,
+    locationState: location.state
+  });
 
   // Reset loading state if navigating directly from navbar
   useEffect(() => {
     if (isDirectNavigation && isLoading) {
+      console.log("Direct navigation detected while loading, resetting state");
       reset();
     }
   }, [isDirectNavigation, isLoading, reset]);
@@ -30,35 +40,34 @@ const QuickRecipePage = () => {
   // Only redirect if not loading AND no recipe data AND no error AND no formData
   useEffect(() => {
     if (!isLoading && !recipe && !error && !formData && !isDirectNavigation) {
+      console.log("No recipe data available, redirecting to home");
       navigate('/');
     }
   }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
 
-  // Fixed handleRetry function that doesn't call a hook inside a callback
   const handleRetry = async () => {
     if (formData) {
       try {
+        console.log("Retrying recipe generation with formData:", formData);
+        
         // Reset first to clear any existing errors
         reset();
         
-        // Set loading state and reuse existing form data
+        // Start the recipe generation with proper loading state
+        const { setLoading } = useQuickRecipeStore.getState();
         setLoading(true);
         
         // Start the recipe generation immediately
-        generateQuickRecipe(formData).then(generatedRecipe => {
-          // Handle successful generation in the store
-          console.log("Recipe regeneration successful");
-        }).catch(err => {
-          console.error("Error retrying recipe generation:", err);
-        });
+        await generateQuickRecipe(formData);
       } catch (err) {
-        console.error("Error setting up recipe retry:", err);
+        console.error("Error retrying recipe generation:", err);
       }
     }
   };
 
   // Show full-screen loading when generating a recipe, without the layout
   if (isLoading) {
+    console.log("Showing loading screen for recipe generation");
     return <FullScreenLoading />;
   }
 

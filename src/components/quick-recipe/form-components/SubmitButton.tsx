@@ -20,15 +20,18 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
         "w-full bg-gradient-to-r from-recipe-blue to-recipe-green hover:from-recipe-blue/90 hover:to-recipe-green/90",
         "transition-all text-white shadow-lg font-medium group",
         "relative overflow-hidden rounded-xl",
-        isMobile && "py-4 text-base"
+        isMobile ? "py-4 text-base" : "",
+        isLoading ? "animate-pulse" : ""
       )}
-      size={isMobile ? "mobile" : "lg"}
+      size={isMobile ? "lg" : "lg"}
       disabled={isLoading || disabled}
+      aria-disabled={isLoading || disabled}
+      aria-busy={isLoading}
     >
       {isLoading ? (
         <div className="flex items-center justify-center">
           <CookingPot className={cn(
-            "mr-2 animate-pulse",
+            "mr-2 animate-bounce",
             isMobile ? "h-6 w-6" : "h-5 w-5"
           )} />
           <span className={isMobile ? "font-medium" : ""}>
@@ -50,11 +53,14 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
           )} />
         </div>
       )}
-      {/* Touch ripple effect for mobile */}
-      <span className="absolute inset-0 pointer-events-none touch-ripple"></span>
       
-      {/* Add animated gradient background */}
+      {/* Animated gradient background */}
       <span className="absolute inset-0 -z-10 bg-gradient-to-r from-recipe-blue via-recipe-green to-recipe-blue bg-[length:200%_100%] animate-gradient-x"></span>
+      
+      {/* Touch ripple effect for mobile */}
+      {isMobile && (
+        <span className="absolute inset-0 pointer-events-none touch-ripple"></span>
+      )}
     </Button>
   );
 }

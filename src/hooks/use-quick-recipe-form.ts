@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { toast } from '@/hooks/use-toast';
 
 export function useQuickRecipeForm() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export function useQuickRecipeForm() {
   }, [navigate, setNavigate]);
   
   // Handle form submission
-  const handleSubmit = async (formData: QuickRecipeFormData) => {
+  const handleSubmit = useCallback(async (formData: QuickRecipeFormData) => {
     try {
       console.log("Handling form submission:", formData);
       
@@ -35,14 +36,22 @@ export function useQuickRecipeForm() {
       setLoading(true);
       setFormData(formData);
       
+      // Show loading toast
+      toast({
+        title: "Creating your recipe",
+        description: "Your delicious recipe is being crafted...",
+        duration: 3000
+      });
+      
       // Navigate to the quick recipe page BEFORE starting the API call
       // This ensures the loading animation is displayed
       navigate('/quick-recipe', { 
-        state: { fromForm: true } // Add state to indicate this is from form submission
+        state: { fromForm: true, timestamp: Date.now() }
       });
       
       // Start generating the recipe immediately after navigation
       try {
+        console.log("Starting recipe generation");
         const generatedRecipe = await generateQuickRecipe(formData);
         
         // Validate the recipe structure before setting it
@@ -52,27 +61,42 @@ export function useQuickRecipeForm() {
         
         console.log("Recipe generation successful:", generatedRecipe);
         setRecipe(generatedRecipe);
+        
+        // Success toast
+        toast({
+          title: "Recipe created!",
+          description: "Your delicious recipe is ready.",
+          variant: "success",
+        });
+        
         return generatedRecipe;
       } catch (error: any) {
         console.error('Error generating recipe:', error);
         setLoading(false);
         setError(error.message || "Failed to generate recipe. Please try again.");
+        
+        // Error toast
+        toast({
+          title: "Recipe generation failed",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+        
         return null;
       }
     } catch (error: any) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
-      setError(error.message || "Failed to generate recipe. Please try again.");
+      setError(error.message || "Failed to submit recipe request. Please try again.");
       return null;
     }
-  };
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, toast]);
 
   return {
     handleSubmit,
     navigate,
     location,
     reset,
-    recipe,
-    generateQuickRecipe
+    recipe
   };
 }

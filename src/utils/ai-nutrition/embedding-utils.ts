@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface EmbeddingOptions {
@@ -105,8 +104,7 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
-    // Convert the embedding array to a string for PostgreSQL's vector representation
-    // This resolves the type mismatch error
+    // Convert the embedding array to a properly formatted string for PostgreSQL
     const vectorString = JSON.stringify(embedding);
 
     const { error } = await supabase

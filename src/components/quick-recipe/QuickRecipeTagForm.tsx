@@ -37,13 +37,21 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
   
   // Validation errors
   const errors = {
-    mainIngredient: touchedFields.mainIngredient && !formData.mainIngredient.trim() 
+    mainIngredient: touchedFields.mainIngredient && !formData.mainIngredient.trim() && formData.cuisine.length === 0
       ? 'Please enter an ingredient or select a cuisine'
       : ''
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isLoading) {
+      console.log("Form submission blocked - already loading");
+      return;
+    }
+    
+    console.log("Form submission started with data:", formData);
     
     // Mark fields as touched
     setTouchedFields({
@@ -71,8 +79,11 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
                            primaryCuisine === 'asian' ? 'rice' :
                            primaryCuisine === 'mediterranean' ? 'olive oil' : 'chicken';
       }
+      
+      console.log("Using random ingredient:", randomIngredient);
       onSubmit({...formData, mainIngredient: randomIngredient});
     } else {
+      console.log("Submitting form with user-provided ingredient:", formData.mainIngredient);
       onSubmit(formData);
     }
   };
@@ -160,7 +171,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
 
       <SubmitButton 
         isLoading={isLoading} 
-        disabled={!isValid}
+        disabled={!isValid || isLoading}
       />
     </form>
   );

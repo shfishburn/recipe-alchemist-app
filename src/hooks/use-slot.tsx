@@ -14,26 +14,31 @@ export const useSlot = () => {
       
       // Use effect to handle ref forwarding properly
       React.useEffect(() => {
+        if (!ref) return;
+        
         const childElement = children as React.ReactElement & { ref?: React.Ref<any> };
         const childRef = childElement.ref;
         
-        if (ref) {
-          if (childRef) {
-            // Merge refs if both exist
-            if (typeof ref === 'function' && typeof childRef === 'function') {
-              const originalChildRef = childRef;
-              childRef((value: any) => {
-                originalChildRef(value);
-                ref(value);
-              });
-            } else if (typeof ref !== 'function' && typeof childRef !== 'function') {
-              // For object refs
-              if (ref.current) {
-                childRef.current = ref.current;
-              }
-            }
+        // Get the underlying DOM node
+        let node: any = null;
+        
+        // For object refs, we can access the DOM node
+        if (ref && typeof ref !== 'function' && 'current' in ref) {
+          node = ref.current;
+          
+          // Now handle forwarding this ref to the child's ref if it exists
+          if (childRef && typeof childRef === 'function') {
+            childRef(node);
           }
+          // We can't modify childRef.current directly as it's readonly
         }
+        
+        // Cleanup
+        return () => {
+          if (childRef && typeof childRef === 'function') {
+            childRef(null);
+          }
+        };
       }, [children, ref]);
       
       return clonedChild;
