@@ -12,3 +12,11 @@ verify_jwt = false
 # New function for ML-based unit conversion
 [functions.convert-units]
 verify_jwt = false
+
+# Register the generate-quick-recipe function properly
+[functions.generate-quick-recipe]
+verify_jwt = false
+
+# Recipe chat function
+[functions.recipe-chat]
+verify_jwt = false

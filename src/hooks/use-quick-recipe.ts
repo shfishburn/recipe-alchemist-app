@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -130,22 +131,27 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     }
     
     // Increase timeout for the request to prevent premature timeouts
-    const TIMEOUT_DURATION = 40000; // 40 seconds timeout
+    const TIMEOUT_DURATION = 50000; // 50 seconds timeout (increased from 40)
     
     // Set a timeout for the request to prevent indefinite loading
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), TIMEOUT_DURATION);
     });
     
+    // Define the request body
+    const requestBody = {
+      cuisine: formData.cuisine.join(', '),
+      dietary: formData.dietary.join(', '),
+      mainIngredient: formData.mainIngredient,
+      servings: formData.servings,
+      maxCalories: formData.maxCalories
+    };
+    
+    console.log("Sending request to edge function with body:", requestBody);
+    
     // Call the Supabase Edge Function to generate the recipe
     const responsePromise = supabase.functions.invoke('generate-quick-recipe', {
-      body: {
-        cuisine: formData.cuisine.join(', '),
-        dietary: formData.dietary,
-        mainIngredient: formData.mainIngredient,
-        servings: formData.servings,
-        maxCalories: formData.maxCalories
-      },
+      body: requestBody,
       headers: {
         'Content-Type': 'application/json'
       }
@@ -177,8 +183,19 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     return normalizedRecipe;
   } catch (error: any) {
+    // Add more context to the error message
+    let errorMessage = error.message || "Unknown error occurred";
+    
+    if (error.message?.includes("timeout")) {
+      errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
+    } else if (error.message?.includes("fetch")) {
+      errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
+    } else if (error.status === 500) {
+      errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
+    }
+    
     console.error('Error in generateQuickRecipe:', error);
-    throw error;
+    throw new Error(errorMessage);
   }
 };
 
