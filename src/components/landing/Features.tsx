@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Brain, ChartPie, CookingPot, Filter, HeartPulse, ShoppingBag, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -103,10 +104,14 @@ const Features = () => {
           ))}
         </div>
         
-        {/* Call to action - Fixed implementation with asChild */}
+        {/* Call to action - Fixed implementation without asChild */}
         <div className="mt-12 text-center">
-          <Button asChild size="lg" className="bg-recipe-blue hover:bg-recipe-blue/90">
-            <Link to="/quick-recipe">Try AI Recipe Generation</Link>
+          <Button 
+            size="lg" 
+            className="bg-recipe-blue hover:bg-recipe-blue/90"
+            onClick={() => window.location.href = '/quick-recipe'}
+          >
+            Try AI Recipe Generation
           </Button>
         </div>
       </div>

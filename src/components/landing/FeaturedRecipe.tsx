@@ -55,10 +55,8 @@ export function FeaturedRecipe() {
                 <BookOpen className="h-5 w-5 text-recipe-blue" />
                 Featured Recipe
               </CardTitle>
-              <Button asChild variant="outline">
-                <Link to={`/recipes/${FEATURED_RECIPE_ID}`}>
-                  View Full Recipe
-                </Link>
+              <Button variant="outline" onClick={() => window.location.href = `/recipes/${FEATURED_RECIPE_ID}`}>
+                View Full Recipe
               </Button>
             </div>
           </CardHeader>

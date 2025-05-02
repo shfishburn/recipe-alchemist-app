@@ -28,13 +28,10 @@ export const useSlot = () => {
     // Only clone if children is a valid React element and asChild is true
     if (asChild && React.isValidElement(children)) {
       // When asChild is true, we clone the child element and forward props
-      return React.cloneElement(
-        children as React.ReactElement<any>,
-        {
-          ...otherProps,
-          ref: composeRefs<any>(ref, (children as any).ref),
-        }
-      );
+      return React.cloneElement(children as React.ReactElement<any>, {
+        ...otherProps,
+        ref: composeRefs(ref, (children as any).ref),
+      });
     }
     
     // When asChild is false or not provided, render a div

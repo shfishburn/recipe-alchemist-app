@@ -10,8 +10,8 @@ interface ButtonWrapperProps extends ButtonProps {
 // Improved ButtonWrapper that properly handles the asChild prop
 const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonWrapperProps>(
   ({ asChild, className, children, ...props }, ref) => {
-    // When asChild is true, use our custom Slot component directly
-    if (asChild) {
+    // When asChild is true, use our custom Slot component
+    if (asChild && React.isValidElement(children)) {
       return (
         <Slot
           className={className} 
@@ -23,7 +23,7 @@ const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonWrapperProps>(
       );
     }
     
-    // Regular button when asChild is false
+    // Regular button when asChild is false or children is not a valid element
     return <Button ref={ref} className={className} {...props}>{children}</Button>;
   }
 );

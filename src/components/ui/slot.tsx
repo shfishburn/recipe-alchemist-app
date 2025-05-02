@@ -17,13 +17,10 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
   }
   
   // Clone the element with proper TypeScript typing
-  return React.cloneElement(
-    children as React.ReactElement<any>,
-    {
-      ...rest,
-      ref: composeRefs(ref, (children as any).ref),
-    }
-  );
+  return React.cloneElement(children as React.ReactElement<any>, {
+    ...rest,
+    ref: composeRefs(ref, (children as any).ref),
+  });
 });
 
 /**

@@ -62,83 +62,91 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
     (recipe as any).generated_by_ai
   );
   
+  // Use a simple click handler that navigates to the recipe detail
+  const handleClick = (e: React.MouseEvent) => {
+    // Let the Link component handle the navigation
+    e.currentTarget.querySelector('a')?.click();
+  };
+  
   return (
-    <Link 
-      to={`/recipes/${recipe.id}`}
-      className="block no-underline group"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      // Touch optimization
-      onTouchStart={() => setHovered(true)}
-      onTouchEnd={() => setTimeout(() => setHovered(false), 300)}
-    >
-      <Card className={cn(
+    <Card 
+      className={cn(
         "overflow-hidden relative z-10 h-full transition-all duration-300 card-touch-optimized",
         "border border-gray-100 dark:border-gray-800",
         "hover:shadow-lg hover:-translate-y-1",
         hovered ? "shadow-md -translate-y-0.5" : "shadow"
-      )}>
-        {/* Recipe Image with Aspect Ratio */}
-        <div className="relative aspect-video overflow-hidden">
-          <ImageLoader
-            src={recipe.image_url || '/placeholder.svg'}
-            alt={recipe.title}
-            className="object-cover w-full h-full"
-            priority={priority}
-            containerClassName="w-full h-full"
-          />
-          
-          {/* Overlay for easier readability of badges */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
-          
-          {/* Time Badge */}
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 text-white px-2 py-1 rounded-full text-xs font-medium">
-            <Timer size={12} className="inline-block" />
-            <span>{formatCookingTime(cookingTime)}</span>
-          </div>
-          
-          {/* Difficulty Badge - Only show if difficulty exists */}
-          {recipeDifficulty && (
-            <div className={cn(
-              "absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium",
-              getDifficultyColor(recipeDifficulty)
-            )}>
-              {recipeDifficulty}
-            </div>
-          )}
-          
-          {/* AI Badge - Only show if AI generated */}
-          {isAiGenerated && (
-            <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-blue-500/70 text-white px-2 py-1 rounded-full text-xs font-medium">
-              <Brain size={10} className="inline-block" />
-              <span>AI Generated</span>
-            </div>
-          )}
-          
-          {/* Nutrition Badge - Only show if has nutrition data */}
-          {hasNutrition && (
-            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-green-500/70 text-white px-2 py-1 rounded-full text-xs font-medium">
-              <ChartPie size={10} className="inline-block" />
-              <span>Nutrition</span>
-            </div>
-          )}
+      )}
+      onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onTouchStart={() => setHovered(true)}
+      onTouchEnd={() => setTimeout(() => setHovered(false), 300)}
+    >
+      {/* Recipe Image with Aspect Ratio */}
+      <div className="relative aspect-video overflow-hidden">
+        <ImageLoader
+          src={recipe.image_url || '/placeholder.svg'}
+          alt={recipe.title}
+          className="object-cover w-full h-full"
+          priority={priority}
+          containerClassName="w-full h-full"
+        />
+        
+        {/* Overlay for easier readability of badges */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
+        
+        {/* Time Badge */}
+        <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 text-white px-2 py-1 rounded-full text-xs font-medium">
+          <Timer size={12} className="inline-block" />
+          <span>{formatCookingTime(cookingTime)}</span>
         </div>
         
-        {/* Recipe Content */}
-        <div className="p-3 md:p-4">
-          <h3 className="font-medium text-sm md:text-base line-clamp-2 group-hover:text-recipe-blue transition-colors">
-            {recipe.title}
-          </h3>
-          
-          {/* Recipe Metadata */}
-          <div className="mt-2 flex items-center text-xs text-gray-500 space-x-2">
-            <div className="flex items-center">
-              <Utensils size={12} className="mr-1" />
-              <span>{recipe.cuisine || 'Various'}</span>
-            </div>
+        {/* Difficulty Badge - Only show if difficulty exists */}
+        {recipeDifficulty && (
+          <div className={cn(
+            "absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium",
+            getDifficultyColor(recipeDifficulty)
+          )}>
+            {recipeDifficulty}
+          </div>
+        )}
+        
+        {/* AI Badge - Only show if AI generated */}
+        {isAiGenerated && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-blue-500/70 text-white px-2 py-1 rounded-full text-xs font-medium">
+            <Brain size={10} className="inline-block" />
+            <span>AI Generated</span>
+          </div>
+        )}
+        
+        {/* Nutrition Badge - Only show if has nutrition data */}
+        {hasNutrition && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-green-500/70 text-white px-2 py-1 rounded-full text-xs font-medium">
+            <ChartPie size={10} className="inline-block" />
+            <span>Nutrition</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Recipe Content */}
+      <div className="p-3 md:p-4">
+        <h3 className="font-medium text-sm md:text-base line-clamp-2 group-hover:text-recipe-blue transition-colors">
+          {recipe.title}
+        </h3>
+        
+        {/* Recipe Metadata */}
+        <div className="mt-2 flex items-center text-xs text-gray-500 space-x-2">
+          <div className="flex items-center">
+            <Utensils size={12} className="mr-1" />
+            <span>{recipe.cuisine || 'Various'}</span>
           </div>
         </div>
-      </Card>
-    </Link>
+      </div>
+      
+      {/* Hidden link for navigation - this makes the entire card clickable */}
+      <Link to={`/recipes/${recipe.id}`} className="absolute inset-0 z-10 opacity-0">
+        View {recipe.title}
+      </Link>
+    </Card>
   );
 }
