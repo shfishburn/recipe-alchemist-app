@@ -146,11 +146,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         servings: formData.servings,
         maxCalories: formData.maxCalories
       },
-      // Important: Add additional options to handle timeout more gracefully
-      options: {
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      headers: {
+        'Content-Type': 'application/json'
       }
     });
     
