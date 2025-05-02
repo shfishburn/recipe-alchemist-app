@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot } from '@/components/ui/slot';
 
-export const useRadixWrapper = () => {
-  const RadixWrapper = React.forwardRef<
+export const useSlot = () => {
+  const SlotWrapper = React.forwardRef<
     HTMLElement,
     { asChild?: boolean; children: React.ReactNode } & React.HTMLAttributes<HTMLElement>
   >((props, ref) => {
@@ -16,7 +16,7 @@ export const useRadixWrapper = () => {
     );
   });
   
-  RadixWrapper.displayName = 'RadixWrapper';
+  SlotWrapper.displayName = 'SlotWrapper';
   
-  return RadixWrapper;
+  return SlotWrapper;
 };
