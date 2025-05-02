@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Popular cuisines with their display names, values, and flag emojis
@@ -47,7 +48,12 @@ export function CuisineSelector({ selectedCuisines, onCuisineToggle }: CuisineSe
 
   return (
     <div className="space-y-2 w-full">
-      <label className="text-sm font-medium">What flavors match your mood tonight? (select up to {MAX_CUISINE_SELECTIONS})</label>
+      <div className="flex items-center gap-2">
+        <Globe className="h-5 w-5 text-recipe-green" />
+        <label className="text-base font-medium text-recipe-green">
+          What flavors match your mood tonight? <span className="text-gray-600 text-sm">(select up to {MAX_CUISINE_SELECTIONS})</span>
+        </label>
+      </div>
       <div className="flex flex-wrap gap-3 justify-start w-full">
         {CUISINES.map(cuisine => (
           <Badge 

@@ -71,8 +71,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
       <FeatureBadges />
       
       <label htmlFor="mainIngredient" className={cn(
-        "block pb-1 text-left",
-        isMobile ? "text-base font-medium" : "text-sm font-medium"
+        "block pb-1 text-left text-lg font-semibold text-recipe-blue",
+        isMobile ? "text-base" : "text-lg"
       )}>
         What ingredients do you have today?
       </label>

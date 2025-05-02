@@ -15,8 +15,8 @@ export function ServingsSelector({ selectedServings, onServingsSelect }: Serving
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Users className="h-4 w-4 text-recipe-blue" />
-        <label className="text-sm font-medium">How many servings?</label>
+        <Users className="h-5 w-5 text-recipe-blue" />
+        <label className="text-base font-medium text-recipe-blue">How many servings?</label>
       </div>
       <div className="flex flex-wrap gap-2">
         {SERVINGS_OPTIONS.map(servingOption => (

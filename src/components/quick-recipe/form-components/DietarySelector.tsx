@@ -46,7 +46,12 @@ export function DietarySelector({ selectedDietary, onDietaryToggle }: DietarySel
 
   return (
     <div>
-      <label className="text-sm font-medium block mt-4">Any dietary preferences? (select up to {MAX_DIETARY_SELECTIONS})</label>
+      <div className="flex items-center gap-2 mb-2">
+        <LeafyGreen className="h-5 w-5 text-recipe-orange" />
+        <label className="text-base font-medium text-recipe-orange">
+          Any dietary preferences? <span className="text-gray-600 text-sm">(select up to {MAX_DIETARY_SELECTIONS})</span>
+        </label>
+      </div>
       <div className="flex flex-wrap gap-3 justify-start w-full">
         {DIETARY.map(diet => (
           <Badge 
