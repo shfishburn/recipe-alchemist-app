@@ -8,14 +8,15 @@ export const useSlot = () => {
   >((props, ref) => {
     const { asChild, children, ...otherProps } = props;
     
+    // Only clone if children is a valid React element and asChild is true
     if (asChild && React.isValidElement(children)) {
       // When asChild is true, we clone the child element
       // and forward all props to it
       return React.cloneElement(children, {
         ...otherProps,
-        // TypeScript doesn't know about ref in cloneElement's second argument
-        // So we need to handle it manually via a callback
+        // Forward the ref
         ref: (node: any) => {
+          // Handle ref forwarding
           if (ref) {
             if (typeof ref === 'function') {
               ref(node);

@@ -49,11 +49,18 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
   // Safely access the difficulty property (which might not exist in Recipe type)
   const recipeDifficulty = (recipe as any).difficulty;
   
-  // Check if recipe has nutrition information
-  const hasNutrition = recipe.nutrition_per_serving || (recipe as any).macros;
+  // Check if recipe has nutrition information - check various possible property names
+  const hasNutrition = Boolean(
+    recipe.nutrition || 
+    (recipe as any).nutrition_per_serving || 
+    (recipe as any).macros
+  );
   
-  // Determine if recipe is AI generated
-  const isAiGenerated = recipe.ai_generated || (recipe as any).generated_by_ai;
+  // Determine if recipe is AI generated - check various possible property names
+  const isAiGenerated = Boolean(
+    (recipe as any).ai_generated || 
+    (recipe as any).generated_by_ai
+  );
   
   return (
     <Link 

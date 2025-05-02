@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Brain, ChartPie, CookingPot, Filter, HeartPulse, ShoppingBag, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -104,7 +103,7 @@ const Features = () => {
           ))}
         </div>
         
-        {/* Call to action */}
+        {/* Call to action - Fixed implementation with asChild */}
         <div className="mt-12 text-center">
           <Button asChild size="lg" className="bg-recipe-blue hover:bg-recipe-blue/90">
             <Link to="/quick-recipe">Try AI Recipe Generation</Link>
