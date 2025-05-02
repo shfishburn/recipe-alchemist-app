@@ -1,16 +1,16 @@
 
 /* Global touch optimizations */
 .touch-optimized {
+  /* Remove user-select none which blocks copy-paste */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  user-select: none;
 }
 
 /* Hardware acceleration for critical elements */
 .hw-accelerated {
   transform: translateZ(0);
   backface-visibility: hidden;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 
 /* Properly sized touch targets */
@@ -31,6 +31,11 @@
   touch-action: pan-x;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  cursor: grab;
+}
+
+.swipe-horizontal:active {
+  cursor: grabbing;
 }
 
 /* Fast transitions for responsive feel */
@@ -43,10 +48,15 @@
   touch-action: manipulation;
 }
 
-/* Hide default focus outlines on touch while preserving for keyboard */
+/* Preserve focus outlines for keyboard navigation while improving touch */
 @media (hover: none) {
-  *:focus {
+  *:focus:not(:focus-visible) {
     outline: none !important;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid rgba(56, 189, 248, 0.5) !important;
+    outline-offset: 2px !important;
   }
 }
 
@@ -66,4 +76,40 @@
   scroll-behavior: smooth;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* Touch-friendly form elements */
+input, 
+button, 
+textarea, 
+select {
+  font-size: 16px; /* Prevent zoom on iOS */
+}
+
+/* Add clear visual feedback for taps */
+.tap-highlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.tap-highlight::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.tap-highlight:active::after {
+  opacity: 0.1;
+}
+
+/* Better momentum scrolling on iOS */
+* {
+  -webkit-overflow-scrolling: touch;
 }

@@ -1,37 +1,54 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { QuickRecipeLoading } from './QuickRecipeLoading';
 import { toast } from '@/hooks/use-toast';
 
 export function FullScreenLoading() {
-  // Prevent back navigation during loading
-  React.useEffect(() => {
+  // Improve the navigation block during loading to be less intrusive
+  useEffect(() => {
+    let navigationAttempted = false;
+    
+    // Instead of completely blocking navigation, warn the user
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const message = 'Recipe generation in progress. Are you sure you want to leave?';
       e.preventDefault();
-      e.returnValue = 'Recipe generation in progress. Are you sure you want to leave?';
+      e.returnValue = message;
+      return message;
     };
 
+    // Use a more user-friendly approach for back button
     const handlePopState = (e: PopStateEvent) => {
-      // Prevent navigation while loading
-      e.preventDefault();
-      window.history.pushState(null, '', window.location.pathname);
-      
-      // Show error toast notification
-      toast({
-        title: "Navigation blocked",
-        description: "Please wait until recipe generation is complete.",
-        variant: "destructive",
-      });
-      
-      console.log("Back navigation prevented during recipe generation");
+      if (!navigationAttempted) {
+        e.preventDefault();
+        
+        // Show a toast with warning instead of completely blocking
+        toast({
+          title: "Recipe generation in progress",
+          description: "Please wait until complete, or reload the page to cancel.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        
+        // Add current state to history so back button works after multiple attempts
+        window.history.pushState(null, '', window.location.pathname);
+        
+        navigationAttempted = true;
+        
+        // Reset the flag after a short delay so multiple taps are not needed
+        setTimeout(() => {
+          navigationAttempted = false;
+        }, 2000);
+      }
     };
 
-    // Add event listeners
+    // Add event listeners with passive option for better performance
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
-    // Force the current URL to be in the history stack
-    window.history.pushState(null, '', window.location.pathname);
+    // Ensure we don't break browser history by only pushing once
+    if (window.history.state !== 'loading') {
+      window.history.pushState('loading', '', window.location.pathname);
+    }
 
     return () => {
       // Clean up event listeners

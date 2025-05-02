@@ -1,138 +1,109 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Recipe } from '@/types/recipe';
-import type { Database } from '@/integrations/supabase/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ImageLoader } from '@/components/ui/image-loader';
+import { Card } from '@/components/ui/card';
+import { Timer, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Recipe } from '@/types/recipe';
 
-// Allow both Recipe types to be used
-type RecipeCardProps = {
-  recipe: Recipe | Database['public']['Tables']['recipes']['Row'];
-};
+interface RecipeCardProps {
+  recipe: Recipe;
+  priority?: boolean;
+}
 
-export function RecipeCard({ recipe }: RecipeCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  const isMobile = useIsMobile();
+export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
+  const [hovered, setHovered] = useState(false);
   
-  // Add state for touch handling
-  const [isTouched, setIsTouched] = useState(false);
-  
-  // Add touch handlers with correct visual feedback
-  const handleTouchStart = () => setIsTouched(true);
-  const handleTouchEnd = () => setIsTouched(false);
-  
-  // Optimize image loading
-  const imageRef = useRef<HTMLImageElement>(null);
-
-  // Handle image loading
-  const handleImageLoad = () => {
-    setImageLoaded(true);
+  // Format cooking time (e.g., "30 mins", "1 hr 15 mins")
+  const formatCookingTime = (minutes: number | undefined): string => {
+    if (!minutes) return 'Quick prep';
+    
+    if (minutes < 60) {
+      return `${minutes} min${minutes > 1 ? 's' : ''}`;
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (remainingMinutes === 0) {
+      return `${hours} hr${hours > 1 ? 's' : ''}`;
+    }
+    
+    return `${hours} hr ${remainingMinutes} min`;
   };
 
-  // Handle image error
-  const handleImageError = () => {
-    setImageError(true);
+  // Determine difficulty badge color
+  const getDifficultyColor = (difficulty: string | undefined): string => {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'medium': return 'bg-amber-100 text-amber-800';
+      case 'hard': return 'bg-red-100 text-red-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
   };
   
-  // Use intersection observer for lazy loading
-  useEffect(() => {
-    if (!imageRef.current || !recipe.image_url || imageError) return;
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && imageRef.current) {
-            // Set proper src only when visible
-            const img = imageRef.current;
-            const dataSrc = img.getAttribute('data-src');
-            if (dataSrc) {
-              img.setAttribute('src', dataSrc);
-            }
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { rootMargin: '100px' }
-    );
-    
-    observer.observe(imageRef.current);
-    
-    return () => observer.disconnect();
-  }, [recipe.image_url, imageError]);
-
   return (
     <Link 
       to={`/recipes/${recipe.id}`}
-      className={cn(
-        "block h-full touch-optimized card-touch-optimized",
-        isTouched ? "touch-active" : ""
-      )}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
+      className="block no-underline group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      // Touch optimization
+      onTouchStart={() => setHovered(true)}
+      onTouchEnd={() => setTimeout(() => setHovered(false), 300)}
     >
-      <div className={cn(
-        "h-full relative z-10 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl rounded-xl overflow-hidden border transition-all flex flex-col",
-        "touch-transition hw-accelerated", // Add optimizations
-        isMobile ? "touch-optimized" : ""
+      <Card className={cn(
+        "overflow-hidden relative z-10 h-full transition-all duration-300 card-touch-optimized",
+        "border border-gray-100 dark:border-gray-800",
+        "hover:shadow-lg hover:-translate-y-1",
+        hovered ? "shadow-md -translate-y-0.5" : "shadow"
       )}>
-        <div className="aspect-[4/3] max-h-[200px] md:max-h-[300px] bg-gray-100 relative">
-          {recipe.image_url && !imageError ? (
-            <>
-              {!imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Skeleton className="w-full h-full absolute inset-0" />
-                </div>
-              )}
-              <img 
-                ref={imageRef}
-                data-src={recipe.image_url} // Use data-src for intersection observer
-                alt={recipe.title}
-                className={cn(
-                  "w-full h-full object-cover hw-accelerated",
-                  imageLoaded ? 'opacity-100' : 'opacity-0',
-                  "transition-opacity duration-200" // Faster transition
-                )}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                loading="lazy"
-              />
-            </>
-          ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400 text-sm">No image available</span>
+        {/* Recipe Image with Aspect Ratio */}
+        <div className="relative aspect-video overflow-hidden">
+          <ImageLoader
+            src={recipe.image_url || '/placeholder.svg'}
+            alt={recipe.title}
+            className="object-cover w-full h-full"
+            priority={priority}
+            containerClassName="w-full h-full"
+          />
+          
+          {/* Overlay for easier readability of badges */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
+          
+          {/* Time Badge */}
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 text-white px-2 py-1 rounded-full text-xs font-medium">
+            <Timer size={12} className="inline-block" />
+            <span>{formatCookingTime(recipe.cooking_time)}</span>
+          </div>
+          
+          {/* Difficulty Badge */}
+          {recipe.difficulty && (
+            <div className={cn(
+              "absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium",
+              getDifficultyColor(recipe.difficulty)
+            )}>
+              {recipe.difficulty}
             </div>
           )}
         </div>
-        <div className="p-3 md:p-4 flex flex-col flex-grow">
-          <h3 className="font-medium text-base md:text-lg mb-2 line-clamp-2">{recipe.title}</h3>
-          <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground mt-auto">
-            {recipe.dietary && (
-              <span className="flex items-center">
-                <span className="w-2 h-2 bg-recipe-green rounded-full mr-1.5"></span>
-                {recipe.dietary}
-              </span>
-            )}
-            {recipe.cook_time_min && (
-              <span>{recipe.cook_time_min} minutes</span>
-            )}
-            {typeof recipe.nutrition === 'object' && 
-             recipe.nutrition && 
-             ('calories' in recipe.nutrition || 'kcal' in recipe.nutrition) && (
-              <span>
-                {recipe.nutrition.calories !== undefined 
-                  ? `${recipe.nutrition.calories} calories` 
-                  : recipe.nutrition.kcal !== undefined
-                  ? `${recipe.nutrition.kcal} calories`
-                  : ''}
-              </span>
-            )}
+        
+        {/* Recipe Content */}
+        <div className="p-3 md:p-4">
+          <h3 className="font-medium text-sm md:text-base line-clamp-2 group-hover:text-recipe-blue transition-colors">
+            {recipe.title}
+          </h3>
+          
+          {/* Recipe Metadata */}
+          <div className="mt-2 flex items-center text-xs text-gray-500 space-x-2">
+            <div className="flex items-center">
+              <Utensils size={12} className="mr-1" />
+              <span>{recipe.cuisine || 'Various'}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
     </Link>
   );
 }

@@ -25,39 +25,54 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-resize textarea based on content
+  // Auto-resize textarea based on content using requestAnimationFrame for performance
   useEffect(() => {
     if (textareaRef.current) {
-      // Reset height to auto to get the correct scrollHeight
-      textareaRef.current.style.height = 'auto';
-      // Set the height to match content (min 48px for mobile, 56px for desktop)
-      const minHeight = isMobile ? '52px' : '60px';
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${Math.max(parseInt(minHeight), scrollHeight)}px`;
+      requestAnimationFrame(() => {
+        if (!textareaRef.current) return;
+        
+        // Reset height to auto to get the correct scrollHeight
+        textareaRef.current.style.height = 'auto';
+        // Set the height to match content (min height varies by device)
+        const minHeight = isMobile ? '52px' : '60px';
+        const scrollHeight = textareaRef.current.scrollHeight;
+        textareaRef.current.style.height = `${Math.max(parseInt(minHeight), scrollHeight)}px`;
+      });
     }
   }, [value, isMobile]);
 
+  // Feature badges with better visual design
+  const FeatureBadges = () => (
+    <div className="flex flex-wrap justify-center gap-2 mb-2">
+      <span className="bg-recipe-green/10 text-recipe-green rounded-full px-3 py-1 text-xs font-medium">
+        Ready in 30 mins
+      </span>
+      <span className="bg-recipe-blue/10 text-recipe-blue rounded-full px-3 py-1 text-xs font-medium">
+        Easy cleanup
+      </span>
+      <span className="bg-recipe-orange/10 text-recipe-orange rounded-full px-3 py-1 text-xs font-medium">
+        Ingredient-based
+      </span>
+    </div>
+  );
+
   return (
-    <div className="space-y-1">
-      <div className="text-center text-xs text-muted-foreground mb-1">
-        <span className="bg-recipe-green/10 rounded-full px-2 py-0.5">Ready in 30 mins</span>
-        {" • "}
-        <span className="bg-recipe-blue/10 rounded-full px-2 py-0.5">Easy cleanup</span>
-        {" • "}
-        <span className="bg-recipe-orange/10 rounded-full px-2 py-0.5">Ingredient-based</span>
-      </div>
+    <div className="space-y-2">
+      <FeatureBadges />
+      
       <label htmlFor="mainIngredient" className={cn(
         "block pb-1 text-left",
         isMobile ? "text-base font-medium" : "text-sm font-medium"
       )}>
         What ingredients do you have today?
       </label>
+      
       <div className={cn(
         "relative rounded-xl shadow-md transition-all duration-200",
         isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
         isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
         error ? 'ring-2 ring-red-500' : '',
-        "bg-gradient-to-r from-white to-blue-50 dark:from-gray-900 dark:to-gray-800"
+        "bg-gradient-to-r from-white to-blue-50/70 dark:from-gray-900 dark:to-gray-800"
       )}>
         <Textarea 
           id="mainIngredient"
@@ -70,13 +85,16 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           className={cn(
             isMobile ? "min-h-[56px] text-base py-3 px-4" : "min-h-[60px] text-lg",
             "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl",
-            "focus-within:border-recipe-blue placeholder:text-gray-500 touch-feedback",
+            "focus-within:border-recipe-blue placeholder:text-gray-500",
             error ? "border-red-500" : "focus:border-recipe-blue"
           )}
           rows={1}
+          // Improved touch handling
+          style={{ touchAction: "manipulation" }}
         />
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-recipe-blue" />
       </div>
+      
       {error ? (
         <p className="text-xs text-left text-red-500 font-medium animate-fade-in">{error}</p>
       ) : (
