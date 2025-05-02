@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -131,7 +130,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     }
     
     // Increase timeout for the request to prevent premature timeouts
-    const TIMEOUT_DURATION = 55000; // 55 seconds timeout (increased from previous value)
+    const TIMEOUT_DURATION = 60000; // 60 seconds timeout (increased from 55 seconds)
     
     // Set a timeout for the request to prevent indefinite loading
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -142,22 +141,22 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // The edge function expects string values, not arrays
     const cuisineValue = Array.isArray(formData.cuisine) 
       ? formData.cuisine.join(', ') 
-      : formData.cuisine;
+      : formData.cuisine || "Any";
     
     const dietaryValue = Array.isArray(formData.dietary) 
       ? formData.dietary.join(', ') 
-      : formData.dietary;
+      : formData.dietary || "";
     
     // Define the request body with properly formatted values
     const requestBody = {
       cuisine: cuisineValue,
       dietary: dietaryValue,
-      mainIngredient: formData.mainIngredient,
+      mainIngredient: formData.mainIngredient.trim(),
       servings: formData.servings || 4,
       maxCalories: formData.maxCalories
     };
     
-    console.log("Sending request to edge function with body:", requestBody);
+    console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
     // Call the Supabase Edge Function to generate the recipe
     const responsePromise = supabase.functions.invoke('generate-quick-recipe', {
@@ -175,6 +174,16 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
 
     if (error) {
       console.error('Error generating recipe:', error);
+      
+      // Add more detailed error logging
+      if (error.message) {
+        console.error('Error message:', error.message);
+      }
+      
+      if (error.context) {
+        console.error('Error context:', error.context);
+      }
+      
       throw error;
     }
 
@@ -186,6 +195,12 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Log the raw response for debugging
     console.log('Raw recipe data received:', data);
     
+    // Check for error in data
+    if (data.error) {
+      console.error('Error in recipe data:', data.error);
+      throw new Error(data.error);
+    }
+    
     // Normalize the recipe data to ensure it matches our expected structure
     const normalizedRecipe = normalizeRecipeResponse(data);
     
@@ -193,6 +208,31 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     return normalizedRecipe;
   } catch (error: any) {
+    // Check if the error is from Supabase Functions
+    if (error.name === "FunctionsError" || error.name === "FunctionsHttpError") {
+      console.error("Supabase Functions error details:", {
+        name: error.name,
+        message: error.message,
+        context: error.context || "No context",
+        status: error.status || "No status",
+      });
+      
+      if (error.context?.response?.text) {
+        try {
+          // Try to parse the response text as JSON
+          const errorResponseBody = JSON.parse(error.context.response.text);
+          console.error("Error response body:", errorResponseBody);
+          
+          // Use the error message from the response body if available
+          if (errorResponseBody.error) {
+            throw new Error(errorResponseBody.error);
+          }
+        } catch (parseError) {
+          console.error("Could not parse error response:", parseError);
+        }
+      }
+    }
+    
     // Add more context to the error message
     let errorMessage = error.message || "Unknown error occurred";
     
@@ -206,6 +246,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       errorMessage = "Invalid request format. Please check your inputs and try again.";
     } else if (error.message?.includes("SyntaxError") || error.message?.includes("JSON")) {
       errorMessage = "Error processing the recipe. The AI generated an invalid response format. Please try again.";
+    } else if (error.message?.includes("OpenAI API key")) {
+      errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
     }
     
     console.error('Error in generateQuickRecipe:', error);

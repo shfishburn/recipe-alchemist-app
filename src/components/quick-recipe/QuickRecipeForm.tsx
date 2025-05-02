@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,25 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate mainIngredient before submitting
+    if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
+      toast({
+        title: "Missing ingredient",
+        description: "Please enter at least one main ingredient",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Debugging: log the submission data
+    console.log("Submitting form data:", {
+      cuisine: formData.cuisine,
+      dietary: formData.dietary,
+      mainIngredient: formData.mainIngredient,
+      servings: formData.servings
+    });
+    
     onSubmit(formData);
   };
 
@@ -122,6 +142,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
           value={formData.mainIngredient}
           onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
           className={isMobile ? "h-10 w-full" : "h-12 text-lg w-full"}
+          aria-label="Main ingredient"
         />
       </div>
 

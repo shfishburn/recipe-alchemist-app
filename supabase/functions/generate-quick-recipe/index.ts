@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
@@ -26,12 +25,21 @@ serve(async (req) => {
   }
 
   try {
-    // Get OpenAI API key
+    // Get OpenAI API key with better error handling
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
       console.error("OpenAI API key is not configured");
-      throw new Error("OpenAI API key is not configured");
+      return new Response(
+        JSON.stringify({ 
+          error: "OpenAI API key is not configured",
+          details: "The OPENAI_API_KEY environment variable is missing or empty"
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    
+    // Diagnostic log for API key (redacted)
+    console.log(`API key configured: ${apiKey.substring(0, 3)}...${apiKey.substring(apiKey.length - 3)}`);
     
     // Create OpenAI client
     const openai = new OpenAI({ apiKey });
@@ -42,7 +50,9 @@ serve(async (req) => {
     try {
       // Get the request body as text first for debugging
       requestText = await req.text();
-      console.log("Raw request body:", requestText.substring(0, 200) + "...");
+      console.log("Raw request body:", requestText.length > 0 ? 
+        `${requestText.substring(0, 200)}... (${requestText.length} chars)` : 
+        "EMPTY REQUEST BODY");
       
       if (!requestText || requestText.trim() === "") {
         throw new Error("Empty request body");
@@ -86,6 +96,16 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    // Diagnostic log all inputs
+    console.log("Recipe inputs:", { 
+      mainIngredient, 
+      cuisine: typeof cuisine === 'string' ? cuisine : JSON.stringify(cuisine), 
+      dietary: typeof dietary === 'string' ? dietary : JSON.stringify(dietary),
+      servings,
+      maxCalories: maxCalories || "not specified",
+      flavorTags: typeof flavorTags === 'string' ? flavorTags : JSON.stringify(flavorTags)
+    });
     
     // Ensure cuisine, dietary and flavorTags are properly handled regardless of input format
     // Convert string inputs to arrays if they're not already
@@ -261,6 +281,7 @@ Format each as object → {
     console.log("Using model: gpt-4o");
     
     try {
+      console.log("Sending request to OpenAI API...");
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // Keep using the more capable model
         response_format: { type: "json_object" },
@@ -321,10 +342,26 @@ Format each as object → {
       
     } catch (openaiError) {
       console.error("OpenAI API error:", openaiError);
+      // Improved error response with more details
+      let errorMessage = "Error generating recipe from OpenAI";
+      let errorDetails = openaiError.message || "Unknown OpenAI error";
+      
+      // Check for common OpenAI error patterns
+      if (errorDetails.includes("401")) {
+        errorMessage = "Invalid OpenAI API key";
+        errorDetails = "The API key provided was rejected by OpenAI. Please check the key and try again.";
+      } else if (errorDetails.includes("429")) {
+        errorMessage = "OpenAI rate limit exceeded";
+        errorDetails = "The OpenAI API rate limit has been exceeded. Please try again later.";
+      } else if (errorDetails.includes("500")) {
+        errorMessage = "OpenAI internal server error";
+        errorDetails = "OpenAI is experiencing internal issues. Please try again later.";
+      }
+      
       return new Response(
         JSON.stringify({
-          error: "Error generating recipe from OpenAI",
-          details: openaiError.message || "Unknown OpenAI error",
+          error: errorMessage,
+          details: errorDetails,
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );

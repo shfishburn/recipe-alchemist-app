@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -15,7 +16,8 @@ export function useQuickRecipeForm() {
     setFormData, 
     setError,
     setNavigate,
-    isRecipeValid
+    isRecipeValid,
+    setHasTimeoutError
   } = useQuickRecipeStore();
   
   // Store navigate function in the global store for use in other components
@@ -26,7 +28,7 @@ export function useQuickRecipeForm() {
   // Handle form submission
   const handleSubmit = useCallback(async (formData: QuickRecipeFormData) => {
     try {
-      console.log("Handling form submission:", formData);
+      console.log("Handling form submission with data:", formData);
       
       if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
         toast({
@@ -61,7 +63,16 @@ export function useQuickRecipeForm() {
       
       // Start generating the recipe immediately after navigation
       try {
-        console.log("Starting recipe generation");
+        console.log("Starting recipe generation with payload:", {
+          cuisine: formData.cuisine,
+          dietary: formData.dietary,
+          mainIngredient: formData.mainIngredient,
+          servings: formData.servings
+        });
+        
+        // Add a small delay to ensure navigation completes
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const generatedRecipe = await generateQuickRecipe(formData);
         
         // Validate the recipe structure before setting it
@@ -87,10 +98,15 @@ export function useQuickRecipeForm() {
         if (error.message?.includes('timeout')) {
           errorMessage = "Recipe generation timed out. Please try again with a simpler recipe request.";
           isTimeout = true;
+          setHasTimeoutError(true);
         } else if (error.status === 400) {
           errorMessage = "Invalid recipe request. Please check your inputs and try again.";
         } else if (error.message?.includes('Edge Function')) {
           errorMessage = "We're having trouble connecting to our recipe service. Please try again shortly.";
+        } else if (error.message?.includes('OpenAI API key')) {
+          errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
+          // Log specifically for API key issues
+          console.error("CRITICAL: OpenAI API key issue detected");
         }
         
         // Set descriptive error with timeout flag
@@ -111,7 +127,7 @@ export function useQuickRecipeForm() {
       setError(error.message || "Failed to submit recipe request. Please try again.");
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError]);
 
   return {
     handleSubmit,
