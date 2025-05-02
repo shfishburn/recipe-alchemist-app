@@ -43,6 +43,12 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
     }
   };
   
+  // Get cooking time from cook_time_min or prep_time_min
+  const cookingTime = recipe.cook_time_min || recipe.prep_time_min;
+  
+  // Recipe difficulty might not exist in the type, so handle it safely
+  const recipeDifficulty = (recipe as any).difficulty;
+  
   return (
     <Link 
       to={`/recipes/${recipe.id}`}
@@ -75,16 +81,16 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
           {/* Time Badge */}
           <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 text-white px-2 py-1 rounded-full text-xs font-medium">
             <Timer size={12} className="inline-block" />
-            <span>{formatCookingTime(recipe.cooking_time)}</span>
+            <span>{formatCookingTime(cookingTime)}</span>
           </div>
           
-          {/* Difficulty Badge */}
-          {recipe.difficulty && (
+          {/* Difficulty Badge - Only show if difficulty exists */}
+          {recipeDifficulty && (
             <div className={cn(
               "absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium",
-              getDifficultyColor(recipe.difficulty)
+              getDifficultyColor(recipeDifficulty)
             )}>
-              {recipe.difficulty}
+              {recipeDifficulty}
             </div>
           )}
         </div>

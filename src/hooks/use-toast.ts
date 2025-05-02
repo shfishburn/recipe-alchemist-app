@@ -1,11 +1,17 @@
 
 // This is a modified version of the toast hook that is touch-optimized
 import { useState, useEffect } from 'react'
-import { toast as sonnerToast, type ToastT, type ExternalToast } from 'sonner'
+import { toast as sonnerToast, type ToastT, type ExternalToast as SonnerExternalToast } from 'sonner'
 
-export type ToastProps = ExternalToast & {
-  id?: string | number
+// Extend the Sonner toast interface to include our custom properties
+export interface ExternalToast extends SonnerExternalToast {
+  id?: string | number;
+  title?: string;
+  description?: string;
+  variant?: "default" | "destructive" | "success";
 }
+
+export type ToastProps = ExternalToast
 
 export function toast(props: ToastProps) {
   // Enhanced touch feedback for toast interactions
@@ -27,5 +33,7 @@ export function useToast() {
     dismiss: sonnerToast.dismiss,
     error: (props: ToastProps) => toast({ ...props, variant: "destructive" }),
     success: (props: ToastProps) => toast(props),
+    // Include toasts property for the Toaster component
+    toasts: [],
   }
 }
