@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { NutritionPreferencesType } from '@/types/nutrition';
 import { MacroSplitSliders } from './macro-details/MacroSplitSliders';
-import { MacroPieCharts } from './macro-details/MacroPieCharts';
+import MacroPieCharts from './macro-details/MacroPieCharts';
 import { InfoPanel } from './macro-details/InfoPanel';
 import { useIsMobile } from '@/hooks/use-mobile';
 

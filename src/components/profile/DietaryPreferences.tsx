@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { MealSizeSelector } from './dietary/MealSizeSelector';
 import { MacroSliders } from './nutrition/MacroSliders';
 import { MacroChart } from './nutrition/MacroChart';
 import { MacroSplitSliders } from './macro-details/MacroSplitSliders';
-import { MacroPieCharts } from './macro-details/MacroPieCharts';
+import MacroPieCharts from './macro-details/MacroPieCharts';
 import { InfoPanel } from './macro-details/InfoPanel';
 import { MealTiming } from './MealTiming';
 import { useIsMobile } from '@/hooks/use-mobile';

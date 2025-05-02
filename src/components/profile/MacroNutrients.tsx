@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MacroSliders } from './nutrition/MacroSliders';
 import { MacroChart } from './nutrition/MacroChart';
 import { MacroSplitSliders } from './macro-details/MacroSplitSliders';
-import { MacroPieCharts } from './macro-details/MacroPieCharts';
+import MacroPieCharts from './macro-details/MacroPieCharts';
 import { InfoPanel } from './macro-details/InfoPanel';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { NutritionPreferencesType } from '@/types/nutrition';
