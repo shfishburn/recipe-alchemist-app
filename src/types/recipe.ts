@@ -1,7 +1,15 @@
 
 export interface Ingredient {
-  qty: number;
-  unit: string;
+  // Metric measurements
+  qty_metric: number;
+  unit_metric: string;
+  // Imperial measurements
+  qty_imperial: number;
+  unit_imperial: string;
+  // Original measurement (backwards compatibility)
+  qty?: number;
+  unit?: string;
+  // Common fields
   item: string;
   notes?: string;
   shop_size_qty?: number;

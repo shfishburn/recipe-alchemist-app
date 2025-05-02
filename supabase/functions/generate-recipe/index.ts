@@ -45,10 +45,11 @@ Create a recipe with evidence-based techniques that maximize flavor through unde
    - Maximize nutrient bioavailability
 
 5. MEASUREMENT STANDARDIZATION:
-   - Use imperial units (oz, lb, cups, tbsp, tsp, inches, °F)
-   - Include metric in parentheses
-   - Use fractions for small quantities
-   - Include °C in parentheses
+   - ALWAYS provide BOTH imperial AND metric measurements for each ingredient
+   - For imperial: use oz, lb, cups, tbsp, tsp, inches, °F
+   - For metric: use g, kg, ml, L, cm, °C
+   - Include both systems using qty_metric, unit_metric, qty_imperial, unit_imperial for each ingredient
+   - Use fractions for small quantities in imperial
 
 6. SHOPPABLE INGREDIENTS:
    - Each item gets a typical US grocery package size
@@ -70,8 +71,10 @@ Return ONLY valid JSON matching this schema:
   "prep_time_min": number,
   "cook_time_min": number,
   "ingredients": [{ 
-    "qty": number, 
-    "unit": string, 
+    "qty_metric": number, 
+    "unit_metric": string, 
+    "qty_imperial": number,
+    "unit_imperial": string,
     "shop_size_qty": number,
     "shop_size_unit": string,
     "item": string, 

@@ -3,6 +3,7 @@ import React from 'react';
 import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { Ingredient } from '@/hooks/use-quick-recipe';
+import { useUnitSystemStore } from '@/stores/unitSystem';
 
 // Helper function to format ingredient display text with markdown
 export const formatIngredientWithMarkdown = (ingredient: Ingredient): string => {
@@ -48,6 +49,8 @@ interface FormatIngredientProps {
 }
 
 export function FormatIngredient({ ingredient }: FormatIngredientProps) {
+  const { unitSystem } = useUnitSystemStore();
+
   return (
     <FormattedIngredientText text={formatIngredientWithMarkdown(ingredient)} />
   );
