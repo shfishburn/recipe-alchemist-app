@@ -13,6 +13,9 @@ export function useQuickRecipeForm() {
   // Handle form submission
   const handleSubmit = async (formData: QuickRecipeFormData) => {
     try {
+      // Reset any previous state
+      reset();
+      
       // Set loading state immediately so it shows the loading animation
       setLoading(true);
       setIsLoadingLocal(true);
@@ -24,12 +27,24 @@ export function useQuickRecipeForm() {
         state: { fromForm: true } // Add state to indicate this is from form submission
       });
       
-      // Start generating the recipe AFTER navigation
-      const generatedRecipe = await generateQuickRecipe(formData);
-      setRecipe(generatedRecipe);
-      setIsLoadingLocal(false);
+      // Small delay to ensure UI updates before heavy processing begins
+      setTimeout(async () => {
+        try {
+          // Start generating the recipe AFTER navigation
+          const generatedRecipe = await generateQuickRecipe(formData);
+          setRecipe(generatedRecipe);
+          setIsLoadingLocal(false);
+          return generatedRecipe;
+        } catch (innerError) {
+          console.error('Error generating recipe:', innerError);
+          setLoading(false);
+          setIsLoadingLocal(false);
+          setError(innerError.message || "Failed to generate recipe");
+          return null;
+        }
+      }, 50);
       
-      return generatedRecipe;
+      return null;
     } catch (error) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);

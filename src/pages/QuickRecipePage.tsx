@@ -10,13 +10,11 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
-import { RecipeCarousel } from '@/components/landing/RecipeCarousel';
 
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { recipe, isLoading, formData, error, reset } = useQuickRecipeStore();
-  const { generateQuickRecipe } = useQuickRecipe();
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
@@ -37,7 +35,24 @@ const QuickRecipePage = () => {
 
   const handleRetry = async () => {
     if (formData) {
-      await generateQuickRecipe(formData);
+      try {
+        // Reset first to clear any existing errors
+        reset();
+        
+        // Then navigate to ensure we have fresh state
+        navigate('/quick-recipe', { 
+          replace: true,
+          state: { fromForm: true }
+        });
+        
+        // Small delay to ensure UI updates before starting the generation
+        setTimeout(() => {
+          const { generateQuickRecipe } = useQuickRecipe();
+          generateQuickRecipe(formData);
+        }, 50);
+      } catch (err) {
+        console.error("Error retrying recipe generation:", err);
+      }
     }
   };
 
@@ -115,12 +130,7 @@ const QuickRecipePage = () => {
             </div>
           )}
           
-          {/* Popular Recipes section - Only show when showing form or no recipe */}
-          {(isDirectNavigation || !recipe) && (
-            <div className="mt-12 md:mt-16">
-              <RecipeCarousel />
-            </div>
-          )}
+          {/* Removed Popular Recipes section entirely */}
         </div>
       </main>
     </div>
