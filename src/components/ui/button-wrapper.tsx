@@ -18,7 +18,7 @@ const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonWrapperProps>(
           ref={ref} 
           {...props}
         >
-          {React.Children.only(children)}
+          {children}
         </Slot>
       );
     }
