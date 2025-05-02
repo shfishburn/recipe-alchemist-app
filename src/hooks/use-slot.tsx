@@ -1,6 +1,21 @@
 
 import React from 'react';
 
+/**
+ * Merges multiple React refs into a single ref function
+ */
+function mergeRefs(refs: Array<React.Ref<any> | undefined | null>) {
+  return (value: any) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(value);
+      } else if (ref != null) {
+        (ref as React.MutableRefObject<any>).current = value;
+      }
+    });
+  };
+}
+
 export const useSlot = () => {
   const SlotWrapper = React.forwardRef<
     HTMLDivElement,
@@ -10,33 +25,12 @@ export const useSlot = () => {
     
     // Only clone if children is a valid React element and asChild is true
     if (asChild && React.isValidElement(children)) {
-      // When asChild is true, we clone the child element
-      // and forward all props to it with proper TypeScript typing
+      // When asChild is true, we clone the child element and forward props
       return React.cloneElement(children, {
         ...otherProps,
-        // Forward the ref with proper TypeScript typing
-        ref: (node: unknown) => {
-          // Handle ref forwarding
-          if (typeof ref === 'function') {
-            ref(node as HTMLDivElement);
-          } else if (ref) {
-            (ref as React.MutableRefObject<HTMLDivElement>).current = node as HTMLDivElement;
-          }
-          
-          // Also forward to child's existing ref if it exists
-          const childRef = (children as React.ReactElement<any>).ref;
-          if (childRef) {
-            if (typeof childRef === 'function') {
-              childRef(node);
-            } else {
-              const refObject = childRef as React.MutableRefObject<unknown>;
-              if (refObject && 'current' in refObject) {
-                refObject.current = node;
-              }
-            }
-          }
-        }
-      } as React.HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<unknown> });
+        // Properly merge refs using our helper function
+        ref: mergeRefs([ref, (children as any)._owner?.ref]),
+      });
     }
     
     // When asChild is false or not provided, render a div

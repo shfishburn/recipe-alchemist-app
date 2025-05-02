@@ -5,6 +5,9 @@ interface SlotProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
 }
 
+/**
+ * Slot component that merges its props with its child element
+ */
 const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
   const { children, ...rest } = props;
   
@@ -13,35 +16,27 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
     return null;
   }
   
-  // Clone the element and pass down props
-  // Use proper TypeScript casting to ensure type safety
+  // Clone the element and properly merge refs
   return React.cloneElement(children, {
     ...rest,
-    // Use the appropriate approach for ref merging that TypeScript understands
-    ref: (node: unknown) => {
-      // Handle our forwarded ref
-      if (typeof ref === 'function') {
-        ref(node as HTMLElement);
-      } else if (ref) {
-        (ref as React.MutableRefObject<HTMLElement>).current = node as HTMLElement;
-      }
-      
-      // Forward to child's existing ref if it exists
-      const childRef = (children as React.ReactElement<any>).ref;
-      if (childRef) {
-        if (typeof childRef === 'function') {
-          childRef(node);
-        } else {
-          // Make sure childRef exists and has current property
-          const refObject = childRef as React.MutableRefObject<unknown>;
-          if (refObject && 'current' in refObject) {
-            refObject.current = node;
-          }
-        }
-      }
-    }
-  } as React.HTMLAttributes<HTMLElement> & { ref?: React.Ref<unknown> });
+    ref: mergeRefs([ref, (children as any)._owner?.ref]),
+  });
 });
+
+/**
+ * Merges multiple React refs into a single ref function
+ */
+function mergeRefs(refs: Array<React.Ref<any> | undefined | null>) {
+  return (value: any) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(value);
+      } else if (ref != null) {
+        (ref as React.MutableRefObject<any>).current = value;
+      }
+    });
+  };
+}
 
 Slot.displayName = "Slot";
 
