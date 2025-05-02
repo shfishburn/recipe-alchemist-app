@@ -7,7 +7,7 @@ import { Brain, ChartPie, ChefHat, Sparkles } from 'lucide-react';
 import { NutritionPreview } from './NutritionPreview';
 
 // Use React.memo to prevent unnecessary re-renders
-const Hero = React.memo(() => {
+const Hero = () => {
   const isMobile = useIsMobile();
   
   return (
@@ -68,8 +68,6 @@ const Hero = React.memo(() => {
       </div>
     </section>
   );
-});
-
-Hero.displayName = 'Hero';
+};
 
 export default Hero;

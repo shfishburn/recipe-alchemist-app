@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,8 @@ interface QuickRecipeTagFormProps {
   selectedCuisine: string;
   selectedDietary: string;
   prepTime: number;
+  onSubmit?: (formData: any) => void;
+  isLoading?: boolean;
 }
 
 const QuickRecipeTagForm = ({ 
@@ -37,8 +40,10 @@ const QuickRecipeTagForm = ({
   selectedServings,
   selectedCuisine,
   selectedDietary,
-  prepTime
-}) => {
+  prepTime,
+  onSubmit,
+  isLoading = false
+}: QuickRecipeTagFormProps) => {
   const [localIngredients, setLocalIngredients] = useState(ingredients);
   const debouncedIngredients = useDebounce(localIngredients, 500);
 
@@ -64,7 +69,7 @@ const QuickRecipeTagForm = ({
       </div>
       
       <div className="flex flex-wrap gap-4">
-        {/* Servings Selector - Fixed prop name */}
+        {/* Servings Selector */}
         <div className="flex-1 min-w-[180px]">
           <Label htmlFor="servings">Servings</Label>
           <div className="mt-2">
@@ -80,8 +85,8 @@ const QuickRecipeTagForm = ({
           <Label htmlFor="cuisine">Cuisine</Label>
           <div className="mt-2">
             <CuisineSelector 
-              selectedCuisine={selectedCuisine} 
-              onCuisineSelect={onCuisineSelect}
+              value={selectedCuisine} 
+              onChange={onCuisineSelect}
             />
           </div>
         </div>
@@ -91,8 +96,8 @@ const QuickRecipeTagForm = ({
           <Label htmlFor="dietary">Dietary</Label>
           <div className="mt-2">
             <DietarySelector
-              selectedDietary={selectedDietary}
-              onDietarySelect={onDietarySelect}
+              value={selectedDietary}
+              onChange={onDietarySelect}
             />
           </div>
         </div>
@@ -112,6 +117,19 @@ const QuickRecipeTagForm = ({
           {prepTime} minutes
         </p>
       </div>
+      
+      {onSubmit && (
+        <div className="pt-4">
+          <button 
+            type="button" 
+            onClick={() => onSubmit({ingredients: localIngredients, servings: selectedServings, cuisine: selectedCuisine, dietary: selectedDietary, prepTime})}
+            className="w-full bg-recipe-blue hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Creating Recipe...' : 'Create Recipe'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

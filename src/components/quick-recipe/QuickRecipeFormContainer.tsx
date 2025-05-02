@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { QuickRecipeTagForm } from './QuickRecipeTagForm';
+import QuickRecipeTagForm from './QuickRecipeTagForm';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
