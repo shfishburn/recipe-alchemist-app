@@ -141,20 +141,48 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), TIMEOUT_DURATION);
     });
     
-    // Ensure cuisine and dietary are properly formatted as strings
-    // The edge function expects string values, not arrays
-    const cuisineValue = Array.isArray(formData.cuisine) 
-      ? formData.cuisine.join(', ') 
-      : formData.cuisine || "Any";
+    // *** FIXED: Process cuisine values properly ***
+    // Convert "any" to empty array for cuisine
+    let cuisineValue: string | string[] = formData.cuisine;
+    if (typeof cuisineValue === 'string') {
+      if (cuisineValue.toLowerCase() === 'any') {
+        cuisineValue = [];
+      } else if (cuisineValue) {
+        cuisineValue = cuisineValue.split(',').map(c => c.trim()).filter(Boolean);
+      }
+    }
     
-    const dietaryValue = Array.isArray(formData.dietary) 
-      ? formData.dietary.join(', ') 
-      : formData.dietary || "";
+    // *** FIXED: Process dietary values properly ***
+    // Convert "any" to empty array for dietary
+    let dietaryValue: string | string[] = formData.dietary;
+    if (typeof dietaryValue === 'string') {
+      if (dietaryValue.toLowerCase() === 'any') {
+        dietaryValue = [];
+      } else if (dietaryValue) {
+        dietaryValue = dietaryValue.split(',').map(d => d.trim()).filter(Boolean);
+      }
+    }
+    
+    // Format both cuisine and dietary as comma-separated strings for the API
+    const cuisineString = Array.isArray(cuisineValue) 
+      ? cuisineValue.join(', ') 
+      : cuisineValue || "";
+    
+    const dietaryString = Array.isArray(dietaryValue) 
+      ? dietaryValue.join(', ') 
+      : dietaryValue || "";
+    
+    console.log("Processed values:", { 
+      cuisineOriginal: formData.cuisine, 
+      cuisineProcessed: cuisineString,
+      dietaryOriginal: formData.dietary,
+      dietaryProcessed: dietaryString 
+    });
     
     // Define the request body with properly formatted values and ensure all fields are included
     const requestBody = {
-      cuisine: cuisineValue,
-      dietary: dietaryValue,
+      cuisine: cuisineString || "Any",
+      dietary: dietaryString || "",
       mainIngredient: formData.mainIngredient.trim(),
       servings: servings,
       maxCalories: formData.maxCalories
