@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -130,9 +129,12 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       throw new Error("Please provide a main ingredient");
     }
     
+    // Increase timeout for the request to prevent premature timeouts
+    const TIMEOUT_DURATION = 40000; // 40 seconds timeout
+    
     // Set a timeout for the request to prevent indefinite loading
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), 25000);
+      setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), TIMEOUT_DURATION);
     });
     
     // Call the Supabase Edge Function to generate the recipe
@@ -143,13 +145,19 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         mainIngredient: formData.mainIngredient,
         servings: formData.servings,
         maxCalories: formData.maxCalories
+      },
+      // Important: Add additional options to handle timeout more gracefully
+      options: {
+        headers: {
+          'Content-Type': 'application/json',
+        }
       }
     });
     
     // Race the response against the timeout
     const { data, error } = await Promise.race([
       responsePromise, 
-      timeoutPromise.then(() => { throw new Error("Recipe generation timed out"); })
+      timeoutPromise.then(() => { throw new Error("Recipe generation timed out. Please try again with a simpler recipe."); })
     ]);
 
     if (error) {

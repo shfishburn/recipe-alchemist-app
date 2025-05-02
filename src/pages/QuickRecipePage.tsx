@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
@@ -5,7 +6,7 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, ChefHat } from 'lucide-react';
+import { AlertCircle, RefreshCw, ChefHat, ArrowLeft } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
@@ -15,7 +16,7 @@ import { useAuth } from '@/hooks/use-auth';
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { recipe, isLoading, formData, error, reset, setFormData, setLoading } = useQuickRecipeStore();
+  const { recipe, isLoading, formData, error, reset, setFormData, setLoading, hasTimeoutError } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
   const { session } = useAuth();
   
@@ -140,12 +141,25 @@ const QuickRecipePage = () => {
               <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
               <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
               <p className="text-muted-foreground mb-6">{error}</p>
+              
+              {hasTimeoutError && (
+                <div className="text-sm text-muted-foreground mb-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg">
+                  <p className="font-medium">Tip for timeout errors:</p>
+                  <ul className="list-disc list-inside mt-1">
+                    <li>Try a simpler ingredient or combination</li>
+                    <li>Check your internet connection</li>
+                    <li>Wait a moment and try again</li>
+                  </ul>
+                </div>
+              )}
+              
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   variant="outline" 
                   onClick={() => navigate('/')}
                   className="flex items-center gap-2"
                 >
+                  <ArrowLeft className="h-4 w-4" />
                   Start Over
                 </Button>
                 {formData && (

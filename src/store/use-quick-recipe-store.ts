@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { NavigateFunction } from 'react-router-dom';
@@ -28,6 +27,7 @@ interface QuickRecipeStore {
   setCompletedLoading: (completed: boolean) => void;
   reset: () => void;
   isRecipeValid: (recipe: any) => boolean;
+  hasTimeoutError: () => boolean;
 }
 
 const initialLoadingState: LoadingState = {
@@ -35,7 +35,7 @@ const initialLoadingState: LoadingState = {
   totalSteps: 6,
   stepDescription: "Analyzing your ingredients...",
   percentComplete: 0,
-  estimatedTimeRemaining: 30 // setting a reasonable time for recipe generation
+  estimatedTimeRemaining: 35 // increased timeout for recipe generation
 };
 
 export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
@@ -50,7 +50,7 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
   setRecipe: (recipe) => set({ 
     recipe,
     // If recipe is successfully set, ensure loading is turned off
-    ...(recipe ? { isLoading: false } : {})
+    ...(recipe ? { isLoading: false, completedLoading: true } : {})
   }),
   setLoading: (isLoading) => set({ 
     isLoading,
@@ -64,7 +64,7 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
   setError: (error) => set({ 
     error,
     // Turn off loading state when there's an error
-    ...(error ? { isLoading: false } : {})
+    ...(error ? { isLoading: false, completedLoading: false } : {})
   }),
   setFormData: (formData) => set({ formData }),
   updateLoadingState: (state) => set((prev) => ({
@@ -107,5 +107,9 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
     }
     
     return true;
+  },
+  hasTimeoutError: () => {
+    const { error } = get();
+    return error?.toLowerCase().includes('timeout') || false;
   }
 }));

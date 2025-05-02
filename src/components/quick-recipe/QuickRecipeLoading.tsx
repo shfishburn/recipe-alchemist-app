@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CookingPot, CircleCheck, PartyPopper } from 'lucide-react';
+import { CookingPot, CircleCheck, PartyPopper, AlarmClock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LoadingTipCard } from './loading/LoadingTipCard';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -19,16 +19,18 @@ const LOADING_STEPS = [
 ];
 
 // Maximum time to wait before showing error (in seconds)
-const MAX_LOADING_TIME = 45;
+const MAX_LOADING_TIME = 40;
 
 export function QuickRecipeLoading() {
   const { loadingState, formData, updateLoadingState, completedLoading, setCompletedLoading, setError } = useQuickRecipeStore();
   const isMobile = useIsMobile();
   const { session } = useAuth();
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
+  const [showTimeout, setShowTimeout] = useState(false);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutWarningRef = useRef<NodeJS.Timeout | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   
   // Initialize sound effect for typing with mobile-friendly settings
@@ -65,6 +67,13 @@ export function QuickRecipeLoading() {
   
   // Set a timeout to prevent infinite loading
   useEffect(() => {
+    // Show a timeout warning after 75% of the maximum time
+    timeoutWarningRef.current = setTimeout(() => {
+      if (!completedLoading) {
+        setShowTimeout(true);
+      }
+    }, (MAX_LOADING_TIME * 0.75) * 1000);
+    
     // Set a timeout to prevent infinite loading state
     timeoutTimerRef.current = setTimeout(() => {
       if (!completedLoading) {
@@ -75,6 +84,9 @@ export function QuickRecipeLoading() {
     }, MAX_LOADING_TIME * 1000);
     
     return () => {
+      if (timeoutWarningRef.current) {
+        clearTimeout(timeoutWarningRef.current);
+      }
       if (timeoutTimerRef.current) {
         clearTimeout(timeoutTimerRef.current);
       }
@@ -210,6 +222,14 @@ export function QuickRecipeLoading() {
             {showFinalAnimation ? "100% Complete" : formatTimeRemaining(loadingState.estimatedTimeRemaining)}
           </p>
         </div>
+        
+        {/* Timeout warning */}
+        {showTimeout && !showFinalAnimation && (
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2">
+            <AlarmClock className="h-4 w-4" />
+            <span>This is taking longer than usual. Please be patient...</span>
+          </div>
+        )}
         
         {/* Smart tip card */}
         <div className="w-full max-w-xs animate-fade-in">
