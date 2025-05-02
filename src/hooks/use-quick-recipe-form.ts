@@ -31,6 +31,7 @@ export function useQuickRecipeForm() {
     try {
       console.log("Handling form submission with data:", formData);
       
+      // Validate that we have mainIngredient, which is required by the API
       if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
         toast({
           title: "Missing ingredient",

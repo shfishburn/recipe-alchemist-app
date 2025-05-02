@@ -46,16 +46,15 @@ export function QuickRecipeFormContainer() {
   const handleFormSubmit = (formData: TagFormData) => {
     console.log("Handling form submission:", formData);
     
-    // Format the data properly for the API
+    // Format the data properly for the API - FIXED: ensuring we only use mainIngredient
     const adaptedFormData = {
-      ...formData,
-      mainIngredient: formData.ingredients.trim(),
-      // The generateQuickRecipe function expects single values, not arrays
+      mainIngredient: formData.ingredients.trim(), // Map ingredients to mainIngredient
       cuisine: formData.cuisine, 
       dietary: formData.dietary,
-      // Ensure servings is a number
       servings: Number(formData.servings) || 2
     };
+    
+    console.log("Adapted form data for API:", adaptedFormData);
     
     // Call the original handleSubmit function
     handleSubmit(adaptedFormData);
