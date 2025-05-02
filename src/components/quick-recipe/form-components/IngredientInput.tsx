@@ -14,14 +14,24 @@ interface IngredientInputProps {
 export function IngredientInput({ value, onChange, error }: IngredientInputProps) {
   const isMobile = useIsMobile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [isPulsing, setIsPulsing] = useState(true);
+  // Change default pulsing state to false to prevent flashing
+  const [isPulsing, setIsPulsing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
-  // Stop the pulsing after a few seconds
+  // Start pulsing after component mounts for a smoother experience
   useEffect(() => {
+    // Delay the pulse effect to prevent flash on initial load
     const timer = setTimeout(() => {
-      setIsPulsing(false);
-    }, 3000);
+      setIsPulsing(true);
+      
+      // Then stop the pulsing after a few seconds
+      const stopTimer = setTimeout(() => {
+        setIsPulsing(false);
+      }, 3000);
+      
+      return () => clearTimeout(stopTimer);
+    }, 1000); // Delay start by 1 second
+    
     return () => clearTimeout(timer);
   }, []);
 
@@ -34,7 +44,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
         // Reset height to auto to get the correct scrollHeight
         textareaRef.current.style.height = 'auto';
         // Set the height to match content (min height varies by device)
-        const minHeight = isMobile ? '52px' : '60px';
+        const minHeight = isMobile ? '56px' : '60px';
         const scrollHeight = textareaRef.current.scrollHeight;
         textareaRef.current.style.height = `${Math.max(parseInt(minHeight), scrollHeight)}px`;
       });
@@ -43,7 +53,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
 
   // Feature badges with better visual design
   const FeatureBadges = () => (
-    <div className="flex flex-wrap justify-center gap-2 mb-2">
+    <div className="flex flex-wrap justify-center gap-2 mb-3">
       <span className="bg-recipe-green/10 text-recipe-green rounded-full px-3 py-1 text-xs font-medium">
         Ready in 30 mins
       </span>
@@ -68,7 +78,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
       </label>
       
       <div className={cn(
-        "relative rounded-xl shadow-md transition-all duration-200",
+        "relative rounded-xl shadow-md transition-all duration-300",
         isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
         isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
         error ? 'ring-2 ring-red-500' : '',
@@ -85,8 +95,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           className={cn(
             isMobile ? "min-h-[56px] text-base py-3 px-4" : "min-h-[60px] text-lg",
             "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl",
-            "focus-within:border-recipe-blue placeholder:text-gray-500",
-            error ? "border-red-500" : "focus:border-recipe-blue"
+            "focus-within:border-recipe-blue placeholder:text-gray-500/80", // Lower opacity for placeholder
+            error ? "border-red-500" : "border-gray-200 focus:border-recipe-blue"
           )}
           rows={1}
           // Improved touch handling
