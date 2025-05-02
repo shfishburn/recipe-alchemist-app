@@ -32,7 +32,8 @@ export const useSlot = () => {
       });
     }
     
-    return <div ref={ref} {...otherProps}>{children}</div>;
+    // Return a div when not using asChild
+    return React.createElement("div", { ref, ...otherProps }, children);
   });
   
   SlotWrapper.displayName = 'SlotWrapper';
