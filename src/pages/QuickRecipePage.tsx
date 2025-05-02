@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -16,9 +16,10 @@ import { useAuth } from '@/hooks/use-auth';
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { recipe, isLoading, formData, error, reset, setFormData, setLoading, hasTimeoutError } = useQuickRecipeStore();
+  const { recipe, isLoading, formData, error, reset, setFormData, setLoading, hasTimeoutError, setError } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
   const { session } = useAuth();
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
@@ -84,18 +85,27 @@ const QuickRecipePage = () => {
   const handleRetry = async () => {
     if (formData) {
       try {
+        setIsRetrying(true);
         console.log("Retrying recipe generation with formData:", formData);
         
-        // Reset first to clear any existing errors
-        reset();
+        // Clear any existing errors
+        setError(null);
         
         // Start the recipe generation with proper loading state
         setLoading(true);
         
+        toast({
+          title: "Retrying recipe generation",
+          description: "We're attempting to generate your recipe again...",
+        });
+        
         // Start the recipe generation immediately
         await generateQuickRecipe(formData);
+        
+        setIsRetrying(false);
       } catch (err: any) {
         console.error("Error retrying recipe generation:", err);
+        setIsRetrying(false);
         toast({
           title: "Recipe generation failed",
           description: err.message || "Please try again later.",
@@ -105,10 +115,22 @@ const QuickRecipePage = () => {
     }
   };
 
+  const handleCancel = () => {
+    // Reset and navigate back to home
+    reset();
+    navigate('/');
+  };
+
   // Show full-screen loading when generating a recipe, without the layout
-  if (isLoading) {
+  if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
-    return <FullScreenLoading />;
+    return (
+      <FullScreenLoading 
+        onCancel={handleCancel}
+        onRetry={error ? handleRetry : undefined}
+        error={error}
+      />
+    );
   }
 
   return (
@@ -156,7 +178,7 @@ const QuickRecipePage = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/')}
+                  onClick={handleCancel}
                   className="flex items-center gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -166,9 +188,10 @@ const QuickRecipePage = () => {
                   <Button 
                     onClick={handleRetry}
                     className="flex items-center gap-2"
+                    disabled={isRetrying}
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    Try Again
+                    <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+                    {isRetrying ? 'Retrying...' : 'Try Again'}
                   </Button>
                 )}
               </div>

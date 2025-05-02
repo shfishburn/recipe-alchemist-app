@@ -1,15 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Loader2, AlertCircle, XCircle } from 'lucide-react';
+import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface LoadingInterstitialProps {
   isOpen: boolean;
   onCancel?: () => void;
+  onRetry?: () => void;
+  error?: string | null;
 }
 
-const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => {
+const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInterstitialProps) => {
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showCriticalError, setShowCriticalError] = useState(false);
@@ -19,7 +21,7 @@ const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => 
     let timeoutErrorId: NodeJS.Timeout;
     let criticalErrorId: NodeJS.Timeout;
     
-    if (isOpen) {
+    if (isOpen && !error) {
       // Show timeout warning after 20 seconds
       timeoutWarningId = setTimeout(() => {
         setShowTimeoutMessage(true);
@@ -45,13 +47,16 @@ const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => 
       clearTimeout(timeoutErrorId);
       clearTimeout(criticalErrorId);
     };
-  }, [isOpen]);
+  }, [isOpen, error]);
+
+  // If there's an explicit error, show the critical error state immediately
+  const hasExplicitError = !!error;
   
   return (
     <Dialog open={isOpen} modal={true}>
       <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-10 gap-6">
         <div className="relative">
-          {showCriticalError ? (
+          {hasExplicitError || showCriticalError ? (
             <XCircle className="h-12 w-12 text-destructive" />
           ) : (
             <Loader2 className="h-12 w-12 animate-spin text-recipe-blue" />
@@ -59,21 +64,23 @@ const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => 
         </div>
         <div className="text-center space-y-2">
           <h3 className="text-lg font-semibold">
-            {showCriticalError 
+            {hasExplicitError || showCriticalError 
               ? "Recipe Generation Failed" 
               : showErrorMessage 
                 ? "Recipe Generation Issue" 
                 : "Creating Your Recipe"}
           </h3>
           <p className="text-muted-foreground text-sm">
-            {showCriticalError
-              ? "We couldn't create your recipe. Please try again with a different request."
-              : showErrorMessage
-                ? "The recipe is taking longer than expected to create."
-                : "Our culinary AI is crafting your perfect recipe..."}
+            {hasExplicitError
+              ? error
+              : showCriticalError
+                ? "We couldn't create your recipe. Please try again with a different request."
+                : showErrorMessage
+                  ? "The recipe is taking longer than expected to create."
+                  : "Our culinary AI is crafting your perfect recipe..."}
           </p>
           
-          {showTimeoutMessage && !showErrorMessage && !showCriticalError && (
+          {showTimeoutMessage && !showErrorMessage && !showCriticalError && !hasExplicitError && (
             <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg text-sm text-amber-700 dark:text-amber-300">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4" />
@@ -86,7 +93,7 @@ const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => 
             </div>
           )}
           
-          {showErrorMessage && !showCriticalError && (
+          {showErrorMessage && !showCriticalError && !hasExplicitError && (
             <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg text-sm text-red-700 dark:text-red-300">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4" />
@@ -99,7 +106,7 @@ const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => 
             </div>
           )}
           
-          {showCriticalError && (
+          {(hasExplicitError || showCriticalError) && (
             <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg text-sm text-red-700 dark:text-red-300">
               <div className="flex items-center gap-2 mb-2">
                 <XCircle className="h-4 w-4" />
@@ -116,16 +123,30 @@ const LoadingInterstitial = ({ isOpen, onCancel }: LoadingInterstitialProps) => 
             </div>
           )}
           
-          {onCancel && (
-            <Button 
-              variant={showCriticalError ? "default" : showErrorMessage ? "destructive" : "outline"} 
-              size="sm" 
-              onClick={onCancel} 
-              className={`mt-2 w-full ${showCriticalError ? "bg-primary text-primary-foreground" : showErrorMessage ? "bg-destructive text-destructive-foreground" : "text-amber-600 border-amber-300"}`}
-            >
-              {showCriticalError ? "Try Again" : showErrorMessage ? "Cancel and Try Again" : "Cancel"}
-            </Button>
-          )}
+          <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
+            {onCancel && (
+              <Button 
+                variant={hasExplicitError || showCriticalError ? "outline" : showErrorMessage ? "destructive" : "outline"} 
+                size="sm" 
+                onClick={onCancel} 
+                className="w-full sm:w-auto"
+              >
+                {hasExplicitError || showCriticalError ? "Close" : showErrorMessage ? "Cancel" : "Cancel"}
+              </Button>
+            )}
+            
+            {onRetry && (hasExplicitError || showCriticalError) && (
+              <Button 
+                variant="default"
+                size="sm" 
+                onClick={onRetry} 
+                className="w-full sm:w-auto flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

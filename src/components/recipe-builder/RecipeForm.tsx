@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import InputsTab from './tabs/InputsTab';
 import FormFooter from './form/FormFooter';
 import PreviewDialog from './form/PreviewDialog';
 import LoadingInterstitial from './LoadingInterstitial';
 import AdvancedOptions from './form/AdvancedOptions';
 import { useRecipeForm } from '@/hooks/use-recipe-form';
+import { toast } from '@/hooks/use-toast';
 
 export interface RecipeFormData {
   title: string;
@@ -22,9 +23,12 @@ export interface RecipeFormData {
 interface RecipeFormProps {
   onSubmit: (formData: RecipeFormData) => void;
   isLoading?: boolean;
+  error?: string | null;
 }
 
-const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
+const RecipeForm = ({ onSubmit, isLoading = false, error = null }: RecipeFormProps) => {
+  const [isRetrying, setIsRetrying] = useState(false);
+  
   const {
     formState: {
       activeTab,
@@ -50,6 +54,22 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
   const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSubmit(e);
+  };
+  
+  const handleRetry = () => {
+    setIsRetrying(true);
+    toast({
+      title: "Retrying recipe generation",
+      description: "We're attempting to generate your recipe again...",
+    });
+    
+    // Re-submit the form with the same data
+    onSubmit(formData);
+    
+    // Reset retry state after a short delay
+    setTimeout(() => {
+      setIsRetrying(false);
+    }, 500);
   };
 
   return (
@@ -87,7 +107,7 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
       <FormFooter
         onPreview={() => setPreviewOpen(true)}
         onSubmit={onFormSubmit}
-        isLoading={isLoading}
+        isLoading={isLoading || isRetrying}
         hasGenerated={hasGenerated}
       />
 
@@ -98,7 +118,14 @@ const RecipeForm = ({ onSubmit, isLoading = false }: RecipeFormProps) => {
         showAdvanced={showAdvanced}
       />
 
-      <LoadingInterstitial isOpen={isLoading} />
+      <LoadingInterstitial 
+        isOpen={isLoading || isRetrying} 
+        onCancel={() => {
+          // This will be passed from parent component
+        }}
+        onRetry={handleRetry}
+        error={error}
+      />
     </form>
   );
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -28,6 +27,15 @@ export function useQuickRecipeForm() {
   const handleSubmit = useCallback(async (formData: QuickRecipeFormData) => {
     try {
       console.log("Handling form submission:", formData);
+      
+      if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
+        toast({
+          title: "Missing ingredient",
+          description: "Please enter at least one main ingredient",
+          variant: "destructive",
+        });
+        return null;
+      }
       
       // Reset any previous state
       reset();
@@ -71,12 +79,27 @@ export function useQuickRecipeForm() {
       } catch (error: any) {
         console.error('Error generating recipe:', error);
         setLoading(false);
-        setError(error.message || "Failed to generate recipe. Please try again.");
+        
+        // More specific error message based on the error type
+        let errorMessage = error.message || "Failed to generate recipe. Please try again.";
+        let isTimeout = false;
+        
+        if (error.message?.includes('timeout')) {
+          errorMessage = "Recipe generation timed out. Please try again with a simpler recipe request.";
+          isTimeout = true;
+        } else if (error.status === 400) {
+          errorMessage = "Invalid recipe request. Please check your inputs and try again.";
+        } else if (error.message?.includes('Edge Function')) {
+          errorMessage = "We're having trouble connecting to our recipe service. Please try again shortly.";
+        }
+        
+        // Set descriptive error with timeout flag if applicable
+        setError(errorMessage, isTimeout);
         
         // Keep error toast only
         toast({
           title: "Recipe generation failed",
-          description: error.message || "Please try again later.",
+          description: errorMessage,
           variant: "destructive",
         });
         

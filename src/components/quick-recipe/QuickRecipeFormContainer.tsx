@@ -44,13 +44,17 @@ export function QuickRecipeFormContainer() {
 
   // Create an adapter function to handle form submission
   const handleFormSubmit = (formData: TagFormData) => {
-    // Convert string values to arrays as required by the API
+    console.log("Handling form submission:", formData);
+    
+    // Format the data properly for the API
     const adaptedFormData = {
       ...formData,
-      mainIngredient: formData.ingredients.split(',')[0].trim(),
-      // Convert string values to arrays for cuisine and dietary
-      cuisine: [formData.cuisine], // Convert to array
-      dietary: [formData.dietary], // Convert to array
+      mainIngredient: formData.ingredients.trim(),
+      // The generateQuickRecipe function expects single values, not arrays
+      cuisine: formData.cuisine, 
+      dietary: formData.dietary,
+      // Ensure servings is a number
+      servings: Number(formData.servings) || 2
     };
     
     // Call the original handleSubmit function

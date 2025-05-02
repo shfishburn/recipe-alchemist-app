@@ -43,8 +43,8 @@ export interface QuickRecipe {
 }
 
 export interface QuickRecipeFormData {
-  cuisine: string[];
-  dietary: string[];
+  cuisine: string[] | string;
+  dietary: string[] | string;
   mainIngredient: string;
   servings: number;
   maxCalories?: number;
@@ -138,10 +138,20 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       setTimeout(() => reject(new Error("Recipe generation timed out. Please try again.")), TIMEOUT_DURATION);
     });
     
-    // Define the request body - ensure it's properly formatted
+    // Ensure cuisine and dietary are properly formatted as strings
+    // The edge function expects string values, not arrays
+    const cuisineValue = Array.isArray(formData.cuisine) 
+      ? formData.cuisine.join(', ') 
+      : formData.cuisine;
+    
+    const dietaryValue = Array.isArray(formData.dietary) 
+      ? formData.dietary.join(', ') 
+      : formData.dietary;
+    
+    // Define the request body with properly formatted values
     const requestBody = {
-      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine.join(', ') : formData.cuisine,
-      dietary: Array.isArray(formData.dietary) ? formData.dietary.join(', ') : formData.dietary,
+      cuisine: cuisineValue,
+      dietary: dietaryValue,
       mainIngredient: formData.mainIngredient,
       servings: formData.servings || 4,
       maxCalories: formData.maxCalories
@@ -192,6 +202,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
     } else if (error.status === 500) {
       errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
+    } else if (error.status === 400) {
+      errorMessage = "Invalid request format. Please check your inputs and try again.";
     } else if (error.message?.includes("SyntaxError") || error.message?.includes("JSON")) {
       errorMessage = "Error processing the recipe. The AI generated an invalid response format. Please try again.";
     }

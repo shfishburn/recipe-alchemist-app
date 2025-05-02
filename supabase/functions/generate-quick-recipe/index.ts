@@ -36,21 +36,33 @@ serve(async (req) => {
     // Create OpenAI client
     const openai = new OpenAI({ apiKey });
     
-    // Safely parse request body
+    // Safely parse request body with better error handling
     let requestBody;
+    let requestText = "";
     try {
-      requestBody = await req.json();
-      console.log("Request body received:", JSON.stringify(requestBody).substring(0, 200) + "...");
+      // Get the request body as text first for debugging
+      requestText = await req.text();
+      console.log("Raw request body:", requestText.substring(0, 200) + "...");
+      
+      if (!requestText || requestText.trim() === "") {
+        throw new Error("Empty request body");
+      }
+      
+      // Parse the request text into JSON
+      requestBody = JSON.parse(requestText);
+      console.log("Parsed request body:", JSON.stringify(requestBody).substring(0, 200) + "...");
       
       if (!requestBody) {
-        throw new Error("Empty request body");
+        throw new Error("Empty request body after parsing");
       }
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
+      console.error("Raw request text received:", requestText);
       return new Response(
         JSON.stringify({ 
           error: "Invalid JSON in request body", 
-          details: parseError.message 
+          details: parseError.message,
+          requestText: requestText.substring(0, 100) // Include part of the raw request for debugging
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -75,15 +87,29 @@ serve(async (req) => {
       );
     }
     
+    // Ensure cuisine, dietary and flavorTags are properly handled regardless of input format
+    // Convert string inputs to arrays if they're not already
+    const processCuisine = typeof cuisine === 'string' 
+      ? cuisine.split(',').map(c => c.trim()).filter(Boolean)
+      : Array.isArray(cuisine) ? cuisine : ["Any"];
+      
+    const processDietary = typeof dietary === 'string' 
+      ? dietary.split(',').map(d => d.trim()).filter(Boolean)
+      : Array.isArray(dietary) ? dietary : ["None"];
+      
+    const processFlavorTags = typeof flavorTags === 'string' 
+      ? flavorTags.split(',').map(t => t.trim()).filter(Boolean)
+      : Array.isArray(flavorTags) ? flavorTags : ["Chef's choice"];
+    
     // Escape user inputs to prevent prompt-injection
-    const safeCuisine = JSON.stringify(cuisine).slice(1, -1);
-    const safeMain   = JSON.stringify(mainIngredient).slice(1, -1);
-    const safeDiet   = dietary.length
-      ? dietary.map((d) => JSON.stringify(d).slice(1, -1)).join(", ")
+    const safeCuisine = processCuisine.map(c => JSON.stringify(c).slice(1, -1)).join(", ") || "Any";
+    const safeMain = JSON.stringify(mainIngredient).slice(1, -1);
+    const safeDiet = processDietary.length
+      ? processDietary.map((d) => JSON.stringify(d).slice(1, -1)).join(", ")
       : "None";
     const safeServings = servings || 4;
-    const safeTags = flavorTags.length
-      ? flavorTags.map((t) => JSON.stringify(t).slice(1, -1)).join(", ")
+    const safeTags = processFlavorTags.length
+      ? processFlavorTags.map((t) => JSON.stringify(t).slice(1, -1)).join(", ")
       : "Chef's choice";
     
     // Generate a unique ID to prevent prompt caching
@@ -224,7 +250,14 @@ Format each as object → {
 }`;
     
     // Log the inputs and prompt for debugging
-    console.log("Starting quick recipe generation with inputs:", { cuisine, dietary, mainIngredient, servings, maxCalories, flavorTags });
+    console.log("Starting quick recipe generation with inputs:", { 
+      cuisine: safeCuisine, 
+      dietary: safeDiet, 
+      mainIngredient: safeMain, 
+      servings: safeServings, 
+      maxCalories, 
+      flavorTags: safeTags 
+    });
     console.log("Using model: gpt-4o");
     
     try {
