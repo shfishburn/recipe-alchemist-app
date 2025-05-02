@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import '@/styles/touch-optimizations.css';
 
 // Lazy load non-critical components
-const Hero = lazy(() => import('@/components/landing/Hero').then(module => ({ default: module.default })));
+const Hero = lazy(() => import('@/components/landing/Hero'));
 const Features = lazy(() => import('@/components/landing/Features'));
 
 // Create loading placeholders for better UX

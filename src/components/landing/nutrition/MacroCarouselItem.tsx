@@ -1,16 +1,12 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MacroChart } from './MacroChart';
 import { MacroDetailsPanel } from './MacroDetailsPanel';
-import dynamic from 'next/dynamic';
 
-// Dynamically load the detailed charts component
-const MacroPieCharts = dynamic(() => 
-  import('@/components/profile/macro-details/MacroPieCharts').then(module => ({
-    default: module.MacroPieCharts
-  })),
-  { ssr: false }
+// Use React's lazy loading instead of Next.js dynamic
+const MacroPieCharts = lazy(() => 
+  import('@/components/profile/macro-details/MacroPieCharts')
 );
 
 interface MacroCarouselItemProps {
