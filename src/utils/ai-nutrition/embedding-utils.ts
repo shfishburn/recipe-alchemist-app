@@ -105,13 +105,14 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
-    // We need to convert the embedding array to string for PostgreSQL vector columns
+    // We need to use type assertion to tell TypeScript that this is valid
+    // The Supabase client will handle the conversion to PostgreSQL vector type
     const { error } = await supabase
       .from('ingredient_embeddings')
       .insert({
         ingredient_text: ingredientText,
         normalized_text: normalizedText,
-        embedding: embedding, // Supabase will handle the conversion from number[] to vector
+        embedding: embedding as unknown as string, // Type assertion for TypeScript
         confidence_score: confidenceScore
       });
 

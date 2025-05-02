@@ -51,16 +51,18 @@ export function NutritionConfidenceIndicator({
   
   const getLimitationText = () => {
     const limitations = [];
+    const penalties = nutrition.data_quality.penalties || {};
     
-    if (nutrition.data_quality.penalties.energy_check_fail) {
+    // Add proper null checks for all properties
+    if (penalties.energy_check_fail) {
       limitations.push('Energy validation check failed');
     }
     
-    if (nutrition.data_quality.penalties.unmatched_ingredients_rate > 0.2) {
-      limitations.push(`${Math.round(nutrition.data_quality.penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
+    if (penalties.unmatched_ingredients_rate && penalties.unmatched_ingredients_rate > 0.2) {
+      limitations.push(`${Math.round(penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
     }
     
-    if (nutrition.data_quality.penalties.low_confidence_top_ingredients) {
+    if (penalties.low_confidence_top_ingredients) {
       limitations.push('Low confidence in main ingredients');
     }
     
@@ -81,6 +83,9 @@ export function NutritionConfidenceIndicator({
     return badge;
   }
   
+  // Safety check for unmatched_or_low_confidence_ingredients
+  const unmatchedIngredients = nutrition.data_quality.unmatched_or_low_confidence_ingredients || [];
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -94,11 +99,11 @@ export function NutritionConfidenceIndicator({
           <div className="space-y-2">
             <p className="font-semibold">Nutrition Confidence: {formatScore(overall_confidence_score)}</p>
             <p className="text-sm text-muted-foreground">{getLimitationText()}</p>
-            {nutrition.data_quality.unmatched_or_low_confidence_ingredients?.length > 0 && (
+            {unmatchedIngredients.length > 0 && (
               <div className="text-xs">
                 <p className="font-medium">Ingredients with lower confidence:</p>
                 <p className="text-muted-foreground">
-                  {nutrition.data_quality.unmatched_or_low_confidence_ingredients.join(', ')}
+                  {unmatchedIngredients.join(', ')}
                 </p>
               </div>
             )}
