@@ -12,8 +12,10 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
     return null;
   }
   
+  // Clone the element with the provided props
   return React.cloneElement(children, { 
     ...rest, 
+    // Type-safe ref merging
     ref: (childRef: any) => {
       // Handle refs properly
       if (typeof ref === "function") {

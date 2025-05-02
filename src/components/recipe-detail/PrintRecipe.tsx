@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import type { Recipe } from '@/hooks/use-recipe-detail';
+import { useUnitSystemStore } from '@/stores/unitSystem';
 
 interface PrintRecipeProps {
   recipe: Recipe;
@@ -18,6 +19,7 @@ interface PrintRecipeProps {
 export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ recipe }, ref) => {
   const printContentRef = useRef<HTMLDivElement>(null);
   const dialogTriggerRef = useRef<HTMLButtonElement>(null);
+  const { unitSystem } = useUnitSystemStore();
 
   useImperativeHandle(ref, () => ({
     click: () => {
@@ -27,9 +29,23 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
     }
   }) as any);
 
-  // Format ingredient strings properly
-  const formatIngredient = (ingredient: { qty: number; unit: string; item: string }) => {
-    const { qty, unit, item } = ingredient;
+  // Format ingredient strings properly based on unit system
+  const formatIngredient = (ingredient: any) => {
+    // Handle different possible ingredient formats
+    if (!ingredient) return '';
+    
+    // For unit system-aware formatting
+    const qty = unitSystem === 'metric' 
+      ? (ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty || 0) 
+      : (ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty || 0);
+      
+    const unit = unitSystem === 'metric'
+      ? (ingredient.unit_metric || ingredient.unit || '')
+      : (ingredient.unit_imperial || ingredient.unit || '');
+    
+    const item = typeof ingredient.item === 'string' ? ingredient.item : 
+                (ingredient.item ? JSON.stringify(ingredient.item) : '');
+    
     const qtyStr = qty !== 0 ? `${qty} ` : '';
     const unitStr = unit ? `${unit} ` : '';
     

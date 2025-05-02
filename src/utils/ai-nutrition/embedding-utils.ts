@@ -105,12 +105,16 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
+    // Convert the embedding array to a PostgreSQL vector type string
+    // This syntax is specific to PostgreSQL's vector type
+    const vectorString = `[${embedding.join(',')}]`;
+
     const { error } = await supabase
       .from('ingredient_embeddings')
       .insert({
         ingredient_text: ingredientText,
         normalized_text: normalizedText,
-        embedding,
+        embedding: vectorString,
         confidence_score: confidenceScore
       });
 

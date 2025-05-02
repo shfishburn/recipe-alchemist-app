@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import type { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
+import { Ingredient } from '@/types/recipe';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * @deprecated This hook is deprecated and internally uses the QuickRecipe functionality.
@@ -14,6 +16,34 @@ export const useRecipeGenerator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Helper function to convert ingredients to a database-safe format
+  const convertIngredientsToJson = (ingredients: any[]): Json => {
+    return ingredients.map(ingredient => {
+      if (typeof ingredient === 'string') {
+        return {
+          qty: 1,
+          unit: '',
+          item: ingredient,
+          qty_metric: 1,
+          unit_metric: '',
+          qty_imperial: 1,
+          unit_imperial: ''
+        };
+      }
+      
+      return {
+        qty: ingredient.qty || 1,
+        unit: ingredient.unit || '',
+        item: typeof ingredient.item === 'string' ? ingredient.item : 
+              (ingredient.item ? JSON.stringify(ingredient.item) : ''),
+        qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+        unit_metric: ingredient.unit_metric || ingredient.unit || '',
+        qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+        unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
+      };
+    }) as Json;
+  };
 
   const generateRecipe = async (formData: RecipeFormData) => {
     try {
@@ -46,6 +76,9 @@ export const useRecipeGenerator = () => {
         if (!userError && user) {
           console.log('Logged in user detected, saving recipe to database');
           
+          // Convert ingredients to a JSON-compatible format
+          const ingredientsJson = convertIngredientsToJson(generatedRecipe.ingredients);
+          
           // Save the recipe to the database for authenticated users
           const { data: savedRecipe, error: saveError } = await supabase
             .from('recipes')
@@ -58,9 +91,9 @@ export const useRecipeGenerator = () => {
               servings: generatedRecipe.servings,
               prep_time_min: generatedRecipe.prep_time_min || generatedRecipe.prepTime,
               cook_time_min: generatedRecipe.cook_time_min || generatedRecipe.cookTime,
-              ingredients: generatedRecipe.ingredients,
+              ingredients: ingredientsJson,
               instructions: generatedRecipe.steps || generatedRecipe.instructions,
-              nutrition: generatedRecipe.nutrition,
+              nutrition: generatedRecipe.nutrition as Json,
               user_id: user.id
             })
             .select()

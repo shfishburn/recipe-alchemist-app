@@ -1,6 +1,7 @@
 
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
+import { LucideProps } from 'lucide-react';
 
 export interface IconProps extends React.SVGAttributes<SVGElement> {
   name: keyof typeof LucideIcons;
@@ -16,19 +17,23 @@ const Icon = ({
   color = "currentColor",
   ...props 
 }: IconProps) => {
-  const LucideIcon = LucideIcons[name];
-  
-  if (!LucideIcon) {
+  // Type check to ensure the icon exists
+  if (!(name in LucideIcons)) {
     console.error(`Icon "${name}" not found in Lucide icons`);
     return null;
   }
-
-  return React.createElement(LucideIcon, { 
-    size, 
-    strokeWidth, 
-    color, 
-    ...props 
-  });
+  
+  // Safely access the icon component
+  const LucideIcon = LucideIcons[name] as React.FC<LucideProps>;
+  
+  return (
+    <LucideIcon 
+      size={size} 
+      strokeWidth={strokeWidth} 
+      color={color} 
+      {...props} 
+    />
+  );
 };
 
 export { Icon };

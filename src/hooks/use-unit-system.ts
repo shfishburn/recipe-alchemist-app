@@ -8,6 +8,7 @@ export const useUnitSystem = () => {
   return {
     unitSystem,
     setUnitSystem,
+    updateUnitSystem: setUnitSystem, // Add this alias for compatibility
     toggleUnitSystem,
     isMetric: unitSystem === 'metric',
     isImperial: unitSystem === 'imperial',

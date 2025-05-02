@@ -1,15 +1,20 @@
-
 import React, { useRef } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
+import { Ingredient } from '@/types/recipe';
 
 // Helper function to format ingredient for database storage
-const formatIngredientForDB = (ingredient: any) => {
+const formatIngredientForDB = (ingredient: any): Ingredient => {
   if (typeof ingredient === 'string') {
     return {
       qty: 1,
       unit: '',
-      item: ingredient
+      item: ingredient,
+      // Add required metric/imperial units
+      qty_metric: 1,
+      unit_metric: '',
+      qty_imperial: 1,
+      unit_imperial: ''
     };
   }
   
@@ -18,7 +23,12 @@ const formatIngredientForDB = (ingredient: any) => {
     return {
       qty: ingredient.qty || 1,
       unit: ingredient.unit || '',
-      item: ingredient.item
+      item: ingredient.item,
+      // Add required metric/imperial units
+      qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+      unit_metric: ingredient.unit_metric || ingredient.unit || '',
+      qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+      unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
     };
   }
   
@@ -26,7 +36,12 @@ const formatIngredientForDB = (ingredient: any) => {
   return {
     qty: ingredient.qty || 1,
     unit: ingredient.unit || '',
-    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient)
+    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient),
+    // Add required metric/imperial units
+    qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+    unit_metric: ingredient.unit_metric || ingredient.unit || '',
+    qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+    unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
   };
 };
 
@@ -45,11 +60,7 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
   };
 
   // Convert ingredients to expected format for PrintRecipe
-  const formattedIngredients = recipe.ingredients.map(ingredient => ({
-    qty: ingredient.qty || 1,
-    unit: ingredient.unit || '',
-    item: typeof ingredient.item === 'string' ? ingredient.item : JSON.stringify(ingredient.item) 
-  }));
+  const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
 
   return (
     <>

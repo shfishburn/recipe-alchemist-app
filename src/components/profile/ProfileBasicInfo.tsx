@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +38,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function ProfileBasicInfo() {
   const { user } = useAuth();
   const { profile, isLoading, error, updateProfile, refreshProfile } = useProfileContext();
-  const { unitSystem, updateUnitSystem } = useUnitSystem();
+  const { unitSystem, setUnitSystem } = useUnitSystem();
   const { toast } = useToast();
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -82,7 +83,7 @@ export function ProfileBasicInfo() {
       if (success) {
         // Update unit system globally
         if (data.unitSystem !== unitSystem) {
-          updateUnitSystem(data.unitSystem);
+          setUnitSystem(data.unitSystem);
         }
         
         setSaveSuccess(true);

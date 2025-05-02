@@ -9,10 +9,12 @@ export const useSlot = () => {
     const { asChild, children, ...otherProps } = props;
     
     if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(children, {
+      // Use type assertion to make TypeScript happy with ref handling
+      const childProps = {
         ...otherProps,
+        // Properly handle the ref merging
         ref: (innerRef: any) => {
-          // Handle refs properly
+          // Handle refs properly using type-safe approach
           if (typeof ref === "function") {
             ref(innerRef);
           } else if (ref) {
@@ -29,7 +31,9 @@ export const useSlot = () => {
             }
           }
         }
-      });
+      };
+      
+      return React.cloneElement(children, childProps);
     }
     
     // Return a div when not using asChild
