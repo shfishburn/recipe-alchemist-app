@@ -43,10 +43,10 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
     }
   };
   
-  // Get cooking time from cook_time_min or prep_time_min
+  // Get cooking time from various possible sources, safely
   const cookingTime = recipe.cook_time_min || recipe.prep_time_min;
   
-  // Recipe difficulty might not exist in the type, so handle it safely
+  // Safely access the difficulty property (which might not exist in Recipe type)
   const recipeDifficulty = (recipe as any).difficulty;
   
   return (

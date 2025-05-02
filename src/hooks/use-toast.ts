@@ -6,8 +6,8 @@ import { toast as sonnerToast, type ToastT, type ExternalToast as SonnerExternal
 // Extend the Sonner toast interface to include our custom properties
 export interface ExternalToast extends SonnerExternalToast {
   id?: string | number;
-  title?: string;
-  description?: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
   variant?: "default" | "destructive" | "success";
 }
 
@@ -23,7 +23,16 @@ export function toast(props: ToastProps) {
     className: `${props.className || ''} touch-optimized hw-boost`,
   }
   
-  return sonnerToast(enhancedProps)
+  // For sonner v1.0.0+, the toast function accepts a title as first arg and options object as second arg
+  if (props.title) {
+    return sonnerToast(props.title, {
+      ...enhancedProps,
+      description: props.description
+    })
+  }
+  
+  // For backward compatibility and simpler calls
+  return sonnerToast(enhancedProps as unknown as React.ReactNode)
 }
 
 export function useToast() {
@@ -32,7 +41,7 @@ export function useToast() {
     // Re-export other toast functions from sonner
     dismiss: sonnerToast.dismiss,
     error: (props: ToastProps) => toast({ ...props, variant: "destructive" }),
-    success: (props: ToastProps) => toast(props),
+    success: (props: ToastProps) => toast({ ...props, variant: "default" }),
     // Include toasts property for the Toaster component
     toasts: [],
   }
