@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -36,10 +37,8 @@ interface QuickRecipeState {
   isRecipeValid: (recipe: any) => boolean;
 }
 
-export const useQuickRecipeStore = create<QuickRecipeState & {
-  updateLoadingState: (state: Partial<LoadingState>) => void;
-  setCompletedLoading: (value: boolean) => void;
-}>(
+// Create the store with properly typed middleware
+export const useQuickRecipeStore = create<QuickRecipeState>()(
   devtools(
     persist(
       (set, get) => ({
