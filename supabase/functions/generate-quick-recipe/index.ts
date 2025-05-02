@@ -125,18 +125,25 @@ serve(async (req) => {
       flavorTags: typeof flavorTags === 'string' ? flavorTags : JSON.stringify(flavorTags)
     });
     
-    // Ensure cuisine, dietary and flavorTags are properly handled regardless of input format
-    // Convert string inputs to arrays if they're not already
+    // UPDATED: Improved handling of cuisine values
     const processCuisine = typeof cuisine === 'string' 
-      ? cuisine.split(',').map(c => c.trim()).filter(Boolean)
+      ? (cuisine.toLowerCase() === 'any' || cuisine === '') 
+        ? ["Any"] // Handle special cases directly
+        : cuisine.split(',').map(c => c.trim()).filter(Boolean)
       : Array.isArray(cuisine) ? cuisine : ["Any"];
       
+    // UPDATED: Improved handling of dietary values
     const processDietary = typeof dietary === 'string' 
-      ? dietary.split(',').map(d => d.trim()).filter(Boolean)
-      : Array.isArray(dietary) ? dietary : ["None"];
+      ? (dietary.toLowerCase() === 'any' || dietary === '' || dietary.toLowerCase() === 'none') 
+        ? [] // Handle special cases directly - empty array for no restrictions
+        : dietary.split(',').map(d => d.trim()).filter(Boolean)
+      : Array.isArray(dietary) ? dietary : [];
       
+    // UPDATED: Improved handling of flavor tags
     const processFlavorTags = typeof flavorTags === 'string' 
-      ? flavorTags.split(',').map(t => t.trim()).filter(Boolean)
+      ? (flavorTags.toLowerCase() === 'any' || flavorTags === '') 
+        ? ["Chef's choice"] 
+        : flavorTags.split(',').map(t => t.trim()).filter(Boolean)
       : Array.isArray(flavorTags) ? flavorTags : ["Chef's choice"];
     
     // Escape user inputs to prevent prompt-injection
