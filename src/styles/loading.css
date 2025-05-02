@@ -16,6 +16,30 @@
   100% { background-position: 0% 50%; }
 }
 
+@keyframes cooking-pot {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes steam {
+  0% { opacity: 0; transform: translateY(0) translateX(0); }
+  50% { opacity: 0.8; transform: translateY(-15px) translateX(5px); }
+  100% { opacity: 0; transform: translateY(-25px) translateX(10px); }
+}
+
+@keyframes progress-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
 /* Animation classes */
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-in-out;
@@ -27,10 +51,27 @@
 
 .animate-gradient-x {
   animation: gradientX 3s linear infinite;
+  background-size: 200% 200%;
 }
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-cooking-pot {
+  animation: cooking-pot 2s ease-in-out infinite;
+}
+
+.animate-steam {
+  animation: steam 2s ease-in-out infinite;
+}
+
+.animate-progress-pulse {
+  animation: progress-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 /* Touch ripple effect */
@@ -57,25 +98,13 @@
   position: relative;
 }
 
-/* Custom loading animations for recipe system */
-@keyframes cooking-pot {
-  0% { transform: translateY(0) rotate(0); }
-  25% { transform: translateY(-5px) rotate(-5deg); }
-  50% { transform: translateY(0) rotate(0); }
-  75% { transform: translateY(-5px) rotate(5deg); }
-  100% { transform: translateY(0) rotate(0); }
+/* Custom recipe green glow effect */
+.glow-recipe-green {
+  box-shadow: 0 0 15px 2px rgba(75, 175, 80, 0.3);
+  animation: glow 2s ease-in-out infinite alternate;
 }
 
-.animate-cooking-pot {
-  animation: cooking-pot 2s ease-in-out infinite;
-}
-
-@keyframes steam {
-  0% { opacity: 0; transform: translateY(0) translateX(0); }
-  50% { opacity: 0.7; transform: translateY(-10px) translateX(5px); }
-  100% { opacity: 0; transform: translateY(-20px) translateX(10px); }
-}
-
-.animate-steam {
-  animation: steam 2s ease-in-out infinite;
+@keyframes glow {
+  from { box-shadow: 0 0 10px 2px rgba(75, 175, 80, 0.2); }
+  to { box-shadow: 0 0 20px 5px rgba(75, 175, 80, 0.4); }
 }

@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -299,12 +300,12 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
           console.error('Error response status:', error.context.response.status);
           
           const responseClone = error.context.response.clone();
-          responseText = await responseClone.text();
-          console.error('Full error response:', responseText);
+          const errorResponseText = await responseClone.text();
+          console.error('Full error response:', errorResponseText);
           
           try {
             // Try to parse the response text as JSON
-            const errorResponseBody = JSON.parse(responseText);
+            const errorResponseBody = JSON.parse(errorResponseText);
             console.error("Error response body:", errorResponseBody);
             
             // Use the error message from the response body if available

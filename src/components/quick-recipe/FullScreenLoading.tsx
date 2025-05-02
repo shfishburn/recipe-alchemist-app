@@ -2,9 +2,10 @@
 import React from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { LoadingTipCard } from './loading/LoadingTipCard';
-import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Clock, RefreshCw, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Progress } from '@/components/ui/progress';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -18,9 +19,11 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-50 animate-fadeIn">
       {/* Accessible title for screen readers */}
-      <h1 className="sr-only">
-        {error ? "Recipe Generation Failed" : "Recipe Generation Loading Screen"}
-      </h1>
+      <VisuallyHidden asChild>
+        <h1>
+          {error ? "Recipe Generation Failed" : "Recipe Generation Loading Screen"}
+        </h1>
+      </VisuallyHidden>
       
       <div className="w-full max-w-md mx-auto text-center">
         {error ? (
@@ -55,38 +58,51 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
           </div>
         ) : (
           <>
-            {/* Accessible title */}
-            <h2 className="mb-4 text-xl font-semibold">Creating Your Recipe</h2>
-            <p className="text-muted-foreground mb-8">
-              Our AI chef is crafting your recipe...
-            </p>
-            
-            {/* Animated loading indicator */}
-            <div className="relative my-12">
-              {/* Center spinner with colored circle animation */}
-              <div className="relative mx-auto w-16 h-16">
-                <div className="animate-ping absolute inset-0 rounded-full bg-recipe-green opacity-75"></div>
-                <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-recipe-green/20">
-                  <span className="block h-8 w-8 border-4 border-t-recipe-blue border-recipe-green/30 rounded-full animate-spin"></span>
+            {/* Main loading animation */}
+            <div className="flex flex-col items-center space-y-6 mb-8">
+              {/* Improved animated cooking pot icon */}
+              <div className="relative">
+                <div className="relative h-20 w-20 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-recipe-green/10 animate-pulse"></div>
+                  <ChefHat className="h-12 w-12 text-recipe-green animate-bounce" />
+                  
+                  {/* Animated 'steam' effect */}
+                  <div className="absolute -top-2 -right-1">
+                    <div className="h-2 w-2 rounded-full bg-recipe-green/80 animate-ping"></div>
+                  </div>
                 </div>
+              </div>
+              
+              {/* Title and description */}
+              <div>
+                <h2 className="text-xl font-medium mb-1">Creating Your Recipe</h2>
+                <p className="text-muted-foreground text-sm">
+                  Our AI chef is crafting the perfect recipe for you...
+                </p>
               </div>
             </div>
             
-            {/* Loading status */}
-            <div className="mb-6">
-              <p className="text-sm font-medium">
-                {loadingState?.stepDescription || "Analyzing your ingredients..."}
-              </p>
-              <div className="w-full h-2 bg-gray-100 rounded-full mt-2">
-                <div 
-                  className="h-2 bg-recipe-green rounded-full transition-all duration-300"
-                  style={{ width: `${loadingState?.percentComplete || 10}%` }}
-                ></div>
+            {/* Loading progress */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="font-medium">
+                  {loadingState?.stepDescription || "Analyzing your ingredients..."}
+                </span>
+                <span className="text-muted-foreground flex items-center">
+                  <Clock className="h-3 w-3 mr-1 inline" />
+                  <span>{Math.ceil(loadingState?.percentComplete || 0)}%</span>
+                </span>
               </div>
+              
+              <Progress
+                value={loadingState?.percentComplete || 10}
+                className="h-2 bg-gray-100"
+                indicatorClassName="bg-recipe-green transition-all duration-500"
+              />
             </div>
             
             {/* Cooking tip card */}
-            <div className="mt-8">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto">
               <LoadingTipCard />
             </div>
             
@@ -95,7 +111,7 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
               <Button 
                 variant="ghost" 
                 onClick={onCancel} 
-                className="mt-6 text-muted-foreground"
+                className="text-muted-foreground hover:text-foreground"
                 aria-label="Cancel recipe generation"
               >
                 Cancel
