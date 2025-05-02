@@ -19,12 +19,13 @@ export function DistributionCharts({ recipeMacros, targetMacros }: DistributionC
   const isMobile = useIsMobile();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
       <Card className="border border-slate-200">
         <CardContent className={isMobile ? "p-3" : "p-4"}>
           <MacroDistributionPie 
             data={recipeMacros}
             title="Recipe Macro Breakdown"
+            height={isMobile ? 180 : 220}
           />
         </CardContent>
       </Card>
@@ -34,6 +35,7 @@ export function DistributionCharts({ recipeMacros, targetMacros }: DistributionC
           <MacroDistributionPie 
             data={targetMacros}
             title="Your Target Macro Breakdown"
+            height={isMobile ? 180 : 220}
           />
         </CardContent>
       </Card>

@@ -3,19 +3,20 @@ import React, { useState, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Select } from '@/components/ui/select';
-import { 
-  SelectTrigger, 
-  SelectValue, 
-  SelectContent, 
-  SelectItem 
-} from '@/components/ui/select';
 import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
 import { useDebounce } from '@/hooks/use-debounce';
 
-interface QuickRecipeTagFormProps {
+export interface QuickRecipeFormData {
+  ingredients: string;
+  servings: number;
+  cuisine: string;
+  dietary: string;
+  prepTime: number;
+}
+
+export interface QuickRecipeTagFormProps {
   onIngredientsChange: (ingredients: string) => void;
   onServingsSelect: (servings: number) => void;
   onCuisineSelect: (cuisine: string) => void;
@@ -26,11 +27,11 @@ interface QuickRecipeTagFormProps {
   selectedCuisine: string;
   selectedDietary: string;
   prepTime: number;
-  onSubmit?: (formData: any) => void;
+  onSubmit?: (formData: QuickRecipeFormData) => void;
   isLoading?: boolean;
 }
 
-const QuickRecipeTagForm = ({ 
+const QuickRecipeTagForm = ({
   onIngredientsChange,
   onServingsSelect,
   onCuisineSelect,
@@ -56,6 +57,18 @@ const QuickRecipeTagForm = ({
     setLocalIngredients(e.target.value);
   }, []);
 
+  const handleFormSubmit = () => {
+    if (onSubmit) {
+      onSubmit({
+        ingredients: localIngredients,
+        servings: selectedServings,
+        cuisine: selectedCuisine,
+        dietary: selectedDietary,
+        prepTime
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -65,6 +78,7 @@ const QuickRecipeTagForm = ({
           placeholder="e.g., chicken, rice, vegetables"
           value={localIngredients}
           onChange={handleInputChange}
+          aria-label="Enter your ingredients"
         />
       </div>
       
@@ -112,6 +126,7 @@ const QuickRecipeTagForm = ({
           max={120}
           step={5}
           onValueChange={(value) => onPrepTimeChange(value[0])}
+          aria-label="Select prep time in minutes"
         />
         <p className="text-sm text-muted-foreground">
           {prepTime} minutes
@@ -122,7 +137,7 @@ const QuickRecipeTagForm = ({
         <div className="pt-4">
           <button 
             type="button" 
-            onClick={() => onSubmit({ingredients: localIngredients, servings: selectedServings, cuisine: selectedCuisine, dietary: selectedDietary, prepTime})}
+            onClick={handleFormSubmit}
             className="w-full bg-recipe-blue hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             disabled={isLoading}
           >

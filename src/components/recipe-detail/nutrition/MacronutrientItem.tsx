@@ -15,23 +15,24 @@ export function MacronutrientItem({ type, value, percentage, label }: Macronutri
   const getIcon = () => {
     switch(type) {
       case 'protein':
-        return <Dumbbell className="h-4 w-4 text-white" />;
+        return <Dumbbell className="h-4 w-4 text-white" aria-hidden="true" />;
       case 'carbs':
-        return <Apple className="h-4 w-4 text-white" />;
+        return <Apple className="h-4 w-4 text-white" aria-hidden="true" />;
       case 'fat':
-        return <Droplets className="h-4 w-4 text-white" />;
+        return <Droplets className="h-4 w-4 text-white" aria-hidden="true" />;
       case 'fiber':
-        return <Circle className="h-4 w-4 text-white" />;
+        return <Circle className="h-4 w-4 text-white" aria-hidden="true" />;
       default:
-        return <Circle className="h-4 w-4 text-white" />;
+        return <Circle className="h-4 w-4 text-white" aria-hidden="true" />;
     }
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2" role="listitem">
       <div 
         className="p-1.5 rounded-full flex items-center justify-center" 
         style={{ backgroundColor: NUTRITION_COLORS[type] }}
+        aria-hidden="true"
       >
         {getIcon()}
       </div>

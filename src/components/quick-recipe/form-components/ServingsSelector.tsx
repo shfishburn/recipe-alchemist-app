@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 export interface ServingsSelectorProps {
   selectedServings: number;
-  onServingsChange: (servings: number) => void; // Changed from onServingsSelect
+  onServingsChange: (servings: number) => void; 
 }
 
 export function ServingsSelector({ selectedServings, onServingsChange }: ServingsSelectorProps) {

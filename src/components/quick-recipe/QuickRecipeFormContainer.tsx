@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import QuickRecipeTagForm from './QuickRecipeTagForm';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
@@ -12,6 +12,34 @@ export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
   const { isLoading } = useQuickRecipeStore();
   const isMobile = useIsMobile();
+
+  // Add state for all the required form fields
+  const [ingredients, setIngredients] = useState('');
+  const [selectedServings, setSelectedServings] = useState(2);
+  const [selectedCuisine, setSelectedCuisine] = useState('any');
+  const [selectedDietary, setSelectedDietary] = useState('any');
+  const [prepTime, setPrepTime] = useState(30);
+
+  // Handlers for each input type
+  const handleIngredientsChange = (value: string) => {
+    setIngredients(value);
+  };
+
+  const handleServingsChange = (servings: number) => {
+    setSelectedServings(servings);
+  };
+
+  const handleCuisineChange = (cuisine: string) => {
+    setSelectedCuisine(cuisine);
+  };
+
+  const handleDietaryChange = (dietary: string) => {
+    setSelectedDietary(dietary);
+  };
+
+  const handlePrepTimeChange = (time: number) => {
+    setPrepTime(time);
+  };
 
   return (
     <div className={cn(
@@ -47,7 +75,20 @@ export function QuickRecipeFormContainer() {
           </p>
         </div>
       
-        <QuickRecipeTagForm onSubmit={handleSubmit} isLoading={isLoading} />
+        <QuickRecipeTagForm 
+          onIngredientsChange={handleIngredientsChange}
+          onServingsSelect={handleServingsChange}
+          onCuisineSelect={handleCuisineChange}
+          onDietarySelect={handleDietaryChange}
+          onPrepTimeChange={handlePrepTimeChange}
+          ingredients={ingredients}
+          selectedServings={selectedServings}
+          selectedCuisine={selectedCuisine}
+          selectedDietary={selectedDietary}
+          prepTime={prepTime}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
       </Card>
     </div>
   );

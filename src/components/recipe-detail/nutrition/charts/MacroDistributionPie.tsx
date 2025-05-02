@@ -16,9 +16,10 @@ interface MacroData {
 interface MacroDistributionPieProps {
   data: MacroData[];
   title: string;
+  height?: number;
 }
 
-export function MacroDistributionPie({ data, title }: MacroDistributionPieProps) {
+export function MacroDistributionPie({ data, title, height = 200 }: MacroDistributionPieProps) {
   const isMobile = useIsMobile();
   
   const renderCustomizedLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
@@ -26,6 +27,11 @@ export function MacroDistributionPie({ data, title }: MacroDistributionPieProps)
     const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    // Don't render text labels on very small devices
+    if (isMobile && window.innerWidth < 350) {
+      return null;
+    }
 
     return (
       <text 
@@ -50,8 +56,12 @@ export function MacroDistributionPie({ data, title }: MacroDistributionPieProps)
     );
   };
   
+  // Calculate responsive dimensions
+  const outerRadius = isMobile ? (window.innerWidth < 350 ? 60 : 70) : 85;
+  const innerRadius = Math.max(outerRadius * 0.65, 40);
+  
   return (
-    <div className={isMobile ? "h-48" : "h-56"}>
+    <div style={{ height: `${height}px` }} aria-label={title} role="img">
       <h5 className="text-xs font-medium text-center mb-4 text-slate-700">
         {title}
       </h5>
@@ -62,15 +72,19 @@ export function MacroDistributionPie({ data, title }: MacroDistributionPieProps)
             cx="50%"
             cy="45%"
             labelLine={false}
-            outerRadius={isMobile ? 70 : 85}
-            innerRadius={isMobile ? 45 : 55}
+            outerRadius={outerRadius}
+            innerRadius={innerRadius}
             dataKey="value"
             label={renderCustomizedLabel}
             strokeWidth={1}
             stroke="#ffffff"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} />
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.fill}
+                aria-label={`${entry.name}: ${entry.value}%`}
+              />
             ))}
           </Pie>
           <Legend 

@@ -77,24 +77,9 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   }
   
   // Format protein, carbs and fat based on unit system
-  // For imperial, we'll show pounds only for very large values
   const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);
-  
-  // Special handling for carbs to avoid showing too large values
-  let formattedCarbs;
-  if (unitSystem === 'imperial' && carbs > 1000) {
-    formattedCarbs = `${(carbs / 453.592).toFixed(1)} lb`;
-  } else {
-    formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
-  }
-  
-  // Special handling for fat for imperial units
-  let formattedFat;
-  if (unitSystem === 'imperial' && fat > 1000) {
-    formattedFat = `${(fat / 453.592).toFixed(1)} lb`;
-  } else {
-    formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
-  }
+  const formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
+  const formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
   
   return (
     <Card>
