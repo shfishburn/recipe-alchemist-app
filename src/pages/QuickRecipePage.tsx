@@ -6,7 +6,7 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, ChefHat, ArrowLeft } from 'lucide-react';
+import { AlertCircle, RefreshCw, ChefHat, ArrowLeft, Bug } from 'lucide-react';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
@@ -26,6 +26,7 @@ const QuickRecipePage = () => {
   const { generateQuickRecipe } = useQuickRecipe();
   const { session } = useAuth();
   const [isRetrying, setIsRetrying] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
@@ -127,6 +128,10 @@ const QuickRecipePage = () => {
     navigate('/');
   };
 
+  const toggleDebugMode = () => {
+    setDebugMode(!debugMode);
+  };
+
   // Show full-screen loading when generating a recipe, without the layout
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
@@ -157,6 +162,18 @@ const QuickRecipePage = () => {
                 I'll instantly transform your ingredients into delicious, foolproof recipes.
               </p>
             )}
+            
+            {/* Debug mode toggle - hidden in UI but can be triggered with keyboard shortcut */}
+            <div className="absolute top-2 right-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={`opacity-20 hover:opacity-100 ${debugMode ? 'bg-amber-100' : ''}`}
+                onClick={toggleDebugMode}
+              >
+                <Bug size={16} />
+              </Button>
+            </div>
           </div>
 
           {isDirectNavigation ? (
@@ -178,6 +195,18 @@ const QuickRecipePage = () => {
                     <li>Check your internet connection</li>
                     <li>Wait a moment and try again</li>
                   </ul>
+                </div>
+              )}
+              
+              {/* Debug info only shown when debug mode is enabled */}
+              {debugMode && formData && (
+                <div className="w-full mb-4 text-xs bg-gray-50 p-3 rounded overflow-auto max-h-48 text-left">
+                  <div className="font-semibold mb-1">Debug Information:</div>
+                  <pre className="whitespace-pre-wrap">{JSON.stringify({
+                    formData,
+                    hasTimeoutError,
+                    error
+                  }, null, 2)}</pre>
                 </div>
               )}
               

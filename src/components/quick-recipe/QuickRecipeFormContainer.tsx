@@ -49,8 +49,8 @@ export function QuickRecipeFormContainer() {
     // Format the data properly for the API - FIXED: ensuring we only use mainIngredient
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(), // Map ingredients to mainIngredient
-      cuisine: formData.cuisine, 
-      dietary: formData.dietary,
+      cuisine: formData.cuisine === 'any' ? 'Any' : formData.cuisine, // Normalize "any" value for backend processing
+      dietary: formData.dietary === 'any' ? 'Any' : formData.dietary, // Normalize "any" value for backend processing
       servings: Number(formData.servings) || 2
     };
     

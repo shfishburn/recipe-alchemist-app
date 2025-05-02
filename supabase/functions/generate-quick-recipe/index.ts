@@ -146,6 +146,13 @@ serve(async (req) => {
         : flavorTags.split(',').map(t => t.trim()).filter(Boolean)
       : Array.isArray(flavorTags) ? flavorTags : ["Chef's choice"];
     
+    // Log processed values for debugging
+    console.log("Processed values:", {
+      processCuisine,
+      processDietary,
+      processFlavorTags
+    });
+    
     // Escape user inputs to prevent prompt-injection
     const safeCuisine = processCuisine.map(c => JSON.stringify(c).slice(1, -1)).join(", ") || "Any";
     const safeMain = JSON.stringify(mainIngredient).slice(1, -1);
@@ -293,6 +300,10 @@ Format each as object → {
   },
   "calorie_check_pass": boolean
 }`;
+
+    // Log the final constructed prompt for debugging
+    console.log("Final prompt construction - length:", prompt.length);
+    console.log("Final prompt snippet (first 300 chars):", prompt.substring(0, 300));
     
     // Log the inputs and prompt for debugging
     console.log("Starting quick recipe generation with inputs:", { 
@@ -321,6 +332,8 @@ Format each as object → {
           { role: "user", content: prompt },
         ],
       });
+      
+      console.log("OpenAI API response received");
       
       if (!response.choices || !response.choices[0]?.message?.content) {
         console.error("Invalid response from OpenAI:", response);

@@ -199,6 +199,34 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       }
     });
     
+    // DEBUGGING: Add direct fetch call to test the edge function
+    console.log("Testing direct fetch to edge function");
+    fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${await supabase.auth.getSession().then(res => res.data.session?.access_token || '')}`,
+        'X-Debug-Info': 'direct-fetch-test'
+      },
+      body: JSON.stringify(requestBody)
+    })
+    .then(response => {
+      console.log("Direct fetch response status:", response.status);
+      return response.text();
+    })
+    .then(text => {
+      console.log("Direct fetch response:", text);
+      try {
+        const json = JSON.parse(text);
+        console.log("Direct fetch parsed JSON:", json);
+      } catch (e) {
+        console.log("Direct fetch response is not valid JSON");
+      }
+    })
+    .catch(error => {
+      console.error("Direct fetch error:", error);
+    });
+    
     // Race the response against the timeout
     const { data, error } = await Promise.race([
       responsePromise, 
@@ -215,6 +243,30 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       
       if (error.context) {
         console.error('Error context:', error.context);
+      }
+      
+      // ENHANCED ERROR INSPECTION: Capture and log the full response body
+      if (error.context?.response) {
+        try {
+          console.error('Error response status:', error.context.response.status);
+          const responseClone = error.context.response.clone();
+          responseClone.text().then(responseText => {
+            console.error('Full error response:', responseText);
+            try {
+              const errorJson = JSON.parse(responseText);
+              console.error('Parsed error response:', errorJson);
+              
+              // Use error details from response if available
+              if (errorJson.error) {
+                throw new Error(errorJson.error);
+              }
+            } catch (e) {
+              console.error('Response is not JSON:', responseText);
+            }
+          });
+        } catch (e) {
+          console.error('Could not read response body:', e);
+        }
       }
       
       // Check for empty body errors
