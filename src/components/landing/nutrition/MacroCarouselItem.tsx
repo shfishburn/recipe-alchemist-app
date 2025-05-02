@@ -4,10 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MacroChart } from './MacroChart';
 import { MacroDetailsPanel } from './MacroDetailsPanel';
 
-// Use React's lazy loading instead of Next.js dynamic
-const MacroPieCharts = lazy(() => 
-  import('@/components/profile/macro-details/MacroPieCharts')
-);
+// Use React's lazy loading for the MacroPieCharts component
+const MacroPieCharts = lazy(() => import('@/components/profile/macro-details/MacroPieCharts'));
 
 interface MacroCarouselItemProps {
   item: {

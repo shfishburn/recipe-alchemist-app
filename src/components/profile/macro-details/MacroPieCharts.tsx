@@ -16,7 +16,7 @@ interface MacroPieChartsProps {
   }>;
 }
 
-export function MacroPieCharts({ carbsData, fatsData }: MacroPieChartsProps) {
+const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
   return (
     <div className="space-y-8">
       <div>
@@ -70,4 +70,6 @@ export function MacroPieCharts({ carbsData, fatsData }: MacroPieChartsProps) {
       </div>
     </div>
   );
-}
+};
+
+export default MacroPieCharts;
