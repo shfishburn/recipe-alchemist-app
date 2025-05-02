@@ -105,13 +105,13 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
-    // For PostgreSQL vector columns, we need to convert the embedding array to string
+    // We need to convert the embedding array to string for PostgreSQL vector columns
     const { error } = await supabase
       .from('ingredient_embeddings')
       .insert({
         ingredient_text: ingredientText,
         normalized_text: normalizedText,
-        embedding: JSON.stringify(embedding), // Convert the array to a JSON string
+        embedding: embedding, // Supabase will handle the conversion from number[] to vector
         confidence_score: confidenceScore
       });
 
