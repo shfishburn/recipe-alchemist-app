@@ -6,7 +6,6 @@ import { Slider } from '@/components/ui/slider';
 import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
-import { useDebounce } from '@/hooks/use-debounce';
 
 export interface QuickRecipeFormData {
   ingredients: string;
@@ -46,12 +45,11 @@ const QuickRecipeTagForm = ({
   isLoading = false
 }: QuickRecipeTagFormProps) => {
   const [localIngredients, setLocalIngredients] = useState(ingredients);
-  const debouncedIngredients = useDebounce(localIngredients, 500);
 
-  // Update ingredients after debounce
+  // Update ingredients after input changes
   React.useEffect(() => {
-    onIngredientsChange(debouncedIngredients);
-  }, [debouncedIngredients, onIngredientsChange]);
+    onIngredientsChange(localIngredients);
+  }, [localIngredients, onIngredientsChange]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalIngredients(e.target.value);

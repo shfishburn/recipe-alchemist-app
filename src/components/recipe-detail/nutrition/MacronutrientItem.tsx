@@ -28,15 +28,15 @@ export function MacronutrientItem({ type, value, percentage, label }: Macronutri
   };
 
   return (
-    <div className="flex items-center space-x-2" role="listitem">
+    <div className="flex items-center space-x-3 w-full" role="listitem">
       <div 
-        className="p-1.5 rounded-full flex items-center justify-center" 
+        className="p-1.5 rounded-full flex items-center justify-center flex-shrink-0" 
         style={{ backgroundColor: NUTRITION_COLORS[type] }}
         aria-hidden="true"
       >
         {getIcon()}
       </div>
-      <div>
+      <div className="flex-1">
         <p className="text-sm font-medium">{label}</p>
         <div className="flex items-center space-x-2">
           <p className="text-sm">{value}</p>

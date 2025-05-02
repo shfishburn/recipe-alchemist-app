@@ -34,7 +34,7 @@ export function RecipeCarousel() {
 
   // Optimize carousel options with correct TypeScript types
   const carouselOptions = useMemo(() => ({
-    align: "start" as const, // Specify literal type
+    align: "center" as const, // Specify literal type and center the items
     loop: true,
     dragFree: true, // Enable for all devices
     inViewThreshold: 0.6,
@@ -77,15 +77,15 @@ export function RecipeCarousel() {
   }, []);
 
   return (
-    <div className="relative w-full" ref={carouselRef}>
+    <div className="w-full flex flex-col items-center" ref={carouselRef}>
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto">
           {[1, 2, 3].map((i) => (
             <RecipeCarouselSkeleton key={i} />
           ))}
         </div>
       ) : (
-        <div className="flex flex-col space-y-5 md:space-y-8">
+        <div className="flex flex-col items-center space-y-5 md:space-y-8 w-full">
           <div className="flex flex-col items-center justify-center gap-2 md:gap-2 mb-4 md:mb-6">
             <div className="flex items-center gap-1.5 md:gap-2">
               <CookingPot className="h-5 w-5 md:h-5 md:w-5 text-recipe-green" />
@@ -98,34 +98,38 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          <Carousel
-            opts={carouselOptions}
-            className="w-full no-touch-delay"
-            setApi={setCarouselApi}
-          >
-            <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4">
-              {featuredRecipes.map((recipe) => (
-                <CarouselItem key={recipe.id} className={classnames(
-                  isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
-                  "hw-accelerated touch-optimized" // Add optimizations
-                )}>
-                  <RecipeCard recipe={recipe} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            
-            {/* Update arrows for better touch targets */}
-            <CarouselPrevious className={classnames(
-              "hidden md:flex touch-target",
-              isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
-              "touch-feedback tap-highlight-none z-10" // Add touch feedback
-            )} />
-            <CarouselNext className={classnames(
-              "hidden md:flex touch-target",
-              isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
-              "touch-feedback tap-highlight-none z-10" // Add touch feedback
-            )} />
-          </Carousel>
+          <div className="w-full flex justify-center">
+            <Carousel
+              opts={carouselOptions}
+              className="w-full no-touch-delay max-w-5xl"
+              setApi={setCarouselApi}
+            >
+              <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4 flex items-center">
+                {featuredRecipes.map((recipe) => (
+                  <CarouselItem key={recipe.id} className={classnames(
+                    isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
+                    "hw-accelerated touch-optimized" // Add optimizations
+                  )}>
+                    <div className="flex justify-center">
+                      <RecipeCard recipe={recipe} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              
+              {/* Update arrows for better touch targets */}
+              <CarouselPrevious className={classnames(
+                "hidden md:flex touch-target",
+                isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
+                "touch-feedback tap-highlight-none z-10" // Add touch feedback
+              )} />
+              <CarouselNext className={classnames(
+                "hidden md:flex touch-target",
+                isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
+                "touch-feedback tap-highlight-none z-10" // Add touch feedback
+              )} />
+            </Carousel>
+          </div>
           
           {/* Pagination moved outside the carousel for better positioning */}
           <div className="w-full flex flex-col items-center mt-4 md:mt-6">

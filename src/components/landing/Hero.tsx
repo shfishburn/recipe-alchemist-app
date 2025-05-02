@@ -46,23 +46,27 @@ const Hero = () => {
         </div>
         
         {/* Recipe Generator - Full width with improved spacing and visual design */}
-        <div className="w-full mb-10 md:mb-12 hw-accelerated">
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-5 md:p-7 shadow-lg w-full transition-all duration-300 hover:shadow-xl border border-gray-100">
+        <div className="w-full mb-10 md:mb-12 flex justify-center">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-5 md:p-7 shadow-lg w-full max-w-3xl mx-auto transition-all duration-300 hover:shadow-xl border border-gray-100">
             <QuickRecipeGenerator />
           </div>
         </div>
         
-        {/* Nutrition Preview Section */}
-        <div className="w-full mb-10 md:mb-14">
-          <NutritionPreview />
+        {/* Nutrition Preview Section - Centered */}
+        <div className="w-full mb-10 md:mb-14 flex justify-center">
+          <div className="w-full max-w-6xl">
+            <NutritionPreview />
+          </div>
         </div>
         
-        {/* Sample Recipes Carousel - Full Width with improved spacing */}
-        <div className="w-full mb-6 md:mb-8">
-          <div className="w-full mx-auto relative scroll-container swipe-horizontal touch-optimized">
+        {/* Sample Recipes Carousel - Full Width with improved spacing and centering */}
+        <div className="w-full mb-6 md:mb-8 flex justify-center">
+          <div className="w-full max-w-6xl mx-auto relative overflow-hidden">
             <div className="absolute -top-6 -left-6 w-16 h-16 md:w-24 md:h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl z-0"></div>
             <div className="absolute -bottom-6 -right-6 w-20 h-20 md:w-32 md:h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl z-0"></div>
-            <RecipeCarousel />
+            <div className="relative z-10 w-full">
+              <RecipeCarousel />
+            </div>
           </div>
         </div>
       </div>

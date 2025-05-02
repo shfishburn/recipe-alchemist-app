@@ -49,8 +49,8 @@ export function NutritionPreview() {
   }, [api]);
   
   return (
-    <div className="w-full">
-      <div className="text-center mb-6 md:mb-8">
+    <div className="w-full flex flex-col items-center">
+      <div className="text-center mb-6 md:mb-8 w-full">
         <div className="inline-flex items-center justify-center gap-2 mb-3">
           <ChartPie className="h-5 w-5 text-recipe-purple" />
           <Activity className="h-5 w-5 text-recipe-blue" />
@@ -62,32 +62,34 @@ export function NutritionPreview() {
         </p>
       </div>
       
-      <Card className="mx-4 md:mx-auto max-w-5xl border-purple-100 dark:border-purple-900 shadow-md">
+      <Card className="mx-4 md:mx-auto max-w-5xl w-full border-purple-100 dark:border-purple-900 shadow-md">
         <CardContent className="p-4 md:p-6">
           <div className="mb-6 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm">
             <strong className="text-purple-700 dark:text-purple-300">Personal Nutrition Features:</strong> Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
           </div>
           
-          <Carousel
-            opts={{
-              align: "center",
-              loop: true,
-            }}
-            className="w-full"
-            setApi={setApi}
-          >
-            <CarouselContent>
-              {macroDistributionData.map((item, index) => (
-                <CarouselItem key={index} className="md:basis-full">
-                  <MacroCarouselItem 
-                    item={item} 
-                    carbsData={carbsData} 
-                    fatsData={fatsData} 
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+          <div className="flex justify-center w-full">
+            <Carousel
+              opts={{
+                align: "center",
+                loop: true,
+              }}
+              className="w-full max-w-4xl"
+              setApi={setApi}
+            >
+              <CarouselContent>
+                {macroDistributionData.map((item, index) => (
+                  <CarouselItem key={index} className="md:basis-full flex justify-center">
+                    <MacroCarouselItem 
+                      item={item} 
+                      carbsData={carbsData} 
+                      fatsData={fatsData} 
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
           
           <CarouselPagination 
             totalItems={macroDistributionData.length}

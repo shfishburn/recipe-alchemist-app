@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Cake, ChefHat, Egg } from 'lucide-react';
+import { QuickRecipeFormData as TagFormData } from './QuickRecipeTagForm';
 
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
@@ -39,6 +40,18 @@ export function QuickRecipeFormContainer() {
 
   const handlePrepTimeChange = (time: number) => {
     setPrepTime(time);
+  };
+
+  // Create an adapter function to handle form submission
+  const handleFormSubmit = (formData: TagFormData) => {
+    // Add the mainIngredient property required by the hook
+    const adaptedFormData = {
+      ...formData,
+      mainIngredient: formData.ingredients.split(',')[0].trim(),
+    };
+    
+    // Call the original handleSubmit function
+    handleSubmit(adaptedFormData);
   };
 
   return (
@@ -86,7 +99,7 @@ export function QuickRecipeFormContainer() {
           selectedCuisine={selectedCuisine}
           selectedDietary={selectedDietary}
           prepTime={prepTime}
-          onSubmit={handleSubmit}
+          onSubmit={handleFormSubmit}
           isLoading={isLoading}
         />
       </Card>
