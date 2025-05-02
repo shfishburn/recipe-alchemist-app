@@ -1,21 +1,22 @@
 
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuickRecipe } from '@/hooks/use-quick-recipe';
+import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 
 export function useQuickRecipeForm() {
-  const { generateQuickRecipe, isLoading } = useQuickRecipe();
   const navigate = useNavigate();
   const location = useLocation();
-  const { reset, recipe, setLoading } = useQuickRecipeStore();
+  const { reset, recipe, setLoading, setRecipe, setFormData, setError } = useQuickRecipeStore();
+  const [isLoading, setIsLoadingLocal] = useState(false);
   
   // Handle form submission
   const handleSubmit = async (formData: QuickRecipeFormData) => {
     try {
       // Set loading state immediately so it shows the loading animation
       setLoading(true);
+      setIsLoadingLocal(true);
+      setFormData(formData);
       
       // Navigate to the quick recipe page BEFORE starting the API call
       // This ensures the loading animation is displayed
@@ -24,19 +25,23 @@ export function useQuickRecipeForm() {
       });
       
       // Start generating the recipe AFTER navigation
-      const recipe = await generateQuickRecipe(formData);
+      const generatedRecipe = await generateQuickRecipe(formData);
+      setRecipe(generatedRecipe);
+      setIsLoadingLocal(false);
       
-      return recipe;
+      return generatedRecipe;
     } catch (error) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
+      setIsLoadingLocal(false);
+      setError(error.message || "Failed to generate recipe");
       return null;
     }
   };
 
   return {
     handleSubmit,
-    isLoading,
+    isLoading: isLoading,
     navigate,
     location,
     reset,
