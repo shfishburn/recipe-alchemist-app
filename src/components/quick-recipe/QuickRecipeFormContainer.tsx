@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Cake, ChefHat, Egg } from 'lucide-react';
 import { QuickRecipeFormData as TagFormData } from './QuickRecipeTagForm';
+import { toast } from '@/hooks/use-toast';
 
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
@@ -45,6 +46,16 @@ export function QuickRecipeFormContainer() {
   // Create an adapter function to handle form submission
   const handleFormSubmit = (formData: TagFormData) => {
     console.log("Handling form submission:", formData);
+    
+    // Input validation - ensure we have ingredients
+    if (!formData.ingredients || !formData.ingredients.trim()) {
+      toast({
+        title: "Missing ingredient",
+        description: "Please enter a main ingredient for your recipe.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Format the data properly for the API - FIXED: Convert "any" values to empty arrays
     const adaptedFormData = {
