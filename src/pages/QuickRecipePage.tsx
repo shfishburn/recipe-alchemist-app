@@ -1,136 +1,37 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
 import Navbar from '@/components/ui/navbar';
-import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, ChefHat, ArrowLeft, Bug } from 'lucide-react';
-import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
-import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-
-interface FullScreenLoadingProps {
-  onCancel?: () => void;
-  onRetry?: () => void;
-  error?: string | null;
-}
+import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
+import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeError';
+import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
+import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 
 const QuickRecipePage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { recipe, isLoading, formData, error, reset, setFormData, setLoading, hasTimeoutError, setError } = useQuickRecipeStore();
-  const { generateQuickRecipe } = useQuickRecipe();
-  const { session } = useAuth();
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [debugMode, setDebugMode] = useState(false);
-  
-  // Check if we're navigating from navbar (no state)
-  const isDirectNavigation = !location.state;
+  const {
+    recipe,
+    isLoading,
+    formData,
+    error,
+    hasTimeoutError,
+    isRetrying,
+    debugMode,
+    isDirectNavigation,
+    handleRetry,
+    handleCancel,
+    toggleDebugMode
+  } = useQuickRecipePage();
   
   console.log("QuickRecipePage - Current state:", { 
     isLoading, 
     recipe: !!recipe, 
     error, 
     formData: !!formData, 
-    isDirectNavigation,
-    locationState: location.state
+    isDirectNavigation
   });
-
-  // Check if we need to resume recipe generation after login
-  useEffect(() => {
-    if (session) {
-      const storedGenerationData = sessionStorage.getItem('recipeGenerationSource');
-      if (storedGenerationData && !isLoading && !recipe) {
-        try {
-          const parsedData = JSON.parse(storedGenerationData);
-          if (parsedData.formData) {
-            console.log("Resuming recipe generation after login:", parsedData);
-            // Clear the stored data
-            sessionStorage.removeItem('recipeGenerationSource');
-            
-            // Start the generation process
-            setLoading(true);
-            setFormData(parsedData.formData);
-            
-            // Start an async generation
-            generateQuickRecipe(parsedData.formData).catch(err => {
-              console.error("Error resuming recipe generation:", err);
-              toast({
-                title: "Recipe generation failed",
-                description: err.message || "Please try again later.",
-                variant: "destructive",
-              });
-            });
-          }
-        } catch (err) {
-          console.error("Error parsing stored recipe data:", err);
-        }
-      }
-    }
-  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData]);
-
-  // Reset loading state if navigating directly from navbar
-  useEffect(() => {
-    if (isDirectNavigation && isLoading) {
-      console.log("Direct navigation detected while loading, resetting state");
-      reset();
-    }
-  }, [isDirectNavigation, isLoading, reset]);
-
-  // Only redirect if not loading AND no recipe data AND no error AND no formData
-  useEffect(() => {
-    if (!isLoading && !recipe && !error && !formData && !isDirectNavigation) {
-      console.log("No recipe data available, redirecting to home");
-      navigate('/');
-    }
-  }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
-
-  const handleRetry = async () => {
-    if (formData) {
-      try {
-        setIsRetrying(true);
-        console.log("Retrying recipe generation with formData:", formData);
-        
-        // Clear any existing errors
-        setError(null);
-        
-        // Start the recipe generation with proper loading state
-        setLoading(true);
-        
-        toast({
-          title: "Retrying recipe generation",
-          description: "We're attempting to generate your recipe again...",
-        });
-        
-        // Start the recipe generation immediately
-        await generateQuickRecipe(formData);
-        
-        setIsRetrying(false);
-      } catch (err: any) {
-        console.error("Error retrying recipe generation:", err);
-        setIsRetrying(false);
-        toast({
-          title: "Recipe generation failed",
-          description: err.message || "Please try again later.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleCancel = () => {
-    // Reset and navigate back to home
-    reset();
-    navigate('/');
-  };
-
-  const toggleDebugMode = () => {
-    setDebugMode(!debugMode);
-  };
 
   // Show full-screen loading when generating a recipe, without the layout
   if (isLoading || isRetrying) {
@@ -150,31 +51,11 @@ const QuickRecipePage = () => {
       <main className="flex-1 py-6 md:py-10 animate-fadeIn">
         <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Title Section - Always show this */}
-          <div className="text-center mb-8 md:mb-10">
-            <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl flex items-center justify-center gap-2">
-              <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
-              {recipe ? "Your Custom Recipe" : "What's in your kitchen tonight?"}
-            </h1>
-            
-            {!recipe && (
-              <p className="text-base sm:text-lg text-muted-foreground max-w-4xl mx-auto mt-3 md:mt-4">
-                Share what you've got and what you're craving. Pick your flavor inspiration. 
-                I'll instantly transform your ingredients into delicious, foolproof recipes.
-              </p>
-            )}
-            
-            {/* Debug mode toggle - hidden in UI but can be triggered with keyboard shortcut */}
-            <div className="absolute top-2 right-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className={`opacity-20 hover:opacity-100 ${debugMode ? 'bg-amber-100' : ''}`}
-                onClick={toggleDebugMode}
-              >
-                <Bug size={16} />
-              </Button>
-            </div>
-          </div>
+          <QuickRecipeHero 
+            hasRecipe={!!recipe} 
+            toggleDebugMode={toggleDebugMode}
+            debugMode={debugMode}
+          />
 
           {isDirectNavigation ? (
             // Show form directly when navigating from navbar
@@ -182,56 +63,18 @@ const QuickRecipePage = () => {
               <QuickRecipeFormContainer />
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 border rounded-xl bg-red-50 dark:bg-red-900/10">
-              <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
-              <p className="text-muted-foreground mb-6">{error}</p>
-              
-              {hasTimeoutError && (
-                <div className="text-sm text-muted-foreground mb-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg">
-                  <p className="font-medium">Tip for timeout errors:</p>
-                  <ul className="list-disc list-inside mt-1">
-                    <li>Try a simpler ingredient or combination</li>
-                    <li>Check your internet connection</li>
-                    <li>Wait a moment and try again</li>
-                  </ul>
-                </div>
-              )}
-              
-              {/* Debug info only shown when debug mode is enabled */}
-              {debugMode && formData && (
-                <div className="w-full mb-4 text-xs bg-gray-50 p-3 rounded overflow-auto max-h-48 text-left">
-                  <div className="font-semibold mb-1">Debug Information:</div>
-                  <pre className="whitespace-pre-wrap">{JSON.stringify({
-                    formData,
-                    hasTimeoutError,
-                    error
-                  }, null, 2)}</pre>
-                </div>
-              )}
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={handleCancel}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Start Over
-                </Button>
-                {formData && (
-                  <Button 
-                    onClick={handleRetry}
-                    className="flex items-center gap-2"
-                    disabled={isRetrying}
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                    {isRetrying ? 'Retrying...' : 'Try Again'}
-                  </Button>
-                )}
-              </div>
-            </div>
+            // Show error state
+            <QuickRecipeError 
+              error={error}
+              hasTimeoutError={hasTimeoutError}
+              debugMode={debugMode}
+              formData={formData}
+              onCancel={handleCancel}
+              onRetry={handleRetry}
+              isRetrying={isRetrying}
+            />
           ) : recipe ? (
+            // Show recipe
             <>
               <QuickRecipeDisplay recipe={recipe} />
               <div className="mt-6 mb-10">
@@ -239,17 +82,8 @@ const QuickRecipePage = () => {
               </div>
             </>
           ) : (
-            <div className="text-center">
-              <p className="text-muted-foreground">No recipe found. 
-                <Button 
-                  variant="link" 
-                  onClick={() => navigate('/')}
-                  className="p-0 h-auto text-primary underline"
-                >
-                  &nbsp;Return to home
-                </Button>
-              </p>
-            </div>
+            // Show empty state
+            <QuickRecipeEmpty />
           )}
         </div>
       </main>

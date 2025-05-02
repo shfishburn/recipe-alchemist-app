@@ -16,5 +16,8 @@ export const useQuickRecipe = (id?: string) => {
   };
 };
 
+// Re-export the generateQuickRecipe function for backward compatibility
+export { generateQuickRecipe };
+
 // Re-export types for backward compatibility
 export type { QuickRecipe, QuickRecipeFormData, QuickRecipeOptions, Ingredient } from '@/types/quick-recipe';
