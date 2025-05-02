@@ -105,8 +105,7 @@ export async function cacheIngredientEmbedding(
   }
 
   try {
-    // Use type assertion to tell TypeScript that this conversion is intentional
-    // The Supabase client will properly handle the conversion to PostgreSQL vector type
+    // Convert the embedding array to a JSON string for storage
     const { error } = await supabase
       .from('ingredient_embeddings')
       .insert({
