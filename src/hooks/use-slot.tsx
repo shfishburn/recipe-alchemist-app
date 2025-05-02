@@ -2,19 +2,21 @@
 import React from 'react';
 
 /**
- * Merges multiple React refs into a single ref function
+ * Composes multiple refs into one
  */
-function mergeRefs(refs: Array<React.Ref<any> | undefined | null>) {
-  return (value: any) => {
+const composeRefs = <T extends any>(
+  ...refs: Array<React.Ref<T> | undefined | null>
+): React.RefCallback<T> => {
+  return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
         ref(value);
       } else if (ref != null) {
-        (ref as React.MutableRefObject<any>).current = value;
+        (ref as React.MutableRefObject<T | null>).current = value;
       }
     });
   };
-}
+};
 
 export const useSlot = () => {
   const SlotWrapper = React.forwardRef<
@@ -26,11 +28,13 @@ export const useSlot = () => {
     // Only clone if children is a valid React element and asChild is true
     if (asChild && React.isValidElement(children)) {
       // When asChild is true, we clone the child element and forward props
-      return React.cloneElement(children, {
-        ...otherProps,
-        // Properly merge refs using our helper function
-        ref: mergeRefs([ref, (children as any)._owner?.ref]),
-      });
+      return React.cloneElement(
+        children as React.ReactElement<any>,
+        {
+          ...otherProps,
+          ref: composeRefs<any>(ref, (children as any).ref),
+        }
+      );
     }
     
     // When asChild is false or not provided, render a div

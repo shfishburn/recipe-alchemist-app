@@ -16,27 +16,32 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
     return null;
   }
   
-  // Clone the element and properly merge refs
-  return React.cloneElement(children, {
-    ...rest,
-    ref: mergeRefs([ref, (children as any)._owner?.ref]),
-  });
+  // Clone the element with proper TypeScript typing
+  return React.cloneElement(
+    children as React.ReactElement<any>,
+    {
+      ...rest,
+      ref: composeRefs(ref, (children as any).ref),
+    }
+  );
 });
 
 /**
- * Merges multiple React refs into a single ref function
+ * Composes multiple refs into one
  */
-function mergeRefs(refs: Array<React.Ref<any> | undefined | null>) {
-  return (value: any) => {
+const composeRefs = <T extends any>(
+  ...refs: Array<React.Ref<T> | undefined | null>
+): React.RefCallback<T> => {
+  return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
         ref(value);
       } else if (ref != null) {
-        (ref as React.MutableRefObject<any>).current = value;
+        (ref as React.MutableRefObject<T | null>).current = value;
       }
     });
   };
-}
+};
 
 Slot.displayName = "Slot";
 
