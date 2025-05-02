@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ImageLoader } from '@/components/ui/image-loader';
 import { Card } from '@/components/ui/card';
-import { Timer, Utensils } from 'lucide-react';
+import { Brain, ChartPie, Timer, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Recipe } from '@/types/recipe';
 
@@ -49,6 +49,12 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
   // Safely access the difficulty property (which might not exist in Recipe type)
   const recipeDifficulty = (recipe as any).difficulty;
   
+  // Check if recipe has nutrition information
+  const hasNutrition = recipe.nutrition_per_serving || (recipe as any).macros;
+  
+  // Determine if recipe is AI generated
+  const isAiGenerated = recipe.ai_generated || (recipe as any).generated_by_ai;
+  
   return (
     <Link 
       to={`/recipes/${recipe.id}`}
@@ -91,6 +97,22 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
               getDifficultyColor(recipeDifficulty)
             )}>
               {recipeDifficulty}
+            </div>
+          )}
+          
+          {/* AI Badge - Only show if AI generated */}
+          {isAiGenerated && (
+            <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-blue-500/70 text-white px-2 py-1 rounded-full text-xs font-medium">
+              <Brain size={10} className="inline-block" />
+              <span>AI Generated</span>
+            </div>
+          )}
+          
+          {/* Nutrition Badge - Only show if has nutrition data */}
+          {hasNutrition && (
+            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-green-500/70 text-white px-2 py-1 rounded-full text-xs font-medium">
+              <ChartPie size={10} className="inline-block" />
+              <span>Nutrition</span>
             </div>
           )}
         </div>

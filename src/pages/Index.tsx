@@ -7,6 +7,7 @@ import '@/styles/touch-optimizations.css';
 
 // Lazy load non-critical components
 const Hero = lazy(() => import('@/components/landing/Hero'));
+const Features = lazy(() => import('@/components/landing/Features'));
 
 // Create loading placeholders for better UX
 const HeroSkeleton = () => (
@@ -25,6 +26,20 @@ const HeroSkeleton = () => (
         <div className="w-full md:w-auto md:flex-1">
           <Skeleton className="w-full aspect-video rounded-lg md:rounded-xl" />
         </div>
+      </div>
+    </div>
+  </section>
+);
+
+const FeaturesSkeleton = () => (
+  <section className="py-12">
+    <div className="container-page">
+      <Skeleton className="h-8 w-1/2 mx-auto mb-4" />
+      <Skeleton className="h-4 w-3/4 mx-auto mb-8" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-48 rounded-lg" />
+        ))}
       </div>
     </div>
   </section>
@@ -58,6 +73,9 @@ const Index = () => {
       <main className="flex-1 animate-fadeIn pb-8 md:pb-12 touch-scroll">
         <Suspense fallback={<HeroSkeleton />}>
           <Hero />
+        </Suspense>
+        <Suspense fallback={<FeaturesSkeleton />}>
+          <Features />
         </Suspense>
       </main>
     </div>
