@@ -112,7 +112,7 @@ export async function cacheIngredientEmbedding(
       .insert({
         ingredient_text: ingredientText,
         normalized_text: normalizedText,
-        embedding: embedding as unknown as string, // Type assertion for TypeScript
+        embedding: JSON.stringify(embedding), // Convert number[] to string for storage
         confidence_score: confidenceScore
       });
 
