@@ -46,11 +46,11 @@ export function QuickRecipeFormContainer() {
   const handleFormSubmit = (formData: TagFormData) => {
     console.log("Handling form submission:", formData);
     
-    // Format the data properly for the API - FIXED: ensuring we only use mainIngredient
+    // Format the data properly for the API - FIXED: Convert "any" values to empty arrays
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(), // Map ingredients to mainIngredient
-      cuisine: formData.cuisine === 'any' ? 'Any' : formData.cuisine, // Normalize "any" value for backend processing
-      dietary: formData.dietary === 'any' ? 'Any' : formData.dietary, // Normalize "any" value for backend processing
+      cuisine: formData.cuisine === 'any' ? [] : formData.cuisine, // Convert "any" to empty array
+      dietary: formData.dietary === 'any' ? [] : formData.dietary, // Convert "any" to empty array
       servings: Number(formData.servings) || 2
     };
     
