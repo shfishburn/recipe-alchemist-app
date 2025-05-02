@@ -1,175 +1,128 @@
-/**
- * Utilities for embedding-based ingredient matching
- */
 
 import { supabase } from '@/integrations/supabase/client';
-import { normalizeIngredientText } from '../../../supabase/functions/nutrisynth-analysis/ingredient-helpers';
 
-// Types for embedding operations
-export interface EmbeddingMatch {
-  food_code: string;
-  food_name: string;
-  similarity_score: number;
-  match_method: string;
+interface EmbeddingOptions {
+  withContext?: boolean;
+  maxTokens?: number;
+  model?: string;
+  temperature?: number;
 }
 
 /**
- * Generate a text embedding for ingredient matching using context
- * 
- * @param ingredientText The ingredient text to embed
- * @param recipeContext Optional context about the recipe (title, cuisine)
- * @returns Promise resolving to the generated embedding
+ * Generate embeddings for ingredient text
  */
 export async function generateIngredientEmbedding(
-  ingredientText: string, 
-  recipeContext?: { 
-    title?: string;
-    cuisine?: string;
-    cookingMethod?: string;
-  }
+  ingredientText: string,
+  context?: any,
+  options: EmbeddingOptions = {}
 ): Promise<number[]> {
+  if (!ingredientText || typeof ingredientText !== 'string') {
+    console.error('Invalid ingredient text:', ingredientText);
+    return [];
+  }
+
   try {
-    // Normalize the ingredient text first
-    const normalizedText = normalizeIngredientText(ingredientText);
-    
-    // Create a context-enhanced prompt for the embedding
-    let enhancedText = normalizedText;
-    
-    if (recipeContext) {
-      if (recipeContext.title) {
-        enhancedText = `${recipeContext.title}: ${enhancedText}`;
+    // Clean up the input text
+    const cleanedText = ingredientText.trim();
+
+    // Make an API call to generate embedding
+    const response = await supabase.functions.invoke('generate-embedding', {
+      body: { 
+        text: cleanedText,
+        context
       }
-      
-      if (recipeContext.cuisine) {
-        enhancedText += ` (${recipeContext.cuisine} cuisine)`;
-      }
-      
-      if (recipeContext.cookingMethod) {
-        enhancedText += ` for ${recipeContext.cookingMethod}`;
-      }
-    }
-    
-    // Use Edge Function to generate embedding (to keep API keys secure)
-    const { data, error } = await supabase.functions.invoke('generate-embedding', {
-      body: { text: enhancedText }
     });
 
-    if (error) {
-      console.error('Error generating embedding:', error);
-      throw new Error(`Embedding generation failed: ${error.message}`);
+    if (response.error) {
+      throw new Error(`Embedding API error: ${response.error.message || 'Unknown error'}`);
     }
-    
-    return data.embedding;
+
+    // Return the generated embedding
+    return response.data?.embedding || [];
   } catch (error) {
-    console.error('Failed to generate embedding:', error);
-    
-    // Return empty embedding as fallback
-    // This allows the system to fall back to traditional matching methods
+    console.error('Error generating ingredient embedding:', error);
     return [];
   }
 }
 
 /**
- * Find matching ingredients using vector similarity search
- * 
- * @param embedding The ingredient embedding to match
- * @param threshold Minimum similarity threshold (0-1)
- * @param maxMatches Maximum number of matches to return
- * @returns Promise resolving to matching ingredients
+ * Find similar ingredients using vector similarity search
  */
 export async function findSimilarIngredients(
   embedding: number[],
   threshold: number = 0.78,
   maxMatches: number = 5
-): Promise<EmbeddingMatch[]> {
+): Promise<any[]> {
   if (!embedding || embedding.length === 0) {
-    console.warn('No embedding provided for similarity search');
+    console.error('Invalid embedding for similarity search');
     return [];
   }
-  
+
   try {
-    const { data, error } = await supabase.rpc('match_ingredient_embeddings', {
-      query_embedding: embedding,
-      similarity_threshold: threshold,
-      match_count: maxMatches
-    });
-    
+    // Convert the embedding array to a PostgreSQL vector
+    // We need to use raw query due to the vector type complexity
+    const { data: matches, error } = await supabase.rpc(
+      'match_ingredient_embeddings',
+      {
+        query_embedding: embedding,
+        similarity_threshold: threshold,
+        match_count: maxMatches
+      }
+    );
+
     if (error) {
-      console.error('Error in similarity search:', error);
-      return [];
+      console.error('Vector search error:', error);
+      throw error;
     }
-    
-    return data.map((match: any) => ({
-      food_code: match.food_code,
-      food_name: match.food_name || match.description,
-      similarity_score: match.similarity,
-      match_method: 'vector_similarity'
-    }));
+
+    return matches || [];
   } catch (error) {
-    console.error('Failed to perform similarity search:', error);
+    console.error('Error finding similar ingredients:', error);
     return [];
   }
 }
 
 /**
- * Enhanced ingredient matching using embeddings with fallback to traditional methods
- * 
- * @param ingredientText The ingredient text to match
- * @param recipeContext Optional context about the recipe
- * @returns Promise resolving to best matching ingredient
+ * Check if an embedding is valid
  */
-export async function findIngredientMatchEnhanced(
+export function isValidEmbedding(embedding: any): boolean {
+  return Array.isArray(embedding) && 
+         embedding.length > 0 && 
+         embedding.every(val => typeof val === 'number');
+}
+
+/**
+ * Cache an ingredient embedding in the database
+ */
+export async function cacheIngredientEmbedding(
   ingredientText: string,
-  recipeContext?: {
-    title?: string;
-    cuisine?: string;
-    cookingMethod?: string;
+  normalizedText: string,
+  embedding: number[],
+  confidenceScore: number = 0.8
+): Promise<boolean> {
+  if (!isValidEmbedding(embedding)) {
+    console.error('Invalid embedding for caching');
+    return false;
   }
-): Promise<EmbeddingMatch | null> {
+
   try {
-    // Step 1: Generate embedding for the ingredient with context
-    const embedding = await generateIngredientEmbedding(ingredientText, recipeContext);
-    
-    // Step 2: If we have a valid embedding, perform similarity search
-    if (embedding && embedding.length > 0) {
-      const matches = await findSimilarIngredients(embedding);
-      
-      // If we found matches, return the best one
-      if (matches && matches.length > 0) {
-        return matches[0];
-      }
+    const { error } = await supabase
+      .from('ingredient_embeddings')
+      .insert({
+        ingredient_text: ingredientText,
+        normalized_text: normalizedText,
+        embedding,
+        confidence_score: confidenceScore
+      });
+
+    if (error) {
+      console.error('Error caching ingredient embedding:', error);
+      return false;
     }
-    
-    // Step 3: Fall back to traditional search via the nutrisynth-analysis function
-    const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke(
-      'nutrisynth-analysis', {
-        body: { 
-          ingredients: [{ item: ingredientText, qty: 1, unit: 'g' }],
-          servings: 1
-        }
-      }
-    );
-    
-    if (fallbackError) {
-      console.error('Fallback search error:', fallbackError);
-      return null;
-    }
-    
-    // Extract match from fallback data
-    if (fallbackData?.per_ingredient?.[ingredientText]) {
-      const fallbackMatch = fallbackData.per_ingredient[ingredientText];
-      
-      return {
-        food_code: fallbackMatch.food_code || '',
-        food_name: fallbackMatch.matched_food || ingredientText,
-        similarity_score: fallbackMatch.confidence_score || 0.5,
-        match_method: fallbackMatch.match_method || 'fallback'
-      };
-    }
-    
-    return null;
+
+    return true;
   } catch (error) {
-    console.error('Enhanced ingredient matching failed:', error);
-    return null;
+    console.error('Error caching ingredient embedding:', error);
+    return false;
   }
 }

@@ -26,15 +26,33 @@ export function formatNutrientWithUnit(
     return `0${unit}`;
   }
 
-  // Round to integer for cleaner display
-  const roundedValue = Math.round(Number(value));
+  // Ensure value is positive
+  const positiveValue = Math.abs(Number(value));
 
-  // Convert units if needed based on unit system
-  if (unitSystem === 'imperial' && unit === 'g' && roundedValue >= 1000) {
-    // Convert to pounds for large values
-    return `${(roundedValue / 453.592).toFixed(1)} lb`;
+  // For large values in imperial system, convert to appropriate units
+  if (unitSystem === 'imperial') {
+    if (unit === 'g' && positiveValue >= 1000) {
+      // Convert to pounds for large values
+      return `${(positiveValue / 453.592).toFixed(1)} lb`;
+    } else if (unit === 'mg' && positiveValue >= 1000) {
+      // Convert to grams for large values
+      return `${(positiveValue / 1000).toFixed(1)} g`;
+    }
   }
 
+  // For metric system, handle large values
+  if (unitSystem === 'metric') {
+    if (unit === 'g' && positiveValue >= 1000) {
+      // Convert to kg for large values
+      return `${(positiveValue / 1000).toFixed(1)} kg`;
+    } else if (unit === 'mg' && positiveValue >= 1000) {
+      // Convert to grams for large values
+      return `${(positiveValue / 1000).toFixed(1)} g`;
+    }
+  }
+
+  // Round to integer for cleaner display
+  const roundedValue = Math.round(positiveValue);
   return `${roundedValue}${unit}`;
 }
 

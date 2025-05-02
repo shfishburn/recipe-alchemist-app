@@ -5,6 +5,7 @@ interface SemanticMatchOptions {
   threshold?: number;
   withContext?: boolean;
   maxMatches?: number;
+  validateResults?: boolean;  // Add validation option
 }
 
 /**
@@ -30,7 +31,8 @@ export async function semanticIngredientMatch(
     const {
       threshold = 0.78,
       withContext = true,
-      maxMatches = 3
+      maxMatches = 3,
+      validateResults = true
     } = options;
     
     // Start with the ingredient alone for better embedding
@@ -50,17 +52,20 @@ export async function semanticIngredientMatch(
     // Find similar ingredients using vector similarity search
     const matches = await findSimilarIngredients(embedding, threshold, maxMatches);
     
+    // Validate matches if requested to ensure reasonable values
+    const validatedMatches = validateResults ? validateMatches(matches, ingredientText) : matches;
+    
     // Enhanced logging for debugging
-    if (matches.length > 0) {
+    if (validatedMatches.length > 0) {
       console.log(`Semantic match results for "${ingredientText}":`, 
-        matches.map(m => `${m.food_name} (${m.similarity_score.toFixed(2)})`).join(', ')
+        validatedMatches.map(m => `${m.food_name} (${m.similarity_score.toFixed(2)})`).join(', ')
       );
     } else {
       console.warn(`No semantic matches found for "${ingredientText}"`);
     }
     
     return {
-      matches,
+      matches: validatedMatches,
       embedding,
       query: ingredientText
     };
@@ -71,6 +76,29 @@ export async function semanticIngredientMatch(
       error: String(error)
     };
   }
+}
+
+/**
+ * Validate matches to ensure they make nutritional sense
+ */
+function validateMatches(matches: any[], ingredientText: string): any[] {
+  if (!matches || matches.length === 0) return [];
+  
+  return matches.filter(match => {
+    // Skip matches with unreasonably high calorie counts or negative values
+    if (match.nutrition && match.nutrition.calories > 1000) {
+      console.warn(`Filtered out match for "${ingredientText}" with unreasonable calories: ${match.food_name} (${match.nutrition.calories} kcal)`);
+      return false;
+    }
+    
+    // Filter out matches with very low similarity scores
+    if (match.similarity_score < 0.6) {
+      console.warn(`Filtered out low confidence match for "${ingredientText}": ${match.food_name} (score: ${match.similarity_score})`);
+      return false;
+    }
+    
+    return true;
+  });
 }
 
 /**

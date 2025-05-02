@@ -48,18 +48,19 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
     );
   }
   
-  // Extract values and ensure they're numbers
-  const calories = Math.round(recipeNutrition.calories || 0);
-  const protein = Math.round(recipeNutrition.protein || 0);
-  const carbs = Math.round(recipeNutrition.carbs || 0);
-  const fat = Math.round(recipeNutrition.fat || 0);
-  const fiber = Math.round(recipeNutrition.fiber || 0);
+  // Extract values and ensure they're numbers and within reasonable limits
+  const calories = Math.min(Math.round(recipeNutrition.calories || 0), 5000); // Cap at 5000 calories
+  const protein = Math.min(Math.round(recipeNutrition.protein || 0), 300);    // Cap at 300g protein
+  const carbs = Math.min(Math.round(recipeNutrition.carbs || 0), 500);        // Cap at 500g carbs
+  const fat = Math.min(Math.round(recipeNutrition.fat || 0), 300);            // Cap at 300g fat
+  const fiber = Math.min(Math.round(recipeNutrition.fiber || 0), 100);        // Cap at 100g fiber
   
   // Calculate daily value percentages based on standard reference values
-  const proteinDailyValue = Math.round((protein / DAILY_REFERENCE_VALUES.protein) * 100);
-  const carbsDailyValue = Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100);
-  const fatDailyValue = Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100);
-  const fiberDailyValue = fiber ? Math.round((fiber / DAILY_REFERENCE_VALUES.fiber) * 100) : 0;
+  // Make sure we cap the values at reasonable percentages
+  const proteinDailyValue = Math.min(Math.round((protein / DAILY_REFERENCE_VALUES.protein) * 100), 200);
+  const carbsDailyValue = Math.min(Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100), 200);
+  const fatDailyValue = Math.min(Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100), 200);
+  const fiberDailyValue = fiber ? Math.min(Math.round((fiber / DAILY_REFERENCE_VALUES.fiber) * 100), 200) : 0;
   
   // Default macros distribution
   let proteinPercentage = 30;
@@ -76,9 +77,24 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   }
   
   // Format protein, carbs and fat based on unit system
+  // For imperial, we'll show pounds only for very large values
   const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);
-  const formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
-  const formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
+  
+  // Special handling for carbs to avoid showing too large values
+  let formattedCarbs;
+  if (unitSystem === 'imperial' && carbs > 1000) {
+    formattedCarbs = `${(carbs / 453.592).toFixed(1)} lb`;
+  } else {
+    formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
+  }
+  
+  // Special handling for fat for imperial units
+  let formattedFat;
+  if (unitSystem === 'imperial' && fat > 1000) {
+    formattedFat = `${(fat / 453.592).toFixed(1)} lb`;
+  } else {
+    formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
+  }
   
   return (
     <Card>

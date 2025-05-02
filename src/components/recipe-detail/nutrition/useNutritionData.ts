@@ -34,7 +34,42 @@ export interface ExtendedNutritionData {
     overall_confidence: 'high' | 'medium' | 'low';
     overall_confidence_score: number;
   };
+  per_ingredient?: Record<string, any>;
   // Add any other properties you need
+}
+
+// Validate nutrition data to ensure reasonable values
+function validateNutritionValues(nutrition: any): ExtendedNutritionData {
+  // Create a copy to avoid mutating the original
+  const validated: ExtendedNutritionData = {
+    calories: Math.min(Math.abs(nutrition.calories || 0), 5000),  // Max 5000 calories
+    protein: Math.min(Math.abs(nutrition.protein || 0), 300),     // Max 300g protein
+    carbs: Math.min(Math.abs(nutrition.carbs || 0), 500),         // Max 500g carbs
+    fat: Math.min(Math.abs(nutrition.fat || 0), 300),             // Max 300g fat
+    fiber: Math.min(Math.abs(nutrition.fiber || 0), 100),         // Max 100g fiber
+    sugar: Math.min(Math.abs(nutrition.sugar || 0), 100),         // Max 100g sugar
+    sodium: Math.min(Math.abs(nutrition.sodium || 0), 5000)       // Max 5000mg sodium
+  };
+
+  // Handle micronutrients with reasonable caps
+  if (nutrition.vitaminA !== undefined) validated.vitaminA = Math.min(Math.abs(nutrition.vitaminA), 10000);
+  if (nutrition.vitaminC !== undefined) validated.vitaminC = Math.min(Math.abs(nutrition.vitaminC), 1000);
+  if (nutrition.vitaminD !== undefined) validated.vitaminD = Math.min(Math.abs(nutrition.vitaminD), 1000);
+  if (nutrition.calcium !== undefined) validated.calcium = Math.min(Math.abs(nutrition.calcium), 2000);
+  if (nutrition.iron !== undefined) validated.iron = Math.min(Math.abs(nutrition.iron), 100);
+  if (nutrition.potassium !== undefined) validated.potassium = Math.min(Math.abs(nutrition.potassium), 10000);
+
+  // Include data quality info if present
+  if (nutrition.data_quality) {
+    validated.data_quality = nutrition.data_quality;
+  }
+
+  // Include per-ingredient data if available
+  if (nutrition.per_ingredient) {
+    validated.per_ingredient = nutrition.per_ingredient;
+  }
+
+  return validated;
 }
 
 export function useNutritionData(recipe: Recipe, profile?: Profile | null) {
@@ -48,22 +83,21 @@ export function useNutritionData(recipe: Recipe, profile?: Profile | null) {
     if (recipe?.nutrition) {
       try {
         const standardized = standardizeNutrition(recipe.nutrition);
-        setRecipeNutrition({
-          calories: standardized.calories || 0,
-          protein: standardized.protein || 0,
-          carbs: standardized.carbs || 0,
-          fat: standardized.fat || 0,
-          fiber: standardized.fiber || 0,
-          sugar: standardized.sugar || 0,
-          sodium: standardized.sodium || 0,
-          vitaminA: standardized.vitamin_a || 0,
-          vitaminC: standardized.vitamin_c || 0,
-          vitaminD: standardized.vitamin_d || 0,
-          calcium: standardized.calcium || 0,
-          iron: standardized.iron || 0,
-          potassium: standardized.potassium || 0,
-          data_quality: standardized.data_quality
-        });
+        
+        // Apply validation to ensure reasonable values
+        const validated = validateNutritionValues(standardized);
+        
+        // Log if we found unreasonable values
+        if (standardized.calories > 5000 || standardized.fat > 300) {
+          console.warn('Recipe has unusually high nutrition values, applying caps:', {
+            originalCalories: standardized.calories,
+            originalFat: standardized.fat,
+            cappedCalories: validated.calories,
+            cappedFat: validated.fat
+          });
+        }
+        
+        setRecipeNutrition(validated);
       } catch (error) {
         console.error('Error processing nutrition data:', error);
         setRecipeNutrition(null);

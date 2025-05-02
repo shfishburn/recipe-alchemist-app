@@ -12,9 +12,8 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { standardizeNutrition, Nutrition, validateNutritionData } from '@/types/nutrition-utils';
+import { standardizeNutrition, validateNutritionData } from '@/types/nutrition-utils';
 import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
-import { NutritionFeedback } from './nutrition/NutritionFeedback';
 
 // Safe import for ProfileContext - don't throw errors if not available
 let useProfileSettings: () => any | null = () => null;
@@ -130,10 +129,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   }
   
   // Use type assertion to avoid type incompatibility
-  const standardizedNutrition = recipeNutrition as unknown as Nutrition;
-  const enhancedNutrition = standardizedNutrition?.data_quality 
-    ? (standardizedNutrition as unknown as EnhancedNutrition) 
-    : undefined;
+  const standardizedNutrition = recipeNutrition as unknown as EnhancedNutrition;
 
   // Make sure userPreferences has unitSystem, dailyCalories and macroSplit
   const defaultPreferences = {
@@ -162,15 +158,9 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             onViewModeChange={setViewMode}
             cookingMethod={cookingMethod}
             totalTime={totalTime}
-            nutrition={enhancedNutrition}
+            nutrition={standardizedNutrition}
           />
           <div className="flex items-center gap-2">
-            {/* Add feedback button */}
-            <NutritionFeedback 
-              recipeId={recipe.id}
-              ingredientData={recipeNutrition?.per_ingredient}
-            />
-            
             <NutritionUpdateButton 
               recipe={recipe}
               onUpdateComplete={handleNutritionUpdate}
