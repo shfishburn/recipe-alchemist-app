@@ -1,6 +1,6 @@
-
 import { create } from 'zustand';
 import { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
+import { NavigateFunction } from 'react-router-dom';
 
 export interface LoadingState {
   step: number;
@@ -17,10 +17,12 @@ interface QuickRecipeStore {
   formData: QuickRecipeFormData | null;
   loadingState: LoadingState;
   completedLoading: boolean;
+  navigate: NavigateFunction | null;
   setRecipe: (recipe: QuickRecipe | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setFormData: (formData: QuickRecipeFormData | null) => void;
+  setNavigate: (navigate: NavigateFunction) => void;
   updateLoadingState: (state: Partial<LoadingState>) => void;
   setCompletedLoading: (completed: boolean) => void;
   reset: () => void;
@@ -41,6 +43,8 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set) => ({
   formData: null,
   loadingState: initialLoadingState,
   completedLoading: false,
+  navigate: null,
+  setNavigate: (navigate) => set({ navigate }),
   setRecipe: (recipe) => set({ recipe }),
   setLoading: (isLoading) => set({ 
     isLoading,
@@ -59,9 +63,9 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set) => ({
   reset: () => set({ 
     recipe: null, 
     isLoading: false, 
-    error: null, 
-    formData: null,
+    error: null,
     loadingState: initialLoadingState,
     completedLoading: false
+    // Keep formData and navigate as is for regeneration purposes
   }),
 }));

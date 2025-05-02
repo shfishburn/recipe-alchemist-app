@@ -25,12 +25,39 @@ export function QuickRecipeLoading() {
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   
-  // Initialize sound effect for typing
+  // Initialize sound effect for typing with mobile-friendly settings
   const { play: playTypingSound, pause: pauseTypingSound } = useSoundEffect('/lovable-uploads/typing.mp3', {
     loop: true,
-    volume: 0.3
+    volume: isMobile ? 0.5 : 0.3, // Higher volume for mobile
+    enabled: true
   });
+  
+  // Enable audio after a user interaction on mobile
+  useEffect(() => {
+    const enableAudio = () => {
+      if (!audioEnabled) {
+        setAudioEnabled(true);
+        // Try to play audio now that we have user interaction
+        if (!completedLoading) {
+          playTypingSound();
+        }
+        // Remove listener once enabled
+        document.removeEventListener('touchstart', enableAudio);
+        document.removeEventListener('click', enableAudio);
+      }
+    };
+
+    // Add listeners for user interaction
+    document.addEventListener('touchstart', enableAudio);
+    document.addEventListener('click', enableAudio);
+    
+    return () => {
+      document.removeEventListener('touchstart', enableAudio);
+      document.removeEventListener('click', enableAudio);
+    };
+  }, [audioEnabled, completedLoading, playTypingSound]);
   
   // Update progress every second
   useEffect(() => {
@@ -39,8 +66,10 @@ export function QuickRecipeLoading() {
     const startTime = Date.now();
     const initialEstimate = loadingState.estimatedTimeRemaining;
     
-    // Start typing sound when loading begins
-    playTypingSound();
+    // Start typing sound if audio is enabled
+    if (audioEnabled || !isMobile) {
+      playTypingSound();
+    }
     
     progressTimerRef.current = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
@@ -75,7 +104,7 @@ export function QuickRecipeLoading() {
       }
       pauseTypingSound();
     };
-  }, [loadingState.estimatedTimeRemaining, playTypingSound, pauseTypingSound, updateLoadingState, completedLoading, setCompletedLoading]);
+  }, [loadingState.estimatedTimeRemaining, playTypingSound, pauseTypingSound, updateLoadingState, completedLoading, setCompletedLoading, audioEnabled, isMobile]);
   
   // Cycle through loading steps
   useEffect(() => {

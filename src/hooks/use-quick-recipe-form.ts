@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -7,8 +7,21 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 export function useQuickRecipeForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { reset, recipe, setLoading, setRecipe, setFormData, setError } = useQuickRecipeStore();
+  const { 
+    reset, 
+    recipe, 
+    setLoading, 
+    setRecipe, 
+    setFormData, 
+    setError,
+    setNavigate
+  } = useQuickRecipeStore();
   const [isLoading, setIsLoadingLocal] = useState(false);
+  
+  // Store navigate function in the global store for use in other components
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate, setNavigate]);
   
   // Handle form submission
   const handleSubmit = async (formData: QuickRecipeFormData) => {
@@ -27,24 +40,19 @@ export function useQuickRecipeForm() {
         state: { fromForm: true } // Add state to indicate this is from form submission
       });
       
-      // Small delay to ensure UI updates before heavy processing begins
-      setTimeout(async () => {
-        try {
-          // Start generating the recipe AFTER navigation
-          const generatedRecipe = await generateQuickRecipe(formData);
-          setRecipe(generatedRecipe);
-          setIsLoadingLocal(false);
-          return generatedRecipe;
-        } catch (innerError) {
-          console.error('Error generating recipe:', innerError);
-          setLoading(false);
-          setIsLoadingLocal(false);
-          setError(innerError.message || "Failed to generate recipe");
-          return null;
-        }
-      }, 50);
-      
-      return null;
+      // Start generating the recipe immediately after navigation
+      try {
+        const generatedRecipe = await generateQuickRecipe(formData);
+        setRecipe(generatedRecipe);
+        setIsLoadingLocal(false);
+        return generatedRecipe;
+      } catch (error) {
+        console.error('Error generating recipe:', error);
+        setLoading(false);
+        setIsLoadingLocal(false);
+        setError(error.message || "Failed to generate recipe");
+        return null;
+      }
     } catch (error) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);

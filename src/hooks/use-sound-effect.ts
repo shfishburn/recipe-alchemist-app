@@ -16,11 +16,38 @@ export function useSoundEffect(
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   
-  // Initialize audio on mount
+  // Initialize audio on mount with preload
   useEffect(() => {
     const audio = new Audio(soundUrl);
     audio.loop = loop;
     audio.volume = volume;
+    audio.preload = "auto"; // Preload the audio file
+    
+    // For iOS devices - needs to be set after a user interaction
+    if (typeof document !== 'undefined') {
+      const unlockAudio = () => {
+        if (audioRef.current) {
+          // Create and play a silent audio buffer to unlock audio playback
+          const silentPlay = audioRef.current.play();
+          if (silentPlay !== undefined) {
+            silentPlay
+              .then(() => {
+                // Successfully unlocked audio
+                audioRef.current?.pause();
+              })
+              .catch(() => {
+                // Audio still locked, retry on next user interaction
+              });
+          }
+        }
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+      };
+      
+      document.addEventListener('touchstart', unlockAudio, { once: true });
+      document.addEventListener('click', unlockAudio, { once: true });
+    }
+    
     audioRef.current = audio;
     
     return () => {
@@ -30,7 +57,7 @@ export function useSoundEffect(
     };
   }, [soundUrl, loop, volume]);
   
-  // Play sound
+  // Play sound with better error handling
   const play = useCallback(() => {
     if (!audioRef.current || !enabled || isMuted) return;
     
@@ -44,12 +71,14 @@ export function useSoundEffect(
             setIsPlaying(true);
           })
           .catch(error => {
-            console.error("Audio play failed:", error);
+            // Don't log the error, it's usually just browser autoplay policy
+            // and can clutter the console
             setIsPlaying(false);
           });
       }
     } catch (error) {
-      console.error("Audio play error:", error);
+      // Silent error handling to prevent app crashing
+      setIsPlaying(false);
     }
   }, [enabled, isMuted]);
   
@@ -71,7 +100,9 @@ export function useSoundEffect(
     
     // If unmuting and was playing, resume
     if (!newMuteState && isPlaying) {
-      audioRef.current.play().catch(console.error);
+      audioRef.current.play().catch(() => {
+        // Silent catch - don't break the UI if audio fails
+      });
     }
     
     return newMuteState;

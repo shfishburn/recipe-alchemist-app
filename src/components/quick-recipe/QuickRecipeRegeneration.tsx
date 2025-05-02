@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 
 interface QuickRecipeRegenerationProps {
   formData: QuickRecipeFormData | null;
@@ -11,12 +12,22 @@ interface QuickRecipeRegenerationProps {
 }
 
 export function QuickRecipeRegeneration({ formData, isLoading }: QuickRecipeRegenerationProps) {
-  const navigate = useNavigate();
+  const { navigate } = useQuickRecipeStore();
+  const { generateQuickRecipe } = useQuickRecipe();
+  const { reset, setLoading } = useQuickRecipeStore();
   
-  const handleRegenerate = () => {
-    if (formData) {
-      // Go back to the home page with state to trigger regeneration
-      navigate('/', { state: { regenerate: true, formData } });
+  const handleRegenerate = async () => {
+    if (formData && !isLoading) {
+      try {
+        // Reset and set loading state
+        reset();
+        setLoading(true);
+        
+        // Generate a new recipe with the same form data
+        await generateQuickRecipe(formData);
+      } catch (error) {
+        console.error("Error regenerating recipe:", error);
+      }
     }
   };
   

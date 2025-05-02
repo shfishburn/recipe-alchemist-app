@@ -14,7 +14,8 @@ import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeF
 const QuickRecipePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { recipe, isLoading, formData, error, reset } = useQuickRecipeStore();
+  const { recipe, isLoading, formData, error, reset, setLoading, setFormData } = useQuickRecipeStore();
+  const { generateQuickRecipe } = useQuickRecipe(); // Properly use hook at the top level
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
@@ -33,25 +34,24 @@ const QuickRecipePage = () => {
     }
   }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
 
+  // Fixed handleRetry function that doesn't call a hook inside a callback
   const handleRetry = async () => {
     if (formData) {
       try {
         // Reset first to clear any existing errors
         reset();
         
-        // Then navigate to ensure we have fresh state
-        navigate('/quick-recipe', { 
-          replace: true,
-          state: { fromForm: true }
-        });
+        // Set loading state and reuse existing form data
+        setLoading(true);
         
-        // Small delay to ensure UI updates before starting the generation
-        setTimeout(() => {
-          const { generateQuickRecipe } = useQuickRecipe();
-          generateQuickRecipe(formData);
-        }, 50);
+        // Start the recipe generation immediately
+        generateQuickRecipe(formData).then(generatedRecipe => {
+          // Handle successful generation in the store
+        }).catch(err => {
+          console.error("Error retrying recipe generation:", err);
+        });
       } catch (err) {
-        console.error("Error retrying recipe generation:", err);
+        console.error("Error setting up recipe retry:", err);
       }
     }
   };
@@ -129,8 +129,6 @@ const QuickRecipePage = () => {
               </p>
             </div>
           )}
-          
-          {/* Removed Popular Recipes section entirely */}
         </div>
       </main>
     </div>
