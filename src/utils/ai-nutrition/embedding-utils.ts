@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface EmbeddingOptions {
@@ -112,7 +113,7 @@ export async function cacheIngredientEmbedding(
       .insert({
         ingredient_text: ingredientText,
         normalized_text: normalizedText,
-        embedding: vectorString,
+        embedding: vectorString, // Fix: This properly stringifies the array
         confidence_score: confidenceScore
       });
 

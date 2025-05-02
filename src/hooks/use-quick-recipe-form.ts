@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -36,12 +35,8 @@ export function useQuickRecipeForm() {
       setLoading(true);
       setFormData(formData);
       
-      // Show loading toast
-      toast({
-        title: "Creating your recipe",
-        description: "Your delicious recipe is being crafted...",
-        duration: 3000
-      });
+      // Log in console instead of showing non-error toast
+      console.log("Creating your recipe - processing request...");
       
       // Navigate to the quick recipe page BEFORE starting the API call
       // This ensures the loading animation is displayed
@@ -62,12 +57,8 @@ export function useQuickRecipeForm() {
         console.log("Recipe generation successful:", generatedRecipe);
         setRecipe(generatedRecipe);
         
-        // Success toast
-        toast({
-          title: "Recipe created!",
-          description: "Your delicious recipe is ready.",
-          variant: "success",
-        });
+        // Success message in console instead of toast
+        console.log("Recipe created successfully!");
         
         return generatedRecipe;
       } catch (error: any) {
@@ -75,7 +66,7 @@ export function useQuickRecipeForm() {
         setLoading(false);
         setError(error.message || "Failed to generate recipe. Please try again.");
         
-        // Error toast
+        // Keep error toast only
         toast({
           title: "Recipe generation failed",
           description: error.message || "Please try again later.",
@@ -90,7 +81,7 @@ export function useQuickRecipeForm() {
       setError(error.message || "Failed to submit recipe request. Please try again.");
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, toast]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid]);
 
   return {
     handleSubmit,

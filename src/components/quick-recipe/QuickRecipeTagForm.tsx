@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { CuisineSelector } from './form-components/CuisineSelector';
@@ -60,6 +59,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     
     // Stop if form is invalid
     if (!isValid) {
+      // Keep error toast only
       toast({
         title: "Please fill in required fields",
         description: "Tell us what ingredients you'd like to cook with",
@@ -88,7 +88,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
     }
   };
 
-  const toggleCuisine = (value: string) => {
+  function toggleCuisine(value: string) {
     setFormData(prev => {
       // If the cuisine is already selected, remove it
       if (prev.cuisine.includes(value)) {
@@ -99,9 +99,9 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         return { ...prev, cuisine: [...prev.cuisine, value] };
       }
     });
-  };
+  }
 
-  const toggleDietary = (value: string) => {
+  function toggleDietary(value: string) {
     setFormData(prev => {
       // If the dietary option is already selected, remove it
       if (prev.dietary.includes(value)) {
@@ -112,16 +112,16 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         return { ...prev, dietary: [...prev.dietary, value] };
       }
     });
-  };
+  }
 
-  const setServings = (servings: number) => {
+  function setServings(servings: number) {
     setFormData(prev => ({
       ...prev,
       servings
     }));
-  };
+  }
 
-  const setMainIngredient = (value: string) => {
+  function setMainIngredient(value: string) {
     setFormData(prev => ({
       ...prev,
       mainIngredient: value
@@ -134,7 +134,7 @@ export function QuickRecipeTagForm({ onSubmit, isLoading }: QuickRecipeTagFormPr
         mainIngredient: true
       }));
     }
-  };
+  }
 
   return (
     <form 

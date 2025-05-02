@@ -17,7 +17,9 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!session) {
-    // Store the current path before redirecting to login
+    // Store the current full location before redirecting to login
+    // This includes pathname, search params, hash, and state
+    console.log("Not authenticated, redirecting to login from:", location.pathname);
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

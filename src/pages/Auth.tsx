@@ -10,10 +10,21 @@ const Auth = () => {
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || '/';
   
-  // Store the referring page in sessionStorage on component mount
+  // Store the complete referring location in sessionStorage on component mount
+  // This includes pathname, search params, and state
   useEffect(() => {
     if (location.state?.from) {
-      sessionStorage.setItem('redirectPath', location.state.from.pathname);
+      // Store the full location object with path, search params and any state
+      const locationData = {
+        pathname: location.state.from.pathname,
+        search: location.state.from.search || '',
+        hash: location.state.from.hash || '',
+        state: location.state.from.state || null
+      };
+      
+      // Store as stringified JSON to preserve all properties
+      sessionStorage.setItem('redirectLocation', JSON.stringify(locationData));
+      console.log('Stored redirect location:', locationData);
     }
   }, [location.state]);
 
@@ -28,11 +39,35 @@ const Auth = () => {
 
   // If already logged in, redirect to stored path or home page
   if (session) {
-    const redirectPath = sessionStorage.getItem('redirectPath') || from;
-    console.log("Already authenticated, redirecting to:", redirectPath);
+    let redirectTo = from;
+    let redirectState = {};
+    
+    // Try to get the stored location data
+    const storedLocationData = sessionStorage.getItem('redirectLocation');
+    if (storedLocationData) {
+      try {
+        const locationData = JSON.parse(storedLocationData);
+        redirectTo = locationData.pathname;
+        
+        // Recreate the URL with search params and hash if they exist
+        if (locationData.search) redirectTo += locationData.search;
+        if (locationData.hash) redirectTo += locationData.hash;
+        
+        // Preserve any state that might have been stored
+        if (locationData.state) {
+          redirectState = locationData.state;
+        }
+        
+        console.log("Redirecting to:", redirectTo, "with state:", redirectState);
+      } catch (error) {
+        console.error("Error parsing stored location:", error);
+      }
+    }
+    
     // Clear the stored path after using it
-    sessionStorage.removeItem('redirectPath');
-    return <Navigate to={redirectPath} replace />;
+    sessionStorage.removeItem('redirectLocation');
+    
+    return <Navigate to={redirectTo} state={redirectState} replace />;
   }
 
   return (

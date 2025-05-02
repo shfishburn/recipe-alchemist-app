@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { QuickRecipeLoading } from './QuickRecipeLoading';
+import { toast } from '@/hooks/use-toast';
 
 export function FullScreenLoading() {
   // Prevent back navigation during loading
@@ -15,7 +16,13 @@ export function FullScreenLoading() {
       e.preventDefault();
       window.history.pushState(null, '', window.location.pathname);
       
-      // Optional: Show a toast that navigation is disabled during recipe creation
+      // Show error toast notification
+      toast({
+        title: "Navigation blocked",
+        description: "Please wait until recipe generation is complete.",
+        variant: "destructive",
+      });
+      
       console.log("Back navigation prevented during recipe generation");
     };
 
