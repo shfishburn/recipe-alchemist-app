@@ -57,7 +57,7 @@ const QuickRecipePage = () => {
     }
   };
 
-  // Show full-screen loading when generating a recipe
+  // Show full-screen loading when generating a recipe, without the layout
   if (isLoading) {
     return <FullScreenLoading />;
   }

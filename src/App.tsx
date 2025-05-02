@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Footer } from "@/components/ui/footer";
 import PrivateRoute from "@/components/PrivateRoute";
@@ -12,6 +12,7 @@ import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { DefaultSeo } from "@/components/seo/DefaultSeo";
 import { Suspense, lazy } from "react";
+import { useQuickRecipeStore } from "@/store/use-quick-recipe-store";
 
 // Lazy load non-critical pages
 const Index = lazy(() => import("./pages/Index"));
@@ -49,15 +50,28 @@ const queryClient = new QueryClient({
   },
 });
 
+// Footer wrapper that conditionally renders based on quick recipe loading state
+const FooterWrapper = () => {
+  const { isLoading } = useQuickRecipeStore();
+  const location = useLocation();
+  
+  // Don't render footer on the quick recipe page when loading
+  if (location.pathname === '/quick-recipe' && isLoading) {
+    return null;
+  }
+  
+  return <Footer />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <div className="min-h-screen flex flex-col">
-          <DefaultSeo />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col">
+            <DefaultSeo />
+            <Toaster />
+            <Sonner />
             <LoadingIndicator />
             <PageTransition>
               <Routes>
@@ -168,9 +182,9 @@ const App = () => (
                 } />
               </Routes>
             </PageTransition>
-            <Footer />
-          </BrowserRouter>
-        </div>
+            <FooterWrapper />
+          </div>
+        </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
