@@ -9,43 +9,36 @@ export const useSlot = () => {
     const { asChild, children, ...otherProps } = props;
     
     if (asChild && React.isValidElement(children)) {
-      // Clone the child, but handle ref separately
-      const clonedChild = React.cloneElement(children, otherProps);
-      
-      // Use effect to handle ref forwarding properly
-      React.useEffect(() => {
-        if (!ref) return;
-        
-        const childElement = children as React.ReactElement & { ref?: React.Ref<any> };
-        const childRef = childElement.ref;
-        
-        // Get the underlying DOM node
-        let node: any = null;
-        
-        // For object refs, we can access the DOM node
-        if (ref && typeof ref !== 'function' && 'current' in ref) {
-          node = ref.current;
+      // When asChild is true, we want to clone the child element
+      // and forward all props to it
+      return React.cloneElement(children, {
+        ...otherProps,
+        // Properly merge refs using a callback ref
+        ref: (node: any) => {
+          // Handle forwarding ref to the child component
+          if (ref) {
+            if (typeof ref === 'function') {
+              ref(node);
+            } else {
+              (ref as React.MutableRefObject<any>).current = node;
+            }
+          }
           
-          // Now handle forwarding this ref to the child's ref if it exists
-          if (childRef && typeof childRef === 'function') {
-            childRef(node);
+          // Forward to child's ref if it exists
+          const childRef = (children as any).ref;
+          if (childRef) {
+            if (typeof childRef === 'function') {
+              childRef(node);
+            } else {
+              childRef.current = node;
+            }
           }
-          // We can't modify childRef.current directly as it's readonly
         }
-        
-        // Cleanup
-        return () => {
-          if (childRef && typeof childRef === 'function') {
-            childRef(null);
-          }
-        };
-      }, [children, ref]);
-      
-      return clonedChild;
+      });
     }
     
-    // Return a div when not using asChild
-    return React.createElement("div", { ...otherProps, ref }, children);
+    // When asChild is false or not provided, render a div
+    return <div ref={ref} {...otherProps}>{children}</div>;
   });
   
   SlotWrapper.displayName = 'SlotWrapper';
