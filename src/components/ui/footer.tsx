@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram } from 'lucide-react';
+import { Twitter, Facebook, Instagram, Linkedin } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -51,9 +51,18 @@ export function Footer() {
           <p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
             © {currentYear} Recipe Alchemy. All rights reserved.
           </p>
-          <div className="order-1 sm:order-2">
+          <div className="flex space-x-3 sm:space-x-4 order-1 sm:order-2">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Twitter size={16} className="sm:size-18" />
+            </a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Facebook size={16} className="sm:size-18" />
+            </a>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Instagram size={20} />
+              <Instagram size={16} className="sm:size-18" />
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Linkedin size={16} className="sm:size-18" />
             </a>
           </div>
         </div>

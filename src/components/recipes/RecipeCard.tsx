@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -22,47 +21,49 @@ export function RecipeCard({ recipe, className, ...props }: RecipeCardProps) {
   };
 
   return (
-    <div className={cn("group block relative transition-all duration-300", className)} {...props}>
-      <Link 
-        to={`/recipes/${recipe.id}/${generateSlug(recipe.title)}`}
-        className="no-underline block h-full"
-      >
-        <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
-          {recipe.image_url ? (
-            <AspectRatio ratio={16 / 9}>
-              <img
-                src={recipe.image_url}
-                alt={recipe.title}
-                className="rounded-md object-cover transition-all duration-300 group-hover:scale-105"
-              />
-            </AspectRatio>
-          ) : (
-            <AspectRatio ratio={16 / 9}>
-              <div className="bg-secondary rounded-md flex items-center justify-center text-secondary-foreground text-sm">
-                No Image
-              </div>
-            </AspectRatio>
+    <Link 
+      to={`/recipes/${recipe.id}/${generateSlug(recipe.title)}`}
+      className={cn(
+        "group block relative transition-all duration-300 no-underline",
+        className
+      )}
+      {...props}
+    >
+      <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
+        {recipe.image_url ? (
+          <AspectRatio ratio={16 / 9}>
+            <img
+              src={recipe.image_url}
+              alt={recipe.title}
+              className="rounded-md object-cover transition-all duration-300 group-hover:scale-105"
+            />
+          </AspectRatio>
+        ) : (
+          <AspectRatio ratio={16 / 9}>
+            <div className="bg-secondary rounded-md flex items-center justify-center text-secondary-foreground text-sm">
+              No Image
+            </div>
+          </AspectRatio>
+        )}
+        <CardContent className="p-4">
+          <h3 className="font-semibold line-clamp-1">{recipe.title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {recipe.description || 'No description available'}
+          </p>
+        </CardContent>
+        <CardFooter className="flex items-center justify-between p-4">
+          {recipe.cuisine && (
+            <Badge variant="secondary" className="text-xs">
+              {recipe.cuisine}
+            </Badge>
           )}
-          <CardContent className="p-4">
-            <h3 className="font-semibold line-clamp-1">{recipe.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {recipe.description || 'No description available'}
-            </p>
-          </CardContent>
-          <CardFooter className="flex items-center justify-between p-4">
-            {recipe.cuisine && (
-              <Badge variant="secondary" className="text-xs">
-                {recipe.cuisine}
-              </Badge>
-            )}
-            {recipe.prep_time_min && recipe.cook_time_min && (
-              <div className="text-xs text-muted-foreground">
-                {recipe.prep_time_min + recipe.cook_time_min} min
-              </div>
-            )}
-          </CardFooter>
-        </Card>
-      </Link>
-    </div>
+          {recipe.prep_time_min && recipe.cook_time_min && (
+            <div className="text-xs text-muted-foreground">
+              {recipe.prep_time_min + recipe.cook_time_min} min
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+    </Link>
   );
 }
