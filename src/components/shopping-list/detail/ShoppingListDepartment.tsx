@@ -120,33 +120,33 @@ export function ShoppingListDepartment({
             return (
               <div 
                 key={`${department}-${idx}`} 
-                className={`flex items-center px-2 py-2 touch-optimized tap-highlight relative
-                  ${item.checked 
-                    ? 'bg-green-50 hover:bg-green-100' 
-                    : 'hover:bg-muted/50'}`}
+                className={`flex items-center justify-between pr-1 pl-1 py-1.5 touch-optimized tap-highlight relative
+                  ${item.checked ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
               >
                 <div 
-                  className="flex-1 flex items-center gap-1"
+                  className="flex-1 flex items-center gap-0.5 min-w-0"
                   onClick={(e) => handleItemToggle(itemIndex, e)}
                 >
-                  <div className="w-5 h-5 flex items-center justify-center touch-target">
+                  <div className="flex-none w-5 h-5 flex items-center justify-center">
                     {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                     ) : item.checked ? (
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-3.5 w-3.5 text-green-600" />
                     ) : null}
                   </div>
                   
-                  <div className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {quantityText && <strong className="mr-1">{quantityText}</strong>}
-                      <span className="font-medium">{item.name}</span>
+                  <div className={`flex-1 min-w-0 ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
+                    <div className="flex items-baseline gap-0.5 flex-wrap">
+                      {quantityText && (
+                        <strong className="mr-0.5 flex-shrink-0">{quantityText}</strong>
+                      )}
+                      <span className="font-medium truncate">{item.name}</span>
                       
                       {(item.quality_indicators || item.storage_tips) && (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="inline h-3 w-3 text-muted-foreground ml-1" />
+                              <Info className="inline h-3 w-3 text-muted-foreground ml-0.5 flex-shrink-0" />
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
                               {item.quality_indicators && (
@@ -159,18 +159,22 @@ export function ShoppingListDepartment({
                           </Tooltip>
                         </TooltipProvider>
                       )}
-                      
-                      {item.notes && <span className="text-xs text-muted-foreground ml-1">({item.notes})</span>}
                     </div>
                     
+                    {item.notes && (
+                      <span className="text-xs text-muted-foreground block truncate">
+                        {item.notes}
+                      </span>
+                    )}
+                    
                     {item.alternatives?.length > 0 && (
-                      <span className="block text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground truncate block">
                         Alt: {item.alternatives.join(', ')}
                       </span>
                     )}
                     
                     {item.pantry_staple && (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded inline-block mt-1">
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded inline-block">
                         Pantry
                       </span>
                     )}
@@ -180,7 +184,7 @@ export function ShoppingListDepartment({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-1 h-auto w-auto touch-target opacity-60 hover:opacity-100 focus:opacity-100"
+                  className="p-1 h-auto w-auto flex-none opacity-60 hover:opacity-100 focus:opacity-100 ml-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteItem(itemIndex);

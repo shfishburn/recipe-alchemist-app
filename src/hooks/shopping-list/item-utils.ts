@@ -2,7 +2,7 @@
 import { ShoppingListItem } from '@/types/shopping-list';
 import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { ToastProps } from '@/hooks/use-toast';
 
 // Helper function to get the index of an item in the list
 export function getItemIndex(items: ShoppingListItem[], item: ShoppingListItem): number {
@@ -11,12 +11,16 @@ export function getItemIndex(items: ShoppingListItem[], item: ShoppingListItem):
   );
 }
 
+type ToastHandler = {
+  toast: (props: ToastProps) => string | number;
+};
+
 // Helper function to toggle an item's checked state
 export async function toggleItemChecked(
   listId: string, 
   items: ShoppingListItem[], 
   index: number,
-  toast: ReturnType<typeof useToast>
+  { toast }: ToastHandler
 ): Promise<ShoppingListItem[] | null> {
   try {
     // Optimistically update the local state first for immediate feedback
@@ -33,7 +37,7 @@ export async function toggleItemChecked(
       .eq('id', listId);
 
     if (error) {
-      toast.toast({
+      toast({
         title: 'Error',
         description: 'Failed to update item',
         variant: 'destructive'
@@ -43,7 +47,7 @@ export async function toggleItemChecked(
 
     return updatedItems;
   } catch (error) {
-    toast.toast({
+    toast({
       title: 'Error',
       description: 'Failed to update item',
       variant: 'destructive'
@@ -57,7 +61,7 @@ export async function deleteItem(
   listId: string, 
   items: ShoppingListItem[], 
   index: number,
-  toast: ReturnType<typeof useToast>
+  { toast }: ToastHandler
 ): Promise<ShoppingListItem[] | null> {
   try {
     // Optimistically update the UI
@@ -69,7 +73,7 @@ export async function deleteItem(
       .eq('id', listId);
 
     if (error) {
-      toast.toast({
+      toast({
         title: 'Error',
         description: 'Failed to delete item',
         variant: 'destructive'
@@ -77,14 +81,14 @@ export async function deleteItem(
       return null;
     }
 
-    toast.toast({
+    toast({
       title: 'Success',
       description: 'Item removed from list'
     });
     
     return updatedItems;
   } catch (error) {
-    toast.toast({
+    toast({
       title: 'Error',
       description: 'Failed to delete item',
       variant: 'destructive'
@@ -98,7 +102,7 @@ export async function addItem(
   listId: string, 
   items: ShoppingListItem[], 
   newItem: Omit<ShoppingListItem, 'checked'>,
-  toast: ReturnType<typeof useToast>
+  { toast }: ToastHandler
 ): Promise<ShoppingListItem[] | null> {
   try {
     const item: ShoppingListItem = {
@@ -114,7 +118,7 @@ export async function addItem(
       .eq('id', listId);
       
     if (error) {
-      toast.toast({
+      toast({
         title: 'Error',
         description: 'Failed to add item',
         variant: 'destructive'
@@ -124,7 +128,7 @@ export async function addItem(
     
     return updatedItems;
   } catch (error) {
-    toast.toast({
+    toast({
       title: 'Error',
       description: 'Failed to add item',
       variant: 'destructive'
@@ -139,7 +143,7 @@ export async function toggleDepartmentItems(
   items: ShoppingListItem[], 
   department: string, 
   checked: boolean,
-  toast: ReturnType<typeof useToast>
+  { toast }: ToastHandler
 ): Promise<ShoppingListItem[] | null> {
   try {
     // Optimistically update local state
@@ -153,7 +157,7 @@ export async function toggleDepartmentItems(
       .eq('id', listId);
       
     if (error) {
-      toast.toast({
+      toast({
         title: 'Error',
         description: 'Failed to update items',
         variant: 'destructive'
@@ -163,7 +167,7 @@ export async function toggleDepartmentItems(
     
     return updatedItems;
   } catch (error) {
-    toast.toast({
+    toast({
       title: 'Error',
       description: 'Failed to update items',
       variant: 'destructive'

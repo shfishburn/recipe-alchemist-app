@@ -23,7 +23,7 @@ export function ShoppingListItemsView({
   getItemIndex
 }: ShoppingListItemsViewProps) {
   return (
-    <div className="space-y-2 max-w-full overflow-hidden">
+    <div className="space-y-1.5 max-w-full overflow-hidden">
       {Object.entries(groupedItems).map(([department, items]) => {
         if (items.length === 0) return null;
         
