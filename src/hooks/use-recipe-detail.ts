@@ -19,79 +19,92 @@ export const useRecipeDetail = (id?: string) => {
       // Extract the actual ID if it's in slug-id format
       const actualId = extractIdFromSlug(id);
       
-      // Validate the UUID before querying
+      // Enhanced validation with better error message
       if (!actualId) {
+        console.error('Invalid or malformed recipe ID:', id);
         throw new Error('Invalid recipe ID format');
       }
-
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .eq('id', actualId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching recipe:', error);
-        throw error;
-      }
-      if (!data) {
-        console.error('Recipe not found');
-        throw new Error('Recipe not found');
-      }
       
-      // Transform science_notes from JSON to string array if necessary
-      let scienceNotes: string[] = [];
-      if (data.science_notes) {
-        try {
-          // Handle both string[] and other formats
-          if (Array.isArray(data.science_notes)) {
-            scienceNotes = data.science_notes as string[];
-          } else {
-            // If it's stored as JSON string or other format, try to parse it
-            const parsedNotes = typeof data.science_notes === 'string' 
-              ? JSON.parse(data.science_notes) 
-              : data.science_notes;
+      // Double-check UUID format to prevent database errors
+      if (!isValidUUID(actualId)) {
+        console.error('ID failed UUID format validation:', actualId);
+        throw new Error('Invalid UUID format');
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('recipes')
+          .select('*')
+          .eq('id', actualId)
+          .maybeSingle(); // Use maybeSingle instead of single for better error handling
+  
+        if (error) {
+          console.error('Error fetching recipe:', error);
+          throw error;
+        }
+        
+        if (!data) {
+          console.error('Recipe not found');
+          throw new Error('Recipe not found');
+        }
+        
+        // Transform science_notes from JSON to string array if necessary
+        let scienceNotes: string[] = [];
+        if (data.science_notes) {
+          try {
+            // Handle both string[] and other formats
+            if (Array.isArray(data.science_notes)) {
+              scienceNotes = data.science_notes as string[];
+            } else {
+              // If it's stored as JSON string or other format, try to parse it
+              const parsedNotes = typeof data.science_notes === 'string' 
+                ? JSON.parse(data.science_notes) 
+                : data.science_notes;
+              
+              scienceNotes = Array.isArray(parsedNotes) ? parsedNotes : [];
+            }
+          } catch (e) {
+            console.error('Error parsing science notes:', e);
+            scienceNotes = [];
+          }
+        }
+        
+        // Enhanced nutrition data processing
+        let nutrition: Nutrition = {};
+        if (data.nutrition) {
+          try {
+            // Handle different nutrition data formats
+            let rawNutrition;
+            if (typeof data.nutrition === 'string') {
+              rawNutrition = JSON.parse(data.nutrition);
+            } else {
+              rawNutrition = data.nutrition;
+            }
             
-            scienceNotes = Array.isArray(parsedNotes) ? parsedNotes : [];
+            // Standardize the nutrition data to ensure consistent property access
+            nutrition = standardizeNutrition(rawNutrition);
+            
+            console.log("Processed nutrition data:", nutrition);
+          } catch (e) {
+            console.error('Error parsing nutrition data:', e);
+            nutrition = {};
           }
-        } catch (e) {
-          console.error('Error parsing science notes:', e);
-          scienceNotes = [];
         }
+        
+        // Type cast the JSON fields with their proper structure
+        const recipe: Recipe = {
+          ...data,
+          ingredients: data.ingredients as unknown as Ingredient[],
+          nutrition: nutrition,
+          science_notes: scienceNotes
+        };
+        
+        console.log('Recipe detail fetched:', recipe);
+        return recipe;
+      } catch (e) {
+        console.error('Error in recipe detail fetch:', e);
+        throw e;
       }
-      
-      // Enhanced nutrition data processing
-      let nutrition: Nutrition = {};
-      if (data.nutrition) {
-        try {
-          // Handle different nutrition data formats
-          let rawNutrition;
-          if (typeof data.nutrition === 'string') {
-            rawNutrition = JSON.parse(data.nutrition);
-          } else {
-            rawNutrition = data.nutrition;
-          }
-          
-          // Standardize the nutrition data to ensure consistent property access
-          nutrition = standardizeNutrition(rawNutrition);
-          
-          console.log("Processed nutrition data:", nutrition);
-        } catch (e) {
-          console.error('Error parsing nutrition data:', e);
-          nutrition = {};
-        }
-      }
-      
-      // Type cast the JSON fields with their proper structure
-      const recipe: Recipe = {
-        ...data,
-        ingredients: data.ingredients as unknown as Ingredient[],
-        nutrition: nutrition,
-        science_notes: scienceNotes
-      };
-      
-      console.log('Recipe detail fetched:', recipe);
-      return recipe;
     },
     enabled: !!id,
     retry: 1,

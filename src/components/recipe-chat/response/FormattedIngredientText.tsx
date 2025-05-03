@@ -18,7 +18,7 @@ export function FormattedIngredientText({ text }: FormattedIngredientTextProps) 
   }
   
   try {
-    // Use the shared text formatting utility
+    // Use the shared text formatting utility to get an array of elements
     const formattedContent = processInlineFormatting(text);
     
     // Ensure we wrap content in a single element for React.Children.only compatibility

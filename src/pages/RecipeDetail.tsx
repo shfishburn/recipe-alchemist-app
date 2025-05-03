@@ -7,17 +7,18 @@ import { RecipeDetailLoading } from '@/components/recipe-detail/loading/RecipeDe
 import { RecipeNotFound } from '@/components/recipe-detail/error/RecipeNotFound';
 import { RecipeDetailContent } from '@/components/recipe-detail/RecipeDetailContent';
 import { generateSlug, isValidUUID } from '@/utils/slug-utils';
+import { ErrorDisplay } from '@/components/profile/ErrorDisplay';
 
 const RecipeDetail = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
   
-  // Validate the ID before fetching
-  const isValidId = id && isValidUUID(id.split('-').pop() || id);
+  // Enhanced UUID validation with more robust checks
+  const isValidId = id && typeof id === 'string' && isValidUUID(id.split('-').pop() || id);
   
   const { data: recipe, isLoading, error, refetch } = useRecipeDetail(isValidId ? id : undefined);
   
-  // Handle invalid ID format
+  // Handle invalid ID format and log issue
   useEffect(() => {
     if (id && !isValidId) {
       console.error("Invalid recipe ID format:", id);
@@ -42,6 +43,22 @@ const RecipeDetail = () => {
     };
   }, [recipe]);
   
+  // Show custom error for runtime errors (including React.Children.only errors)
+  if (error instanceof Error && error.message.includes('React.Children.only')) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <ErrorDisplay 
+            error={error} 
+            title="There was an issue rendering this recipe" 
+            onRetry={refetch}
+          />
+        </main>
+      </div>
+    );
+  }
+  
   // If the ID is invalid or there's an error, show the not found component
   if (!isValidId || error) {
     return <RecipeNotFound />;
@@ -52,7 +69,7 @@ const RecipeDetail = () => {
     return <RecipeDetailLoading />;
   }
   
-  // If we have a recipe, show the content
+  // If we have a recipe, show the content, with safety check
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

@@ -16,22 +16,34 @@ export const generateSlug = (text: string): string => {
 };
 
 /**
- * Validates if a string is a valid UUID v4
+ * Enhanced UUID validation with more robust checks
  * @param uuid String to validate as UUID
  * @returns Boolean indicating if the string is a valid UUID
  */
 export const isValidUUID = (uuid: string): boolean => {
+  if (!uuid || typeof uuid !== 'string') {
+    return false;
+  }
+  
+  // Standard UUID v4 regex pattern
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
+  
+  // Try to normalize the UUID by trimming whitespace
+  const normalizedUuid = uuid.trim();
+  
+  return uuidRegex.test(normalizedUuid);
 };
 
 /**
- * Extracts a recipe ID from a slug-id format
+ * Extracts a recipe ID from a slug-id format with enhanced validation
  * @param slugId String in format "slug-id" or just "id"
  * @returns The extracted ID or null if invalid
  */
 export const extractIdFromSlug = (slugId: string): string | null => {
-  if (!slugId) return null;
+  // Basic validation
+  if (!slugId || typeof slugId !== 'string') {
+    return null;
+  }
   
   // If the string contains a hyphen, extract the part after the last hyphen
   if (slugId.includes('-')) {

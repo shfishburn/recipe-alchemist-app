@@ -11,15 +11,39 @@ interface SlotProps extends React.HTMLAttributes<HTMLElement> {
 const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
   const { children, ...rest } = props;
   
+  // If no children, return null
+  if (!children) {
+    return null;
+  }
+  
   // Only proceed if we have a valid React element
   if (!React.isValidElement(children)) {
     return null;
   }
+
+  // Get a single child element, even if an array is passed
+  let child: React.ReactElement | null = null;
+  
+  if (React.Children.count(children) > 1) {
+    console.warn("Slot received multiple children, using only the first one");
+    React.Children.forEach(children, (element, index) => {
+      if (index === 0 && React.isValidElement(element)) {
+        child = element;
+      }
+    });
+  } else {
+    child = React.isValidElement(children) ? children : null;
+  }
+  
+  // If no valid child after processing, return null
+  if (!child) {
+    return null;
+  }
   
   // Clone the element with proper TypeScript typing
-  return React.cloneElement(children as React.ReactElement<any>, {
+  return React.cloneElement(child, {
     ...rest,
-    ref: composeRefs(ref, (children as any).ref),
+    ref: composeRefs(ref, (child as any).ref),
   });
 });
 
