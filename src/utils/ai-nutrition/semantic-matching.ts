@@ -5,7 +5,8 @@ interface SemanticMatchOptions {
   threshold?: number;
   withContext?: boolean;
   maxMatches?: number;
-  validateResults?: boolean;  // Add validation option
+  validateResults?: boolean;
+  embeddingModel?: string; // Add option to specify embedding model
 }
 
 /**
@@ -32,7 +33,8 @@ export async function semanticIngredientMatch(
       threshold = 0.78,
       withContext = true,
       maxMatches = 3,
-      validateResults = true
+      validateResults = true,
+      embeddingModel = 'text-embedding-ada-002' // Default to ada-002 model
     } = options;
     
     // Start with the ingredient alone for better embedding
@@ -45,7 +47,8 @@ export async function semanticIngredientMatch(
       console.warn('Failed to generate embedding for:', ingredientText);
       return {
         matches: [],
-        error: 'Failed to generate ingredient embedding'
+        error: 'Failed to generate ingredient embedding',
+        embeddingModel
       };
     }
     
@@ -57,23 +60,25 @@ export async function semanticIngredientMatch(
     
     // Enhanced logging for debugging
     if (validatedMatches.length > 0) {
-      console.log(`Semantic match results for "${ingredientText}":`, 
+      console.log(`Semantic match results for "${ingredientText}" using ${embeddingModel}:`, 
         validatedMatches.map(m => `${m.food_name} (${m.similarity_score.toFixed(2)})`).join(', ')
       );
     } else {
-      console.warn(`No semantic matches found for "${ingredientText}"`);
+      console.warn(`No semantic matches found for "${ingredientText}" using ${embeddingModel}`);
     }
     
     return {
       matches: validatedMatches,
       embedding,
-      query: ingredientText
+      query: ingredientText,
+      embeddingModel
     };
   } catch (error) {
     console.error('Semantic ingredient matching error:', error);
     return {
       matches: [],
-      error: String(error)
+      error: String(error),
+      embeddingModel: options.embeddingModel || 'text-embedding-ada-002'
     };
   }
 }

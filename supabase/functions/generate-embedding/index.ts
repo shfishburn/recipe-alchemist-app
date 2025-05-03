@@ -123,7 +123,7 @@ async function generateEmbedding(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'text-embedding-3-small',
+        model: 'text-embedding-ada-002', // Updated to use ada-002 model instead of text-embedding-3-small
         input: cleanedText
       }),
     });
@@ -143,3 +143,4 @@ async function generateEmbedding(
     throw error;
   }
 }
+

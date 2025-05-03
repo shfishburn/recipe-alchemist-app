@@ -23,7 +23,8 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'X-Debug-Info': 'direct-fetch-production-' + Date.now()
+        'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
+        'X-Embedding-Model': 'text-embedding-ada-002' // Add header to indicate the embedding model being used
       },
       body: JSON.stringify(requestBody)
     });
@@ -63,7 +64,8 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
     body: requestBody,
     headers: {
       'Content-Type': 'application/json',
-      'X-Debug-Info': 'supabase-invoke-' + Date.now()
+      'X-Debug-Info': 'supabase-invoke-' + Date.now(),
+      'X-Embedding-Model': 'text-embedding-ada-002' // Add header to indicate the embedding model being used
     }
   });
 
