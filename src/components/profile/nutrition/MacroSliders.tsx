@@ -26,6 +26,13 @@ export function MacroSliders({
   carbsGrams,
   fatGrams,
 }: MacroSlidersProps) {
+  const getSliderStyles = (color: string) => {
+    return {
+      "--slider-track-background": "hsl(var(--muted))",
+      "--slider-range-background": color,
+    } as React.CSSProperties;
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -40,6 +47,7 @@ export function MacroSliders({
           step={5}
           onValueChange={onProteinChange} 
           className="w-full" 
+          style={getSliderStyles("rgb(139, 92, 246)")} // purple-500
         />
       </div>
       
@@ -55,6 +63,7 @@ export function MacroSliders({
           step={5}
           onValueChange={onCarbsChange} 
           className="w-full" 
+          style={getSliderStyles("rgb(59, 130, 246)")} // blue-500
         />
       </div>
       
@@ -70,6 +79,7 @@ export function MacroSliders({
           step={5}
           onValueChange={onFatChange} 
           className="w-full" 
+          style={getSliderStyles("rgb(34, 197, 94)")} // green-500
         />
       </div>
     </div>

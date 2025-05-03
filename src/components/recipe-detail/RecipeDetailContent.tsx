@@ -98,9 +98,10 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   return (
     <ProfileProvider>
       <div className="max-w-4xl mx-auto">
+        {/* Recipe Header with title */}
         <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
         
-        {/* Recipe Image - Moved above recipe overview */}
+        {/* Recipe Image - Moved to top directly under the title */}
         <RecipeImage recipe={currentRecipe} />
         
         <div className="hidden">

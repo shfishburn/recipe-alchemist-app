@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Ruler, BarChart } from 'lucide-react';
 
 interface UnitSystemToggleProps {
-  variant?: 'default' | 'outline' | 'secondary';
+  variant?: 'default' | 'outline' | 'secondary' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
 }
@@ -23,11 +23,11 @@ export function UnitSystemToggle({
       variant={variant} 
       size={size}
       onClick={toggleUnitSystem}
-      className={`flex items-center gap-2 ${className}`}
+      className={`flex items-center gap-2 rounded-full transition-all duration-300 ${className}`}
       aria-label={`Switch to ${unitSystem === 'metric' ? 'imperial' : 'metric'} units`}
     >
       {size !== 'icon' && (
-        <span>
+        <span className="font-medium">
           {unitSystem === 'metric' ? 'Metric' : 'Imperial'}
         </span>
       )}

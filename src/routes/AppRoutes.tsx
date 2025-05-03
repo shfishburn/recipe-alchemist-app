@@ -18,6 +18,12 @@ export const AppRoutes = () => {
           <LazyRoutes.Recipes />
         </Suspense>
       } />
+      {/* Updated to support both slug-id and id-only patterns */}
+      <Route path="/recipes/:slug-:id" element={
+        <Suspense fallback={<PageLoadingFallback />}>
+          <LazyRoutes.RecipeDetail />
+        </Suspense>
+      } />
       <Route path="/recipes/:id" element={
         <Suspense fallback={<PageLoadingFallback />}>
           <LazyRoutes.RecipeDetail />

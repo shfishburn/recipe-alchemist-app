@@ -3,10 +3,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChefHat, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide-react';
+import { ChefHat, MessageSquare, Printer, Share2, Trash2, Loader2, FileBarChart, Copy } from 'lucide-react';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/hooks/use-toast';
+import { generateSlug } from '@/utils/slug-utils';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeActionsProps {
@@ -46,17 +48,41 @@ export function RecipeActions({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [sticky]);
   
+  const getShareUrl = () => {
+    const slug = generateSlug(recipe.title);
+    return `${window.location.origin}/recipes/${slug}-${recipe.id}`;
+  };
+  
   const shareRecipe = async () => {
-    if (!navigator.share) return;
+    const shareUrl = getShareUrl();
+    const shareData = {
+      title: recipe.title,
+      text: recipe.tagline || `Check out this ${recipe.cuisine || ''} recipe for ${recipe.title}`,
+      url: shareUrl,
+    };
     
     try {
-      await navigator.share({
-        title: recipe.title,
-        text: recipe.tagline || `Check out this ${recipe.cuisine || ''} recipe for ${recipe.title}`,
-        url: window.location.href,
-      });
+      if (navigator.share) {
+        // Use native sharing if available
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied!",
+          description: "Recipe URL copied to clipboard",
+        });
+      }
     } catch (err) {
       console.error('Error sharing:', err);
+      // Silently fail if user cancels share
+      if (err instanceof Error && err.name !== 'AbortError') {
+        toast({
+          title: "Couldn't share recipe",
+          description: "Please try copying the URL manually",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -149,18 +175,22 @@ export function RecipeActions({
             <span className={isMobile ? "hidden sm:inline" : ""}>Print</span>
           </Button>
           
-          {navigator.share && (
-            <Button
-              variant="outline"
-              size="default"
-              className="w-full flex items-center justify-center"
-              onClick={shareRecipe}
-              title="Share Recipe"
-            >
+          <Button
+            variant="outline"
+            size="default"
+            className="w-full flex items-center justify-center"
+            onClick={shareRecipe}
+            title="Share Recipe"
+          >
+            {navigator.share ? (
               <Share2 className="h-5 w-5 mr-1 sm:mr-2" />
-              <span className={isMobile ? "hidden sm:inline" : ""}>Share</span>
-            </Button>
-          )}
+            ) : (
+              <Copy className="h-5 w-5 mr-1 sm:mr-2" />
+            )}
+            <span className={isMobile ? "hidden sm:inline" : ""}>
+              {navigator.share ? "Share" : "Copy"}
+            </span>
+          </Button>
           
           <Button
             variant="outline"

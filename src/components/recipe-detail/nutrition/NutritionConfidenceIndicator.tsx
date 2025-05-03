@@ -25,10 +25,12 @@ export function NutritionConfidenceIndicator({
     return null;
   }
   
-  const { overall_confidence, overall_confidence_score } = nutrition.data_quality;
+  // Default values in case they're missing
+  const confidence = nutrition.data_quality?.overall_confidence || 'medium';
+  const confidenceScore = nutrition.data_quality?.overall_confidence_score || 0.7;
   
   const getConfidenceColor = () => {
-    switch (overall_confidence) {
+    switch (confidence) {
       case 'high': return 'bg-green-600 hover:bg-green-700';
       case 'medium': return 'bg-yellow-500 hover:bg-yellow-600';
       case 'low': return 'bg-red-500 hover:bg-red-600';
@@ -46,7 +48,8 @@ export function NutritionConfidenceIndicator({
   };
   
   const formatScore = (score: number) => {
-    return Math.round(score * 100) + '%';
+    // Check if score is a valid number and format it
+    return !isNaN(score) ? Math.round(score * 100) + '%' : 'N/A';
   };
   
   const getLimitationText = () => {
@@ -76,9 +79,13 @@ export function NutritionConfidenceIndicator({
     return limitations.join('. ');
   };
   
+  const getHowItWorksText = () => {
+    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence rating indicates how reliable we think these values are based on the quality of ingredient data.";
+  };
+  
   const badge = (
     <Badge className={`${getConfidenceColor()} ${getSizeClasses()} text-white capitalize font-semibold`}>
-      {overall_confidence} {formatScore(overall_confidence_score)}
+      {confidence} {formatScore(confidenceScore)}
     </Badge>
   );
   
@@ -100,7 +107,8 @@ export function NutritionConfidenceIndicator({
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
           <div className="space-y-2">
-            <p className="font-semibold">Nutrition Confidence: {formatScore(overall_confidence_score)}</p>
+            <p className="font-semibold">Nutrition Confidence: {formatScore(confidenceScore)}</p>
+            <p className="text-sm text-muted-foreground">{getHowItWorksText()}</p>
             <p className="text-sm text-muted-foreground">{getLimitationText()}</p>
             {unmatchedIngredients.length > 0 && (
               <div className="text-xs">

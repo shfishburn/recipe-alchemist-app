@@ -52,10 +52,12 @@ export function NutritionUpdateButton({
     try {
       console.log("Sending ingredients to analyze:", recipe.ingredients);
       
+      // Use the same edge function that batch processing uses
       const response = await supabase.functions.invoke('nutrisynth-analysis', {
         body: { 
           ingredients: recipe.ingredients,
-          servings: recipe.servings || 1
+          servings: recipe.servings || 1,
+          recipeId: recipe.id
         }
       });
 
@@ -107,7 +109,6 @@ export function NutritionUpdateButton({
         toast({
           title: "Nutrition updated",
           description: "Some nutrition values may be estimates due to limited ingredient data",
-          // Using a valid variant for the toast
           variant: "default"
         });
       } else {
