@@ -46,18 +46,18 @@ const QuickRecipePage = () => {
     };
   }, []);
 
-  // Show full-screen loading when generating a recipe, without the layout
+  // Show full-screen loading when generating a recipe, within the relative container
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
     return (
-      <>
+      <div className="min-h-screen relative">
         <LoadingIndicator />
         <FullScreenLoading 
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
         />
-      </>
+      </div>
     );
   }
 

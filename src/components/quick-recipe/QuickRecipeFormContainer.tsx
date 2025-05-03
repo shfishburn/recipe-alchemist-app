@@ -9,6 +9,7 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Cake, ChefHat, Egg } from 'lucide-react';
 import { QuickRecipeFormData as TagFormData } from './QuickRecipeTagForm';
 import { toast } from '@/hooks/use-toast';
+import { FullScreenLoading } from './FullScreenLoading';
 
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
@@ -41,6 +42,18 @@ export function QuickRecipeFormContainer() {
 
   const handlePrepTimeChange = (time: number) => {
     setPrepTime(time);
+  };
+
+  // Handle user cancellation
+  const handleCancel = () => {
+    toast({
+      title: "Recipe generation cancelled",
+      description: "You can try again with different ingredients.",
+    });
+    // Reset the loading state - this should be handled by the store but adding a fallback
+    if (window.location.pathname === '/') {
+      window.location.reload();
+    }
   };
 
   // Create an adapter function to handle form submission
@@ -77,6 +90,11 @@ export function QuickRecipeFormContainer() {
       isMobile ? "px-1" : "px-2",
       "md:max-w-xl lg:max-w-2xl mx-auto" // Increased width for desktop displays (1.5x wider)
     )}>
+      {/* Show loading overlay when isLoading is true */}
+      {isLoading && (
+        <FullScreenLoading onCancel={handleCancel} />
+      )}
+      
       {/* Enhanced decorative elements with more interesting visual design */}
       <div className="absolute -top-8 -left-8 w-20 h-20 md:w-32 md:h-32 bg-recipe-green/20 rounded-full blur-md z-0 animate-pulse"></div>
       <div className="absolute -bottom-10 -right-10 w-24 h-24 md:w-40 md:h-40 bg-recipe-orange/20 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: "1s" }}></div>
