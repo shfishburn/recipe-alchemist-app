@@ -78,6 +78,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             setMessage={setMessage}
             applyChanges={applyChanges}
             isApplying={isApplying}
+            recipe={recipe}
           />
 
           <RecipeChatInput

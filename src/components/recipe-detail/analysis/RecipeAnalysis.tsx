@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle, ChevronUp, ChevronDown, Atom, Flask } from "lucide-react";
+import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle, ChevronUp, ChevronDown, Atom } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -59,18 +59,24 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
     queryKey: ['recipe-reactions', recipe.id],
     queryFn: async () => {
       console.log('Fetching recipe reactions for', recipe.id);
-      const { data, error } = await supabase
-        .from('recipe_step_reactions')
-        .select('*')
-        .eq('recipe_id', recipe.id)
-        .order('step_index', { ascending: true });
       
-      if (error) {
-        console.error('Error fetching recipe reactions:', error);
+      try {
+        const { data, error } = await supabase
+          .from('recipe_step_reactions')
+          .select('*')
+          .eq('recipe_id', recipe.id)
+          .order('step_index', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching recipe reactions:', error);
+          return [];
+        }
+        
+        return data as ReactionItem[];
+      } catch (err) {
+        console.error('Error in query execution:', err);
         return [];
       }
-      
-      return data;
     },
     enabled: isOpen, // Only fetch when the analysis section is open
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
@@ -243,7 +249,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
           <div key={`reaction-${index}`} className="mb-6">
             <div className="flex items-start gap-3 mb-2">
               <div className="mt-1 flex-shrink-0">
-                <Flask className="h-5 w-5 text-blue-500" />
+                <Atom className="h-5 w-5 text-blue-500" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-slate-800">{reaction.step_text}</p>

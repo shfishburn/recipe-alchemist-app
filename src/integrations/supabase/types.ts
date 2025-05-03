@@ -357,6 +357,74 @@ export type Database = {
           },
         ]
       }
+      recipe_step_reactions: {
+        Row: {
+          ai_model: string | null
+          confidence: number
+          cooking_method: string | null
+          created_at: string | null
+          cuisine: string | null
+          duration_minutes: number | null
+          generated_by: string | null
+          id: string
+          ingredient_context: string[] | null
+          reaction_details: string[]
+          reactions: string[]
+          recipe_id: string
+          step_index: number
+          step_text: string
+          temperature_celsius: number | null
+          updated_at: string | null
+          version: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          confidence: number
+          cooking_method?: string | null
+          created_at?: string | null
+          cuisine?: string | null
+          duration_minutes?: number | null
+          generated_by?: string | null
+          id?: string
+          ingredient_context?: string[] | null
+          reaction_details: string[]
+          reactions: string[]
+          recipe_id: string
+          step_index: number
+          step_text: string
+          temperature_celsius?: number | null
+          updated_at?: string | null
+          version?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          confidence?: number
+          cooking_method?: string | null
+          created_at?: string | null
+          cuisine?: string | null
+          duration_minutes?: number | null
+          generated_by?: string | null
+          id?: string
+          ingredient_context?: string[] | null
+          reaction_details?: string[]
+          reactions?: string[]
+          recipe_id?: string
+          step_index?: number
+          step_text?: string
+          temperature_celsius?: number | null
+          updated_at?: string | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_step_reactions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipes: {
         Row: {
           chef_notes: string | null
