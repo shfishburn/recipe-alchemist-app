@@ -74,7 +74,8 @@ export function QuickRecipeFormContainer() {
   return (
     <div className={cn(
       "relative overflow-hidden",
-      isMobile ? "px-1" : "px-2"
+      isMobile ? "px-1" : "px-2",
+      "md:max-w-xl lg:max-w-2xl mx-auto" // Increased width for desktop displays (1.5x wider)
     )}>
       {/* Enhanced decorative elements with more interesting visual design */}
       <div className="absolute -top-8 -left-8 w-20 h-20 md:w-32 md:h-32 bg-recipe-green/20 rounded-full blur-md z-0 animate-pulse"></div>

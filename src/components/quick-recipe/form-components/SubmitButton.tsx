@@ -20,7 +20,7 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
         "w-full bg-gradient-to-r from-recipe-blue to-recipe-green hover:from-recipe-blue/90 hover:to-recipe-green/90",
         "transition-all text-white shadow-lg font-medium group",
         "relative overflow-hidden rounded-xl",
-        isMobile ? "py-4 text-base" : "",
+        isMobile ? "py-4 text-base" : "py-4 text-lg", // Increased padding and text size for desktop
         isLoading ? "animate-pulse" : ""
       )}
       size={isMobile ? "lg" : "lg"}
@@ -32,24 +32,24 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
         <div className="flex items-center justify-center">
           <CookingPot className={cn(
             "mr-2 animate-bounce",
-            isMobile ? "h-6 w-6" : "h-5 w-5"
+            isMobile ? "h-6 w-6" : "h-6 w-6" // Increased icon size for desktop
           )} />
-          <span className={isMobile ? "font-medium" : ""}>
+          <span className={isMobile ? "font-medium" : "font-medium"}>
             Creating Your Recipe...
           </span>
         </div>
       ) : (
         <div className="flex items-center justify-center">
-          <span className={isMobile ? "font-medium" : ""}>
+          <span className={isMobile ? "font-medium" : "font-medium"}>
             Show My Recipe
           </span>
           <ArrowRight className={cn(
             "ml-1 group-hover:translate-x-1 transition-transform",
-            isMobile ? "h-6 w-6" : "h-5 w-5"
+            isMobile ? "h-6 w-6" : "h-6 w-6" // Increased icon size for desktop
           )} />
           <PartyPopper className={cn(
             "ml-1 opacity-0 group-hover:opacity-100 transition-opacity group-hover:animate-bounce",
-            isMobile ? "h-5 w-5" : "h-4 w-4"
+            isMobile ? "h-5 w-5" : "h-5 w-5" // Increased icon size for desktop
           )} />
         </div>
       )}
