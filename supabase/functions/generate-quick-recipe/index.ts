@@ -15,7 +15,11 @@ serve(async (req) => {
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
     console.log(`Request received with debug info: ${debugInfo}`);
     
-    return await handleRequest(req, debugInfo);
+    // Extract embedding model header if present
+    const embeddingModel = req.headers.get("x-embedding-model") || "text-embedding-ada-002";
+    console.log(`Using embedding model: ${embeddingModel}`);
+    
+    return await handleRequest(req, debugInfo, embeddingModel);
   } catch (err) {
     console.error("Quick recipe generation error:", err);
     return new Response(

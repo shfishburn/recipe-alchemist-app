@@ -6,7 +6,7 @@ import { buildOpenAIPrompt } from "./prompt-builder.ts";
 import { processRequestParams } from "./request-processor.ts";
 
 // Main request handler function
-export async function handleRequest(req: Request, debugInfo: string): Promise<Response> {
+export async function handleRequest(req: Request, debugInfo: string, embeddingModel: string = "text-embedding-ada-002"): Promise<Response> {
   // Check content type
   const contentType = req.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
@@ -53,6 +53,9 @@ export async function handleRequest(req: Request, debugInfo: string): Promise<Re
     if (paramError) {
       return paramError;
     }
+    
+    // Add embedding model to the params
+    processedParams.embeddingModel = embeddingModel;
     
     // Build the prompt for OpenAI
     const prompt = buildOpenAIPrompt(processedParams);

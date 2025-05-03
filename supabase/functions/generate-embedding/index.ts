@@ -1,11 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-
-// Define CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 // OpenAI API key from environment variable
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -32,16 +27,19 @@ serve(async (req) => {
     // Extract input data with validation
     const { text, context, model = 'text-embedding-ada-002' } = normalizeInput(requestData);
     
-    console.log(`Generating embedding for "${text.substring(0, 30)}..." using model: ${model}`);
+    // Check if client specified embedding model in header
+    const requestedModel = req.headers.get('x-embedding-model') || model;
+    
+    console.log(`Generating embedding for "${text.substring(0, 30)}..." using model: ${requestedModel}`);
     
     // Generate embedding using OpenAI API
-    const embedding = await generateEmbedding(text, context, model);
+    const embedding = await generateEmbedding(text, context, requestedModel);
     
     // Return the embedding vector
     return new Response(
       JSON.stringify({ 
         embedding,
-        model,
+        model: requestedModel,
         dimensions: embedding.length,
         input_tokens: estimateTokens(text)
       }),
@@ -135,7 +133,7 @@ async function generateEmbedding(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: model, // Use the requested model or default
+        model: model, // Use the requested model
         input: cleanedText
       }),
     });

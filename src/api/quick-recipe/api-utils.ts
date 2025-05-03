@@ -17,16 +17,19 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     
     console.log("Testing direct fetch to edge function");
     
-    // Make the direct fetch request
+    // Make the direct fetch request with CORS-compatible headers
     const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
-        'X-Embedding-Model': 'text-embedding-ada-002' // Add header to indicate the embedding model being used
+        // Remove problematic header - will be handled through the request body instead
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        ...requestBody,
+        embeddingModel: 'text-embedding-ada-002' // Include model in request body
+      })
     });
     
     console.log("Direct fetch response status:", response.status);
@@ -61,11 +64,14 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
 // Fallback API call using Supabase functions
 export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
   const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
-    body: requestBody,
+    body: {
+      ...requestBody,
+      embeddingModel: 'text-embedding-ada-002' // Include model in request body
+    },
     headers: {
       'Content-Type': 'application/json',
-      'X-Debug-Info': 'supabase-invoke-' + Date.now(),
-      'X-Embedding-Model': 'text-embedding-ada-002' // Add header to indicate the embedding model being used
+      'X-Debug-Info': 'supabase-invoke-' + Date.now()
+      // Remove problematic header - will be handled through the request body
     }
   });
 
