@@ -1,222 +1,144 @@
 
-import { useCallback, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useRecipes } from '@/hooks/use-recipes';
-import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { supabase } from '@/integrations/supabase/client';
-import { Recipe } from '@/types/recipe';
+import type { Recipe } from '@/types/recipe';
+import type { ChatMessage } from '@/types/chat';
 import { updateRecipe } from './utils/update-recipe';
-import { validateRecipeUpdate } from './utils/validation/validate-recipe-update';
-import { ChatMessage } from '@/types/chat';
-import { updateChatStatus } from './utils/update-chat-status';
 
-export const useApplyChanges = () => {
+export function useApplyChanges() {
+  const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
-  const { refetch: refetchRecipes } = useRecipes();
-  const { refetch: refetchRecipeDetail } = useRecipeDetail();
-  const [isTimeoutExceeded, setIsTimeoutExceeded] = useState(false);
-
-  const mutation = useMutation({
-    mutationFn: async ({ recipeId, changes, originalRecipe }: { 
-      recipeId: string, 
-      changes: ChatMessage, 
-      originalRecipe: Recipe 
-    }) => {
-      if (!recipeId || !changes) {
-        console.warn("No recipe ID or changes provided.");
-        return false;
-      }
-
-      console.log("Applying changes:", { 
-        recipeId, 
-        changeTitle: changes.changes_suggested?.title,
-        changeIngredients: changes.changes_suggested?.ingredients ? 'present' : 'none',
-        changeInstructions: changes.changes_suggested?.instructions ? 'present' : 'none',
+  
+  async function applyChanges(recipe: Recipe, chatMessage: ChatMessage) {
+    if (isApplying) {
+      console.warn('Already applying changes, ignoring duplicate request');
+      return;
+    }
+    
+    console.log('Starting to apply changes from chat message:', chatMessage.id);
+    
+    // Check for required data
+    if (!recipe || !recipe.id) {
+      const errorMsg = 'Cannot apply changes: Recipe data is missing';
+      console.error(errorMsg);
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive',
       });
+      return;
+    }
+    
+    if (!chatMessage || !chatMessage.recipe_id) {
+      const errorMsg = 'Cannot apply changes: Chat message is missing recipe reference';
+      console.error(errorMsg, chatMessage);
+      toast({
+        title: 'Error',
+        description: errorMsg,
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      setIsApplying(true);
       
-      // Set a timeout to detect stuck operations
-      const timeoutId = setTimeout(() => {
-        setIsTimeoutExceeded(true);
-        console.warn("Apply changes operation timeout threshold exceeded");
-      }, 15000);
-
-      try {
-        // Validate updates before applying
-        const validationResult = validateRecipeUpdate(originalRecipe, changes.changes_suggested);
-        if (!validationResult) {
-          clearTimeout(timeoutId);
+      // First, mark this chat as "applied" in the database
+      const { error: updateError } = await supabase
+        .from('recipe_chats')
+        .update({ applied: true })
+        .eq('id', chatMessage.id);
+      
+      if (updateError) {
+        throw new Error(`Error marking chat as applied: ${updateError.message}`);
+      }
+      
+      // Step 2: Update the recipe with the changes
+      await updateRecipe(recipe, chatMessage)
+        .then(() => {
+          // Success - Show toast notification
           toast({
-            title: "Validation Error",
-            description: "Failed to validate updates.",
-            variant: "destructive",
+            title: 'Changes Applied',
+            description: 'Recipe has been successfully updated.',
           });
-          return false;
-        }
-
-        // Process and apply updates to the recipe
-        const updatedRecipe = await updateRecipe(originalRecipe, changes);
-
-        // Mark the chat message as applied
-        try {
-          if (changes.id) {
-            await updateChatStatus(changes);
-          } else {
-            console.warn("No chat ID available to mark as applied");
-          }
-        } catch (statusError) {
-          console.error("Error updating chat status:", statusError);
-          // Continue with the process even if status update fails
-        }
-
-        // Revalidate cache after successful update
-        await Promise.all([
-          refetchRecipes(),
-          recipeId ? refetchRecipeDetail() : Promise.resolve()
-        ]);
-        
-        clearTimeout(timeoutId);
-        setIsTimeoutExceeded(false);
-
-        toast({
-          title: "Recipe Updated",
-          description: "Your recipe has been successfully updated.",
-        });
-
-        return true;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        setIsTimeoutExceeded(false);
-        console.error("Error applying changes:", error);
-        toast({
-          title: "Update Failed",
-          description: "Failed to update recipe. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
-    },
-    onError: (error) => {
-      setIsTimeoutExceeded(false);
-      console.error("Recipe chat mutation error:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const applyChanges = useCallback((chat: ChatMessage): Promise<boolean> => {
-    // Enhanced validation of recipe ID
-    if (!chat.recipe_id) {
-      console.error("Missing recipe ID in chat message", chat);
-      toast({
-        title: "Error",
-        description: "Cannot apply changes: Missing recipe ID in chat message",
-        variant: "destructive",
-      });
-      return Promise.resolve(false);
-    }
-    
-    console.log("ApplyChanges called with chat message:", {
-      id: chat.id,
-      recipe_id: chat.recipe_id,
-      hasChanges: !!chat.changes_suggested
-    });
-    
-    // Reset state
-    setIsTimeoutExceeded(false);
-    
-    // We need the original recipe for the update
-    return new Promise<boolean>((resolve, reject) => {
-      // Set a timeout for the entire operation
-      const operationTimeout = setTimeout(() => {
-        console.error("Total operation timeout exceeded");
-        setIsTimeoutExceeded(true);
-        toast({
-          title: "Operation Timeout",
-          description: "The update is taking too long. Please try again.",
-          variant: "destructive",
-        });
-        resolve(false);
-      }, 30000);
-      
-      supabase
-        .from('recipes')
-        .select('*')
-        .eq('id', chat.recipe_id)
-        .single()
-        .then(({ data, error }) => {
-          if (error) {
-            console.error("Error fetching recipe:", error);
-            clearTimeout(operationTimeout);
-            toast({
-              title: "Error",
-              description: "Could not find the recipe to update.",
-              variant: "destructive",
-            });
-            resolve(false);
-            return;
-          }
-          
-          if (!data) {
-            console.error("No recipe data found for ID:", chat.recipe_id);
-            clearTimeout(operationTimeout);
-            toast({
-              title: "Error",
-              description: "Recipe data not found.",
-              variant: "destructive",
-            });
-            resolve(false);
-            return;
-          }
-          
-          console.log("Recipe fetched successfully:", {
-            id: data.id,
-            title: data.title,
-            ingredientsCount: data.ingredients?.length
-          });
-          
-          // Cast the data to Recipe type to ensure type safety
-          const recipeData = data as unknown as Recipe;
-          
-          // Use then/finally pattern instead of then/catch to avoid TypeScript error
-          mutation.mutateAsync({ 
-            recipeId: chat.recipe_id as string, 
-            changes: chat, 
-            originalRecipe: recipeData 
-          })
-            .then(result => {
-              console.log("Apply changes mutation completed with result:", result);
-              clearTimeout(operationTimeout);
-              resolve(result);
-            })
-            .then(null, err => {
-              // This is an alternative to .catch() that works with PromiseLike<void>
-              console.error("Error in mutation:", err);
-              clearTimeout(operationTimeout);
-              toast({
-                title: "Update Error",
-                description: "Failed to update the recipe. Please try again.",
-                variant: "destructive",
-              });
-              resolve(false);
-            });
         })
-        .then(null, err => {
-          // This is an alternative to .catch() that works with PromiseLike
-          console.error("Error fetching recipe:", err);
-          clearTimeout(operationTimeout);
+        .catch((error) => {
+          console.error('Error applying changes:', error);
+          // Show error toast
           toast({
-            title: "Database Error",
-            description: "Could not access the recipe. Please try again.",
-            variant: "destructive",
+            title: 'Error Applying Changes',
+            description: error.message || 'An error occurred while updating the recipe.',
+            variant: 'destructive',
           });
-          resolve(false);
+          throw error; // Re-throw to trigger catch block below
         });
-    });
-  }, [mutation, toast]);
-
-  return { applyChanges, isPending: mutation.isPending, isTimeoutExceeded };
-};
+        
+      // If the changes include science-related updates, analyze with the reactions function
+      if (chatMessage.changes_suggested && 
+          (chatMessage.changes_suggested.science_notes ||
+           chatMessage.changes_suggested.instructions)) {
+        
+        // Skip reactions analysis if the instructions array is empty
+        const instructionsArray = chatMessage.changes_suggested.instructions;
+        if (Array.isArray(instructionsArray) && instructionsArray.length === 0) {
+          console.log('Skipping reactions analysis: empty instructions array');
+          return;
+        }
+        
+        try {
+          console.log('Starting scientific reaction analysis for recipe:', recipe.id);
+          
+          // Load updated recipe to get latest instructions
+          const { data: updatedRecipe, error: loadError } = await supabase
+            .from('recipes')
+            .select('*')
+            .eq('id', recipe.id)
+            .single();
+            
+          if (loadError) {
+            console.error('Error loading updated recipe:', loadError);
+            return; // Continue without scientific analysis
+          }
+          
+          // Call the reactions analysis edge function
+          const instructions = Array.isArray(updatedRecipe.instructions) ? 
+            updatedRecipe.instructions : [];
+            
+          if (instructions && instructions.length > 0) {
+            // Call the analyze-reactions edge function
+            supabase.functions.invoke('analyze-reactions', {
+              body: {
+                recipe_id: recipe.id,
+                title: updatedRecipe.title || recipe.title,
+                instructions: instructions
+              }
+            }).then((response) => {
+              if (response.error) {
+                console.error('Error in scientific analysis:', response.error);
+              } else {
+                console.log('Scientific analysis completed:', response.data);
+              }
+            }).catch((error) => {
+              console.error('Failed to invoke scientific analysis:', error);
+            });
+          }
+        } catch (analysisError) {
+          console.error('Error during scientific analysis:', analysisError);
+          // Don't block the main flow for scientific analysis errors
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error in apply changes flow:', error);
+      // Error already handled in updateRecipe catch
+    } finally {
+      setIsApplying(false);
+    }
+  }
+  
+  return {
+    applyChanges,
+    isApplying,
+  };
+}

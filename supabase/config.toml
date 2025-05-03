@@ -20,3 +20,7 @@ verify_jwt = false
 # Recipe chat function
 [functions.recipe-chat]
 verify_jwt = false
+
+# New science analysis function for recipe reactions
+[functions.analyze-reactions]
+verify_jwt = false

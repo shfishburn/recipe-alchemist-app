@@ -14,7 +14,9 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   
   // Check if we have the structured quantity and unit fields
   if (item.quantity !== undefined && item.quantity !== null) {
-    formattedQuantity = item.quantity.toString();
+    formattedQuantity = typeof item.quantity === 'number' 
+      ? item.quantity.toString() 
+      : item.quantity;
     
     if (item.unit) {
       formattedQuantity += ` ${item.unit}`;
@@ -30,16 +32,8 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
     }
   }
 
-  // Debug logging to help identify issues
-  console.log("Shopping item rendering:", { 
-    index,
-    itemText: item.text,
-    itemName: item.item,
-    quantity: item.quantity,
-    unit: item.unit, 
-    formattedQuantity,
-    fullItem: item 
-  });
+  // Get the display name for the item
+  const displayName = item.item || item.text || '';
 
   return (
     <div 
@@ -59,7 +53,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
       </div>
       <span className={`${item.checked ? 'line-through text-muted-foreground' : ''}`}>
         {formattedQuantity && <strong className="mr-1">{formattedQuantity}</strong>}
-        {item.item || item.text}
+        {displayName}
       </span>
       {item.pantryStaple && (
         <span className="text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded ml-auto">

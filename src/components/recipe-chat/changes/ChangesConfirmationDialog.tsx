@@ -32,6 +32,7 @@ export function ChangesConfirmationDialog({
   // Use local state to debounce the isApplying state
   const [isLocalApplying, setIsLocalApplying] = useState(isApplying);
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [isStuck, setIsStuck] = useState(false);
   
   // Use effect to debounce the applying state
   useEffect(() => {
@@ -42,10 +43,28 @@ export function ChangesConfirmationDialog({
     return () => clearTimeout(timer);
   }, [isApplying]);
   
+  // Set a timeout to detect if the dialog is stuck
+  useEffect(() => {
+    let stuckTimer: number | undefined;
+    
+    if (isLocalApplying) {
+      stuckTimer = setTimeout(() => {
+        setIsStuck(true);
+      }, 8000) as unknown as number; // If applying takes more than 8 seconds, consider it stuck
+    } else {
+      setIsStuck(false);
+    }
+    
+    return () => {
+      if (stuckTimer) clearTimeout(stuckTimer);
+    };
+  }, [isLocalApplying]);
+  
   // Clear any error when the dialog opens/closes
   useEffect(() => {
     if (!open) {
       setApplyError(null);
+      setIsStuck(false);
     }
   }, [open]);
   
@@ -58,6 +77,7 @@ export function ChangesConfirmationDialog({
     // Set local applying immediately for better UX
     setIsLocalApplying(true);
     setApplyError(null);
+    setIsStuck(false);
     
     // Add error handling around the confirm action
     try {
@@ -69,9 +89,16 @@ export function ChangesConfirmationDialog({
     }
   };
   
+  const handleForceClose = () => {
+    setIsLocalApplying(false);
+    setIsStuck(false);
+    onOpenChange(false);
+  };
+  
   return (
     <AlertDialog open={open} onOpenChange={(isOpen) => {
-      if (isLocalApplying && !isOpen) return; // Prevent closing while applying
+      // Allow force closing if stuck
+      if (isLocalApplying && !isOpen && !isStuck) return; 
       onOpenChange(isOpen);
     }}>
       <AlertDialogContent className="max-w-lg">
@@ -93,8 +120,19 @@ export function ChangesConfirmationDialog({
           </div>
         )}
         
+        {isStuck && (
+          <div className="mb-4 px-4 py-3 border border-amber-200 bg-amber-50 text-amber-700 rounded-md text-sm">
+            It's taking longer than expected. You can force close this dialog and try again later.
+          </div>
+        )}
+        
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLocalApplying}>Cancel</AlertDialogCancel>
+          {isStuck ? (
+            <AlertDialogCancel onClick={handleForceClose}>Force Close</AlertDialogCancel>
+          ) : (
+            <AlertDialogCancel disabled={isLocalApplying && !isStuck}>Cancel</AlertDialogCancel>
+          )}
+          
           <AlertDialogAction 
             onClick={handleConfirm}
             disabled={isLocalApplying}

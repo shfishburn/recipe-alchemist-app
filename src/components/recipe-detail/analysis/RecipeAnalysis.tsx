@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle, ChevronUp, ChevronDown, Atom, Flask } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -10,6 +10,15 @@ import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import type { Recipe, Ingredient } from '@/types/recipe';
+
+// Define reaction item type
+interface ReactionItem {
+  step_index: number;
+  step_text: string;
+  reactions: string[];
+  reaction_details: string[];
+  confidence: number;
+}
 
 interface RecipeAnalysisProps {
   recipe: Recipe;
@@ -23,6 +32,7 @@ interface TabContent {
   chemistry: React.ReactNode[];
   techniques: React.ReactNode[];
   troubleshooting: React.ReactNode[];
+  reactions: React.ReactNode[];
 }
 
 export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: RecipeAnalysisProps) {
@@ -31,17 +41,42 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [activeTab, setActiveTab] = useState("chemistry");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [reactionData, setReactionData] = useState<ReactionItem[]>([]);
   
   // Store parsed content to ensure consistency between tab switches
   const [parsedContent, setParsedContent] = useState<TabContent>({
     chemistry: [],
     techniques: [],
-    troubleshooting: []
+    troubleshooting: [],
+    reactions: []
   });
   
   // Flag to track if content has been parsed
   const contentParsedRef = useRef(false);
   
+  // Fetch reaction data from Supabase
+  const { data: reactions, isLoading: isLoadingReactions, refetch: refetchReactions } = useQuery({
+    queryKey: ['recipe-reactions', recipe.id],
+    queryFn: async () => {
+      console.log('Fetching recipe reactions for', recipe.id);
+      const { data, error } = await supabase
+        .from('recipe_step_reactions')
+        .select('*')
+        .eq('recipe_id', recipe.id)
+        .order('step_index', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching recipe reactions:', error);
+        return [];
+      }
+      
+      return data;
+    },
+    enabled: isOpen, // Only fetch when the analysis section is open
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+  
+  // Fetch general analysis data from recipe-chat
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
@@ -76,6 +111,39 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     retry: 1,
   });
 
+  // Function to analyze reactions with OpenAI
+  const analyzeReactions = async () => {
+    if (!recipe.instructions || recipe.instructions.length === 0) {
+      toast.error('Cannot analyze: Recipe has no instructions');
+      return;
+    }
+    
+    try {
+      setIsAnalyzing(true);
+      toast.info('Analyzing recipe reactions...');
+      
+      const response = await supabase.functions.invoke('analyze-reactions', {
+        body: {
+          recipe_id: recipe.id,
+          title: recipe.title,
+          instructions: recipe.instructions
+        }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to analyze reactions');
+      }
+      
+      toast.success('Reaction analysis complete');
+      refetchReactions();
+    } catch (error) {
+      console.error('Error analyzing reactions:', error);
+      toast.error('Failed to analyze reactions: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   // Function to manually trigger analysis
   const handleAnalyze = useCallback(() => {
     if (!isLoading) {
@@ -84,13 +152,20 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       setParsedContent({
         chemistry: [],
         techniques: [],
-        troubleshooting: []
+        troubleshooting: [],
+        reactions: []
       });
       
       setIsAnalyzing(true);
-      refetch().finally(() => {
+      
+      // Perform both analyses
+      Promise.all([
+        refetch(),
+        analyzeReactions()
+      ]).finally(() => {
         setIsAnalyzing(false);
       });
+      
       toast.info("Analyzing recipe...");
     }
   }, [refetch, isLoading]);
@@ -152,6 +227,63 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id]);
 
+  // Process reactions when they're loaded
+  useEffect(() => {
+    if (reactions && reactions.length > 0) {
+      setReactionData(reactions as ReactionItem[]);
+      
+      // Create content for the reactions tab
+      const reactionNodes = reactions.map((reaction: ReactionItem, index) => {
+        const reactionTypes = Array.isArray(reaction.reactions) ? reaction.reactions : [];
+        const reactionDetails = Array.isArray(reaction.reaction_details) && reaction.reaction_details.length > 0 
+          ? reaction.reaction_details[0] 
+          : '';
+          
+        return (
+          <div key={`reaction-${index}`} className="mb-6">
+            <div className="flex items-start gap-3 mb-2">
+              <div className="mt-1 flex-shrink-0">
+                <Flask className="h-5 w-5 text-blue-500" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-slate-800">{reaction.step_text}</p>
+                {reactionDetails && (
+                  <p className="text-sm text-slate-600 mt-1">{reactionDetails}</p>
+                )}
+              </div>
+            </div>
+            {reactionTypes.length > 0 && (
+              <div className="ml-8 flex flex-wrap gap-2 mt-2">
+                {reactionTypes.map((type, i) => (
+                  <span 
+                    key={`${index}-${i}`} 
+                    className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full"
+                  >
+                    {formatReactionName(type)}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      });
+      
+      // Update the reactions tab content
+      setParsedContent(prev => ({
+        ...prev,
+        reactions: reactionNodes
+      }));
+    }
+  }, [reactions]);
+
+  // Format reaction names for display
+  const formatReactionName = (reaction: string): string => {
+    return reaction
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Set initialAnalysisRef to true after initial render
   useEffect(() => {
     if (analysis && !initialAnalysisRef.current) {
@@ -172,7 +304,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       const newContent: TabContent = {
         chemistry: [],
         techniques: [],
-        troubleshooting: []
+        troubleshooting: [],
+        reactions: parsedContent.reactions // Keep existing reaction content
       };
       
       // Process chemistry section
@@ -305,10 +438,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     (analysis?.science_notes && analysis.science_notes.length > 0) || 
     (analysis?.techniques && analysis.techniques.length > 0) || 
     (analysis?.troubleshooting && analysis.troubleshooting.length > 0) ||
-    (analysis?.textResponse && analysis.textResponse.length > 50);
+    (analysis?.textResponse && analysis.textResponse.length > 50) ||
+    (reactionData && reactionData.length > 0);
 
   // Check if we should show the analysis prompt
-  const showAnalysisPrompt = !analysis && !isLoading;
+  const showAnalysisPrompt = !analysis && !isLoading && !reactionData.length;
+
+  // Check if the reactions analysis was done (for tab visibility)
+  const hasReactionAnalysis = reactionData && reactionData.length > 0;
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle} className="mt-6">
@@ -320,7 +457,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               Scientific Analysis
             </CardTitle>
             <div className="flex items-center space-x-2">
-              {!isLoading && hasAnyAnalysisContent && (
+              {!isAnalyzing && hasAnyAnalysisContent && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -352,7 +489,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
         <CollapsibleContent>
           <CardContent>
-            {isLoading || isAnalyzing ? (
+            {isLoading || isAnalyzing || isLoadingReactions ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
@@ -376,6 +513,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                     <BookOpenText className="h-4 w-4" />
                     Techniques
                   </TabsTrigger>
+                  {hasReactionAnalysis && (
+                    <TabsTrigger value="reactions" className="flex items-center gap-2">
+                      <Atom className="h-4 w-4" />
+                      Reactions
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="troubleshooting" className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4" />
                     Troubleshooting
@@ -405,6 +548,21 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                     }
                   </div>
                 </TabsContent>
+                
+                {hasReactionAnalysis && (
+                  <TabsContent value="reactions" className="prose prose-zinc dark:prose-invert max-w-none">
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-base text-slate-700 mb-4">Step-by-Step Reaction Analysis</h3>
+                      {parsedContent.reactions.length > 0 ? 
+                        parsedContent.reactions : 
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>No reaction analysis available for this recipe.</p>
+                          <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                        </div>
+                      }
+                    </div>
+                  </TabsContent>
+                )}
                 
                 <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
                   <div className="space-y-2">

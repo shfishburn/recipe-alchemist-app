@@ -23,6 +23,7 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const isMobile = useIsMobile();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleApplyChanges = () => {
     if (isOptimistic) return; // Don't allow applying changes from optimistic messages
@@ -36,12 +37,27 @@ export function ChatMessage({
     }
     
     console.log("Applying changes from chat:", chat.id);
+    setIsProcessing(true);
+    
+    // Add timeout to detect stuck operations
+    const timeout = setTimeout(() => {
+      if (isProcessing) {
+        console.warn("Apply changes operation taking too long, may be stuck");
+        setLocalError("Operation is taking longer than expected. Please try again.");
+        setIsProcessing(false);
+      }
+    }, 10000);
     
     // Apply the changes
-    applyChanges(chat).catch(error => {
-      console.error("Error when applying changes:", error);
-      setLocalError(error instanceof Error ? error.message : "Failed to apply changes");
-    });
+    applyChanges(chat)
+      .catch(error => {
+        console.error("Error when applying changes:", error);
+        setLocalError(error instanceof Error ? error.message : "Failed to apply changes");
+      })
+      .finally(() => {
+        clearTimeout(timeout);
+        setIsProcessing(false);
+      });
   };
   
   // Parse and extract follow-up questions from the response
@@ -68,6 +84,9 @@ export function ChatMessage({
 
   const avatarSize = isMobile ? "h-7 w-7" : "h-10 w-10";
   const messageGap = isMobile ? "gap-2" : "gap-4";
+
+  // Merge local state with props for proper UI display
+  const effectiveIsApplying = isApplying || isProcessing;
 
   return (
     <div className="flex flex-col space-y-2 sm:space-y-4">
@@ -100,7 +119,7 @@ export function ChatMessage({
               followUpQuestions={followUpQuestions}
               setMessage={setMessage}
               onApplyChanges={handleApplyChanges}
-              isApplying={isApplying}
+              isApplying={effectiveIsApplying}
               applied={chat.applied || false}
               isMobile={isMobile}
             />
