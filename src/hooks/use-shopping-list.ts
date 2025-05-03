@@ -19,23 +19,6 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
     return acc;
   }, {} as Record<string, ShoppingListItem[]>);
 
-  // Separate active and completed items
-  const activeItemsByDept = Object.entries(itemsByDepartment).reduce((acc, [dept, items]) => {
-    const activeItems = items.filter(item => !item.checked);
-    if (activeItems.length > 0) {
-      acc[dept] = activeItems;
-    }
-    return acc;
-  }, {} as Record<string, ShoppingListItem[]>);
-  
-  const completedItemsByDept = Object.entries(itemsByDepartment).reduce((acc, [dept, items]) => {
-    const completedItems = items.filter(item => item.checked);
-    if (completedItems.length > 0) {
-      acc[dept] = completedItems;
-    }
-    return acc;
-  }, {} as Record<string, ShoppingListItem[]>);
-
   // Get all departments
   const allDepartments = Object.keys(itemsByDepartment);
   
@@ -66,59 +49,12 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
     return 0;
   });
 
-  // Re-group filtered and sorted items if needed
+  // Group filtered and sorted items
   const groupedItems = sortOrder === 'dept' 
     ? itemsByDepartment 
     : {
         'All Items': sortedItems
       };
-      
-  // Apply filters to active and completed items
-  let activeItems = activeItemsByDept;
-  let completedItems = completedItemsByDept;
-  
-  if (searchTerm.trim() !== '') {
-    // Apply search filter to active items
-    activeItems = Object.entries(activeItemsByDept).reduce((acc, [dept, items]) => {
-      const filtered = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      if (filtered.length > 0) {
-        acc[dept] = filtered;
-      }
-      return acc;
-    }, {} as Record<string, ShoppingListItem[]>);
-    
-    // Apply search filter to completed items
-    completedItems = Object.entries(completedItemsByDept).reduce((acc, [dept, items]) => {
-      const filtered = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      if (filtered.length > 0) {
-        acc[dept] = filtered;
-      }
-      return acc;
-    }, {} as Record<string, ShoppingListItem[]>);
-  }
-  
-  if (sortOrder !== 'dept') {
-    // Apply sorting to active and completed items
-    activeItems = { 'Active Items': Object.values(activeItemsByDept).flat().filter(item => {
-      if (searchTerm.trim() === '') return true;
-      return item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    }).sort((a, b) => {
-      if (sortOrder === 'asc') return a.name.localeCompare(b.name);
-      return b.name.localeCompare(a.name);
-    })};
-    
-    completedItems = { 'Completed Items': Object.values(completedItemsByDept).flat().filter(item => {
-      if (searchTerm.trim() === '') return true;
-      return item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    }).sort((a, b) => {
-      if (sortOrder === 'asc') return a.name.localeCompare(b.name);
-      return b.name.localeCompare(a.name);
-    })};
-  }
 
   const handleToggleItem = async (index: number) => {
     const updatedItems = [...list.items];
@@ -283,8 +219,6 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
     toggleAllInDepartment,
     toggleDeptExpanded,
     copyToClipboard,
-    getItemIndex,
-    activeItems,
-    completedItems
+    getItemIndex
   };
 }

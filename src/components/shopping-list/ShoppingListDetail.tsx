@@ -34,14 +34,11 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     toggleAllInDepartment,
     toggleDeptExpanded,
     copyToClipboard,
-    getItemIndex,
-    activeItems,
-    completedItems
+    getItemIndex
   } = useShoppingList(list, onUpdate);
 
   const [showAddItemForm, setShowAddItemForm] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
 
   // Calculate completion stats
   const totalItems = list.items.length;
@@ -76,11 +73,11 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
           />
         </div>
         
-        {/* Active Items Section */}
+        {/* Shopping Items Section */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Active Items</h3>
+          <h3 className="text-lg font-medium mb-3">Shopping List</h3>
           <ShoppingListItemsView
-            groupedItems={activeItems}
+            groupedItems={groupedItems}
             expandedDepts={expandedDepts}
             onToggleDept={toggleDeptExpanded}
             onToggleDepartmentItems={toggleAllInDepartment}
@@ -113,36 +110,6 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
             </div>
           )}
         </div>
-
-        {/* Completed Items Section */}
-        {completedItems && Object.keys(completedItems).some(dept => completedItems[dept].length > 0) && (
-          <div className="mb-6 border rounded-md">
-            <Button 
-              variant="ghost" 
-              className="w-full flex items-center justify-between p-3"
-              onClick={() => setShowCompleted(!showCompleted)}
-            >
-              <span className="flex items-center">
-                <span className="font-medium">Completed Items ({completedCount})</span>
-              </span>
-              {showCompleted ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-            
-            {showCompleted && (
-              <div className="p-4">
-                <ShoppingListItemsView
-                  groupedItems={completedItems}
-                  expandedDepts={expandedDepts}
-                  onToggleDept={toggleDeptExpanded}
-                  onToggleDepartmentItems={toggleAllInDepartment}
-                  onToggleItem={handleToggleItem}
-                  onDeleteItem={handleDeleteItem}
-                  getItemIndex={getItemIndex}
-                />
-              </div>
-            )}
-          </div>
-        )}
         
         {/* Notes Section */}
         <div className="mb-6 border rounded-md">
