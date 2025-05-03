@@ -59,27 +59,29 @@ export function ShoppingListDepartment({
 
   // Format quantity with units for display
   const formatQuantityWithUnit = (item: ShoppingListItem): string => {
-    // Handle cases where quantity or unit might be missing or invalid
-    if (typeof item.quantity === 'undefined' || item.quantity === null) {
-      console.log(`Missing quantity for item: ${item.name}`);
+    // Handle cases where quantity might be missing or invalid
+    if (item.quantity === undefined || item.quantity === null) {
       return '';
     }
 
+    // Convert to number if it's a string
     const qty = typeof item.quantity === 'string' 
       ? parseFloat(item.quantity) 
       : item.quantity;
     
     // Check for valid number
     if (isNaN(qty) || qty === 0) {
-      console.log(`Invalid quantity (${qty}) for item: ${item.name}`);
       return '';
     }
     
     // Format number: whole numbers as integers, decimals with 1 decimal place
     const formattedQty = Number.isInteger(qty) ? qty.toString() : qty.toFixed(1);
     
+    // Trim trailing zeros after decimal point
+    const trimmedQty = formattedQty.replace(/\.0$/, '');
+    
     // Add unit if available
-    return item.unit ? `${formattedQty} ${item.unit}` : formattedQty;
+    return item.unit ? `${trimmedQty} ${item.unit}` : trimmedQty;
   };
 
   return (
@@ -114,7 +116,6 @@ export function ShoppingListDepartment({
             
             // Format quantity for display
             const quantityText = formatQuantityWithUnit(item);
-            console.log(`Item ${item.name} has quantity: ${item.quantity}, formatted as: ${quantityText}`);
             
             return (
               <div 
@@ -138,7 +139,7 @@ export function ShoppingListDepartment({
                   <span className="flex items-center gap-2">
                     <span>
                       {quantityText && <strong className="mr-1">{quantityText}</strong>}
-                      <strong>{item.name}</strong>
+                      <span className="font-medium">{item.name}</span>
                       {item.notes && <span className="text-sm text-muted-foreground ml-1">({item.notes})</span>}
                     </span>
                     {(item.quality_indicators || item.storage_tips) && (

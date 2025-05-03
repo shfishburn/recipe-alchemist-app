@@ -1,4 +1,3 @@
-
 /**
  * Unit conversion constants
  */
@@ -200,6 +199,11 @@ export function getHeightDisplay(heightCm: number, unitSystem: 'metric' | 'imper
  * This is used to convert recipe measurements to practical shopping measurements
  */
 export function getShoppingQuantity(qty: number, unit: string): { qty: number, unit: string } {
+  // If quantity is invalid, return as is
+  if (qty === undefined || qty === null || isNaN(qty)) {
+    return { qty: 0, unit };
+  }
+  
   // Handle common conversions to more practical shopping units
   if (unit === 'g' && qty >= 1000) {
     return { qty: qty / 1000, unit: 'kg' };
