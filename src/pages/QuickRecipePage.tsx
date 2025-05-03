@@ -42,7 +42,11 @@ const QuickRecipePage = () => {
     document.body.appendChild(loadingTrigger);
     
     return () => {
-      document.body.removeChild(loadingTrigger);
+      // Ensure we clean up any loading states when component unmounts
+      document.body.classList.remove('overflow-hidden');
+      if (loadingTrigger && loadingTrigger.parentNode) {
+        document.body.removeChild(loadingTrigger);
+      }
     };
   }, []);
 
@@ -50,7 +54,7 @@ const QuickRecipePage = () => {
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
     return (
-      <div className="min-h-screen relative">
+      <div className="min-h-screen relative touch-action-auto">
         <LoadingIndicator />
         <FullScreenLoading 
           onCancel={handleCancel}

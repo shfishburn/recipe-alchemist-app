@@ -113,3 +113,21 @@ select {
 * {
   -webkit-overflow-scrolling: touch;
 }
+
+/* Ensure touch events work properly in loading states */
+.touch-action-auto {
+  touch-action: auto !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure touch events work on elements that should be interactive */
+.pointer-events-none {
+  pointer-events: none !important;
+}
+
+/* Ensure body elements properly reset after loading */
+body.completed-loading {
+  overflow: initial !important;
+  touch-action: auto !important;
+}
+

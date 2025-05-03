@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { LoadingTipCard } from './loading/LoadingTipCard';
 import { AlertCircle, ArrowLeft, Clock, RefreshCw, ChefHat } from 'lucide-react';
@@ -16,6 +16,7 @@ interface FullScreenLoadingProps {
 export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadingProps) {
   const { loadingState, updateLoadingState } = useQuickRecipeStore();
   const isErrorState = !!error;
+  const [completedLoading, setCompletedLoading] = useState(false);
   
   // Simulate loading progress
   useEffect(() => {
@@ -48,6 +49,8 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
         
         if (progress >= 100) {
           clearInterval(interval);
+          // Mark loading as completed to enable pointer events
+          setCompletedLoading(true);
         }
       }, 300); // Update every 300ms
       
@@ -57,15 +60,22 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
   
   // Add a class to prevent body scrolling when loading is shown
   useEffect(() => {
-    document.body.classList.add('overflow-hidden');
+    // Only add overflow-hidden if we're actually loading
+    if (!completedLoading && !isErrorState) {
+      document.body.classList.add('overflow-hidden');
+    }
     
+    // Cleanup function to ensure overflow-hidden is removed when component unmounts
     return () => {
       document.body.classList.remove('overflow-hidden');
     };
-  }, []);
+  }, [completedLoading, isErrorState]);
+
+  // Set appropriate pointer events based on loading state
+  const pointerEventsClass = completedLoading && !isErrorState ? 'pointer-events-none' : '';
   
   return (
-    <div className="absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto">
+    <div className={`absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
       {/* Accessible title for screen readers */}
       <VisuallyHidden asChild>
         <h1>
@@ -181,3 +191,4 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
     </div>
   );
 }
+
