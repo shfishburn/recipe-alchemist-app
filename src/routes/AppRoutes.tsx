@@ -70,14 +70,6 @@ export const AppRoutes = () => {
         </Suspense>
       } />
       <Route
-        path="/build"
-        element={
-          <Suspense fallback={<PageLoadingFallback />}>
-            <LazyRoutes.Build />
-          </Suspense>
-        }
-      />
-      <Route
         path="/profile"
         element={
           <PrivateRoute>

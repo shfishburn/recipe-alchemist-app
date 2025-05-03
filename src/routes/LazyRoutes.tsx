@@ -5,7 +5,6 @@ import { lazy } from "react";
 export const Index = lazy(() => import("@/pages/Index"));
 export const Recipes = lazy(() => import("@/pages/Recipes"));
 export const RecipeDetail = lazy(() => import("@/pages/RecipeDetail"));
-export const Build = lazy(() => import("@/pages/Build")); // Keeping this for backwards compatibility
 export const Profile = lazy(() => import("@/pages/Profile"));
 export const ShoppingLists = lazy(() => import("@/pages/ShoppingLists"));
 export const Favorites = lazy(() => import("@/pages/Favorites"));
