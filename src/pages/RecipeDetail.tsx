@@ -6,35 +6,25 @@ import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { RecipeDetailLoading } from '@/components/recipe-detail/loading/RecipeDetailLoading';
 import { RecipeNotFound } from '@/components/recipe-detail/error/RecipeNotFound';
 import { RecipeDetailContent } from '@/components/recipe-detail/RecipeDetailContent';
-import { generateSlug, isValidUUID, extractIdFromSlug } from '@/utils/slug-utils';
+import { isValidUUID } from '@/utils/slug-utils';
 import { ErrorDisplay } from '@/components/profile/ErrorDisplay';
 
 const RecipeDetail = () => {
-  const { id, slug } = useParams();
+  const { id: recipeIdOrSlug } = useParams();
   const navigate = useNavigate();
   
-  // Extract and validate UUID from URL parameter
-  const extractedId = id ? extractIdFromSlug(id) : null;
-  const isValidId = extractedId !== null;
+  // Extract ID based on whether it's a UUID or slug
+  const isUuid = recipeIdOrSlug ? isValidUUID(recipeIdOrSlug) : false;
   
-  // Fetch recipe data with the validated ID
-  const { data: recipe, isLoading, error, refetch } = useRecipeDetail(isValidId ? extractedId : undefined);
+  // Fetch recipe data using the ID or slug
+  const { data: recipe, isLoading, error, refetch } = useRecipeDetail(recipeIdOrSlug);
   
-  // Handle invalid ID format
+  // Redirect to the slug URL if we have a recipe but accessed via UUID
   useEffect(() => {
-    if (id && !isValidId) {
-      console.error("Invalid recipe ID format:", id);
-      // No need to navigate, we'll show the error component
+    if (recipe?.slug && isUuid && recipeIdOrSlug !== recipe.slug) {
+      navigate(`/recipes/${recipe.slug}`, { replace: true });
     }
-  }, [id, isValidId]);
-  
-  // Redirect to the proper URL with slug if we have a recipe but no slug in the URL
-  useEffect(() => {
-    if (recipe && isValidId && extractedId && !slug && !window.location.pathname.includes('-')) {
-      const generatedSlug = generateSlug(recipe.title);
-      navigate(`/recipes/${generatedSlug}-${extractedId}`, { replace: true });
-    }
-  }, [recipe, slug, id, navigate, isValidId, extractedId]);
+  }, [recipe, isUuid, recipeIdOrSlug, navigate]);
   
   // Set page title based on recipe
   useEffect(() => {
@@ -62,8 +52,8 @@ const RecipeDetail = () => {
     );
   }
   
-  // If the ID is invalid or there's an error, show the not found component
-  if (!isValidId || error) {
+  // If there's an error, show the not found component
+  if (error) {
     return <RecipeNotFound />;
   }
 
@@ -78,7 +68,7 @@ const RecipeDetail = () => {
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-4 sm:py-8">
-          {recipe && <RecipeDetailContent recipe={recipe} id={extractedId || undefined} refetch={refetch} />}
+          {recipe && <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />}
         </div>
       </main>
     </div>

@@ -4,30 +4,35 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
 import { standardizeNutrition } from '@/types/nutrition-utils';
-import { extractIdFromSlug, isValidUUID } from '@/utils/slug-utils';
+import { isValidUUID } from '@/utils/slug-utils';
 
 export type { Recipe, Ingredient, Nutrition };
 
-export const useRecipeDetail = (id?: string) => {
+export const useRecipeDetail = (idOrSlug?: string) => {
   return useQuery({
-    queryKey: ['recipe', id],
+    queryKey: ['recipe', idOrSlug],
     queryFn: async () => {
-      if (!id) {
-        throw new Error('Recipe ID is required');
+      if (!idOrSlug) {
+        throw new Error('Recipe ID or slug is required');
       }
 
-      // Enhanced validation with better error messages
-      if (!isValidUUID(id)) {
-        console.error('Invalid UUID format:', id);
-        throw new Error('Invalid recipe ID format');
-      }
+      // Check if we're dealing with a UUID or a slug
+      const isUuid = isValidUUID(idOrSlug);
       
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('recipes')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
+          .select('*');
+          
+        if (isUuid) {
+          // If it's a UUID, query by id
+          query = query.eq('id', idOrSlug);
+        } else {
+          // If it's not a UUID, assume it's a slug
+          query = query.eq('slug', idOrSlug);
+        }
+        
+        const { data, error } = await query.maybeSingle();
   
         if (error) {
           console.error('Error fetching recipe:', error);
@@ -83,7 +88,7 @@ export const useRecipeDetail = (id?: string) => {
         throw e;
       }
     },
-    enabled: !!id,
+    enabled: !!idOrSlug,
     retry: 1,
     staleTime: 30000,
   });

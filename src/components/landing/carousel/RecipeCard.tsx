@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Brain, ChartPie, Timer, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Recipe } from '@/types/recipe';
-import { generateSlug } from '@/utils/slug-utils';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -63,9 +62,10 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
     (recipe as any).generated_by_ai
   );
   
-  // Generate slug for the recipe URL
-  const recipeSlug = generateSlug(recipe.title);
-  const recipeUrl = `/recipes/${recipeSlug}-${recipe.id}`;
+  // Generate URL for the recipe using slug if available
+  const recipeUrl = recipe.slug
+    ? `/recipes/${recipe.slug}`
+    : `/recipes/${recipe.id}`;
   
   // Use a simple click handler that navigates to the recipe detail
   const handleClick = (e: React.MouseEvent) => {

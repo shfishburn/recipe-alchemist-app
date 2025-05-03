@@ -380,6 +380,7 @@ export type Database = {
           reasoning: string | null
           science_notes: Json | null
           servings: number
+          slug: string | null
           tagline: string | null
           title: string
           updated_at: string
@@ -408,6 +409,7 @@ export type Database = {
           reasoning?: string | null
           science_notes?: Json | null
           servings: number
+          slug?: string | null
           tagline?: string | null
           title: string
           updated_at?: string
@@ -436,6 +438,7 @@ export type Database = {
           reasoning?: string | null
           science_notes?: Json | null
           servings?: number
+          slug?: string | null
           tagline?: string | null
           title?: string
           updated_at?: string

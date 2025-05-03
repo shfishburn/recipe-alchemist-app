@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { Routes, Route } from "react-router-dom";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
@@ -17,12 +18,7 @@ export const AppRoutes = () => {
           <LazyRoutes.Recipes />
         </Suspense>
       } />
-      {/* Support both slug-id format and plain id format with better error handling */}
-      <Route path="/recipes/:slug-:id" element={
-        <Suspense fallback={<PageLoadingFallback />}>
-          <LazyRoutes.RecipeDetail />
-        </Suspense>
-      } />
+      {/* Support both slug format and plain id format with better error handling */}
       <Route path="/recipes/:id" element={
         <Suspense fallback={<PageLoadingFallback />}>
           <LazyRoutes.RecipeDetail />

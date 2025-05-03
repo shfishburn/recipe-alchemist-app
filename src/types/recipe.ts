@@ -92,4 +92,5 @@ export interface Recipe {
   science_notes: string[];
   chef_notes?: string;
   cooking_tip?: string;
+  slug?: string;
 }

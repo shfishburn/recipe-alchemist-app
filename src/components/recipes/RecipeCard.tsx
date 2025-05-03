@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { generateSlug } from '@/utils/slug-utils';
 import type { Recipe } from '@/types/recipe';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ImageLoader } from '@/components/ui/image-loader';
 
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
-  // Generate slug URL
-  const recipeSlug = generateSlug(recipe.title);
-  const recipeUrl = `/recipes/${recipeSlug}-${recipe.id}`;
+  // Generate URL using the slug if available, otherwise fallback to id
+  const recipeUrl = recipe.slug 
+    ? `/recipes/${recipe.slug}` 
+    : `/recipes/${recipe.id}`;
   
   return (
     <Link 
