@@ -3,13 +3,13 @@ import React from 'react';
 import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { Ingredient } from '@/hooks/use-quick-recipe';
-import { useUnitSystemStore } from '@/stores/unitSystem';
+import { useUnitSystem } from '@/hooks/use-unit-system';
 
 // Helper function to format ingredient display text with markdown
-export const formatIngredientWithMarkdown = (ingredient: Ingredient): string => {
+export const formatIngredientWithMarkdown = (ingredient: Ingredient, unitSystem: 'metric' | 'imperial'): string => {
   try {
-    // Use the same utility for consistency across the app
-    const formatted = formatIngredient(ingredient);
+    // Use the same utility for consistency across the app but pass unit system
+    const formatted = formatIngredient(ingredient, unitSystem);
     
     // Extract parts for highlighting
     const parts = formatted.split(' ');
@@ -51,9 +51,9 @@ interface FormatIngredientProps {
 }
 
 export function FormatIngredient({ ingredient }: FormatIngredientProps) {
-  const { unitSystem } = useUnitSystemStore();
+  const { unitSystem } = useUnitSystem();
 
   return (
-    <FormattedIngredientText text={formatIngredientWithMarkdown(ingredient)} />
+    <FormattedIngredientText text={formatIngredientWithMarkdown(ingredient, unitSystem)} />
   );
 }

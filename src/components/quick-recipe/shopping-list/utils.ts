@@ -1,4 +1,3 @@
-
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { ShoppingItem, ShoppingItemsByDepartment } from './types';
