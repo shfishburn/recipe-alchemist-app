@@ -116,7 +116,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
         {/* Recipe Header with title */}
         <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
         
-        {/* Recipe Image - Moved to top directly under the title */}
+        {/* Recipe Image - Moved above the separator/overview */}
         <RecipeImage recipe={currentRecipe} />
         
         <div className="hidden">

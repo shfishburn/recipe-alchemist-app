@@ -43,7 +43,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
   const shouldShowGenerateButton = !imageUrl || imageError;
 
   return (
-    <Card className="mb-8 overflow-hidden border-0 shadow-md">
+    <Card className="mb-6 overflow-hidden border-0 shadow-md">
       <CardContent className="p-0">
         <div className="relative">
           <div className="rounded-lg overflow-hidden">
