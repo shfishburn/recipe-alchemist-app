@@ -9,49 +9,33 @@ interface ShoppingListItemProps {
 }
 
 export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProps) {
-  // Format quantity for display - use the structured data fields specifically designed for this
-  let formattedQuantity = '';
-  
-  // Add detailed debug information for troubleshooting quantity issues
-  console.log('ShoppingListItem rendering with data:', {
-    item,
-    index,
-    quantityType: typeof item.quantity,
-    hasItem: !!item.item,
-    hasText: !!item.text
-  });
-  
-  // Enhanced quantity formatting logic
-  if (item.quantity !== undefined && item.quantity !== null) {
-    // Handle both numeric and string quantities
+  // Format quantity for display 
+  const formatQuantityWithUnit = (item: ShoppingItem): string => {
+    // Handle cases where quantity is missing
+    if (item.quantity === undefined || item.quantity === null) {
+      return '';
+    }
+    
+    // Convert to number if it's a string
     const qtyValue = typeof item.quantity === 'number' 
       ? item.quantity 
-      : (typeof item.quantity === 'string' && parseFloat(item.quantity) > 0)
-        ? parseFloat(item.quantity)
-        : null;
-        
-    if (qtyValue !== null && qtyValue > 0) {
-      // Format with precision to avoid unnecessary decimal places
-      formattedQuantity = (qtyValue % 1 === 0) 
-        ? String(Math.round(qtyValue))  // Integer values
-        : qtyValue.toString();          // Keep decimals
+      : parseFloat(item.quantity);
       
-      // Add the unit if available
-      if (item.unit) {
-        formattedQuantity += ` ${item.unit}`;
-      }
+    // Check if it's a valid number
+    if (isNaN(qtyValue) || qtyValue === 0) {
+      return '';
     }
-  } 
-  // Fallback to text-based parsing if needed (legacy format)
-  else if (item.text && !item.item) {
-    // Try to extract quantity and unit from text format
-    const match = item.text.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s+(.+)$/);
-    if (match) {
-      formattedQuantity = match[1];
-      if (match[2]) formattedQuantity += ` ${match[2]}`;
-    }
-  }
-
+    
+    // Format with precision: whole numbers as integers, decimals with 1 decimal place
+    const formattedQty = Number.isInteger(qtyValue) ? qtyValue.toString() : qtyValue.toFixed(1);
+    
+    // Add the unit if available
+    return item.unit ? `${formattedQty} ${item.unit}` : formattedQty;
+  };
+  
+  // Get formatted quantity
+  const formattedQuantity = formatQuantityWithUnit(item);
+  
   // Get the display name for the item - prioritize structured data
   const displayName = item.item || 
     (item.text && item.text.replace(/^\d+(\.\d+)?\s*[a-zA-Z]*\s+/, '')) || 
@@ -76,6 +60,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
       <span className={`${item.checked ? 'line-through text-muted-foreground' : ''}`}>
         {formattedQuantity && <strong className="mr-1">{formattedQuantity}</strong>}
         {displayName}
+        {item.notes && <span className="text-sm text-muted-foreground ml-1">({item.notes})</span>}
       </span>
       {item.pantryStaple && (
         <span className="text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded ml-auto">

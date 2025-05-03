@@ -5,7 +5,17 @@ import { ShoppingListItem } from '@/types/shopping-list';
  * Merge items from two shopping lists, combining duplicates and summing quantities
  */
 export function mergeShoppingItems(existingItems: ShoppingListItem[], newItems: ShoppingListItem[]): ShoppingListItem[] {
-  const result = [...existingItems];
+  console.log("Merging shopping items - Starting merge operation");
+  console.log("Existing items:", existingItems);
+  console.log("New items:", newItems);
+  
+  // Ensure existingItems is always an array
+  const safeExistingItems = Array.isArray(existingItems) ? existingItems : [];
+  if (!Array.isArray(existingItems)) {
+    console.warn("Expected existingItems to be an array, but received:", typeof existingItems, existingItems);
+  }
+  
+  const result = [...safeExistingItems];
   let addedCount = 0;
   
   for (const item of newItems) {
@@ -30,5 +40,16 @@ export function mergeShoppingItems(existingItems: ShoppingListItem[], newItems: 
     }
   }
   
+  console.log(`Merge completed: ${addedCount} new items added, ${newItems.length - addedCount} merged with existing items`);
   return result;
+}
+
+/**
+ * Helper function to normalize item names for comparison
+ */
+export function normalizeItemName(name: string): string {
+  return name.toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }

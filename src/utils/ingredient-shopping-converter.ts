@@ -2,6 +2,7 @@
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
+import { useUnitSystemStore } from '@/stores/unitSystem';
 
 /**
  * Converts recipe ingredients to shopping list items
@@ -12,9 +13,14 @@ export function recipeIngredientsToShoppingItems(
 ): ShoppingListItem[] {
   console.log("Converting recipe ingredients to shopping items:", ingredients);
   
+  // Get the current unit system preference from store
+  const unitSystem = useUnitSystemStore.getState().unitSystem;
+  console.log(`Using ${unitSystem} unit system for conversion`);
+  
   return ingredients.map((ingredient): ShoppingListItem => {
     // Handle string ingredients
     if (typeof ingredient === 'string') {
+      console.log(`String ingredient found: ${ingredient}`);
       return {
         name: ingredient,
         quantity: 1,
@@ -30,8 +36,25 @@ export function recipeIngredientsToShoppingItems(
       ? ingredient.item 
       : (ingredient.item as any)?.item || 'Unknown item';
     
+    // Select quantity based on unit system preference
+    let quantity = 0;
+    let unit = '';
+    
+    if (unitSystem === 'metric') {
+      quantity = typeof ingredient.qty_metric !== 'undefined' ? ingredient.qty_metric : 
+                (typeof ingredient.qty !== 'undefined' ? ingredient.qty : 0);
+      unit = ingredient.unit_metric || ingredient.unit || '';
+    } else {
+      quantity = typeof ingredient.qty_imperial !== 'undefined' ? ingredient.qty_imperial : 
+                (typeof ingredient.qty !== 'undefined' ? ingredient.qty : 0);
+      unit = ingredient.unit_imperial || ingredient.unit || '';
+    }
+    
+    console.log(`Ingredient: ${itemName}, Qty: ${quantity}, Unit: ${unit}, System: ${unitSystem}`);
+    
     // Convert recipe units to shopping units
-    const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
+    const shoppingQty = getShoppingQuantity(quantity, unit);
+    console.log(`Converted to shopping qty: ${shoppingQty.qty} ${shoppingQty.unit}`);
     
     // Determine department
     const department = getDepartmentForIngredient(itemName);

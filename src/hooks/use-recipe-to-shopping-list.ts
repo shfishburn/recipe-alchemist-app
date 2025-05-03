@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
+import { mergeShoppingItems } from '@/utils/shopping-list-merge';
 import type { Recipe } from '@/types/recipe';
 
 export function useRecipeToShoppingList() {
@@ -134,8 +135,13 @@ export function useRecipeToShoppingList() {
         recipe.id
       );
       
-      // Step 3: Merge with existing items
-      const existingItems = existingList.items || [];
+      // Step 3: Merge with existing items - ensure we're dealing with arrays
+      const existingItems = Array.isArray(existingList.items) ? existingList.items : [];
+      
+      // Log type information for debugging
+      console.log("Existing items type:", typeof existingItems, Array.isArray(existingItems));
+      console.log("Existing items:", existingItems);
+      
       const mergedItems = mergeShoppingItems(existingItems, newItems);
       
       // Step 4: Update the list
@@ -169,46 +175,6 @@ export function useRecipeToShoppingList() {
       setIsLoading(false);
     }
   };
-
-  /**
-   * Merge shopping lists intelligently, combining same items
-   */
-  function mergeShoppingItems(existingItems: any[], newItems: any[]): any[] {
-    const result = [...existingItems];
-    
-    for (const newItem of newItems) {
-      const existingIndex = result.findIndex(item => 
-        normalizeItemName(item.name) === normalizeItemName(newItem.name) && 
-        item.unit === newItem.unit
-      );
-      
-      if (existingIndex >= 0) {
-        // Item exists, update quantity
-        result[existingIndex].quantity += newItem.quantity;
-        // Merge notes if they exist
-        if (newItem.notes && !result[existingIndex].notes?.includes(newItem.notes)) {
-          result[existingIndex].notes = result[existingIndex].notes 
-            ? `${result[existingIndex].notes}, ${newItem.notes}`
-            : newItem.notes;
-        }
-      } else {
-        // New item, add it
-        result.push({...newItem});
-      }
-    }
-    
-    return result;
-  }
-  
-  /**
-   * Normalize item names for comparison
-   */
-  function normalizeItemName(name: string): string {
-    return name.toLowerCase()
-      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
 
   return {
     addRecipeToNewList,

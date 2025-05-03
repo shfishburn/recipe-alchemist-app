@@ -57,6 +57,29 @@ export function ShoppingListDepartment({
     }
   };
 
+  // Format quantity with units for display
+  const formatQuantityWithUnit = (item: ShoppingListItem): string => {
+    // Handle cases where quantity or unit might be missing or invalid
+    if (typeof item.quantity === 'undefined' || item.quantity === null) {
+      return '';
+    }
+
+    const qty = typeof item.quantity === 'string' 
+      ? parseFloat(item.quantity) 
+      : item.quantity;
+    
+    // Check for valid number
+    if (isNaN(qty) || qty === 0) {
+      return '';
+    }
+    
+    // Format number: whole numbers as integers, decimals with 1 decimal place
+    const formattedQty = Number.isInteger(qty) ? qty.toString() : qty.toFixed(1);
+    
+    // Add unit if available
+    return item.unit ? `${formattedQty} ${item.unit}` : formattedQty;
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
       <div 
@@ -88,9 +111,7 @@ export function ShoppingListDepartment({
             const isLoading = !!loadingItems[itemIndex];
             
             // Format quantity for display
-            const quantityDisplay = item.quantity ? `${item.quantity}` : '';
-            const unitDisplay = item.unit ? `${item.unit}` : '';
-            const quantityText = [quantityDisplay, unitDisplay].filter(Boolean).join(' ');
+            const quantityText = formatQuantityWithUnit(item);
             
             return (
               <div 
