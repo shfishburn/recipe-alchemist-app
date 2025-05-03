@@ -1,4 +1,3 @@
-
 import "./styles/loading.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 import { Footer } from "@/components/ui/footer";
 import PrivateRoute from "@/components/PrivateRoute";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -72,147 +72,149 @@ const FooterWrapper = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <CookieConsentProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <div className="min-h-screen flex flex-col">
-              <DefaultSeo />
-              <Toaster />
-              <Sonner />
-              <LoadingIndicator />
-              <CookieConsent />
-              <PageTransition>
-                <Routes>
-                  <Route path="/" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <Index />
-                    </Suspense>
-                  } />
-                  <Route path="/recipes" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <Recipes />
-                    </Suspense>
-                  } />
-                  <Route path="/recipes/:id" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <RecipeDetail />
-                    </Suspense>
-                  } />
-                  <Route path="/quick-recipe" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <QuickRecipePage />
-                    </Suspense>
-                  } />
-                  <Route path="/how-it-works" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <HowItWorks />
-                    </Suspense>
-                  } />
-                  <Route path="/how-it-works/:slug" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <ArticleDetail />
-                    </Suspense>
-                  } />
-                  <Route path="/faq" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <FAQ />
-                    </Suspense>
-                  } />
-                  <Route path="/about" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <About />
-                    </Suspense>
-                  } />
-                  <Route path="/contact" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <Contact />
-                    </Suspense>
-                  } />
-                  <Route path="/privacy" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <Privacy />
-                    </Suspense>
-                  } />
-                  <Route path="/terms" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <Terms />
-                    </Suspense>
-                  } />
-                  <Route path="/cookies" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <Cookies />
-                    </Suspense>
-                  } />
-                  <Route
-                    path="/build"
-                    element={
+      <ProfileProvider>
+        <CookieConsentProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <div className="min-h-screen flex flex-col">
+                <DefaultSeo />
+                <Toaster />
+                <Sonner />
+                <LoadingIndicator />
+                <CookieConsent />
+                <PageTransition>
+                  <Routes>
+                    <Route path="/" element={
                       <Suspense fallback={<PageLoadingFallback />}>
-                        <Build />
+                        <Index />
                       </Suspense>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <PrivateRoute>
+                    } />
+                    <Route path="/recipes" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <Recipes />
+                      </Suspense>
+                    } />
+                    <Route path="/recipes/:id" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <RecipeDetail />
+                      </Suspense>
+                    } />
+                    <Route path="/quick-recipe" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <QuickRecipePage />
+                      </Suspense>
+                    } />
+                    <Route path="/how-it-works" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <HowItWorks />
+                      </Suspense>
+                    } />
+                    <Route path="/how-it-works/:slug" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <ArticleDetail />
+                      </Suspense>
+                    } />
+                    <Route path="/faq" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <FAQ />
+                      </Suspense>
+                    } />
+                    <Route path="/about" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <About />
+                      </Suspense>
+                    } />
+                    <Route path="/contact" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <Contact />
+                      </Suspense>
+                    } />
+                    <Route path="/privacy" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <Privacy />
+                      </Suspense>
+                    } />
+                    <Route path="/terms" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <Terms />
+                      </Suspense>
+                    } />
+                    <Route path="/cookies" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <Cookies />
+                      </Suspense>
+                    } />
+                    <Route
+                      path="/build"
+                      element={
                         <Suspense fallback={<PageLoadingFallback />}>
-                          <Profile />
+                          <Build />
                         </Suspense>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/shopping-lists"
-                    element={
-                      <PrivateRoute>
-                        <Suspense fallback={<PageLoadingFallback />}>
-                          <ShoppingLists />
-                        </Suspense>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/shopping-lists/:id"
-                    element={
-                      <PrivateRoute>
-                        <Suspense fallback={<PageLoadingFallback />}>
-                          <ShoppingLists />
-                        </Suspense>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/favorites"
-                    element={
-                      <PrivateRoute>
-                        <Suspense fallback={<PageLoadingFallback />}>
-                          <Favorites />
-                        </Suspense>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/data-import"
-                    element={
-                      <PrivateRoute>
-                        <Suspense fallback={<PageLoadingFallback />}>
-                          <DataImport />
-                        </Suspense>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="*" element={
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <NotFound />
-                    </Suspense>
-                  } />
-                </Routes>
-              </PageTransition>
-              <FooterWrapper />
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CookieConsentProvider>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<PageLoadingFallback />}>
+                            <Profile />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/shopping-lists"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<PageLoadingFallback />}>
+                            <ShoppingLists />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/shopping-lists/:id"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<PageLoadingFallback />}>
+                            <ShoppingLists />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/favorites"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<PageLoadingFallback />}>
+                            <Favorites />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/data-import"
+                      element={
+                        <PrivateRoute>
+                          <Suspense fallback={<PageLoadingFallback />}>
+                            <DataImport />
+                          </Suspense>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route path="*" element={
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <NotFound />
+                      </Suspense>
+                    } />
+                  </Routes>
+                </PageTransition>
+                <FooterWrapper />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CookieConsentProvider>
+      </ProfileProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

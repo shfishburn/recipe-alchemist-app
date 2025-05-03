@@ -7,6 +7,12 @@ import { UnitSystem } from '@/stores/unitSystem';
  * Pure utility that takes unitSystem as a parameter - no dynamic imports or conditional hooks
  */
 export const formatIngredient = (ingredient: any, unitSystem: UnitSystem = 'metric'): string => {
+  // Handle empty ingredients
+  if (!ingredient) {
+    return '';
+  }
+  
+  // Handle string ingredients directly
   if (typeof ingredient === 'string') {
     return ingredient;
   }

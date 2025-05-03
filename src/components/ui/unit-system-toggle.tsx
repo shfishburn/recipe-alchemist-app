@@ -15,6 +15,7 @@ export function UnitSystemToggle({
   size = 'default',
   className = ''
 }: UnitSystemToggleProps) {
+  // Use the hook which handles profile synchronization
   const { unitSystem, toggleUnitSystem } = useUnitSystem();
   
   return (

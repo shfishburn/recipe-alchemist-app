@@ -13,36 +13,38 @@ import { NutritionPreferencesType, DEFAULT_NUTRITION_PREFERENCES } from '@/types
 export const useUnitSystem = () => {
   const { unitSystem, setUnitSystem, toggleUnitSystem: storeToggle } = useUnitSystemStore();
   const { user } = useAuth();
-  const profileContext = useProfileContext();
+  const { profile, updateProfile } = useProfileContext();
   
   // Sync with profile preference when component mounts or profile changes
   useEffect(() => {
-    if (profileContext?.profile?.nutrition_preferences?.unitSystem) {
+    // Only run this effect if we have a profile with nutrition preferences
+    if (profile?.nutrition_preferences?.unitSystem) {
       // Only update if different from current value to avoid loops
-      if (profileContext.profile.nutrition_preferences.unitSystem !== unitSystem) {
-        setUnitSystem(profileContext.profile.nutrition_preferences.unitSystem);
+      if (profile.nutrition_preferences.unitSystem !== unitSystem) {
+        // Update store from profile
+        setUnitSystem(profile.nutrition_preferences.unitSystem);
       }
     }
-  }, [profileContext?.profile?.nutrition_preferences?.unitSystem, setUnitSystem, unitSystem]);
+  }, [profile?.nutrition_preferences?.unitSystem, setUnitSystem, unitSystem]);
   
   // Function to update unit system and sync with profile
   const updateUnitSystemWithProfile = useCallback(
     async (newSystem: UnitSystem) => {
-      // Update local state immediately
+      // Always update local state immediately for responsive UI
       setUnitSystem(newSystem);
       
       // If logged in, update profile preference in background
-      if (user?.id && profileContext?.profile) {
+      if (user?.id && profile) {
         try {
           // Get current preferences
-          const currentPrefs = profileContext.profile.nutrition_preferences || DEFAULT_NUTRITION_PREFERENCES;
+          const currentPrefs = profile.nutrition_preferences || DEFAULT_NUTRITION_PREFERENCES;
           // Merge with new unit system preference
           const updatedPrefs: NutritionPreferencesType = {
             ...currentPrefs,
             unitSystem: newSystem
           };
           
-          await profileContext.updateProfile({
+          await updateProfile({
             nutrition_preferences: updatedPrefs
           });
         } catch (error) {
@@ -50,7 +52,7 @@ export const useUnitSystem = () => {
         }
       }
     },
-    [user?.id, profileContext, setUnitSystem]
+    [user?.id, profile, updateProfile, setUnitSystem]
   );
   
   // Enhanced toggle that updates user profile when logged in
