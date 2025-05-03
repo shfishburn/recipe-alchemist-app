@@ -26,25 +26,29 @@ function App() {
     <CookieConsentProvider>
       <AuthProvider>
         <Router>
-          <SiteHeader />
-          <Suspense fallback={<LoadingScreen />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/recipes" element={<Recipes />} />
-              <Route path="/recipes/:id/:slug?" element={<RecipeDetail />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/shopping-lists" element={<ShoppingLists />} />
-              <Route path="/quick-recipe" element={<QuickRecipe />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/cookies" element={<Cookies />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <SiteFooter />
-          <Toaster />
+          <div className="flex flex-col min-h-screen">
+            <SiteHeader />
+            <main className="flex-1">
+              <Suspense fallback={<LoadingScreen />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/recipes" element={<Recipes />} />
+                  <Route path="/recipes/:id/:slug?" element={<RecipeDetail />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/shopping-lists" element={<ShoppingLists />} />
+                  <Route path="/quick-recipe" element={<QuickRecipe />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/cookies" element={<Cookies />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </main>
+            <SiteFooter />
+            <Toaster />
+          </div>
         </Router>
       </AuthProvider>
     </CookieConsentProvider>

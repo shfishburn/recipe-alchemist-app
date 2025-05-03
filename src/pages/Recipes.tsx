@@ -2,8 +2,7 @@
 import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search, Loader } from 'lucide-react';
-import Navbar from '@/components/ui/navbar';
-import RecipeCard from '@/components/recipes/RecipeCard';
+import { RecipeCard } from '@/components/recipes/RecipeCard';
 import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -44,8 +43,7 @@ const Recipes = () => {
   }, [status, isLoading, isFetching, recipes, error]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <div className="min-h-screen">
       <main className="flex-1">
         <div className="container-page py-8">
           {/* Breadcrumb Navigation */}
