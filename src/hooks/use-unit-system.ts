@@ -4,6 +4,7 @@ import { useUnitSystemStore } from '@/stores/unitSystem';
 import { UnitSystem } from '@/stores/unitSystem';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileContext } from '@/contexts/ProfileContext';
+import { NutritionPreferencesType, DEFAULT_NUTRITION_PREFERENCES } from '@/types/nutrition-preferences';
 
 /**
  * Hook for accessing and managing the unit system with profile synchronization
@@ -33,12 +34,16 @@ export const useUnitSystem = () => {
       // If logged in, update profile preference in background
       if (user?.id && profileContext?.profile) {
         try {
-          const currentPrefs = profileContext.profile.nutrition_preferences || {};
+          // Get current preferences
+          const currentPrefs = profileContext.profile.nutrition_preferences || DEFAULT_NUTRITION_PREFERENCES;
+          // Merge with new unit system preference
+          const updatedPrefs: NutritionPreferencesType = {
+            ...currentPrefs,
+            unitSystem: newSystem
+          };
+          
           await profileContext.updateProfile({
-            nutrition_preferences: {
-              ...currentPrefs,
-              unitSystem: newSystem
-            }
+            nutrition_preferences: updatedPrefs
           });
         } catch (error) {
           console.error('Error updating profile unit system preference:', error);
