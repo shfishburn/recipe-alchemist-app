@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
 
 interface MacroBreakdownProps {
   protein: number;
@@ -9,11 +8,19 @@ interface MacroBreakdownProps {
 }
 
 export function MacroBreakdown({ protein, carbs, fat }: MacroBreakdownProps) {
+  // Ensure all values are positive numbers
+  const safeProtein = Math.max(0, protein || 0);
+  const safeCarbs = Math.max(0, carbs || 0);
+  const safeFat = Math.max(0, fat || 0);
+
   // Calculate total to ensure percentages add up to 100%
-  const total = protein + carbs + fat;
-  const proteinPercent = Math.round((protein / total) * 100);
-  const carbsPercent = Math.round((carbs / total) * 100);
-  const fatPercent = Math.round((fat / total) * 100);
+  const total = safeProtein + safeCarbs + safeFat;
+  
+  // If total is 0, set equal percentages to avoid NaN
+  const proteinPercent = total === 0 ? 33 : Math.round((safeProtein / total) * 100);
+  const carbsPercent = total === 0 ? 34 : Math.round((safeCarbs / total) * 100);
+  // Ensure percentages add up to exactly 100%
+  const fatPercent = total === 0 ? 33 : 100 - proteinPercent - carbsPercent;
 
   return (
     <div className="space-y-4">
