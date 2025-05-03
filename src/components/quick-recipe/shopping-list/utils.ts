@@ -1,3 +1,4 @@
+
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { ShoppingItem, ShoppingItemsByDepartment } from './types';
@@ -36,6 +37,13 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
         ? (ingredient.item.item || JSON.stringify(ingredient.item))
         : 'Unknown item';
         
+    // Get the appropriate quantity, filtering out zero values
+    const quantity = ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
+      ? ingredient.shop_size_qty
+      : ingredient.qty !== undefined && ingredient.qty > 0
+        ? ingredient.qty
+        : null;
+        
     // Create properly structured shopping item that preserves all ingredient data
     return {
       // Format the text to clearly include the item name
@@ -46,7 +54,7 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
       // Save the complete original ingredient data to maintain structured information
       ingredientData: ingredient,
       // Extract specific shopping fields for easier access
-      quantity: ingredient.shop_size_qty !== undefined ? ingredient.shop_size_qty : ingredient.qty,
+      quantity: quantity, // Use filtered quantity that's never zero
       unit: ingredient.shop_size_unit || ingredient.unit,
       item: itemName,
       notes: ingredient.notes || ''
