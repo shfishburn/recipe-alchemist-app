@@ -110,6 +110,48 @@ export type Database = {
         }
         Relationships: []
       }
+      grocery_package_sizes: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          ingredient: string
+          metric_equiv: string | null
+          notes: string | null
+          package_sizes: Json
+          package_unit: string
+          standard_qty: number | null
+          standard_unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          ingredient: string
+          metric_equiv?: string | null
+          notes?: string | null
+          package_sizes: Json
+          package_unit: string
+          standard_qty?: number | null
+          standard_unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          ingredient?: string
+          metric_equiv?: string | null
+          notes?: string | null
+          package_sizes?: Json
+          package_unit?: string
+          standard_qty?: number | null
+          standard_unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       import_examples: {
         Row: {
           created_at: string | null

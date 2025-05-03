@@ -14,9 +14,18 @@ export function useUpdateShoppingList() {
   const { usePackageSizes } = useShoppingListSettings();
 
   // Add recipe ingredients to an existing shopping list
-  const addToExistingList = async (listId: string, recipe: Recipe) => {
+  const addToExistingList = async (
+    listId: string, 
+    recipe: Recipe, 
+    usePackageSizesOverride?: boolean
+  ) => {
     try {
       setIsLoading(true);
+      
+      // Use the override value if provided, otherwise use the setting from useShoppingListSettings
+      const usePackageSizesValue = usePackageSizesOverride !== undefined 
+        ? usePackageSizesOverride 
+        : usePackageSizes;
 
       // First, get the current shopping list
       const { data: listData, error: listError } = await supabase
@@ -31,8 +40,8 @@ export function useUpdateShoppingList() {
       }
 
       // Convert recipe ingredients to shopping list items
-      console.log("Adding recipe ingredients to list with package sizes:", usePackageSizes ? "enabled" : "disabled");
-      const newItems = await recipeIngredientsToShoppingItems(recipe.ingredients, recipe.id, usePackageSizes);
+      console.log(`Adding recipe ingredients to list with package sizes: ${usePackageSizesValue ? "enabled" : "disabled"}`);
+      const newItems = await recipeIngredientsToShoppingItems(recipe.ingredients, recipe.id, usePackageSizesValue);
 
       // Combine with existing items, avoiding duplicates
       const existingItems = listData.items as ShoppingListItem[];

@@ -4,10 +4,11 @@ import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
 import { useUnitSystemStore } from '@/stores/unitSystem';
 import { AIShoppingConverter, convertIngredientsWithAI } from '@/services/aiShoppingConverter';
+import { PackageSizeService } from '@/services/package-size-service';
 
 /**
  * Converts recipe ingredients to shopping list items
- * Now with AI-powered shopping conversions and package size optimization
+ * Now with database-driven package size optimization
  */
 export async function recipeIngredientsToShoppingItems(
   ingredients: Ingredient[], 

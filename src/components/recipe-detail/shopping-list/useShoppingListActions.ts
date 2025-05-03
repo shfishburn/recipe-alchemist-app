@@ -6,6 +6,7 @@ import { useCreateShoppingList } from '@/hooks/use-create-shopping-list';
 import { useUpdateShoppingList } from '@/hooks/use-update-shopping-list';
 import { useLegacyShoppingList } from '@/hooks/use-legacy-shopping-list';
 import { useToast } from '@/hooks/use-toast';
+import { useShoppingListSettings } from '@/hooks/use-shopping-list-settings';
 import type { Recipe } from '@/types/recipe';
 
 export function useShoppingListActions(recipe: any = null) {
@@ -13,16 +14,22 @@ export function useShoppingListActions(recipe: any = null) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { usePackageSizes } = useShoppingListSettings();
   
   const { createNewList, isLoading: isCreatingList } = useCreateShoppingList();
   const { addToExistingList, toggleItemChecked, isLoading: isUpdatingList } = useUpdateShoppingList();
   const { addIngredientsToShoppingList, isAddingToList } = useLegacyShoppingList();
   
   // Enhanced createNewList with proper navigation
-  const handleCreateNewList = async (listName: string) => {
+  const handleCreateNewList = async (listName: string, usePackageSizesOverride?: boolean) => {
     try {
       setIsLoading(true);
-      const result = await createNewList(listName, recipe);
+      // Use the override value if provided, otherwise use the setting from useShoppingListSettings
+      const usePackageSizesValue = usePackageSizesOverride !== undefined 
+        ? usePackageSizesOverride 
+        : usePackageSizes;
+      
+      const result = await createNewList(listName, recipe, usePackageSizesValue);
       
       if (result.success && result.listId) {
         toast({
@@ -49,7 +56,7 @@ export function useShoppingListActions(recipe: any = null) {
   const handleAddToExistingList = async (listId: string) => {
     try {
       setIsLoading(true);
-      const result = await addToExistingList(listId, recipe);
+      const result = await addToExistingList(listId, recipe, usePackageSizes);
       
       if (result.success) {
         toast({
@@ -82,5 +89,6 @@ export function useShoppingListActions(recipe: any = null) {
     createNewList: handleCreateNewList,
     addToExistingList: handleAddToExistingList,
     isLoading: combinedLoading,
+    usePackageSizes,
   };
 }

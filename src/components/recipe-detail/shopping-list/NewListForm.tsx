@@ -4,21 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useShoppingListSettings } from '@/hooks/use-shopping-list-settings';
 import type { Recipe } from '@/types/recipe';
 
 interface NewListFormProps {
   recipe: Recipe;
-  onSubmit: (name: string) => Promise<any>;
+  onSubmit: (name: string, usePackageSizes: boolean) => Promise<any>;
   isLoading: boolean;
 }
 
 export function NewListForm({ recipe, onSubmit, isLoading }: NewListFormProps) {
+  const { usePackageSizes, setUsePackageSizes } = useShoppingListSettings();
   const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newListName.trim()) {
-      onSubmit(newListName);
+      onSubmit(newListName, usePackageSizes);
     }
   };
 
@@ -34,6 +37,18 @@ export function NewListForm({ recipe, onSubmit, isLoading }: NewListFormProps) {
           disabled={isLoading}
           required
         />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="use-package-sizes" 
+          checked={usePackageSizes}
+          onCheckedChange={(checked) => setUsePackageSizes(!!checked)}
+          disabled={isLoading}
+        />
+        <Label htmlFor="use-package-sizes" className="text-sm cursor-pointer">
+          Use standard package sizes (recommended)
+        </Label>
       </div>
       
       <Button 
