@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface CookieSettings {
   essential: boolean;
@@ -27,15 +28,15 @@ const CookieConsentContext = createContext<CookieConsentContextType>({
   setIsOpen: () => {},
 });
 
-// Cookie related helper functions
-const setCookie = (name: string, value: string, days: number = 365) => {
+// Cookie related helper functions - consolidated with common domain/path settings
+export const setCookie = (name: string, value: string, days: number = 365) => {
   const d = new Date();
   d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
   const expires = `expires=${d.toUTCString()}`;
   document.cookie = `${name}=${value};${expires};path=/;Secure;SameSite=Strict`;
 };
 
-const getCookie = (name: string): string | null => {
+export const getCookie = (name: string): string | null => {
   const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
   return match ? match[2] : null;
 };
@@ -48,9 +49,13 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
     preferences: false,
     analytics: false,
   });
+  const [initialized, setInitialized] = useState(false);
+  const location = useLocation();
 
-  // Check for existing consent on component mount
+  // Check for existing consent on component mount only (not on route change)
   useEffect(() => {
+    if (initialized) return;
+
     const consentCookie = getCookie('cookieConsent');
     if (consentCookie) {
       setHasConsented(true);
@@ -60,12 +65,16 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
       } catch (e) {
         console.error('Error parsing cookie consent settings', e);
       }
+      setIsOpen(false);
     } else {
       // If no consent cookie exists, show the banner
       setIsOpen(true);
     }
-  }, []);
+    
+    setInitialized(true);
+  }, [initialized]);
 
+  // Function to save consent settings
   const saveConsent = (settings: CookieSettings) => {
     setHasConsented(true);
     setCookieSettings(settings);

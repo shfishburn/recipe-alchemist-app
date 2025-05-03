@@ -13,28 +13,12 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const transitionTimeRef = useRef<number | null>(null);
   
-  // Use sessionStorage instead of an in-memory object for persistence
-  const getScrollPosition = (path: string): number => {
-    try {
-      const saved = sessionStorage.getItem(`scroll_${path}`);
-      return saved ? parseInt(saved, 10) : 0;
-    } catch (e) {
-      return 0;
-    }
-  };
-  
-  const saveScrollPosition = (path: string, position: number) => {
-    try {
-      sessionStorage.setItem(`scroll_${path}`, position.toString());
-    } catch (e) {
-      console.error("Error saving scroll position", e);
-    }
-  };
-  
   useEffect(() => {
     if (location !== displayLocation) {
       // Store scroll position before transition
-      saveScrollPosition(displayLocation.pathname, window.scrollY);
+      const currentPosition = window.scrollY;
+      const currentPath = displayLocation.pathname;
+      sessionStorage.setItem(`scroll_${currentPath}`, currentPosition.toString());
       
       // Start exit animation without changing container height
       setTransitionStage("fadeOut");
@@ -48,15 +32,7 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
         // Start entry animation
         setTransitionStage("fadeIn");
         
-        // Restore scroll position after a short delay to ensure DOM is updated
-        transitionTimeRef.current = window.setTimeout(() => {
-          const savedPosition = getScrollPosition(location.pathname);
-          window.scrollTo({
-            top: savedPosition,
-            behavior: 'auto'
-          });
-          transitionTimeRef.current = null;
-        }, 50);
+        transitionTimeRef.current = null;
       }, 280);
     }
     
@@ -66,14 +42,6 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
       }
     };
   }, [location, displayLocation]);
-
-  // Handle initial load
-  useEffect(() => {
-    // Only scroll to top on initial page load
-    if (location.pathname === displayLocation.pathname && !getScrollPosition(location.pathname)) {
-      window.scrollTo(0, 0);
-    }
-  }, []);
 
   return (
     <div 

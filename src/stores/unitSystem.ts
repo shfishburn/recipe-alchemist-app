@@ -1,20 +1,9 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getCookie, setCookie } from '@/hooks/use-cookie-consent';
 
 export type UnitSystem = 'metric' | 'imperial';
-
-// Cookie functions for persistent unit setting
-const setCookieUnits = (units: UnitSystem) => {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() + 1); // persists for 1 year
-  document.cookie = `units=${units};expires=${d.toUTCString()};path=/;Secure;SameSite=Strict`;
-};
-
-const getCookieUnits = (): UnitSystem | null => {
-  const match = document.cookie.match(/units=(metric|imperial)/);
-  return match ? match[1] as UnitSystem : null;
-};
 
 interface UnitSystemState {
   unitSystem: UnitSystem;
@@ -25,14 +14,14 @@ interface UnitSystemState {
 export const useUnitSystemStore = create<UnitSystemState>()(
   persist(
     (set, get) => ({
-      unitSystem: getCookieUnits() || 'metric', // Use cookie value first if available
+      unitSystem: getCookie('units') as UnitSystem || 'metric', // Use cookie value first if available
       setUnitSystem: (system) => {
-        setCookieUnits(system); // Set the cookie
+        setCookie('units', system); // Set the cookie using our consolidated function
         set({ unitSystem: system });
       },
       toggleUnitSystem: () => {
         const newSystem = get().unitSystem === 'metric' ? 'imperial' : 'metric';
-        setCookieUnits(newSystem); // Set the cookie
+        setCookie('units', newSystem); // Set the cookie using our consolidated function
         set({ unitSystem: newSystem });
       },
     }),
