@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import {
   Controller,
@@ -12,7 +11,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Slot } from "@/components/ui/slot"
+import { Slot } from "@/components/ui/slot"  // Changed from Radix to our custom implementation
 
 const Form = FormProvider
 

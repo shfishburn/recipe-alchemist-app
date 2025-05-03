@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Slot } from '@/components/ui/slot'; // Import our custom Slot
 
 /**
  * Composes multiple refs into one with improved type safety
@@ -25,15 +26,13 @@ export const useSlot = () => {
   >((props, ref) => {
     const { asChild, children, ...otherProps } = props;
     
-    // Only clone if children is a valid React element and asChild is true
+    // When asChild is true, use our custom Slot component
     if (asChild && React.isValidElement(children)) {
-      // Safer cloning with proper ref handling
-      return React.cloneElement(children as React.ReactElement, {
-        ...otherProps,
-        ref: ref 
-          ? composeRefs(ref, (children as any).ref) 
-          : (children as any).ref,
-      });
+      return (
+        <Slot ref={ref} {...otherProps}>
+          {children}
+        </Slot>
+      );
     }
     
     // When asChild is false or not provided, render a div

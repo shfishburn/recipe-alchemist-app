@@ -1,6 +1,7 @@
 
 import * as React from "react";
 
+// Define clearer types for the Slot component
 interface SlotProps {
   children?: React.ReactNode;
   [key: string]: any; // Allow for additional props
@@ -8,7 +9,7 @@ interface SlotProps {
 
 /**
  * Custom Slot component that merges props with child element
- * Better handling of children without relying on React.Children.only
+ * With improved TypeScript handling for refs
  */
 const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
   const { children, ...rest } = props;
@@ -36,15 +37,17 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
   }
   
   // Clone the element with merged props
-  // TypeScript: We need to type cast the child properly to access ref
-  return React.cloneElement(firstChild, {
-    ...rest,
-    // When forwarding refs, we need to compose them properly
-    // but avoid TypeScript errors by using type assertions for refs
-    ref: forwardedRef 
-      ? composeRefs(forwardedRef, (firstChild as any).ref) 
-      : (firstChild as any).ref,
-  });
+  // We need to use as React.ReactElement<any> to correctly handle refs
+  return React.cloneElement(
+    firstChild as React.ReactElement<any>, 
+    {
+      ...rest,
+      // When forwarding refs, we need to compose them properly
+      ref: forwardedRef 
+        ? composeRefs(forwardedRef, (firstChild as any).ref) 
+        : (firstChild as any).ref,
+    }
+  );
 });
 
 /**
