@@ -1,8 +1,8 @@
-
 import React from 'react';
 
 /**
- * Process inline formatting in text with enhanced styling for ingredients
+ * Process inline formatting in text and return properly structured React nodes
+ * Ensures consistent output for React.Children.only compatibility
  */
 export function processInlineFormatting(text: string): React.ReactNode[] {
   if (!text || typeof text !== 'string') {
@@ -16,21 +16,10 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
   let italicActive = false;
   let codeActive = false;
   
-  // Enhanced scientific notation support
-  const processedText = text
-    // Handle temperature formats like 350°F, 175°C
-    .replace(/(\d+)°([FC])/g, '$1°$2')
-    // Handle fractions like 1/2, 3/4
-    .replace(/(\d+)\/(\d+)/g, '$1/$2')
-    // Handle nutrition units like 28g, 240 kcal
-    .replace(/(\d+)(\s*)(g|mg|kg|kcal|cal)/g, '$1$2$3')
-    // Handle percentages
-    .replace(/(\d+)(\s*)(%)/g, '$1$2$3');
-  
-  // Process the text character by character for more reliable formatting
-  for (let i = 0; i < processedText.length; i++) {
+  // Process the text character by character
+  for (let i = 0; i < text.length; i++) {
     // Handle bold formatting with **text**
-    if (processedText.substr(i, 2) === '**' && (!codeActive)) {
+    if (text.substr(i, 2) === '**' && (!codeActive)) {
       // Add accumulated text before the marker
       if (currentText) {
         if (boldActive) {
@@ -54,9 +43,9 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     }
     
     // Handle italic formatting with _text_
-    if (processedText[i] === '_' && (!codeActive) && 
-        (!processedText[i-1] || /\s/.test(processedText[i-1])) && 
-        (!processedText[i+1] || !/\s/.test(processedText[i+1]))) {
+    if (text[i] === '_' && (!codeActive) && 
+        (!text[i-1] || /\s/.test(text[i-1])) && 
+        (!text[i+1] || !/\s/.test(text[i+1]))) {
       // Add accumulated text before the marker
       if (currentText) {
         if (boldActive) {
@@ -79,7 +68,7 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     }
     
     // Handle code formatting with `text`
-    if (processedText[i] === '`' && (i === 0 || processedText[i-1] !== '\\')) {
+    if (text[i] === '`' && (i === 0 || text[i-1] !== '\\')) {
       // Add accumulated text before the marker
       if (currentText) {
         if (boldActive) {
@@ -102,12 +91,11 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     }
     
     // Add character to current text segment
-    currentText += processedText[i];
+    currentText += text[i];
     
     // Handle end of text
-    if (i === processedText.length - 1 && currentText) {
+    if (i === text.length - 1 && currentText) {
       if (boldActive) {
-        // Use enhanced styling for ingredients (bolded items)
         parts.push(
           React.createElement('span', { 
             key: `bold-${i}`, 

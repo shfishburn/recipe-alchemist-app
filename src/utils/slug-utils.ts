@@ -16,7 +16,7 @@ export const generateSlug = (text: string): string => {
 };
 
 /**
- * Enhanced UUID validation with more robust checks
+ * Enhanced UUID validation with better handling of formats and edge cases
  * @param uuid String to validate as UUID
  * @returns Boolean indicating if the string is a valid UUID
  */
@@ -25,17 +25,18 @@ export const isValidUUID = (uuid: string): boolean => {
     return false;
   }
   
+  // Normalize the UUID by removing any whitespace
+  const normalizedUuid = uuid.trim();
+  
   // Standard UUID v4 regex pattern
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Try to normalize the UUID by trimming whitespace
-  const normalizedUuid = uuid.trim();
-  
+  // Check if it's a valid UUID with proper format
   return uuidRegex.test(normalizedUuid);
 };
 
 /**
- * Extracts a recipe ID from a slug-id format with enhanced validation
+ * Improved extraction of ID from slug with better error handling
  * @param slugId String in format "slug-id" or just "id"
  * @returns The extracted ID or null if invalid
  */

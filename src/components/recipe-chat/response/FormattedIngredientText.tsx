@@ -8,7 +8,6 @@ interface FormattedIngredientTextProps {
 
 /**
  * Component to process and format ingredient text with styling
- * Used in both RecipeSteps and QuickCookingMode
  * Always returns a single React element with proper error handling
  */
 export function FormattedIngredientText({ text }: FormattedIngredientTextProps) {
@@ -18,10 +17,11 @@ export function FormattedIngredientText({ text }: FormattedIngredientTextProps) 
   }
   
   try {
-    // Use the shared text formatting utility to get an array of elements
+    // Process the text with the formatting utility
     const formattedContent = processInlineFormatting(text);
     
-    // Ensure we wrap content in a single element for React.Children.only compatibility
+    // Explicitly wrap the result in a span element to ensure we return a single React element
+    // This is critical for compatibility with React.Children.only in parent components
     return <span className="ingredient-text">{formattedContent}</span>;
   } catch (error) {
     console.error("Error formatting ingredient text:", error);

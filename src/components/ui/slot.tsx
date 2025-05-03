@@ -6,7 +6,8 @@ interface SlotProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 /**
- * Slot component that merges its props with its child element
+ * Custom Slot component that merges props with child element
+ * Handles multiple children more gracefully than React.Children.only
  */
 const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
   const { children, ...rest } = props;
@@ -16,39 +17,32 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
     return null;
   }
   
+  // Use Children.toArray to handle multiple children safely
+  const childrenArray = React.Children.toArray(children);
+  
+  // If array is empty after filtering, return null
+  if (childrenArray.length === 0) {
+    return null;
+  }
+  
+  // Use first child if it's a valid element
+  const firstChild = childrenArray[0];
+  
   // Only proceed if we have a valid React element
-  if (!React.isValidElement(children)) {
-    return null;
-  }
-
-  // Get a single child element, even if an array is passed
-  let child: React.ReactElement | null = null;
-  
-  if (React.Children.count(children) > 1) {
-    console.warn("Slot received multiple children, using only the first one");
-    React.Children.forEach(children, (element, index) => {
-      if (index === 0 && React.isValidElement(element)) {
-        child = element;
-      }
-    });
-  } else {
-    child = React.isValidElement(children) ? children : null;
-  }
-  
-  // If no valid child after processing, return null
-  if (!child) {
+  if (!React.isValidElement(firstChild)) {
+    console.warn("Slot received non-element child");
     return null;
   }
   
-  // Clone the element with proper TypeScript typing
-  return React.cloneElement(child, {
+  // Clone the element with merged props
+  return React.cloneElement(firstChild, {
     ...rest,
-    ref: composeRefs(ref, (child as any).ref),
+    ref: composeRefs(ref, (firstChild as any).ref),
   });
 });
 
 /**
- * Composes multiple refs into one
+ * Helper to compose multiple refs into one
  */
 const composeRefs = <T extends any>(
   ...refs: Array<React.Ref<T> | undefined | null>
