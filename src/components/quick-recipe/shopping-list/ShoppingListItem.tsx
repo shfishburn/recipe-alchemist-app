@@ -23,10 +23,22 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   // Check if we have the structured quantity and unit fields
   if (item.quantity !== undefined && item.quantity !== null) {
     // Convert quantity to string regardless of whether it's a number or string
-    formattedQuantity = String(item.quantity).trim();
-    
-    if (item.unit) {
-      formattedQuantity += ` ${item.unit}`;
+    const qtyValue = typeof item.quantity === 'number' && item.quantity > 0 
+      ? item.quantity 
+      : (typeof item.quantity === 'string' && parseFloat(item.quantity) > 0)
+        ? parseFloat(item.quantity)
+        : null;
+        
+    if (qtyValue !== null) {
+      // Format with precision to avoid unnecessary decimal places
+      formattedQuantity = (qtyValue % 1 === 0) 
+        ? String(Math.round(qtyValue))  // Integer values
+        : qtyValue.toString();          // Keep decimals
+      
+      // Add the unit if available
+      if (item.unit) {
+        formattedQuantity += ` ${item.unit}`;
+      }
     }
   } 
   // Fallback to text-based parsing if needed (legacy format)
