@@ -22,7 +22,12 @@ export class PackageSizeService {
         .ilike('ingredient', normalizedIngredient);
       
       if (directMatches && directMatches.length > 0) {
-        return directMatches[0] as GroceryPackageSize;
+        // Ensure package_sizes is typed as number[]
+        const match = directMatches[0];
+        return {
+          ...match,
+          package_sizes: Array.isArray(match.package_sizes) ? match.package_sizes : []
+        };
       }
       
       // Try partial match - ingredient contains the database entry
@@ -32,7 +37,11 @@ export class PackageSizeService {
         .filter('ingredient', 'in', `(${normalizedIngredient})`);
       
       if (partialMatches && partialMatches.length > 0) {
-        return partialMatches[0] as GroceryPackageSize;
+        const match = partialMatches[0];
+        return {
+          ...match,
+          package_sizes: Array.isArray(match.package_sizes) ? match.package_sizes : []
+        };
       }
       
       // Try searching for any part of the ingredient
@@ -48,7 +57,11 @@ export class PackageSizeService {
             .limit(1);
           
           if (wordMatches && wordMatches.length > 0) {
-            return wordMatches[0] as GroceryPackageSize;
+            const match = wordMatches[0];
+            return {
+              ...match,
+              package_sizes: Array.isArray(match.package_sizes) ? match.package_sizes : []
+            };
           }
         }
       }

@@ -118,10 +118,10 @@ export type Database = {
           ingredient: string
           metric_equiv: string | null
           notes: string | null
-          package_sizes: Json
+          package_sizes: number[]
           package_unit: string
-          standard_qty: number | null
-          standard_unit: string | null
+          standard_qty: number
+          standard_unit: string
           updated_at: string | null
         }
         Insert: {
@@ -131,10 +131,10 @@ export type Database = {
           ingredient: string
           metric_equiv?: string | null
           notes?: string | null
-          package_sizes: Json
+          package_sizes: number[]
           package_unit: string
-          standard_qty?: number | null
-          standard_unit?: string | null
+          standard_qty: number
+          standard_unit: string
           updated_at?: string | null
         }
         Update: {
@@ -144,10 +144,10 @@ export type Database = {
           ingredient?: string
           metric_equiv?: string | null
           notes?: string | null
-          package_sizes?: Json
+          package_sizes?: number[]
           package_unit?: string
-          standard_qty?: number | null
-          standard_unit?: string | null
+          standard_qty?: number
+          standard_unit?: string
           updated_at?: string | null
         }
         Relationships: []

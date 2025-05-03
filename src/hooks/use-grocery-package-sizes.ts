@@ -6,7 +6,7 @@ export interface GroceryPackageSize {
   id: string;
   ingredient: string;
   category: string;
-  package_sizes: number[];
+  package_sizes: number[];  // Changed from Json to number[]
   package_unit: string;
   standard_qty?: number;
   standard_unit?: string;
@@ -33,7 +33,13 @@ export function useGroceryPackageSizes() {
         throw error;
       }
 
-      setPackageSizes(data || []);
+      // Transform the data to ensure package_sizes is a number[] array
+      const transformedData: GroceryPackageSize[] = data?.map(item => ({
+        ...item,
+        package_sizes: Array.isArray(item.package_sizes) ? item.package_sizes : []
+      })) || [];
+      
+      setPackageSizes(transformedData);
     } catch (err) {
       console.error('Error fetching package sizes:', err);
       setError(err instanceof Error ? err : new Error('Unknown error occurred'));
