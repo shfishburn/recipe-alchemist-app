@@ -1,3 +1,4 @@
+
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
@@ -6,26 +7,32 @@ import { AIShoppingConverter, convertIngredientsWithAI } from '@/services/aiShop
 
 /**
  * Converts recipe ingredients to shopping list items
- * Now with AI-powered shopping conversions
+ * Now with AI-powered shopping conversions and package size optimization
  */
 export async function recipeIngredientsToShoppingItems(
   ingredients: Ingredient[], 
-  recipeId?: string
+  recipeId?: string,
+  usePackageSizes: boolean = true
 ): Promise<ShoppingListItem[]> {
   console.log("Converting recipe ingredients to shopping items:", ingredients);
   
   try {
-    // Try to use the AI converter for better shopping quantities
-    const aiItems = await convertIngredientsWithAI(ingredients);
-    console.log("AI converted shopping items:", aiItems);
-    
-    // Add recipe ID to each item
-    const itemsWithRecipeId = aiItems.map(item => ({
-      ...item,
-      recipeId: recipeId
-    }));
-    
-    return itemsWithRecipeId;
+    // Use the AI converter for better shopping quantities if package sizes are enabled
+    if (usePackageSizes) {
+      const aiItems = await convertIngredientsWithAI(ingredients);
+      console.log("AI converted shopping items:", aiItems);
+      
+      // Add recipe ID to each item
+      const itemsWithRecipeId = aiItems.map(item => ({
+        ...item,
+        recipeId: recipeId
+      }));
+      
+      return itemsWithRecipeId;
+    } else {
+      // If package sizes are disabled, use basic conversion
+      return basicIngredientsToShoppingItems(ingredients, recipeId);
+    }
   } catch (error) {
     console.warn("AI conversion failed, falling back to basic conversion:", error);
     return basicIngredientsToShoppingItems(ingredients, recipeId);
@@ -104,43 +111,5 @@ function basicIngredientsToShoppingItems(
  * Helper function to determine department based on ingredient name
  */
 export function getDepartmentForIngredient(ingredient: string): string {
-  const lowerIngredient = ingredient.toLowerCase();
-  
-  // Produce
-  if (/lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i.test(lowerIngredient)) {
-    return 'Produce';
-  }
-  
-  // Meat & Seafood
-  if (/beef|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|steak|ground meat|bacon|sausage/i.test(lowerIngredient)) {
-    return 'Meat & Seafood';
-  }
-  
-  // Dairy & Eggs
-  if (/milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i.test(lowerIngredient)) {
-    return 'Dairy & Eggs';
-  }
-  
-  // Bakery
-  if (/bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i.test(lowerIngredient)) {
-    return 'Bakery';
-  }
-  
-  // Pantry
-  if (/flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i.test(lowerIngredient)) {
-    return 'Pantry';
-  }
-  
-  // Frozen
-  if (/frozen|ice cream|popsicle/i.test(lowerIngredient)) {
-    return 'Frozen';
-  }
-  
-  // Beverages
-  if (/water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i.test(lowerIngredient)) {
-    return 'Beverages';
-  }
-  
-  // Default
-  return 'Other';
+  return AIShoppingConverter.guessDepartment(ingredient);
 }

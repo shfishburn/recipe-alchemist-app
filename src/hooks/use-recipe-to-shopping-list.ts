@@ -14,6 +14,7 @@ export function useRecipeToShoppingList() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [usePackageSizes, setUsePackageSizes] = useState(true);
   
   /**
    * Creates a new shopping list from a recipe
@@ -46,6 +47,7 @@ export function useRecipeToShoppingList() {
     
     try {
       console.log("Creating shopping list for recipe:", recipe.title);
+      console.log("Using package sizes:", usePackageSizes);
       
       // Step 1: Create a new shopping list with basic info
       const { data: newList, error: listError } = await supabase
@@ -65,10 +67,11 @@ export function useRecipeToShoppingList() {
         throw new Error("Failed to create shopping list");
       }
 
-      // Step 2: Convert recipe ingredients to shopping items
+      // Step 2: Convert recipe ingredients to shopping items with package size option
       const shoppingItems = await recipeIngredientsToShoppingItems(
         recipe.ingredients, 
-        recipe.id
+        recipe.id,
+        usePackageSizes
       );
       
       console.log("Generated shopping items:", shoppingItems);
@@ -130,10 +133,11 @@ export function useRecipeToShoppingList() {
         
       if (fetchError) throw fetchError;
       
-      // Step 2: Convert recipe ingredients to shopping items
+      // Step 2: Convert recipe ingredients to shopping items with package size option
       const newItems = await recipeIngredientsToShoppingItems(
         recipe.ingredients, 
-        recipe.id
+        recipe.id,
+        usePackageSizes
       );
       
       // Step 3: Merge with existing items
@@ -155,7 +159,8 @@ export function useRecipeToShoppingList() {
             department: item.department || 'Other',
             recipeId: item.recipeId,
             shop_size_qty: item.shop_size_qty,
-            shop_size_unit: item.shop_size_unit
+            shop_size_unit: item.shop_size_unit,
+            package_notes: item.package_notes
           }));
         } else {
           console.error("Items from database is not an array:", existingList.items);
@@ -203,6 +208,8 @@ export function useRecipeToShoppingList() {
   return {
     addRecipeToNewList,
     addRecipeToExistingList,
+    usePackageSizes,
+    setUsePackageSizes,
     isLoading
   };
 }
