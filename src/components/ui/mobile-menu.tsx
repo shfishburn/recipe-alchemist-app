@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ButtonWrapper } from '@/components/ui/button-wrapper';
-import { ChefHat, Menu, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
@@ -22,10 +22,10 @@ export function MobileMenu() {
   
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
-    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: ChefHat },
-    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
-    { name: 'My Market', path: '/shopping-lists', requiresAuth: true, icon: ShoppingCart },
-    { name: 'Our Science', path: '/how-it-works', requiresAuth: false, icon: BookText },
+    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false },
+    { name: 'My Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
+    { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];
 
   // Filter links based on authentication status
@@ -60,8 +60,7 @@ export function MobileMenu() {
                 to={link.path} 
                 className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
               >
-                {link.icon && React.createElement(link.icon, { className: "h-5 w-5 mr-3" })}
-                {link.name}
+                <span>{link.name}</span>
               </Link>
             </SheetClose>
           ))}

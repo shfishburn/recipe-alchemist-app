@@ -8,17 +8,17 @@ import { useAuth } from '@/hooks/use-auth';
 import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { ChefHat, BookOpen, ShoppingCart, BookText, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export function Navbar({ className }: { className?: string }) {
   const { session } = useAuth();
   const { isOpen, open, close } = useAuthDrawer();
 
   const navigationLinks = [
-    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false, icon: ChefHat },
-    { name: 'My Recipes', path: '/recipes', requiresAuth: false, icon: BookOpen },
-    { name: 'My Market', path: '/shopping-lists', requiresAuth: true, icon: ShoppingCart },
-    { name: 'Our Science', path: '/how-it-works', requiresAuth: false, icon: BookText },
+    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false },
+    { name: 'My Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
+    { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
   ];
 
   // Filter links based on authentication status
@@ -48,7 +48,6 @@ export function Navbar({ className }: { className?: string }) {
               to={link.path} 
               className="text-sm font-medium hover:text-primary transition-colors flex items-center px-3 py-2 rounded-md"
             >
-              {link.icon && React.createElement(link.icon, { className: "h-4 w-4 mr-1.5" })}
               {link.name}
             </Link>
           ))}
