@@ -55,8 +55,17 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
     }
   }, [isErrorState, updateLoadingState]);
   
+  // Add a class to prevent body scrolling when loading is shown
+  useEffect(() => {
+    document.body.classList.add('overflow-hidden');
+    
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, []);
+  
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-50 animate-fadeIn">
+    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[9999] animate-fadeIn overflow-auto">
       {/* Accessible title for screen readers */}
       <VisuallyHidden asChild>
         <h1>
@@ -64,7 +73,7 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
         </h1>
       </VisuallyHidden>
       
-      <div className="w-full max-w-md mx-auto text-center">
+      <div className="w-full max-w-md mx-auto text-center py-12">
         {isErrorState ? (
           <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 animate-scale-in">
             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />

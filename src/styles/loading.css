@@ -152,3 +152,27 @@
   backface-visibility: hidden;
   transform: translateZ(0);
 }
+
+/* Progress bar container styling */
+.nprogress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  pointer-events: none;
+  width: 100%;
+  height: 3px;
+}
+
+/* Progress bar styling */
+.nprogress-bar {
+  background: linear-gradient(to right, #38bdf8, #22c55e);
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  transform-origin: left;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+}
