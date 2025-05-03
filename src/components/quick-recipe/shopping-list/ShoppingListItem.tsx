@@ -12,11 +12,18 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   // Format quantity for display - use the structured data fields specifically designed for this
   let formattedQuantity = '';
   
+  // Debug the quantity value to verify what we're receiving
+  console.log('ShoppingListItem quantity data:', {
+    qty: item.quantity,
+    unit: item.unit,
+    type: typeof item.quantity,
+    originalItem: item
+  });
+  
   // Check if we have the structured quantity and unit fields
   if (item.quantity !== undefined && item.quantity !== null) {
-    formattedQuantity = typeof item.quantity === 'number' 
-      ? item.quantity.toString() 
-      : item.quantity;
+    // Convert quantity to string regardless of whether it's a number or string
+    formattedQuantity = String(item.quantity).trim();
     
     if (item.unit) {
       formattedQuantity += ` ${item.unit}`;

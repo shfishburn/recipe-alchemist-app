@@ -54,9 +54,11 @@ export function ChatHistory({
       {allMessages.map((message) => (
         <ChatMessage
           key={message.id}
-          message={message}
-          onExampleClick={setMessage}
-          onApplyChanges={handleOpenChangesDialog}
+          chat={message}
+          setMessage={setMessage}
+          applyChanges={handleOpenChangesDialog}
+          isApplying={isApplying}
+          isOptimistic={optimisticMessages.includes(message)}
         />
       ))}
       
