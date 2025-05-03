@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ShoppingItem } from './types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Check, Info } from 'lucide-react';
+import { Check, Info, Loader2 } from 'lucide-react';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 
 interface ShoppingListItemProps {
@@ -13,6 +13,7 @@ interface ShoppingListItemProps {
 
 export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProps) {
   const { unitSystem } = useUnitSystem();
+  const [isLoading, setIsLoading] = useState(false);
   
   // Extract ingredient details from either the structured fields or the original ingredientData
   const hasDetails = !!(item.notes || item.ingredientData?.notes);
@@ -80,17 +81,34 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   
   // Create a more readable display format
   const displayText = item.text || `${converted.value} ${converted.unit} ${itemName}`.trim();
+  
+  const handleToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsLoading(true);
+    
+    // Call toggle with short delay for UI feedback
+    setTimeout(() => {
+      onToggle(index);
+      setIsLoading(false);
+    }, 150);
+  };
 
   return (
     <div 
-      className={`flex items-start gap-2 p-4 rounded-md cursor-pointer transition-colors
+      className={`flex items-start gap-2 p-4 rounded-md cursor-pointer transition-colors touch-optimized tap-highlight
         ${item.checked 
           ? 'bg-green-50 hover:bg-green-100' 
           : 'bg-muted/40 hover:bg-muted/60'}`}
-      onClick={() => onToggle(index)}
+      onClick={handleToggle}
     >
-      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
-        {item.checked && <Check className="h-4 w-4 text-green-600" />}
+      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1 touch-target">
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : item.checked ? (
+          <Check className="h-4 w-4 text-green-600" />
+        ) : null}
       </div>
       <div 
         className={`text-sm flex-1 pt-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}

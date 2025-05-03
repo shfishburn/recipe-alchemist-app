@@ -10,9 +10,15 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'dept'>('dept');
   const [expandedDepts, setExpandedDepts] = useState<Record<string, boolean>>({});
+  const [items, setItems] = useState<ShoppingListItem[]>(list.items);
+
+  // Update local state when list changes from props
+  useEffect(() => {
+    setItems(list.items);
+  }, [list]);
 
   // Group items by department
-  const itemsByDepartment = list.items.reduce((acc, item) => {
+  const itemsByDepartment = items.reduce((acc, item) => {
     const dept = item.department || 'Other';
     if (!acc[dept]) acc[dept] = [];
     acc[dept].push(item);
@@ -34,8 +40,8 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
 
   // Filter and sort items
   const filteredItems = searchTerm.trim() === '' 
-    ? list.items 
-    : list.items.filter(item => 
+    ? items 
+    : items.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
@@ -57,30 +63,40 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
       };
 
   const handleToggleItem = async (index: number) => {
-    const updatedItems = [...list.items];
+    // Optimistically update the local state first for immediate feedback
+    const updatedItems = [...items];
     updatedItems[index] = {
       ...updatedItems[index],
       checked: !updatedItems[index].checked
     };
+    
+    // Update local state immediately
+    setItems(updatedItems);
 
+    // Then send the update to the server
     const { error } = await supabase
       .from('shopping_lists')
       .update({ items: updatedItems as unknown as Json })
       .eq('id', list.id);
 
     if (error) {
+      // If there's an error, revert the optimistic update
+      setItems(list.items);
       toast({
         title: 'Error',
         description: 'Failed to update item',
         variant: 'destructive'
       });
     } else {
+      // Only call onUpdate after successful DB update
       onUpdate();
     }
   };
 
   const handleDeleteItem = async (index: number) => {
-    const updatedItems = list.items.filter((_, i) => i !== index);
+    // Optimistically update the UI
+    const updatedItems = items.filter((_, i) => i !== index);
+    setItems(updatedItems);
 
     const { error } = await supabase
       .from('shopping_lists')
@@ -88,6 +104,8 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
       .eq('id', list.id);
 
     if (error) {
+      // Revert on error
+      setItems(list.items);
       toast({
         title: 'Error',
         description: 'Failed to delete item',
@@ -108,7 +126,10 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
       checked: false
     };
     
-    const updatedItems = [...list.items, item];
+    const updatedItems = [...items, item];
+    
+    // Update local state optimistically
+    setItems(updatedItems);
     
     const { error } = await supabase
       .from('shopping_lists')
@@ -116,6 +137,8 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
       .eq('id', list.id);
       
     if (error) {
+      // Revert on error
+      setItems(list.items);
       toast({
         title: 'Error',
         description: 'Failed to add item',
@@ -129,9 +152,12 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
   };
   
   const toggleAllInDepartment = async (department: string, checked: boolean) => {
-    const updatedItems = list.items.map(item => 
+    // Optimistically update local state
+    const updatedItems = items.map(item => 
       item.department === department ? {...item, checked} : item
     );
+    
+    setItems(updatedItems);
     
     const { error } = await supabase
       .from('shopping_lists')
@@ -139,6 +165,8 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
       .eq('id', list.id);
       
     if (error) {
+      // Revert on error
+      setItems(list.items);
       toast({
         title: 'Error',
         description: 'Failed to update items',
@@ -197,7 +225,7 @@ export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
   };
 
   const getItemIndex = (item: ShoppingListItem) => {
-    return list.items.findIndex(
+    return items.findIndex(
       i => i.name === item.name && i.unit === item.unit && i.department === item.department
     );
   };

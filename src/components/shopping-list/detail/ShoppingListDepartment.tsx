@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Info, ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { Trash2, Info, ChevronDown, ChevronRight, Check, Loader2 } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -34,10 +34,28 @@ export function ShoppingListDepartment({
 }: ShoppingListDepartmentProps) {
   const deptCompleted = items.every(item => item.checked);
   const deptPartial = items.some(item => item.checked) && !deptCompleted;
+  const [loadingItems, setLoadingItems] = useState<Record<number, boolean>>({});
   
   // Get the department icon and color
   const DepartmentIcon = getDepartmentIcon(department);
   const departmentColorClass = getDepartmentColor(department);
+
+  // Handle item toggle with optimistic updates and loading state
+  const handleItemToggle = async (itemIndex: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Optimistically update UI
+    setLoadingItems(prev => ({ ...prev, [itemIndex]: true }));
+    
+    try {
+      await onToggleItem(itemIndex);
+    } catch (error) {
+      console.error('Error toggling item:', error);
+    } finally {
+      setLoadingItems(prev => ({ ...prev, [itemIndex]: false }));
+    }
+  };
 
   return (
     <div className="border rounded-md overflow-hidden">
@@ -67,20 +85,23 @@ export function ShoppingListDepartment({
             const itemIndex = getItemIndexInList(item);
             
             if (itemIndex === -1) return null;
+            const isLoading = !!loadingItems[itemIndex];
             
             return (
               <div 
                 key={`${department}-${idx}`} 
-                className={`flex items-center gap-2 p-3 cursor-pointer transition-colors
+                className={`flex items-center gap-2 p-3 touch-optimized tap-highlight
                   ${item.checked 
                     ? 'bg-green-50 hover:bg-green-100' 
                     : 'hover:bg-muted/50'}`}
-                onClick={() => onToggleItem(itemIndex)}
+                onClick={(e) => handleItemToggle(itemIndex, e)}
               >
-                <div className="flex-none w-5 h-5 flex items-center justify-center">
-                  {item.checked && (
+                <div className="flex-none w-5 h-5 flex items-center justify-center touch-target">
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : item.checked ? (
                     <Check className="h-4 w-4 text-green-600" />
-                  )}
+                  ) : null}
                 </div>
                 <div 
                   className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
@@ -122,6 +143,7 @@ export function ShoppingListDepartment({
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="touch-target"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent toggling item when delete button is clicked
                     onDeleteItem(itemIndex);

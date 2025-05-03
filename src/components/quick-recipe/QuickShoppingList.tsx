@@ -12,6 +12,9 @@ import { useUnitSystem } from '@/hooks/use-unit-system';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
 
+// Import touch optimizations
+import '@/styles/touch-optimizations.css';
+
 interface QuickShoppingListProps {
   recipe: QuickRecipe;
   open: boolean;
@@ -65,12 +68,32 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
     initializeItems();
   }, [recipe, open, unitSystem]); // Include unitSystem to regenerate when preference changes
   
+  // Add touch optimization class on modal open
+  useEffect(() => {
+    if (open) {
+      document.body.classList.add('touch-optimized');
+    }
+    
+    return () => {
+      document.body.classList.remove('touch-optimized');
+    };
+  }, [open]);
+  
   const toggleItem = (index: number) => {
+    // Optimistic UI update for better responsiveness
     const updatedItems = items.map((item, i) => 
       i === index ? { ...item, checked: !item.checked } : item
     );
     setItems(updatedItems);
     setItemsByDepartment(groupItemsByDepartment(updatedItems));
+    
+    // Show success toast for feedback
+    const isNowChecked = !items[index].checked;
+    toast({
+      title: isNowChecked ? "Marked as complete" : "Marked as incomplete",
+      description: `${items[index].item || items[index].text}`,
+      variant: "default"
+    });
   };
   
   const copyToClipboard = () => {
@@ -98,7 +121,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={isMobile ? "w-[95vw] max-w-md p-6" : "sm:max-w-md"}>
+      <DialogContent className={`${isMobile ? "w-[95vw] max-w-md p-6" : "sm:max-w-md"} touch-optimized`}>
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle className="flex items-center gap-2">
@@ -111,7 +134,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
                 variant="outline"
                 size="sm"
                 onClick={copyToClipboard}
-                className="flex items-center gap-2 h-10 px-4"
+                className="flex items-center gap-2 h-10 px-4 touch-target"
                 disabled={isLoading}
               >
                 {copied ? (
@@ -130,7 +153,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
           </div>
         </DialogHeader>
         
-        <div className="mt-4">
+        <div className="mt-4 touch-scroll">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />

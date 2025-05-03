@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ShoppingItem } from './types';
 import { ShoppingListItem } from './ShoppingListItem';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -19,7 +19,7 @@ export function ShoppingListDepartment({
   onToggleItem,
   itemIndices
 }: ShoppingListDepartmentProps) {
-  const [isOpen, setIsOpen] = React.useState(true);
+  const [isOpen, setIsOpen] = useState(true);
   const checkedCount = items.filter(item => item.checked).length;
   
   // Get the department icon and color
@@ -29,7 +29,7 @@ export function ShoppingListDepartment({
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-1">
       <CollapsibleTrigger 
-        className={`flex items-center justify-between w-full p-2 text-sm font-medium hover:bg-muted/50 rounded-md ${departmentColorClass}`}
+        className={`flex items-center justify-between w-full p-2 text-sm font-medium hover:bg-muted/50 rounded-md ${departmentColorClass} touch-target`}
       >
         <div className="flex items-center">
           {isOpen ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
