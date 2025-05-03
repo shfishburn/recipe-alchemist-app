@@ -61,6 +61,7 @@ export function ShoppingListDepartment({
   const formatQuantityWithUnit = (item: ShoppingListItem): string => {
     // Handle cases where quantity or unit might be missing or invalid
     if (typeof item.quantity === 'undefined' || item.quantity === null) {
+      console.log(`Missing quantity for item: ${item.name}`);
       return '';
     }
 
@@ -70,6 +71,7 @@ export function ShoppingListDepartment({
     
     // Check for valid number
     if (isNaN(qty) || qty === 0) {
+      console.log(`Invalid quantity (${qty}) for item: ${item.name}`);
       return '';
     }
     
@@ -112,6 +114,7 @@ export function ShoppingListDepartment({
             
             // Format quantity for display
             const quantityText = formatQuantityWithUnit(item);
+            console.log(`Item ${item.name} has quantity: ${item.quantity}, formatted as: ${quantityText}`);
             
             return (
               <div 

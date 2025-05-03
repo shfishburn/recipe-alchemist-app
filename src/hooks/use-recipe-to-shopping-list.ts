@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
 import { mergeShoppingItems } from '@/utils/shopping-list-merge';
 import type { Recipe } from '@/types/recipe';
+import type { ShoppingListItem } from '@/types/shopping-list';
 
 export function useRecipeToShoppingList() {
   const { user } = useAuth();
@@ -135,14 +136,35 @@ export function useRecipeToShoppingList() {
         recipe.id
       );
       
-      // Step 3: Merge with existing items - ensure we're dealing with arrays
-      const existingItems = Array.isArray(existingList.items) ? existingList.items : [];
+      // Step 3: Merge with existing items
+      // Ensure existingItems is properly converted to ShoppingListItem[] type
+      let existingItems: ShoppingListItem[] = [];
       
-      // Log type information for debugging
-      console.log("Existing items type:", typeof existingItems, Array.isArray(existingItems));
-      console.log("Existing items:", existingItems);
+      // Process the items from the database to ensure they match ShoppingListItem structure
+      if (existingList && existingList.items) {
+        if (Array.isArray(existingList.items)) {
+          existingItems = existingList.items as ShoppingListItem[];
+          
+          // Validate structure - ensure each item has required properties
+          existingItems = existingItems.map(item => ({
+            name: item.name || '',
+            quantity: typeof item.quantity === 'number' ? item.quantity : 0,
+            unit: item.unit || '',
+            checked: !!item.checked,
+            notes: item.notes,
+            department: item.department || 'Other',
+            recipeId: item.recipeId
+          }));
+        } else {
+          console.error("Items from database is not an array:", existingList.items);
+        }
+      }
+      
+      console.log("Existing items (processed):", existingItems);
+      console.log("New items to merge:", newItems);
       
       const mergedItems = mergeShoppingItems(existingItems, newItems);
+      console.log("Merged items result:", mergedItems);
       
       // Step 4: Update the list
       const { error: updateError } = await supabase
