@@ -9,6 +9,7 @@ import { Recipe } from '@/types/recipe';
 import { updateRecipe } from './utils/update-recipe';
 import { validateRecipeUpdate } from './utils/validation/validate-recipe-update';
 import { ChatMessage } from '@/types/chat';
+import { updateChatStatus } from './utils/update-chat-status';
 
 export const useApplyChanges = () => {
   const { toast } = useToast();
@@ -55,6 +56,16 @@ export const useApplyChanges = () => {
 
         // Process and apply updates to the recipe
         const updatedRecipe = await updateRecipe(originalRecipe, changes);
+
+        // Mark the chat message as applied
+        try {
+          if (changes.id) {
+            await updateChatStatus(changes);
+          }
+        } catch (statusError) {
+          console.error("Error updating chat status:", statusError);
+          // Continue with the process even if status update fails
+        }
 
         // Revalidate cache after successful update
         await Promise.all([
@@ -128,22 +139,25 @@ export const useApplyChanges = () => {
           // Cast the data to Recipe type to ensure type safety
           const recipeData = data as unknown as Recipe;
           
+          // Use then/finally pattern instead of then/catch to avoid TypeScript error
           mutation.mutateAsync({ 
             recipeId: chat.recipe_id as string, 
             changes: chat, 
             originalRecipe: recipeData 
           })
-          .then(result => {
-            clearTimeout(operationTimeout);
-            resolve(result);
-          })
-          .catch(err => {
-            console.error("Error in mutation:", err);
-            clearTimeout(operationTimeout);
-            resolve(false);
-          });
+            .then(result => {
+              clearTimeout(operationTimeout);
+              resolve(result);
+            })
+            .then(null, err => {
+              // This is an alternative to .catch() that works with PromiseLike<void>
+              console.error("Error in mutation:", err);
+              clearTimeout(operationTimeout);
+              resolve(false);
+            });
         })
-        .catch(err => {
+        .then(null, err => {
+          // This is an alternative to .catch() that works with PromiseLike
           console.error("Error fetching recipe:", err);
           clearTimeout(operationTimeout);
           resolve(false);
