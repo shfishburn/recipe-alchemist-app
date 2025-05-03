@@ -16,6 +16,9 @@ export interface ShoppingItem {
   quality_indicators?: string;
   alternatives?: string[];
   storage_tips?: string;
+  // New fields for shop sizes
+  shop_size_qty?: number;
+  shop_size_unit?: string;
 }
 
 export interface ShoppingItemsByDepartment {

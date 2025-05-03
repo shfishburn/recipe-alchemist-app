@@ -105,9 +105,13 @@ export async function addItem(
   { toast }: ToastHandler
 ): Promise<ShoppingListItem[] | null> {
   try {
+    // Convert to shoppable format if possible
     const item: ShoppingListItem = {
       ...newItem,
-      checked: false
+      checked: false,
+      // If user provided shop size quantities, use them
+      shop_size_qty: newItem.shop_size_qty || newItem.quantity,
+      shop_size_unit: newItem.shop_size_unit || newItem.unit
     };
     
     const updatedItems = [...items, item];

@@ -3,16 +3,36 @@ import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
 import { useUnitSystemStore } from '@/stores/unitSystem';
+import { AIShoppingConverter, convertIngredientsWithAI } from '@/services/aiShoppingConverter';
 
 /**
  * Converts recipe ingredients to shopping list items
+ * Now with AI-powered shopping conversions
  */
-export function recipeIngredientsToShoppingItems(
+export async function recipeIngredientsToShoppingItems(
+  ingredients: Ingredient[], 
+  recipeId?: string
+): Promise<ShoppingListItem[]> {
+  console.log("Converting recipe ingredients to shopping items:", ingredients);
+  
+  try {
+    // Try to use the AI converter for better shopping quantities
+    const aiItems = await convertIngredientsWithAI(ingredients);
+    console.log("AI converted shopping items:", aiItems);
+    return aiItems;
+  } catch (error) {
+    console.warn("AI conversion failed, falling back to basic conversion:", error);
+    return basicIngredientsToShoppingItems(ingredients, recipeId);
+  }
+}
+
+/**
+ * Basic conversion method as fallback
+ */
+function basicIngredientsToShoppingItems(
   ingredients: Ingredient[], 
   recipeId?: string
 ): ShoppingListItem[] {
-  console.log("Converting recipe ingredients to shopping items:", ingredients);
-  
   // Get the current unit system preference from store
   const unitSystem = useUnitSystemStore.getState().unitSystem;
   console.log(`Using ${unitSystem} unit system for conversion`);

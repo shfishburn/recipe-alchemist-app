@@ -81,6 +81,13 @@ SHOPPING EFFICIENCY:
 4. Suggest preservation methods for unused portions
 5. Flag ingredients that require special storage after purchase
 
+SHOPPABLE QUANTITY RULES:
+1. ALWAYS provide realistic purchasable quantities in shop_size_qty and shop_size_unit
+2. For shop_size_unit, ONLY use standard retail units (oz, lb, each, bunch, package, bottle, can, etc.)
+3. shop_size_qty MUST be a number, not a range or description
+4. NEVER use vague terms like "small container" or "medium package" - be specific with units
+5. Round to standard package sizes available in stores (e.g. 16 oz, 1 lb, 5 lb)
+
 Return ONLY valid JSON matching this schema:
 {
   "departments": [{
@@ -89,6 +96,8 @@ Return ONLY valid JSON matching this schema:
       "name": string,
       "quantity": number,
       "unit": string,
+      "shop_size_qty": number,
+      "shop_size_unit": string,
       "notes": string,
       "quality_indicators": string,
       "alternatives": string[],

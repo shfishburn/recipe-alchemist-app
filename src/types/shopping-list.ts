@@ -11,6 +11,9 @@ export type ShoppingListItem = {
   storage_tips?: string;
   department?: string;
   recipeId?: string;
+  // New fields for shoppable quantities
+  shop_size_qty?: number;
+  shop_size_unit?: string;
 };
 
 export type ShoppingList = {
