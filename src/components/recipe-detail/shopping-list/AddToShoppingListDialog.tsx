@@ -1,98 +1,80 @@
 
-import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ShoppingBag } from 'lucide-react';
-import { useRecipeToShoppingList } from '@/hooks/use-recipe-to-shopping-list';
-import { ExistingListSelector } from './ExistingListSelector';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useShoppingLists } from './useShoppingLists';
+import { useShoppingListActions } from './useShoppingListActions';
+import { ExistingListForm } from './ExistingListForm';
 import { NewListForm } from './NewListForm';
 import { ShoppingListSettings } from '@/components/shopping-list/ShoppingListSettings';
-import { Separator } from '@/components/ui/separator';
 import type { Recipe } from '@/types/recipe';
 
 interface AddToShoppingListDialogProps {
+  recipe: Recipe;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  recipe: Recipe;
 }
 
-export function AddToShoppingListDialog({
-  open,
-  onOpenChange,
-  recipe,
-}: AddToShoppingListDialogProps) {
-  const [mode, setMode] = useState<'new' | 'existing'>('new');
+export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToShoppingListDialogProps) {
+  const [activeTab, setActiveTab] = useState<string>('new');
+  const { shoppingLists, isFetching, fetchShoppingLists } = useShoppingLists();
+  const { createNewList, addToExistingList, isLoading } = useShoppingListActions(recipe);
   
-  const {
-    addRecipeToNewList,
-    addRecipeToExistingList,
-    usePackageSizes,
-    setUsePackageSizes,
-    isLoading
-  } = useRecipeToShoppingList();
-
+  // Fetch shopping lists when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchShoppingLists();
+    }
+  }, [open, fetchShoppingLists]);
+  
+  const handleCreateNewList = async (name: string) => {
+    const result = await createNewList(name);
+    if (result.success) {
+      onOpenChange(false);
+    }
+  };
+  
+  const handleAddToExistingList = async (listId: string) => {
+    const result = await addToExistingList(listId);
+    if (result.success) {
+      onOpenChange(false);
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            Add to Shopping List
-          </DialogTitle>
-          <DialogDescription>
-            Add this recipe to a new or existing shopping list.
-          </DialogDescription>
+          <DialogTitle>Add to Shopping List</DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4 pt-2">
-          {/* Toggle between new and existing list */}
-          <div className="flex gap-2">
-            <Button
-              variant={mode === 'new' ? 'default' : 'outline'}
-              onClick={() => setMode('new')}
-              className="flex-1"
-            >
-              Create New List
-            </Button>
-            <Button
-              variant={mode === 'existing' ? 'default' : 'outline'}
-              onClick={() => setMode('existing')}
-              className="flex-1"
-            >
-              Add to Existing
-            </Button>
-          </div>
-
-          <Separator />
-
-          {/* Settings that apply to both modes */}
-          <ShoppingListSettings
-            usePackageSizes={usePackageSizes}
-            setUsePackageSizes={setUsePackageSizes}
-          />
-
-          {/* Mode-specific forms */}
-          {mode === 'new' ? (
+        
+        <div className="mb-4">
+          <ShoppingListSettings />
+        </div>
+        
+        <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="new">New List</TabsTrigger>
+            <TabsTrigger value="existing">Existing Lists</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="new" className="mt-4 space-y-4">
             <NewListForm 
-              recipe={recipe} 
-              onSubmit={addRecipeToNewList} 
-              isLoading={isLoading} 
-            />
-          ) : (
-            <ExistingListSelector 
-              recipe={recipe} 
-              onSelect={addRecipeToExistingList}
+              recipe={recipe}
+              onSubmit={handleCreateNewList}
               isLoading={isLoading}
             />
-          )}
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="existing" className="mt-4 space-y-4">
+            <ExistingListForm 
+              shoppingLists={shoppingLists}
+              isFetching={isFetching}
+              onSubmit={handleAddToExistingList}
+              isLoading={isLoading}
+            />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

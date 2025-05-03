@@ -1,172 +1,155 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { ingredientsToShoppingItems } from '@/utils/shopping-list-utils';
+import { useToast } from './use-toast';
+import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
+import { useShoppingListSettings } from './use-shopping-list-settings';
 import type { Recipe } from '@/types/recipe';
+import type { ShoppingListItem } from '@/types/shopping-list';
+import type { Json } from '@/integrations/supabase/types';
 
 export function useUpdateShoppingList() {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const { usePackageSizes } = useShoppingListSettings();
 
-  const addToExistingList = async (listId: string, recipe: Recipe | null) => {
+  // Add recipe ingredients to an existing shopping list
+  const addToExistingList = async (listId: string, recipe: Recipe) => {
     try {
-      if (!user) {
-        toast({
-          title: "Not signed in",
-          description: "Please sign in to update your shopping list",
-          variant: "destructive",
-        });
-        return { success: false };
-      }
-
-      if (!recipe) {
-        toast({
-          title: "Recipe required",
-          description: "No recipe provided to add to shopping list",
-          variant: "destructive",
-        });
-        return { success: false };
-      }
-      
       setIsLoading(true);
-      
-      // First, fetch the current list
-      const { data: currentList, error: fetchError } = await supabase
+
+      // First, get the current shopping list
+      const { data: listData, error: listError } = await supabase
         .from('shopping_lists')
-        .select('items, title')
+        .select('items')
         .eq('id', listId)
         .single();
-      
-      if (fetchError) {
-        throw fetchError;
+
+      if (listError) {
+        console.error("Error fetching shopping list:", listError);
+        throw listError;
       }
-      
-      // Convert ingredients to shopping items
-      const newItems = ingredientsToShoppingItems(recipe.ingredients);
-      
-      // Ensure we're working with arrays for the existing items
-      let existingItems = [];
-      
-      // Handle different types of data from the database
-      if (currentList && currentList.items) {
-        if (Array.isArray(currentList.items)) {
-          existingItems = currentList.items;
-        } else if (typeof currentList.items === 'object') {
-          // Try to convert object to array if possible
-          try {
-            existingItems = Object.values(currentList.items);
-          } catch (e) {
-            console.error('Error converting items to array:', e);
-          }
-        }
-      }
-      
-      // Combine with existing items safely
-      const combinedItems = [...existingItems, ...newItems];
-      
+
+      // Convert recipe ingredients to shopping list items
+      console.log("Adding recipe ingredients to list with package sizes:", usePackageSizes ? "enabled" : "disabled");
+      const newItems = await recipeIngredientsToShoppingItems(recipe.ingredients, recipe.id, usePackageSizes);
+
+      // Combine with existing items, avoiding duplicates
+      const existingItems = listData.items as ShoppingListItem[];
+      const combinedItems = combineShoppingItems(existingItems, newItems);
+
       // Update the shopping list
       const { error: updateError } = await supabase
         .from('shopping_lists')
-        .update({ 
-          items: combinedItems,
-          updated_at: new Date().toISOString() 
+        .update({
+          items: combinedItems as Json,
+          updated_at: new Date().toISOString()
         })
         .eq('id', listId);
-      
+
       if (updateError) {
+        console.error("Error updating shopping list:", updateError);
         throw updateError;
       }
-      
+
       toast({
-        title: "Updated shopping list",
-        description: `Added ${newItems.length} items to "${currentList.title}"`,
+        title: "Success",
+        description: `Added ${recipe.title} to shopping list`
       });
-      
-      return { success: true, listId };
+
+      return { success: true };
     } catch (error) {
-      console.error("Error updating shopping list:", error);
+      console.error("Error in addToExistingList:", error);
       toast({
         title: "Error",
         description: "Failed to update shopping list",
         variant: "destructive",
       });
-      return { success: false };
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Toggle checked state of an item
-  const toggleItemChecked = async (listId: string, itemIndex: number) => {
+  // Toggle an item's checked status
+  const toggleItemChecked = async (
+    listId: string,
+    itemIndex: number,
+    currentState: boolean
+  ) => {
     try {
-      if (!user) {
-        toast({
-          title: "Not signed in",
-          description: "Please sign in to update your shopping list",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      setIsLoading(true);
-      
-      // First, fetch the current list
-      const { data: currentList, error: fetchError } = await supabase
+      // First, get the current shopping list
+      const { data: listData, error: listError } = await supabase
         .from('shopping_lists')
         .select('items')
         .eq('id', listId)
         .single();
-      
-      if (fetchError) {
-        throw fetchError;
+
+      if (listError) {
+        throw listError;
       }
-      
-      // Ensure items is an array before proceeding
-      const updatedItems = Array.isArray(currentList.items) ? [...currentList.items] : [];
-      
-      // Toggle the checked status of the specific item
-      if (updatedItems[itemIndex] && typeof updatedItems[itemIndex] === 'object') {
-        // Safely toggle the checked property
-        const item = updatedItems[itemIndex] as any;
-        updatedItems[itemIndex] = {
-          ...item,
-          checked: item.checked !== undefined ? !item.checked : true
-        };
-      }
-      
+
+      // Update the specific item's checked status
+      const updatedItems = [...(listData.items as ShoppingListItem[])];
+      updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        checked: !currentState
+      };
+
       // Update the shopping list
       const { error: updateError } = await supabase
         .from('shopping_lists')
-        .update({ 
-          items: updatedItems,
+        .update({
+          items: updatedItems as Json,
           updated_at: new Date().toISOString()
         })
         .eq('id', listId);
-      
+
       if (updateError) {
         throw updateError;
       }
-      
-      return true;
+
+      return { success: true };
     } catch (error) {
-      console.error("Error toggling item checked state:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update item",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
+      console.error("Error toggling item:", error);
+      return { success: false, error };
     }
   };
+
+  return { addToExistingList, toggleItemChecked, isLoading };
+}
+
+// Helper function to combine shopping items, avoiding duplicates
+function combineShoppingItems(
+  existingItems: ShoppingListItem[],
+  newItems: ShoppingListItem[]
+): ShoppingListItem[] {
+  const combinedItems = [...existingItems];
   
-  return {
-    addToExistingList,
-    toggleItemChecked,
-    isLoading,
-  };
+  newItems.forEach(newItem => {
+    // Check if a similar item already exists
+    const existingItemIndex = existingItems.findIndex(
+      item => 
+        item.name.toLowerCase() === newItem.name.toLowerCase() &&
+        item.unit === newItem.unit
+    );
+    
+    if (existingItemIndex >= 0) {
+      // Update quantity if item exists
+      const existingItem = existingItems[existingItemIndex];
+      combinedItems[existingItemIndex] = {
+        ...existingItem,
+        quantity: existingItem.quantity + newItem.quantity,
+        // Preserve package size info if available
+        shop_size_qty: newItem.shop_size_qty || existingItem.shop_size_qty,
+        shop_size_unit: newItem.shop_size_unit || existingItem.shop_size_unit,
+        package_notes: newItem.package_notes || existingItem.package_notes,
+      };
+    } else {
+      // Add new item if it doesn't exist
+      combinedItems.push(newItem);
+    }
+  });
+  
+  return combinedItems;
 }

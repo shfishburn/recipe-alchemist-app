@@ -9,9 +9,23 @@ import type { Recipe } from '@/types/recipe';
 
 interface RecipeActionsProps {
   recipe: Recipe;
+  sticky?: boolean;
+  onOpenChat?: () => void;
+  onToggleAnalysis?: () => void;
+  isAnalysisOpen?: boolean;
+  isAnalyzing?: boolean;
+  hasAnalysisData?: boolean;
 }
 
-export function RecipeActions({ recipe }: RecipeActionsProps) {
+export function RecipeActions({ 
+  recipe, 
+  sticky = false,
+  onOpenChat,
+  onToggleAnalysis,
+  isAnalysisOpen,
+  isAnalyzing,
+  hasAnalysisData 
+}: RecipeActionsProps) {
   const [showShoppingListDialog, setShowShoppingListDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const { isFavorite, toggleFavorite } = useFavoriteRecipe(recipe.id);

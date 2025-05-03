@@ -1,79 +1,85 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { ingredientsToShoppingItems } from '@/utils/shopping-list-utils';
+import { useToast } from './use-toast';
+import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
+import { useShoppingListSettings } from './use-shopping-list-settings';
 import type { Recipe } from '@/types/recipe';
+import type { Json } from '@/integrations/supabase/types';
 
 export function useCreateShoppingList() {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Create a new shopping list
-  const createNewList = async (listName: string, recipe: Recipe | null) => {
-    try {
-      if (!user) {
-        toast({
-          title: "Not signed in",
-          description: "Please sign in to add items to your shopping list",
-          variant: "destructive",
-        });
-        return { success: false, listId: null };
-      }
+  const { toast } = useToast();
+  const { usePackageSizes } = useShoppingListSettings();
 
-      if (!recipe) {
-        toast({
-          title: "Recipe required",
-          description: "No recipe provided to add to shopping list",
-          variant: "destructive",
-        });
-        return { success: false, listId: null };
-      }
-      
+  const createNewList = async (listName: string, recipe: Recipe) => {
+    try {
       setIsLoading(true);
       
-      // Use the shared utility function to convert ingredients to shopping items
-      const shoppingItems = ingredientsToShoppingItems(recipe.ingredients);
+      // Check authentication
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to create a shopping list",
+          variant: "destructive",
+        });
+        return { success: false, error: 'Not authenticated' };
+      }
       
-      // Create new shopping list
-      const { data: newList, error: createError } = await supabase
+      console.log("Creating new list with recipe:", recipe.title);
+      console.log("Package size optimization:", usePackageSizes ? "enabled" : "disabled");
+      
+      // Convert recipe ingredients to shopping list items
+      const items = await recipeIngredientsToShoppingItems(recipe.ingredients, recipe.id, usePackageSizes);
+      
+      console.log("Converted ingredients to shopping items:", items.length);
+      
+      // Create shopping list
+      const { data, error } = await supabase
         .from('shopping_lists')
         .insert({
           title: listName,
-          user_id: user.id,
-          items: shoppingItems,
+          items: items as Json,
+          user_id: userData.user.id,
+          tips: ['Check your pantry for items you may already have', 'Look for sales on seasonal produce']
         })
-        .select();
-        
-      if (createError) {
-        throw createError;
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error creating shopping list:", error);
+        toast({
+          title: "Error",
+          description: "Failed to create shopping list",
+          variant: "destructive",
+        });
+        return { success: false, error };
       }
       
+      console.log("Created new shopping list:", data);
+      
       toast({
-        title: "Created new shopping list",
-        description: `Added ${shoppingItems.length} items to a new shopping list`,
+        title: "Success",
+        description: `Created new shopping list: ${listName}`
       });
       
-      // Return both success status and the new list ID
-      const listId = newList?.[0]?.id || null;
-      return { success: true, listId };
+      return { 
+        success: true, 
+        listId: data.id 
+      };
     } catch (error) {
-      console.error("Error creating shopping list:", error);
+      console.error("Error in createNewList:", error);
       toast({
         title: "Error",
-        description: "Failed to create shopping list",
+        description: "Something went wrong",
         variant: "destructive",
       });
-      return { success: false, listId: null };
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
   };
 
-  return {
-    createNewList,
-    isLoading,
-  };
+  return { createNewList, isLoading };
 }
