@@ -12,7 +12,6 @@ import { RecipeDebugSection } from './card/RecipeDebugSection';
 interface QuickRecipeCardProps {
   recipe: QuickRecipe;
   onCook: () => void;
-  onShop: () => void;
   onSave: () => void;
   onPrint?: () => void;
   isSaving?: boolean;
@@ -21,7 +20,6 @@ interface QuickRecipeCardProps {
 export function QuickRecipeCard({ 
   recipe, 
   onCook, 
-  onShop, 
   onSave, 
   onPrint,
   isSaving = false 
@@ -54,7 +52,6 @@ export function QuickRecipeCard({
         {/* Action buttons */}
         <RecipeActionButtons 
           onCook={onCook}
-          onShop={onShop}
           onSave={onSave}
           onPrint={onPrint}
           isSaving={isSaving}

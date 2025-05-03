@@ -3,10 +3,8 @@ import React, { useState } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
 import { QuickCookingMode } from '@/components/quick-recipe/QuickCookingMode';
-import { QuickShoppingList } from '@/components/quick-recipe/QuickShoppingList';
 import { QuickRecipePrint } from '@/components/quick-recipe/QuickRecipePrint';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
-import { useNavigate } from 'react-router-dom';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
@@ -14,7 +12,6 @@ interface QuickRecipeDisplayProps {
 
 export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   const [cookModeOpen, setCookModeOpen] = useState(false);
-  const [shoppingListOpen, setShoppingListOpen] = useState(false);
   const { saveRecipe, isSaving, navigate } = useQuickRecipeSave();
   
   // Create a ref to the QuickRecipePrint component
@@ -32,6 +29,7 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
 
   const handleSave = async () => {
     const success = await saveRecipe(recipe);
+    // Only navigate if save was successful
     if (success) {
       navigate('/recipes');
     }
@@ -42,22 +40,16 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
       <QuickRecipeCard 
         recipe={recipe} 
         onCook={() => setCookModeOpen(true)}
-        onShop={() => setShoppingListOpen(true)}
         onSave={handleSave}
         onPrint={handlePrint}
         isSaving={isSaving}
       />
       
-      {/* Dialogs for cooking mode and shopping list */}
+      {/* Dialog for cooking mode */}
       <QuickCookingMode 
         recipe={recipe}
         open={cookModeOpen}
         onOpenChange={setCookModeOpen}
-      />
-      <QuickShoppingList 
-        recipe={recipe}
-        open={shoppingListOpen}
-        onOpenChange={setShoppingListOpen}
       />
       
       {/* Hidden div that contains the print functionality */}

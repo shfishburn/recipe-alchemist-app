@@ -1,11 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { CookingPot, ShoppingBag, Bookmark, Printer } from 'lucide-react';
+import { CookingPot, Bookmark, Printer } from 'lucide-react';
 
 interface RecipeActionButtonsProps {
   onCook: () => void;
-  onShop: () => void;
   onSave: () => void;
   onPrint?: () => void;
   isSaving?: boolean;
@@ -13,7 +12,6 @@ interface RecipeActionButtonsProps {
 
 export function RecipeActionButtons({ 
   onCook, 
-  onShop, 
   onSave, 
   onPrint,
   isSaving = false 
@@ -31,16 +29,7 @@ export function RecipeActionButtons({
       </Button>
       
       {/* Secondary actions in a proper grid layout */}
-      <div className="grid grid-cols-3 gap-2 w-full">
-        <Button 
-          variant="outline" 
-          onClick={onShop}
-          className="w-full"
-        >
-          <ShoppingBag className="mr-1 sm:mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Shopping List</span>
-          <span className="sm:hidden">Shop</span>
-        </Button>
+      <div className="grid grid-cols-2 gap-2 w-full">
         <Button 
           variant="outline" 
           onClick={onSave}
