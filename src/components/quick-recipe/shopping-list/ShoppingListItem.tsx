@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ShoppingItem } from './types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info } from 'lucide-react';
+import { Check, Info } from 'lucide-react';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 
 interface ShoppingListItemProps {
@@ -83,18 +82,18 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   const displayText = item.text || `${converted.value} ${converted.unit} ${itemName}`.trim();
 
   return (
-    <div className="flex items-start gap-2 p-4 bg-muted/40 rounded-md group hover:bg-muted/60 transition-colors">
-      <div className="flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
-        <Checkbox 
-          id={`item-${index}`}
-          checked={item.checked}
-          onCheckedChange={() => onToggle(index)}
-          className="h-5 w-5"
-        />
+    <div 
+      className={`flex items-start gap-2 p-4 rounded-md cursor-pointer transition-colors
+        ${item.checked 
+          ? 'bg-green-50 hover:bg-green-100' 
+          : 'bg-muted/40 hover:bg-muted/60'}`}
+      onClick={() => onToggle(index)}
+    >
+      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
+        {item.checked && <Check className="h-4 w-4 text-green-600" />}
       </div>
-      <label 
-        htmlFor={`item-${index}`}
-        className={`text-sm flex-1 cursor-pointer pt-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+      <div 
+        className={`text-sm flex-1 pt-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
       >
         <div className="flex items-center gap-1 flex-wrap">
           {/* Format to make the item name stand out */}
@@ -148,7 +147,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
             Alternatives: {alternatives.join(', ')}
           </div>
         )}
-      </label>
+      </div>
     </div>
   );
 }

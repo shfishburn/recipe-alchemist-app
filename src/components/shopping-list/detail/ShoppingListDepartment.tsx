@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Info, ChevronDown, ChevronRight } from 'lucide-react';
+import { Trash2, Info, ChevronDown, ChevronRight, Check } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -18,7 +18,7 @@ interface ShoppingListDepartmentProps {
   onToggleExpand: () => void;
   onToggleItem: (itemIndex: number) => Promise<void>;
   onToggleDepartment: (department: string, checked: boolean) => Promise<void>;
-  onDeleteItem: (itemIndex: number) => Promise<void>;
+  onDeleteItem: (index: number) => Promise<void>;
   getItemIndexInList: (item: ShoppingListItem) => number;
 }
 
@@ -71,14 +71,17 @@ export function ShoppingListDepartment({
             return (
               <div 
                 key={`${department}-${idx}`} 
-                className="flex items-center gap-2 p-3 hover:bg-muted/20"
+                className={`flex items-center gap-2 p-3 cursor-pointer transition-colors
+                  ${item.checked 
+                    ? 'bg-green-50 hover:bg-green-100' 
+                    : 'hover:bg-muted/50'}`}
+                onClick={() => onToggleItem(itemIndex)}
               >
-                <input
-                  type="checkbox"
-                  checked={item.checked}
-                  onChange={() => onToggleItem(itemIndex)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
+                <div className="flex-none w-5 h-5 flex items-center justify-center">
+                  {item.checked && (
+                    <Check className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
                 <div 
                   className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
                 >
@@ -119,7 +122,10 @@ export function ShoppingListDepartment({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onDeleteItem(itemIndex)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent toggling item when delete button is clicked
+                    onDeleteItem(itemIndex);
+                  }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
