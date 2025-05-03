@@ -4,9 +4,7 @@ import { useCookieConsent } from '@/hooks/use-cookie-consent';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Cookie } from 'lucide-react';
+import { Check, Cookie } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function CookieConsent() {
@@ -19,8 +17,9 @@ export function CookieConsent() {
     analytics: false,
   });
 
-  const handleSettingChange = (key: keyof typeof settings, checked: boolean) => {
-    setSettings(prev => ({ ...prev, [key]: checked }));
+  const handleSettingChange = (key: keyof typeof settings) => {
+    if (key === 'essential') return; // Essential cookies can't be toggled
+    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleCustomize = () => {
@@ -28,57 +27,54 @@ export function CookieConsent() {
   };
 
   const cookieOptions = (
-    <div className="py-4 space-y-6">
-      <div className="flex items-start space-x-3">
-        <div className="flex h-5 items-center pt-1">
-          <Checkbox id="essential" checked disabled className="data-[state=checked]:bg-green-600" />
+    <div className="py-4 space-y-4">
+      {/* Essential Cookies - Always enabled */}
+      <div 
+        className={`flex items-start p-3 rounded-md bg-green-50 cursor-not-allowed`}
+      >
+        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
+          <Check className="h-4 w-4 text-green-600" />
         </div>
-        <div className="ml-1">
-          <Label htmlFor="essential" className="text-base font-medium">
-            Essential Cookies
-          </Label>
+        <div className="ml-3">
+          <h4 className="text-base font-medium">Essential Cookies</h4>
           <p className="text-sm text-muted-foreground mt-1">
             These cookies are necessary for the website to function and cannot be switched off.
           </p>
         </div>
       </div>
       
-      <div className="flex items-start space-x-3">
-        <div className="flex h-5 items-center pt-1">
-          <Checkbox 
-            id="preferences" 
-            checked={settings.preferences}
-            onCheckedChange={(checked) => 
-              handleSettingChange('preferences', checked === true)
-            }
-            className="data-[state=checked]:bg-green-600"
-          />
+      {/* Preferences Cookies */}
+      <div 
+        className={`flex items-start p-3 rounded-md cursor-pointer transition-colors
+          ${settings.preferences ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
+        onClick={() => handleSettingChange('preferences')}
+      >
+        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
+          {settings.preferences && (
+            <Check className="h-4 w-4 text-green-600" />
+          )}
         </div>
-        <div className="ml-1">
-          <Label htmlFor="preferences" className="text-base font-medium">
-            Preferences Cookies
-          </Label>
+        <div className="ml-3">
+          <h4 className="text-base font-medium">Preferences Cookies</h4>
           <p className="text-sm text-muted-foreground mt-1">
             These cookies allow the website to remember choices you make (such as your preferred unit system).
           </p>
         </div>
       </div>
       
-      <div className="flex items-start space-x-3">
-        <div className="flex h-5 items-center pt-1">
-          <Checkbox 
-            id="analytics" 
-            checked={settings.analytics}
-            onCheckedChange={(checked) => 
-              handleSettingChange('analytics', checked === true)
-            }
-            className="data-[state=checked]:bg-green-600"
-          />
+      {/* Analytics Cookies */}
+      <div 
+        className={`flex items-start p-3 rounded-md cursor-pointer transition-colors
+          ${settings.analytics ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
+        onClick={() => handleSettingChange('analytics')}
+      >
+        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
+          {settings.analytics && (
+            <Check className="h-4 w-4 text-green-600" />
+          )}
         </div>
-        <div className="ml-1">
-          <Label htmlFor="analytics" className="text-base font-medium">
-            Analytics Cookies
-          </Label>
+        <div className="ml-3">
+          <h4 className="text-base font-medium">Analytics Cookies</h4>
           <p className="text-sm text-muted-foreground mt-1">
             These cookies help us understand how visitors interact with our website.
           </p>
