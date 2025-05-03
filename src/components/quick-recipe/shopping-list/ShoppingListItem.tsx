@@ -12,24 +12,25 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   // Format quantity for display - use the structured data fields specifically designed for this
   let formattedQuantity = '';
   
-  // Debug the quantity value to verify what we're receiving
-  console.log('ShoppingListItem quantity data:', {
-    qty: item.quantity,
-    unit: item.unit,
-    type: typeof item.quantity,
-    originalItem: item
+  // Add detailed debug information for troubleshooting quantity issues
+  console.log('ShoppingListItem rendering with data:', {
+    item,
+    index,
+    quantityType: typeof item.quantity,
+    hasItem: !!item.item,
+    hasText: !!item.text
   });
   
-  // Check if we have the structured quantity and unit fields
+  // Enhanced quantity formatting logic
   if (item.quantity !== undefined && item.quantity !== null) {
-    // Convert quantity to string regardless of whether it's a number or string
-    const qtyValue = typeof item.quantity === 'number' && item.quantity > 0 
+    // Handle both numeric and string quantities
+    const qtyValue = typeof item.quantity === 'number' 
       ? item.quantity 
       : (typeof item.quantity === 'string' && parseFloat(item.quantity) > 0)
         ? parseFloat(item.quantity)
         : null;
         
-    if (qtyValue !== null) {
+    if (qtyValue !== null && qtyValue > 0) {
       // Format with precision to avoid unnecessary decimal places
       formattedQuantity = (qtyValue % 1 === 0) 
         ? String(Math.round(qtyValue))  // Integer values
@@ -43,7 +44,7 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
   } 
   // Fallback to text-based parsing if needed (legacy format)
   else if (item.text && !item.item) {
-    // If we only have text, we'll extract what we can
+    // Try to extract quantity and unit from text format
     const match = item.text.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s+(.+)$/);
     if (match) {
       formattedQuantity = match[1];
@@ -51,8 +52,10 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
     }
   }
 
-  // Get the display name for the item
-  const displayName = item.item || item.text || '';
+  // Get the display name for the item - prioritize structured data
+  const displayName = item.item || 
+    (item.text && item.text.replace(/^\d+(\.\d+)?\s*[a-zA-Z]*\s+/, '')) || 
+    'Unknown item';
 
   return (
     <div 

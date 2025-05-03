@@ -28,8 +28,14 @@ export const createShoppingItems = async (recipe: QuickRecipe): Promise<Shopping
 
 // Transform recipe ingredients into basic shopping items (fallback method)
 export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] => {
+  // Log the input data to help debug issues
+  console.log("Creating basic shopping items from recipe ingredients:", recipe.ingredients);
+  
   // Transform ingredients into shopping items with checked state
   const initialItems: ShoppingItem[] = recipe.ingredients.map(ingredient => {
+    // Log the individual ingredient for debugging
+    console.log("Processing ingredient:", ingredient);
+    
     // Extract the item name for better visibility
     const itemName = typeof ingredient.item === 'string' 
       ? ingredient.item 
@@ -88,6 +94,9 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
     }
   });
   
+  // Log the final items list for debugging
+  console.log("Final shopping items created:", initialItems);
+  
   return initialItems;
 };
 
@@ -121,13 +130,18 @@ export const generateAIShoppingList = async (recipe: QuickRecipe): Promise<Shopp
     
     data.departments.forEach(dept => {
       dept.items.forEach(item => {
+        // Ensure numeric quantity for consistency
+        const quantity = typeof item.quantity === 'string' 
+          ? parseFloat(item.quantity) 
+          : item.quantity;
+          
         shoppingItems.push({
           text: `${item.quantity} ${item.unit} ${item.name}`.trim(),
           checked: false,
           department: dept.name,
           pantryStaple: item.pantry_staple || false,
-          quantity: item.quantity,
-          unit: item.unit,
+          quantity: quantity || 1, // Default to 1 if missing
+          unit: item.unit || '',
           item: item.name,
           notes: item.notes || '',
           quality_indicators: item.quality_indicators,
@@ -137,6 +151,9 @@ export const generateAIShoppingList = async (recipe: QuickRecipe): Promise<Shopp
         });
       });
     });
+    
+    // Log the final items list for debugging
+    console.log("Final AI-enhanced shopping items:", shoppingItems);
     
     return shoppingItems;
   } catch (error) {
