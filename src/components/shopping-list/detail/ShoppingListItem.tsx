@@ -1,96 +1,75 @@
 
 import React from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
-import { ShoppingListItem as ShoppingListItemType } from '@/types/shopping-list';
+import { Trash2, Info } from 'lucide-react';
+import type { ShoppingListItem } from '@/types/shopping-list';
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/components/ui/tooltip';
 
-interface ShoppingListItemProps {
-  item: ShoppingListItemType;
-  index: number;
-  onToggle: (index: number) => Promise<void>;
-  onDelete: (index: number) => Promise<void>;
+interface ShoppingItemProps {
+  item: ShoppingListItem;
+  onToggle: () => void;
+  onDelete: () => void;
 }
 
-export function ShoppingListItem({ item, index, onToggle, onDelete }: ShoppingListItemProps) {
-  // Format quantities for display
-  const displayQuantity = formatQuantityForDisplay(item.quantity, item.unit);
-  const displayShopQuantity = item.shop_size_qty 
-    ? formatQuantityForDisplay(item.shop_size_qty, item.shop_size_unit)
-    : null;
+export function ShoppingItemComponent({ item, onToggle, onDelete }: ShoppingItemProps) {
+  // Format the display text with proper quantity and unit
+  const displayText = `${item.quantity} ${item.unit} ${item.name}`.trim();
+  const hasPackageInfo = item.package_notes || (item.shop_size_qty && item.shop_size_unit);
+  const packageInfo = item.package_notes || 
+    (item.shop_size_qty && item.shop_size_unit 
+      ? `Standard package: ${item.shop_size_qty} ${item.shop_size_unit}`
+      : '');
   
   return (
-    <div className="flex items-center justify-between gap-2 py-2 border-b last:border-b-0">
-      <div 
-        className="flex-1 flex items-start gap-2 cursor-pointer"
-        onClick={() => onToggle(index)}
-      >
-        <div className="flex-none pt-1">
-          <div 
-            className={`w-5 h-5 rounded-sm border ${
-              item.checked ? 'bg-green-500 border-green-500' : 'border-gray-300'
-            } flex items-center justify-center`}
-          >
-            {item.checked && (
-              <svg viewBox="0 0 24 24" fill="none" className="w-3 h-3 text-white">
-                <path
-                  d="M5 13l4 4L19 7"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+    <div className={`flex items-center gap-2 py-1 px-1 rounded-md ${item.checked ? 'opacity-60' : ''}`}>
+      <Checkbox 
+        checked={item.checked}
+        onCheckedChange={() => onToggle()}
+        className="h-5 w-5 touch-target"
+      />
+      
+      <div className="flex-1">
+        <div className="flex items-center">
+          <span className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
+            {displayText}
+            {item.notes && (
+              <span className="text-muted-foreground text-sm ml-1">
+                ({item.notes})
+              </span>
             )}
-          </div>
-        </div>
-        
-        <div className={`flex-1 ${item.checked ? 'text-gray-400 line-through' : ''}`}>
-          {/* If we have shop size quantity, show it as primary */}
-          {displayShopQuantity ? (
-            <>
-              <div>
-                <span className="font-medium">{displayShopQuantity}</span> {item.name}
-                {item.notes && <span className="text-gray-500 text-sm"> ({item.notes})</span>}
-              </div>
-              {/* Show original recipe amount as a note */}
-              <div className="text-xs text-gray-500">
-                Recipe calls for: {displayQuantity}
-              </div>
-            </>
-          ) : (
-            <>
-              <span className="font-medium">{displayQuantity}</span> {item.name}
-              {item.notes && <span className="text-gray-500 text-sm"> ({item.notes})</span>}
-            </>
+          </span>
+          
+          {hasPackageInfo && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="ml-2 text-muted-foreground">
+                    <Info className="h-3.5 w-3.5" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs max-w-xs">
+                  {packageInfo}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>
       
-      <Button
-        variant="ghost"
+      <Button 
+        variant="ghost" 
         size="sm"
-        className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
-        onClick={() => onDelete(index)}
+        className="h-7 w-7 p-0 touch-target"
+        onClick={onDelete}
       >
-        <Trash2 className="h-4 w-4" />
-        <span className="sr-only">Delete item</span>
+        <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     </div>
   );
-}
-
-// Helper function to format quantity with unit for display
-function formatQuantityForDisplay(quantity: number, unit: string): string {
-  if (!quantity || quantity === 0) return '';
-  
-  // Format fractions nicely
-  let formattedQty = '';
-  if (Number.isInteger(quantity)) {
-    formattedQty = quantity.toString();
-  } else {
-    // Round to 2 decimal places
-    formattedQty = (Math.round(quantity * 100) / 100).toString();
-  }
-  
-  return unit ? `${formattedQty} ${unit}` : formattedQty;
 }

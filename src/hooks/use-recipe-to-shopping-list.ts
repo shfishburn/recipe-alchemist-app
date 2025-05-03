@@ -124,6 +124,8 @@ export function useRecipeToShoppingList() {
     setIsLoading(true);
     
     try {
+      console.log("Adding recipe to existing list with package sizes:", usePackageSizes);
+      
       // Step 1: Get the existing list
       const { data: existingList, error: fetchError } = await supabase
         .from('shopping_lists')
