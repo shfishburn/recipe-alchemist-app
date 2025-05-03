@@ -4,13 +4,11 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ShoppingBag, ListCheck } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useShoppingListSettings } from '@/hooks/use-shopping-list-settings';
 
-interface ShoppingListSettingsProps {
-  usePackageSizes: boolean;
-  setUsePackageSizes: (value: boolean) => void;
-}
-
-export function ShoppingListSettings({ usePackageSizes, setUsePackageSizes }: ShoppingListSettingsProps) {
+export function ShoppingListSettings() {
+  const { usePackageSizes, setUsePackageSizes } = useShoppingListSettings();
+  
   return (
     <div className="border rounded-md p-3 bg-muted/30">
       <h3 className="text-sm font-medium flex items-center mb-3">

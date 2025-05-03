@@ -3,13 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useShoppingLists } from './useShoppingLists';
 import { useRecipeToShoppingList } from '@/hooks/use-recipe-to-shopping-list';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 export function useAddToShoppingList(recipe: Recipe) {
   const { user } = useAuth();
   const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
-  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [selectedListId, setSelectedListId] = useState<string>('');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [addedListId, setAddedListId] = useState<string | null>(null);
@@ -19,6 +19,7 @@ export function useAddToShoppingList(recipe: Recipe) {
     addRecipeToExistingList, 
     isLoading 
   } = useRecipeToShoppingList();
+  const { toast } = useToast();
   
   // Memoize fetch shopping lists to prevent unnecessary re-renders
   const fetchLists = useCallback(async () => {
@@ -34,10 +35,7 @@ export function useAddToShoppingList(recipe: Recipe) {
     }
   }, [sheetOpen, fetchLists]);
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleSubmit = async () => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -74,7 +72,7 @@ export function useAddToShoppingList(recipe: Recipe) {
       
       // Only show success dialog if operation succeeded
       if (success) {
-        setAddedListId(listId);
+        setAddedListId(listId || null);
         setSheetOpen(false);
         
         // Show success dialog with navigation options
@@ -83,11 +81,21 @@ export function useAddToShoppingList(recipe: Recipe) {
         }, 300);
         
         // Reset form state
-        setSelectedListId(null);
+        setSelectedListId('');
         setNewListName(`${recipe.title} Ingredients`);
       }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
+    }
+  };
+  
+  const handleTriggerClick = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add items to a shopping list.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -99,20 +107,8 @@ export function useAddToShoppingList(recipe: Recipe) {
     
     // Reset state when closing the sheet
     if (!open) {
-      setSelectedListId(null);
+      setSelectedListId('');
       setNewListName(`${recipe.title} Ingredients`);
-    }
-  };
-  
-  const handleTriggerClick = (e: React.MouseEvent) => {
-    if (!user) {
-      e.preventDefault();
-      e.stopPropagation();
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to add items to a shopping list.",
-        variant: "destructive",
-      });
     }
   };
   

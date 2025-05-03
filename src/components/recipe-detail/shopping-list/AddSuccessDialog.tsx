@@ -1,18 +1,9 @@
 
 import React from 'react';
-import { Check, ArrowRight } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ShoppingBag, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ButtonWrapper } from '@/components/ui/button-wrapper';
 
 interface AddSuccessDialogProps {
   open: boolean;
@@ -22,34 +13,43 @@ interface AddSuccessDialogProps {
 
 export function AddSuccessDialog({ open, setOpen, recipeTitle }: AddSuccessDialogProps) {
   const navigate = useNavigate();
-
-  const handleViewList = () => {
-    setOpen(false);
-    
-    // Navigate to the shopping lists page without a specific ID
-    navigate('/shopping-lists');
-  };
-
+  
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center">
-            <Check className="h-5 w-5 mr-2 text-green-500" />
-            Added to Shopping List
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Ingredients from "{recipeTitle}" have been successfully added to your shopping list.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Stay on Recipe</AlertDialogCancel>
-          <AlertDialogAction onClick={handleViewList} className="gap-2 flex items-center">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <div className="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+            <Check className="h-6 w-6 text-green-600" />
+          </div>
+          <DialogTitle className="text-center">Added to Shopping List</DialogTitle>
+        </DialogHeader>
+        
+        <div className="py-4 text-center">
+          <p className="text-muted-foreground">
+            The ingredients for <span className="font-medium text-foreground">{recipeTitle}</span> have been added to your shopping list successfully.
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => setOpen(false)}
+          >
+            Continue Browsing
+          </Button>
+          <Button 
+            className="flex-1 gap-2"
+            onClick={() => {
+              setOpen(false);
+              navigate('/shopping-lists');
+            }}
+          >
+            <ShoppingBag className="h-4 w-4" />
             View Shopping Lists
-            <ArrowRight className="h-4 w-4" />
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

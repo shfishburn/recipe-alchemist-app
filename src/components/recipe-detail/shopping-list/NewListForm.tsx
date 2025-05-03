@@ -2,44 +2,44 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 
 interface NewListFormProps {
   recipe: Recipe;
-  onSubmit: (name: string, recipe: Recipe) => Promise<any>;
+  onSubmit: (name: string) => Promise<any>;
   isLoading: boolean;
 }
 
 export function NewListForm({ recipe, onSubmit, isLoading }: NewListFormProps) {
-  const [listName, setListName] = useState(`${recipe.title} Shopping List`);
+  const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (listName.trim()) {
-      await onSubmit(listName.trim(), recipe);
+    if (newListName.trim()) {
+      onSubmit(newListName);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label htmlFor="list-name" className="text-sm font-medium">
-          List Name
-        </label>
+        <Label htmlFor="list-name">List Name</Label>
         <Input
           id="list-name"
-          placeholder="Enter shopping list name"
-          value={listName}
-          onChange={(e) => setListName(e.target.value)}
-          autoComplete="off"
+          value={newListName}
+          onChange={(e) => setNewListName(e.target.value)}
+          placeholder="Enter a name for your new list"
+          disabled={isLoading}
+          required
         />
       </div>
-
+      
       <Button 
         type="submit" 
-        className="w-full" 
-        disabled={!listName.trim() || isLoading}
+        disabled={!newListName.trim() || isLoading}
+        className="w-full"
       >
         {isLoading ? (
           <>
@@ -47,7 +47,7 @@ export function NewListForm({ recipe, onSubmit, isLoading }: NewListFormProps) {
             Creating...
           </>
         ) : (
-          'Create Shopping List'
+          'Create New List'
         )}
       </Button>
     </form>
