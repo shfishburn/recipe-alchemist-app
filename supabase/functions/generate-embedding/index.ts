@@ -29,15 +29,22 @@ serve(async (req) => {
       );
     }
     
-    // Extract main text and optional context
-    const { text, context } = normalizeInput(requestData);
+    // Extract input data with validation
+    const { text, context, model = 'text-embedding-ada-002' } = normalizeInput(requestData);
+    
+    console.log(`Generating embedding for "${text.substring(0, 30)}..." using model: ${model}`);
     
     // Generate embedding using OpenAI API
-    const embedding = await generateEmbedding(text, context);
+    const embedding = await generateEmbedding(text, context, model);
     
     // Return the embedding vector
     return new Response(
-      JSON.stringify({ embedding }),
+      JSON.stringify({ 
+        embedding,
+        model,
+        dimensions: embedding.length,
+        input_tokens: estimateTokens(text)
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -53,19 +60,23 @@ serve(async (req) => {
 /**
  * Normalize input data from various request formats
  */
-function normalizeInput(data: any): { text: string; context?: Record<string, any> } {
+function normalizeInput(data: any): { text: string; context?: Record<string, any>; model?: string } {
   // If data is a simple string or has only 'text' field
   if (typeof data === 'string') {
     return { text: data };
   }
   
+  // Default model
+  const model = data.model || 'text-embedding-ada-002';
+  
   // If data includes text property
   if (typeof data.text === 'string') {
-    const { text, ...context } = data;
+    const { text, model: requestedModel, ...context } = data;
     
     // Return the text and any additional fields as context
     return { 
       text,
+      model: requestedModel || model,
       context: Object.keys(context).length > 0 ? context : undefined 
     };
   }
@@ -79,7 +90,8 @@ function normalizeInput(data: any): { text: string; context?: Record<string, any
  */
 async function generateEmbedding(
   text: string, 
-  context?: Record<string, any>
+  context?: Record<string, any>,
+  model: string = 'text-embedding-ada-002'
 ): Promise<number[]> {
   if (!OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY environment variable not set');
@@ -123,7 +135,7 @@ async function generateEmbedding(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'text-embedding-ada-002', // Updated to use ada-002 model instead of text-embedding-3-small
+        model: model, // Use the requested model or default
         input: cleanedText
       }),
     });
@@ -144,3 +156,11 @@ async function generateEmbedding(
   }
 }
 
+/**
+ * Estimate token count for billing/monitoring purposes
+ * This is a simple approximation - actual tokens may vary
+ */
+function estimateTokens(text: string): number {
+  // OpenAI tokenization is roughly 4 characters per token on average
+  return Math.ceil(text.length / 4);
+}
