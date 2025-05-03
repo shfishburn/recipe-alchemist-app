@@ -35,15 +35,15 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
     return null;
   }
   
-  // Type the first child correctly to handle ref properly
-  const child = firstChild as React.ReactElement<any>;
-  
-  // Clone the element with merged props - fixed TypeScript handling of refs
-  return React.cloneElement(child, {
+  // Clone the element with merged props
+  // TypeScript: We need to type cast the child properly to access ref
+  return React.cloneElement(firstChild, {
     ...rest,
+    // When forwarding refs, we need to compose them properly
+    // but avoid TypeScript errors by using type assertions for refs
     ref: forwardedRef 
-      ? composeRefs(forwardedRef, child.ref) 
-      : child.ref,
+      ? composeRefs(forwardedRef, (firstChild as any).ref) 
+      : (firstChild as any).ref,
   });
 });
 
