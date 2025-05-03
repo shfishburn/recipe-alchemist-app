@@ -6,9 +6,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Cookie } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 export function CookieConsent() {
   const { isOpen, setIsOpen, acceptAll, declineAll, acceptSelected } = useCookieConsent();
+  const [isMobileSheet, setIsMobileSheet] = useState(window.innerWidth < 768);
+  
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobileSheet(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const [settings, setSettings] = useState({
     essential: true,
@@ -24,47 +35,162 @@ export function CookieConsent() {
     acceptSelected(settings);
   };
 
+  // Mobile version using Sheet
+  if (isMobileSheet) {
+    return (
+      <>
+        {isOpen && (
+          <div className="fixed bottom-0 left-0 right-0 bg-background z-50 p-4 shadow-lg border-t">
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center gap-2">
+                <Cookie className="h-5 w-5 text-primary flex-shrink-0" />
+                <h3 className="font-medium">Cookie Preferences</h3>
+              </div>
+              
+              <p className="text-sm text-muted-foreground">
+                We use cookies to enhance your browsing experience and analyze our traffic.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={declineAll} size="sm">
+                  Essential Only
+                </Button>
+                <Button onClick={acceptAll} size="sm">
+                  Accept All
+                </Button>
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs w-full text-muted-foreground"
+                onClick={() => setIsOpen(false)}
+              >
+                Customize Settings
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        <Sheet open={!isOpen && isOpen} onOpenChange={setIsOpen}>
+          <SheetContent side="bottom" className="h-[80vh]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Cookie className="h-5 w-5" />
+                Cookie Settings
+              </SheetTitle>
+              <SheetDescription>
+                Choose which cookies you want to allow on our site.
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="py-4 space-y-4 max-h-[calc(80vh-150px)] overflow-y-auto">
+              <div className="flex items-start space-x-2">
+                <Checkbox id="essential-mobile" checked disabled />
+                <div className="grid gap-1 leading-none">
+                  <Label htmlFor="essential-mobile" className="text-sm font-medium">
+                    Essential Cookies
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    These cookies are necessary for the website to function and cannot be switched off.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="preferences-mobile" 
+                  checked={settings.preferences}
+                  onCheckedChange={(checked) => 
+                    handleSettingChange('preferences', checked === true)
+                  }
+                />
+                <div className="grid gap-1 leading-none">
+                  <Label htmlFor="preferences-mobile" className="text-sm font-medium">
+                    Preferences Cookies
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    These cookies allow the website to remember your preferences.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="analytics-mobile" 
+                  checked={settings.analytics}
+                  onCheckedChange={(checked) => 
+                    handleSettingChange('analytics', checked === true)
+                  }
+                />
+                <div className="grid gap-1 leading-none">
+                  <Label htmlFor="analytics-mobile" className="text-sm font-medium">
+                    Analytics Cookies
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    These cookies help us understand how visitors interact with our website.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <SheetFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={declineAll} className="w-full">
+                Essential Only
+              </Button>
+              <Button variant="outline" onClick={handleCustomize} className="w-full">
+                Save Preferences
+              </Button>
+              <Button onClick={acceptAll} className="w-full">
+                Accept All
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  // Desktop version using Dialog
   return (
     <>
-      {/* Banner for smaller screens */}
       {isOpen && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 sm:p-6 z-50 shadow-lg md:hidden">
+        <div className="fixed bottom-6 right-6 w-80 bg-background rounded-xl shadow-lg z-50 border p-5 hidden md:block">
           <div className="flex items-center gap-3 mb-4">
             <Cookie className="h-5 w-5 text-primary" />
             <h3 className="font-medium">Cookie Preferences</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.
+            We use cookies to enhance your browsing experience and analyze our traffic.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={declineAll} size="sm" className="w-full">
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={declineAll} size="sm">
               Essential Only
             </Button>
-            <Button onClick={acceptAll} size="sm" className="w-full">
+            <Button onClick={acceptAll} size="sm">
               Accept All
             </Button>
             <Button 
-              variant="secondary" 
+              variant="ghost" 
               size="sm" 
               onClick={() => setIsOpen(false)} 
-              className="w-full"
+              className="col-span-2 text-xs text-muted-foreground"
             >
-              Customize
+              Customize Settings
             </Button>
           </div>
         </div>
       )}
 
-      {/* Dialog for larger screens */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[425px] hidden md:block">
+      <Dialog open={!isOpen && isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Cookie className="h-5 w-5" />
               Cookie Preferences
             </DialogTitle>
             <DialogDescription>
-              We use cookies to enhance your experience on our site. Please let us know which cookies you're ok with.
+              Choose which cookies you want to allow on our site.
             </DialogDescription>
           </DialogHeader>
           
