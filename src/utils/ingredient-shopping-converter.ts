@@ -1,4 +1,3 @@
-
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
@@ -19,7 +18,14 @@ export async function recipeIngredientsToShoppingItems(
     // Try to use the AI converter for better shopping quantities
     const aiItems = await convertIngredientsWithAI(ingredients);
     console.log("AI converted shopping items:", aiItems);
-    return aiItems;
+    
+    // Add recipe ID to each item
+    const itemsWithRecipeId = aiItems.map(item => ({
+      ...item,
+      recipeId: recipeId
+    }));
+    
+    return itemsWithRecipeId;
   } catch (error) {
     console.warn("AI conversion failed, falling back to basic conversion:", error);
     return basicIngredientsToShoppingItems(ingredients, recipeId);
@@ -86,7 +92,10 @@ function basicIngredientsToShoppingItems(
       checked: false,
       notes: ingredient.notes,
       department: department,
-      recipeId: recipeId
+      recipeId: recipeId,
+      // Include shop size fields if we have them
+      shop_size_qty: shoppingQty.qty,
+      shop_size_unit: shoppingQty.unit
     };
   });
 }

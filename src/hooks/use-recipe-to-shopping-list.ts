@@ -66,7 +66,7 @@ export function useRecipeToShoppingList() {
       }
 
       // Step 2: Convert recipe ingredients to shopping items
-      const shoppingItems = recipeIngredientsToShoppingItems(
+      const shoppingItems = await recipeIngredientsToShoppingItems(
         recipe.ingredients, 
         recipe.id
       );
@@ -131,7 +131,7 @@ export function useRecipeToShoppingList() {
       if (fetchError) throw fetchError;
       
       // Step 2: Convert recipe ingredients to shopping items
-      const newItems = recipeIngredientsToShoppingItems(
+      const newItems = await recipeIngredientsToShoppingItems(
         recipe.ingredients, 
         recipe.id
       );
@@ -153,7 +153,9 @@ export function useRecipeToShoppingList() {
             checked: !!item.checked,
             notes: item.notes,
             department: item.department || 'Other',
-            recipeId: item.recipeId
+            recipeId: item.recipeId,
+            shop_size_qty: item.shop_size_qty,
+            shop_size_unit: item.shop_size_unit
           }));
         } else {
           console.error("Items from database is not an array:", existingList.items);
@@ -182,7 +184,7 @@ export function useRecipeToShoppingList() {
       // Step 5: Navigate to the updated list
       setTimeout(() => {
         navigate(`/shopping-lists/${listId}`);
-      }, 300);
+      }, 100);
       
       return { success: true };
     } catch (error) {

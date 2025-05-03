@@ -1,6 +1,6 @@
 
 import { groceryPackageSizes, type GroceryPackageSize } from '@/data/groceryPackageSizes';
-import { convertUnits } from '@/utils/unit-conversion';
+import { getShoppingQuantity } from '@/utils/unit-conversion';
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 
@@ -58,7 +58,7 @@ export class AIShoppingConverter {
       // Extract ingredient name
       const itemName = typeof ingredient.item === 'string' 
         ? ingredient.item 
-        : ingredient.item?.item || '';
+        : (ingredient.item as any)?.item || '';
       
       return {
         item: itemName,
