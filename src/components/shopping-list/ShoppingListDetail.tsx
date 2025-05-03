@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { ShoppingListControls } from './detail/ShoppingListControls';
 import { AddItemForm } from './detail/AddItemForm';
 import { ShoppingListItemsView } from './detail/ShoppingListItemsView';
 import { ShoppingListProgress } from './detail/ShoppingListProgress';
-import { useShoppingList } from '@/hooks/use-shopping-list';
+import { useShoppingList } from '@/hooks/shopping-list';
 
 interface ShoppingListDetailProps {
   list: ShoppingList;
