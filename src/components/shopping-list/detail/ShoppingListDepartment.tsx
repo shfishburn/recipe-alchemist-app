@@ -87,18 +87,18 @@ export function ShoppingListDepartment({
   return (
     <div className="border rounded-md overflow-hidden">
       <div 
-        className={`px-3 py-3 flex items-center justify-between gap-2 cursor-pointer
+        className={`px-2 py-2 flex items-center justify-between gap-1 cursor-pointer
           ${departmentColorClass} 
           ${deptCompleted ? 'text-muted-foreground' : ''}`}
         onClick={onToggleExpand}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {DepartmentIcon && (
             <DepartmentIcon className="h-4 w-4" />
           )}
           <h3 className="font-medium text-sm">
             {department}
-            <span className="ml-2 text-xs font-normal text-muted-foreground">
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
               ({items.filter(item => item.checked).length}/{items.length})
             </span>
           </h3>
@@ -120,67 +120,73 @@ export function ShoppingListDepartment({
             return (
               <div 
                 key={`${department}-${idx}`} 
-                className={`flex items-center gap-2 p-3 touch-optimized tap-highlight
+                className={`flex items-center px-2 py-2 touch-optimized tap-highlight relative
                   ${item.checked 
                     ? 'bg-green-50 hover:bg-green-100' 
                     : 'hover:bg-muted/50'}`}
-                onClick={(e) => handleItemToggle(itemIndex, e)}
               >
-                <div className="flex-none w-5 h-5 flex items-center justify-center touch-target">
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  ) : item.checked ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : null}
-                </div>
                 <div 
-                  className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}
+                  className="flex-1 flex items-center gap-1"
+                  onClick={(e) => handleItemToggle(itemIndex, e)}
                 >
-                  <span className="flex items-center gap-2">
-                    <span>
+                  <div className="w-5 h-5 flex items-center justify-center touch-target">
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : item.checked ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : null}
+                  </div>
+                  
+                  <div className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
+                    <div className="flex items-center gap-1 flex-wrap">
                       {quantityText && <strong className="mr-1">{quantityText}</strong>}
                       <span className="font-medium">{item.name}</span>
-                      {item.notes && <span className="text-sm text-muted-foreground ml-1">({item.notes})</span>}
-                    </span>
-                    {(item.quality_indicators || item.storage_tips) && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            {item.quality_indicators && (
-                              <p className="mb-1">{item.quality_indicators}</p>
-                            )}
-                            {item.storage_tips && (
-                              <p className="text-sm text-muted-foreground">{item.storage_tips}</p>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      
+                      {(item.quality_indicators || item.storage_tips) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="inline h-3 w-3 text-muted-foreground ml-1" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              {item.quality_indicators && (
+                                <p className="mb-1">{item.quality_indicators}</p>
+                              )}
+                              {item.storage_tips && (
+                                <p className="text-sm text-muted-foreground">{item.storage_tips}</p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      
+                      {item.notes && <span className="text-xs text-muted-foreground ml-1">({item.notes})</span>}
+                    </div>
+                    
+                    {item.alternatives?.length > 0 && (
+                      <span className="block text-xs text-muted-foreground">
+                        Alt: {item.alternatives.join(', ')}
+                      </span>
                     )}
-                  </span>
-                  {item.alternatives?.length > 0 && (
-                    <span className="block text-sm text-muted-foreground">
-                      Alternatives: {item.alternatives.join(', ')}
-                    </span>
-                  )}
-                  {item.pantry_staple && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">
-                      Pantry Staple
-                    </span>
-                  )}
+                    
+                    {item.pantry_staple && (
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded inline-block mt-1">
+                        Pantry
+                      </span>
+                    )}
+                  </div>
                 </div>
+                
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="touch-target"
+                  className="p-1 h-auto w-auto touch-target opacity-60 hover:opacity-100 focus:opacity-100"
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent toggling item when delete button is clicked
+                    e.stopPropagation();
                     onDeleteItem(itemIndex);
                   }}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             );

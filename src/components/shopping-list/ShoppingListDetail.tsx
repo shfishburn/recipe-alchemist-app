@@ -46,7 +46,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
   const completionPercentage = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
 
   return (
-    <Card className="p-4 md:p-6">
+    <Card className="p-2 md:p-4 max-w-full">
       <ShoppingListHeader 
         list={list} 
         onDelete={onDelete}
@@ -64,7 +64,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
           completionPercentage={completionPercentage}
         />
 
-        <div className="mb-4">
+        <div className="mb-3">
           <ShoppingListControls 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -74,24 +74,26 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
         
         {/* Shopping Items Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Shopping List</h3>
-          <ShoppingListItemsView
-            groupedItems={groupedItems}
-            expandedDepts={expandedDepts}
-            onToggleDept={toggleDeptExpanded}
-            onToggleDepartmentItems={toggleAllInDepartment}
-            onToggleItem={handleToggleItem}
-            onDeleteItem={handleDeleteItem}
-            getItemIndex={getItemIndex}
-          />
+        <div className="mb-4">
+          <h3 className="text-lg font-medium mb-2">Shopping List</h3>
+          <div className="touch-scroll max-w-full">
+            <ShoppingListItemsView
+              groupedItems={groupedItems}
+              expandedDepts={expandedDepts}
+              onToggleDept={toggleDeptExpanded}
+              onToggleDepartmentItems={toggleAllInDepartment}
+              onToggleItem={handleToggleItem}
+              onDeleteItem={handleDeleteItem}
+              getItemIndex={getItemIndex}
+            />
+          </div>
         </div>
 
         {/* Add Item Button/Form */}
-        <div className="mb-6 border rounded-md">
+        <div className="mb-4 border rounded-md">
           <Button 
             variant="ghost" 
-            className="w-full flex items-center justify-between p-3"
+            className="w-full flex items-center justify-between p-2"
             onClick={() => setShowAddItemForm(!showAddItemForm)}
           >
             <span className="flex items-center">
@@ -102,7 +104,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
           </Button>
           
           {showAddItemForm && (
-            <div className="p-4">
+            <div className="p-3">
               <AddItemForm 
                 onAddItem={handleAddItem}
                 availableDepartments={allDepartments}
@@ -112,10 +114,10 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
         
         {/* Notes Section */}
-        <div className="mb-6 border rounded-md">
+        <div className="mb-4 border rounded-md">
           <Button 
             variant="ghost" 
-            className="w-full flex items-center justify-between p-3"
+            className="w-full flex items-center justify-between p-2"
             onClick={() => setShowNotes(!showNotes)}
           >
             <span className="flex items-center">
@@ -125,7 +127,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
           </Button>
           
           {showNotes && (
-            <div className="p-4">
+            <div className="p-3">
               <ShoppingListNotes list={list} />
             </div>
           )}
