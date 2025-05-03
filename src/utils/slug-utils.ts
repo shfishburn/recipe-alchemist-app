@@ -1,3 +1,4 @@
+
 /**
  * Generates a URL-friendly slug from a given string
  * @param text The text to convert to a slug
@@ -15,16 +16,32 @@ export const generateSlug = (text: string): string => {
 };
 
 /**
+ * Validates if a string is a valid UUID v4
+ * @param uuid String to validate as UUID
+ * @returns Boolean indicating if the string is a valid UUID
+ */
+export const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
+/**
  * Extracts a recipe ID from a slug-id format
  * @param slugId String in format "slug-id" or just "id"
- * @returns The extracted ID
+ * @returns The extracted ID or null if invalid
  */
-export const extractIdFromSlug = (slugId: string): string => {
+export const extractIdFromSlug = (slugId: string): string | null => {
+  if (!slugId) return null;
+  
   // If the string contains a hyphen, extract the part after the last hyphen
   if (slugId.includes('-')) {
     const parts = slugId.split('-');
-    return parts[parts.length - 1];
+    const potentialId = parts[parts.length - 1];
+    
+    // Validate that the extracted part is a valid UUID
+    return isValidUUID(potentialId) ? potentialId : null;
   }
-  // Otherwise, return the original string (assumes it's an ID)
-  return slugId;
+  
+  // If no hyphen, check if the entire string is a valid UUID
+  return isValidUUID(slugId) ? slugId : null;
 };

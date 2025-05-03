@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
 import { standardizeNutrition } from '@/types/nutrition-utils';
-import { extractIdFromSlug } from '@/utils/slug-utils';
+import { extractIdFromSlug, isValidUUID } from '@/utils/slug-utils';
 
 export type { Recipe, Ingredient, Nutrition };
 
@@ -18,6 +18,11 @@ export const useRecipeDetail = (id?: string) => {
 
       // Extract the actual ID if it's in slug-id format
       const actualId = extractIdFromSlug(id);
+      
+      // Validate the UUID before querying
+      if (!actualId) {
+        throw new Error('Invalid recipe ID format');
+      }
 
       const { data, error } = await supabase
         .from('recipes')

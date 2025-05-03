@@ -17,6 +17,7 @@ import { SectionControls } from '@/components/recipe-detail/controls/SectionCont
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import type { Recipe } from '@/types/recipe';
+import { isValidUUID } from '@/utils/slug-utils';
 
 interface RecipeDetailContentProps {
   recipe: Recipe;
@@ -25,12 +26,21 @@ interface RecipeDetailContentProps {
 }
 
 export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContentProps) {
+  // Safety check - if recipe is invalid, don't render
+  if (!recipe || !recipe.id) {
+    console.error("Invalid recipe data:", recipe);
+    return null;
+  }
+  
+  // Ensure ID is valid
+  const validId = id && isValidUUID(id.split('-').pop() || id) ? id : null;
+  
   const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
   const [chatOpen, setChatOpen] = useState(false);
   const chatTriggerRef = useRef<HTMLButtonElement>(null);
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(recipe);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const { updateRecipe } = useRecipeUpdates(id || '');
+  const { updateRecipe } = useRecipeUpdates(validId || '');
   
   const handleOpenChat = () => {
     setChatOpen(true);
@@ -53,8 +63,8 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
         ...updatedRecipe
       });
       
-      // If the recipe has an ID, update it in the database
-      if (id) {
+      // If the recipe has a valid ID, update it in the database
+      if (validId) {
         const fieldsToUpdate = {};
         
         // Only include fields that have changed to avoid unnecessary updates
@@ -94,6 +104,11 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   const hasAnalysisData = currentRecipe?.science_notes && 
                           Array.isArray(currentRecipe.science_notes) && 
                           currentRecipe.science_notes.length > 0;
+
+  // If we have no valid recipe data, return null
+  if (!currentRecipe || !currentRecipe.title) {
+    return null;
+  }
 
   return (
     <ProfileProvider>
@@ -147,7 +162,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
           />
         </div>
 
-        {currentRecipe.nutrition && (
+        {currentRecipe.nutrition && Object.keys(currentRecipe.nutrition).length > 0 && (
           <div className="mt-4 sm:mt-8 mb-40 sm:mb-28">
             <RecipeNutrition 
               recipe={currentRecipe}

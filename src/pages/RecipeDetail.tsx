@@ -6,20 +6,32 @@ import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { RecipeDetailLoading } from '@/components/recipe-detail/loading/RecipeDetailLoading';
 import { RecipeNotFound } from '@/components/recipe-detail/error/RecipeNotFound';
 import { RecipeDetailContent } from '@/components/recipe-detail/RecipeDetailContent';
-import { generateSlug } from '@/utils/slug-utils';
+import { generateSlug, isValidUUID } from '@/utils/slug-utils';
 
 const RecipeDetail = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
-  const { data: recipe, isLoading, error, refetch } = useRecipeDetail(id);
+  
+  // Validate the ID before fetching
+  const isValidId = id && isValidUUID(id.split('-').pop() || id);
+  
+  const { data: recipe, isLoading, error, refetch } = useRecipeDetail(isValidId ? id : undefined);
+  
+  // Handle invalid ID format
+  useEffect(() => {
+    if (id && !isValidId) {
+      console.error("Invalid recipe ID format:", id);
+      // No need to navigate, we'll show the error component
+    }
+  }, [id, isValidId]);
   
   // Redirect to the proper URL with slug if we have a recipe but no slug in the URL
   useEffect(() => {
-    if (recipe && !slug && !window.location.pathname.includes('-')) {
+    if (recipe && isValidId && !slug && !window.location.pathname.includes('-')) {
       const generatedSlug = generateSlug(recipe.title);
       navigate(`/recipes/${generatedSlug}-${id}`, { replace: true });
     }
-  }, [recipe, slug, id, navigate]);
+  }, [recipe, slug, id, navigate, isValidId]);
   
   useEffect(() => {
     if (recipe) {
@@ -30,8 +42,8 @@ const RecipeDetail = () => {
     };
   }, [recipe]);
   
-  // If there's an error, show the not found component
-  if (error) {
+  // If the ID is invalid or there's an error, show the not found component
+  if (!isValidId || error) {
     return <RecipeNotFound />;
   }
 
