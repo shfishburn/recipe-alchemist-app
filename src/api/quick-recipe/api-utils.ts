@@ -24,7 +24,7 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
-        // Remove problematic header - will be handled through the request body instead
+        // Embedding model now passed in request body instead of header
       },
       body: JSON.stringify({
         ...requestBody,
@@ -71,7 +71,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
     headers: {
       'Content-Type': 'application/json',
       'X-Debug-Info': 'supabase-invoke-' + Date.now()
-      // Remove problematic header - will be handled through the request body
+      // Embedding model now passed in request body instead of header
     }
   });
 

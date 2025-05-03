@@ -93,7 +93,7 @@ const QuickRecipeTagForm = ({
           />
         </div>
 
-        {/* Cuisine Selector */}
+        {/* Cuisine Selector - Consistent ordering */}
         <div className="space-y-2">
           <Label htmlFor="cuisine" className="text-sm font-medium">Cuisine</Label>
           <CuisineSelector 
@@ -102,7 +102,7 @@ const QuickRecipeTagForm = ({
           />
         </div>
 
-        {/* Dietary Selector */}
+        {/* Dietary Selector - Consistent ordering */}
         <div className="space-y-2">
           <Label htmlFor="dietary" className="text-sm font-medium">Dietary</Label>
           <DietarySelector

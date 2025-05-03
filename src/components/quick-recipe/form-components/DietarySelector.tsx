@@ -7,24 +7,33 @@ export interface DietarySelectorProps {
   onChange: (dietary: string) => void;
 }
 
+// Define a consistent ordered list of dietary options
+const dietaryOptions = [
+  { value: "any", label: "No Restrictions" },
+  { value: "vegetarian", label: "Vegetarian" },
+  { value: "vegan", label: "Vegan" },
+  { value: "gluten-free", label: "Gluten-Free" },
+  { value: "dairy-free", label: "Dairy-Free" },
+  { value: "keto", label: "Keto" },
+  { value: "paleo", label: "Paleo" },
+  { value: "low-carb", label: "Low-Carb" },
+  { value: "low-fat", label: "Low-Fat" },
+  { value: "high-protein", label: "High-Protein" }
+];
+
 export function DietarySelector({ value, onChange }: DietarySelectorProps) {
   return (
     <div className="w-full">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full bg-white">
           <SelectValue placeholder="Select dietary preference" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="any">No Restrictions</SelectItem>
-          <SelectItem value="vegetarian">Vegetarian</SelectItem>
-          <SelectItem value="vegan">Vegan</SelectItem>
-          <SelectItem value="gluten-free">Gluten-Free</SelectItem>
-          <SelectItem value="dairy-free">Dairy-Free</SelectItem>
-          <SelectItem value="keto">Keto</SelectItem>
-          <SelectItem value="paleo">Paleo</SelectItem>
-          <SelectItem value="low-carb">Low-Carb</SelectItem>
-          <SelectItem value="low-fat">Low-Fat</SelectItem>
-          <SelectItem value="high-protein">High-Protein</SelectItem>
+        <SelectContent className="bg-white">
+          {dietaryOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
