@@ -4,12 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ShoppingList } from '@/types/shopping-list';
-import { ShoppingListHeader } from './detail/ShoppingListHeader';
-import { ShoppingListNotes } from './detail/ShoppingListNotes';
-import { ShoppingListControls } from './detail/ShoppingListControls';
-import { AddItemForm } from './detail/AddItemForm';
-import { ShoppingListItemsView } from './detail/ShoppingListItemsView';
-import { ShoppingListProgress } from './detail/ShoppingListProgress';
+import { ShoppingListHeader } from '@/components/shopping-list/detail/ShoppingListHeader';
+import { ShoppingListNotes } from '@/components/shopping-list/detail/ShoppingListNotes';
+import { ShoppingListControls } from '@/components/shopping-list/detail/ShoppingListControls';
+import { AddItemForm } from '@/components/shopping-list/detail/AddItemForm';
+import { ShoppingListItemsView } from '@/components/shopping-list/detail/ShoppingListItemsView';
+import { ShoppingListProgress } from '@/components/shopping-list/detail/ShoppingListProgress';
 import { useShoppingList } from '@/hooks/use-shopping-list';
 
 // Import touch optimizations

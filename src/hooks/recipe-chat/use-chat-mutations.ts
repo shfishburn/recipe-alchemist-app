@@ -41,34 +41,48 @@ export const useChatMutations = (recipe: Recipe) => {
       console.log("Invoking recipe-chat edge function");
       
       try {
-        // Implement request timeout handling
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Request timed out")), 20000);
-        });
-
-        // Race the actual API call against the timeout
-        const response = await Promise.race([
-          supabase.functions.invoke('recipe-chat', {
-            body: { 
-              recipe, 
-              userMessage: message,
-              sourceType,
-              sourceUrl,
-              sourceImage,
-              messageId,
-              retryAttempt: 0 // Track retry attempts
+        // Implement enhanced request timeout handling with retry logic
+        const makeRequest = async (retryCount = 0): Promise<any> => {
+          try {
+            const response = await Promise.race([
+              supabase.functions.invoke('recipe-chat', {
+                body: { 
+                  recipe, 
+                  userMessage: message,
+                  sourceType,
+                  sourceUrl,
+                  sourceImage,
+                  messageId,
+                  retryAttempt: retryCount
+                }
+              }),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Request timed out")), 20000)
+              )
+            ]) as { data?: any, error?: any };
+            
+            if (response.error) {
+              throw response.error;
             }
-          }),
-          timeoutPromise
-        ]) as { data?: any, error?: any };
+            
+            return response;
+          } catch (error) {
+            // Implement retry for certain errors
+            if (retryCount < 2 && 
+               (error.message?.includes("timeout") || 
+                error.message?.includes("network") || 
+                error.status === 503 || 
+                error.status === 504)) {
+              console.log(`Retrying request (attempt ${retryCount + 1})...`);
+              return makeRequest(retryCount + 1);
+            }
+            throw error;
+          }
+        };
 
-        if (response.error) {
-          console.error("Edge function returned an error:", response.error);
-          throw response.error;
-        }
-        
-        console.log("Edge function response:", response.data);
-        
+        // Make the request with retry capability
+        const response = await makeRequest();
+
         if (!response.data) {
           console.error("Edge function returned no data");
           throw new Error("No data returned from edge function");
@@ -91,7 +105,6 @@ export const useChatMutations = (recipe: Recipe) => {
 
         // Log the exact content we're saving to help with debugging
         console.log("Saving chat message to database with response:", aiResponse.substring(0, 100) + "...");
-        console.log("Original message ID for tracking:", messageId || 'not-provided');
         
         try {
           // Insert the chat message into the database

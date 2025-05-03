@@ -87,6 +87,11 @@ export function ShoppingListDepartment({
             if (itemIndex === -1) return null;
             const isLoading = !!loadingItems[itemIndex];
             
+            // Format quantity for display
+            const quantityDisplay = item.quantity ? `${item.quantity}` : '';
+            const unitDisplay = item.unit ? `${item.unit}` : '';
+            const quantityText = [quantityDisplay, unitDisplay].filter(Boolean).join(' ');
+            
             return (
               <div 
                 key={`${department}-${idx}`} 
@@ -108,7 +113,8 @@ export function ShoppingListDepartment({
                 >
                   <span className="flex items-center gap-2">
                     <span>
-                      {item.quantity} {item.unit} <strong>{item.name}</strong>
+                      {quantityText && <strong className="mr-1">{quantityText}</strong>}
+                      <strong>{item.name}</strong>
                       {item.notes && <span className="text-sm text-muted-foreground ml-1">({item.notes})</span>}
                     </span>
                     {(item.quality_indicators || item.storage_tips) && (

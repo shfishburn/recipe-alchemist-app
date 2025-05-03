@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -10,11 +10,39 @@ interface ChatProcessingIndicatorProps {
 
 export function ChatProcessingIndicator({ stage, className }: ChatProcessingIndicatorProps) {
   const isMobile = useIsMobile();
+  const [dots, setDots] = useState('.');
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  // Add animated dots and timing for better user feedback
+  useEffect(() => {
+    // Animate dots
+    const dotInterval = setInterval(() => {
+      setDots(prev => prev.length >= 3 ? '.' : prev + '.');
+    }, 500);
+    
+    // Track elapsed time for long operations
+    const timeInterval = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => {
+      clearInterval(dotInterval);
+      clearInterval(timeInterval);
+    };
+  }, []);
+  
+  // For long-running operations, show additional feedback
+  const getTimingFeedback = () => {
+    if (elapsedTime > 10) {
+      return " This is taking longer than expected.";
+    }
+    return "";
+  };
   
   const messages = {
-    sending: 'Sending message...',
-    analyzing: 'Chef is thinking...',
-    applying: 'Applying improvements...'
+    sending: `Sending message${dots}`,
+    analyzing: `Chef is thinking${dots}`,
+    applying: `Applying improvements${dots}${getTimingFeedback()}`
   };
 
   return (

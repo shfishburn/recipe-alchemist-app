@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -25,6 +25,32 @@ export function ApplyChangesSection({
 }: ApplyChangesSectionProps) {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [applyTimeout, setApplyTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  // Safety mechanism: automatically clear "applying" state after 15 seconds
+  // to prevent UI from being stuck in applying state indefinitely
+  useEffect(() => {
+    if (isApplying) {
+      const timeout = setTimeout(() => {
+        console.warn("Apply changes operation timed out - forcing UI refresh");
+        // This will force the UI to reset if the apply operation takes too long
+        const applyButton = document.getElementById('apply-changes-button');
+        if (applyButton) {
+          applyButton.classList.remove('animate-pulse');
+          applyButton.querySelector('.animate-spin')?.classList.remove('animate-spin');
+        }
+      }, 15000);
+      
+      setApplyTimeout(timeout);
+    } else if (applyTimeout) {
+      clearTimeout(applyTimeout);
+      setApplyTimeout(null);
+    }
+    
+    return () => {
+      if (applyTimeout) clearTimeout(applyTimeout);
+    };
+  }, [isApplying]);
 
   if (!changesSuggested) return null;
 
@@ -66,8 +92,14 @@ export function ApplyChangesSection({
   };
   
   const handleConfirmApply = () => {
-    onApplyChanges();
-    setConfirmationOpen(false);
+    try {
+      onApplyChanges();
+      setConfirmationOpen(false);
+    } catch (error) {
+      console.error("Error during apply changes:", error);
+      setApplyError(error instanceof Error ? error.message : "An unexpected error occurred while applying changes.");
+      setConfirmationOpen(false);
+    }
   };
 
   return (
@@ -85,6 +117,7 @@ export function ApplyChangesSection({
       )}
       
       <Button
+        id="apply-changes-button"
         onClick={handleApplyChanges}
         disabled={isApplying || applied || !hasChanges}
         className={`${
