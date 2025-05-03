@@ -29,9 +29,10 @@ export function ChatHistory({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Function to open the changes confirmation dialog
-  const handleOpenChangesDialog = (chatMessage: ChatMessageType) => {
+  const handleOpenChangesDialog = async (chatMessage: ChatMessageType): Promise<boolean> => {
     setSelectedChatMessage(chatMessage);
     setIsDialogOpen(true);
+    return true; // Return a promise that resolves to true to satisfy the type
   };
   
   // Function to handle applying changes
