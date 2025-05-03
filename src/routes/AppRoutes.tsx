@@ -24,11 +24,6 @@ export const AppRoutes = () => {
           <LazyRoutes.RecipeDetail />
         </Suspense>
       } />
-      <Route path="/recipe-shopping-list/:recipeId" element={
-        <Suspense fallback={<PageLoadingFallback />}>
-          <LazyRoutes.RecipeShoppingList />
-        </Suspense>
-      } />
       <Route path="/quick-recipe" element={
         <Suspense fallback={<PageLoadingFallback />}>
           <LazyRoutes.QuickRecipePage />

@@ -7,7 +7,6 @@ export const Recipes = lazy(() => import("@/pages/Recipes"));
 export const RecipeDetail = lazy(() => import("@/pages/RecipeDetail"));
 export const Profile = lazy(() => import("@/pages/Profile"));
 export const ShoppingLists = lazy(() => import("@/pages/ShoppingLists"));
-export const RecipeShoppingList = lazy(() => import("@/pages/RecipeShoppingList"));
 export const Favorites = lazy(() => import("@/pages/Favorites"));
 export const NotFound = lazy(() => import("@/pages/NotFound"));
 export const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
