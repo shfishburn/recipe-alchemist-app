@@ -7,15 +7,7 @@ import RecipeCard from '@/components/recipes/RecipeCard';
 import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { 
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbSeparator,
-  BreadcrumbPage
-} from "@/components/ui/breadcrumb";
-import { Link } from 'react-router-dom';
+import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 
 const Recipes = () => {
   const { 
@@ -43,27 +35,18 @@ const Recipes = () => {
     }
   }, [status, isLoading, isFetching, recipes, error]);
 
+  const breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'My Kitchen', current: true }
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-8">
           {/* Breadcrumb Navigation */}
-          <nav className="mb-4" aria-label="Breadcrumb">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/">Home</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>My Kitchen</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </nav>
+          <BreadcrumbNav items={breadcrumbItems} />
           
           <h1 className="text-2xl md:text-3xl font-bold mb-4">My Kitchen</h1>
           <p className="text-base text-muted-foreground mb-8">

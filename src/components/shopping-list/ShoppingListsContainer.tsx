@@ -72,6 +72,7 @@ export function ShoppingListsContainer() {
       <ShoppingListsHeader 
         showBreadcrumb={!selectedList} 
         onBackClick={selectedList ? handleBackClick : undefined} 
+        listTitle={selectedList?.title}
       />
       
       {selectedList ? (

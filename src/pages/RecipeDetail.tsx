@@ -8,6 +8,7 @@ import { RecipeNotFound } from '@/components/recipe-detail/error/RecipeNotFound'
 import { RecipeDetailContent } from '@/components/recipe-detail/RecipeDetailContent';
 import { isValidUUID } from '@/utils/slug-utils';
 import { ErrorDisplay } from '@/components/profile/ErrorDisplay';
+import { BreadcrumbNav, type BreadcrumbItem } from '@/components/ui/breadcrumb-nav';
 
 const RecipeDetail = () => {
   const { id: recipeIdOrSlug } = useParams();
@@ -62,12 +63,22 @@ const RecipeDetail = () => {
     return <RecipeDetailLoading />;
   }
   
+  // Create breadcrumb items
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Home', href: '/' },
+    { label: 'My Kitchen', href: '/recipes' },
+    { label: recipe?.title || 'Recipe', current: true }
+  ];
+  
   // If we have a recipe, show the content
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-4 sm:py-8">
+          {/* Breadcrumb Navigation */}
+          <BreadcrumbNav items={breadcrumbItems} />
+          
           {recipe && <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />}
         </div>
       </main>
