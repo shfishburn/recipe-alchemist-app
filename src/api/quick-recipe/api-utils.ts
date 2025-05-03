@@ -17,6 +17,12 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     
     console.log("Testing direct fetch to edge function");
     
+    // Create a proper payload with embedding model in body
+    const payload = {
+      ...requestBody,
+      embeddingModel: 'text-embedding-ada-002' // Include model in request body
+    };
+    
     // Make the direct fetch request with CORS-compatible headers
     const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
       method: 'POST',
@@ -24,12 +30,8 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
-        // Embedding model now passed in request body instead of header
       },
-      body: JSON.stringify({
-        ...requestBody,
-        embeddingModel: 'text-embedding-ada-002' // Include model in request body
-      })
+      body: JSON.stringify(payload)
     });
     
     console.log("Direct fetch response status:", response.status);
@@ -71,7 +73,6 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
     headers: {
       'Content-Type': 'application/json',
       'X-Debug-Info': 'supabase-invoke-' + Date.now()
-      // Embedding model now passed in request body instead of header
     }
   });
 
