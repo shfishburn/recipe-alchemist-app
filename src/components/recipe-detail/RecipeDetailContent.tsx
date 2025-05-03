@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { RecipeHeader } from '@/components/recipe-detail/RecipeHeader';
+import { RecipeOverview } from '@/components/recipe-detail/RecipeOverview'; 
 import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients';
 import { RecipeNutrition } from '@/components/recipe-detail/RecipeNutrition';
 import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
@@ -116,15 +117,18 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
         {/* Recipe Header with title */}
         <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
         
-        {/* Recipe Image - Moved above the separator/overview */}
+        {/* Recipe Image - Positioned between title and overview */}
         <RecipeImage recipe={currentRecipe} />
+        
+        {/* Recipe Overview - Now separate from header */}
+        <RecipeOverview recipe={currentRecipe} />
         
         <div className="hidden">
           <PrintRecipe recipe={currentRecipe} />
           <CookingMode recipe={currentRecipe} />
         </div>
         
-        <Separator className="mb-4 sm:mb-8" />
+        <Separator className="mb-4 sm:mb-8 mt-4" />
         
         <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
         
