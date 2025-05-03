@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
@@ -9,6 +9,7 @@ import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero'
 import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeError';
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
+import { LoadingIndicator } from '@/components/ui/loading-indicator';
 
 const QuickRecipePage = () => {
   const {
@@ -33,21 +34,37 @@ const QuickRecipePage = () => {
     isDirectNavigation
   });
 
+  // Force show loading indicator for navigation
+  useEffect(() => {
+    // This will trigger a re-render that loads the indicator
+    const loadingTrigger = document.createElement('div');
+    loadingTrigger.className = 'loading-trigger';
+    document.body.appendChild(loadingTrigger);
+    
+    return () => {
+      document.body.removeChild(loadingTrigger);
+    };
+  }, []);
+
   // Show full-screen loading when generating a recipe, without the layout
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
     return (
-      <FullScreenLoading 
-        onCancel={handleCancel}
-        onRetry={error ? handleRetry : undefined}
-        error={error}
-      />
+      <>
+        <LoadingIndicator />
+        <FullScreenLoading 
+          onCancel={handleCancel}
+          onRetry={error ? handleRetry : undefined}
+          error={error}
+        />
+      </>
     );
   }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <LoadingIndicator />
       <main className="flex-1 py-6 md:py-10 animate-fadeIn">
         <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Title Section - Always show this */}

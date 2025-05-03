@@ -65,7 +65,7 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
   }, []);
   
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[9999] animate-fadeIn overflow-auto">
+    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[9998] animate-fadeIn overflow-auto">
       {/* Accessible title for screen readers */}
       <VisuallyHidden asChild>
         <h1>
