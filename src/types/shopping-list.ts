@@ -14,6 +14,8 @@ export type ShoppingListItem = {
   // New fields for shoppable quantities
   shop_size_qty?: number;
   shop_size_unit?: string;
+  package_notes?: string;
+  confidence?: number; // Added confidence field for AI matching quality
 };
 
 export type ShoppingList = {
