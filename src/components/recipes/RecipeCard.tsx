@@ -1,69 +1,125 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { Recipe } from '@/types/recipe';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { ImageIcon, Loader2 } from 'lucide-react';
+import { uploadImageFromUrl } from '@/utils/image-storage';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import type { Recipe } from '@/types/recipe';
 
-interface RecipeCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  recipe: Recipe;
-}
+// Allow both Recipe types to be used
+type RecipeCardProps = {
+  recipe: Recipe | Database['public']['Tables']['recipes']['Row'];
+};
 
-export function RecipeCard({ recipe, className, ...props }: RecipeCardProps) {
-  // Generate title for URL slug
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-')     // Replace spaces with dashes
-      .replace(/-+/g, '-');     // Remove duplicate dashes
+const RecipeCard = ({ recipe }: RecipeCardProps) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isMigratingImage, setIsMigratingImage] = useState(false);
+
+  useEffect(() => {
+    const migrateImageIfNeeded = async () => {
+      if (!recipe.image_url) {
+        setImageError(true);
+        return;
+      }
+
+      // Check if the image is already in our storage
+      if (recipe.image_url.includes('recipe-images')) {
+        setImageUrl(recipe.image_url);
+        return;
+      }
+
+      // If it's an OpenAI URL (temporary), migrate it
+      if (recipe.image_url.includes('openai') || recipe.image_url.includes('oai')) {
+        setIsMigratingImage(true);
+        const fileName = `recipe-${recipe.id}-${Date.now()}.png`;
+        const newUrl = await uploadImageFromUrl(recipe.image_url, fileName);
+        
+        if (newUrl) {
+          const { error: updateError } = await supabase
+            .from('recipes')
+            .update({ image_url: newUrl })
+            .eq('id', recipe.id);
+
+          if (!updateError) {
+            setImageUrl(newUrl);
+          } else {
+            console.error('Error updating recipe image URL:', updateError);
+            setImageError(true);
+          }
+        } else {
+          setImageError(true);
+        }
+        setIsMigratingImage(false);
+      } else {
+        setImageUrl(recipe.image_url);
+      }
+    };
+
+    migrateImageIfNeeded();
+  }, [recipe.image_url, recipe.id]);
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageUrl(null);
   };
 
   return (
-    <Link 
-      to={`/recipes/${recipe.id}/${generateSlug(recipe.title)}`}
-      className={cn(
-        "group block relative transition-all duration-300 no-underline",
-        className
-      )}
-      {...props}
-    >
-      <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow duration-200">
-        {recipe.image_url ? (
-          <AspectRatio ratio={16 / 9}>
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Link to={`/recipes/${recipe.id}`}>
+        <div className="aspect-video relative overflow-hidden bg-gray-100">
+          {isMigratingImage ? (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+              <span className="text-sm text-muted-foreground">Migrating image...</span>
+            </div>
+          ) : imageUrl && !imageError ? (
             <img
-              src={recipe.image_url}
+              src={imageUrl}
               alt={recipe.title}
-              className="rounded-md object-cover transition-all duration-300 group-hover:scale-105"
+              className="object-cover w-full h-full"
+              onError={handleImageError}
             />
-          </AspectRatio>
-        ) : (
-          <AspectRatio ratio={16 / 9}>
-            <div className="bg-secondary rounded-md flex items-center justify-center text-secondary-foreground text-sm">
-              No Image
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+              <ImageIcon className="h-8 w-8 text-gray-400 mb-2" />
+              <span className="text-gray-400 text-sm">No image</span>
             </div>
-          </AspectRatio>
-        )}
-        <CardContent className="p-4">
-          <h3 className="font-semibold line-clamp-1">{recipe.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {recipe.description || 'No description available'}
-          </p>
+          )}
+        </div>
+        
+        <CardHeader>
+          <h3 className="font-semibold text-lg leading-tight">{recipe.title}</h3>
+          {recipe.tagline && (
+            <p className="text-sm text-muted-foreground">{recipe.tagline}</p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {recipe.cuisine && (
+              <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                {recipe.cuisine}
+              </span>
+            )}
+            {recipe.dietary && (
+              <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                {recipe.dietary}
+              </span>
+            )}
+          </div>
         </CardContent>
-        <CardFooter className="flex items-center justify-between p-4">
-          {recipe.cuisine && (
-            <Badge variant="secondary" className="text-xs">
-              {recipe.cuisine}
-            </Badge>
-          )}
-          {recipe.prep_time_min && recipe.cook_time_min && (
-            <div className="text-xs text-muted-foreground">
-              {recipe.prep_time_min + recipe.cook_time_min} min
-            </div>
-          )}
-        </CardFooter>
-      </Card>
-    </Link>
+      </Link>
+      <CardFooter>
+        <div className="text-sm text-muted-foreground">
+          {recipe.prep_time_min && `${recipe.prep_time_min} min prep`}
+          {recipe.cook_time_min && recipe.prep_time_min && ' • '}
+          {recipe.cook_time_min && `${recipe.cook_time_min} min cook`}
+        </div>
+      </CardFooter>
+    </Card>
   );
-}
+};
+
+export default RecipeCard;

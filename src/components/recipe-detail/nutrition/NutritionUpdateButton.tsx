@@ -52,15 +52,10 @@ export function NutritionUpdateButton({
     try {
       console.log("Sending ingredients to analyze:", recipe.ingredients);
       
-      // Use the dedicated nutrisynth-analysis edge function
       const response = await supabase.functions.invoke('nutrisynth-analysis', {
         body: { 
           ingredients: recipe.ingredients,
-          servings: recipe.servings || 1,
-          recipe_id: recipe.id,
-          // Include additional context to improve analysis
-          cuisine: recipe.cuisine,
-          cooking_method: recipe.cooking_tip || recipe.chef_notes
+          servings: recipe.servings || 1
         }
       });
 
@@ -112,6 +107,7 @@ export function NutritionUpdateButton({
         toast({
           title: "Nutrition updated",
           description: "Some nutrition values may be estimates due to limited ingredient data",
+          // Using a valid variant for the toast
           variant: "default"
         });
       } else {
