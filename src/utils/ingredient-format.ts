@@ -1,27 +1,17 @@
 
 import { Ingredient } from '@/hooks/use-quick-recipe';
+import { UnitSystem } from '@/stores/unitSystem';
 
-// Helper function to format ingredient for shopping list
-export const formatIngredient = (ingredient: any, unitSystemParam?: 'metric' | 'imperial'): string => {
+/**
+ * Helper function to format ingredient for shopping list
+ * Pure utility that takes unitSystem as a parameter - no dynamic imports or conditional hooks
+ */
+export const formatIngredient = (ingredient: any, unitSystem: UnitSystem = 'metric'): string => {
   if (typeof ingredient === 'string') {
     return ingredient;
   }
 
-  // Use passed unitSystem if provided, otherwise use Zustand store state
-  // This approach allows the function to work both with direct calls and in React components
-  let unitSystem = unitSystemParam;
-  if (!unitSystem) {
-    try {
-      // Try to import dynamically - will only work in React components
-      const { useUnitSystemStore } = require('@/stores/unitSystem');
-      unitSystem = useUnitSystemStore.getState().unitSystem;
-    } catch (error) {
-      // Default to metric if store can't be accessed
-      unitSystem = 'metric';
-    }
-  }
-  
-  // Extract fields based on unit system preference
+  // Use passed unitSystem if provided
   const qty = unitSystem === 'metric' 
     ? ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty
     : ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty;

@@ -10,10 +10,11 @@ import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/Micr
 import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
+import { UnitSystem } from '@/stores/unitSystem';
 
 interface RecipeBlockProps {
   recipeNutrition: ExtendedNutritionData;
-  unitSystem: 'metric' | 'imperial';
+  unitSystem: UnitSystem;
 }
 
 // Define the shape of the data_quality.recommended_macros property

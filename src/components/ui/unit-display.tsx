@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { getWeightDisplay, getHeightDisplay } from '@/utils/unit-conversion';
+import { UnitSystem } from '@/stores/unitSystem';
 
 /**
  * Format a nutrition value for display, rounding to integer for cleaner UI
@@ -19,7 +20,7 @@ export function formatNutritionValue(value: number | undefined | null): string {
 export function formatNutrientWithUnit(
   value: number | undefined | null, 
   unit: string,
-  unitSystem: 'metric' | 'imperial' = 'metric'
+  unitSystem: UnitSystem = 'metric'
 ): string {
   // Handle null/undefined values
   if (value === undefined || value === null || isNaN(Number(value))) {
@@ -59,7 +60,7 @@ export function formatNutrientWithUnit(
 interface UnitValueProps {
   value: number;
   unit: string;
-  unitSystem: 'metric' | 'imperial';
+  unitSystem: UnitSystem;
   decimals?: number;
   className?: string;
 }
@@ -76,7 +77,7 @@ export function UnitValue({ value, unit, unitSystem, decimals = 1, className }: 
 
 interface WeightDisplayProps {
   weightKg: number;
-  unitSystem: 'metric' | 'imperial';
+  unitSystem: UnitSystem;
   decimals?: number;
   className?: string;
 }
@@ -93,7 +94,7 @@ export function WeightDisplay({ weightKg, unitSystem, decimals = 1, className }:
 
 interface HeightDisplayProps {
   heightCm: number;
-  unitSystem: 'metric' | 'imperial';
+  unitSystem: UnitSystem;
   className?: string;
 }
 
@@ -109,7 +110,7 @@ export function HeightDisplay({ heightCm, unitSystem, className }: HeightDisplay
 
 interface NutrientDisplayProps {
   value: number;
-  unitSystem: 'metric' | 'imperial';
+  unitSystem: UnitSystem;
   unit?: string;
   className?: string;
 }

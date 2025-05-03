@@ -10,6 +10,7 @@ import { createShoppingItems, groupItemsByDepartment, formatShoppingListForClipb
 import { ShoppingListDepartment } from './shopping-list/ShoppingListDepartment';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
 
 interface QuickShoppingListProps {
   recipe: QuickRecipe;
@@ -104,25 +105,28 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
               <ShoppingBag className="h-5 w-5" />
               Shopping List
             </DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              className="flex items-center gap-2 h-10 px-4"
-              disabled={isLoading}
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <UnitSystemToggle size="sm" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyToClipboard}
+                className="flex items-center gap-2 h-10 px-4"
+                disabled={isLoading}
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </DialogHeader>
         

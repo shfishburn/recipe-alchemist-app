@@ -8,7 +8,7 @@ import { useUnitSystem } from '@/hooks/use-unit-system';
 // Helper function to format ingredient display text with markdown
 export const formatIngredientWithMarkdown = (ingredient: Ingredient, unitSystem: 'metric' | 'imperial'): string => {
   try {
-    // Use the same utility for consistency across the app but pass unit system
+    // Use the same utility for consistency across the app but pass unit system explicitly
     const formatted = formatIngredient(ingredient, unitSystem);
     
     // Extract parts for highlighting
