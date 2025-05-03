@@ -7,6 +7,7 @@ import { ChefHat, MessageSquare, Printer, Share2, Trash2, Loader2 } from 'lucide
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeActionsProps {
@@ -34,6 +35,15 @@ export function RecipeActions({
   const [showDeleteAlert, setShowDeleteAlert] = React.useState(false);
   const isMobile = useIsMobile();
   
+  // Generate title for URL slug
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-')     // Replace spaces with dashes
+      .replace(/-+/g, '-');     // Remove duplicate dashes
+  };
+  
   React.useEffect(() => {
     if (!sticky) return;
     
@@ -47,17 +57,48 @@ export function RecipeActions({
   }, [sticky]);
   
   const shareRecipe = async () => {
-    if (!navigator.share) return;
+    // Create the URL with slug for sharing
+    const recipeSlug = generateSlug(recipe.title);
+    const shareUrl = `${window.location.origin}/recipes/${recipe.id}/${recipeSlug}`;
     
-    try {
-      await navigator.share({
-        title: recipe.title,
-        text: recipe.tagline || `Check out this ${recipe.cuisine || ''} recipe for ${recipe.title}`,
-        url: window.location.href,
-      });
-    } catch (err) {
-      console.error('Error sharing:', err);
+    // Check if Web Share API is available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.title,
+          text: recipe.tagline || `Check out this ${recipe.cuisine || ''} recipe for ${recipe.title}`,
+          url: shareUrl,
+        });
+        toast({
+          title: "Recipe shared",
+          description: "The link has been shared successfully",
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+        if (err.name !== 'AbortError') {
+          attemptFallbackSharing(shareUrl);
+        }
+      }
+    } else {
+      attemptFallbackSharing(shareUrl);
     }
+  };
+  
+  const attemptFallbackSharing = (url: string) => {
+    // Fallback to clipboard
+    navigator.clipboard.writeText(url).then(() => {
+      toast({
+        title: "Link copied!",
+        description: "Recipe link copied to clipboard",
+      });
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      toast({
+        title: "Sharing failed",
+        description: "Please copy the URL manually",
+        variant: "destructive"
+      });
+    });
   };
 
   const handleDelete = () => {
@@ -149,18 +190,16 @@ export function RecipeActions({
             <span className={isMobile ? "hidden sm:inline" : ""}>Print</span>
           </Button>
           
-          {navigator.share && (
-            <Button
-              variant="outline"
-              size="default"
-              className="w-full flex items-center justify-center"
-              onClick={shareRecipe}
-              title="Share Recipe"
-            >
-              <Share2 className="h-5 w-5 mr-1 sm:mr-2" />
-              <span className={isMobile ? "hidden sm:inline" : ""}>Share</span>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="default"
+            className="w-full flex items-center justify-center"
+            onClick={shareRecipe}
+            title="Share Recipe"
+          >
+            <Share2 className="h-5 w-5 mr-1 sm:mr-2" />
+            <span className={isMobile ? "hidden sm:inline" : ""}>Share</span>
+          </Button>
           
           <Button
             variant="outline"

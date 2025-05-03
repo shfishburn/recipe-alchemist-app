@@ -11,15 +11,27 @@ interface MacroBreakdownProps {
 export function MacroBreakdown({ protein, carbs, fat }: MacroBreakdownProps) {
   // Calculate total to ensure percentages add up to 100%
   const total = protein + carbs + fat;
+  
+  // Handle edge case of zero total
+  if (total <= 0) {
+    return (
+      <div className="space-y-4">
+        <h5 className="text-xs font-medium mb-2">Macro Distribution</h5>
+        <p className="text-xs text-muted-foreground">No macronutrient data available</p>
+      </div>
+    );
+  }
+  
   const proteinPercent = Math.round((protein / total) * 100);
   const carbsPercent = Math.round((carbs / total) * 100);
-  const fatPercent = Math.round((fat / total) * 100);
+  // Ensure percentages add up to 100%
+  const fatPercent = 100 - proteinPercent - carbsPercent;
 
   return (
     <div className="space-y-4">
       <h5 className="text-xs font-medium mb-2">Macro Distribution</h5>
       
-      <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
         <div 
           className="bg-purple-500 h-full" 
           style={{ width: `${proteinPercent}%` }}
