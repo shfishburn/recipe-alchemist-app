@@ -1,15 +1,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useShoppingLists } from './useShoppingLists';
-import { useShoppingListActions } from './useShoppingListActions';
+import { useRecipeToShoppingList } from '@/hooks/use-recipe-to-shopping-list';
 import { toast } from '@/hooks/use-toast';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 export function useAddToShoppingList(recipe: Recipe) {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -17,10 +15,10 @@ export function useAddToShoppingList(recipe: Recipe) {
   const [addedListId, setAddedListId] = useState<string | null>(null);
   const { shoppingLists, isFetching, fetchShoppingLists } = useShoppingLists();
   const { 
-    createNewList, 
-    addToExistingList, 
+    addRecipeToNewList, 
+    addRecipeToExistingList, 
     isLoading 
-  } = useShoppingListActions(recipe);
+  } = useRecipeToShoppingList();
   
   // Memoize fetch shopping lists to prevent unnecessary re-renders
   const fetchLists = useCallback(async () => {
@@ -64,14 +62,10 @@ export function useAddToShoppingList(recipe: Recipe) {
       let listId = selectedListId;
       
       if (selectedListId) {
-        const result = await addToExistingList(selectedListId);
+        const result = await addRecipeToExistingList(selectedListId, recipe);
         success = result.success;
-        // Use the returned list ID
-        if (success) {
-          listId = selectedListId;
-        }
       } else {
-        const result = await createNewList(newListName);
+        const result = await addRecipeToNewList(newListName, recipe);
         success = result.success;
         if (success && result.listId) {
           listId = result.listId;
