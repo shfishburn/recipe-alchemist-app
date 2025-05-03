@@ -26,14 +26,21 @@ export function ApplyChangesSection({
   const [applyError, setApplyError] = useState<string | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [applyTimeout, setApplyTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [forceReset, setForceReset] = useState(false);
 
   // Safety mechanism: automatically clear "applying" state after 15 seconds
   // to prevent UI from being stuck in applying state indefinitely
   useEffect(() => {
     if (isApplying) {
+      console.log("Starting apply timeout monitoring");
       const timeout = setTimeout(() => {
         console.warn("Apply changes operation timed out - forcing UI refresh");
         // This will force the UI to reset if the apply operation takes too long
+        setForceReset(true);
+        
+        // Show an error to the user
+        setApplyError("Operation timed out. Please try again.");
+        
         const applyButton = document.getElementById('apply-changes-button');
         if (applyButton) {
           applyButton.classList.remove('animate-pulse');
@@ -43,6 +50,7 @@ export function ApplyChangesSection({
       
       setApplyTimeout(timeout);
     } else if (applyTimeout) {
+      console.log("Clearing apply timeout monitoring");
       clearTimeout(applyTimeout);
       setApplyTimeout(null);
     }
@@ -50,6 +58,13 @@ export function ApplyChangesSection({
     return () => {
       if (applyTimeout) clearTimeout(applyTimeout);
     };
+  }, [isApplying]);
+  
+  // Reset the forced reset flag when isApplying changes
+  useEffect(() => {
+    if (!isApplying && forceReset) {
+      setForceReset(false);
+    }
   }, [isApplying]);
 
   if (!changesSuggested) return null;
@@ -93,6 +108,8 @@ export function ApplyChangesSection({
   
   const handleConfirmApply = () => {
     try {
+      console.log("Initiating apply changes from confirmation dialog");
+      // Capture any error that might happen when applying changes
       onApplyChanges();
       setConfirmationOpen(false);
     } catch (error) {
@@ -101,6 +118,10 @@ export function ApplyChangesSection({
       setConfirmationOpen(false);
     }
   };
+
+  // Determine if we should show the apply button as disabled
+  // Force the button to be enabled if we're in a forced reset state
+  const isButtonDisabled = (isApplying && !forceReset) || applied || !hasChanges;
 
   return (
     <div className="mt-2 sm:mt-4 relative" style={{ zIndex: 10 }}>
@@ -119,14 +140,14 @@ export function ApplyChangesSection({
       <Button
         id="apply-changes-button"
         onClick={handleApplyChanges}
-        disabled={isApplying || applied || !hasChanges}
+        disabled={isButtonDisabled}
         className={`${
           applied ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'
         } text-white text-xs sm:text-sm h-7 sm:h-9 mt-2`}
         style={{ zIndex: 10 }}
         size={isMobile ? "sm" : "default"}
       >
-        {isApplying ? (
+        {isApplying && !forceReset ? (
           <>
             <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
             Applying...

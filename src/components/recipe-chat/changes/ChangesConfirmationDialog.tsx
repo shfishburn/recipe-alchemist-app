@@ -31,6 +31,7 @@ export function ChangesConfirmationDialog({
 }: ChangesConfirmationDialogProps) {
   // Use local state to debounce the isApplying state
   const [isLocalApplying, setIsLocalApplying] = useState(isApplying);
+  const [applyError, setApplyError] = useState<string | null>(null);
   
   // Use effect to debounce the applying state
   useEffect(() => {
@@ -41,6 +42,13 @@ export function ChangesConfirmationDialog({
     return () => clearTimeout(timer);
   }, [isApplying]);
   
+  // Clear any error when the dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      setApplyError(null);
+    }
+  }, [open]);
+  
   if (!changes) return null;
   
   const handleConfirm = (e: React.MouseEvent) => {
@@ -49,7 +57,16 @@ export function ChangesConfirmationDialog({
     
     // Set local applying immediately for better UX
     setIsLocalApplying(true);
-    onConfirm();
+    setApplyError(null);
+    
+    // Add error handling around the confirm action
+    try {
+      onConfirm();
+    } catch (error) {
+      console.error("Error in confirmation dialog when applying changes:", error);
+      setApplyError(error instanceof Error ? error.message : "Failed to apply changes");
+      setIsLocalApplying(false);
+    }
   };
   
   return (
@@ -69,6 +86,12 @@ export function ChangesConfirmationDialog({
         <div className="py-2">
           <ChangesSummary changes={changes} />
         </div>
+        
+        {applyError && (
+          <div className="mb-4 px-4 py-3 border border-red-200 bg-red-50 text-red-700 rounded-md text-sm">
+            {applyError}
+          </div>
+        )}
         
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLocalApplying}>Cancel</AlertDialogCancel>

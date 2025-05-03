@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ChatResponse } from './ChatResponse';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,11 +22,26 @@ export function ChatMessage({
   isOptimistic = false 
 }: ChatMessageProps) {
   const isMobile = useIsMobile();
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleApplyChanges = () => {
     if (isOptimistic) return; // Don't allow applying changes from optimistic messages
+    setLocalError(null);
+    
+    // Make sure the chat has a recipe ID
+    if (!chat.recipe_id) {
+      console.error("Cannot apply changes: No recipe_id in chat message", chat);
+      setLocalError("Cannot apply changes: Missing recipe information");
+      return;
+    }
+    
     console.log("Applying changes from chat:", chat.id);
-    applyChanges(chat);
+    
+    // Apply the changes
+    applyChanges(chat).catch(error => {
+      console.error("Error when applying changes:", error);
+      setLocalError(error instanceof Error ? error.message : "Failed to apply changes");
+    });
   };
   
   // Parse and extract follow-up questions from the response
@@ -73,16 +88,23 @@ export function ChatMessage({
             <AvatarImage src="/chef-ai.png" alt="Chef AI" />
             <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm">AI</AvatarFallback>
           </Avatar>
-          <ChatResponse 
-            response={chat.ai_response}
-            changesSuggested={chat.changes_suggested}
-            followUpQuestions={followUpQuestions}
-            setMessage={setMessage}
-            onApplyChanges={() => handleApplyChanges()}
-            isApplying={isApplying}
-            applied={chat.applied || false}
-            isMobile={isMobile}
-          />
+          <div className="flex-1 max-w-[calc(100%-40px)]">
+            {localError && (
+              <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-md text-red-700 text-xs sm:text-sm">
+                {localError}
+              </div>
+            )}
+            <ChatResponse 
+              response={chat.ai_response}
+              changesSuggested={chat.changes_suggested}
+              followUpQuestions={followUpQuestions}
+              setMessage={setMessage}
+              onApplyChanges={handleApplyChanges}
+              isApplying={isApplying}
+              applied={chat.applied || false}
+              isMobile={isMobile}
+            />
+          </div>
         </div>
       ) : isOptimistic ? null : (
         <div className={`flex items-start ${messageGap}`}>

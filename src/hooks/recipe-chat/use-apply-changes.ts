@@ -61,6 +61,8 @@ export const useApplyChanges = () => {
         try {
           if (changes.id) {
             await updateChatStatus(changes);
+          } else {
+            console.warn("No chat ID available to mark as applied");
           }
         } catch (statusError) {
           console.error("Error updating chat status:", statusError);
@@ -106,10 +108,22 @@ export const useApplyChanges = () => {
   });
 
   const applyChanges = useCallback((chat: ChatMessage): Promise<boolean> => {
+    // Enhanced validation of recipe ID
     if (!chat.recipe_id) {
-      console.error("Missing recipe ID in chat message");
+      console.error("Missing recipe ID in chat message", chat);
+      toast({
+        title: "Error",
+        description: "Cannot apply changes: Missing recipe ID in chat message",
+        variant: "destructive",
+      });
       return Promise.resolve(false);
     }
+    
+    console.log("ApplyChanges called with chat message:", {
+      id: chat.id,
+      recipe_id: chat.recipe_id,
+      hasChanges: !!chat.changes_suggested
+    });
     
     // Reset state
     setIsTimeoutExceeded(false);
@@ -120,6 +134,11 @@ export const useApplyChanges = () => {
       const operationTimeout = setTimeout(() => {
         console.error("Total operation timeout exceeded");
         setIsTimeoutExceeded(true);
+        toast({
+          title: "Operation Timeout",
+          description: "The update is taking too long. Please try again.",
+          variant: "destructive",
+        });
         resolve(false);
       }, 30000);
       
@@ -132,9 +151,32 @@ export const useApplyChanges = () => {
           if (error) {
             console.error("Error fetching recipe:", error);
             clearTimeout(operationTimeout);
+            toast({
+              title: "Error",
+              description: "Could not find the recipe to update.",
+              variant: "destructive",
+            });
             resolve(false);
             return;
           }
+          
+          if (!data) {
+            console.error("No recipe data found for ID:", chat.recipe_id);
+            clearTimeout(operationTimeout);
+            toast({
+              title: "Error",
+              description: "Recipe data not found.",
+              variant: "destructive",
+            });
+            resolve(false);
+            return;
+          }
+          
+          console.log("Recipe fetched successfully:", {
+            id: data.id,
+            title: data.title,
+            ingredientsCount: data.ingredients?.length
+          });
           
           // Cast the data to Recipe type to ensure type safety
           const recipeData = data as unknown as Recipe;
@@ -146,6 +188,7 @@ export const useApplyChanges = () => {
             originalRecipe: recipeData 
           })
             .then(result => {
+              console.log("Apply changes mutation completed with result:", result);
               clearTimeout(operationTimeout);
               resolve(result);
             })
@@ -153,6 +196,11 @@ export const useApplyChanges = () => {
               // This is an alternative to .catch() that works with PromiseLike<void>
               console.error("Error in mutation:", err);
               clearTimeout(operationTimeout);
+              toast({
+                title: "Update Error",
+                description: "Failed to update the recipe. Please try again.",
+                variant: "destructive",
+              });
               resolve(false);
             });
         })
@@ -160,10 +208,15 @@ export const useApplyChanges = () => {
           // This is an alternative to .catch() that works with PromiseLike
           console.error("Error fetching recipe:", err);
           clearTimeout(operationTimeout);
+          toast({
+            title: "Database Error",
+            description: "Could not access the recipe. Please try again.",
+            variant: "destructive",
+          });
           resolve(false);
         });
     });
-  }, [mutation]);
+  }, [mutation, toast]);
 
   return { applyChanges, isPending: mutation.isPending, isTimeoutExceeded };
 };

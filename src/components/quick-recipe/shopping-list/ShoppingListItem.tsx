@@ -9,10 +9,37 @@ interface ShoppingListItemProps {
 }
 
 export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProps) {
-  // Format quantity for display
-  const quantityText = item.quantity ? `${item.quantity}` : '';
-  const unitText = item.unit ? `${item.unit}` : '';
-  const formattedQuantity = [quantityText, unitText].filter(Boolean).join(' ');
+  // Format quantity for display - use the structured data fields specifically designed for this
+  let formattedQuantity = '';
+  
+  // Check if we have the structured quantity and unit fields
+  if (item.quantity !== undefined && item.quantity !== null) {
+    formattedQuantity = item.quantity.toString();
+    
+    if (item.unit) {
+      formattedQuantity += ` ${item.unit}`;
+    }
+  } 
+  // Fallback to text-based parsing if needed (legacy format)
+  else if (item.text && !item.item) {
+    // If we only have text, we'll extract what we can
+    const match = item.text.match(/^(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s+(.+)$/);
+    if (match) {
+      formattedQuantity = match[1];
+      if (match[2]) formattedQuantity += ` ${match[2]}`;
+    }
+  }
+
+  // Debug logging to help identify issues
+  console.log("Shopping item rendering:", { 
+    index,
+    itemText: item.text,
+    itemName: item.item,
+    quantity: item.quantity,
+    unit: item.unit, 
+    formattedQuantity,
+    fullItem: item 
+  });
 
   return (
     <div 
