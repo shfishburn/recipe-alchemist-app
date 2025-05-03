@@ -20,8 +20,8 @@ export function FormattedIngredientText({ text }: FormattedIngredientTextProps) 
     // Process the text with the formatting utility
     const formattedContent = processInlineFormatting(text);
     
-    // Explicitly wrap the result in a span element to ensure we return a single React element
-    // This is critical for compatibility with React.Children.only in parent components
+    // Always wrap the result in a span to ensure we return a single React element
+    // This ensures compatibility with components that expect a single child
     return <span className="ingredient-text">{formattedContent}</span>;
   } catch (error) {
     console.error("Error formatting ingredient text:", error);

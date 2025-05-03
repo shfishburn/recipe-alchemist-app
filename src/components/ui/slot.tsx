@@ -1,15 +1,16 @@
 
 import * as React from "react";
 
-interface SlotProps extends React.HTMLAttributes<HTMLElement> {
+interface SlotProps {
   children?: React.ReactNode;
+  [key: string]: any; // Allow for additional props
 }
 
 /**
  * Custom Slot component that merges props with child element
- * Handles multiple children more gracefully than React.Children.only
+ * Better handling of children without relying on React.Children.only
  */
-const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
+const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
   const { children, ...rest } = props;
   
   // If no children, return null
@@ -34,15 +35,17 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, ref) => {
     return null;
   }
   
-  // Clone the element with merged props
+  // Clone the element with merged props - fixed TypeScript handling of refs
   return React.cloneElement(firstChild, {
     ...rest,
-    ref: composeRefs(ref, (firstChild as any).ref),
+    ref: forwardedRef 
+      ? composeRefs(forwardedRef, (firstChild as any).ref) 
+      : (firstChild as any).ref,
   });
 });
 
 /**
- * Helper to compose multiple refs into one
+ * Helper to compose multiple refs into one - improved typing
  */
 const composeRefs = <T extends any>(
   ...refs: Array<React.Ref<T> | undefined | null>

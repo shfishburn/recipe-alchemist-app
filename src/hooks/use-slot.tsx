@@ -2,7 +2,7 @@
 import React from 'react';
 
 /**
- * Composes multiple refs into one
+ * Composes multiple refs into one with improved type safety
  */
 const composeRefs = <T extends any>(
   ...refs: Array<React.Ref<T> | undefined | null>
@@ -27,10 +27,12 @@ export const useSlot = () => {
     
     // Only clone if children is a valid React element and asChild is true
     if (asChild && React.isValidElement(children)) {
-      // When asChild is true, we clone the child element and forward props
-      return React.cloneElement(children as React.ReactElement<any>, {
+      // Safer cloning with proper ref handling
+      return React.cloneElement(children as React.ReactElement, {
         ...otherProps,
-        ref: composeRefs(ref, (children as any).ref),
+        ref: ref 
+          ? composeRefs(ref, (children as any).ref) 
+          : (children as any).ref,
       });
     }
     

@@ -23,8 +23,8 @@ const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonWrapperProps>(
       return (
         <Slot
           className={className} 
-          ref={ref as React.Ref<HTMLElement>}
           {...props}
+          ref={ref}
         >
           {children}
         </Slot>
