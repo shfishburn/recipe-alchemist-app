@@ -64,6 +64,11 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     await copyToClipboard();
   };
 
+  // Create a wrapper function to convert Promise<boolean> to Promise<void>
+  const handleAddItemWrapper = async (item: any): Promise<void> => {
+    await handleAddItem(item);
+  };
+
   return (
     <Card className="p-2 md:p-3 max-w-full">
       <ShoppingListHeader 
@@ -125,7 +130,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
           {showAddItemForm && (
             <div className="p-2">
               <AddItemForm 
-                onAddItem={handleAddItem}
+                onAddItem={handleAddItemWrapper}
                 availableDepartments={allDepartments}
               />
             </div>

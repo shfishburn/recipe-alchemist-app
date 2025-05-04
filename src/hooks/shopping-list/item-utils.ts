@@ -98,7 +98,7 @@ export const addItem = async (
       department: newItem.department || 'Other',
       checked: false,
       notes: newItem.notes,
-      pantryStaple: newItem.pantryStaple || false
+      pantry_staple: newItem.pantry_staple || false
     };
     
     // Add to list and save

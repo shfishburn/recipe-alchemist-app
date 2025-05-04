@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -88,12 +87,14 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
     queryFn: async () => {
       console.log('Fetching recipe analysis for', recipe.title);
       
-      // Create an AbortController for timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
       try {
-        const { data, error } = await supabase.functions.invoke('recipe-chat', {
+        // Create an AbortController for timeout handling
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Analysis request timed out')), 30000)
+        );
+        
+        // The actual fetch operation
+        const fetchPromise = supabase.functions.invoke('recipe-chat', {
           body: { 
             recipe,
             userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
@@ -107,22 +108,16 @@ Please provide:
 
 Include specific temperature thresholds, timing considerations, and visual/tactile indicators of doneness.`,
             sourceType: 'analysis'
-          },
-          signal: controller.signal
+          }
         });
-
-        clearTimeout(timeoutId);
         
-        if (error) {
-          console.error('Error fetching recipe analysis:', error);
-          throw error;
-        }
+        // Use Promise.race to implement timeout
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
         
-        console.log('Analysis data received:', data);
-        return data;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
+        console.log('Analysis data received:', result);
+        return result;
+      } catch (error: any) {
+        if (error.message.includes('timed out')) {
           console.error('Recipe analysis request timed out');
           throw new Error('Analysis request timed out. Please try again later.');
         }
@@ -145,21 +140,21 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     try {
       toast.info('Analyzing recipe reactions...');
       
-      // Create an AbortController for timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
       try {
-        const response = await supabase.functions.invoke('analyze-reactions', {
+        // Use Promise.race to implement timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Reaction analysis timed out')), 30000)
+        );
+        
+        const apiPromise = supabase.functions.invoke('analyze-reactions', {
           body: {
             recipe_id: recipe.id,
             title: recipe.title,
             instructions: recipe.instructions
-          },
-          signal: controller.signal
+          }
         });
         
-        clearTimeout(timeoutId);
+        const response = await Promise.race([apiPromise, timeoutPromise]);
         
         if (response.error) {
           throw new Error(response.error.message || 'Failed to analyze reactions');
@@ -167,17 +162,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         
         toast.success('Reaction analysis complete');
         refetchReactions();
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          console.error('Reaction analysis request timed out');
+      } catch (error: any) {
+        if (error.message.includes('timed out')) {
           throw new Error('Analysis request timed out. Please try again later.');
         }
         throw error;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error analyzing reactions:', error);
-      toast.error('Failed to analyze reactions: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Failed to analyze reactions: ' + error.message);
     } finally {
       // Only reset analyzing state once both operations are complete or have failed
       if (!analysis) {
