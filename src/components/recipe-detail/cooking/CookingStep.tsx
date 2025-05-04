@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
 import type { StepCategory } from '../common/StepCategoryLabel';
@@ -13,7 +13,7 @@ interface CookingStepProps {
   stepCategory?: StepCategory | string;
 }
 
-export function CookingStep({ 
+export const CookingStep = memo(function CookingStep({ 
   stepNumber, 
   instruction, 
   isCompleted, 
@@ -34,4 +34,4 @@ export function CookingStep({
       />
     </div>
   );
-}
+});

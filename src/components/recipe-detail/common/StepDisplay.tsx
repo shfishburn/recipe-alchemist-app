@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Atom } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StepReaction, formatReactionName } from '@/hooks/use-recipe-science';
@@ -17,7 +17,8 @@ interface StepDisplayProps {
   stepCategory?: StepCategory | string;
 }
 
-export function StepDisplay({
+// Use memo for the entire component to prevent unnecessary re-renders
+export const StepDisplay = memo(function StepDisplay({
   stepNumber,
   stepText,
   isCompleted = false,
@@ -33,9 +34,15 @@ export function StepDisplay({
                      Array.isArray(stepReaction.reactions) && 
                      stepReaction.reactions.length > 0;
     
+  // Memoize the science toggle handler
+  const handleScienceClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowScience(prev => !prev);
+  }, []);
+  
   // Styling classes based on state
   const containerClasses = cn(
-    "flex flex-col p-4 rounded-md transition-colors border",
+    "flex flex-col p-4 rounded-md transition-colors border hw-accelerated",
     isCompleted ? "bg-green-50 hover:bg-green-100 border-green-200" : "hover:bg-gray-50 border-gray-100",
     onToggleComplete ? "cursor-pointer" : "",
     variant === 'cooking' ? "shadow-sm" : ""
@@ -46,22 +53,9 @@ export function StepDisplay({
     isCompleted ? "line-through text-muted-foreground" : "text-foreground"
   );
   
-  // Handle toggling
-  const handleClick = () => {
-    if (onToggleComplete) {
-      onToggleComplete();
-    }
-  };
-
-  // Handle science button click
-  const handleScienceClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowScience(!showScience);
-  };
-  
   return (
     <>
-      <div onClick={handleClick} className={containerClasses}>
+      <div onClick={onToggleComplete} className={containerClasses}>
         {/* Step header row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -96,7 +90,7 @@ export function StepDisplay({
       
       {/* Science info panel */}
       {hasScience && showScience && stepReaction && (
-        <div className="ml-6 mt-2 p-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm">
+        <div className="ml-6 mt-2 p-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm hw-accelerated">
           <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
             <Atom className="h-4 w-4 mr-1.5" />
             <span>Scientific Explanation</span>
@@ -121,4 +115,4 @@ export function StepDisplay({
       )}
     </>
   );
-}
+});

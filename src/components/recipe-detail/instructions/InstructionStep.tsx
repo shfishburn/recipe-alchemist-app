@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
@@ -23,7 +23,8 @@ export const InstructionStep = memo(function InstructionStep({
   stepReaction,
   isLastStep
 }: InstructionStepProps) {
-  const handleToggle = () => toggleStep(index);
+  // Memoize the toggle handler to prevent recreation on each render
+  const handleToggle = useCallback(() => toggleStep(index), [toggleStep, index]);
   
   return (
     <li className="group">

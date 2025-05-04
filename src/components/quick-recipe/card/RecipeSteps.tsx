@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { RecipeSectionHeader } from './RecipeSectionHeader';
 import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 
@@ -7,8 +7,8 @@ interface RecipeStepsProps {
   steps: string[];
 }
 
-export function RecipeSteps({ steps }: RecipeStepsProps) {
-  // Use useMemo to avoid unnecessary re-renders
+export const RecipeSteps = memo(function RecipeSteps({ steps }: RecipeStepsProps) {
+  // Use useMemo to avoid unnecessary re-evaluations
   const hasSteps = useMemo(() => steps && steps.length > 0, [steps]);
   
   if (!hasSteps) {
@@ -32,4 +32,4 @@ export function RecipeSteps({ steps }: RecipeStepsProps) {
       </ol>
     </div>
   );
-}
+});
