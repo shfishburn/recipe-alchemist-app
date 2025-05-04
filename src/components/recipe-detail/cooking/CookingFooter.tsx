@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 
 interface CookingFooterProps {
   currentStep: number;
-  completedSteps: number[];
+  completedSteps: boolean[];
   totalSteps: number;
   onPrevStep: () => void;
   onNextStep: () => void;
