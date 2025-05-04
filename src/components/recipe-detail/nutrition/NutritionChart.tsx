@@ -5,6 +5,7 @@ import { ComparisonChart } from './charts/ComparisonChart';
 import { DistributionCharts } from './charts/DistributionCharts';
 import { ExtendedNutritionData } from './useNutritionData';
 import { MicronutrientsDisplay } from './MicronutrientsDisplay';
+import { NUTRITION_COLORS } from '@/constants/nutrition';
 
 interface NutritionChartProps {
   recipeNutrition: ExtendedNutritionData;
@@ -33,8 +34,12 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
     const carbsTarget = Math.round((dailyCalories * (carbsPercentage / 100)) / 4);
     const fatTarget = Math.round((dailyCalories * (fatPercentage / 100)) / 9);
     
-    // Colors for consistency
-    const COLORS = ['#9b87f5', '#0EA5E9', '#22c55e'];
+    // Use colors from constants
+    const COLORS = [
+      NUTRITION_COLORS.protein, 
+      NUTRITION_COLORS.carbs, 
+      NUTRITION_COLORS.fat
+    ];
     
     // Data for macros comparison chart
     const macroData = [
@@ -87,11 +92,11 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="comparison">
-        <TabsList className="mb-2">
-          <TabsTrigger value="comparison">Comparison</TabsTrigger>
-          <TabsTrigger value="distribution">Distribution</TabsTrigger>
-          <TabsTrigger value="micronutrients">Micronutrients</TabsTrigger>
+      <Tabs defaultValue="comparison" className="w-full">
+        <TabsList className="mb-4 w-full justify-start">
+          <TabsTrigger value="comparison" className="flex-1">Comparison</TabsTrigger>
+          <TabsTrigger value="distribution" className="flex-1">Distribution</TabsTrigger>
+          <TabsTrigger value="micronutrients" className="flex-1">Micronutrients</TabsTrigger>
         </TabsList>
         
         <TabsContent value="comparison" className="pt-2">

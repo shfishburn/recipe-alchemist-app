@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
-import { AddToShoppingList } from './AddToShoppingList';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
+import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
 
 interface RecipeIngredientsProps {
   recipe: Recipe;
@@ -45,23 +45,7 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
         <CollapsibleContent>
           <CardContent className="pt-0 relative">
             <div className="mb-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-2 w-full"
-                onClick={() => {
-                  const dialog = document.querySelector('[data-testid="shopping-list-dialog"]');
-                  if (dialog) {
-                    (dialog as HTMLDialogElement).showModal();
-                  }
-                }}
-              >
-                <ShoppingBag className="h-4 w-4" />
-                <span>Add to Shopping List</span>
-              </Button>
-              
-              {/* Hidden dialog component that will be controlled by the button above */}
-              <AddToShoppingList recipe={recipe} />
+              <EnhancedAddToList recipe={recipe} />
             </div>
             <ul className="space-y-3">
               {recipe.ingredients && Array.isArray(recipe.ingredients) ? 

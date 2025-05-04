@@ -19,7 +19,6 @@ export function EnhancedAddToList({ recipe }: EnhancedAddToListProps) {
     <div className="flex items-center gap-2">
       <Button 
         variant="outline" 
-        size="sm" 
         className="flex-1 flex items-center gap-2 hover:bg-primary/10 transition-colors touch-feedback-optimized"
         onClick={() => setOpen(true)}
       >

@@ -9,7 +9,7 @@ import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakd
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
 import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
-import { DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
+import { NUTRITION_COLORS, DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 import { UnitSystem } from '@/stores/unitSystem';
 
 interface RecipeBlockProps {
@@ -124,6 +124,7 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               value={proteinDailyValue} 
               className="h-2" 
               aria-labelledby="protein-label"
+              indicatorColor={NUTRITION_COLORS.proteinBg}
             />
           </div>
           
@@ -136,6 +137,7 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               value={carbsDailyValue} 
               className="h-2" 
               aria-labelledby="carbs-label"
+              indicatorColor={NUTRITION_COLORS.carbsBg}
             />
           </div>
           
@@ -148,6 +150,7 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               value={fatDailyValue} 
               className="h-2" 
               aria-labelledby="fat-label"
+              indicatorColor={NUTRITION_COLORS.fatBg}
             />
           </div>
           
@@ -161,6 +164,7 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
                 value={fiberDailyValue} 
                 className="h-2" 
                 aria-labelledby="fiber-label"
+                indicatorColor={NUTRITION_COLORS.fiberBg}
               />
             </div>
           ) : null}
@@ -168,9 +172,9 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
           <Separator className="my-4" />
           
           <MacroBreakdown 
-            protein={proteinPercentage}
-            carbs={carbsPercentage}
-            fat={fatPercentage}
+            protein={protein}
+            carbs={carbs}
+            fat={fat}
           />
           
           <Separator className="my-4" />
