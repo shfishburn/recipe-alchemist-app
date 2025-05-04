@@ -54,14 +54,6 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   // Flag to track if content has been parsed
   const contentParsedRef = useRef(false);
 
-  // Auto-analyze when opened for the first time
-  useEffect(() => {
-    if (isOpen && !initialAnalysisRef.current && !isAnalyzing) {
-      initialAnalysisRef.current = true;
-      handleAnalyze();
-    }
-  }, [isOpen]);
-  
   // Fetch reaction data from Supabase
   const { data: reactions, isLoading: isLoadingReactions, refetch: refetchReactions } = useQuery({
     queryKey: ['recipe-reactions', recipe.id],
@@ -95,10 +87,16 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
       console.log('Fetching recipe analysis for', recipe.title);
-      const { data, error } = await supabase.functions.invoke('recipe-chat', {
-        body: { 
-          recipe,
-          userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
+      
+      // Create an AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('recipe-chat', {
+          body: { 
+            recipe,
+            userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
 
 Please provide:
 1. A detailed breakdown of the key chemical processes occurring (Maillard reactions, protein denaturation, emulsification)
@@ -108,21 +106,33 @@ Please provide:
 5. Suggestions for enhancing flavors through scientifically-validated methods
 
 Include specific temperature thresholds, timing considerations, and visual/tactile indicators of doneness.`,
-          sourceType: 'analysis'
-        }
-      });
+            sourceType: 'analysis'
+          },
+          signal: controller.signal
+        });
 
-      if (error) {
-        console.error('Error fetching recipe analysis:', error);
+        clearTimeout(timeoutId);
+        
+        if (error) {
+          console.error('Error fetching recipe analysis:', error);
+          throw error;
+        }
+        
+        console.log('Analysis data received:', data);
+        return data;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          console.error('Recipe analysis request timed out');
+          throw new Error('Analysis request timed out. Please try again later.');
+        }
+        console.error('Error in recipe analysis:', error);
         throw error;
       }
-      
-      console.log('Analysis data received:', data);
-      return data;
     },
     enabled: false, // Don't auto-fetch on mount
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    retry: 2, // Increased retries from 1 to 2
+    retry: 1,
   });
 
   // Function to analyze reactions with OpenAI
@@ -133,28 +143,46 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
     
     try {
-      setIsAnalyzing(true);
       toast.info('Analyzing recipe reactions...');
       
-      const response = await supabase.functions.invoke('analyze-reactions', {
-        body: {
-          recipe_id: recipe.id,
-          title: recipe.title,
-          instructions: recipe.instructions
+      // Create an AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      try {
+        const response = await supabase.functions.invoke('analyze-reactions', {
+          body: {
+            recipe_id: recipe.id,
+            title: recipe.title,
+            instructions: recipe.instructions
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to analyze reactions');
         }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to analyze reactions');
+        
+        toast.success('Reaction analysis complete');
+        refetchReactions();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          console.error('Reaction analysis request timed out');
+          throw new Error('Analysis request timed out. Please try again later.');
+        }
+        throw error;
       }
-      
-      toast.success('Reaction analysis complete');
-      refetchReactions();
     } catch (error) {
       console.error('Error analyzing reactions:', error);
       toast.error('Failed to analyze reactions: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
-      setIsAnalyzing(false);
+      // Only reset analyzing state once both operations are complete or have failed
+      if (!analysis) {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -171,78 +199,43 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       });
       
       setIsAnalyzing(true);
+      toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
       
-      // Perform both analyses
-      Promise.all([
-        refetch(),
-        analyzeReactions()
-      ]).catch(error => {
+      // Track analysis completion status for both operations
+      let analysisCompleted = false;
+      let reactionsCompleted = false;
+      
+      // Start both analyses in parallel
+      refetch().then(() => {
+        analysisCompleted = true;
+        if (reactionsCompleted) {
+          setIsAnalyzing(false);
+        }
+      }).catch(error => {
         console.error("Analysis error:", error);
         toast.error("Failed to analyze recipe: " + (error instanceof Error ? error.message : "Unknown error"));
-      }).finally(() => {
-        setIsAnalyzing(false);
+        analysisCompleted = true;
+        if (reactionsCompleted) {
+          setIsAnalyzing(false);
+        }
       });
       
-      toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
+      analyzeReactions().then(() => {
+        reactionsCompleted = true;
+        if (analysisCompleted) {
+          setIsAnalyzing(false);
+        }
+      });
     }
   }, [refetch, isLoading, isAnalyzing, analyzeReactions]);
 
-  // Apply analysis updates to recipe when data is available, but only once
+  // Auto-analyze when opened for the first time
   useEffect(() => {
-    // Only run this effect if we have analysis data, we haven't applied updates yet,
-    // and there's a callback for updates
-    if (analysis && 
-        analysis.science_notes && 
-        onRecipeUpdated && 
-        !hasAppliedUpdates && 
-        initialAnalysisRef.current) {
-      
-      console.log('Preparing to apply analysis updates to recipe');
-      
-      // SAFETY CHECK: Only apply updates if we actually have content to apply
-      const hasNewScienceNotes = Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0;
-      
-      // Only proceed if we have meaningful science notes to update
-      if (hasNewScienceNotes) {
-        setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
-        
-        try {
-          // Prepare a safe update object that won't overwrite existing data
-          const updatedData: Partial<Recipe> = {
-            // Always include the ID
-            id: recipe.id,
-            // Only update science notes, not core recipe data
-            science_notes: analysis.science_notes
-          };
-          
-          console.log('Applying recipe science notes only:', updatedData);
-          
-          // Update with safely constructed data - only science notes
-          updateRecipe.mutate(updatedData, {
-            onSuccess: (updatedRecipe) => {
-              console.log('Recipe updated with analysis data (science notes only)');
-              // Pass only the updated recipe to the callback
-              onRecipeUpdated(updatedRecipe as Recipe);
-              toast.success('Recipe analysis complete');
-            },
-            onError: (error) => {
-              console.error('Failed to update recipe with analysis data:', error);
-              toast.error('Failed to update recipe with analysis');
-              // Reset the flag if there was an error so we can try again
-              setHasAppliedUpdates(false);
-            }
-          });
-        } catch (e) {
-          console.error("Error processing analysis data:", e);
-          toast.error("Failed to process recipe analysis data");
-          setHasAppliedUpdates(false);
-        }
-      } else {
-        console.log('No meaningful science notes to apply from analysis.');
-        toast.info('Analysis complete, but no changes needed.');
-      }
+    if (isOpen && !initialAnalysisRef.current && !isAnalyzing) {
+      initialAnalysisRef.current = true;
+      handleAnalyze();
     }
-  }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id]);
+  }, [isOpen, handleAnalyze]);
 
   // Process reactions when they're loaded
   useEffect(() => {
@@ -293,6 +286,57 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   }, [reactions]);
 
+  // Apply analysis updates to recipe when data is available
+  useEffect(() => {
+    // Only run this effect if we have analysis data, we haven't applied updates yet,
+    // and there's a callback for updates
+    if (analysis && 
+        analysis.science_notes && 
+        onRecipeUpdated && 
+        !hasAppliedUpdates && 
+        initialAnalysisRef.current) {
+      
+      // SAFETY CHECK: Only apply updates if we actually have content to apply
+      const hasNewScienceNotes = Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0;
+      
+      // Only proceed if we have meaningful science notes to update
+      if (hasNewScienceNotes) {
+        setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
+        
+        // Prepare a safe update object that won't overwrite existing data
+        const updatedData: Partial<Recipe> = {
+          // Always include the ID
+          id: recipe.id,
+          // Only update science notes, not core recipe data
+          science_notes: analysis.science_notes
+        };
+        
+        // Update with safely constructed data - only science notes
+        updateRecipe.mutate(updatedData, {
+          onSuccess: (updatedRecipe) => {
+            // Pass only the updated recipe to the callback
+            onRecipeUpdated(updatedRecipe as Recipe);
+            toast.success('Recipe analysis complete');
+            setIsAnalyzing(false);
+          },
+          onError: (error) => {
+            console.error('Failed to update recipe with analysis data:', error);
+            toast.error('Failed to update recipe with analysis');
+            // Reset the flag if there was an error so we can try again
+            setHasAppliedUpdates(false);
+            setIsAnalyzing(false);
+          }
+        });
+      } else {
+        toast.info('Analysis complete, but no changes needed.');
+        setIsAnalyzing(false);
+      }
+    } else if (analysis && !isLoading) {
+      // If we have analysis data but aren't updating the recipe
+      setIsAnalyzing(false);
+    }
+  }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id, isLoading]);
+
   // Format reaction names for display
   const formatReactionName = (reaction: string): string => {
     return reaction
@@ -304,8 +348,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   // Pre-process content once when analysis data is available
   useEffect(() => {
     if (analysis && !contentParsedRef.current) {
-      console.log("Pre-processing analysis content for consistency");
-      
       // Process each content section and store it for consistent display
       const newContent: TabContent = {
         chemistry: [],
@@ -357,7 +399,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       setParsedContent(newContent);
       contentParsedRef.current = true;
     }
-  }, [analysis]);
+  }, [analysis, parsedContent.reactions]);
 
   // Helper to format science notes with icons
   function formatScienceNote(note: string, index: number) {
@@ -395,7 +437,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     );
   }
 
-  // Enhanced extract section function with better pattern matching and caching
+  // Enhanced extract section function with better pattern matching
   function extractSectionFromText(rawText: string | undefined, sectionName: string, defaultText?: string): React.ReactNode {
     if (!rawText) return defaultText ? <p>{defaultText}</p> : null;
     
@@ -505,29 +547,29 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               </div>
             ) : hasAnyAnalysisContent ? (
               <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-                <div className="flex items-center mb-4">
-                  <TabsList className="flex w-full overflow-x-auto overflow-y-hidden h-auto p-1 rounded-md md:max-w-fit">
-                    <TabsTrigger value="chemistry" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                <div className="flex items-center overflow-x-auto mb-4">
+                  <TabsList className="flex w-full h-auto p-1 rounded-md">
+                    <TabsTrigger value="chemistry" className="h-auto flex-1 py-2 whitespace-normal">
                       <div className="flex items-center gap-1">
                         <Beaker className="h-4 w-4 shrink-0" />
                         <span>Chemistry</span>
                       </div>
                     </TabsTrigger>
-                    <TabsTrigger value="techniques" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                    <TabsTrigger value="techniques" className="h-auto flex-1 py-2 whitespace-normal">
                       <div className="flex items-center gap-1">
                         <BookOpenText className="h-4 w-4 shrink-0" />
                         <span>Techniques</span>
                       </div>
                     </TabsTrigger>
                     {hasReactionAnalysis && (
-                      <TabsTrigger value="reactions" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                      <TabsTrigger value="reactions" className="h-auto flex-1 py-2 whitespace-normal">
                         <div className="flex items-center gap-1">
                           <Atom className="h-4 w-4 shrink-0" />
                           <span>Reactions</span>
                         </div>
                       </TabsTrigger>
                     )}
-                    <TabsTrigger value="troubleshooting" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                    <TabsTrigger value="troubleshooting" className="h-auto flex-1 py-2 whitespace-normal">
                       <div className="flex items-center gap-1">
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         <span>Troubleshoot</span>

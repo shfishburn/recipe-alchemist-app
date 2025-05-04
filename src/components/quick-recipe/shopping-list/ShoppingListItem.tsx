@@ -33,13 +33,29 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
     return item.unit ? `${formattedQty} ${item.unit}` : formattedQty;
   };
   
+  // Function to capitalize first letter of each word
+  const capitalizeWords = (text: string): string => {
+    return text
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+  
   // Get formatted quantity
   const formattedQuantity = formatQuantityWithUnit(item);
   
   // Get the display name for the item - prioritize structured data
-  const displayName = item.item || 
+  const rawDisplayName = item.item || 
     (item.text && item.text.replace(/^\d+(\.\d+)?\s*[a-zA-Z]*\s+/, '')) || 
     'Unknown item';
+    
+  // Filter out water items
+  if (rawDisplayName.toLowerCase().trim() === 'water') {
+    return null;
+  }
+  
+  // Capitalize each word in the display name
+  const displayName = capitalizeWords(rawDisplayName);
 
   return (
     <div 

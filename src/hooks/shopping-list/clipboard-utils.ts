@@ -1,5 +1,5 @@
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
 import { capitalizeName } from './item-organization';
 
@@ -63,20 +63,13 @@ export const useClipboard = () => {
       
       await navigator.clipboard.writeText(text);
       
-      toast({
-        title: "Copied to clipboard",
-        description: "Shopping list copied to clipboard"
-      });
+      toast.success("Shopping list copied to clipboard");
       
       return true;
     } catch (err) {
       console.error('Failed to copy: ', err);
       
-      toast({
-        title: "Copy failed",
-        description: "Could not copy to clipboard",
-        variant: "destructive"
-      });
+      toast.error("Could not copy to clipboard");
       
       return false;
     }

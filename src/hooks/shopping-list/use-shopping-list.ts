@@ -1,146 +1,167 @@
 
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+import { useClipboard } from './clipboard-utils';
+import { organizeItems } from './item-organization';
+import { toggleItem, deleteItem, addItem } from './item-utils';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
 
-import { 
-  getItemIndex,
-  toggleItemChecked, 
-  deleteItem, 
-  addItem, 
-  toggleDepartmentItems 
-} from './item-utils';
-
-import { 
-  organizeItems, 
-  groupItemsByDepartment 
-} from './item-organization';
-
-import { useClipboard } from './clipboard-utils';
-
-export function useShoppingList(list: ShoppingList, onUpdate: () => void) {
-  const { toast } = useToast();
+export const useShoppingList = (list: ShoppingList, onUpdate: () => void) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'dept'>('dept');
   const [expandedDepts, setExpandedDepts] = useState<Record<string, boolean>>({});
-  const [items, setItems] = useState<ShoppingListItem[]>(list.items);
   const { copyToClipboard } = useClipboard();
-
-  // Update local state when list changes from props
-  useEffect(() => {
-    setItems(list.items);
-  }, [list]);
-
-  // Group items by department
-  const itemsByDepartment = groupItemsByDepartment(items);
-
-  // Get all departments
-  const allDepartments = Object.keys(itemsByDepartment);
   
-  // Initialize expanded departments state if not done
-  useEffect(() => {
-    const initial: Record<string, boolean> = {};
-    allDepartments.forEach(dept => {
-      // By default all departments are expanded
-      initial[dept] = true;
-    });
-    setExpandedDepts(prev => ({...initial, ...prev}));
-  }, [allDepartments]);
-
-  // Filter and sort items
-  const filteredItems = searchTerm.trim() === '' 
-    ? items 
-    : items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-  // Sort items according to the selected sort order
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a.name.localeCompare(b.name);
-    } else if (sortOrder === 'desc') {
-      return b.name.localeCompare(a.name);
-    } 
-    // For 'dept', we'll handle in the rendering
-    return 0;
-  });
-
-  // Group filtered and sorted items
-  const groupedItems = organizeItems(items, searchTerm, sortOrder);
-
-  // Handle toggle item checked state
+  // Get all departments from list items
+  const allDepartments = Array.from(
+    new Set([
+      ...list.items.map(item => item.department || 'Other'),
+      'Produce', 'Dairy', 'Meat', 'Bakery', 'Frozen', 'Pantry', 'Other'
+    ])
+  ).sort();
+  
+  // Organize items based on search and sort criteria
+  const itemsByDepartment = organizeItems(list.items, searchTerm, sortOrder);
+  
+  // Filter out "water" items
+  const filteredItemsByDepartment = Object.entries(itemsByDepartment).reduce((acc, [dept, items]) => {
+    const filteredItems = items.filter(item => 
+      !item.name.toLowerCase().trim().match(/^water$/)
+    );
+    
+    if (filteredItems.length > 0) {
+      acc[dept] = filteredItems;
+    }
+    return acc;
+  }, {} as Record<string, ShoppingListItem[]>);
+  
+  const groupedItems = filteredItemsByDepartment;
+  
+  // Helper function to save the updated list
+  const saveList = async (updatedItems: ShoppingListItem[]): Promise<boolean> => {
+    try {
+      const updatedList = {
+        ...list,
+        items: updatedItems,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Call the parent component's update function
+      onUpdate();
+      return true;
+    } catch (error) {
+      console.error('Error saving list:', error);
+      toast.error('Failed to save changes');
+      return false;
+    }
+  };
+  
+  // Toggle item checked state
   const handleToggleItem = async (index: number) => {
-    const result = await toggleItemChecked(list.id, items, index, { toast });
-    if (result) {
-      setItems(result);
-      onUpdate();
-    }
+    await toggleItem(index, list.items, saveList);
   };
-
-  // Handle delete item
+  
+  // Delete item from the list
   const handleDeleteItem = async (index: number) => {
-    const result = await deleteItem(list.id, items, index, { toast });
-    if (result) {
-      setItems(result);
-      onUpdate();
-    }
+    await deleteItem(index, list.items, saveList);
   };
   
-  // Handle add item
-  const handleAddItem = async (newItem: Omit<ShoppingListItem, 'checked'>) => {
-    const result = await addItem(list.id, items, newItem, { toast });
-    if (result) {
-      setItems(result);
-      onUpdate();
-      return Promise.resolve();
-    }
-    return Promise.reject(new Error('Failed to add item'));
+  // Add a new item to the list
+  const handleAddItem = async (newItem: Partial<ShoppingListItem>) => {
+    return await addItem(newItem, list.items, saveList);
   };
   
-  // Handle toggle all items in department
-  const toggleAllInDepartment = async (department: string, checked: boolean) => {
-    const result = await toggleDepartmentItems(list.id, items, department, checked, { toast });
-    if (result) {
-      setItems(result);
-      onUpdate();
-    }
-  };
-  
-  // Toggle department expanded state
-  const toggleDeptExpanded = (dept: string) => {
+  // Toggle department expansion
+  const toggleDeptExpanded = useCallback((dept: string) => {
     setExpandedDepts(prev => ({
       ...prev,
       [dept]: !prev[dept]
     }));
+  }, []);
+  
+  // Get the index of an item
+  const getItemIndex = useCallback(
+    (item: ShoppingListItem) => {
+      return list.items.findIndex(
+        i => i.name === item.name && i.department === item.department
+      );
+    },
+    [list.items]
+  );
+  
+  // Toggle all items in a department
+  const toggleAllInDepartment = async (department: string, checked: boolean) => {
+    try {
+      // Find all items in this department
+      const deptItems = list.items.filter(item => item.department === department);
+      
+      if (deptItems.length === 0) {
+        return false;
+      }
+      
+      // Create a new array with updated checked states
+      const updatedItems = list.items.map(item =>
+        item.department === department ? { ...item, checked } : item
+      );
+      
+      // Save the updated list
+      const success = await saveList(updatedItems);
+      
+      if (success) {
+        toast.success(`${checked ? 'Completed' : 'Uncompleted'} all items in ${department}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error toggling department:', error);
+      toast.error('Failed to update items');
+      return false;
+    }
   };
   
-  // Handle copy to clipboard
-  const handleCopyToClipboard = () => {
-    return copyToClipboard(list, itemsByDepartment);
+  // Copy the shopping list to clipboard
+  const handleCopyToClipboard = async (): Promise<boolean> => {
+    try {
+      await copyToClipboard(list, itemsByDepartment);
+      return true;
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      toast.error('Failed to copy to clipboard');
+      return false;
+    }
   };
-
-  // Get item index helper
-  const getItemIndexInList = (item: ShoppingListItem) => {
-    return getItemIndex(items, item);
-  };
-
+  
+  // Init: Expand all departments by default
+  useEffect(() => {
+    // Get all departments in the current view
+    const depts = Object.keys(groupedItems);
+    
+    // Create an object with all departments expanded
+    const initialExpandedState = depts.reduce((acc, dept) => {
+      acc[dept] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+    
+    // Set the initial state
+    setExpandedDepts(initialExpandedState);
+  }, []);
+  
   return {
     searchTerm,
     setSearchTerm,
     sortOrder,
     setSortOrder,
-    expandedDepts,
-    filteredItems,
-    sortedItems,
     groupedItems,
-    allDepartments,
-    itemsByDepartment,
+    expandedDepts,
+    toggleDeptExpanded,
     handleToggleItem,
     handleDeleteItem,
     handleAddItem,
     toggleAllInDepartment,
-    toggleDeptExpanded,
     copyToClipboard: handleCopyToClipboard,
-    getItemIndex: getItemIndexInList
+    allDepartments,
+    itemsByDepartment,
+    getItemIndex
   };
-}
+};

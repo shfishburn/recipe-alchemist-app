@@ -32,61 +32,67 @@ export function RecipeActions({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        <Button 
-          variant="outline" 
-          onClick={() => setShowShoppingListDialog(true)}
-          className="flex items-center gap-2"
-        >
-          <ShoppingBag className="h-4 w-4" />
-          <span>Shopping List</span>
-        </Button>
-        
-        <Button 
-          variant={isFavorite ? "default" : "outline"}
-          onClick={toggleFavorite}
-          className="flex items-center gap-2"
-        >
-          <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-          <span>{isFavorite ? "Saved" : "Save"}</span>
-        </Button>
-        
+      <div className={`flex flex-wrap gap-2 ${sticky ? "fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm p-4 border-t z-50 shadow-md" : ""}`}>
+        {/* Primary action - Ask AI Chef */}
         {onOpenChat && (
           <Button 
-            variant="outline" 
+            className="flex-1 sm:flex-none bg-recipe-blue hover:bg-recipe-blue/90 text-white"
+            size="lg"
             onClick={onOpenChat}
-            className="flex items-center gap-2"
           >
-            <MessageCircle className="h-4 w-4" />
+            <MessageCircle className="h-5 w-5 mr-2" />
             <span>Ask AI Chef</span>
           </Button>
         )}
         
-        {onToggleAnalysis && (
-          <Button
-            variant={isAnalysisOpen ? "default" : "outline"}
-            onClick={onToggleAnalysis}
-            className="flex items-center gap-2"
-            disabled={isAnalyzing}
+        {/* Secondary actions row */}
+        <div className="flex flex-wrap gap-2 flex-1 justify-end">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowShoppingListDialog(true)}
+            className="flex items-center gap-1"
           >
-            <FileText className={`h-4 w-4 ${isAnalysisOpen ? "fill-current" : ""}`} />
-            <span>{isAnalysisOpen ? "Hide Science" : "Science Notes"}</span>
-            {hasAnalysisData && !isAnalysisOpen && (
-              <span className="ml-1 bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full">
-                {hasAnalysisData ? "New" : ""}
-              </span>
-            )}
+            <ShoppingBag className="h-4 w-4" />
+            <span className="hidden sm:inline">Shopping List</span>
+            <span className="sm:hidden">List</span>
           </Button>
-        )}
-        
-        <Button 
-          variant="outline" 
-          onClick={() => setShowShareDialog(true)}
-          className="flex items-center gap-2"
-        >
-          <Share2 className="h-4 w-4" />
-          <span>Share</span>
-        </Button>
+          
+          <Button 
+            variant={isFavorite ? "default" : "outline"}
+            onClick={toggleFavorite}
+            className="flex items-center gap-1"
+          >
+            <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
+            <span className="hidden sm:inline">{isFavorite ? "Saved" : "Save"}</span>
+          </Button>
+          
+          {onToggleAnalysis && (
+            <Button
+              variant={isAnalysisOpen ? "secondary" : "outline"}
+              onClick={onToggleAnalysis}
+              className="flex items-center gap-1"
+              disabled={isAnalyzing}
+            >
+              <FileText className={`h-4 w-4 ${isAnalysisOpen ? "fill-current" : ""}`} />
+              <span className="hidden sm:inline">{isAnalysisOpen ? "Hide" : "Science"}</span>
+              <span className="sm:hidden">Science</span>
+              {hasAnalysisData && !isAnalysisOpen && (
+                <span className="ml-1 bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full">
+                  {hasAnalysisData ? "New" : ""}
+                </span>
+              )}
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            onClick={() => setShowShareDialog(true)}
+            className="flex items-center gap-1"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
+        </div>
       </div>
       
       <AddToShoppingListDialog 

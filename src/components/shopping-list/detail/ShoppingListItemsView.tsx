@@ -9,6 +9,7 @@ interface ShoppingListItemsViewProps {
   groupedItems: Record<string, ShoppingListItem[]>;
   expandedDepts: Record<string, boolean>;
   onToggleDept: (dept: string) => void;
+  onToggleDepartmentItems?: (department: string, checked: boolean) => void;
   onToggleItem: (index: number) => void;
   onDeleteItem: (index: number) => void;
   getItemIndex: (item: ShoppingListItem) => number;
@@ -18,6 +19,7 @@ export function ShoppingListItemsView({
   groupedItems,
   expandedDepts,
   onToggleDept,
+  onToggleDepartmentItems,
   onToggleItem,
   onDeleteItem,
   getItemIndex
