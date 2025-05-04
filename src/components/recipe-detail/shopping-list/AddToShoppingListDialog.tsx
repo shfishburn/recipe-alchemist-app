@@ -7,6 +7,7 @@ import { useShoppingListActions } from './useShoppingListActions';
 import { ExistingListForm } from './ExistingListForm';
 import { NewListForm } from './NewListForm';
 import { ShoppingListSettings } from '@/components/shopping-list/ShoppingListSettings';
+import { Separator } from '@/components/ui/separator';
 import type { Recipe } from '@/types/recipe';
 
 interface AddToShoppingListDialogProps {
@@ -18,7 +19,15 @@ interface AddToShoppingListDialogProps {
 export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToShoppingListDialogProps) {
   const [activeTab, setActiveTab] = useState<string>('new');
   const { shoppingLists, isFetching, fetchShoppingLists } = useShoppingLists();
-  const { createNewList, addToExistingList, isLoading } = useShoppingListActions(recipe);
+  const { createNewList, addToExistingList, isLoading, usePackageSizes } = useShoppingListActions(recipe);
+  
+  // For local override of package size optimization
+  const [localUsePackageSizes, setLocalUsePackageSizes] = useState(usePackageSizes);
+  
+  // Update local state when global setting changes
+  useEffect(() => {
+    setLocalUsePackageSizes(usePackageSizes);
+  }, [usePackageSizes]);
   
   // Fetch shopping lists when dialog opens
   useEffect(() => {
@@ -28,7 +37,7 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
   }, [open, fetchShoppingLists]);
   
   const handleCreateNewList = async (name: string) => {
-    const result = await createNewList(name);
+    const result = await createNewList(name, localUsePackageSizes);
     if (result.success) {
       onOpenChange(false);
     }
@@ -48,8 +57,9 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
           <DialogTitle>Add to Shopping List</DialogTitle>
         </DialogHeader>
         
-        <div className="mb-4">
+        <div>
           <ShoppingListSettings />
+          <Separator className="my-4" />
         </div>
         
         <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab}>
@@ -63,6 +73,8 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
               recipe={recipe}
               onSubmit={handleCreateNewList}
               isLoading={isLoading}
+              usePackageSizes={localUsePackageSizes}
+              setUsePackageSizes={setLocalUsePackageSizes}
             />
           </TabsContent>
           

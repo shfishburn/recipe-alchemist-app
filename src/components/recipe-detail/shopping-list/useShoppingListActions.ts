@@ -20,7 +20,7 @@ export function useShoppingListActions(recipe: Recipe | null = null) {
   const { addToExistingList, toggleItemChecked, isLoading: isUpdatingList } = useUpdateShoppingList();
   const { addIngredientsToShoppingList, isAddingToList } = useLegacyShoppingList();
   
-  // Enhanced createNewList with proper navigation
+  // Enhanced createNewList with proper navigation and support for overriding package size setting
   const handleCreateNewList = async (listName: string, usePackageSizesOverride?: boolean) => {
     try {
       setIsLoading(true);
@@ -33,6 +33,8 @@ export function useShoppingListActions(recipe: Recipe | null = null) {
       const usePackageSizesValue = usePackageSizesOverride !== undefined 
         ? usePackageSizesOverride 
         : usePackageSizes;
+      
+      console.log(`Creating new list with package sizes: ${usePackageSizesValue}`);
       
       const result = await createNewList(listName, recipe, usePackageSizesValue);
       

@@ -5,23 +5,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useShoppingListSettings } from '@/hooks/use-shopping-list-settings';
 import type { Recipe } from '@/types/recipe';
 
 interface NewListFormProps {
   recipe: Recipe;
-  onSubmit: (name: string, usePackageSizes: boolean) => Promise<any>;
+  onSubmit: (name: string) => Promise<any>;
   isLoading: boolean;
+  usePackageSizes: boolean;
+  setUsePackageSizes: (value: boolean) => void;
 }
 
-export function NewListForm({ recipe, onSubmit, isLoading }: NewListFormProps) {
-  const { usePackageSizes, setUsePackageSizes } = useShoppingListSettings();
+export function NewListForm({ 
+  recipe, 
+  onSubmit, 
+  isLoading, 
+  usePackageSizes, 
+  setUsePackageSizes 
+}: NewListFormProps) {
   const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newListName.trim()) {
-      onSubmit(newListName, usePackageSizes);
+      onSubmit(newListName);
     }
   };
 
