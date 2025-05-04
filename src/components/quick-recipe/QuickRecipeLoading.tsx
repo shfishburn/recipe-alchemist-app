@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CookingPot, CircleCheck, PartyPopper, AlarmClock } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { LoadingTipCard } from './loading/LoadingTipCard';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { useSoundEffect } from '@/hooks/use-sound-effect';
 import { useAuth } from '@/hooks/use-auth';
-import { Progress } from '@/components/ui/progress';
+import { LoadingAnimation } from './loading/LoadingAnimation';
+import { LoadingProgress } from './loading/LoadingProgress';
+import { TimeoutWarning } from './loading/TimeoutWarning';
+import { LoadingTipCard } from './loading/LoadingTipCard';
+import { useLoadingSound } from './loading/useLoadingSound';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Array of loading step descriptions
 const LOADING_STEPS = [
@@ -31,38 +32,9 @@ export function QuickRecipeLoading() {
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutWarningRef = useRef<NodeJS.Timeout | null>(null);
-  const [audioEnabled, setAudioEnabled] = useState(false);
   
-  // Initialize sound effect for typing with mobile-friendly settings
-  const { play: playTypingSound, pause: pauseTypingSound } = useSoundEffect('/lovable-uploads/typing.mp3', {
-    loop: true,
-    volume: isMobile ? 0.5 : 0.3 // Higher volume for mobile
-  });
-  
-  // Enable audio after a user interaction on mobile
-  useEffect(() => {
-    const enableAudio = () => {
-      if (!audioEnabled) {
-        setAudioEnabled(true);
-        // Try to play audio now that we have user interaction
-        if (!completedLoading) {
-          playTypingSound();
-        }
-        // Remove listener once enabled
-        document.removeEventListener('touchstart', enableAudio);
-        document.removeEventListener('click', enableAudio);
-      }
-    };
-
-    // Add listeners for user interaction
-    document.addEventListener('touchstart', enableAudio);
-    document.addEventListener('click', enableAudio);
-    
-    return () => {
-      document.removeEventListener('touchstart', enableAudio);
-      document.removeEventListener('click', enableAudio);
-    };
-  }, [audioEnabled, completedLoading, playTypingSound]);
+  // Use our custom hook for sound management
+  const { audioEnabled, playTypingSound, pauseTypingSound } = useLoadingSound({ completedLoading });
   
   // Set a timeout to prevent infinite loading
   useEffect(() => {
@@ -175,29 +147,12 @@ export function QuickRecipeLoading() {
     return `Creating your ${ingredient} recipe`;
   };
   
-  // Format time remaining
-  const formatTimeRemaining = (seconds: number) => {
-    if (seconds <= 0) return "Recipe ready!";
-    if (seconds < 10) return `${Math.ceil(seconds)} seconds left`;
-    return `About ${Math.ceil(seconds)} seconds`;
-  };
-  
   return (
     <div className="flex flex-col items-center justify-center py-5 sm:py-8 w-full max-w-md mx-auto animate-fadeIn">
       <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center">
         {/* Animated cooking pot icon or completion animation */}
         <div className="relative">
-          {showFinalAnimation ? (
-            <div className="flex items-center justify-center">
-              <CircleCheck className="h-12 w-12 text-recipe-green animate-scale-in" />
-              <PartyPopper className="absolute -top-2 -right-2 h-6 w-6 text-recipe-orange animate-bounce" />
-            </div>
-          ) : (
-            <>
-              <CookingPot className="h-12 w-12 text-primary animate-bounce" />
-              <div className="absolute -top-2 -right-2 h-3 w-3 bg-recipe-orange rounded-full animate-ping" />
-            </>
-          )}
+          <LoadingAnimation showFinalAnimation={showFinalAnimation} />
         </div>
         
         {/* Personalized message */}
@@ -211,24 +166,17 @@ export function QuickRecipeLoading() {
         </p>
         
         {/* Progress indicator */}
-        <div className="w-full max-w-xs">
-          <Progress 
-            value={showFinalAnimation ? 100 : loadingState.percentComplete} 
-            className="h-2"
-            indicatorClassName={showFinalAnimation ? "bg-recipe-green" : undefined}
-          />
-          <p className="text-xs mt-1 text-muted-foreground text-right">
-            {showFinalAnimation ? "100% Complete" : formatTimeRemaining(loadingState.estimatedTimeRemaining)}
-          </p>
-        </div>
+        <LoadingProgress 
+          showFinalAnimation={showFinalAnimation}
+          percentComplete={loadingState.percentComplete}
+          estimatedTimeRemaining={loadingState.estimatedTimeRemaining}
+        />
         
         {/* Timeout warning */}
-        {showTimeout && !showFinalAnimation && (
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2">
-            <AlarmClock className="h-4 w-4" />
-            <span>This is taking longer than usual. Please be patient...</span>
-          </div>
-        )}
+        <TimeoutWarning 
+          showTimeout={showTimeout} 
+          showFinalAnimation={showFinalAnimation} 
+        />
         
         {/* Smart tip card */}
         <div className="w-full max-w-xs animate-fade-in">
