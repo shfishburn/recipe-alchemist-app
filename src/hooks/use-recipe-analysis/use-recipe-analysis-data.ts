@@ -71,8 +71,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         clearTimeout(timeoutId);
         analysisRequestRef.current = null;
         
-        console.log('Analysis data received:', data);
-
         if (error) {
           throw new Error(error.message || 'Failed to get analysis');
         }
@@ -92,14 +90,17 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 1,
     meta: {
-      onError: (error: any) => setError(error) // Use the meta option for error handling
+      onError: (error: any) => {
+        setError(error);
+      }
     }
   });
   
   // Function to fetch analysis data
   const fetchAnalysis = async () => {
     try {
-      return await refetch();
+      const result = await refetch();
+      return result.data;
     } catch (error) {
       setError(error);
       throw error;

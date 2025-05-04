@@ -47,10 +47,20 @@ export function useRecipeAnalysis(recipe: Recipe, onRecipeUpdate?: (updatedRecip
       
       try {
         // Start both analyses in parallel
-        await Promise.all([
+        const results = await Promise.allSettled([
           fetchAnalysis(),
           fetchReactions()
         ]);
+        
+        // Check for any errors
+        const errors = results
+          .filter(result => result.status === 'rejected')
+          .map(result => (result as PromiseRejectedResult).reason);
+        
+        if (errors.length > 0) {
+          console.error("Analysis errors:", errors);
+          throw errors[0];
+        }
       } catch (err) {
         console.error("Analysis error:", err);
         toast.error("Failed to analyze recipe: " + (err instanceof Error ? err.message : "Unknown error"));
@@ -66,7 +76,7 @@ export function useRecipeAnalysis(recipe: Recipe, onRecipeUpdate?: (updatedRecip
       initialAnalysisRef.current = true;
       handleAnalyze();
     }
-  }, [handleAnalyze, isAnalyzing, hasAnalysisData]);
+  }, [isAnalyzing, hasAnalysisData]);
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {

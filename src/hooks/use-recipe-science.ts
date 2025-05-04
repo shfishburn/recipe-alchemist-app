@@ -19,7 +19,7 @@ export interface RecipeScienceData {
   scienceNotes: string[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
+  refetch: () => Promise<any>;
 }
 
 /**
@@ -55,11 +55,6 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
-  
-  // Check URL hash to see if we're on the science tab
-  const isOnScienceTab = () => {
-    return window.location.hash === '#science';
-  };
   
   // Determine if we have any science data
   const hasAnalysisData = 

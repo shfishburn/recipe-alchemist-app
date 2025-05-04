@@ -56,6 +56,7 @@ export function useRecipeReactions(recipe: Recipe) {
         
         toast.success('Reaction analysis complete');
         await refetchReactions();
+        return response.data;
       } catch (error: any) {
         if (error.name === 'AbortError' || error.message?.includes('timed out')) {
           throw new Error('Analysis request timed out. Please try again later.');
