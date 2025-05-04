@@ -21,6 +21,7 @@ interface StepReaction {
   step_text: string;
   reactions: string[];
   reaction_details: string[];
+  confidence: number;
 }
 
 export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructionsProps) {
@@ -139,17 +140,22 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                   return (
                     <li key={index} className="group">
                       <div 
-                        className={`flex flex-col gap-3 p-3 rounded-md transition-colors ${
+                        className={`flex flex-col gap-2 p-3 rounded-md transition-colors ${
                           completedSteps[index] 
                             ? "bg-green-50 hover:bg-green-100" 
                             : "hover:bg-muted/50"
                         }`}
                       >
-                        <div className="flex items-start gap-3" onClick={() => toggleStep(index)}>
-                          <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium">
+                        <div className="flex items-start">
+                          {/* Smaller, more compact step number */}
+                          <div 
+                            className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium text-sm mr-2"
+                          >
                             {index + 1}
                           </div>
-                          <div className="flex-1 pt-0.5">
+                          
+                          {/* Main instruction content with more space */}
+                          <div className="flex-1">
                             <p className={`leading-relaxed ${completedSteps[index] ? "line-through text-muted-foreground" : ""}`}>
                               {renderInstructionWithBoldIngredients(step)}
                             </p>
@@ -175,29 +181,37 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                             )}
                           </div>
                           
-                          {/* Science note toggle button if reactions exist */}
-                          {hasReactions && (
+                          {/* Action buttons in a row, aligned to top right */}
+                          <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                            {/* Science button as icon only */}
+                            {hasReactions && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={(e) => toggleNotes(index, e)}
+                                title={expandedNotes[index] ? "Hide Science" : "View Science"}
+                              >
+                                <Atom className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            )}
+                            
+                            {/* Mark complete button */}
                             <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="ml-auto flex-shrink-0 flex items-center gap-1"
-                              onClick={(e) => toggleNotes(index, e)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => toggleStep(index)}
+                              title={completedSteps[index] ? "Mark Incomplete" : "Mark Complete"}
                             >
-                              <Atom className="h-4 w-4" />
-                              <span className="text-xs">
-                                {expandedNotes[index] ? 'Hide Science' : 'View Science'}
-                              </span>
+                              <Check className={`h-4 w-4 ${completedSteps[index] ? "text-green-500" : "text-gray-400"}`} />
                             </Button>
-                          )}
-                          
-                          {completedSteps[index] && (
-                            <Check className="h-5 w-5 text-green-500 ml-1" />
-                          )}
+                          </div>
                         </div>
                         
                         {/* Science note content */}
                         {hasReactions && expandedNotes[index] && (
-                          <div className="ml-11 mt-1 p-3 bg-blue-50 rounded-md">
+                          <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md">
                             <h4 className="font-medium text-blue-800 mb-2 flex items-center">
                               <Atom className="h-4 w-4 mr-1" />
                               <span>Science Notes</span>

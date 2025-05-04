@@ -28,9 +28,9 @@ export function ScienceNotes({ recipe, isOpen, onToggle }: ScienceNotesProps) {
               <FileText className="h-5 w-5 mr-2 text-recipe-blue" />
               Science Notes
             </CardTitle>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
               <div className="flex items-center">
-                <span className="mr-2 text-xs sm:text-sm text-muted-foreground hidden sm:inline">Show all</span>
+                <span className="mr-2 text-xs sm:text-sm text-muted-foreground">Show all</span>
                 <Switch checked={expanded} onCheckedChange={setExpanded} />
               </div>
               <CollapsibleTrigger asChild>
