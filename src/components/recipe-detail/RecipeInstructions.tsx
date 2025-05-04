@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { InstructionStep } from './instructions/InstructionStep';
 import { useStepReactions, getStepReaction } from './instructions/useStepReactions';
+import { useStepCompletion } from './instructions/useStepCompletion';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
@@ -15,17 +16,11 @@ interface RecipeInstructionsProps {
 }
 
 export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructionsProps) {
-  const [completedSteps, setCompletedSteps] = useState<{[key: number]: boolean}>({});
+  // Use our new custom hook for step completion
+  const { toggleStep, isStepCompleted } = useStepCompletion();
   
   // Fetch reaction data for this recipe
   const { data: stepReactions } = useStepReactions(recipe.id);
-  
-  const toggleStep = (index: number) => {
-    setCompletedSteps(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
-  };
   
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
@@ -61,7 +56,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                       key={index}
                       step={step}
                       index={index}
-                      isCompleted={!!completedSteps[index]}
+                      isCompleted={isStepCompleted(index)}
                       toggleStep={toggleStep}
                       stepReaction={stepReaction}
                       isLastStep={isLastStep}

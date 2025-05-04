@@ -42,7 +42,6 @@ export function InstructionStep({
           isCompleted ? "bg-green-50 hover:bg-green-100" : "hover:bg-muted/50"
         }`}
       >
-        {/* Step Header Component */}
         <StepHeader
           stepNumber={index + 1}
           isCompleted={isCompleted}
@@ -51,13 +50,11 @@ export function InstructionStep({
           onToggleScience={toggleNotes}
         />
         
-        {/* Step Content */}
         <p className={`text-lg leading-relaxed ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
           <FormatIngredientText text={step} />
         </p>
       </div>
       
-      {/* Science note content */}
       {hasReactions && expandedNotes && (
         <ScienceNote 
           reactionDetails={stepReaction.reaction_details} 

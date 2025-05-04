@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Atom } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { FormatIngredientText } from '../instructions/FormatIngredientText';
+import { StepHeader } from '../instructions/StepHeader';
 
 interface CookingStepProps {
   stepNumber: number;
@@ -23,6 +22,14 @@ export function CookingStep({
   onToggleScience,
   showingScience
 }: CookingStepProps) {
+  // Create handler to prevent bubbling for science toggle
+  const handleScienceToggle = (e: React.MouseEvent) => {
+    if (onToggleScience) {
+      e.stopPropagation();
+      onToggleScience();
+    }
+  };
+  
   return (
     <div className="mb-4">
       <div 
@@ -32,29 +39,13 @@ export function CookingStep({
         }`}
       >
         {/* Step Header */}
-        <div className="flex items-center justify-between mb-2">
-          <span className={`flex-shrink-0 mr-2 font-medium ${
-            isCompleted ? "text-muted-foreground" : "text-foreground"
-          }`}>
-            {stepNumber}.
-          </span>
-          
-          {/* Science button - only if has science */}
-          {hasScience && onToggleScience && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleScience();
-              }}
-              className="h-6 w-6 ml-auto flex-shrink-0"
-              title={showingScience ? "Hide Science" : "View Science"}
-            >
-              <Atom className="h-4 w-4 text-blue-600" />
-            </Button>
-          )}
-        </div>
+        <StepHeader 
+          stepNumber={stepNumber}
+          isCompleted={isCompleted}
+          hasScience={!!hasScience}
+          showingScience={!!showingScience}
+          onToggleScience={handleScienceToggle}
+        />
         
         {/* Step content */}
         <p className={`text-lg leading-relaxed ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
