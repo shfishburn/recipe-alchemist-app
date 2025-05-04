@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { toast } from 'sonner';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
 import { useRecipeScience, formatReactionName } from '@/hooks/use-recipe-science';
@@ -25,19 +24,18 @@ interface AnalysisResponse {
 
 interface RecipeAnalysisProps {
   recipe: Recipe;
-  isOpen: boolean;
-  onToggle: () => void;
-  onRecipeUpdated?: (updatedRecipe: Recipe) => void;
+  isOpen?: boolean;
+  onRecipeUpdate?: (updatedRecipe: Recipe) => void;
 }
 
-export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: RecipeAnalysisProps) {
+export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: RecipeAnalysisProps) {
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const analysisRequestRef = useRef<AbortController | null>(null);
 
-  // Use our new unified science data hook
+  // Use our unified science data hook
   const { stepReactions, hasAnalysisData, scienceNotes, refetch: refetchReactions } = useRecipeScience(recipe);
   
   // Fetch general analysis data from recipe-chat
@@ -148,41 +146,26 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       setIsAnalyzing(true);
       toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
       
-      // Track analysis completion status for both operations
-      let analysisCompleted = false;
-      let reactionsCompleted = false;
-      
       // Start both analyses in parallel
-      refetch().then(() => {
-        analysisCompleted = true;
-        if (reactionsCompleted) {
-          setIsAnalyzing(false);
-        }
-      }).catch(error => {
-        console.error("Analysis error:", error);
-        toast.error("Failed to analyze recipe: " + (error instanceof Error ? error.message : "Unknown error"));
-        analysisCompleted = true;
-        if (reactionsCompleted) {
-          setIsAnalyzing(false);
-        }
-      });
-      
-      analyzeReactions().then(() => {
-        reactionsCompleted = true;
-        if (analysisCompleted) {
-          setIsAnalyzing(false);
-        }
+      Promise.all([
+        refetch().catch(error => {
+          console.error("Analysis error:", error);
+          toast.error("Failed to analyze recipe: " + (error instanceof Error ? error.message : "Unknown error"));
+        }),
+        analyzeReactions()
+      ]).finally(() => {
+        setIsAnalyzing(false);
       });
     }
   }, [refetch, isLoading, isAnalyzing, analyzeReactions]);
 
   // Auto-analyze when opened for the first time
   useEffect(() => {
-    if (isOpen && !initialAnalysisRef.current && !isAnalyzing) {
+    if (isOpen && !initialAnalysisRef.current && !isAnalyzing && !hasAnalysisData) {
       initialAnalysisRef.current = true;
       handleAnalyze();
     }
-  }, [isOpen, handleAnalyze, isAnalyzing]);
+  }, [isOpen, handleAnalyze, isAnalyzing, hasAnalysisData]);
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {
@@ -190,52 +173,73 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     // and there's a callback for updates
     if (analysis && 
         analysis.science_notes && 
-        onRecipeUpdated && 
+        onRecipeUpdate && 
         !hasAppliedUpdates && 
         initialAnalysisRef.current) {
       
-      // SAFETY CHECK: Only apply updates if we actually have content to apply
-      const hasNewScienceNotes = Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0;
-      
       // Only proceed if we have meaningful science notes to update
-      if (hasNewScienceNotes) {
+      if (Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0) {
         setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
         
-        // Prepare a safe update object that won't overwrite existing data
-        const updatedData: Partial<Recipe> = {
-          // Always include the ID
-          id: recipe.id,
-          // Only update science notes, not core recipe data
-          science_notes: analysis.science_notes
-        };
-        
         // Update with safely constructed data - only science notes
-        updateRecipe.mutate(updatedData, {
-          onSuccess: (updatedRecipe) => {
-            // Pass only the updated recipe to the callback
-            onRecipeUpdated(updatedRecipe as Recipe);
-            toast.success('Recipe analysis complete');
-            setIsAnalyzing(false);
-          },
-          onError: (error) => {
-            console.error('Failed to update recipe with analysis data:', error);
-            toast.error('Failed to update recipe with analysis');
-            // Reset the flag if there was an error so we can try again
-            setHasAppliedUpdates(false);
-            setIsAnalyzing(false);
+        updateRecipe.mutate(
+          { science_notes: analysis.science_notes }, 
+          {
+            onSuccess: (updatedRecipe) => {
+              // Pass only the updated recipe to the callback
+              onRecipeUpdate(updatedRecipe as Recipe);
+              toast.success('Recipe analysis complete');
+              setIsAnalyzing(false);
+            },
+            onError: (error) => {
+              console.error('Failed to update recipe with analysis data:', error);
+              toast.error('Failed to update recipe with analysis');
+              // Reset the flag if there was an error so we can try again
+              setHasAppliedUpdates(false);
+              setIsAnalyzing(false);
+            }
           }
-        });
+        );
       } else {
         toast.info('Analysis complete, but no changes needed.');
         setIsAnalyzing(false);
       }
-    } else if (analysis && !isLoading) {
-      // If we have analysis data but aren't updating the recipe
-      setIsAnalyzing(false);
     }
-  }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id, isLoading]);
+  }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdate, recipe.id, isAnalyzing]);
 
-  // Build reaction content with improved display
+  // Extract analysis content
+  const extractAnalysisContent = useCallback(() => {
+    // First check for pre-existing notes in the recipe
+    const existingNotes = scienceNotes.length > 0;
+    
+    // If we don't have analysis data, fall back to recipe notes
+    if (!analysis) {
+      return { 
+        chemistry: existingNotes ? scienceNotes.join('\n\n') : null,
+        techniques: null,
+        troubleshooting: null
+      };
+    }
+    
+    // Extract chemistry section
+    const chemistry = (analysis.science_notes && Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0)
+      ? analysis.science_notes.join('\n\n')
+      : (existingNotes ? scienceNotes.join('\n\n') : null);
+    
+    // Extract techniques section
+    const techniques = (analysis.techniques && Array.isArray(analysis.techniques) && analysis.techniques.length > 0)
+      ? analysis.techniques.join('\n\n')
+      : null;
+    
+    // Extract troubleshooting section
+    const troubleshooting = (analysis.troubleshooting && Array.isArray(analysis.troubleshooting) && analysis.troubleshooting.length > 0)
+      ? analysis.troubleshooting.join('\n\n')
+      : null;
+    
+    return { chemistry, techniques, troubleshooting };
+  }, [analysis, scienceNotes]);
+
+  // Build reaction content
   const buildReactionContent = useCallback(() => {
     if (!stepReactions || stepReactions.length === 0) return null;
     
@@ -250,7 +254,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             // Skip entries without step text
             if (!reaction.step_text) return null;
             
-            // Safely access reaction details
+            // Get reaction details
             const reactionDetails = Array.isArray(reaction.reaction_details) && reaction.reaction_details.length > 0 
               ? reaction.reaction_details[0] 
               : '';
@@ -285,82 +289,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     );
   }, [stepReactions]);
 
-  // Extract and format the content sections from the analysis
-  const extractAnalysisContent = useCallback(() => {
-    // First check for pre-existing notes in the recipe
-    const existingNotes = scienceNotes.length > 0;
-    
-    // If we don't have analysis data, fall back to recipe notes
-    if (!analysis) {
-      return { 
-        chemistry: existingNotes ? scienceNotes.join('\n\n') : null,
-        techniques: null,
-        troubleshooting: null
-      };
-    }
-    
-    // Helper to extract sections from raw text
-    const extractSectionFromText = (rawText: string | undefined, sectionName: string) => {
-      if (!rawText) return null;
-      
-      // Look for markdown headers (### Section Name)
-      const sectionRegex = new RegExp(`#+\\s*${sectionName}([^#]*?)(?=(?:#+\\s|$))`, 'is');
-      const match = rawText.match(sectionRegex);
-      
-      if (match && match[1] && match[1].trim().length > 20) {
-        return match[1].trim();
-      }
-      
-      // Enhanced paragraph pattern matching for blocks of text
-      const paragraphsRegex = new RegExp(`(${sectionName}[^.!?]*(?:[.!?][^.!?]*){1,5})`, 'i');
-      const paragraphMatch = rawText.match(paragraphsRegex);
-      
-      if (paragraphMatch && paragraphMatch[0].length > 40) {
-        return paragraphMatch[0];
-      }
-      
-      // If still no content, look for keyword-rich paragraphs
-      const keywords = sectionName.replace(/[()]/g, '').split('|');
-      const paragraphs = rawText.split(/\n\n+/);
-      
-      for (const keyword of keywords) {
-        for (const paragraph of paragraphs) {
-          if (paragraph.toLowerCase().includes(keyword.toLowerCase()) && paragraph.length > 60) {
-            return paragraph;
-          }
-        }
-      }
-      
-      return null;
-    };
-
-    // Extract chemistry section with more robust fallbacks
-    const chemistry = (analysis.science_notes && Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0)
-      ? analysis.science_notes.join('\n\n')
-      : extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science|Maillard|Reaction)")
-        || (existingNotes ? scienceNotes.join('\n\n') : null);
-    
-    // Extract techniques section
-    const techniques = (analysis.techniques && Array.isArray(analysis.techniques) && analysis.techniques.length > 0)
-      ? analysis.techniques.join('\n\n')
-      : extractSectionFromText(analysis.textResponse, "(Technique|Method|Cooking|Temperature)");
-    
-    // Extract troubleshooting section
-    const troubleshooting = (analysis.troubleshooting && Array.isArray(analysis.troubleshooting) && analysis.troubleshooting.length > 0)
-      ? analysis.troubleshooting.join('\n\n')
-      : extractSectionFromText(analysis.textResponse, "(Troubleshoot|Problem|Issue|Common)");
-    
-    return { chemistry, techniques, troubleshooting };
-  }, [analysis, scienceNotes]);
-
   const { chemistry, techniques, troubleshooting } = extractAnalysisContent();
   const reactionsContent = buildReactionContent();
 
   // Determine if there's any analysis content available
   const hasAnyContent = 
-    (chemistry !== null && chemistry !== undefined) || 
-    (techniques !== null && techniques !== undefined) || 
-    (troubleshooting !== null && troubleshooting !== undefined) ||
+    (chemistry !== null) || 
+    (techniques !== null) || 
+    (troubleshooting !== null) ||
     (analysis?.textResponse && analysis.textResponse.length > 50) ||
     (stepReactions && stepReactions.length > 0);
 
@@ -369,144 +305,120 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     (!hasAnyContent && !isAnalyzing && !isLoading);
 
   // Show only section headers that have content
-  const hasChemistry = chemistry !== null && chemistry !== undefined && chemistry.length > 0;
-  const hasTechniques = techniques !== null && techniques !== undefined && techniques.length > 0;
-  const hasTroubleshooting = troubleshooting !== null && troubleshooting !== undefined && troubleshooting.length > 0;
-  const hasReactions = stepReactions && stepReactions.length > 0;
+  const hasChemistry = chemistry !== null && chemistry.length > 0;
+  const hasTechniques = techniques !== null && techniques.length > 0;
+  const hasTroubleshooting = troubleshooting !== null && troubleshooting.length > 0;
   const hasRawResponse = analysis?.textResponse && analysis.textResponse.length > 50 &&
     !hasChemistry && !hasTechniques && !hasTroubleshooting;
 
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle} className="mt-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
-              <Beaker className="h-5 w-5 mr-2 text-recipe-blue" />
-              Scientific Analysis
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              {!isAnalyzing && hasAnyContent && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAnalyze();
-                  }}
-                  className="text-xs"
-                >
-                  Regenerate
-                </Button>
-              )}
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
-                  {isOpen ? (
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3.13523 8.84197C3.3241 9.04343 3.64052 9.05363 3.84197 8.86477L7.5 5.43536L11.158 8.86477C11.3595 9.05363 11.6759 9.04343 11.8648 8.84197C12.0536 8.64051 12.0434 8.32409 11.842 8.13523L7.84197 4.38523C7.64964 4.20492 7.35036 4.20492 7.15803 4.38523L3.15803 8.13523C2.95657 8.32409 2.94637 8.64051 3.13523 8.84197Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-                    </svg>
-                  ) : (
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-                    </svg>
-                  )}
-                  <span className="sr-only">Toggle section</span>
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-          </div>
-          <CardDescription>
-            In-depth breakdown of cooking chemistry and techniques
-          </CardDescription>
-        </CardHeader>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
+            <Beaker className="h-5 w-5 mr-2 text-recipe-blue" />
+            Scientific Analysis
+          </CardTitle>
+          {!isAnalyzing && hasAnyContent && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleAnalyze}
+              className="text-xs"
+            >
+              Regenerate
+            </Button>
+          )}
+        </div>
+        <CardDescription>
+          In-depth breakdown of cooking chemistry and techniques
+        </CardDescription>
+      </CardHeader>
 
-        <CollapsibleContent>
-          <CardContent>
-            {isLoading || isAnalyzing ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
-              </div>
-            ) : showAnalysisPrompt ? (
-              <div className="text-center py-6">
-                <p className="mb-4 text-muted-foreground">Click the Analyze Recipe button to generate a scientific analysis of this recipe.</p>
-                <Button onClick={handleAnalyze}>
-                  <Beaker className="h-5 w-5 mr-2" />
-                  Analyze Recipe
-                </Button>
-              </div>
-            ) : hasAnyContent ? (
-              <ScrollArea className="h-[60vh] sm:h-[70vh] pr-4">
-                <div className="space-y-6">
-                  {/* Chemistry Section - only show if we have content */}
-                  {hasChemistry && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                        <Beaker className="h-5 w-5 mr-2 text-blue-600" />
-                        Chemistry
-                      </h3>
-                      <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                        <FormattedText text={chemistry} preserveWhitespace={true} className="scientific-content" />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Techniques Section - only show if we have content */}
-                  {hasTechniques && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
-                          <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
-                          <path d="m8 12 4 4 4-4"/>
-                          <path d="M12 8v8"/>
-                        </svg>
-                        Cooking Techniques
-                      </h3>
-                      <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg border border-amber-100">
-                        <FormattedText text={techniques} preserveWhitespace={true} className="scientific-content" />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Troubleshooting Section - only show if we have content */}
-                  {hasTroubleshooting && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
-                          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                          <path d="m9 12 2 2 4-4"/>
-                        </svg>
-                        Troubleshooting Guide
-                      </h3>
-                      <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg border border-green-100">
-                        <FormattedText text={troubleshooting} preserveWhitespace={true} className="scientific-content" />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Reaction Analysis Section - only show if we have content */}
-                  {hasReactions && reactionsContent}
-                  
-                  {/* Fallback when structured sections aren't extracted */}
-                  {hasRawResponse && (
-                    <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                      <FormattedText text={analysis.textResponse} preserveWhitespace={true} className="scientific-content" />
-                    </div>
-                  )}
+      <CardContent>
+        {isLoading || isAnalyzing ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
+          </div>
+        ) : showAnalysisPrompt ? (
+          <div className="text-center py-6">
+            <p className="mb-4 text-muted-foreground">Click the Analyze Recipe button to generate a scientific analysis of this recipe.</p>
+            <Button onClick={handleAnalyze}>
+              <Beaker className="h-5 w-5 mr-2" />
+              Analyze Recipe
+            </Button>
+          </div>
+        ) : hasAnyContent ? (
+          <ScrollArea className="h-[60vh] sm:h-[70vh] pr-4">
+            <div className="space-y-6">
+              {/* Chemistry Section */}
+              {hasChemistry && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                    <Beaker className="h-5 w-5 mr-2 text-blue-600" />
+                    Chemistry
+                  </h3>
+                  <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                    <FormattedText text={chemistry} preserveWhitespace={true} className="scientific-content" />
+                  </div>
                 </div>
-              </ScrollArea>
-            ) : (
-              <div className="text-center py-6">
-                <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
-                <Button onClick={handleAnalyze}>
-                  <Beaker className="h-5 w-5 mr-2" />
-                  Generate Analysis
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
+              )}
+              
+              {/* Techniques Section */}
+              {hasTechniques && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
+                      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
+                      <path d="m8 12 4 4 4-4"/>
+                      <path d="M12 8v8"/>
+                    </svg>
+                    Cooking Techniques
+                  </h3>
+                  <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg border border-amber-100">
+                    <FormattedText text={techniques} preserveWhitespace={true} className="scientific-content" />
+                  </div>
+                </div>
+              )}
+              
+              {/* Troubleshooting Section */}
+              {hasTroubleshooting && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                      <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                    Troubleshooting Guide
+                  </h3>
+                  <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg border border-green-100">
+                    <FormattedText text={troubleshooting} preserveWhitespace={true} className="scientific-content" />
+                  </div>
+                </div>
+              )}
+              
+              {/* Reaction Analysis Section */}
+              {reactionsContent}
+              
+              {/* Fallback Section */}
+              {hasRawResponse && (
+                <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                  <FormattedText text={analysis.textResponse} preserveWhitespace={true} className="scientific-content" />
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="text-center py-6">
+            <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
+            <Button onClick={handleAnalyze}>
+              <Beaker className="h-5 w-5 mr-2" />
+              Generate Analysis
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

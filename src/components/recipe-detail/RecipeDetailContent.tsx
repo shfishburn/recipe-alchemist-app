@@ -7,7 +7,6 @@ import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { TabsView } from '@/components/recipe-detail/navigation/TabsView';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
-import { useIsMobile } from '@/hooks/use-mobile';
 import type { Recipe } from '@/types/recipe';
 import { isValidUUID } from '@/utils/slug-utils';
 
@@ -24,101 +23,66 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     return null;
   }
   
-  // Ensure ID is valid
-  const validId = id && isValidUUID(id.split('-').pop() || id) ? id : null;
-  
-  const [localRecipe, setLocalRecipe] = useState<Recipe | null>(recipe);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const isMobile = useIsMobile();
-  const { updateRecipe } = useRecipeUpdates(validId || '');
-  
-  // Use the unified science hook to check for analysis data
+  const [localRecipe, setLocalRecipe] = useState<Recipe>(recipe);
+  const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id.split('-').pop() || id) ? id : '');
   const { hasAnalysisData } = useRecipeScience(recipe);
-  
-  const handleNotesUpdate = (notes: string) => {
-    if (localRecipe) {
-      setLocalRecipe({
-        ...localRecipe,
-        chef_notes: notes
-      });
-    }
-  };
 
+  // Unified recipe update handler
   const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    if (localRecipe) {
-      // Update local state
-      setLocalRecipe({
-        ...localRecipe,
-        ...updatedRecipe
+    setLocalRecipe({
+      ...localRecipe,
+      ...updatedRecipe
+    });
+    
+    // Only update fields that have changed to avoid unnecessary updates
+    const changedFields: Partial<Recipe> = {};
+    
+    if (updatedRecipe.nutrition !== localRecipe.nutrition) {
+      changedFields.nutrition = updatedRecipe.nutrition;
+    }
+    
+    if (updatedRecipe.science_notes !== localRecipe.science_notes) {
+      changedFields.science_notes = updatedRecipe.science_notes;
+    }
+    
+    if (updatedRecipe.chef_notes !== localRecipe.chef_notes) {
+      changedFields.chef_notes = updatedRecipe.chef_notes;
+    }
+    
+    // Only update if there are changes
+    if (Object.keys(changedFields).length > 0) {
+      updateRecipe.mutate(changedFields, {
+        onSuccess: () => refetch()
       });
-      
-      // If the recipe has a valid ID, update it in the database
-      if (validId) {
-        const fieldsToUpdate = {};
-        
-        // Only include fields that have changed to avoid unnecessary updates
-        if (updatedRecipe.nutrition !== localRecipe.nutrition) {
-          Object.assign(fieldsToUpdate, { nutrition: updatedRecipe.nutrition });
-        }
-        
-        if (updatedRecipe.science_notes !== localRecipe.science_notes) {
-          Object.assign(fieldsToUpdate, { science_notes: updatedRecipe.science_notes });
-        }
-        
-        // Only update if there are changes
-        if (Object.keys(fieldsToUpdate).length > 0) {
-          updateRecipe.mutate(fieldsToUpdate, {
-            onSuccess: () => {
-              refetch();
-            }
-          });
-        }
-      }
     }
   };
 
+  // Handle opening the chat in modify tab
   const handleOpenChat = () => {
-    // Navigate to modify tab and open chat
     window.location.hash = 'modify';
   };
   
-  const handleToggleAnalysis = () => {
-    // Navigate to science tab
-    window.location.hash = 'science';
-  };
-
-  const currentRecipe = localRecipe || recipe;
-  
-  // If we have no valid recipe data, return null
-  if (!currentRecipe || !currentRecipe.title) {
-    return null;
-  }
-
   return (
     <ProfileProvider>
       <div className="max-w-4xl mx-auto mb-20">
         {/* Recipe Header with title */}
-        <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
+        <RecipeHeader recipe={localRecipe} hideReasoning={true} />
         
-        {/* Recipe Image - Positioned between title and tabs */}
-        <RecipeImage recipe={currentRecipe} />
+        {/* Recipe Image */}
+        <RecipeImage recipe={localRecipe} />
         
-        {/* Tabbed Navigation - Main content area */}
+        {/* Tabbed content area */}
         <TabsView 
-          recipe={currentRecipe} 
+          recipe={localRecipe} 
           onRecipeUpdate={handleRecipeUpdate}
           refetch={refetch}
         />
         
-        {/* Floating action buttons at bottom */}
+        {/* Floating action buttons */}
         <RecipeActions 
-          recipe={currentRecipe} 
+          recipe={localRecipe} 
           sticky={true} 
           onOpenChat={handleOpenChat}
-          onToggleAnalysis={handleToggleAnalysis}
-          isAnalysisOpen={window.location.hash === '#science'}
-          isAnalyzing={isAnalyzing}
-          hasAnalysisData={hasAnalysisData}
         />
       </div>
     </ProfileProvider>

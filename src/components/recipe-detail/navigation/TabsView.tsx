@@ -29,7 +29,7 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
   const [chatOpen, setChatOpen] = React.useState(false);
   const isMobile = useIsMobile();
 
-  // Check if there's a tab hash in the URL
+  // Extract hash from URL
   React.useEffect(() => {
     const hash = location.hash.slice(1);
     if (hash && ['recipe', 'nutrition', 'science', 'modify', 'utilities'].includes(hash)) {
@@ -43,6 +43,14 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
     navigate(`#${value}`, { replace: true });
   };
 
+  const tabItems = [
+    { value: 'recipe', icon: <Utensils className="h-4 w-4 mr-2" />, label: 'Recipe' },
+    { value: 'nutrition', icon: <BarChart className="h-4 w-4 mr-2" />, label: 'Nutrition' },
+    { value: 'science', icon: <Beaker className="h-4 w-4 mr-2" />, label: 'Science', highlight: hasAnalysisData },
+    { value: 'modify', icon: <MessageCircle className="h-4 w-4 mr-2" />, label: 'Modify' },
+    { value: 'utilities', icon: <Settings className="h-4 w-4 mr-2" />, label: 'Utilities' }
+  ];
+
   return (
     <Tabs
       value={activeTab}
@@ -51,32 +59,18 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
     >
       <div className="touch-friendly-tabs">
         <TabsList className="w-full grid grid-cols-5 mb-6 touch-scroll">
-          <TabsTrigger value="recipe" className="flex items-center">
-            <Utensils className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Recipe</span>
-          </TabsTrigger>
-          <TabsTrigger value="nutrition" className="flex items-center">
-            <BarChart className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nutrition</span>
-          </TabsTrigger>
-          <TabsTrigger value="science" className="flex items-center relative">
-            <Beaker className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Science</span>
-            {hasAnalysisData && (
-              <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="modify" className="flex items-center">
-            <MessageCircle className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Modify</span>
-          </TabsTrigger>
-          <TabsTrigger value="utilities" className="flex items-center">
-            <Settings className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Utilities</span>
-          </TabsTrigger>
+          {tabItems.map(tab => (
+            <TabsTrigger key={tab.value} value={tab.value} className="flex items-center relative">
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.label}</span>
+              {tab.highlight && (
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+              )}
+            </TabsTrigger>
+          ))}
         </TabsList>
       </div>
 

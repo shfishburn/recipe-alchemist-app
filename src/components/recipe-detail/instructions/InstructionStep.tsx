@@ -22,28 +22,19 @@ export function InstructionStep({
   stepReaction,
   isLastStep
 }: InstructionStepProps) {
-  const handleToggleComplete = React.useCallback(() => {
-    toggleStep(index);
-  }, [toggleStep, index]);
-  
-  // Extract step category from reaction data if available
-  const stepCategory = stepReaction?.cooking_method as StepCategory | undefined;
-  
   return (
     <li key={index} className="group">
       <StepDisplay
         stepNumber={index + 1}
         stepText={step}
         isCompleted={isCompleted}
-        onToggleComplete={handleToggleComplete}
+        onToggleComplete={() => toggleStep(index)}
         stepReaction={stepReaction}
         variant="instruction"
-        stepCategory={stepCategory}
+        stepCategory={stepReaction?.cooking_method as StepCategory | undefined}
       />
       
-      {!isLastStep && (
-        <Separator className="my-6" />
-      )}
+      {!isLastStep && <Separator className="my-6" />}
     </li>
   );
 }
