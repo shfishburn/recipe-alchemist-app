@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Check, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { ShoppingListItem } from '@/types/shopping-list';
 import { ShoppingListItemView } from './ShoppingListItemView';
 
@@ -9,7 +9,6 @@ interface ShoppingListItemsViewProps {
   groupedItems: Record<string, ShoppingListItem[]>;
   expandedDepts: Record<string, boolean>;
   onToggleDept: (dept: string) => void;
-  onToggleDepartmentItems: (dept: string, checked: boolean) => void;
   onToggleItem: (index: number) => void;
   onDeleteItem: (index: number) => void;
   getItemIndex: (item: ShoppingListItem) => number;
@@ -19,7 +18,6 @@ export function ShoppingListItemsView({
   groupedItems,
   expandedDepts,
   onToggleDept,
-  onToggleDepartmentItems,
   onToggleItem,
   onDeleteItem,
   getItemIndex
@@ -39,9 +37,7 @@ export function ShoppingListItemsView({
     <div className="space-y-3">
       {Object.entries(groupedItems).map(([department, items]) => {
         const isExpanded = expandedDepts[department] !== false;
-        const allChecked = items.every(item => item.checked);
-        const someChecked = items.some(item => item.checked);
-        const completedCount = items.filter(i => i.checked).length;
+        const itemCount = items.length;
         
         return (
           <div key={department} className="rounded-lg overflow-hidden border shadow-sm">
@@ -57,32 +53,10 @@ export function ShoppingListItemsView({
                 <div>
                   <h3 className="font-medium text-green-800">{department}</h3>
                   <p className="text-xs text-green-700">
-                    {completedCount} of {items.length} complete
+                    {itemCount} {itemCount === 1 ? 'item' : 'items'}
                   </p>
                 </div>
               </div>
-              
-              <Button
-                variant={allChecked ? "outline" : "default"}
-                size="sm"
-                className={`h-9 px-3 text-sm ${allChecked ? 'bg-white text-green-700 border-green-300 hover:bg-green-50' : 'bg-green-600 hover:bg-green-700'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleDepartmentItems(department, !allChecked);
-                }}
-              >
-                {allChecked ? (
-                  <>
-                    <Plus className="h-4 w-4 mr-1" /> 
-                    <span>Uncheck All</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-4 w-4 mr-1" /> 
-                    <span>Complete All</span>
-                  </>
-                )}
-              </Button>
             </div>
             
             {isExpanded && (

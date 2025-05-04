@@ -1,3 +1,4 @@
+
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
 import { getShoppingQuantity } from '@/utils/unit-conversion';
@@ -7,39 +8,46 @@ import { formatIngredient } from '@/utils/ingredient-format';
  * Converts recipe ingredients to shopping list items
  */
 export function ingredientsToShoppingItems(ingredients: Ingredient[]): ShoppingListItem[] {
-  return ingredients.map((ingredient): ShoppingListItem => {
-    // Handle string ingredients
-    if (typeof ingredient === 'string') {
+  return ingredients
+    .map((ingredient): ShoppingListItem => {
+      // Handle string ingredients
+      if (typeof ingredient === 'string') {
+        return {
+          name: ingredient,
+          quantity: 1,
+          unit: '',
+          checked: false,
+          department: 'Other'
+        };
+      }
+      
+      // Extract ingredient details
+      const itemName = typeof ingredient.item === 'string' 
+        ? ingredient.item 
+        : (ingredient.item as any)?.item || 'Unknown item';
+      
+      // Skip water items
+      if (itemName.toLowerCase().trim() === "water") {
+        return null;
+      }
+      
+      // Convert recipe units to shopping units
+      const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
+      
+      // Determine department
+      const department = getDepartmentForIngredient(itemName);
+      
       return {
-        name: ingredient,
-        quantity: 1,
-        unit: '',
+        name: itemName, // Include the actual item name
+        quantity: shoppingQty.qty,
+        unit: shoppingQty.unit,
         checked: false,
-        department: 'Other'
+        notes: ingredient.notes,
+        department: department,
+        recipeId: undefined // Will be set by the calling function if needed
       };
-    }
-    
-    // Extract ingredient details
-    const itemName = typeof ingredient.item === 'string' 
-      ? ingredient.item 
-      : (ingredient.item as any)?.item || 'Unknown item';
-    
-    // Convert recipe units to shopping units
-    const shoppingQty = getShoppingQuantity(ingredient.qty || 0, ingredient.unit || '');
-    
-    // Determine department
-    const department = getDepartmentForIngredient(itemName);
-    
-    return {
-      name: itemName, // Include the actual item name
-      quantity: shoppingQty.qty,
-      unit: shoppingQty.unit,
-      checked: false,
-      notes: ingredient.notes,
-      department: department,
-      recipeId: undefined // Will be set by the calling function if needed
-    };
-  });
+    })
+    .filter(Boolean); // Filter out null items (water)
 }
 
 /**
@@ -121,6 +129,17 @@ export function mergeShoppingLists(
   const result = [...existingItems];
   
   for (const newItem of newItems) {
+    // Skip any water items
+    if (newItem.name.toLowerCase().trim() === "water") {
+      continue;
+    }
+    
+    // Capitalize the item name
+    newItem.name = newItem.name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    
     const existingIndex = result.findIndex(item => 
       normalizeItemName(item.name) === normalizeItemName(newItem.name) && 
       item.unit === newItem.unit

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Check, Info } from 'lucide-react';
+import { Trash2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ShoppingListItem } from '@/types/shopping-list';
 import {
@@ -18,13 +18,6 @@ interface ShoppingListItemViewProps {
 }
 
 export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListItemViewProps) {
-  // Handle click with proper event stopping
-  const handleItemClick = (e: React.MouseEvent) => {
-    // Prevent toggling if clicking on the delete button
-    if ((e.target as HTMLElement).closest('button')) return;
-    onToggle();
-  };
-  
   // Handle delete with proper event stopping
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,43 +30,32 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
     
     // Standardize parentheses format
     const notes = item.notes.startsWith('(') ? item.notes : `(${item.notes})`;
-    return <span className="text-gray-500 italic truncate">{notes}</span>;
+    return notes;
   };
+
+  // Capitalize the first letter of each word in the name
+  const capitalizedName = item.name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
   return (
     <div 
       className={cn(
-        "flex items-center gap-3 p-3 transition-colors",
-        item.checked 
-          ? "bg-green-50" 
-          : "hover:bg-gray-50",
+        "flex items-center gap-3 p-3 transition-colors group",
+        "hover:bg-gray-50",
         "cursor-pointer"
       )}
-      onClick={handleItemClick}
+      onClick={onToggle}
     >
-      <div className={cn(
-        "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center",
-        item.checked ? "bg-green-100" : "bg-gray-100"
-      )}>
-        {item.checked ? (
-          <Check className="h-4 w-4 text-green-600" />
-        ) : (
-          <div className="w-2 h-2 rounded-full bg-green-600" />
-        )}
-      </div>
-      
       <div className="flex-grow min-w-0">
-        <div className={cn(
-          "flex items-baseline flex-wrap gap-x-1",
-          item.checked && "line-through text-gray-500"
-        )}>
-          <span className="font-medium truncate max-w-[200px]">{item.name}</span>
+        <div className="flex items-baseline flex-wrap gap-x-1">
+          <span className="font-medium truncate max-w-[200px]">{capitalizedName}</span>
           
           <div className="text-sm text-gray-600 truncate max-w-[200px]">
             {item.quantity && item.unit && (
               <span className="mr-1">{item.quantity} {item.unit}</span>
             )}
-            {formatNotes()}
           </div>
           
           {item.quality_indicators && (
@@ -89,6 +71,12 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
             </TooltipProvider>
           )}
         </div>
+        
+        {formatNotes() && (
+          <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded inline-block truncate max-w-full">
+            {formatNotes()}
+          </div>
+        )}
         
         {item.package_notes && (
           <div className="mt-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded inline-block truncate max-w-full">

@@ -32,40 +32,57 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
   console.log("Creating basic shopping items from recipe ingredients:", recipe.ingredients);
   
   // Transform ingredients into shopping items with checked state
-  const initialItems: ShoppingItem[] = recipe.ingredients.map(ingredient => {
-    // Log the individual ingredient for debugging
-    console.log("Processing ingredient:", ingredient);
-    
-    // Extract the item name for better visibility
-    const itemName = typeof ingredient.item === 'string' 
-      ? ingredient.item 
-      : (typeof ingredient.item === 'object' && ingredient.item !== null)
-        ? (ingredient.item.item || JSON.stringify(ingredient.item))
-        : 'Unknown item';
-        
-    // Get the appropriate quantity, filtering out zero values
-    const quantity = ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
-      ? ingredient.shop_size_qty
-      : ingredient.qty !== undefined && ingredient.qty > 0
-        ? ingredient.qty
-        : null;
-        
-    // Create properly structured shopping item that preserves all ingredient data
-    return {
-      // Format the text to clearly include the item name
-      text: `${ingredient.qty || ''} ${ingredient.unit || ''} ${itemName}`.trim() + 
-            (ingredient.notes ? ` (${ingredient.notes})` : ''),
-      checked: false,
-      department: getDepartmentForIngredient(itemName),
-      // Save the complete original ingredient data to maintain structured information
-      ingredientData: ingredient,
-      // Extract specific shopping fields for easier access
-      quantity: quantity, // Use filtered quantity that's never zero
-      unit: ingredient.shop_size_unit || ingredient.unit,
-      item: itemName,
-      notes: ingredient.notes || ''
-    };
-  });
+  const initialItems: ShoppingItem[] = recipe.ingredients
+    .filter(ingredient => {
+      // Filter out water
+      const itemName = typeof ingredient.item === 'string' 
+        ? ingredient.item 
+        : (typeof ingredient.item === 'object' && ingredient.item !== null)
+          ? (ingredient.item.item || JSON.stringify(ingredient.item))
+          : 'Unknown item';
+          
+      return !itemName.toLowerCase().trim().match(/^water$/);
+    })
+    .map(ingredient => {
+      // Log the individual ingredient for debugging
+      console.log("Processing ingredient:", ingredient);
+      
+      // Extract the item name for better visibility
+      const itemName = typeof ingredient.item === 'string' 
+        ? ingredient.item 
+        : (typeof ingredient.item === 'object' && ingredient.item !== null)
+          ? (ingredient.item.item || JSON.stringify(ingredient.item))
+          : 'Unknown item';
+      
+      // Capitalize the item name
+      const capitalizedName = itemName
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+          
+      // Get the appropriate quantity, filtering out zero values
+      const quantity = ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
+        ? ingredient.shop_size_qty
+        : ingredient.qty !== undefined && ingredient.qty > 0
+          ? ingredient.qty
+          : null;
+          
+      // Create properly structured shopping item that preserves all ingredient data
+      return {
+        // Format the text to clearly include the item name
+        text: `${ingredient.qty || ''} ${ingredient.unit || ''} ${capitalizedName}`.trim() + 
+              (ingredient.notes ? ` (${ingredient.notes})` : ''),
+        checked: false,
+        department: getDepartmentForIngredient(capitalizedName),
+        // Save the complete original ingredient data to maintain structured information
+        ingredientData: ingredient,
+        // Extract specific shopping fields for easier access
+        quantity: quantity, // Use filtered quantity that's never zero
+        unit: ingredient.shop_size_unit || ingredient.unit,
+        item: capitalizedName,
+        notes: ingredient.notes || ''
+      };
+    });
   
   // Add extra items for cooking oil, salt, and pepper if not already in the list
   const basicItems = [
@@ -129,27 +146,35 @@ export const generateAIShoppingList = async (recipe: QuickRecipe): Promise<Shopp
     const shoppingItems: ShoppingItem[] = [];
     
     data.departments.forEach(dept => {
-      dept.items.forEach(item => {
-        // Ensure numeric quantity for consistency
-        const quantity = typeof item.quantity === 'string' 
-          ? parseFloat(item.quantity) 
-          : item.quantity;
+      dept.items
+        .filter(item => !item.name.toLowerCase().trim().match(/^water$/))
+        .forEach(item => {
+          // Ensure numeric quantity for consistency
+          const quantity = typeof item.quantity === 'string' 
+            ? parseFloat(item.quantity) 
+            : item.quantity;
           
-        shoppingItems.push({
-          text: `${item.quantity} ${item.unit} ${item.name}`.trim(),
-          checked: false,
-          department: dept.name,
-          pantryStaple: item.pantry_staple || false,
-          quantity: quantity || 1, // Default to 1 if missing
-          unit: item.unit || '',
-          item: item.name,
-          notes: item.notes || '',
-          quality_indicators: item.quality_indicators,
-          storage_tips: item.storage_tips,
-          alternatives: item.alternatives,
-          originalIngredient: item // Store the full AI-generated item data
+          // Capitalize the item name
+          const capitalizedName = item.name
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+            
+          shoppingItems.push({
+            text: `${item.quantity} ${item.unit} ${capitalizedName}`.trim(),
+            checked: false,
+            department: dept.name,
+            pantryStaple: item.pantry_staple || false,
+            quantity: quantity || 1, // Default to 1 if missing
+            unit: item.unit || '',
+            item: capitalizedName,
+            notes: item.notes || '',
+            quality_indicators: item.quality_indicators,
+            storage_tips: item.storage_tips,
+            alternatives: item.alternatives,
+            originalIngredient: item // Store the full AI-generated item data
+          });
         });
-      });
     });
     
     // Log the final items list for debugging
@@ -207,12 +232,14 @@ export const getDepartmentForIngredient = (ingredient: string): string => {
 
 // Group items by department
 export const groupItemsByDepartment = (items: ShoppingItem[]): ShoppingItemsByDepartment => {
-  return items.reduce((acc, item) => {
-    const dept = item.department || 'Recipe Ingredients';
-    if (!acc[dept]) acc[dept] = [];
-    acc[dept].push(item);
-    return acc;
-  }, {} as ShoppingItemsByDepartment);
+  return items
+    .filter(item => !item.item.toLowerCase().trim().match(/^water$/))
+    .reduce((acc, item) => {
+      const dept = item.department || 'Recipe Ingredients';
+      if (!acc[dept]) acc[dept] = [];
+      acc[dept].push(item);
+      return acc;
+    }, {} as ShoppingItemsByDepartment);
 };
 
 // Format shopping list as text for clipboard
@@ -222,54 +249,54 @@ export const formatShoppingListForClipboard = (
 ): string => {
   return Object.entries(itemsByDepartment)
     .map(([department, deptItems]) => {
-      const itemTexts = deptItems.map(item => {
-        // Apply unit conversion based on user preferences
-        let quantityText = '';
-        let unitText = '';
-        
-        if (item.quantity) {
-          const qty = typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity;
-          const unit = item.unit || '';
+      const itemTexts = deptItems
+        .filter(item => !item.item.toLowerCase().trim().match(/^water$/))
+        .map(item => {
+          // Apply unit conversion based on user preferences
+          let quantityText = '';
+          let unitText = '';
           
-          // Convert units based on user preference if needed
-          if (unitSystem === 'imperial' && !isNaN(qty)) {
-            if (unit === 'g' && qty >= 100) {
-              quantityText = (qty / 453.59).toFixed(2);
-              unitText = 'lb ';
-            } else if (unit === 'g') {
-              quantityText = (qty / 28.35).toFixed(1);
-              unitText = 'oz ';
-            } else if (unit === 'kg') {
-              quantityText = (qty * 2.20462).toFixed(2);
-              unitText = 'lb ';
-            } else if (unit === 'ml' && qty >= 240) {
-              quantityText = (qty / 240).toFixed(2);
-              unitText = 'cup ';
-            } else if (unit === 'ml') {
-              quantityText = (qty / 29.57).toFixed(1);
-              unitText = 'fl oz ';
-            } else if (unit === 'l') {
-              quantityText = (qty * 4.22675).toFixed(2);
-              unitText = 'cup ';
-            } else if (unit === 'cm') {
-              quantityText = (qty / 2.54).toFixed(1);
-              unitText = 'in ';
+          if (item.quantity) {
+            const qty = typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity;
+            const unit = item.unit || '';
+            
+            // Convert units based on user preference if needed
+            if (unitSystem === 'imperial' && !isNaN(qty)) {
+              if (unit === 'g' && qty >= 100) {
+                quantityText = (qty / 453.59).toFixed(2);
+                unitText = 'lb ';
+              } else if (unit === 'g') {
+                quantityText = (qty / 28.35).toFixed(1);
+                unitText = 'oz ';
+              } else if (unit === 'kg') {
+                quantityText = (qty * 2.20462).toFixed(2);
+                unitText = 'lb ';
+              } else if (unit === 'ml' && qty >= 240) {
+                quantityText = (qty / 240).toFixed(2);
+                unitText = 'cup ';
+              } else if (unit === 'ml') {
+                quantityText = (qty / 29.57).toFixed(1);
+                unitText = 'fl oz ';
+              } else if (unit === 'l') {
+                quantityText = (qty * 4.22675).toFixed(2);
+                unitText = 'cup ';
+              } else if (unit === 'cm') {
+                quantityText = (qty / 2.54).toFixed(1);
+                unitText = 'in ';
+              } else {
+                quantityText = qty.toString() + ' ';
+                unitText = unit ? unit + ' ' : '';
+              }
             } else {
               quantityText = qty.toString() + ' ';
               unitText = unit ? unit + ' ' : '';
             }
-          } else {
-            quantityText = qty.toString() + ' ';
-            unitText = unit ? unit + ' ' : '';
           }
-        }
-        
-        const itemName = item.item || '';
-        const notesText = item.notes ? ` (${item.notes})` : '';
-        const formattedText = `${quantityText}${unitText}${itemName}${notesText}`;
-        
-        return `${item.checked ? '[x]' : '[ ]'} ${formattedText}`;
-      });
+          
+          const itemName = item.item || '';
+          const notesText = item.notes ? ` (${item.notes})` : '';
+          return `- ${quantityText}${unitText}${itemName}${notesText}`;
+        });
       return `## ${department}\n${itemTexts.join('\n')}`;
     }).join('\n\n');
 };
