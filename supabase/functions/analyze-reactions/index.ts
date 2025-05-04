@@ -135,17 +135,26 @@ ${instructions.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")}
       // Continue anyway - this might be the first time analyzing this recipe
     }
 
-    // Map parsed analysis to database records
-    const inserts = parsed.map((step: any, idx: number) => ({
-      recipe_id,
-      step_index: idx,
-      step_text: step.step,
-      reactions: Array.isArray(step.reactions) ? step.reactions : [],
-      reaction_details: [step.reaction_details || ""],
-      confidence: typeof step.confidence === 'number' ? step.confidence : 0.8,
-      ai_model: "gpt-4o",
-      version: "1.0"
-    }));
+    // Map parsed analysis to database records and validate required fields
+    const inserts = parsed.map((step: any, idx: number) => {
+      // Ensure step_text is never null (critical fix)
+      const stepText = typeof step.step === 'string' && step.step.trim().length > 0 
+        ? step.step 
+        : instructions[idx] || `Step ${idx + 1}`; // Fallback to original instruction or generic step name
+      
+      return {
+        recipe_id,
+        step_index: idx,
+        step_text: stepText,
+        reactions: Array.isArray(step.reactions) ? step.reactions : [],
+        reaction_details: Array.isArray(step.reaction_details) 
+          ? step.reaction_details 
+          : [step.reaction_details || ""],
+        confidence: typeof step.confidence === 'number' ? step.confidence : 0.8,
+        ai_model: "gpt-4o",
+        version: "1.0"
+      };
+    });
 
     console.log(`Inserting ${inserts.length} reaction records for recipe ${recipe_id}`);
     
@@ -164,7 +173,7 @@ ${instructions.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")}
     // Collect summarized scientific notes for the recipe
     const scienceNotes = parsed.flatMap((step: any) => {
       if (step.reaction_details && step.reactions && step.reactions.length > 0) {
-        return [`${step.step} — ${step.reaction_details} (${step.reactions.join(", ")})`];
+        return [`${step.step || ''} — ${step.reaction_details} (${step.reactions.join(", ")})`];
       }
       return [];
     });

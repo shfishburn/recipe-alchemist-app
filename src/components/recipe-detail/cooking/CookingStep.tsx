@@ -22,10 +22,11 @@ export function CookingStep({
   onToggleScience,
   showingScience
 }: CookingStepProps) {
-  // Create handler to prevent bubbling for science toggle
-  const handleScienceToggle = (e: React.MouseEvent) => {
+  // Create handler to prevent bubbling for science toggle with better touch handling
+  const handleScienceToggle = (e: React.MouseEvent | React.TouchEvent) => {
     if (onToggleScience) {
       e.stopPropagation();
+      e.preventDefault();
       onToggleScience();
     }
   };

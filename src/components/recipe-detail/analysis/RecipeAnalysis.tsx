@@ -215,12 +215,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       initialAnalysisRef.current = true;
       handleAnalyze();
     }
-  }, [isOpen, handleAnalyze]);
+  }, [isOpen, handleAnalyze, isAnalyzing]);
 
   // Process reactions when they're loaded
   useEffect(() => {
     if (reactions && reactions.length > 0) {
-      setReactionData(reactions as ReactionItem[]);
+      setReactionData(reactions);
     }
   }, [reactions]);
 
@@ -283,9 +283,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       .join(' ');
   };
 
-  // Extract content from analysis response
-  const extractContent = useCallback(() => {
-    if (!analysis) return { chemistry: null, techniques: null, troubleshooting: null };
+  // Extract content from analysis response with improved fallbacks
+  const extractAnalysisContent = useCallback(() => {
+    if (!analysis) {
+      return { 
+        chemistry: recipe.science_notes?.length > 0 ? recipe.science_notes.join('\n\n') : null,
+        techniques: null,
+        troubleshooting: null
+      };
+    }
     
     // Helper to extract sections from raw text
     const extractSectionFromText = (rawText: string | undefined, sectionName: string) => {
@@ -322,10 +328,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       return null;
     };
 
-    // Extract chemistry section
+    // Extract chemistry section with more robust fallbacks
     const chemistry = analysis.science_notes && analysis.science_notes.length > 0
       ? analysis.science_notes.join('\n\n')
-      : extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science|Maillard)");
+      : extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science|Maillard|Reaction)")
+        || recipe.science_notes?.join('\n\n')
+        || null;
     
     // Extract techniques section
     const techniques = analysis.techniques && analysis.techniques.length > 0
@@ -337,15 +345,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       ? analysis.troubleshooting.join('\n\n')
       : extractSectionFromText(analysis.textResponse, "(Troubleshoot|Problem|Issue|Common)");
     
-    return { 
-      chemistry, 
-      techniques, 
-      troubleshooting 
-    };
-  }, [analysis]);
+    return { chemistry, techniques, troubleshooting };
+  }, [analysis, recipe.science_notes]);
 
-  // Build reaction content
-  const buildReactionContent = () => {
+  // Build reaction content with improved display
+  const buildReactionContent = useCallback(() => {
     if (!reactionData || reactionData.length === 0) return null;
     
     return (
@@ -353,13 +357,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         <h3 className="text-lg font-medium text-gray-900 mb-3">Step-by-Step Reaction Analysis</h3>
         <div className="space-y-6">
           {reactionData.map((reaction, index) => {
+            if (!reaction.step_text) return null;
+            
             const reactionTypes = Array.isArray(reaction.reactions) ? reaction.reactions : [];
             const reactionDetails = Array.isArray(reaction.reaction_details) && reaction.reaction_details.length > 0 
               ? reaction.reaction_details[0] 
               : '';
               
             return (
-              <div key={`reaction-${index}`} className="mb-6">
+              <div key={`reaction-${index}`} className="mb-6 p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-start gap-3 mb-2">
                   <div className="flex-1">
                     <p className="font-medium text-slate-800">{reaction.step_text}</p>
@@ -373,7 +379,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                     {reactionTypes.map((type, i) => (
                       <span 
                         key={`${index}-${i}`} 
-                        className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full"
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
                       >
                         {formatReactionName(type)}
                       </span>
@@ -386,10 +392,10 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         </div>
       </div>
     );
-  };
+  }, [reactionData]);
 
   // Extract and format the content sections from the analysis
-  const { chemistry, techniques, troubleshooting } = extractContent();
+  const { chemistry, techniques, troubleshooting } = extractAnalysisContent();
   const reactionsContent = buildReactionContent();
 
   // Determine if there's any analysis content available
@@ -427,7 +433,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 </Button>
               )}
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
                   {isOpen ? (
                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M3.13523 8.84197C3.3241 9.04343 3.64052 9.05363 3.84197 8.86477L7.5 5.43536L11.158 8.86477C11.3595 9.05363 11.6759 9.04343 11.8648 8.84197C12.0536 8.64051 12.0434 8.32409 11.842 8.13523L7.84197 4.38523C7.64964 4.20492 7.35036 4.20492 7.15803 4.38523L3.15803 8.13523C2.95657 8.32409 2.94637 8.64051 3.13523 8.84197Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
@@ -468,7 +474,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 {chemistry && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Chemistry</h3>
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg">
                       <FormattedText text={chemistry} preserveWhitespace={true} />
                     </div>
                   </div>
@@ -478,7 +484,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 {techniques && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Techniques</h3>
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg">
                       <FormattedText text={techniques} preserveWhitespace={true} />
                     </div>
                   </div>
@@ -488,7 +494,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 {troubleshooting && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Troubleshooting</h3>
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg">
                       <FormattedText text={troubleshooting} preserveWhitespace={true} />
                     </div>
                   </div>
@@ -499,7 +505,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 
                 {/* Fallback when structured sections aren't extracted */}
                 {!chemistry && !techniques && !troubleshooting && !reactionsContent && analysis?.textResponse && (
-                  <div className="prose prose-sm max-w-none">
+                  <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg">
                     <FormattedText text={analysis.textResponse} preserveWhitespace={true} />
                   </div>
                 )}
