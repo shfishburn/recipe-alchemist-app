@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCookieConsent } from '@/hooks/use-cookie-consent';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -32,68 +31,44 @@ export function CookieConsent() {
     return null; // Early return after all hooks are defined
   }
 
+  // Simplified options layout
   const cookieOptions = (
-    <div className="py-4 space-y-4">
+    <div className="py-3 space-y-3">
       {/* Essential Cookies - Always enabled */}
-      <div 
-        className={`flex items-start p-3 rounded-md bg-green-50 cursor-not-allowed`}
-      >
-        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
-          <Check className="h-4 w-4 text-green-600" />
+      <div className="flex items-center justify-between p-2 rounded-md bg-green-50">
+        <div>
+          <h4 className="text-sm font-medium">Essential Cookies</h4>
+          <p className="text-xs text-muted-foreground">Required for site functionality</p>
         </div>
-        <div className="ml-3">
-          <h4 className="text-base font-medium">Essential Cookies</h4>
-          <p className="text-sm text-muted-foreground mt-1">
-            These cookies are necessary for the website to function and cannot be switched off.
-          </p>
-        </div>
+        <Check className="h-4 w-4 text-green-600" />
       </div>
       
-      {/* Preferences Cookies */}
-      <div 
-        className={`flex items-start p-3 rounded-md cursor-pointer transition-colors
-          ${settings.preferences ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
-        onClick={() => handleSettingChange('preferences')}
-      >
-        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
-          {settings.preferences && (
-            <Check className="h-4 w-4 text-green-600" />
-          )}
-        </div>
-        <div className="ml-3">
-          <h4 className="text-base font-medium">Preferences Cookies</h4>
-          <p className="text-sm text-muted-foreground mt-1">
-            These cookies allow the website to remember choices you make (such as your preferred unit system).
-          </p>
-        </div>
-      </div>
-      
-      {/* Analytics Cookies */}
-      <div 
-        className={`flex items-start p-3 rounded-md cursor-pointer transition-colors
-          ${settings.analytics ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-muted/50'}`}
-        onClick={() => handleSettingChange('analytics')}
-      >
-        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-1">
-          {settings.analytics && (
-            <Check className="h-4 w-4 text-green-600" />
-          )}
-        </div>
-        <div className="ml-3">
-          <h4 className="text-base font-medium">Analytics Cookies</h4>
-          <p className="text-sm text-muted-foreground mt-1">
-            These cookies help us understand how visitors interact with our website.
-          </p>
-        </div>
-      </div>
+      {/* Other cookie types */}
+      {Object.entries(settings)
+        .filter(([key]) => key !== 'essential')
+        .map(([key, value]) => (
+          <div 
+            key={key}
+            className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${value ? 'bg-green-50' : 'hover:bg-muted/50'}`}
+            onClick={() => handleSettingChange(key as keyof typeof settings)}
+          >
+            <div>
+              <h4 className="text-sm font-medium">{key.charAt(0).toUpperCase() + key.slice(1)}</h4>
+              <p className="text-xs text-muted-foreground">
+                {key === 'preferences' ? 'Remembers your preferences' : 'Helps us improve the site'}
+              </p>
+            </div>
+            {value && <Check className="h-4 w-4 text-green-600" />}
+          </div>
+        ))}
     </div>
   );
 
   const cookieActions = (
-    <div className="flex flex-col sm:flex-row gap-3 w-full justify-end">
-      <Button variant="outline" onClick={declineAll} className="flex-1 sm:flex-none py-2">Essential Only</Button>
-      <Button variant="outline" onClick={handleCustomize} className="flex-1 sm:flex-none py-2">Save Preferences</Button>
-      <Button onClick={acceptAll} className="flex-1 sm:flex-none py-2 bg-green-600 hover:bg-green-700">Accept All</Button>
+    <div className="flex flex-col sm:flex-row gap-2 w-full justify-end">
+      <Button variant="outline" onClick={declineAll} size="sm" className="flex-1 sm:flex-none">Essential Only</Button>
+      <Button variant="outline" onClick={handleCustomize} size="sm" className="flex-1 sm:flex-none">Save Preferences</Button>
+      <Button onClick={acceptAll} size="sm" className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700">Accept All</Button>
     </div>
   );
 
@@ -104,18 +79,18 @@ export function CookieConsent() {
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
             <SheetHeader className="pb-2">
-              <SheetTitle className="flex items-center gap-2 text-xl">
+              <SheetTitle className="flex items-center gap-2">
                 <Cookie className="h-5 w-5" />
-                Cookie Preferences
+                Cookie Settings
               </SheetTitle>
-              <SheetDescription className="text-base">
-                We use cookies to enhance your experience on our site. Please let us know which cookies you're ok with.
+              <SheetDescription className="text-sm">
+                We use cookies to enhance your experience
               </SheetDescription>
             </SheetHeader>
             
             {cookieOptions}
             
-            <SheetFooter className="pt-4 border-t">
+            <SheetFooter className="pt-3 border-t mt-3">
               {cookieActions}
             </SheetFooter>
           </SheetContent>
@@ -125,20 +100,20 @@ export function CookieConsent() {
       {/* Desktop UI - Dialog */}
       {!isMobile && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className={`${isMobile ? "w-[95vw] max-w-md p-6" : "sm:max-w-[500px] p-6"}`}>
+          <DialogContent className="sm:max-w-[400px] p-4">
             <DialogHeader className="pb-2">
-              <DialogTitle className="flex items-center gap-2 text-xl">
+              <DialogTitle className="flex items-center gap-2">
                 <Cookie className="h-5 w-5" />
-                Cookie Preferences
+                Cookie Settings
               </DialogTitle>
-              <DialogDescription className="text-base">
-                We use cookies to enhance your experience on our site. Please let us know which cookies you're ok with.
+              <DialogDescription className="text-sm">
+                We use cookies to enhance your experience
               </DialogDescription>
             </DialogHeader>
             
             {cookieOptions}
             
-            <DialogFooter className="pt-4 border-t">
+            <DialogFooter className="pt-3 border-t mt-3">
               {cookieActions}
             </DialogFooter>
           </DialogContent>

@@ -1,8 +1,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Beaker, BookOpen, BookOpenText, AlertCircle, ChevronUp, ChevronDown, Atom } from "lucide-react";
+import { Loader2, Beaker, BookOpen, ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -49,11 +48,11 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
-  const [activeTab, setActiveTab] = useState("chemistry");
+  const [activeCategory, setActiveCategory] = useState("chemistry");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [reactionData, setReactionData] = useState<ReactionItem[]>([]);
   
-  // Store parsed content to ensure consistency between tab switches
+  // Store parsed content to ensure consistency between category switches
   const [parsedContent, setParsedContent] = useState<TabContent>({
     chemistry: [],
     techniques: [],
@@ -262,9 +261,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         return (
           <div key={`reaction-${index}`} className="mb-6">
             <div className="flex items-start gap-3 mb-2">
-              <div className="mt-1 flex-shrink-0">
-                <Atom className="h-5 w-5 text-blue-500" />
-              </div>
               <div className="flex-1">
                 <p className="font-medium text-slate-800">{reaction.step_text}</p>
                 {reactionDetails && (
@@ -273,7 +269,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               </div>
             </div>
             {reactionTypes.length > 0 && (
-              <div className="ml-8 flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {reactionTypes.map((type, i) => (
                   <span 
                     key={`${index}-${i}`} 
@@ -414,11 +410,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   // Helper to format science notes with icons
   function formatScienceNote(note: string, index: number) {
     return (
-      <div key={`science-${index}`} className="mb-4 flex items-start gap-3">
-        <div className="mt-1 flex-shrink-0">
-          <Beaker className="h-5 w-5 text-blue-500" />
-        </div>
-        <p className="flex-1">{note}</p>
+      <div key={`science-${index}`} className="mb-4">
+        <p>{note}</p>
       </div>
     );
   }
@@ -426,11 +419,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   // Helper to format techniques with icons
   function formatTechnique(technique: string, index: number) {
     return (
-      <div key={`technique-${index}`} className="mb-4 flex items-start gap-3">
-        <div className="mt-1 flex-shrink-0">
-          <BookOpenText className="h-5 w-5 text-green-500" />
-        </div>
-        <p className="flex-1">{technique}</p>
+      <div key={`technique-${index}`} className="mb-4">
+        <p>{technique}</p>
       </div>
     );
   }
@@ -438,11 +428,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   // Helper to format troubleshooting with icons
   function formatTroubleshooting(tip: string, index: number) {
     return (
-      <div key={`troubleshoot-${index}`} className="mb-4 flex items-start gap-3">
-        <div className="mt-1 flex-shrink-0">
-          <AlertCircle className="h-5 w-5 text-amber-500" />
-        </div>
-        <p className="flex-1">{tip}</p>
+      <div key={`troubleshoot-${index}`} className="mb-4">
+        <p>{tip}</p>
       </div>
     );
   }
@@ -499,6 +486,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
   // Check if the reactions analysis was done (for tab visibility)
   const hasReactionAnalysis = reactionData && reactionData.length > 0;
+  
+  // Categories for improved mobile UI
+  const categories = [
+    { id: "chemistry", label: "Chemistry" },
+    { id: "techniques", label: "Techniques" },
+    ...(hasReactionAnalysis ? [{ id: "reactions", label: "Reactions" }] : []),
+    { id: "troubleshooting", label: "Troubleshoot" }
+  ];
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle} className="mt-6">
@@ -556,64 +551,51 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 </Button>
               </div>
             ) : hasAnyAnalysisContent ? (
-              <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-                <div className="flex items-center overflow-x-auto mb-4">
-                  <TabsList className="flex w-full h-auto p-1 rounded-md">
-                    <TabsTrigger value="chemistry" className="h-auto flex-1 py-2 whitespace-normal">
-                      <div className="flex items-center gap-1">
-                        <Beaker className="h-4 w-4 shrink-0" />
-                        <span>Chemistry</span>
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger value="techniques" className="h-auto flex-1 py-2 whitespace-normal">
-                      <div className="flex items-center gap-1">
-                        <BookOpenText className="h-4 w-4 shrink-0" />
-                        <span>Techniques</span>
-                      </div>
-                    </TabsTrigger>
-                    {hasReactionAnalysis && (
-                      <TabsTrigger value="reactions" className="h-auto flex-1 py-2 whitespace-normal">
-                        <div className="flex items-center gap-1">
-                          <Atom className="h-4 w-4 shrink-0" />
-                          <span>Reactions</span>
-                        </div>
-                      </TabsTrigger>
-                    )}
-                    <TabsTrigger value="troubleshooting" className="h-auto flex-1 py-2 whitespace-normal">
-                      <div className="flex items-center gap-1">
-                        <AlertCircle className="h-4 w-4 shrink-0" />
-                        <span>Troubleshoot</span>
-                      </div>
-                    </TabsTrigger>
-                  </TabsList>
+              <div className="space-y-6">
+                {/* Category selector - now a simple list of buttons */}
+                <div className="flex flex-wrap gap-2 border-b pb-3">
+                  {categories.map(category => (
+                    <button
+                      key={category.id}
+                      onClick={() => setActiveCategory(category.id)}
+                      className={`px-3 py-1.5 text-sm rounded-md transition ${
+                        activeCategory === category.id 
+                          ? 'bg-primary text-primary-foreground font-medium' 
+                          : 'text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {category.label}
+                    </button>
+                  ))}
                 </div>
                 
-                <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
-                  <div className="space-y-2">
-                    {parsedContent.chemistry.length > 0 ? 
-                      parsedContent.chemistry : 
-                      <div className="text-center py-4 text-muted-foreground">
-                        <p>No chemical analysis available for this recipe.</p>
-                        <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                      </div>
-                    }
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="techniques" className="prose prose-zinc dark:prose-invert max-w-none">
-                  <div className="space-y-2">
-                    {parsedContent.techniques.length > 0 ? 
-                      parsedContent.techniques : 
-                      <div className="text-center py-4 text-muted-foreground">
-                        <p>No technique analysis available for this recipe.</p>
-                        <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                      </div>
-                    }
-                  </div>
-                </TabsContent>
-                
-                {hasReactionAnalysis && (
-                  <TabsContent value="reactions" className="prose prose-zinc dark:prose-invert max-w-none">
+                {/* Content display based on active category */}
+                <div className="pt-2">
+                  {activeCategory === "chemistry" && (
+                    <div className="space-y-2">
+                      {parsedContent.chemistry.length > 0 ? 
+                        parsedContent.chemistry : 
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>No chemical analysis available for this recipe.</p>
+                          <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                        </div>
+                      }
+                    </div>
+                  )}
+                  
+                  {activeCategory === "techniques" && (
+                    <div className="space-y-2">
+                      {parsedContent.techniques.length > 0 ? 
+                        parsedContent.techniques : 
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>No technique analysis available for this recipe.</p>
+                          <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                        </div>
+                      }
+                    </div>
+                  )}
+                  
+                  {activeCategory === "reactions" && hasReactionAnalysis && (
                     <div className="space-y-2">
                       <h3 className="font-medium text-base text-slate-700 mb-4">Step-by-Step Reaction Analysis</h3>
                       {parsedContent.reactions.length > 0 ? 
@@ -624,21 +606,21 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                         </div>
                       }
                     </div>
-                  </TabsContent>
-                )}
-                
-                <TabsContent value="troubleshooting" className="prose prose-zinc dark:prose-invert max-w-none">
-                  <div className="space-y-2">
-                    {parsedContent.troubleshooting.length > 0 ? 
-                      parsedContent.troubleshooting : 
-                      <div className="text-center py-4 text-muted-foreground">
-                        <p>No troubleshooting tips available for this recipe.</p>
-                        <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
-                      </div>
-                    }
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  )}
+                  
+                  {activeCategory === "troubleshooting" && (
+                    <div className="space-y-2">
+                      {parsedContent.troubleshooting.length > 0 ? 
+                        parsedContent.troubleshooting : 
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>No troubleshooting tips available for this recipe.</p>
+                          <p className="text-sm mt-2">Try regenerating the analysis or check back later.</p>
+                        </div>
+                      }
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="text-center py-6">
                 <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
@@ -654,3 +636,4 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     </Collapsible>
   );
 }
+

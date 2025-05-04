@@ -13,27 +13,25 @@ export function RecipeTimeInfo({ prepTime, cookTime }: RecipeTimeInfoProps) {
   return (
     <div className="flex justify-around border-t border-b py-3">
       {prepTime > 0 && (
-        <div className="text-center">
-          <div className="text-xs text-muted-foreground">Prep</div>
-          <div className="flex items-center justify-center gap-1 font-medium">
-            <Clock className="h-4 w-4 text-recipe-green" />
+        <div className="text-center flex-1">
+          <div className="text-xs text-muted-foreground mb-1">Prep</div>
+          <div className="font-medium">
             {prepTime} min
           </div>
         </div>
       )}
       
       {cookTime > 0 && (
-        <div className="text-center">
-          <div className="text-xs text-muted-foreground">Cook</div>
-          <div className="flex items-center justify-center gap-1 font-medium">
-            <CookingPot className="h-4 w-4 text-recipe-orange" />
+        <div className="text-center flex-1">
+          <div className="text-xs text-muted-foreground mb-1">Cook</div>
+          <div className="font-medium">
             {cookTime} min
           </div>
         </div>
       )}
       
-      <div className="text-center">
-        <div className="text-xs text-muted-foreground">Total</div>
+      <div className="text-center flex-1">
+        <div className="text-xs text-muted-foreground mb-1">Total</div>
         <div className="font-medium">
           {totalTime} min
         </div>

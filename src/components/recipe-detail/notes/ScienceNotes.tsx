@@ -1,9 +1,11 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { FileText, ChevronDown, ChevronUp } from "lucide-react";
 import type { Recipe } from "@/types/recipe";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
 
 interface ScienceNotesProps {
   recipe: Recipe;
@@ -13,6 +15,7 @@ interface ScienceNotesProps {
 
 export function ScienceNotes({ recipe, isOpen, onToggle }: ScienceNotesProps) {
   const hasNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0;
+  const [expanded, setExpanded] = useState<boolean>(false);
   
   if (!hasNotes) return null;
 
@@ -25,38 +28,48 @@ export function ScienceNotes({ recipe, isOpen, onToggle }: ScienceNotesProps) {
               <FileText className="h-5 w-5 mr-2 text-recipe-blue" />
               Science Notes
             </CardTitle>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-                <span className="sr-only">Toggle section</span>
-              </Button>
-            </CollapsibleTrigger>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center text-sm">
+                <span className="mr-2">Show all</span>
+                <Switch checked={expanded} onCheckedChange={setExpanded} />
+              </div>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">Toggle section</span>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
           </div>
         </CardHeader>
         <CollapsibleContent>
           <CardContent>
-            {recipe.science_notes.length > 3 ? (
-              <Accordion type="single" collapsible className="w-full">
-                {recipe.science_notes.map((note, index) => (
-                  <AccordionItem key={index} value={`note-${index}`}>
-                    <AccordionTrigger className="text-muted-foreground">
-                      Note {index + 1}: {note.substring(0, 50)}...
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {note}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
+            {expanded ? (
               <ul className="list-disc pl-4 space-y-2">
                 {recipe.science_notes.map((note, index) => (
                   <li key={index} className="text-muted-foreground">{note}</li>
                 ))}
+              </ul>
+            ) : (
+              <ul className="list-disc pl-4 space-y-2">
+                {recipe.science_notes.slice(0, 3).map((note, index) => (
+                  <li key={index} className="text-muted-foreground">{note}</li>
+                ))}
+                {recipe.science_notes.length > 3 && (
+                  <li className="text-sm mt-2">
+                    <Button 
+                      variant="link" 
+                      onClick={() => setExpanded(true)}
+                      className="p-0 h-auto"
+                    >
+                      Show {recipe.science_notes.length - 3} more notes...
+                    </Button>
+                  </li>
+                )}
               </ul>
             )}
           </CardContent>
