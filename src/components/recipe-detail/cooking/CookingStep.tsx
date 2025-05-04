@@ -23,6 +23,9 @@ export const CookingStep = memo(function CookingStep({
   stepCategory,
   className
 }: CookingStepProps) {
+  // We derive stepCategory from stepReaction if it's not explicitly provided
+  const effectiveStepCategory = stepCategory || (stepReaction?.cooking_method as StepCategory | undefined);
+  
   return (
     <div className={cn("mb-6", className)}>
       <StepDisplay
@@ -32,7 +35,7 @@ export const CookingStep = memo(function CookingStep({
         onToggleComplete={onToggleComplete}
         stepReaction={stepReaction}
         variant="cooking"
-        stepCategory={stepCategory || (stepReaction?.cooking_method as StepCategory | undefined)}
+        stepCategory={effectiveStepCategory}
       />
     </div>
   );

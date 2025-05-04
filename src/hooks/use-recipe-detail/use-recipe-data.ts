@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Recipe, Ingredient } from '@/types/recipe';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useAnalysisContent } from '@/hooks/use-analysis-content';
+import { getDepartmentForIngredient } from '@/utils/ingredient-department-utils';
 
 /**
  * Processed recipe metadata for component consumption
@@ -68,8 +69,10 @@ export function useRecipeData(recipe: Recipe) {
     }
     
     return recipe.ingredients.reduce<Record<string, Ingredient[]>>((acc, ingredient) => {
-      // Use ingredient.department or default to 'Other'
-      const department = ingredient.department || 'Other';
+      // Use utility function to get department instead of accessing property directly
+      const department = getDepartmentForIngredient(
+        typeof ingredient.item === 'string' ? ingredient.item : 'Unknown'
+      );
       
       if (!acc[department]) {
         acc[department] = [];

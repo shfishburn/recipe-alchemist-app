@@ -28,6 +28,9 @@ export const InstructionStep = memo(function InstructionStep({
   // Memoize the toggle handler to prevent recreation on each render
   const handleToggle = useCallback(() => toggleStep(index), [toggleStep, index]);
   
+  // Extract cooking method as step category if available
+  const stepCategory = stepReaction?.cooking_method as StepCategory | undefined;
+  
   return (
     <li className={cn("group", className)}>
       <StepDisplay
@@ -37,7 +40,7 @@ export const InstructionStep = memo(function InstructionStep({
         onToggleComplete={handleToggle}
         stepReaction={stepReaction}
         variant="instruction"
-        stepCategory={stepReaction?.cooking_method as StepCategory | undefined}
+        stepCategory={stepCategory}
       />
       
       {!isLastStep && <Separator className="my-6" />}

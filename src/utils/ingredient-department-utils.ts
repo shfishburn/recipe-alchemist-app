@@ -12,17 +12,31 @@ const DEPARTMENT_PATTERNS = {
   'Beverages': /water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i
 };
 
-// Get department for a given ingredient
+/**
+ * Get department for a given ingredient item name
+ * @param item The ingredient item name to categorize
+ * @returns The department name
+ */
 export const getDepartmentForIngredient = (item: string): string => {
+  if (!item || typeof item !== 'string') {
+    return 'Other';
+  }
+  
+  const itemName = item.toLowerCase();
+  
   for (const [department, pattern] of Object.entries(DEPARTMENT_PATTERNS)) {
-    if (pattern.test(item.toLowerCase())) {
+    if (pattern.test(itemName)) {
       return department;
     }
   }
   return 'Other';
 };
 
-// Group ingredients by department
+/**
+ * Group ingredients by department based on their name
+ * @param ingredients Array of ingredient objects
+ * @returns Object with departments as keys and arrays of ingredients as values
+ */
 export function groupIngredientsByDepartment(ingredients: Ingredient[]): Record<string, Ingredient[]> {
   // Filter out any non-valid ingredients
   const validIngredients = ingredients.filter(ing => ing && typeof ing !== 'string' && ing.item);
@@ -47,7 +61,10 @@ export function groupIngredientsByDepartment(ingredients: Ingredient[]): Record<
   return groupedIngredients;
 }
 
-// Get the recommended order for displaying departments
+/**
+ * Get the recommended order for displaying departments
+ * @returns Array of department names in display order
+ */
 export const getDepartmentDisplayOrder = (): string[] => [
   'Produce',
   'Meat & Seafood',

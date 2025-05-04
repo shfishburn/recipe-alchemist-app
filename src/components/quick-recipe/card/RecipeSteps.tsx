@@ -17,18 +17,15 @@ export const RecipeSteps = memo(function RecipeSteps({
   // Use useMemo to avoid unnecessary re-evaluations
   const hasSteps = useMemo(() => steps && steps.length > 0, [steps]);
   
-  if (!hasSteps) {
-    return (
-      <div className={className}>
-        <RecipeSectionHeader title="Quick Steps" />
+  // Memoize the step content to prevent recreation on each render
+  const stepsContent = useMemo(() => {
+    if (!hasSteps) {
+      return (
         <p className="text-muted-foreground">No steps available</p>
-      </div>
-    );
-  }
-  
-  return (
-    <div className={className}>
-      <RecipeSectionHeader title="Quick Steps" />
+      );
+    }
+    
+    return (
       <ol className={`list-decimal pl-5 ${compact ? 'space-y-1' : 'space-y-2'}`}>
         {steps.map((step, index) => (
           <li key={index} className={`${compact ? 'py-0.5' : 'py-1'}`}>
@@ -36,6 +33,13 @@ export const RecipeSteps = memo(function RecipeSteps({
           </li>
         ))}
       </ol>
+    );
+  }, [steps, hasSteps, compact]);
+  
+  return (
+    <div className={className}>
+      <RecipeSectionHeader title="Quick Steps" />
+      {stepsContent}
     </div>
   );
 });
