@@ -4,10 +4,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
 export function useQuickRecipeForm() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { session } = useAuth();
   const { 
     reset, 
     recipe, 
@@ -59,7 +61,8 @@ export function useQuickRecipeForm() {
       // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");
       
-      // Save current path to session storage in case user needs to log in
+      // Save current path and form data to session storage in case user needs to log in
+      // This will allow us to resume the recipe generation after login
       sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
         path: location.pathname,
         formData: formData
@@ -83,6 +86,8 @@ export function useQuickRecipeForm() {
         // Add a small delay to ensure navigation completes
         await new Promise(resolve => setTimeout(resolve, 100));
         
+        // If not logged in, we'll be redirected to login page
+        // and the recipe generation will resume after login
         const generatedRecipe = await generateQuickRecipe(formData);
         
         // Validate the recipe structure before setting it

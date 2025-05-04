@@ -65,6 +65,15 @@ const Index = () => {
     if (isTouchDevice) {
       document.body.classList.add('touch-device');
     }
+    
+    // Fix for touch responsiveness after login
+    document.body.classList.remove('overflow-hidden');
+    
+    return () => {
+      // Clean up when component unmounts
+      document.body.classList.remove('touch-device');
+      document.body.classList.remove('overflow-hidden');
+    };
   }, []);
   
   return (

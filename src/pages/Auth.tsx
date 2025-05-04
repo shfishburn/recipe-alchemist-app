@@ -75,6 +75,9 @@ const Auth = () => {
     // Clear the stored path after using it
     sessionStorage.removeItem('redirectAfterAuth');
     
+    // Remove any overflow-hidden class that might be causing touch issues
+    document.body.classList.remove('overflow-hidden');
+    
     return <Navigate to={redirectTo} state={redirectState} replace />;
   }
 
