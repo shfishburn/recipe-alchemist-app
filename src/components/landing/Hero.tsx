@@ -5,10 +5,14 @@ import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Brain, ChartPie, ChefHat, Sparkles } from 'lucide-react';
 import { NutritionPreview } from './NutritionPreview';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 
 // Use React.memo to prevent unnecessary re-renders
 const Hero = () => {
   const isMobile = useIsMobile();
+  const { open: openAuthDrawer } = useAuthDrawer();
   
   return (
     <section className="w-full py-6 md:py-12 lg:py-16 content-visibility-auto">
@@ -42,6 +46,26 @@ const Hero = () => {
             <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-1 rounded">
               Ready in 30 mins
             </span>
+          </div>
+          
+          {/* Call to Action Buttons */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <Button 
+              size="lg" 
+              onClick={openAuthDrawer}
+              className="bg-recipe-green hover:bg-recipe-green/90"
+            >
+              Get Started for Free
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              asChild
+            >
+              <Link to="/how-it-works">
+                Learn More
+              </Link>
+            </Button>
           </div>
         </div>
         
