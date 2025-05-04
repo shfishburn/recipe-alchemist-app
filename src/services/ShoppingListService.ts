@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Ingredient } from '@/types/recipe';
 import { ShoppingListItem } from '@/types/shopping-list';
@@ -350,7 +349,8 @@ export class ShoppingListService {
         packageSizeMatch
       );
       
-      // Return enhanced shopping item
+      // Return enhanced shopping item with properly typed fields
+      // Make sure we only include properties that exist in ShoppingListItem type
       return {
         ...item,
         quantity: purchaseInfo.quantity,
@@ -359,7 +359,7 @@ export class ShoppingListService {
         shop_size_unit: purchaseInfo.unit,
         package_notes: packageSizeMatch.notes,
         confidence: 0.8, // Confidence score for the match
-        category: packageSizeMatch.category || item.department
+        department: packageSizeMatch.category || item.department // Use category as department if available
       };
     }
     

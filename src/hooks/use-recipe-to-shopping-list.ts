@@ -1,217 +1,155 @@
-
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
-import { mergeShoppingItems } from '@/utils/shopping-list-merge';
+import { useToast } from '@/hooks/use-toast';
+import { ShoppingListService } from '@/services/ShoppingListService';
 import type { Recipe } from '@/types/recipe';
-import type { ShoppingListItem } from '@/types/shopping-list';
+import type { Json } from '@/integrations/supabase/types';
 
 export function useRecipeToShoppingList() {
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [usePackageSizes, setUsePackageSizes] = useState(true);
-  
-  /**
-   * Creates a new shopping list from a recipe
-   * Improved data flow pattern:
-   * 1. Create the list with basic metadata
-   * 2. Convert recipe ingredients to shopping items
-   * 3. Store the items in the list
-   * 4. Navigate to the new list
-   */
-  const addRecipeToNewList = async (listName: string, recipe: Recipe) => {
-    if (!user) {
-      toast({
-        title: "Not signed in",
-        description: "Please sign in to create a shopping list",
-        variant: "destructive",
-      });
-      return { success: false, listId: null };
-    }
-    
-    if (!recipe) {
-      toast({
-        title: "Recipe required",
-        description: "No recipe provided to create shopping list",
-        variant: "destructive",
-      });
-      return { success: false, listId: null };
-    }
 
-    setIsLoading(true);
-    
+  const addRecipeToNewList = async (title: string, recipe: Recipe) => {
     try {
-      console.log("Creating shopping list for recipe:", recipe.title);
-      console.log("Using package sizes:", usePackageSizes);
-      
-      // Step 1: Create a new shopping list with basic info
-      const { data: newList, error: listError } = await supabase
-        .from('shopping_lists')
-        .insert({
-          title: listName,
-          user_id: user.id,
-          items: [], // Start with empty array, we'll populate it next
-        })
-        .select();
-        
-      if (listError) throw listError;
-      
-      const listId = newList?.[0]?.id;
-      
-      if (!listId) {
-        throw new Error("Failed to create shopping list");
+      setIsLoading(true);
+
+      // Get user info
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        throw new Error('User not authenticated');
       }
 
-      // Step 2: Convert recipe ingredients to shopping items with package size option
-      const shoppingItems = await recipeIngredientsToShoppingItems(
-        recipe.ingredients, 
-        recipe.id,
-        usePackageSizes
-      );
-      
-      console.log("Generated shopping items:", shoppingItems);
-      
-      // Step 3: Update the list with the converted items
-      const { error: updateError } = await supabase
+      // Convert recipe ingredients to shopping list items using our unified service
+      const items = await ShoppingListService.ingredientsToShoppingItems(recipe.ingredients, recipe.id);
+
+      // Create shopping list
+      const { data, error } = await supabase
         .from('shopping_lists')
-        .update({ items: shoppingItems })
-        .eq('id', listId);
-        
-      if (updateError) throw updateError;
-      
+        .insert({
+          title,
+          user_id: userData.user.id,
+          items: items as Json
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Error creating shopping list:', error);
+        throw error;
+      }
+
       toast({
-        title: "Shopping list created",
-        description: `${shoppingItems.length} items added to your new shopping list`,
+        title: "Success",
+        description: `Created new shopping list "${title}"`
       });
-      
-      // Step 4: Navigate to the new list
-      setTimeout(() => {
-        navigate(`/shopping-lists/${listId}`);
-      }, 300);
-      
-      return { success: true, listId };
+
+      return { success: true, listId: data.id };
     } catch (error) {
-      console.error("Error creating shopping list:", error);
+      console.error('Error in addRecipeToNewList:', error);
       toast({
         title: "Error",
         description: "Failed to create shopping list",
         variant: "destructive",
       });
-      return { success: false, listId: null };
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
   };
-  
-  /**
-   * Adds recipe ingredients to an existing shopping list
-   */
-  const addRecipeToExistingList = async (listId: string, recipe: Recipe) => {
-    if (!user) {
-      toast({
-        title: "Not signed in",
-        description: "Please sign in to update shopping lists",
-        variant: "destructive",
-      });
-      return { success: false };
-    }
 
-    setIsLoading(true);
-    
+  // Add recipe ingredients to an existing shopping list
+  const addRecipeToExistingList = async (listId: string, recipe: Recipe) => {
     try {
-      console.log("Adding recipe to existing list with package sizes:", usePackageSizes);
-      
-      // Step 1: Get the existing list
-      const { data: existingList, error: fetchError } = await supabase
+      setIsLoading(true);
+
+      // First, get the current shopping list
+      const { data: listData, error: listError } = await supabase
         .from('shopping_lists')
         .select('items')
         .eq('id', listId)
         .single();
-        
-      if (fetchError) throw fetchError;
-      
-      // Step 2: Convert recipe ingredients to shopping items with package size option
-      const newItems = await recipeIngredientsToShoppingItems(
-        recipe.ingredients, 
-        recipe.id,
-        usePackageSizes
-      );
-      
-      // Step 3: Merge with existing items
-      // Ensure existingItems is properly converted to ShoppingListItem[] type
-      let existingItems: ShoppingListItem[] = [];
-      
-      // Process the items from the database to ensure they match ShoppingListItem structure
-      if (existingList && existingList.items) {
-        if (Array.isArray(existingList.items)) {
-          existingItems = existingList.items as ShoppingListItem[];
-          
-          // Validate structure - ensure each item has required properties
-          existingItems = existingItems.map(item => ({
-            name: item.name || '',
-            quantity: typeof item.quantity === 'number' ? item.quantity : 0,
-            unit: item.unit || '',
-            checked: !!item.checked,
-            notes: item.notes,
-            department: item.department || 'Other',
-            recipeId: item.recipeId,
-            shop_size_qty: item.shop_size_qty,
-            shop_size_unit: item.shop_size_unit,
-            package_notes: item.package_notes
-          }));
-        } else {
-          console.error("Items from database is not an array:", existingList.items);
-        }
+
+      if (listError) {
+        console.error("Error fetching shopping list:", listError);
+        throw listError;
       }
-      
-      console.log("Existing items (processed):", existingItems);
-      console.log("New items to merge:", newItems);
-      
-      const mergedItems = mergeShoppingItems(existingItems, newItems);
-      console.log("Merged items result:", mergedItems);
-      
-      // Step 4: Update the list
+
+      // Convert recipe ingredients to shopping list items
+      const newItems = await ShoppingListService.ingredientsToShoppingItems(recipe.ingredients, recipe.id);
+
+      // Combine with existing items, avoiding duplicates
+      const existingItems = listData.items as any[];
+      const combinedItems = combineShoppingItems(existingItems, newItems);
+
+      // Update the shopping list
       const { error: updateError } = await supabase
         .from('shopping_lists')
-        .update({ items: mergedItems })
+        .update({
+          items: combinedItems as Json,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', listId);
-        
-      if (updateError) throw updateError;
-      
+
+      if (updateError) {
+        console.error("Error updating shopping list:", updateError);
+        throw updateError;
+      }
+
       toast({
-        title: "Shopping list updated",
-        description: `${newItems.length} items added to your shopping list`,
+        title: "Success",
+        description: `Added ${recipe.title} to shopping list`
       });
-      
-      // Step 5: Navigate to the updated list
-      setTimeout(() => {
-        navigate(`/shopping-lists/${listId}`);
-      }, 100);
-      
+
       return { success: true };
     } catch (error) {
-      console.error("Error updating shopping list:", error);
+      console.error("Error in addRecipeToExistingList:", error);
       toast({
         title: "Error",
         description: "Failed to update shopping list",
         variant: "destructive",
       });
-      return { success: false };
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
   };
 
-  return {
-    addRecipeToNewList,
-    addRecipeToExistingList,
-    usePackageSizes,
-    setUsePackageSizes,
-    isLoading
-  };
+  return { addRecipeToNewList, addRecipeToExistingList, isLoading };
+}
+
+// Helper function to combine shopping items, avoiding duplicates
+function combineShoppingItems(
+  existingItems: any[],
+  newItems: any[]
+): any[] {
+  const combinedItems = [...existingItems];
+  
+  newItems.forEach(newItem => {
+    // Check if a similar item already exists
+    const existingItemIndex = existingItems.findIndex(
+      item => 
+        item.name.toLowerCase() === newItem.name.toLowerCase() &&
+        item.unit === newItem.unit
+    );
+    
+    if (existingItemIndex >= 0) {
+      // Update quantity if item exists
+      const existingItem = existingItems[existingItemIndex];
+      combinedItems[existingItemIndex] = {
+        ...existingItem,
+        quantity: existingItem.quantity + newItem.quantity,
+        // Preserve package size info if available
+        shop_size_qty: newItem.shop_size_qty || existingItem.shop_size_qty,
+        shop_size_unit: newItem.shop_size_unit || existingItem.shop_size_unit,
+        package_notes: newItem.package_notes || existingItem.package_notes,
+      };
+    } else {
+      // Add new item if it doesn't exist
+      combinedItems.push(newItem);
+    }
+  });
+  
+  return combinedItems;
 }
