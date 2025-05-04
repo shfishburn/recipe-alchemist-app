@@ -62,13 +62,18 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     };
   }, []);
 
+  // Fix: Convert Promise<boolean> to Promise<void>
+  const handleCopyToClipboard = async (): Promise<void> => {
+    await copyToClipboard();
+  };
+
   return (
     <Card className="p-3 sm:p-5 max-w-full">
       <ShoppingListHeader 
         list={list} 
         onDelete={onDelete}
         itemsByDepartment={itemsByDepartment}
-        onCopyToClipboard={copyToClipboard}
+        onCopyToClipboard={handleCopyToClipboard}
         completionPercentage={completionPercentage}
         completedCount={completedCount}
         totalItems={totalItems}

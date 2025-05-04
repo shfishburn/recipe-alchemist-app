@@ -1,12 +1,14 @@
 
 /* Touch optimizations for mobile devices */
 .touch-optimized .touch-target {
-  min-height: 44px; /* Apple's recommended minimum touch target size */
+  min-height: 48px; /* Increased from Apple's recommended minimum (44px) for better usability */
 }
 
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
 }
 
 /* Better touch targets for interactive elements */
@@ -39,11 +41,77 @@
   .touch-optimized .button:active,
   .touch-optimized [role="button"]:active {
     opacity: 0.7;
-    transition: opacity 0.1s;
+    transform: scale(0.98);
+    transition: opacity 0.1s, transform 0.1s;
   }
+  
+  /* Always show delete buttons on touch devices */
+  .touch-optimized .group:hover .opacity-0 {
+    opacity: 1 !important;
+  }
+}
+
+/* Visual feedback on touch */
+.touch-feedback:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.touch-feedback-optimized {
+  will-change: transform, opacity;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-feedback-optimized:active {
+  opacity: 0.8;
+  transform: scale(0.98);
 }
 
 /* Add class to apply when page is loaded to avoid transition flashes */
 .completed-loading * {
-  transition: background-color 0.2s, opacity 0.2s, color 0.2s;
+  transition: background-color 0.2s, opacity 0.2s, color 0.2s, transform 0.15s;
+}
+
+/* Improved scrolling indication for overflow content */
+.touch-scroll {
+  position: relative;
+}
+
+.touch-scroll:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.2));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.touch-scroll.has-overflow:after {
+  opacity: 1;
+}
+
+/* Add haptic feedback for iOS devices */
+@supports (-webkit-touch-callout: none) {
+  .touch-optimized .haptic-feedback {
+    cursor: pointer;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Prevent text selection during taps */
+.touch-optimized .prevent-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Adaptive touch targets based on device size */
+@media (max-width: 380px) {
+  .touch-optimized .touch-target-adaptive {
+    min-height: 52px;
+    min-width: 52px;
+  }
 }

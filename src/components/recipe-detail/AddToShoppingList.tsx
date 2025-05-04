@@ -1,8 +1,6 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ShoppingBag } from 'lucide-react';
-import { AddToShoppingListDialog } from './shopping-list/AddToShoppingListDialog';
+import React from 'react';
+import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
 import type { Recipe } from '@/types/recipe';
 
 interface AddToShoppingListProps {
@@ -10,26 +8,5 @@ interface AddToShoppingListProps {
 }
 
 export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
-  const [open, setOpen] = useState(false);
-  
-  return (
-    <>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="flex items-center gap-2 w-full hover:bg-primary/10 transition-colors"
-        onClick={() => setOpen(true)}
-      >
-        <ShoppingBag className="h-4 w-4" />
-        <span>Add to Shopping List</span>
-      </Button>
-      
-      <AddToShoppingListDialog
-        recipe={recipe}
-        open={open}
-        onOpenChange={setOpen}
-        data-testid="shopping-list-dialog"
-      />
-    </>
-  );
+  return <EnhancedAddToList recipe={recipe} />;
 }

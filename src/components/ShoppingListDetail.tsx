@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { ShoppingListControls } from '@/components/shopping-list/detail/Shopping
 import { AddItemForm } from '@/components/shopping-list/detail/AddItemForm';
 import { ShoppingListItemsView } from '@/components/shopping-list/detail/ShoppingListItemsView';
 import { ShoppingListProgress } from '@/components/shopping-list/detail/ShoppingListProgress';
-import { useShoppingList } from '@/hooks/shopping-list';
+import { useShoppingList } from '@/hooks/shopping-list/use-shopping-list';
 
 // Import touch optimizations
 import '@/styles/touch-optimizations.css';
@@ -58,13 +59,18 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     };
   }, []);
 
+  // Fix: Convert Promise<boolean> to Promise<void>
+  const handleCopyToClipboard = async (): Promise<void> => {
+    await copyToClipboard();
+  };
+
   return (
     <Card className="p-4 md:p-6">
       <ShoppingListHeader 
         list={list} 
         onDelete={onDelete}
         itemsByDepartment={itemsByDepartment}
-        onCopyToClipboard={copyToClipboard}
+        onCopyToClipboard={handleCopyToClipboard}
         completionPercentage={completionPercentage}
         completedCount={completedCount}
         totalItems={totalItems}

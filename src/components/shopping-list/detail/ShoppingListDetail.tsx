@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
@@ -11,6 +11,9 @@ import { AddItemForm } from './AddItemForm';
 import { ShoppingListItemsView } from './ShoppingListItemsView';
 import { ShoppingListProgress } from './ShoppingListProgress';
 import { useShoppingList } from '@/hooks/shopping-list';
+
+// Import touch optimizations
+import '@/styles/touch-optimizations.css';
 
 interface ShoppingListDetailProps {
   list: ShoppingList;
@@ -45,13 +48,29 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
   const completedCount = list.items.filter(item => item.checked).length;
   const completionPercentage = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
 
+  // Add touch optimization class on mount
+  useEffect(() => {
+    document.body.classList.add('completed-loading');
+    document.body.classList.add('touch-optimized');
+    
+    return () => {
+      document.body.classList.remove('completed-loading');
+      document.body.classList.remove('touch-optimized');
+    };
+  }, []);
+
+  // Fix: Convert Promise<boolean> to Promise<void>
+  const handleCopyToClipboard = async (): Promise<void> => {
+    await copyToClipboard();
+  };
+
   return (
     <Card className="p-2 md:p-3 max-w-full">
       <ShoppingListHeader 
         list={list} 
         onDelete={onDelete}
         itemsByDepartment={itemsByDepartment}
-        onCopyToClipboard={copyToClipboard}
+        onCopyToClipboard={handleCopyToClipboard}
         completionPercentage={completionPercentage}
         completedCount={completedCount}
         totalItems={totalItems}
