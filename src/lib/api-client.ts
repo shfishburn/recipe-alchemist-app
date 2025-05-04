@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLoadingState } from '@/hooks/use-loading-state';
 
 /**
@@ -161,8 +161,5 @@ export function useApiRequest() {
     reset
   };
 }
-
-// Make sure to import useEffect
-import { useEffect } from 'react';
 
 export default useApiRequest;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CardWrapper } from "@/components/ui/card-wrapper";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useAnalysisContent } from '@/hooks/use-analysis-content';
 import { AnalysisHeader } from './AnalysisHeader';
@@ -9,6 +9,7 @@ import { AnalysisLoading } from './AnalysisLoading';
 import { EmptyAnalysis } from './EmptyAnalysis';
 import { AnalysisContent } from './AnalysisContent';
 import { useRecipeAnalysisData } from './hooks/useRecipeAnalysisData';
+import { ErrorDisplay } from '@/components/ui/error-display';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeAnalysisProps {
@@ -28,7 +29,8 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     stepReactions,
     scienceNotes,
     hasAnalysisData,
-    handleAnalyze
+    handleAnalyze,
+    error
   } = useRecipeAnalysisData(recipe, (updatedRecipe) => {
     // Handle recipe updates with the update mutation
     updateRecipe.mutate(
@@ -58,33 +60,47 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
   const showAnalysisPrompt = (!analysis && !isLoading && (!stepReactions || stepReactions.length === 0) && !isAnalyzing) || 
     (!hasAnyContent && !isAnalyzing && !isLoading);
 
+  // If there's an error, show the error display
+  if (error) {
+    return (
+      <CardWrapper>
+        <ErrorDisplay
+          error={error}
+          title="Failed to analyze recipe"
+          onRetry={handleAnalyze}
+        />
+      </CardWrapper>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <CardWrapper
+      variant="bordered"
+      padding="default"
+      headerClassName="pb-3"
+      headerAction={
         <AnalysisHeader 
           hasContent={hasAnyContent}
           isAnalyzing={isAnalyzing}
           onRegenerate={handleAnalyze}
         />
-      </CardHeader>
-
-      <CardContent>
-        {isLoading || isAnalyzing ? (
-          <AnalysisLoading />
-        ) : showAnalysisPrompt ? (
-          <AnalysisPrompt onAnalyze={handleAnalyze} />
-        ) : hasAnyContent ? (
-          <AnalysisContent
-            chemistry={chemistry}
-            techniques={techniques}
-            troubleshooting={troubleshooting}
-            rawResponse={analysis?.textResponse || null}
-            stepReactions={stepReactions}
-          />
-        ) : (
-          <EmptyAnalysis onAnalyze={handleAnalyze} />
-        )}
-      </CardContent>
-    </Card>
+      }
+    >
+      {isLoading || isAnalyzing ? (
+        <AnalysisLoading />
+      ) : showAnalysisPrompt ? (
+        <AnalysisPrompt onAnalyze={handleAnalyze} />
+      ) : hasAnyContent ? (
+        <AnalysisContent
+          chemistry={chemistry}
+          techniques={techniques}
+          troubleshooting={troubleshooting}
+          rawResponse={analysis?.textResponse || null}
+          stepReactions={stepReactions}
+        />
+      ) : (
+        <EmptyAnalysis onAnalyze={handleAnalyze} />
+      )}
+    </CardWrapper>
   );
 }

@@ -3,6 +3,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
+import { useErrorHandler } from '@/hooks/use-error-handler';
 import { toast } from 'sonner';
 import type { Recipe } from '@/types/recipe';
 
@@ -25,6 +26,12 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const analysisRequestRef = useRef<AbortController | null>(null);
+  
+  // Use error handler for standardized error handling
+  const { error, setError, clearError } = useErrorHandler({
+    toastTitle: 'Analysis Error',
+    showToast: false // We'll handle toasts manually for better UX
+  });
 
   // Use our unified science data hook
   const { stepReactions, hasAnalysisData, scienceNotes, refetch: refetchReactions } = useRecipeScience(recipe);
@@ -34,6 +41,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
       console.log('Fetching recipe analysis for', recipe.title);
+      clearError();
       
       try {
         // Create an AbortController for timeout handling
@@ -88,6 +96,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     enabled: false, // Don't auto-fetch on mount
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 1,
+    onError: (error: any) => setError(error)
   });
 
   // Function to analyze reactions with OpenAI
@@ -128,7 +137,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       }
     } catch (error: any) {
       console.error('Error analyzing reactions:', error);
-      toast.error('Failed to analyze reactions: ' + error.message);
+      setError(error);
+      toast.error('Failed to analyze reactions: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       // Only reset analyzing state once both operations are complete or have failed
       if (!analysis) {
@@ -141,12 +151,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   const handleAnalyze = useCallback(() => {
     if (!isLoading && !isAnalyzing) {
       setIsAnalyzing(true);
+      clearError(); // Clear any previous errors
       toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
       
       // Start both analyses in parallel
       Promise.all([
         refetch().catch(error => {
           console.error("Analysis error:", error);
+          setError(error);
           toast.error("Failed to analyze recipe: " + (error instanceof Error ? error.message : "Unknown error"));
         }),
         analyzeReactions()
@@ -154,7 +166,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         setIsAnalyzing(false);
       });
     }
-  }, [refetch, isLoading, isAnalyzing]);
+  }, [refetch, isLoading, isAnalyzing, clearError]);
 
   // Auto-analyze when opened for the first time
   useEffect(() => {
@@ -200,6 +212,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     stepReactions,
     scienceNotes,
     hasAnalysisData,
-    handleAnalyze
+    handleAnalyze,
+    error
   };
 }

@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisResponse {
@@ -22,7 +22,7 @@ export function useAnalysisContent(
   scienceNotes: string[],
   stepReactions: StepReaction[]
 ): AnalysisContentData {
-  // Extract analysis content
+  // Extract analysis content with memoized callback
   const extractAnalysisContent = useCallback(() => {
     // First check for pre-existing notes in the recipe
     const existingNotes = scienceNotes.length > 0;
@@ -54,15 +54,21 @@ export function useAnalysisContent(
     return { chemistry, techniques, troubleshooting };
   }, [analysis, scienceNotes]);
 
-  const { chemistry, techniques, troubleshooting } = extractAnalysisContent();
+  // Use memoization for the content extraction
+  const { chemistry, techniques, troubleshooting } = useMemo(() => 
+    extractAnalysisContent(), 
+    [extractAnalysisContent]
+  );
   
-  // Determine if there's any analysis content available
-  const hasAnyContent = 
+  // Determine if there's any analysis content available with memoization
+  const hasAnyContent = useMemo(() => 
     (chemistry !== null) || 
     (techniques !== null) || 
     (troubleshooting !== null) ||
     (analysis?.textResponse && analysis.textResponse.length > 50) ||
-    (stepReactions && stepReactions.length > 0);
+    (stepReactions && stepReactions.length > 0),
+    [chemistry, techniques, troubleshooting, analysis?.textResponse, stepReactions]
+  );
 
   return {
     chemistry,
