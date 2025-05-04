@@ -93,11 +93,13 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
   return (
     <div className="space-y-4">
       <Tabs defaultValue="comparison" className="w-full">
-        <TabsList className="mb-4 w-full justify-start">
-          <TabsTrigger value="comparison" className="flex-1">Comparison</TabsTrigger>
-          <TabsTrigger value="distribution" className="flex-1">Distribution</TabsTrigger>
-          <TabsTrigger value="micronutrients" className="flex-1">Micronutrients</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center mb-4">
+          <TabsList className="flex w-full overflow-x-auto rounded-md p-1 mb-0 md:max-w-fit">
+            <TabsTrigger value="comparison" className="flex-1 md:flex-none">Comparison</TabsTrigger>
+            <TabsTrigger value="distribution" className="flex-1 md:flex-none">Distribution</TabsTrigger>
+            <TabsTrigger value="micronutrients" className="flex-1 md:flex-none">Micronutrients</TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="comparison" className="pt-2">
           <ComparisonChart compareData={compareData} unitSystem={unitSystem} />

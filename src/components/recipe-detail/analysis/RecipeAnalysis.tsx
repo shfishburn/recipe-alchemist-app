@@ -9,7 +9,7 @@ import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import type { Recipe, Ingredient } from '@/types/recipe';
+import type { Recipe } from '@/types/recipe';
 
 // Define reaction item type
 interface ReactionItem {
@@ -53,6 +53,14 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   
   // Flag to track if content has been parsed
   const contentParsedRef = useRef(false);
+
+  // Auto-analyze when opened for the first time
+  useEffect(() => {
+    if (isOpen && !initialAnalysisRef.current && !isAnalyzing) {
+      initialAnalysisRef.current = true;
+      handleAnalyze();
+    }
+  }, [isOpen]);
   
   // Fetch reaction data from Supabase
   const { data: reactions, isLoading: isLoadingReactions, refetch: refetchReactions } = useQuery({
@@ -114,7 +122,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     },
     enabled: false, // Don't auto-fetch on mount
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    retry: 1,
+    retry: 2, // Increased retries from 1 to 2
   });
 
   // Function to analyze reactions with OpenAI
@@ -152,7 +160,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
   // Function to manually trigger analysis
   const handleAnalyze = useCallback(() => {
-    if (!isLoading) {
+    if (!isLoading && !isAnalyzing) {
       // Reset content parsing state when manually retrying
       contentParsedRef.current = false;
       setParsedContent({
@@ -168,13 +176,16 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       Promise.all([
         refetch(),
         analyzeReactions()
-      ]).finally(() => {
+      ]).catch(error => {
+        console.error("Analysis error:", error);
+        toast.error("Failed to analyze recipe: " + (error instanceof Error ? error.message : "Unknown error"));
+      }).finally(() => {
         setIsAnalyzing(false);
       });
       
-      toast.info("Analyzing recipe...");
+      toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
     }
-  }, [refetch, isLoading]);
+  }, [refetch, isLoading, isAnalyzing, analyzeReactions]);
 
   // Apply analysis updates to recipe when data is available, but only once
   useEffect(() => {
@@ -290,17 +301,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       .join(' ');
   };
 
-  // Set initialAnalysisRef to true after initial render
-  useEffect(() => {
-    if (analysis && !initialAnalysisRef.current) {
-      // Use a small delay to ensure this runs after the data is loaded
-      const timer = setTimeout(() => {
-        initialAnalysisRef.current = true;
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [analysis]);
-
   // Pre-process content once when analysis data is available
   useEffect(() => {
     if (analysis && !contentParsedRef.current) {
@@ -358,11 +358,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       contentParsedRef.current = true;
     }
   }, [analysis]);
-
-  // Helper function to check if a data section has content
-  const hasContent = (section: any[]): boolean => {
-    return Array.isArray(section) && section.length > 0;
-  };
 
   // Helper to format science notes with icons
   function formatScienceNote(note: string, index: number) {
@@ -448,7 +443,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     (reactionData && reactionData.length > 0);
 
   // Check if we should show the analysis prompt
-  const showAnalysisPrompt = !analysis && !isLoading && !reactionData.length;
+  const showAnalysisPrompt = !analysis && !isLoading && !reactionData.length && !isAnalyzing;
 
   // Check if the reactions analysis was done (for tab visibility)
   const hasReactionAnalysis = reactionData && reactionData.length > 0;
@@ -510,26 +505,36 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               </div>
             ) : hasAnyAnalysisContent ? (
               <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-                <TabsList className="mb-4 w-full flex justify-between overflow-x-auto">
-                  <TabsTrigger value="chemistry" className="flex items-center gap-2">
-                    <Beaker className="h-4 w-4" />
-                    Chemistry
-                  </TabsTrigger>
-                  <TabsTrigger value="techniques" className="flex items-center gap-2">
-                    <BookOpenText className="h-4 w-4" />
-                    Techniques
-                  </TabsTrigger>
-                  {hasReactionAnalysis && (
-                    <TabsTrigger value="reactions" className="flex items-center gap-2">
-                      <Atom className="h-4 w-4" />
-                      Reactions
+                <div className="flex items-center mb-4">
+                  <TabsList className="flex w-full overflow-x-auto overflow-y-hidden h-auto p-1 rounded-md md:max-w-fit">
+                    <TabsTrigger value="chemistry" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                      <div className="flex items-center gap-1">
+                        <Beaker className="h-4 w-4 shrink-0" />
+                        <span>Chemistry</span>
+                      </div>
                     </TabsTrigger>
-                  )}
-                  <TabsTrigger value="troubleshooting" className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    Troubleshooting
-                  </TabsTrigger>
-                </TabsList>
+                    <TabsTrigger value="techniques" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                      <div className="flex items-center gap-1">
+                        <BookOpenText className="h-4 w-4 shrink-0" />
+                        <span>Techniques</span>
+                      </div>
+                    </TabsTrigger>
+                    {hasReactionAnalysis && (
+                      <TabsTrigger value="reactions" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                        <div className="flex items-center gap-1">
+                          <Atom className="h-4 w-4 shrink-0" />
+                          <span>Reactions</span>
+                        </div>
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="troubleshooting" className="h-auto flex-1 py-2 md:flex-none whitespace-normal">
+                      <div className="flex items-center gap-1">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>Troubleshoot</span>
+                      </div>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
                 
                 <TabsContent value="chemistry" className="prose prose-zinc dark:prose-invert max-w-none">
                   <div className="space-y-2">

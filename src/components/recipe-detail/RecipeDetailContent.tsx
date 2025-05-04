@@ -94,7 +94,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     if (!sections.analysis) {
       setIsAnalyzing(true);
       // Set a timeout to hide the loading state after a reasonable delay
-      setTimeout(() => setIsAnalyzing(false), 500);
+      setTimeout(() => setIsAnalyzing(false), 3000); // Increased from 500ms to 3000ms
     }
     toggleSection('analysis');
   };

@@ -18,7 +18,7 @@ export const useChatMutations = (recipe: Recipe) => {
       messageId
     }: {
       message: string;
-      sourceType?: 'manual' | 'image' | 'url';
+      sourceType?: 'manual' | 'image' | 'url' | 'analysis';
       sourceUrl?: string;
       sourceImage?: string;
       messageId?: string;
@@ -57,7 +57,7 @@ export const useChatMutations = (recipe: Recipe) => {
                 }
               }),
               new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Request timed out")), 20000)
+                setTimeout(() => reject(new Error("Request timed out")), 40000) // Increased from 20s to 40s
               )
             ]) as { data?: any, error?: any };
             
