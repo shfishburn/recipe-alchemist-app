@@ -13,33 +13,75 @@ export function groupItemsByDepartment(items: ShoppingListItem[]): Record<string
 }
 
 /**
- * Sort and filter items by search term and sort order
+ * Filter and organize items based on search term and sort order
  */
 export function organizeItems(
-  items: ShoppingListItem[], 
+  items: ShoppingListItem[],
   searchTerm: string,
   sortOrder: 'asc' | 'desc' | 'dept'
 ): Record<string, ShoppingListItem[]> {
-  // Filter items by search term
+  // First filter items based on search term
   const filteredItems = searchTerm.trim() === '' 
     ? items 
-    : items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    : items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
   
-  // For 'asc' and 'desc' sort orders, group all items together
-  if (sortOrder === 'asc' || sortOrder === 'desc') {
-    const sortedItems = [...filteredItems].sort((a, b) => {
-      return sortOrder === 'asc'
-        ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name);
-    });
-    
+  // Then sort based on selected sort order
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    switch (sortOrder) {
+      case 'asc':
+        return a.name.localeCompare(b.name);
+      case 'desc':
+        return b.name.localeCompare(a.name);
+      default:
+        return 0;
+    }
+  });
+  
+  // Finally group by department if sort order is 'dept'
+  if (sortOrder === 'dept') {
+    return groupItemsByDepartment(sortedItems);
+  } else {
+    // Otherwise return a single group with all items
     return { 'All Items': sortedItems };
   }
+}
+
+/**
+ * Get department color class
+ */
+export function getDepartmentColorClass(department: string): string {
+  const deptLower = department.toLowerCase();
   
-  // For 'dept', group by department
-  return groupItemsByDepartment(filteredItems);
+  if (deptLower.includes('produce') || deptLower.includes('vegetable') || deptLower.includes('fruit')) {
+    return 'bg-green-100 text-green-800';
+  }
+  
+  if (deptLower.includes('meat') || deptLower.includes('seafood') || deptLower.includes('fish')) {
+    return 'bg-red-100 text-red-800';
+  }
+  
+  if (deptLower.includes('dairy') || deptLower.includes('egg')) {
+    return 'bg-blue-100 text-blue-800';
+  }
+  
+  if (deptLower.includes('bakery') || deptLower.includes('bread')) {
+    return 'bg-amber-100 text-amber-800';
+  }
+  
+  if (deptLower.includes('pantry') || deptLower.includes('dry')) {
+    return 'bg-orange-100 text-orange-800';
+  }
+  
+  if (deptLower.includes('frozen')) {
+    return 'bg-indigo-100 text-indigo-800';
+  }
+  
+  if (deptLower.includes('beverage') || deptLower.includes('drink')) {
+    return 'bg-purple-100 text-purple-800';
+  }
+  
+  // Default
+  return 'bg-muted/30';
 }
 
 /**

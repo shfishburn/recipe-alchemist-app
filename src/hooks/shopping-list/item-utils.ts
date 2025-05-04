@@ -1,53 +1,51 @@
 
 import { ShoppingListItem } from '@/types/shopping-list';
-import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
-import { ToastProps } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
 
-// Helper function to get the index of an item in the list
-export function getItemIndex(items: ShoppingListItem[], item: ShoppingListItem): number {
+interface UtilsOptions {
+  toast: any;
+}
+
+// Get the index of an item in the items array
+export function getItemIndex(
+  items: ShoppingListItem[],
+  item: ShoppingListItem
+): number {
   return items.findIndex(
     i => i.name === item.name && i.unit === item.unit && i.department === item.department
   );
 }
 
-type ToastHandler = {
-  toast: (props: ToastProps) => string | number;
-};
-
-// Helper function to toggle an item's checked state
+// Toggle an item's checked state
 export async function toggleItemChecked(
   listId: string, 
   items: ShoppingListItem[], 
   index: number,
-  { toast }: ToastHandler
+  options: UtilsOptions
 ): Promise<ShoppingListItem[] | null> {
   try {
-    // Optimistically update the local state first for immediate feedback
+    // Optimistically update the local state
     const updatedItems = [...items];
     updatedItems[index] = {
       ...updatedItems[index],
       checked: !updatedItems[index].checked
     };
     
-    // Then send the update to the server
+    // Update in database
     const { error } = await supabase
       .from('shopping_lists')
       .update({ items: updatedItems as unknown as Json })
       .eq('id', listId);
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update item',
-        variant: 'destructive'
-      });
-      return null;
+      throw error;
     }
 
     return updatedItems;
   } catch (error) {
-    toast({
+    console.error("Error toggling item:", error);
+    options.toast({
       title: 'Error',
       description: 'Failed to update item',
       variant: 'destructive'
@@ -56,39 +54,36 @@ export async function toggleItemChecked(
   }
 }
 
-// Helper function to delete an item from the list
+// Delete an item from the shopping list
 export async function deleteItem(
-  listId: string, 
+  listId: string,
   items: ShoppingListItem[], 
   index: number,
-  { toast }: ToastHandler
+  options: UtilsOptions
 ): Promise<ShoppingListItem[] | null> {
   try {
-    // Optimistically update the UI
+    // Create updated items array without the deleted item
     const updatedItems = items.filter((_, i) => i !== index);
-
+    
+    // Update in database
     const { error } = await supabase
       .from('shopping_lists')
       .update({ items: updatedItems as unknown as Json })
       .eq('id', listId);
 
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete item',
-        variant: 'destructive'
-      });
-      return null;
+      throw error;
     }
 
-    toast({
+    options.toast({
       title: 'Success',
       description: 'Item removed from list'
     });
-    
+
     return updatedItems;
   } catch (error) {
-    toast({
+    console.error("Error deleting item:", error);
+    options.toast({
       title: 'Error',
       description: 'Failed to delete item',
       variant: 'destructive'
@@ -97,42 +92,37 @@ export async function deleteItem(
   }
 }
 
-// Helper function to add an item to the list
+// Add a new item to the shopping list
 export async function addItem(
-  listId: string, 
+  listId: string,
   items: ShoppingListItem[], 
   newItem: Omit<ShoppingListItem, 'checked'>,
-  { toast }: ToastHandler
+  options: UtilsOptions
 ): Promise<ShoppingListItem[] | null> {
   try {
-    // Convert to shoppable format if possible
+    // Create full item with checked state
     const item: ShoppingListItem = {
       ...newItem,
-      checked: false,
-      // If user provided shop size quantities, use them
-      shop_size_qty: newItem.shop_size_qty || newItem.quantity,
-      shop_size_unit: newItem.shop_size_unit || newItem.unit
+      checked: false
     };
     
+    // Add to items array
     const updatedItems = [...items, item];
     
+    // Update in database
     const { error } = await supabase
       .from('shopping_lists')
       .update({ items: updatedItems as unknown as Json })
       .eq('id', listId);
       
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to add item',
-        variant: 'destructive'
-      });
-      return null;
+      throw error;
     }
-    
+
     return updatedItems;
   } catch (error) {
-    toast({
+    console.error("Error adding item:", error);
+    options.toast({
       title: 'Error',
       description: 'Failed to add item',
       variant: 'destructive'
@@ -141,37 +131,34 @@ export async function addItem(
   }
 }
 
-// Helper function to toggle all items in a department
+// Toggle all items in a department
 export async function toggleDepartmentItems(
-  listId: string, 
+  listId: string,
   items: ShoppingListItem[], 
   department: string, 
   checked: boolean,
-  { toast }: ToastHandler
+  options: UtilsOptions
 ): Promise<ShoppingListItem[] | null> {
   try {
-    // Optimistically update local state
+    // Update all items in the department
     const updatedItems = items.map(item => 
       item.department === department ? {...item, checked} : item
     );
     
+    // Update in database
     const { error } = await supabase
       .from('shopping_lists')
       .update({ items: updatedItems as unknown as Json })
       .eq('id', listId);
       
     if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update items',
-        variant: 'destructive'
-      });
-      return null;
+      throw error;
     }
-    
+
     return updatedItems;
   } catch (error) {
-    toast({
+    console.error("Error updating department items:", error);
+    options.toast({
       title: 'Error',
       description: 'Failed to update items',
       variant: 'destructive'

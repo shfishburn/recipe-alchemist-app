@@ -1,97 +1,75 @@
 
 import React from 'react';
-import { 
-  Carrot, 
-  Utensils, 
-  MilkOff, 
-  WheatOff, 
-  Package, 
-  Snowflake, 
-  Coffee, 
-  ShoppingBag,
-  LucideIcon
-} from 'lucide-react';
+import { Apple, Beef, Egg, Bread, Package2, Snowflake, Coffee } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
-// Map department names to icons
-export function getDepartmentIcon(department: string): LucideIcon {
-  // Normalize the department name for comparison
-  const normalizedDept = department.toLowerCase().trim();
+// Get appropriate icon for a department
+export function getDepartmentIcon(department: string): LucideIcon | null {
+  const deptLower = department.toLowerCase();
   
-  // Map department names to icons
-  if (normalizedDept.includes('produce') || normalizedDept.includes('vegetable') || normalizedDept.includes('fruit')) {
-    return Carrot;
+  if (deptLower.includes('produce') || deptLower.includes('vegetable') || deptLower.includes('fruit')) {
+    return Apple;
   }
   
-  if (normalizedDept.includes('meat') || normalizedDept.includes('seafood') || normalizedDept.includes('protein')) {
-    return Utensils;
+  if (deptLower.includes('meat') || deptLower.includes('seafood') || deptLower.includes('fish')) {
+    return Beef;
   }
   
-  if (normalizedDept.includes('dairy') || normalizedDept.includes('egg') || normalizedDept.includes('milk')) {
-    return MilkOff;
+  if (deptLower.includes('dairy') || deptLower.includes('egg')) {
+    return Egg;
   }
   
-  if (normalizedDept.includes('bakery') || normalizedDept.includes('bread') || normalizedDept.includes('grain')) {
-    return WheatOff;
+  if (deptLower.includes('bakery') || deptLower.includes('bread')) {
+    return Bread;
   }
   
-  if (normalizedDept.includes('frozen')) {
+  if (deptLower.includes('pantry') || deptLower.includes('dry')) {
+    return Package2;
+  }
+  
+  if (deptLower.includes('frozen')) {
     return Snowflake;
   }
   
-  if (normalizedDept.includes('beverage') || normalizedDept.includes('drink')) {
+  if (deptLower.includes('beverage') || deptLower.includes('drink')) {
     return Coffee;
   }
   
-  if (normalizedDept.includes('pantry') || normalizedDept.includes('canned') || normalizedDept.includes('dry')) {
-    return Package;
-  }
-  
-  // Default icon for other departments
-  return ShoppingBag;
+  return null;
 }
 
-// Map department names to color classes
+// Get department color classes
 export function getDepartmentColor(department: string): string {
-  // Normalize the department name for comparison
-  const normalizedDept = department.toLowerCase().trim();
+  const deptLower = department.toLowerCase();
   
-  // Map department names to color classes
-  if (normalizedDept.includes('produce') || normalizedDept.includes('vegetable') || normalizedDept.includes('fruit')) {
-    return 'bg-green-50 dark:bg-green-950/30';
+  if (deptLower.includes('produce') || deptLower.includes('vegetable') || deptLower.includes('fruit')) {
+    return 'bg-green-50 text-green-700';
   }
   
-  if (normalizedDept.includes('meat') || normalizedDept.includes('seafood') || normalizedDept.includes('protein')) {
-    return 'bg-red-50 dark:bg-red-950/30';
+  if (deptLower.includes('meat') || deptLower.includes('seafood') || deptLower.includes('fish')) {
+    return 'bg-red-50 text-red-700';
   }
   
-  if (normalizedDept.includes('dairy') || normalizedDept.includes('egg') || normalizedDept.includes('milk')) {
-    return 'bg-blue-50 dark:bg-blue-950/30';
+  if (deptLower.includes('dairy') || deptLower.includes('egg')) {
+    return 'bg-blue-50 text-blue-700';
   }
   
-  if (normalizedDept.includes('bakery') || normalizedDept.includes('bread') || normalizedDept.includes('grain')) {
-    return 'bg-amber-50 dark:bg-amber-950/30';
+  if (deptLower.includes('bakery') || deptLower.includes('bread')) {
+    return 'bg-amber-50 text-amber-700';
   }
   
-  if (normalizedDept.includes('frozen')) {
-    return 'bg-cyan-50 dark:bg-cyan-950/30';
+  if (deptLower.includes('pantry') || deptLower.includes('dry') || deptLower === 'other') {
+    return 'bg-orange-50 text-orange-700';
   }
   
-  if (normalizedDept.includes('beverage') || normalizedDept.includes('drink')) {
-    return 'bg-orange-50 dark:bg-orange-950/30';
+  if (deptLower.includes('frozen')) {
+    return 'bg-indigo-50 text-indigo-700';
   }
   
-  if (normalizedDept.includes('pantry') || normalizedDept.includes('canned') || normalizedDept.includes('dry')) {
-    return 'bg-yellow-50 dark:bg-yellow-950/30';
+  if (deptLower.includes('beverage') || deptLower.includes('drink')) {
+    return 'bg-purple-50 text-purple-700';
   }
   
-  if (normalizedDept.includes('spice') || normalizedDept.includes('herb')) {
-    return 'bg-purple-50 dark:bg-purple-950/30';
-  }
-  
-  if (normalizedDept.includes('snack') || normalizedDept.includes('sweet')) {
-    return 'bg-pink-50 dark:bg-pink-950/30';
-  }
-  
-  // Default color for other departments
-  return 'bg-gray-50 dark:bg-gray-800/30';
+  // Default
+  return 'bg-gray-50 text-gray-700';
 }
