@@ -23,7 +23,6 @@ export const AnalysisErrorDisplay = memo(function AnalysisErrorDisplay({
         error={errorMessage}
         title="Failed to analyze recipe"
         onRetry={onRetry}
-        icon={<AlertTriangle className="h-10 w-10 text-amber-500" />}
       />
     </CardWrapper>
   );
