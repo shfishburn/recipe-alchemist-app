@@ -4,6 +4,8 @@ import { Atom } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StepReaction, formatReactionName } from '@/hooks/use-recipe-science';
 import { cn } from '@/lib/utils';
+import { StepCategoryLabel } from './StepCategoryLabel';
+import type { StepCategory } from './StepCategoryLabel';
 
 interface StepDisplayProps {
   stepNumber: number;
@@ -12,6 +14,7 @@ interface StepDisplayProps {
   onToggleComplete?: () => void;
   stepReaction?: StepReaction | null;
   variant: 'instruction' | 'cooking';
+  stepCategory?: StepCategory | string;
 }
 
 /**
@@ -23,7 +26,8 @@ export function StepDisplay({
   isCompleted = false,
   onToggleComplete,
   stepReaction,
-  variant
+  variant,
+  stepCategory
 }: StepDisplayProps) {
   const [showScience, setShowScience] = useState<boolean>(false);
   
@@ -68,14 +72,20 @@ export function StepDisplay({
         onClick={handleStepClick}
         className={containerClasses}
       >
-        {/* Step header with step number and science toggle */}
+        {/* Step header with step number, category label and science toggle */}
         <div className="flex items-center justify-between mb-3">
-          <span className={cn(
-            "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md",
-            isCompleted ? "bg-green-100 text-green-700" : "bg-recipe-blue/10 text-recipe-blue"
-          )}>
-            Step {stepNumber}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md",
+              isCompleted ? "bg-green-100 text-green-700" : "bg-recipe-blue/10 text-recipe-blue"
+            )}>
+              Step {stepNumber}
+            </span>
+            
+            {stepCategory && (
+              <StepCategoryLabel category={stepCategory} />
+            )}
+          </div>
           
           {/* Science button - only shown if step has science data */}
           {hasScience && (

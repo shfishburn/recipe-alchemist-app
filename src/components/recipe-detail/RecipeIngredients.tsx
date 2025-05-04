@@ -8,6 +8,8 @@ import type { Recipe } from '@/hooks/use-recipe-detail';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
 import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
+import { groupIngredientsByDepartment, getDepartmentDisplayOrder } from '@/utils/ingredient-department-utils';
+import { IngredientDepartmentHeader } from './ingredients/IngredientDepartmentHeader';
 
 interface RecipeIngredientsProps {
   recipe: Recipe;
@@ -17,6 +19,15 @@ interface RecipeIngredientsProps {
 
 export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredientsProps) {
   const { unitSystem } = useUnitSystem();
+  
+  // Group ingredients by department
+  const ingredientsByDepartment = groupIngredientsByDepartment(recipe.ingredients);
+  const departmentOrder = getDepartmentDisplayOrder();
+  
+  // Sort departments based on the predefined order
+  const sortedDepartments = Object.keys(ingredientsByDepartment).sort(
+    (a, b) => departmentOrder.indexOf(a) - departmentOrder.indexOf(b)
+  );
   
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle} className="relative">
@@ -47,34 +58,43 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
             <div className="mb-4">
               <EnhancedAddToList recipe={recipe} />
             </div>
-            <ul className="space-y-3">
-              {recipe.ingredients && Array.isArray(recipe.ingredients) ? 
-                recipe.ingredients.map((ingredient, index) => (
-                  <li 
-                    key={index}
-                    className="text-sm sm:text-base"
-                  >
-                    {typeof ingredient === 'string' ? (
-                      <span>{ingredient}</span>
-                    ) : (
-                      <>
-                        <span className="font-medium">
-                          {unitSystem === 'metric' ? 
-                            // Use metric values if available
-                            `${ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty} ${ingredient.unit_metric || ingredient.unit}` : 
-                            // Use imperial values if available
-                            `${ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty} ${ingredient.unit_imperial || ingredient.unit}`
-                          }
-                        </span>{' '}
-                        {ingredient.item}
-                        {ingredient.notes && <span className="text-gray-500"> ({ingredient.notes})</span>}
-                      </>
-                    )}
-                  </li>
-                )) : 
-                <li className="text-muted-foreground">No ingredients listed</li>
-              }
-            </ul>
+            
+            {recipe.ingredients && Array.isArray(recipe.ingredients) ? (
+              <div className="space-y-5">
+                {sortedDepartments.map((department) => (
+                  <div key={department} className="ingredient-department">
+                    <IngredientDepartmentHeader department={department} />
+                    <ul className="space-y-3 pl-1">
+                      {ingredientsByDepartment[department].map((ingredient, index) => (
+                        <li 
+                          key={`${department}-${index}`}
+                          className="text-sm sm:text-base"
+                        >
+                          {typeof ingredient === 'string' ? (
+                            <span>{ingredient}</span>
+                          ) : (
+                            <>
+                              <span className="font-medium">
+                                {unitSystem === 'metric' ? 
+                                  // Use metric values if available
+                                  `${ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty} ${ingredient.unit_metric || ingredient.unit}` : 
+                                  // Use imperial values if available
+                                  `${ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty} ${ingredient.unit_imperial || ingredient.unit}`
+                                }
+                              </span>{' '}
+                              {ingredient.item}
+                              {ingredient.notes && <span className="text-gray-500"> ({ingredient.notes})</span>}
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No ingredients listed</p>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Card>

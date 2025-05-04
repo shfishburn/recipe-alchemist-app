@@ -2,6 +2,7 @@
 import React from 'react';
 import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
+import type { StepCategory } from '../common/StepCategoryLabel';
 
 interface CookingStepProps {
   stepNumber: number;
@@ -9,6 +10,7 @@ interface CookingStepProps {
   isCompleted: boolean;
   onToggleComplete: () => void;
   stepReaction?: StepReaction | null;
+  stepCategory?: StepCategory | string;
 }
 
 export function CookingStep({ 
@@ -16,7 +18,8 @@ export function CookingStep({
   instruction, 
   isCompleted, 
   onToggleComplete,
-  stepReaction
+  stepReaction,
+  stepCategory
 }: CookingStepProps) {
   return (
     <div className="mb-6">
@@ -27,6 +30,7 @@ export function CookingStep({
         onToggleComplete={onToggleComplete}
         stepReaction={stepReaction}
         variant="cooking"
+        stepCategory={stepCategory || stepReaction?.cooking_method}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
+import type { StepCategory } from '../common/StepCategoryLabel';
 
 interface InstructionStepProps {
   step: string;
@@ -25,6 +26,9 @@ export function InstructionStep({
     toggleStep(index);
   }, [toggleStep, index]);
   
+  // Extract step category from reaction data if available
+  const stepCategory = stepReaction?.cooking_method as StepCategory | undefined;
+  
   return (
     <li key={index} className="group">
       <StepDisplay
@@ -34,6 +38,7 @@ export function InstructionStep({
         onToggleComplete={handleToggleComplete}
         stepReaction={stepReaction}
         variant="instruction"
+        stepCategory={stepCategory}
       />
       
       {!isLastStep && (
