@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useLoadingState } from '@/hooks/use-loading-state';
 
 /**
@@ -102,7 +102,7 @@ export function useApiRequest() {
   } = useLoadingState();
   
   // Reference to the abort controller
-  const abortControllerRef = React.useRef<AbortController | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Abort current request
   const abortRequest = useCallback(() => {
@@ -144,7 +144,7 @@ export function useApiRequest() {
   }, [reset, setLoading, abortRequest, setData, setSuccess, setError]);
   
   // Clean up on unmount
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       abortRequest();
     };
@@ -161,5 +161,8 @@ export function useApiRequest() {
     reset
   };
 }
+
+// Make sure to import useEffect
+import { useEffect } from 'react';
 
 export default useApiRequest;

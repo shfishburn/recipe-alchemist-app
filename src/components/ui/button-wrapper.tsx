@@ -1,4 +1,3 @@
-
 import React, { forwardRef } from 'react';
 import { Button as ShadcnButton, ButtonProps as ShadcnButtonProps } from '@/components/ui/button';
 import { Slot } from '@radix-ui/react-slot';
@@ -69,11 +68,22 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
       </>
     );
     
-    // Use Slot if asChild is true
-    const Comp = asChild ? Slot : ShadcnButton;
+    // Use Slot if asChild is true, but pass only the props that Slot accepts
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(className)}
+          ref={ref as React.Ref<HTMLElement>}
+          {...props}
+        >
+          {buttonContent}
+        </Slot>
+      );
+    }
     
+    // Otherwise use ShadcnButton
     return (
-      <Comp
+      <ShadcnButton
         className={cn(className)}
         variant={variant}
         size={size}
@@ -82,7 +92,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {buttonContent}
-      </Comp>
+      </ShadcnButton>
     );
   }
 );
