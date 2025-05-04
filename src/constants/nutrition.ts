@@ -8,12 +8,14 @@ export const NUTRITION_COLORS = {
   carbs: '#0EA5E9',   // Blue
   fat: '#22c55e',     // Green
   fiber: '#fb923c',   // Orange
+  calories: '#ef4444', // Red
 
   // Background colors for progress bars (with opacity)
   proteinBg: 'rgba(155, 135, 245, 0.9)',
   carbsBg: 'rgba(14, 165, 233, 0.9)',
   fatBg: 'rgba(34, 197, 94, 0.9)',
   fiberBg: 'rgba(251, 146, 60, 0.9)',
+  caloriesBg: 'rgba(239, 68, 68, 0.9)',
 
   // Supporting colors for micro-nutrients
   vitaminA: '#f59e0b',
@@ -53,4 +55,61 @@ export const NUTRITION_QUALITY_LEVELS = {
   high: 0.8,
   medium: 0.6,
   low: 0.4
+};
+
+/**
+ * Nutrient descriptions for tooltips and explanations
+ */
+export const NUTRIENT_DESCRIPTIONS = {
+  protein: 'Essential for building and repairing muscle tissue and supporting immune function',
+  carbs: 'Primary source of energy for the body and brain',
+  fat: 'Necessary for hormone production, vitamin absorption, and cell membrane integrity',
+  fiber: 'Supports digestive health and helps regulate blood sugar and cholesterol levels',
+  calories: 'Unit of energy - daily needs vary based on age, gender, weight, and activity level',
+  sodium: 'Electrolyte that helps maintain fluid balance and supports muscle and nerve function',
+  calcium: 'Essential for bone health, muscle contraction, and nerve transmission',
+  iron: 'Needed for red blood cell production and oxygen transport throughout the body',
+  potassium: 'Electrolyte that helps regulate fluid balance, muscle contractions, and nerve signals',
+  vitaminA: 'Important for vision, immune function, and cell growth',
+  vitaminC: 'Antioxidant that supports immune function and collagen production',
+  vitaminD: 'Helps absorb calcium and promotes bone health',
+  sugar: 'Simple carbohydrates that provide quick energy but should be consumed in moderation'
+};
+
+/**
+ * Display names for nutrients (for UI presentation)
+ */
+export const NUTRIENT_DISPLAY_NAMES = {
+  protein: 'Protein',
+  carbs: 'Carbohydrates',
+  fat: 'Fat',
+  fiber: 'Dietary Fiber',
+  calories: 'Calories',
+  sodium: 'Sodium',
+  calcium: 'Calcium',
+  iron: 'Iron',
+  potassium: 'Potassium',
+  vitaminA: 'Vitamin A',
+  vitaminC: 'Vitamin C',
+  vitaminD: 'Vitamin D',
+  sugar: 'Sugar'
+};
+
+/**
+ * Units for each nutrient
+ */
+export const NUTRIENT_UNITS = {
+  protein: 'g',
+  carbs: 'g',
+  fat: 'g',
+  fiber: 'g',
+  calories: 'kcal',
+  sodium: 'mg',
+  calcium: 'mg',
+  iron: 'mg',
+  potassium: 'mg',
+  vitaminA: 'μg RAE',
+  vitaminC: 'mg',
+  vitaminD: 'μg',
+  sugar: 'g'
 };

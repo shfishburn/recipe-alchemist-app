@@ -19,11 +19,11 @@ export function ShoppingListProgress({ completedCount, totalItems, completionPer
       </div>
       <Progress 
         value={completionPercentage} 
-        indicatorClassName={
+        indicatorColor={
           completionPercentage === 100 
-            ? "bg-green-500" 
+            ? "#22c55e" // green-500
             : completionPercentage > 50 
-              ? "bg-recipe-blue" 
+              ? "#0EA5E9" // recipe-blue
               : undefined
         }
       />

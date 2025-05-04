@@ -2,6 +2,7 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
+import { NUTRITION_COLORS } from '@/constants/nutrition';
 
 interface NutrientStatsProps {
   calories: number;
@@ -12,11 +13,11 @@ interface NutrientStatsProps {
   proteinPercentage: number;
   carbsPercentage: number;
   fatPercentage: number;
-  colors: {
-    protein: string;
-    carbs: string;
-    fat: string;
-    calories: string;
+  colors?: {
+    protein?: string;
+    carbs?: string;
+    fat?: string;
+    calories?: string;
   };
   unitSystem: 'metric' | 'imperial';
 }
@@ -49,7 +50,11 @@ export function NutrientStats({
             <span className="text-xs text-muted-foreground">{caloriesPercentage}%</span>
           </div>
         </div>
-        <Progress value={caloriesPercentage} className="h-1.5" indicatorClassName="bg-calories" />
+        <Progress 
+          value={caloriesPercentage} 
+          className="h-1.5"
+          indicatorColor={NUTRITION_COLORS.calories}
+        />
       </div>
       
       <div>
@@ -60,7 +65,11 @@ export function NutrientStats({
             <span className="text-xs text-muted-foreground">{proteinPercentage}%</span>
           </div>
         </div>
-        <Progress value={proteinPercentage} className="h-1.5" indicatorClassName="bg-blue-600" />
+        <Progress 
+          value={proteinPercentage} 
+          className="h-1.5" 
+          indicatorColor={NUTRITION_COLORS.protein}
+        />
       </div>
       
       <div>
@@ -71,7 +80,11 @@ export function NutrientStats({
             <span className="text-xs text-muted-foreground">{carbsPercentage}%</span>
           </div>
         </div>
-        <Progress value={carbsPercentage} className="h-1.5" indicatorClassName="bg-amber-500" />
+        <Progress 
+          value={carbsPercentage} 
+          className="h-1.5" 
+          indicatorColor={NUTRITION_COLORS.carbs}
+        />
       </div>
       
       <div>
@@ -82,7 +95,11 @@ export function NutrientStats({
             <span className="text-xs text-muted-foreground">{fatPercentage}%</span>
           </div>
         </div>
-        <Progress value={fatPercentage} className="h-1.5" indicatorClassName="bg-emerald-500" />
+        <Progress 
+          value={fatPercentage} 
+          className="h-1.5" 
+          indicatorColor={NUTRITION_COLORS.fat}
+        />
       </div>
     </div>
   );

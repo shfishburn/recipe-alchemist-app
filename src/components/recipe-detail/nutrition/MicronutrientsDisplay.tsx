@@ -25,77 +25,81 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
     return NUTRIENT_DESCRIPTIONS[key] || 
            `Essential nutrient for overall health`;
   };
+
+  // Helper function to get nutrient unit
+  const getNutrientUnit = (nutrient: string): string => {
+    const key = nutrient.toLowerCase().replace(/[^a-z0-9]/g, '') as keyof typeof NUTRIENT_UNITS;
+    return NUTRIENT_UNITS[key] || 'g';
+  };
   
   // Group the micronutrients into categories
   const vitamins = [
     {
       name: 'Vitamin A',
       value: nutrition.vitaminA || 0,
-      unit: NUTRIENT_UNITS.vitaminA || 'μg RAE',
+      unit: getNutrientUnit('vitaminA'),
       percentage: calculateDailyValuePercentage(nutrition.vitaminA, 'vitaminA'),
       description: getNutrientDescription('vitaminA')
     },
     {
       name: 'Vitamin C',
       value: nutrition.vitaminC || 0,
-      unit: NUTRIENT_UNITS.vitaminC || 'mg',
+      unit: getNutrientUnit('vitaminC'),
       percentage: calculateDailyValuePercentage(nutrition.vitaminC, 'vitaminC'),
       description: getNutrientDescription('vitaminC')
     },
     {
       name: 'Vitamin D',
       value: nutrition.vitaminD || 0,
-      unit: NUTRIENT_UNITS.vitaminD || 'μg',
+      unit: getNutrientUnit('vitaminD'),
       percentage: calculateDailyValuePercentage(nutrition.vitaminD, 'vitaminD'),
       description: getNutrientDescription('vitaminD')
     }
-    // Removed Vitamin E and K since they don't exist in the ExtendedNutritionData type
   ].filter(vitamin => vitamin.value > 0); // Only show vitamins with values
   
   const minerals = [
     {
       name: 'Calcium',
       value: nutrition.calcium || 0,
-      unit: NUTRIENT_UNITS.calcium || 'mg',
+      unit: getNutrientUnit('calcium'),
       percentage: calculateDailyValuePercentage(nutrition.calcium, 'calcium'),
       description: getNutrientDescription('calcium')
     },
     {
       name: 'Iron',
       value: nutrition.iron || 0,
-      unit: NUTRIENT_UNITS.iron || 'mg',
+      unit: getNutrientUnit('iron'),
       percentage: calculateDailyValuePercentage(nutrition.iron, 'iron'),
       description: getNutrientDescription('iron')
     },
     {
       name: 'Potassium',
       value: nutrition.potassium || 0,
-      unit: NUTRIENT_UNITS.potassium || 'mg',
+      unit: getNutrientUnit('potassium'),
       percentage: calculateDailyValuePercentage(nutrition.potassium, 'potassium'),
       description: getNutrientDescription('potassium')
     }
-    // Removed magnesium and zinc since they don't exist in the ExtendedNutritionData type
   ].filter(mineral => mineral.value > 0); // Only show minerals with values
   
   const others = [
     {
       name: 'Sodium',
       value: nutrition.sodium || 0,
-      unit: NUTRIENT_UNITS.sodium || 'mg',
+      unit: getNutrientUnit('sodium'),
       percentage: calculateDailyValuePercentage(nutrition.sodium, 'sodium'),
       description: getNutrientDescription('sodium')
     },
     {
       name: 'Fiber',
       value: nutrition.fiber || 0,
-      unit: NUTRIENT_UNITS.fiber || 'g',
+      unit: getNutrientUnit('fiber'),
       percentage: calculateDailyValuePercentage(nutrition.fiber, 'fiber'),
       description: getNutrientDescription('fiber')
     },
     {
       name: 'Sugar',
       value: nutrition.sugar || 0,
-      unit: NUTRIENT_UNITS.sugar || 'g',
+      unit: getNutrientUnit('sugar'),
       percentage: calculateDailyValuePercentage(nutrition.sugar, 'sugar'),
       description: getNutrientDescription('sugar')
     }

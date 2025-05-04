@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Heart, Share2, MessageCircle, Flask } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, MessageCircle, FileText } from 'lucide-react';
 import { useFavoriteRecipe } from '@/hooks/use-favorite-recipe';
 import { AddToShoppingListDialog } from './shopping-list/AddToShoppingListDialog';
 import { ShareRecipeDialog } from './ShareRecipeDialog';
@@ -69,7 +69,7 @@ export function RecipeActions({
             className="flex items-center gap-2"
             disabled={isAnalyzing}
           >
-            <Flask className={`h-4 w-4 ${isAnalysisOpen ? "fill-current" : ""}`} />
+            <FileText className={`h-4 w-4 ${isAnalysisOpen ? "fill-current" : ""}`} />
             <span>{isAnalysisOpen ? "Hide Science" : "Science Notes"}</span>
             {hasAnalysisData && !isAnalysisOpen && (
               <span className="ml-1 bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full">
