@@ -2,7 +2,6 @@
 import React, { useState, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
@@ -13,7 +12,6 @@ export interface QuickRecipeFormData {
   servings: number;
   cuisine: string;
   dietary: string;
-  prepTime: number;
 }
 
 export interface QuickRecipeTagFormProps {
@@ -21,12 +19,10 @@ export interface QuickRecipeTagFormProps {
   onServingsSelect: (servings: number) => void;
   onCuisineSelect: (cuisine: string) => void;
   onDietarySelect: (dietary: string) => void;
-  onPrepTimeChange: (prepTime: number) => void;
   ingredients: string;
   selectedServings: number;
   selectedCuisine: string;
   selectedDietary: string;
-  prepTime: number;
   onSubmit?: (formData: QuickRecipeFormData) => void;
   isLoading?: boolean;
 }
@@ -36,12 +32,10 @@ const QuickRecipeTagForm = ({
   onServingsSelect,
   onCuisineSelect,
   onDietarySelect,
-  onPrepTimeChange,
   ingredients,
   selectedServings,
   selectedCuisine,
   selectedDietary,
-  prepTime,
   onSubmit,
   isLoading = false
 }: QuickRecipeTagFormProps) => {
@@ -63,8 +57,7 @@ const QuickRecipeTagForm = ({
         ingredients: localIngredients,
         servings: selectedServings,
         cuisine: selectedCuisine,
-        dietary: selectedDietary,
-        prepTime
+        dietary: selectedDietary
       });
     }
   };
@@ -110,22 +103,6 @@ const QuickRecipeTagForm = ({
             onChange={onDietarySelect}
           />
         </div>
-      </div>
-
-      {/* Prep Time Slider */}
-      <div className="space-y-2 pt-2">
-        <Label htmlFor="prep-time" className="text-sm font-medium">Prep Time (minutes)</Label>
-        <Slider
-          id="prep-time"
-          defaultValue={[prepTime]}
-          max={120}
-          step={5}
-          onValueChange={(value) => onPrepTimeChange(value[0])}
-          aria-label="Select prep time in minutes"
-        />
-        <p className="text-sm text-muted-foreground">
-          {prepTime} minutes
-        </p>
       </div>
       
       {onSubmit && (

@@ -8,26 +8,34 @@ interface RecipeTimeInfoProps {
 }
 
 export function RecipeTimeInfo({ prepTime, cookTime }: RecipeTimeInfoProps) {
+  const totalTime = prepTime + cookTime;
+  
   return (
-    <div className="flex justify-between border-t border-b py-3">
-      <div className="text-center">
-        <div className="text-xs text-muted-foreground">Prep</div>
-        <div className="flex items-center justify-center gap-1 font-medium">
-          <Clock className="h-4 w-4 text-recipe-green" />
-          {prepTime} min
+    <div className="flex justify-around border-t border-b py-3">
+      {prepTime > 0 && (
+        <div className="text-center">
+          <div className="text-xs text-muted-foreground">Prep</div>
+          <div className="flex items-center justify-center gap-1 font-medium">
+            <Clock className="h-4 w-4 text-recipe-green" />
+            {prepTime} min
+          </div>
         </div>
-      </div>
-      <div className="text-center">
-        <div className="text-xs text-muted-foreground">Cook</div>
-        <div className="flex items-center justify-center gap-1 font-medium">
-          <CookingPot className="h-4 w-4 text-recipe-orange" />
-          {cookTime} min
+      )}
+      
+      {cookTime > 0 && (
+        <div className="text-center">
+          <div className="text-xs text-muted-foreground">Cook</div>
+          <div className="flex items-center justify-center gap-1 font-medium">
+            <CookingPot className="h-4 w-4 text-recipe-orange" />
+            {cookTime} min
+          </div>
         </div>
-      </div>
+      )}
+      
       <div className="text-center">
         <div className="text-xs text-muted-foreground">Total</div>
         <div className="font-medium">
-          {prepTime + cookTime} min
+          {totalTime} min
         </div>
       </div>
     </div>

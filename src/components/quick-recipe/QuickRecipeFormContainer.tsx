@@ -21,7 +21,6 @@ export function QuickRecipeFormContainer() {
   const [selectedServings, setSelectedServings] = useState(2);
   const [selectedCuisine, setSelectedCuisine] = useState('any');
   const [selectedDietary, setSelectedDietary] = useState('any');
-  const [prepTime, setPrepTime] = useState(30);
 
   // Handlers for each input type
   const handleIngredientsChange = (value: string) => {
@@ -38,10 +37,6 @@ export function QuickRecipeFormContainer() {
 
   const handleDietaryChange = (dietary: string) => {
     setSelectedDietary(dietary);
-  };
-
-  const handlePrepTimeChange = (time: number) => {
-    setPrepTime(time);
   };
 
   // Handle user cancellation
@@ -129,12 +124,10 @@ export function QuickRecipeFormContainer() {
           onServingsSelect={handleServingsChange}
           onCuisineSelect={handleCuisineChange}
           onDietarySelect={handleDietaryChange}
-          onPrepTimeChange={handlePrepTimeChange}
           ingredients={ingredients}
           selectedServings={selectedServings}
           selectedCuisine={selectedCuisine}
           selectedDietary={selectedDietary}
-          prepTime={prepTime}
           onSubmit={handleFormSubmit}
           isLoading={isLoading}
         />
