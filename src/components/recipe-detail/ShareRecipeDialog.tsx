@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle
+} from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +27,7 @@ export function ShareRecipeDialog({ recipe, open, onOpenChange }: ShareRecipeDia
   const { toast } = useToast();
   
   // Generate shareable link
-  const recipeUrl = `${window.location.origin}/recipes/${recipe.id}`;
+  const recipeUrl = `${window.location.origin}/recipes/${recipe.slug || recipe.id}`;
   
   const handleCopyLink = async () => {
     try {
@@ -54,59 +56,67 @@ export function ShareRecipeDialog({ recipe, open, onOpenChange }: ShareRecipeDia
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Share Recipe</DialogTitle>
-          <DialogDescription>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader>
+          <DrawerTitle>Share Recipe</DrawerTitle>
+          <DrawerDescription>
             Share this recipe with friends and family
-          </DialogDescription>
-        </DialogHeader>
+          </DrawerDescription>
+        </DrawerHeader>
         
-        <div className="flex flex-col space-y-4 py-4">
-          <div className="flex flex-col space-y-2">
-            <Label htmlFor="link">Recipe Link</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                id="link"
-                value={recipeUrl}
-                readOnly
-                className="flex-1"
-              />
-              <Button 
-                type="button" 
-                size="icon" 
-                onClick={handleCopyLink}
-                className="flex-shrink-0"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
+        <div className="px-4 py-2">
+          <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="link">Recipe Link</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="link"
+                  value={recipeUrl}
+                  readOnly
+                  className="flex-1"
+                />
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  onClick={handleCopyLink}
+                  className="flex-shrink-0"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex flex-col space-y-2">
-            <Label>Share Options</Label>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                className="flex-1" 
-                onClick={handleShareViaEmail}
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Email
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1" 
-                onClick={handleCopyLink}
-              >
-                <LinkIcon className="mr-2 h-4 w-4" />
-                Copy Link
-              </Button>
+            
+            <div className="flex flex-col space-y-2">
+              <Label>Share Options</Label>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={handleShareViaEmail}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Email
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={handleCopyLink}
+                >
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  Copy Link
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        
+        <DrawerFooter>
+          <DrawerClose asChild>
+            <Button variant="outline">Close</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

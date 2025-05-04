@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Beaker, BookOpen, ChevronUp, ChevronDown } from "lucide-react";
@@ -552,21 +551,23 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               </div>
             ) : hasAnyAnalysisContent ? (
               <div className="space-y-6">
-                {/* Category selector - now a simple list of buttons */}
-                <div className="flex flex-wrap gap-2 border-b pb-3">
-                  {categories.map(category => (
-                    <button
-                      key={category.id}
-                      onClick={() => setActiveCategory(category.id)}
-                      className={`px-3 py-1.5 text-sm rounded-md transition ${
-                        activeCategory === category.id 
-                          ? 'bg-primary text-primary-foreground font-medium' 
-                          : 'text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {category.label}
-                    </button>
-                  ))}
+                {/* Category selector - improved styling for single row */}
+                <div className="flex overflow-x-auto no-scrollbar pb-1">
+                  <div className="inline-flex rounded-md p-1 bg-muted mx-auto">
+                    {categories.map((category, index) => (
+                      <Button
+                        key={category.id}
+                        onClick={() => setActiveCategory(category.id)}
+                        variant={activeCategory === category.id ? "default" : "ghost"}
+                        size="sm"
+                        className={`px-3 rounded-md ${
+                          index > 0 ? "ml-1" : ""
+                        }`}
+                      >
+                        {category.label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
                 
                 {/* Content display based on active category */}
@@ -636,4 +637,3 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     </Collapsible>
   );
 }
-

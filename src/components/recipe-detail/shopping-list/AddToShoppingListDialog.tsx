@@ -1,6 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle
+} from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useShoppingLists } from './useShoppingLists';
 import { useShoppingListActions } from './useShoppingListActions';
@@ -11,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import type { Recipe } from '@/types/recipe';
 
 interface AddToShoppingListDialogProps {
@@ -55,15 +63,15 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
   };
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-6">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl text-center">Add to Shopping List</DialogTitle>
-        </DialogHeader>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader>
+          <DrawerTitle className="text-xl text-center">Add to Shopping List</DrawerTitle>
+        </DrawerHeader>
         
-        <div className="py-5 space-y-8">
+        <div className="px-4 pb-5 pt-2 space-y-6 overflow-y-auto">
           {/* Settings Section */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Package Size Optimization */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
@@ -145,7 +153,13 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
             </TabsContent>
           </Tabs>
         </div>
-      </DialogContent>
-    </Dialog>
+        
+        <DrawerFooter>
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

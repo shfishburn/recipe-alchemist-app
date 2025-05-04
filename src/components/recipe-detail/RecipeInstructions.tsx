@@ -97,6 +97,14 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
     return stepReactions.find(reaction => reaction.step_index === index);
   };
   
+  // Format reaction names for better display
+  const formatReactionName = (reaction: string): string => {
+    return reaction
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+  
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card>
@@ -145,6 +153,26 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                             <p className={`leading-relaxed ${completedSteps[index] ? "line-through text-muted-foreground" : ""}`}>
                               {renderInstructionWithBoldIngredients(step)}
                             </p>
+                            
+                            {/* Show reaction tags inline */}
+                            {hasReactions && !expandedNotes[index] && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {stepReaction.reactions.slice(0, 2).map((type, i) => (
+                                  <span 
+                                    key={i} 
+                                    className="inline-flex items-center text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full"
+                                  >
+                                    <Atom className="h-3 w-3 mr-1" />
+                                    {formatReactionName(type)}
+                                  </span>
+                                ))}
+                                {stepReaction.reactions.length > 2 && (
+                                  <span className="text-xs text-blue-600">
+                                    +{stepReaction.reactions.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                           
                           {/* Science note toggle button if reactions exist */}
@@ -182,7 +210,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                                 <div className="flex flex-wrap gap-1 pt-1">
                                   {stepReaction.reactions.map((type, i) => (
                                     <span key={i} className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
-                                      {type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                      {formatReactionName(type)}
                                     </span>
                                   ))}
                                 </div>
