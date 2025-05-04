@@ -32,6 +32,62 @@
   display: none;
 }
 
+/* Scientific content styling improvements */
+.scientific-content h1,
+.scientific-content h2,
+.scientific-content h3 {
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.scientific-content h1 {
+  font-size: 1.5rem;
+}
+
+.scientific-content h2 {
+  font-size: 1.25rem;
+  color: #222;
+}
+
+.scientific-content h3 {
+  font-size: 1.1rem;
+  color: #444;
+}
+
+.scientific-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.scientific-content ul,
+.scientific-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.scientific-content li {
+  margin-bottom: 0.5rem;
+}
+
+.scientific-content strong {
+  color: #222;
+  font-weight: 600;
+}
+
+.scientific-content em {
+  font-style: italic;
+}
+
+.scientific-content code {
+  background: #f5f5f5;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
 /* Expanded touch feedback */
 .touch-feedback-strong:active {
   transform: scale(0.96);
@@ -88,4 +144,10 @@ body:has(.drawer-content[data-state="open"]) .drawer-content:not([data-state="op
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+/* Ensure ScrollArea component is touch-friendly */
+.radix-scroll-area-viewport {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain;
 }

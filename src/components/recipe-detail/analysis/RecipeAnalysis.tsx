@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
 import { useRecipeScience, formatReactionName } from '@/hooks/use-recipe-science';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Recipe } from '@/types/recipe';
 
 // Define the analysis response type
@@ -435,63 +436,65 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 </Button>
               </div>
             ) : hasAnyContent ? (
-              <div className="space-y-6">
-                {/* Chemistry Section - only show if we have content */}
-                {hasChemistry && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                      <Beaker className="h-5 w-5 mr-2 text-blue-600" />
-                      Chemistry
-                    </h3>
+              <ScrollArea className="h-[60vh] sm:h-[70vh] pr-4">
+                <div className="space-y-6">
+                  {/* Chemistry Section - only show if we have content */}
+                  {hasChemistry && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                        <Beaker className="h-5 w-5 mr-2 text-blue-600" />
+                        Chemistry
+                      </h3>
+                      <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                        <FormattedText text={chemistry} preserveWhitespace={true} className="scientific-content" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Techniques Section - only show if we have content */}
+                  {hasTechniques && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
+                          <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
+                          <path d="m8 12 4 4 4-4"/>
+                          <path d="M12 8v8"/>
+                        </svg>
+                        Cooking Techniques
+                      </h3>
+                      <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg border border-amber-100">
+                        <FormattedText text={techniques} preserveWhitespace={true} className="scientific-content" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Troubleshooting Section - only show if we have content */}
+                  {hasTroubleshooting && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
+                          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                          <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                        Troubleshooting Guide
+                      </h3>
+                      <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg border border-green-100">
+                        <FormattedText text={troubleshooting} preserveWhitespace={true} className="scientific-content" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Reaction Analysis Section - only show if we have content */}
+                  {hasReactions && reactionsContent}
+                  
+                  {/* Fallback when structured sections aren't extracted */}
+                  {hasRawResponse && (
                     <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                      <FormattedText text={chemistry} preserveWhitespace={true} />
+                      <FormattedText text={analysis.textResponse} preserveWhitespace={true} className="scientific-content" />
                     </div>
-                  </div>
-                )}
-                
-                {/* Techniques Section - only show if we have content */}
-                {hasTechniques && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
-                        <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
-                        <path d="m8 12 4 4 4-4"/>
-                        <path d="M12 8v8"/>
-                      </svg>
-                      Cooking Techniques
-                    </h3>
-                    <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg border border-amber-100">
-                      <FormattedText text={techniques} preserveWhitespace={true} />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Troubleshooting Section - only show if we have content */}
-                {hasTroubleshooting && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                      </svg>
-                      Troubleshooting Guide
-                    </h3>
-                    <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg border border-green-100">
-                      <FormattedText text={troubleshooting} preserveWhitespace={true} />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Reaction Analysis Section - only show if we have content */}
-                {hasReactions && reactionsContent}
-                
-                {/* Fallback when structured sections aren't extracted */}
-                {hasRawResponse && (
-                  <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                    <FormattedText text={analysis.textResponse} preserveWhitespace={true} />
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </ScrollArea>
             ) : (
               <div className="text-center py-6">
                 <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>

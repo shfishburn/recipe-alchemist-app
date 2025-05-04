@@ -69,7 +69,7 @@ export function FormattedText({
       }
       
       // Enhanced heading pattern matching with scientific headers
-      if (block.match(/^#{2,3}\s+[\w\s]/)) {
+      if (block.match(/^#{1,3}\s+[\w\s]/)) {
         return <HeadingBlock block={block} blockIndex={blockIndex} />;
       }
       
