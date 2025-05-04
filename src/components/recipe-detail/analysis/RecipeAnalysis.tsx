@@ -8,7 +8,7 @@ import { AnalysisPrompt } from './AnalysisPrompt';
 import { AnalysisLoading } from './AnalysisLoading';
 import { EmptyAnalysis } from './EmptyAnalysis';
 import { AnalysisContent } from './AnalysisContent';
-import { useRecipeAnalysisData } from './hooks/useRecipeAnalysisData';
+import { useRecipeAnalysis } from '@/hooks/use-recipe-analysis';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import type { Recipe } from '@/types/recipe';
 
@@ -31,7 +31,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     hasAnalysisData,
     handleAnalyze,
     error
-  } = useRecipeAnalysisData(recipe, (updatedRecipe) => {
+  } = useRecipeAnalysis(recipe, (updatedRecipe) => {
     // Handle recipe updates with the update mutation
     updateRecipe.mutate(
       { science_notes: updatedRecipe.science_notes }, 
