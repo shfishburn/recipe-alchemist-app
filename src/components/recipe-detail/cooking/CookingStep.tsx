@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FormatIngredientText } from '../instructions/FormatIngredientText';
 import { StepHeader } from '../instructions/StepHeader';
 
@@ -30,10 +30,8 @@ export function CookingStep({
     }
   };
   
-  // Ensure touch events work correctly
-  const handleStepClick = (e: React.MouseEvent) => {
-    // Prevent any lingering event issues
-    e.stopPropagation();
+  // Handle step click with better event handling
+  const handleStepClick = () => {
     onToggleComplete();
   };
   
