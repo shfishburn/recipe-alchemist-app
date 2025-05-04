@@ -4,7 +4,7 @@ import {
   ChefHat, 
   Utensils, 
   Flame,
-  Cooking,
+  CookingPot,
   EggFried,
   Carrot,
   Apple
@@ -39,12 +39,12 @@ const categoryConfig: Record<string, { icon: React.ReactNode, color: string, lab
     label: 'Cooking'
   },
   baking: {
-    icon: <Cooking className="h-3 w-3" />,
+    icon: <CookingPot className="h-3 w-3" />,
     color: 'bg-amber-50 text-amber-700 border-amber-200',
     label: 'Baking'
   },
   frying: {
-    icon: <Cooking className="h-3 w-3" />,
+    icon: <CookingPot className="h-3 w-3" />,
     color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     label: 'Frying'
   },
