@@ -36,8 +36,7 @@ export function QuickRecipeLoading() {
   // Initialize sound effect for typing with mobile-friendly settings
   const { play: playTypingSound, pause: pauseTypingSound } = useSoundEffect('/lovable-uploads/typing.mp3', {
     loop: true,
-    volume: isMobile ? 0.5 : 0.3, // Higher volume for mobile
-    enabled: true
+    volume: isMobile ? 0.5 : 0.3 // Higher volume for mobile
   });
   
   // Enable audio after a user interaction on mobile

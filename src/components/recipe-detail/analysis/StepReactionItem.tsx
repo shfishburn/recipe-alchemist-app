@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { formatReactionName } from '@/hooks/use-recipe-science';
+import { ReactionTagsList } from './reactions/ReactionTagsList';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface StepReactionItemProps {
@@ -17,7 +17,7 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
     : '';
     
   return (
-    <div key={`reaction-${index}`} className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
+    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
       <div className="flex items-start gap-3 mb-2">
         <div className="flex-1">
           <p className="font-semibold text-slate-800">Step {index + 1}: {reaction.step_text}</p>
@@ -26,18 +26,11 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
           )}
         </div>
       </div>
-      {reaction.reactions.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-blue-200">
-          {reaction.reactions.map((type, i) => (
-            <span 
-              key={`${index}-${i}`} 
-              className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full"
-            >
-              {formatReactionName(type)}
-            </span>
-          ))}
-        </div>
-      )}
+      
+      <ReactionTagsList 
+        reactions={reaction.reactions} 
+        stepIndex={index}
+      />
     </div>
   );
 }
