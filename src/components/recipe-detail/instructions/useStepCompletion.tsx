@@ -16,10 +16,13 @@ export function useStepCompletion(): StepCompletionState {
   const [completedSteps, setCompletedSteps] = useState<{[key: number]: boolean}>({});
   
   const toggleStep = useCallback((index: number) => {
-    setCompletedSteps(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
+    // Ensure a clean user interaction without UI blocking
+    setTimeout(() => {
+      setCompletedSteps(prev => ({
+        ...prev,
+        [index]: !prev[index]
+      }));
+    }, 0);
   }, []);
   
   const isStepCompleted = useCallback((index: number) => {

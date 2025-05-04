@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonWrapper } from "@/components/ui/button-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCallback, useEffect, useMemo } from "react";
+import { cleanupUIState } from "@/utils/dom-cleanup";
 
 // For desktop
 import {
@@ -41,6 +42,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   // Close drawer and navigate on successful auth
   const handleAuthSuccess = useCallback(() => {
     setOpen(false);
+    cleanupUIState(); // Clean up UI state before navigating
     navigate("/"); // Navigate to home page after successful auth
   }, [setOpen, navigate]);
 
@@ -48,8 +50,20 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   useEffect(() => {
     if (session && open) {
       setOpen(false);
+      cleanupUIState();
     }
   }, [session, open, setOpen]);
+
+  // When the drawer closes, ensure UI state is cleaned up
+  useEffect(() => {
+    if (!open) {
+      // Small delay to allow animations to complete
+      const timeout = setTimeout(() => {
+        cleanupUIState();
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [open]);
 
   // Memoize the auth form to prevent unnecessary rerenders
   const authForm = useMemo(() => (
@@ -58,7 +72,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={setOpen}>
+      <Drawer open={open} onOpenChange={(newOpen) => {
+        setOpen(newOpen);
+        // Clean up when closed
+        if (!newOpen) {
+          setTimeout(() => cleanupUIState(), 300);
+        }
+      }}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader className="flex items-center justify-between border-b pb-4">
             <DrawerTitle className="text-center">Account</DrawerTitle>
@@ -78,7 +98,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={(newOpen) => {
+      setOpen(newOpen);
+      // Clean up when closed
+      if (!newOpen) {
+        setTimeout(() => cleanupUIState(), 300);
+      }
+    }}>
       <SheetContent side="right" className="w-full max-w-md border-l">
         <SheetHeader className="flex items-center justify-between border-b pb-4">
           <SheetTitle>Account</SheetTitle>

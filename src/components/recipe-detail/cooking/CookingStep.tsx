@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FormatIngredientText } from '../instructions/FormatIngredientText';
 import { StepHeader } from '../instructions/StepHeader';
 
@@ -30,10 +30,17 @@ export function CookingStep({
     }
   };
   
+  // Ensure touch events work correctly
+  const handleStepClick = (e: React.MouseEvent) => {
+    // Prevent any lingering event issues
+    e.stopPropagation();
+    onToggleComplete();
+  };
+  
   return (
     <div className="mb-4">
       <div 
-        onClick={onToggleComplete}
+        onClick={handleStepClick}
         className={`flex flex-col cursor-pointer p-3 rounded-md transition-colors ${
           isCompleted ? "bg-green-50 hover:bg-green-100" : "hover:bg-muted/50"
         }`}

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import { useAuth } from '@/hooks/use-auth';
+import { cleanupUIState } from '@/utils/dom-cleanup';
 
 const Auth = () => {
   const { session, loading } = useAuth();
@@ -42,6 +43,9 @@ const Auth = () => {
     let redirectTo = from;
     let redirectState = {};
     
+    // First, clean up any UI elements that might be lingering
+    cleanupUIState();
+    
     // Try to get the stored location data
     const storedLocationData = sessionStorage.getItem('redirectAfterAuth');
     
@@ -74,9 +78,6 @@ const Auth = () => {
     
     // Clear the stored path after using it
     sessionStorage.removeItem('redirectAfterAuth');
-    
-    // Remove any overflow-hidden class that might be causing touch issues
-    document.body.classList.remove('overflow-hidden');
     
     return <Navigate to={redirectTo} state={redirectState} replace />;
   }
