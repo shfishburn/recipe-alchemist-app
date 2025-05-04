@@ -22,48 +22,35 @@ export function TimerDisplay({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Effect to show toast notification when time is running low
-  useEffect(() => {
-    if (isLowTime && timeRemaining === 30) {
-      toast({
-        title: "Timer Alert",
-        description: "30 seconds remaining on your timer!",
-        variant: "destructive",
-      });
-    } else if (isLowTime && timeRemaining === 10) {
-      toast({
-        title: "Timer Alert",
-        description: "10 seconds remaining on your timer!",
-        variant: "destructive",
-      });
-    } else if (timeRemaining === 0) {
-      toast({
-        title: "Timer Complete",
-        description: "Your timer has finished!",
-        variant: "destructive",
-      });
-    }
-  }, [timeRemaining, isLowTime]);
-
+  // Add a title element for accessibility
+  const timerTitle = isLowTime ? "Time is running low" : "Timer running";
+  
   // Add pulsing animation for low time
   const pulsingClass = isLowTime ? "animate-pulse" : "";
 
   return (
-    <div className={cn(
-      "p-6 rounded-lg border text-center w-full",
-      isLowTime ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-100",
-      pulsingClass
-    )}>
+    <div 
+      className={cn(
+        "p-6 rounded-lg border text-center w-full",
+        isLowTime ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-100",
+        pulsingClass
+      )}
+      role="timer" 
+      aria-label={`Timer: ${formatTime(timeRemaining)}`}
+      aria-live="polite"
+    >
       <div className={cn(
         "text-3xl font-bold mb-2",
         isLowTime ? "text-red-600" : "text-blue-600"
       )}>
-        {formatTime(timeRemaining)}
+        <span aria-hidden="true">{formatTime(timeRemaining)}</span>
+        <span className="sr-only">{formatTime(timeRemaining)} remaining</span>
       </div>
       <Button 
         variant="destructive" 
         onClick={onCancel}
-        className="gap-1.5"
+        className="gap-1.5 touch-target"
+        aria-label="Stop timer"
       >
         <StopCircle className="h-4 w-4" />
         Stop Timer

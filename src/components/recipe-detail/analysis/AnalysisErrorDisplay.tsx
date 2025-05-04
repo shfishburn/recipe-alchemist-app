@@ -1,29 +1,26 @@
 
-import React, { memo } from 'react';
-import { CardWrapper } from "@/components/ui/card-wrapper";
-import { ErrorDisplay } from '@/components/ui/error-display';
-import { AlertTriangle } from 'lucide-react';
+import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface AnalysisErrorDisplayProps {
-  error: Error | string;
+  error: Error;
   onRetry: () => void;
-  className?: string;
 }
 
-export const AnalysisErrorDisplay = memo(function AnalysisErrorDisplay({ 
-  error, 
-  onRetry,
-  className 
-}: AnalysisErrorDisplayProps) {
-  const errorMessage = typeof error === 'string' ? error : error.message;
-  
+export function AnalysisErrorDisplay({ error, onRetry }: AnalysisErrorDisplayProps) {
   return (
-    <CardWrapper className={className}>
-      <ErrorDisplay
-        error={errorMessage}
-        title="Failed to analyze recipe"
-        onRetry={onRetry}
-      />
-    </CardWrapper>
+    <div className="p-8 text-center">
+      <h3 className="text-lg font-medium text-red-600 mb-2">Analysis Error</h3>
+      <p className="text-muted-foreground mb-4">
+        {error.message || "There was a problem analyzing this recipe."}
+      </p>
+      <Button 
+        variant="outline" 
+        onClick={onRetry}
+        className="mt-4"
+      >
+        Retry Analysis
+      </Button>
+    </div>
   );
-});
+}

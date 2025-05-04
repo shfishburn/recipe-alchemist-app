@@ -1,12 +1,17 @@
 
 import React from 'react';
-import { Loader2 } from "lucide-react";
+import { BeakerIcon } from 'lucide-react';
 
 export function AnalysisLoading() {
   return (
-    <div className="flex items-center justify-center py-8">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
+    <div className="p-8 text-center">
+      <div className="animate-pulse">
+        <BeakerIcon className="h-16 w-16 mx-auto mb-6 text-blue-500 opacity-70" />
+      </div>
+      <h3 className="text-xl font-medium mb-2">Analyzing Recipe</h3>
+      <p className="text-muted-foreground">
+        Discovering the science of flavors and techniques...
+      </p>
     </div>
   );
 }

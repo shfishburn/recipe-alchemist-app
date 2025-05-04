@@ -16,8 +16,8 @@ export function useTimer(): UseTimerResult {
   const [isLowTime, setIsLowTime] = useState(false);
   const LOW_TIME_THRESHOLD = 30; // seconds
 
-  // Optional sound effects for timer notifications (using existing hook)
-  const { playSound } = useSoundEffect();
+  // Sound effects for timer notifications
+  const { play } = useSoundEffect();
   
   // Timer countdown effect
   useEffect(() => {
@@ -33,8 +33,9 @@ export function useTimer(): UseTimerResult {
       toast({
         title: "Timer Complete",
         description: "Your timer has finished!",
+        variant: "destructive",
       });
-      playSound('typing');  // Use any available sound for notification
+      play('/lovable-uploads/typing.mp3');
       return;
     }
     
@@ -44,8 +45,9 @@ export function useTimer(): UseTimerResult {
       toast({
         title: "Timer Alert",
         description: `${LOW_TIME_THRESHOLD} seconds remaining!`,
+        variant: "destructive",
       });
-      playSound('typing');  // Use any available sound for notification
+      play('/lovable-uploads/typing.mp3');
     }
     
     const interval = setInterval(() => {
@@ -53,7 +55,7 @@ export function useTimer(): UseTimerResult {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [timeRemaining, isLowTime, playSound]);
+  }, [timeRemaining, isLowTime, play]);
   
   const startTimer = useCallback((minutes: number) => {
     setTimeRemaining(minutes * 60);
