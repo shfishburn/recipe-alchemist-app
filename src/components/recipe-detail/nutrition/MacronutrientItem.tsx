@@ -20,17 +20,8 @@ export function MacronutrientItem({
   showPercentage = true,
   emphasize = false
 }: MacronutrientItemProps) {
-  // Use a more robust color mapping with fallbacks
-  const colorMap: Record<string, string> = {
-    protein: NUTRITION_COLORS.protein || '#9b87f5',
-    carbs: NUTRITION_COLORS.carbs || '#0EA5E9',
-    fat: NUTRITION_COLORS.fat || '#22c55e',
-    fiber: NUTRITION_COLORS.fiber || '#fb923c',
-    calories: NUTRITION_COLORS.calories || '#ef4444'
-  };
-  
-  // Get the color for this macronutrient
-  const color = colorMap[name] || '#94A3B8'; // Default to slate if not found
+  // Use the color directly from NUTRITION_COLORS constant
+  const color = NUTRITION_COLORS[name] || '#94A3B8'; // Default to slate if not found
   
   // Format the name for display
   const displayName = name.charAt(0).toUpperCase() + name.slice(1);

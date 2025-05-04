@@ -9,6 +9,13 @@ interface ShoppingListProgressProps {
 }
 
 export function ShoppingListProgress({ completedCount, totalItems, completionPercentage }: ShoppingListProgressProps) {
+  // Determine color based on completion percentage
+  const indicatorColor = completionPercentage === 100 
+    ? "#22c55e" // Green when complete
+    : completionPercentage > 50 
+      ? "#0EA5E9" // Blue when more than halfway
+      : undefined; // Default primary color otherwise
+      
   return (
     <div className="mb-4">
       <div className="flex justify-between items-center mb-1">
@@ -19,13 +26,7 @@ export function ShoppingListProgress({ completedCount, totalItems, completionPer
       </div>
       <Progress 
         value={completionPercentage} 
-        indicatorColor={
-          completionPercentage === 100 
-            ? "#22c55e" // green-500
-            : completionPercentage > 50 
-              ? "#0EA5E9" // recipe-blue
-              : undefined
-        }
+        indicatorColor={indicatorColor}
       />
     </div>
   );

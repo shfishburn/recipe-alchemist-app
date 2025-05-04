@@ -7,7 +7,7 @@ interface AddToShoppingListProps {
   recipe: Recipe;
 }
 
-// This component is now deprecated - using RecipeActions is recommended instead
+// This component is deprecated - using RecipeActions is recommended instead
 export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
   console.warn("AddToShoppingList component is deprecated. Use RecipeActions instead.");
   return <EnhancedAddToList recipe={recipe} />;

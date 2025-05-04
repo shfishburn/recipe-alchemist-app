@@ -13,7 +13,6 @@ import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition, validateNutritionData } from '@/types/nutrition-utils';
-import { NutritionUpdateButton } from './nutrition/NutritionUpdateButton';
 
 // Safe import for ProfileContext - don't throw errors if not available
 let useProfileSettings: () => any | null = () => null;
@@ -74,19 +73,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
     }
   }, [recipe.nutrition, recipeNutrition]);
 
-  const handleNutritionUpdate = (updatedNutrition: any) => {
-    if (onRecipeUpdate && updatedNutrition) {
-      // Create updated recipe with new nutrition data
-      const updatedRecipe = {
-        ...recipe,
-        nutrition: updatedNutrition
-      };
-      
-      onRecipeUpdate(updatedRecipe);
-      refetchNutrition();
-    }
-  };
-  
   // If there's no valid nutrition data, show a placeholder instead of nothing
   if (!hasValidNutrition) {
     return (
@@ -97,10 +83,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
               <h3 className="text-lg font-medium">Nutrition Information</h3>
             </div>
             <div className="flex items-center gap-2">
-              <NutritionUpdateButton 
-                recipe={recipe}
-                onUpdateComplete={handleNutritionUpdate}
-              />
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   {isOpen ? (
@@ -117,9 +99,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             <CardContent className="text-center py-6">
               <p className="text-muted-foreground">
                 Nutrition information is not available for this recipe.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Click the "Update Nutrition" button to analyze this recipe's ingredients.
               </p>
             </CardContent>
           </CollapsibleContent>
@@ -161,11 +140,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             nutrition={standardizedNutrition}
           />
           <div className="flex items-center gap-2">
-            <NutritionUpdateButton 
-              recipe={recipe}
-              onUpdateComplete={handleNutritionUpdate}
-            />
-            
             <CollapsibleTrigger asChild>
               <Button 
                 variant="ghost" 
