@@ -6,11 +6,23 @@ import type { RecipeStep } from '@/types/recipe-steps';
 interface StepsListProps {
   steps: RecipeStep[];
   compact?: boolean;
+  className?: string;
 }
 
-export const StepsList = memo(function StepsList({ steps, compact = false }: StepsListProps) {
+export const StepsList = memo(function StepsList({ 
+  steps, 
+  compact = false,
+  className 
+}: StepsListProps) {
+  const listClasses = [
+    'list-decimal',
+    'pl-5',
+    compact ? 'space-y-1' : 'space-y-2',
+    className
+  ].filter(Boolean).join(' ');
+  
   return (
-    <ol className={`list-decimal pl-5 ${compact ? 'space-y-1' : 'space-y-2'}`}>
+    <ol className={listClasses}>
       {steps.map((step) => (
         <StepItem 
           key={step.index} 

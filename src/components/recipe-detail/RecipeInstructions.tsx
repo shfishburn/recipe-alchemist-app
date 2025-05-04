@@ -8,6 +8,7 @@ import type { Recipe } from '@/types/recipe';
 import { InstructionStep } from './instructions/InstructionStep';
 import { useStepCompletion } from './instructions/useStepCompletion';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
+import type { RecipeStep } from '@/types/recipe-steps';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
@@ -31,27 +32,40 @@ export const RecipeInstructions = memo(function RecipeInstructions({
     [recipe.instructions]
   );
   
+  // Convert raw instruction strings to proper RecipeStep objects
+  const formattedInstructions = useMemo(() => {
+    if (!recipe.instructions) return [];
+    
+    return recipe.instructions.map((text, index) => {
+      const stepReaction = stepReactions?.find(r => r.step_index === index);
+      
+      return {
+        text,
+        index,
+        isCompleted: isStepCompleted(index),
+        reaction: stepReaction || null,
+        category: stepReaction?.cooking_method
+      };
+    });
+  }, [recipe.instructions, stepReactions, isStepCompleted]);
+  
   // Memoize the instructions rendering for better performance
   const instructionsList = useMemo(() => {
     if (!hasInstructions) return null;
     
-    return recipe.instructions.map((step, index) => {
-      const stepReaction = stepReactions?.[index] || null;
-      const isLastStep = index === recipe.instructions.length - 1;
+    return formattedInstructions.map((step, index) => {
+      const isLastStep = index === formattedInstructions.length - 1;
       
       return (
         <InstructionStep
           key={index}
           step={step}
-          index={index}
-          isCompleted={isStepCompleted(index)}
-          toggleStep={toggleStep}
-          stepReaction={stepReaction}
           isLastStep={isLastStep}
+          toggleStep={toggleStep}
         />
       );
     });
-  }, [hasInstructions, recipe.instructions, stepReactions, isStepCompleted, toggleStep]);
+  }, [hasInstructions, formattedInstructions, toggleStep]);
   
   return (
     <Card className={className}>

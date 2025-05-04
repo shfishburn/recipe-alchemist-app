@@ -1,21 +1,30 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { CardWrapper } from "@/components/ui/card-wrapper";
 import { ErrorDisplay } from '@/components/ui/error-display';
+import { AlertTriangle } from 'lucide-react';
 
 interface AnalysisErrorDisplayProps {
   error: Error | string;
   onRetry: () => void;
+  className?: string;
 }
 
-export function AnalysisErrorDisplay({ error, onRetry }: AnalysisErrorDisplayProps) {
+export const AnalysisErrorDisplay = memo(function AnalysisErrorDisplay({ 
+  error, 
+  onRetry,
+  className 
+}: AnalysisErrorDisplayProps) {
+  const errorMessage = typeof error === 'string' ? error : error.message;
+  
   return (
-    <CardWrapper>
+    <CardWrapper className={className}>
       <ErrorDisplay
-        error={error}
+        error={errorMessage}
         title="Failed to analyze recipe"
         onRetry={onRetry}
+        icon={<AlertTriangle className="h-10 w-10 text-amber-500" />}
       />
     </CardWrapper>
   );
-}
+});

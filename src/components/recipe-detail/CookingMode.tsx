@@ -17,6 +17,7 @@ import { CookingStep } from './cooking/CookingStep';
 import { CookingProgress } from './cooking/CookingProgress';
 import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
 import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { RecipeStep } from '@/types/recipe-steps';
 
 interface CookingModeProps {
   recipe: Recipe;
@@ -97,8 +98,24 @@ export function CookingMode({ recipe }: CookingModeProps) {
   
   const completedCount = completedSteps.filter(Boolean).length;
   
-  // Get reaction data for the current step
-  const currentStepReaction = getStepReaction(stepReactions, currentStep);
+  // Create formatted step object for the current step
+  const getCurrentStepObject = (): RecipeStep | null => {
+    if (!recipe.instructions || !recipe.instructions[currentStep]) {
+      return null;
+    }
+    
+    const stepText = recipe.instructions[currentStep];
+    const stepReaction = getStepReaction(stepReactions, currentStep);
+    
+    return {
+      text: stepText,
+      index: currentStep,
+      isCompleted: completedSteps[currentStep],
+      reaction: stepReaction
+    };
+  };
+  
+  const currentStepObject = getCurrentStepObject();
   
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -154,13 +171,10 @@ export function CookingMode({ recipe }: CookingModeProps) {
           <Separator className="my-6" />
           
           <div className="px-4 py-8">
-            {recipe.instructions && (
+            {currentStepObject && (
               <CookingStep
-                stepNumber={currentStep + 1}
-                instruction={recipe.instructions[currentStep]}
-                isCompleted={completedSteps[currentStep]}
+                step={currentStepObject}
                 onToggleComplete={() => toggleStepCompletion(currentStep)}
-                stepReaction={currentStepReaction}
               />
             )}
             
