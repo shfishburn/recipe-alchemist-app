@@ -3,6 +3,7 @@ import React from 'react';
 import { RecipeOverview } from '@/components/recipe-detail/RecipeOverview';
 import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients';
 import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
+import { EnhancedAddToList } from '@/components/recipe-detail/shopping-list/EnhancedAddToList';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 
@@ -24,6 +25,11 @@ export function RecipeTabContent({ recipe }: RecipeTabContentProps) {
             isOpen={sections.ingredients}
             onToggle={() => toggleSection('ingredients')}
           />
+          
+          {/* Contextual action: Add ingredients to shopping list */}
+          <div className="mt-4">
+            <EnhancedAddToList recipe={recipe} />
+          </div>
         </div>
         <div className="md:col-span-2">
           <RecipeInstructions 

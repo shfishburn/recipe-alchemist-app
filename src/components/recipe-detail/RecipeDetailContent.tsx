@@ -7,6 +7,7 @@ import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { TabsView } from '@/components/recipe-detail/navigation/TabsView';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { Recipe } from '@/types/recipe';
 import { isValidUUID } from '@/utils/slug-utils';
 
@@ -28,6 +29,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(recipe);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const isMobile = useIsMobile();
   const { updateRecipe } = useRecipeUpdates(validId || '');
   
   // Use the unified science hook to check for analysis data
@@ -75,6 +77,16 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     }
   };
 
+  const handleOpenChat = () => {
+    // Navigate to modify tab and open chat
+    window.location.hash = 'modify';
+  };
+  
+  const handleToggleAnalysis = () => {
+    // Navigate to science tab
+    window.location.hash = 'science';
+  };
+
   const currentRecipe = localRecipe || recipe;
   
   // If we have no valid recipe data, return null
@@ -102,14 +114,8 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
         <RecipeActions 
           recipe={currentRecipe} 
           sticky={true} 
-          onOpenChat={() => {
-            // Navigate to modify tab and open chat
-            window.location.hash = 'modify';
-          }}
-          onToggleAnalysis={() => {
-            // Navigate to science tab
-            window.location.hash = 'science';
-          }}
+          onOpenChat={handleOpenChat}
+          onToggleAnalysis={handleToggleAnalysis}
           isAnalysisOpen={window.location.hash === '#science'}
           isAnalyzing={isAnalyzing}
           hasAnalysisData={hasAnalysisData}
