@@ -25,7 +25,7 @@ export function ListBlock({ block, blockIndex, type }: ListBlockProps) {
           const indentClass = indent > 2 ? "ml-4" : "";
           
           return (
-            <li key={`${blockIndex}-${itemIndex}`} className={indentClass}>
+            <li key={`${blockIndex}-${itemIndex}`} className={`${indentClass} break-words`}>
               {processInlineFormatting(item.replace(/^[\s\t]*[•\-*]\s+/, ''))}
             </li>
           );
@@ -36,7 +36,7 @@ export function ListBlock({ block, blockIndex, type }: ListBlockProps) {
     return (
       <ol key={blockIndex} className="list-decimal pl-5 space-y-1 my-2">
         {items.map((item, itemIndex) => (
-          <li key={`${blockIndex}-${itemIndex}`}>
+          <li key={`${blockIndex}-${itemIndex}`} className="break-words">
             {processInlineFormatting(item.replace(/^[\s\t]*\d+\.\s+/, ''))}
           </li>
         ))}

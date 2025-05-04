@@ -17,7 +17,7 @@ export function ShoppingListNotes({ list }: ShoppingListNotesProps) {
   // Return empty div if no content rather than null
   // This helps maintain consistent component rendering flow
   if (!hasTips && !hasNotes) {
-    return <div className="empty-notes"></div>;
+    return <div className="empty-notes text-center text-muted-foreground py-4">No notes or tips available.</div>;
   }
 
   return (
@@ -29,7 +29,7 @@ export function ShoppingListNotes({ list }: ShoppingListNotesProps) {
             <ShoppingBag className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
             <h3 className="font-medium text-amber-800">Shopping Tips</h3>
           </div>
-          <ScrollArea className="max-h-[200px]">
+          <ScrollArea className="max-h-[200px] pr-2">
             <ul className="space-y-2">
               {list.tips?.map((tip, index) => (
                 <li 
@@ -51,7 +51,7 @@ export function ShoppingListNotes({ list }: ShoppingListNotesProps) {
             <BookOpen className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
             <h3 className="font-medium text-blue-800">Preparation Notes</h3>
           </div>
-          <ScrollArea className="max-h-[200px]">
+          <ScrollArea className="max-h-[200px] pr-2">
             <ul className="space-y-2">
               {list.preparation_notes?.map((note, index) => (
                 <li 

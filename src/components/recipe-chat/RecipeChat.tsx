@@ -61,15 +61,15 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
   return (
-    <Card className="bg-[#F9FAFB] border-slate-100 shadow-sm">
-      <CardContent className="pt-2 sm:pt-6 px-2 sm:px-6">
-        <div className="space-y-3 sm:space-y-6">
+    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden">
+      <CardContent className="pt-2 sm:pt-4 px-3 sm:px-5 pb-4">
+        <div className="space-y-3 sm:space-y-4">
           <ChatHeader 
             hasChatHistory={chatHistory.length > 0} 
             onClearChat={handleClearChat} 
           />
           
-          <ScrollArea className="h-[calc(100%-120px)] max-h-[60vh]">
+          <ScrollArea className="h-[calc(100%-120px)] max-h-[60vh] pr-1">
             {/* Show EmptyChatState if there are no messages */}
             {showEmptyState ? (
               <EmptyChatState />

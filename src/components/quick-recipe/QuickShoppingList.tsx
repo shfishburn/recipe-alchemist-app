@@ -11,6 +11,7 @@ import { ShoppingListDepartment } from './shopping-list/ShoppingListDepartment';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Import touch optimizations
 import '@/styles/touch-optimizations.css';
@@ -153,14 +154,14 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
           </div>
         </DialogHeader>
         
-        <div className="mt-4 touch-scroll">
+        <ScrollArea className="mt-4 max-h-[60vh]">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground">Generating optimized shopping list...</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 pr-2">
               {Object.entries(itemsByDepartment).length > 0 ? (
                 Object.entries(itemsByDepartment).map(([department, deptItems]) => (
                   <ShoppingListDepartment
@@ -176,7 +177,7 @@ export function QuickShoppingList({ recipe, open, onOpenChange }: QuickShoppingL
               )}
             </div>
           )}
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

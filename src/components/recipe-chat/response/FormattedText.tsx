@@ -92,7 +92,7 @@ export function FormattedText({
 
   return (
     <div className={cn(
-      "text-sm text-neutral-800 break-words", 
+      "text-sm text-neutral-800 break-words overflow-hidden", 
       isScientific ? 'scientific-content' : '',
       className
     )}>

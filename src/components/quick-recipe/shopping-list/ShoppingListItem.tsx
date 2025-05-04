@@ -57,13 +57,13 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
           )}
         </div>
       </div>
-      <span className={`${item.checked ? 'line-through text-muted-foreground' : ''}`}>
+      <span className={`${item.checked ? 'line-through text-muted-foreground' : ''} break-words`}>
         {formattedQuantity && <strong className="mr-1">{formattedQuantity}</strong>}
         {displayName}
-        {item.notes && <span className="text-sm text-muted-foreground ml-1">({item.notes})</span>}
+        {item.notes && <span className="text-sm text-muted-foreground ml-1 break-words">({item.notes})</span>}
       </span>
       {item.pantryStaple && (
-        <span className="text-xs bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded ml-auto">
+        <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full ml-auto whitespace-nowrap">
           Pantry
         </span>
       )}
