@@ -2,18 +2,16 @@ import { useState, useEffect } from 'react';
 import { Recipe } from '@/types/recipe';
 import type { RecipeStep } from '@/types/recipe-steps';
 import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
+import { useTimer } from '@/hooks/use-timer';
 
 interface CookingModeState {
   currentStep: number;
   completedSteps: boolean[];
-  timeRemaining: number | null;
   isOpen: boolean;
 }
 
 interface CookingModeActions {
   toggleStepCompletion: (index: number) => void;
-  startTimer: (minutes: number) => void;
-  cancelTimer: () => void;
   goToNextStep: () => void;
   goToPrevStep: () => void;
   setIsOpen: (value: boolean) => void;
@@ -26,6 +24,7 @@ interface CookingModeResult {
   completedCount: number;
   currentStepObject: RecipeStep | null;
   stepReactions: ReturnType<typeof useRecipeScience>['stepReactions'];
+  timer: ReturnType<typeof useTimer>;
 }
 
 export function useCookingMode(recipe: Recipe): CookingModeResult {
@@ -33,7 +32,9 @@ export function useCookingMode(recipe: Recipe): CookingModeResult {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([]);
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  
+  // Timer state from our custom hook
+  const timer = useTimer();
   
   // Recipe science data
   const { stepReactions } = useRecipeScience(recipe);
@@ -44,17 +45,6 @@ export function useCookingMode(recipe: Recipe): CookingModeResult {
       setCompletedSteps(new Array(recipe.instructions.length).fill(false));
     }
   }, [recipe.instructions]);
-  
-  // Timer countdown effect
-  useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0) return;
-    
-    const interval = setInterval(() => {
-      setTimeRemaining(prev => (prev !== null && prev > 0) ? prev - 1 : null);
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [timeRemaining]);
   
   // Keep screen awake during cooking mode
   useEffect(() => {
@@ -84,14 +74,6 @@ export function useCookingMode(recipe: Recipe): CookingModeResult {
     const newCompleted = [...completedSteps];
     newCompleted[index] = !newCompleted[index];
     setCompletedSteps(newCompleted);
-  };
-  
-  const startTimer = (minutes: number) => {
-    setTimeRemaining(minutes * 60);
-  };
-  
-  const cancelTimer = () => {
-    setTimeRemaining(null);
   };
   
   const goToNextStep = () => {
@@ -133,13 +115,10 @@ export function useCookingMode(recipe: Recipe): CookingModeResult {
     state: {
       currentStep,
       completedSteps,
-      timeRemaining,
       isOpen
     },
     actions: {
       toggleStepCompletion,
-      startTimer,
-      cancelTimer,
       goToNextStep,
       goToPrevStep,
       setIsOpen
@@ -147,6 +126,7 @@ export function useCookingMode(recipe: Recipe): CookingModeResult {
     totalSteps,
     completedCount,
     currentStepObject,
-    stepReactions
+    stepReactions,
+    timer
   };
 }

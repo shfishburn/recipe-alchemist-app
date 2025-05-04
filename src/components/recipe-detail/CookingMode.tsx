@@ -24,11 +24,13 @@ export function CookingMode({ recipe }: CookingModeProps) {
     actions,
     totalSteps,
     completedCount,
-    currentStepObject
+    currentStepObject,
+    timer
   } = useCookingMode(recipe);
   
-  const { currentStep, completedSteps, timeRemaining, isOpen } = state;
-  const { toggleStepCompletion, startTimer, cancelTimer, goToNextStep, goToPrevStep, setIsOpen } = actions;
+  const { currentStep, completedSteps, isOpen } = state;
+  const { toggleStepCompletion, goToNextStep, goToPrevStep, setIsOpen } = actions;
+  const { timeRemaining, startTimer, cancelTimer } = timer;
   
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
