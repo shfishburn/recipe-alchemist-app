@@ -27,7 +27,7 @@ export function ShoppingListItemsView({
   if (Object.keys(groupedItems).length === 0) {
     return (
       <div className="py-6 text-center border rounded-md bg-muted/20">
-        <p className="text-muted-foreground">No items in this shopping list yet.</p>
+        <p className="text-base text-muted-foreground">No items in this shopping list yet.</p>
         <p className="text-sm mt-2 text-muted-foreground">
           Use the "Add New Item" button below to start adding items.
         </p>
@@ -40,16 +40,15 @@ export function ShoppingListItemsView({
       {Object.entries(groupedItems).map(([department, items]) => {
         const isExpanded = expandedDepts[department] !== false;
         const allChecked = items.every(item => item.checked);
-        const someChecked = items.some(item => item.checked);
         
         return (
           <div key={department} className="border rounded-md overflow-hidden">
-            <div className="flex items-center justify-between p-2 bg-muted/20">
+            <div className="flex items-center justify-between p-3 bg-muted/30">
               <div className="flex items-center">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="mr-2 h-7 w-7 p-1 rounded-full"
+                  className="mr-2 h-8 w-8 p-0 rounded-full"
                   onClick={() => onToggleDept(department)}
                 >
                   {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -57,8 +56,8 @@ export function ShoppingListItemsView({
                 </Button>
                 
                 <div>
-                  <h3 className="font-medium text-sm">{department}</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <h3 className="font-medium text-base">{department}</h3>
+                  <p className="text-sm text-muted-foreground">
                     {items.filter(i => i.checked).length} of {items.length} complete
                   </p>
                 </div>
@@ -66,20 +65,20 @@ export function ShoppingListItemsView({
               
               <div className="flex items-center">
                 <Button
-                  variant="outline"
+                  variant={allChecked ? "outline" : "default"}
                   size="sm"
-                  className="text-xs h-7 px-1.5"
+                  className="h-8 px-3 text-sm"
                   onClick={() => onToggleDepartmentItems(department, !allChecked)}
                 >
                   {allChecked ? (
                     <>
-                      <Plus className="h-3 w-3 mr-1" /> 
+                      <Plus className="h-4 w-4 mr-1" /> 
                       <span>Uncheck All</span>
                     </>
                   ) : (
                     <>
-                      <Check className="h-3 w-3 mr-1" /> 
-                      <span>Check All</span>
+                      <Check className="h-4 w-4 mr-1" /> 
+                      <span>Complete All</span>
                     </>
                   )}
                 </Button>
@@ -87,7 +86,7 @@ export function ShoppingListItemsView({
             </div>
             
             {isExpanded && (
-              <div className={`p-1.5 ${department === 'All Items' ? 'divide-y' : ''}`}>
+              <div className="p-2 space-y-1">
                 {items.map((item) => (
                   <ShoppingListItemView 
                     key={`${item.name}-${item.unit}-${item.quantity}`}

@@ -8,5 +8,9 @@ interface AddToShoppingListProps {
 }
 
 export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
-  return <EnhancedAddToList recipe={recipe} />;
+  return (
+    <div className="touch-feedback-optimized">
+      <EnhancedAddToList recipe={recipe} />
+    </div>
+  );
 }

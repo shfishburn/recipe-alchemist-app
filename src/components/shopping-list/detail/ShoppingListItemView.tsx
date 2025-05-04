@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ShoppingListItem } from '@/types/shopping-list';
 
@@ -14,49 +13,56 @@ interface ShoppingListItemViewProps {
 
 export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListItemViewProps) {
   return (
-    <div className={cn(
-      "group flex items-center justify-between py-2 px-2 rounded-md transition-colors",
-      "hover:bg-accent/50 touch-feedback-optimized",
-      "touch-target" // Custom touch target class for better mobile UX
-    )}>
-      <div 
-        className="flex items-start flex-1 cursor-pointer"
-        onClick={(e) => {
-          // Prevent toggling if clicking on the delete button
-          if ((e.target as HTMLElement).closest('button')) return;
-          onToggle();
-        }}
-      >
-        <div className="touch-target flex items-center pr-2">
-          <Checkbox 
-            checked={item.checked} 
-            className="h-5 w-5 rounded-sm touch-target data-[state=checked]:bg-primary"
-          />
-        </div>
-        
+    <div 
+      className={cn(
+        "flex items-start gap-3 p-2 rounded-md transition-colors",
+        item.checked 
+          ? "bg-green-50 hover:bg-green-100" 
+          : "hover:bg-muted/50",
+        "touch-feedback-optimized"
+      )}
+      onClick={(e) => {
+        // Prevent toggling if clicking on the delete button
+        if ((e.target as HTMLElement).closest('button')) return;
+        onToggle();
+      }}
+    >
+      <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium">
+        {item.checked ? (
+          <Check className="h-4 w-4" />
+        ) : (
+          <span>•</span>
+        )}
+      </div>
+      
+      <div className="flex-1 pt-0.5 flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className={cn(
-            "text-sm font-medium truncate",
+            "text-base font-medium",
             item.checked && "line-through text-muted-foreground"
           )}>
             {item.name}
           </div>
           
-          <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-            <span className="truncate">{item.quantity} {item.unit}</span>
+          <div className="flex flex-wrap items-center gap-1 text-sm">
+            <span className="text-muted-foreground">{item.quantity} {item.unit}</span>
             {item.notes && (
-              <span className="truncate italic">
+              <span className="text-muted-foreground italic">
                 ({item.notes})
               </span>
             )}
           </div>
           
           {item.package_notes && (
-            <div className="text-xs text-primary-foreground/70 bg-primary/10 px-1.5 py-0.5 rounded mt-1 inline-block">
+            <div className="text-sm text-primary-foreground/80 bg-primary/10 px-2 py-1 rounded mt-1 inline-block">
               {item.package_notes}
             </div>
           )}
         </div>
+        
+        {item.checked && (
+          <Check className="h-5 w-5 text-green-500 mr-2" />
+        )}
       </div>
       
       <div className={cn(
