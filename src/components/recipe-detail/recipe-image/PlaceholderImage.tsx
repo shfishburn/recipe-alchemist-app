@@ -1,5 +1,5 @@
 
-import { Image as ImageIcon } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 
 interface PlaceholderImageProps {
   hasError: boolean;
@@ -9,7 +9,7 @@ interface PlaceholderImageProps {
 export function PlaceholderImage({ hasError, onClick }: PlaceholderImageProps) {
   return (
     <div 
-      className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg cursor-pointer"
+      className="w-full aspect-video bg-muted flex flex-col items-center justify-center rounded-lg cursor-pointer touch-feedback-strong"
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -19,19 +19,27 @@ export function PlaceholderImage({ hasError, onClick }: PlaceholderImageProps) {
           if (onClick) onClick();
         }
       }}
-      aria-label={hasError ? "Image unavailable" : "Generate recipe image"}
+      aria-label={hasError ? "Generate recipe image" : "Generate recipe image"}
     >
-      <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
-      <p className="text-muted-foreground text-center">
-        {hasError ? "Image unavailable" : "No image available"}
-      </p>
-      <p className="text-xs text-muted-foreground text-center max-w-xs mt-1">
-        {!hasError && "Generate a beautiful image of this recipe with AI"}
-      </p>
-      {!hasError && (
-        <p className="text-xs text-muted-foreground text-center max-w-xs mt-1 italic">
-          Click here to create an image
-        </p>
+      <ImagePlus className="h-12 w-12 text-muted-foreground mb-2" />
+      
+      {hasError ? (
+        <div className="text-center px-4">
+          <p className="text-muted-foreground font-medium">Tap to generate an image</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Create a beautiful image of this recipe with AI
+          </p>
+        </div>
+      ) : (
+        <div className="text-center px-4">
+          <p className="text-muted-foreground font-medium">Tap to generate an image</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Create a beautiful image of this recipe with AI
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 italic">
+            Visualize your recipe before cooking!
+          </p>
+        </div>
       )}
     </div>
   );

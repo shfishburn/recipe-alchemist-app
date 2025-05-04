@@ -36,6 +36,14 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     }
   }, [imageUrl, imageError]);
 
+  const handleGenerateImage = useCallback(() => {
+    if (imageError || !imageUrl) {
+      generateNewImage();
+    } else {
+      setShowImageDrawer(true);
+    }
+  }, [imageError, imageUrl, generateNewImage]);
+
   const handleRegenerationComplete = useCallback(() => {
     window.location.reload();
   }, []);
@@ -62,7 +70,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
             ) : (
               <PlaceholderImage 
                 hasError={imageError} 
-                onClick={generateNewImage}
+                onClick={handleGenerateImage}
               />
             )}
           </div>

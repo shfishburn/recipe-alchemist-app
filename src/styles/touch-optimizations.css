@@ -95,6 +95,32 @@
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
+/* Image placeholder enhancements */
+.image-placeholder-cta {
+  position: relative;
+  overflow: hidden;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
+}
+
+.image-placeholder-cta:after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 30px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
 /* Tab-specific touch improvements */
 .touch-friendly-tabs [data-radix-tabs-trigger] {
   padding: 0.75rem 1rem;
