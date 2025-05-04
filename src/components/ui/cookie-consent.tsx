@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCookieConsent } from '@/hooks/use-cookie-consent';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,8 +11,8 @@ export function CookieConsent() {
   const { isOpen, setIsOpen, hasConsented, acceptAll, declineAll, acceptSelected } = useCookieConsent();
   const isMobile = useIsMobile();
   
-  // Only render the component if user hasn't consented yet
-  if (hasConsented) return null;
+  // Only render the component if user hasn't consented yet and banner should be shown
+  if (hasConsented || !isOpen) return null;
   
   const [settings, setSettings] = useState({
     essential: true,
@@ -97,7 +97,7 @@ export function CookieConsent() {
   return (
     <>
       {/* Mobile UI - Sheet */}
-      {isMobile && isOpen && (
+      {isMobile && (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
             <SheetHeader className="pb-2">
@@ -120,7 +120,7 @@ export function CookieConsent() {
       )}
 
       {/* Desktop UI - Dialog */}
-      {!isMobile && isOpen && (
+      {!isMobile && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="sm:max-w-[500px] p-6">
             <DialogHeader className="pb-2">

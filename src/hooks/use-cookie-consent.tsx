@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -40,6 +41,9 @@ export const getCookie = (name: string): string | null => {
   return match ? match[2] : null;
 };
 
+// Storage key for session storage to prevent multiple prompts
+const SESSION_CONSENT_KEY = 'cookieConsentShown';
+
 export const CookieConsentProvider = ({ children }: { children: ReactNode }) => {
   const [hasConsented, setHasConsented] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -48,36 +52,39 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
     preferences: false,
     analytics: false,
   });
-  const [initialized, setInitialized] = useState(false);
+  
   const location = useLocation();
 
-  // Check for existing consent on component mount only (not on route change)
+  // Check for existing consent only once on component mount
   useEffect(() => {
-    if (initialized) return;
-
+    // Check if consent has already been given
     const consentCookie = getCookie('cookieConsent');
+    
     if (consentCookie) {
-      setHasConsented(true);
       try {
         const savedSettings = JSON.parse(consentCookie);
+        setHasConsented(true);
         setCookieSettings(savedSettings);
+        setIsOpen(false); // Make sure banner stays closed
       } catch (e) {
         console.error('Error parsing cookie consent settings', e);
       }
-      // Make sure to keep the dialog closed if consent was already given
-      setIsOpen(false);
     } else {
-      // If no consent cookie exists, show the banner after a short delay
-      // This prevents the dialog from appearing immediately during initial page load
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1500);
+      // Check if we've already shown the consent banner in this session
+      const consentShown = sessionStorage.getItem(SESSION_CONSENT_KEY);
       
-      return () => clearTimeout(timer);
+      if (!consentShown) {
+        // If no consent and not shown yet in this session, show after a short delay
+        const timer = setTimeout(() => {
+          setIsOpen(true);
+          // Mark that we've shown the consent banner in this session
+          sessionStorage.setItem(SESSION_CONSENT_KEY, 'true');
+        }, 1500);
+        
+        return () => clearTimeout(timer);
+      }
     }
-    
-    setInitialized(true);
-  }, [initialized]);
+  }, []); // Empty dependency array ensures this only runs once on mount
 
   // Function to save consent settings
   const saveConsent = (settings: CookieSettings) => {
@@ -85,6 +92,8 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
     setCookieSettings(settings);
     setCookie('cookieConsent', JSON.stringify(settings));
     setIsOpen(false);
+    // Also mark as shown for this session
+    sessionStorage.setItem(SESSION_CONSENT_KEY, 'true');
   };
 
   const acceptAll = () => {
