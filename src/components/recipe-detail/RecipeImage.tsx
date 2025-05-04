@@ -1,21 +1,20 @@
 
 import { useState } from 'react';
-import { ImagePlus, Loader2, RefreshCw, Edit } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeImage } from '@/hooks/use-recipe-image';
 import { LoadingState } from './recipe-image/LoadingState';
 import { PlaceholderImage } from './recipe-image/PlaceholderImage';
-import { ImageDialog } from './recipe-image/ImageDialog';
+import { ImageDrawer } from './recipe-image/ImageDrawer';
 import { ImageRegenerationForm } from './recipe-image/ImageRegenerationForm';
-import { Card, CardContent } from '@/components/ui/card';
+import { ImageControls } from './recipe-image/ImageControls';
 
 interface RecipeImageProps {
   recipe: Recipe;
 }
 
 export function RecipeImage({ recipe }: RecipeImageProps) {
-  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showImageDrawer, setShowImageDrawer] = useState(false);
   const [showRegenerationForm, setShowRegenerationForm] = useState(false);
   const {
     isGenerating,
@@ -32,15 +31,13 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
 
   const openFullImage = () => {
     if (imageUrl && !imageError) {
-      setShowImageDialog(true);
+      setShowImageDrawer(true);
     }
   };
 
   const handleRegenerationComplete = () => {
     window.location.reload();
   };
-
-  const shouldShowGenerateButton = !imageUrl || imageError;
 
   return (
     <Card className="mb-6 overflow-hidden border-0 shadow-md">
@@ -58,71 +55,27 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
                 onClick={openFullImage}
               />
             ) : (
-              <PlaceholderImage hasError={imageError} />
-            )}
-          </div>
-          
-          <div className="mt-2 p-3 flex justify-end gap-2">
-            {shouldShowGenerateButton ? (
-              <Button
+              <PlaceholderImage 
+                hasError={imageError} 
                 onClick={generateNewImage}
-                disabled={isGenerating}
-                variant="secondary"
-                size="sm"
-                className="bg-recipe-blue text-white hover:bg-recipe-blue/80"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <ImagePlus className="mr-2 h-4 w-4" />
-                    Generate Image
-                  </>
-                )}
-              </Button>
-            ) : (
-              <>
-                <Button
-                  onClick={() => setShowRegenerationForm(true)}
-                  variant="outline"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted"
-                  disabled={isGenerating}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Customize
-                </Button>
-                <Button
-                  onClick={generateNewImage}
-                  disabled={isGenerating}
-                  variant="secondary"
-                  size="sm"
-                  className="bg-recipe-blue text-white hover:bg-recipe-blue/80"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Regenerating...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Regenerate
-                    </>
-                  )}
-                </Button>
-              </>
+              />
             )}
           </div>
         </div>
       </CardContent>
 
-      <ImageDialog
-        open={showImageDialog}
-        onOpenChange={setShowImageDialog}
+      {/* Image controls now inside the drawer/modal rather than beneath the image */}
+      <ImageControls 
+        imageUrl={imageUrl}
+        imageError={imageError}
+        isGenerating={isGenerating}
+        onGenerate={generateNewImage}
+        onCustomize={() => setShowRegenerationForm(true)}
+      />
+
+      <ImageDrawer
+        open={showImageDrawer}
+        onOpenChange={setShowImageDrawer}
         imageUrl={imageUrl || ''}
         title={recipe.title}
         onError={handleImageError}

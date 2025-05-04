@@ -49,3 +49,25 @@
 .touch-friendly-tabs [data-radix-tabs-trigger]:active {
   transform: scale(0.97);
 }
+
+/* Drawer specific optimizations */
+.drawer-content {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drawer-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Bottom sheet specific touch improvements */
+.bottom-sheet {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* Image viewing optimizations */
+.image-view-touch {
+  touch-action: pinch-zoom;
+}
