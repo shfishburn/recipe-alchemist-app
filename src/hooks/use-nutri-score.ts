@@ -38,16 +38,18 @@ export function useNutriScore(recipe: Recipe | undefined): NutriScoreData {
 
     if (!recipe) return defaultData;
 
-    // Check if we have nutri_score data
-    const nutriScoreData = recipe.nutri_score;
-    if (!nutriScoreData) return defaultData;
+    // Check if we have nutrition data
+    const nutrition = recipe.nutrition;
+    if (!nutrition) return defaultData;
 
-    // Extract the grade and score
-    const score = nutriScoreData.score;
-    const grade = nutriScoreData.grade as NutriScoreGrade;
+    // Extract the nutri_score data if available
+    // This matches the database structure we created
+    const nutriScore = recipe.nutri_score || {};
+    const grade = (nutriScore.grade as NutriScoreGrade) || null;
+    const score = nutriScore.score || null;
 
     // Get serving size if available
-    const servingSize = recipe.nutrition?.serving_size_g || undefined;
+    const servingSize = nutrition.serving_size || undefined;
 
     // Extract health score
     let healthScore: 'low' | 'medium' | 'high' | null = null;
@@ -64,56 +66,56 @@ export function useNutriScore(recipe: Recipe | undefined): NutriScoreData {
     const negatives: NutriScoreData['negatives'] = [];
 
     // Check for nutrition facts to determine positives and negatives
-    if (recipe.nutrition) {
-      const nutrition = recipe.nutrition;
+    if (nutrition) {
+      const nutritionData = nutrition;
       
       // Positives
-      if (nutrition.protein > 10) {
+      if (nutritionData.protein > 10) {
         positives.push({
           name: 'Protein',
           type: 'positive',
-          value: `${Math.round(nutrition.protein)}g`,
+          value: `${Math.round(nutritionData.protein)}g`,
         });
       }
       
-      if (nutrition.fiber > 3) {
+      if (nutritionData.fiber > 3) {
         positives.push({
           name: 'Fiber',
           type: 'positive',
-          value: `${Math.round(nutrition.fiber)}g`,
+          value: `${Math.round(nutritionData.fiber)}g`,
         });
       }
       
       // Negatives
-      if (nutrition.fat > 10) {
+      if (nutritionData.fat > 10) {
         negatives.push({
           name: 'Saturated fat',
           type: 'negative',
-          value: `${Math.round(nutrition.fat * 0.3)}g`, // Estimate saturated fat as 30% of total fat
+          value: `${Math.round(nutritionData.fat * 0.3)}g`, // Estimate saturated fat as 30% of total fat
         });
       }
       
-      if (nutrition.sugar > 10) {
+      if (nutritionData.sugar > 10) {
         negatives.push({
           name: 'Sugar',
           type: 'negative',
-          value: `${Math.round(nutrition.sugar)}g`,
+          value: `${Math.round(nutritionData.sugar)}g`,
         });
       }
       
-      if (nutrition.sodium > 400) {
+      if (nutritionData.sodium > 400) {
         negatives.push({
           name: 'Sodium',
           type: 'negative',
-          value: `${Math.round(nutrition.sodium)}mg`,
+          value: `${Math.round(nutritionData.sodium)}mg`,
         });
       }
       
-      if (nutrition.calories > 400) {
+      if (nutritionData.calories > 400) {
         negatives.push({
           name: 'Calories',
           type: 'negative',
-          value: `${Math.round(nutrition.calories)} kcal`,
+          value: `${Math.round(nutritionData.calories)} kcal`,
         });
       }
     }
@@ -137,7 +139,7 @@ export function useNutriScore(recipe: Recipe | undefined): NutriScoreData {
       negatives,
       servingSize,
       healthScore,
-      hasData: true,
+      hasData: grade !== null || positives.length > 0 || negatives.length > 0,
     };
   }, [recipe]);
 }

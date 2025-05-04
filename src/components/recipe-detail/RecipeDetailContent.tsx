@@ -78,7 +78,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     <ProfileProvider>
       <div className="max-w-4xl mx-auto mb-20">
         {/* Recipe Header with title */}
-        <RecipeHeader recipe={localRecipe} hideReasoning={true} />
+        <RecipeHeader recipe={localRecipe} currentTab={currentTab} onOpenChat={handleOpenChat} />
         
         {/* Recipe Image */}
         <RecipeImage recipe={localRecipe} />
