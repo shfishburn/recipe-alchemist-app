@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart } from 'lucide-react';
+import { Heart, MessageSquare } from 'lucide-react';
 import { useFavoriteRecipe } from '@/hooks/use-favorite-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Recipe } from '@/types/recipe';
@@ -10,14 +10,17 @@ interface RecipeActionsProps {
   recipe: Recipe;
   sticky?: boolean;
   onOpenChat?: () => void;
+  currentTab?: string;
 }
 
-export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActionsProps) {
+export function RecipeActions({ 
+  recipe, 
+  sticky = false, 
+  onOpenChat,
+  currentTab = 'recipe'
+}: RecipeActionsProps) {
   const { isFavorite, toggleFavorite } = useFavoriteRecipe(recipe.id);
   const isMobile = useIsMobile();
-  
-  // Determine which tab is active to show contextual actions
-  const currentTab = window.location.hash ? window.location.hash.slice(1) : 'recipe';
   
   // Only show chat button when not already on the modify tab
   const showChatButton = onOpenChat && currentTab !== 'modify';
@@ -30,13 +33,9 @@ export function RecipeActions({ recipe, sticky = false, onOpenChat }: RecipeActi
           <Button 
             className="w-full bg-recipe-blue hover:bg-recipe-blue/90 text-white mb-3 h-12 touch-feedback-strong"
             size="lg"
-            onClick={() => {
-              if (onOpenChat) {
-                onOpenChat();
-                window.location.hash = 'modify';
-              }
-            }}
+            onClick={onOpenChat}
           >
+            <MessageSquare className="mr-2 h-5 w-5" />
             Ask AI Chef
           </Button>
         )}

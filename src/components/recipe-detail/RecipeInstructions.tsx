@@ -7,7 +7,7 @@ import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { InstructionStep } from './instructions/InstructionStep';
 import { useStepCompletion } from './instructions/useStepCompletion';
-import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
+import { useRecipeScience } from '@/hooks/use-recipe-science';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
@@ -43,17 +43,22 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
           <CardContent className="pt-0">
             {hasInstructions ? (
               <ol className="space-y-4">
-                {recipe.instructions.map((step, index) => (
-                  <InstructionStep
-                    key={index}
-                    step={step}
-                    index={index}
-                    isCompleted={isStepCompleted(index)}
-                    toggleStep={toggleStep}
-                    stepReaction={getStepReaction(stepReactions, index)}
-                    isLastStep={index === recipe.instructions.length - 1}
-                  />
-                ))}
+                {recipe.instructions.map((step, index) => {
+                  const stepReaction = stepReactions?.[index] || null;
+                  const isLastStep = index === recipe.instructions.length - 1;
+                  
+                  return (
+                    <InstructionStep
+                      key={index}
+                      step={step}
+                      index={index}
+                      isCompleted={isStepCompleted(index)}
+                      toggleStep={toggleStep}
+                      stepReaction={stepReaction}
+                      isLastStep={isLastStep}
+                    />
+                  );
+                })}
               </ol>
             ) : (
               <p className="text-muted-foreground">No instructions available</p>

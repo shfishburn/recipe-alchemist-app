@@ -29,12 +29,15 @@ export function StepDisplay({
   const [showScience, setShowScience] = useState<boolean>(false);
   
   // Determine if this step has scientific data
-  const hasScience = stepReaction && Array.isArray(stepReaction.reactions) && stepReaction.reactions.length > 0;
+  const hasScience = stepReaction && 
+                     Array.isArray(stepReaction.reactions) && 
+                     stepReaction.reactions.length > 0;
     
-  // Styling classes
+  // Styling classes based on state
   const containerClasses = cn(
-    "flex flex-col cursor-pointer p-4 rounded-md transition-colors border",
+    "flex flex-col p-4 rounded-md transition-colors border",
     isCompleted ? "bg-green-50 hover:bg-green-100 border-green-200" : "hover:bg-gray-50 border-gray-100",
+    onToggleComplete ? "cursor-pointer" : "",
     variant === 'cooking' ? "shadow-sm" : ""
   );
   
@@ -43,9 +46,22 @@ export function StepDisplay({
     isCompleted ? "line-through text-muted-foreground" : "text-foreground"
   );
   
+  // Handle toggling
+  const handleClick = () => {
+    if (onToggleComplete) {
+      onToggleComplete();
+    }
+  };
+
+  // Handle science button click
+  const handleScienceClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowScience(!showScience);
+  };
+  
   return (
     <>
-      <div onClick={onToggleComplete} className={containerClasses}>
+      <div onClick={handleClick} className={containerClasses}>
         {/* Step header row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -64,11 +80,7 @@ export function StepDisplay({
             <Button
               variant="outline"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setShowScience(!showScience);
-              }}
+              onClick={handleScienceClick}
               className="ml-auto flex-shrink-0 gap-1.5"
               title={showScience ? "Hide Science" : "View Science"}
             >

@@ -8,13 +8,15 @@ interface RecipeActionButtonsProps {
   onSave: () => void;
   onPrint?: () => void;
   isSaving?: boolean;
+  isSmallScreen?: boolean;
 }
 
 export function RecipeActionButtons({ 
   onCook, 
   onSave, 
   onPrint,
-  isSaving = false 
+  isSaving = false,
+  isSmallScreen = false
 }: RecipeActionButtonsProps) {
   return (
     <div className="pt-5 flex flex-col gap-2.5 w-full">
@@ -37,18 +39,20 @@ export function RecipeActionButtons({
           disabled={isSaving}
         >
           <Bookmark className="mr-1 sm:mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Save Recipe</span>
-          <span className="sm:hidden">Save</span>
+          <span className={isSmallScreen ? "hidden" : "inline"}>Save Recipe</span>
+          <span className={isSmallScreen ? "inline" : "hidden"}>Save</span>
         </Button>
-        <Button 
-          variant="outline" 
-          onClick={onPrint}
-          className="w-full"
-        >
-          <Printer className="mr-1 sm:mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Print</span>
-          <span className="sm:hidden">Print</span>
-        </Button>
+        {onPrint && (
+          <Button 
+            variant="outline" 
+            onClick={onPrint}
+            className="w-full"
+          >
+            <Printer className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className={isSmallScreen ? "hidden" : "inline"}>Print</span>
+            <span className={isSmallScreen ? "inline" : "hidden"}>Print</span>
+          </Button>
+        )}
       </div>
     </div>
   );

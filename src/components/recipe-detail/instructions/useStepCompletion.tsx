@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 
 export interface StepCompletionState {
@@ -6,7 +5,9 @@ export interface StepCompletionState {
   toggleStep: (index: number) => void;
   isStepCompleted: (index: number) => boolean;
   resetAllSteps: () => void;
-  markAllStepsCompleted: () => void;
+  markAllStepsCompleted: (totalSteps?: number) => void;
+  completedCount: number;
+  totalCompletedPercentage: (total: number) => number;
 }
 
 /**
@@ -33,21 +34,41 @@ export function useStepCompletion(): StepCompletionState {
     setCompletedSteps({});
   }, []);
   
-  const markAllStepsCompleted = useCallback(() => {
-    // Create a new state object with all steps marked as completed
+  const markAllStepsCompleted = useCallback((totalSteps?: number) => {
+    // If totalSteps is provided, we can create a new state with all steps marked completed
+    if (typeof totalSteps === 'number') {
+      const newState: {[key: number]: boolean} = {};
+      for (let i = 0; i < totalSteps; i++) {
+        newState[i] = true;
+      }
+      setCompletedSteps(newState);
+      return;
+    }
+    
+    // Otherwise use the existing keys
     const allCompleted: {[key: number]: boolean} = {};
-    // We don't know the total number of steps, so we use the existing keys and ensure they're all true
     Object.keys(completedSteps).forEach(key => {
       allCompleted[parseInt(key)] = true;
     });
     setCompletedSteps(allCompleted);
   }, [completedSteps]);
   
+  // Calculate how many steps are completed
+  const completedCount = Object.values(completedSteps).filter(Boolean).length;
+  
+  // Calculate percentage of steps completed
+  const totalCompletedPercentage = useCallback((total: number) => {
+    if (total === 0) return 0;
+    return (completedCount / total) * 100;
+  }, [completedCount]);
+  
   return {
     completedSteps,
     toggleStep,
     isStepCompleted,
     resetAllSteps,
-    markAllStepsCompleted
+    markAllStepsCompleted,
+    completedCount,
+    totalCompletedPercentage
   };
 }

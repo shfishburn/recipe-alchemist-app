@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { RecipeOverview } from '@/components/recipe-detail/RecipeOverview';
 import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients';
 import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
 import { EnhancedAddToList } from '@/components/recipe-detail/shopping-list/EnhancedAddToList';
+import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -13,7 +14,7 @@ interface RecipeTabContentProps {
 }
 
 export function RecipeTabContent({ recipe }: RecipeTabContentProps) {
-  const { sections, toggleSection } = useRecipeSections();
+  const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
   const isMobile = useIsMobile();
 
   return (
@@ -21,8 +22,11 @@ export function RecipeTabContent({ recipe }: RecipeTabContentProps) {
       {/* Recipe overview section */}
       <RecipeOverview recipe={recipe} />
       
+      {/* Section controls */}
+      <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
+      
       {/* Main recipe content */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3 mt-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3 mt-4">
         {/* Ingredients column */}
         <div className="md:col-span-1">
           <RecipeIngredients 

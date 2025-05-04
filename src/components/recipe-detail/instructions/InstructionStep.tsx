@@ -22,13 +22,15 @@ export function InstructionStep({
   stepReaction,
   isLastStep
 }: InstructionStepProps) {
+  const handleToggle = () => toggleStep(index);
+  
   return (
-    <li key={index} className="group">
+    <li className="group">
       <StepDisplay
         stepNumber={index + 1}
         stepText={step}
         isCompleted={isCompleted}
-        onToggleComplete={() => toggleStep(index)}
+        onToggleComplete={handleToggle}
         stepReaction={stepReaction}
         variant="instruction"
         stepCategory={stepReaction?.cooking_method as StepCategory | undefined}
