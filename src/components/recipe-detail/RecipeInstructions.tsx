@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, ChevronDown, ChevronUp, Check, Info, Atom } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, Check, Atom } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/hooks/use-recipe-detail';
@@ -141,13 +141,10 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                           <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium">
                             {index + 1}
                           </div>
-                          <div className="flex-1 pt-0.5 flex items-center justify-between">
+                          <div className="flex-1 pt-0.5">
                             <p className={`leading-relaxed ${completedSteps[index] ? "line-through text-muted-foreground" : ""}`}>
                               {renderInstructionWithBoldIngredients(step)}
                             </p>
-                            {completedSteps[index] && (
-                              <Check className="h-5 w-5 text-green-500" />
-                            )}
                           </div>
                           
                           {/* Science note toggle button if reactions exist */}
@@ -159,10 +156,14 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                               onClick={(e) => toggleNotes(index, e)}
                             >
                               <Atom className="h-4 w-4" />
-                              <span className="hidden sm:inline">
-                                {expandedNotes[index] ? 'Hide' : 'Science'}
+                              <span className="text-xs">
+                                {expandedNotes[index] ? 'Hide Science' : 'View Science'}
                               </span>
                             </Button>
+                          )}
+                          
+                          {completedSteps[index] && (
+                            <Check className="h-5 w-5 text-green-500 ml-1" />
                           )}
                         </div>
                         

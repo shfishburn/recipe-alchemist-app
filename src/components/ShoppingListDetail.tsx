@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import type { ShoppingList } from '@/types/shopping-list';
+import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
 import { ShoppingListHeader } from '@/components/shopping-list/detail/ShoppingListHeader';
 import { ShoppingListNotes } from '@/components/shopping-list/detail/ShoppingListNotes';
 import { ShoppingListControls } from '@/components/shopping-list/detail/ShoppingListControls';
@@ -59,13 +59,13 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     };
   }, []);
 
-  // Fix: Convert Promise<boolean> to Promise<void>
+  // Convert Promise<boolean> to Promise<void>
   const handleCopyToClipboard = async (): Promise<void> => {
     await copyToClipboard();
   };
 
   // Create a wrapper function to convert Promise<boolean> to Promise<void>
-  const handleAddItemWrapper = async (item: any): Promise<void> => {
+  const handleAddItemWrapper = async (item: Partial<ShoppingListItem>): Promise<void> => {
     await handleAddItem(item);
   };
 

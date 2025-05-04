@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +18,16 @@ interface ReactionItem {
   reactions: string[];
   reaction_details: string[];
   confidence: number;
+}
+
+// Define the analysis response type
+interface AnalysisResponse {
+  textResponse?: string;
+  science_notes?: string[];
+  techniques?: string[];
+  troubleshooting?: string[];
+  changes?: any;
+  error?: string;
 }
 
 interface RecipeAnalysisProps {
@@ -52,6 +63,8 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   
   // Flag to track if content has been parsed
   const contentParsedRef = useRef(false);
+  // Ref for tracking analysis request
+  const analysisRequestRef = useRef<AbortController | null>(null);
 
   // Fetch reaction data from Supabase
   const { data: reactions, isLoading: isLoadingReactions, refetch: refetchReactions } = useQuery({
@@ -82,19 +95,25 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   });
   
   // Fetch general analysis data from recipe-chat
-  const { data: analysis, isLoading, refetch } = useQuery({
+  const { data: analysis, isLoading, refetch } = useQuery<AnalysisResponse, Error>({
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
       console.log('Fetching recipe analysis for', recipe.title);
       
       try {
         // Create an AbortController for timeout handling
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Analysis request timed out')), 30000)
-        );
+        const abortController = new AbortController();
+        analysisRequestRef.current = abortController;
+        
+        // Set a timeout
+        const timeoutId = setTimeout(() => {
+          if (analysisRequestRef.current) {
+            analysisRequestRef.current.abort();
+          }
+        }, 30000);
         
         // The actual fetch operation
-        const fetchPromise = supabase.functions.invoke('recipe-chat', {
+        const response = await supabase.functions.invoke('recipe-chat', {
           body: { 
             recipe,
             userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
@@ -110,14 +129,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
             sourceType: 'analysis'
           }
         });
+
+        clearTimeout(timeoutId);
+        analysisRequestRef.current = null;
         
-        // Use Promise.race to implement timeout
-        const result = await Promise.race([fetchPromise, timeoutPromise]);
-        
-        console.log('Analysis data received:', result);
-        return result;
+        console.log('Analysis data received:', response);
+        return response as AnalysisResponse;
       } catch (error: any) {
-        if (error.message.includes('timed out')) {
+        if (error.name === 'AbortError' || error.message?.includes('timed out')) {
           console.error('Recipe analysis request timed out');
           throw new Error('Analysis request timed out. Please try again later.');
         }
@@ -140,13 +159,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     try {
       toast.info('Analyzing recipe reactions...');
       
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 30000);
+      
       try {
-        // Use Promise.race to implement timeout
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Reaction analysis timed out')), 30000)
-        );
-        
-        const apiPromise = supabase.functions.invoke('analyze-reactions', {
+        const response = await supabase.functions.invoke('analyze-reactions', {
           body: {
             recipe_id: recipe.id,
             title: recipe.title,
@@ -154,16 +171,16 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
           }
         });
         
-        const response = await Promise.race([apiPromise, timeoutPromise]);
+        clearTimeout(timeoutId);
         
         if (response.error) {
-          throw new Error(response.error.message || 'Failed to analyze reactions');
+          throw new Error(response.error as string || 'Failed to analyze reactions');
         }
         
         toast.success('Reaction analysis complete');
         refetchReactions();
       } catch (error: any) {
-        if (error.message.includes('timed out')) {
+        if (error.name === 'AbortError' || error.message?.includes('timed out')) {
           throw new Error('Analysis request timed out. Please try again later.');
         }
         throw error;
