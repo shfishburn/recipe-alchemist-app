@@ -1,51 +1,43 @@
 
 /**
- * Utility to clean up UI state, remove orphaned overlays and reset body classes
- * after authentication transitions and route changes
+ * Utility functions for cleaning up UI state during navigation
  */
 
-/**
- * Cleans up any lingering modal overlays and resets body classes
- * to prevent ghost overlays that block interactions
- */
-export function cleanupUIState(): void {
-  // Reset body classes that might have been left behind
-  document.body.classList.remove('overflow-hidden');
-  
-  // Remove any orphaned overlays (dialog, drawer, sheet)
-  const overlays = document.querySelectorAll(
-    '[data-state="open"].bg-black\\/80, ' + 
-    '[role="dialog"], ' +
-    '[role="presentation"].fixed'
-  );
-  
-  // Clean up each overlay element
-  overlays.forEach(overlay => {
-    // Check if it's an orphaned element (no longer connected to active components)
-    if (overlay.parentElement) {
-      overlay.parentElement.removeChild(overlay);
+// Cleanup any open tooltips, popovers, or other floating UI elements
+export function cleanupUIState() {
+  // Remove any open modals
+  const modals = document.querySelectorAll('[role="dialog"]');
+  modals.forEach(modal => {
+    if (modal.classList.contains('open')) {
+      modal.classList.remove('open');
     }
   });
   
-  // Clear any inline styles that might have been added by radix components
+  // Remove any open tooltips
+  const tooltips = document.querySelectorAll('[data-state="open"]');
+  tooltips.forEach(tooltip => {
+    tooltip.setAttribute('data-state', 'closed');
+  });
+  
+  // Remove any fixed positioning that may cause scrolling issues
+  document.body.classList.remove('overflow-hidden');
   document.body.style.paddingRight = '';
-  document.body.style.pointerEvents = '';
+  
+  // Force blur on any focused elements to prevent keyboard issues
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
 }
 
-/**
- * Sets up a global listener to clean UI state on route changes
- */
-export function setupRouteChangeCleanup(): () => void {
-  // Called when popstate event happens (browser navigation)
-  const handleRouteChange = () => {
-    cleanupUIState();
-  };
+// Setup listener for route changes to clean up UI state
+export function setupRouteChangeCleanup() {
+  const cleanup = () => cleanupUIState();
   
-  // Listen for browser history navigation
-  window.addEventListener('popstate', handleRouteChange);
+  // Clean up when user navigates away from the page
+  window.addEventListener('beforeunload', cleanup);
   
-  // Return cleanup function
+  // Return a function to remove the listener
   return () => {
-    window.removeEventListener('popstate', handleRouteChange);
+    window.removeEventListener('beforeunload', cleanup);
   };
 }

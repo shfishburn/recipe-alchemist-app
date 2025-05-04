@@ -34,14 +34,15 @@ export const AppLayout = () => {
     <TooltipProvider>
       <div className="min-h-screen flex flex-col">
         <DefaultSeo />
-        <Toaster />
-        <Sonner />
         <LoadingIndicator />
-        <CookieConsent />
         <PageTransition>
           <AppRoutes />
         </PageTransition>
         <FooterWrapper />
+        {/* Move these components below the main content to prevent render blocking */}
+        <Toaster />
+        <Sonner />
+        <CookieConsent />
       </div>
     </TooltipProvider>
   );

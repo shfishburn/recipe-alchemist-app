@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { RecipeSectionHeader } from './RecipeSectionHeader';
 import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 
@@ -8,7 +8,10 @@ interface RecipeStepsProps {
 }
 
 export function RecipeSteps({ steps }: RecipeStepsProps) {
-  if (!steps || steps.length === 0) {
+  // Use useMemo to avoid unnecessary re-renders
+  const hasSteps = useMemo(() => steps && steps.length > 0, [steps]);
+  
+  if (!hasSteps) {
     return (
       <div>
         <RecipeSectionHeader title="Quick Steps" />

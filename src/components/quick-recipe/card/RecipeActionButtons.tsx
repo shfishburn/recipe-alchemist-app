@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { CookingPot, Bookmark, Printer } from 'lucide-react';
 
@@ -11,7 +11,8 @@ interface RecipeActionButtonsProps {
   isSmallScreen?: boolean;
 }
 
-export function RecipeActionButtons({ 
+// Use memo to prevent unnecessary re-renders
+export const RecipeActionButtons = memo(function RecipeActionButtons({ 
   onCook, 
   onSave, 
   onPrint,
@@ -56,4 +57,4 @@ export function RecipeActionButtons({
       </div>
     </div>
   );
-}
+});

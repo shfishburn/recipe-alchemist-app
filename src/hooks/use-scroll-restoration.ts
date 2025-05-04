@@ -10,12 +10,13 @@ export function useScrollRestoration() {
     const savedPosition = sessionStorage.getItem(`scroll_${pathname}`);
     
     if (savedPosition) {
-      setTimeout(() => {
+      // Use RAF for smoother scroll restoration
+      requestAnimationFrame(() => {
         window.scrollTo({
           top: parseInt(savedPosition, 10),
           behavior: 'auto'
         });
-      }, 10);
+      });
     } else {
       // If no saved position, scroll to top (but not on first load)
       if (performance.navigation.type !== 0) { 
@@ -23,17 +24,17 @@ export function useScrollRestoration() {
       }
     }
     
-    // Save position when navigating away
+    // Save position when navigating away (more efficient with fewer events)
     const savePosition = () => {
-      if (document.visibilityState === 'visible') {
-        sessionStorage.setItem(`scroll_${pathname}`, window.scrollY.toString());
-      }
+      sessionStorage.setItem(`scroll_${pathname}`, window.scrollY.toString());
     };
     
-    // Save scroll position periodically and on page visibility changes
-    const scrollInterval = setInterval(savePosition, 1000);
-    document.addEventListener('visibilitychange', savePosition);
+    // Use fewer event listeners for better performance
     window.addEventListener('beforeunload', savePosition);
+    document.addEventListener('visibilitychange', savePosition);
+    
+    // Use a more efficient interval (less frequent)
+    const scrollInterval = setInterval(savePosition, 3000);
     
     return () => {
       clearInterval(scrollInterval);

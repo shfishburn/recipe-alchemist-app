@@ -107,9 +107,6 @@ export function LoadingIndicator() {
     };
   }, [location]);
 
-  // Force visibility of loading indicator for debugging
-  console.log("LoadingIndicator state:", { isLoading, progress });
-
   // Don't render anything when not loading
   if (!isLoading) return null;
 

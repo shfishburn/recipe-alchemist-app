@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
@@ -14,7 +14,8 @@ interface InstructionStepProps {
   isLastStep: boolean;
 }
 
-export function InstructionStep({ 
+// Use memo to prevent unnecessary re-renders
+export const InstructionStep = memo(function InstructionStep({ 
   step, 
   index, 
   isCompleted, 
@@ -39,4 +40,4 @@ export function InstructionStep({
       {!isLastStep && <Separator className="my-6" />}
     </li>
   );
-}
+});

@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
 import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 import { isValidUUID } from '@/utils/slug-utils';
@@ -24,13 +23,10 @@ export const useRecipeDetail = (idOrSlug?: string) => {
           .from('recipes')
           .select('*');
           
-        if (isUuid) {
-          // If it's a UUID, query by id
-          query = query.eq('id', idOrSlug);
-        } else {
-          // If it's not a UUID, assume it's a slug
-          query = query.eq('slug', idOrSlug);
-        }
+        // Use a single query branch with conditional WHERE clause
+        query = isUuid
+          ? query.eq('id', idOrSlug)
+          : query.eq('slug', idOrSlug);
         
         const { data, error } = await query.maybeSingle();
   
@@ -40,42 +36,27 @@ export const useRecipeDetail = (idOrSlug?: string) => {
         }
         
         if (!data) {
-          console.error('Recipe not found');
           throw new Error('Recipe not found');
         }
         
         // Transform data with better error handling
         try {
-          // Transform science_notes from JSON to string array if necessary
-          let scienceNotes: string[] = [];
-          if (data.science_notes) {
-            if (Array.isArray(data.science_notes)) {
-              scienceNotes = data.science_notes as string[];
-            } else {
-              const parsedNotes = typeof data.science_notes === 'string' 
-                ? JSON.parse(data.science_notes) 
-                : data.science_notes;
-              
-              scienceNotes = Array.isArray(parsedNotes) ? parsedNotes : [];
-            }
-          }
+          // Process all JSON data at once
+          const scienceNotes = Array.isArray(data.science_notes)
+            ? data.science_notes
+            : typeof data.science_notes === 'string'
+              ? JSON.parse(data.science_notes)
+              : [];
           
-          // Enhanced nutrition data processing
-          let nutrition: Nutrition = {};
-          if (data.nutrition) {
-            const rawNutrition = typeof data.nutrition === 'string'
-              ? JSON.parse(data.nutrition)
-              : data.nutrition;
-            
-            nutrition = standardizeNutrition(rawNutrition);
-          }
+          const nutrition = typeof data.nutrition === 'string'
+            ? standardizeNutrition(JSON.parse(data.nutrition))
+            : standardizeNutrition(data.nutrition || {});
           
-          // Type cast the JSON fields with their proper structure
           const recipe: Recipe = {
             ...data,
             ingredients: data.ingredients as unknown as Ingredient[],
             nutrition: nutrition,
-            science_notes: scienceNotes
+            science_notes: Array.isArray(scienceNotes) ? scienceNotes : []
           };
           
           return recipe;
@@ -90,6 +71,6 @@ export const useRecipeDetail = (idOrSlug?: string) => {
     },
     enabled: !!idOrSlug,
     retry: 1,
-    staleTime: 30000,
+    staleTime: 300000, // 5 minutes (increased from 30 seconds)
   });
 };

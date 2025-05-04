@@ -4,7 +4,7 @@
   will-change: opacity;
   transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 280ms;
+  transition-duration: 250ms;
 }
 
 /* Only apply transform animations on desktop for better mobile performance */
@@ -20,11 +20,11 @@
   
   .page-transition.fadeOut {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(5px);
   }
 }
 
-/* Mobile optimized transitions */
+/* Mobile optimized transitions - opacity only for better performance */
 @media (max-width: 767px) {
   .page-transition.fadeIn {
     opacity: 1;
@@ -42,11 +42,9 @@
 .slide-in,
 .slide-out,
 .fade-in,
-.fade-out,
-.zoom-in,
-.zoom-out {
+.fade-out {
   backface-visibility: hidden;
-  -webkit-font-smoothing: subpixel-antialiased;
+  transform: translateZ(0);
 }
 
 /* Reduce motion preference support */

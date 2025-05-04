@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { cleanupUIState } from "@/utils/dom-cleanup";
 
@@ -11,8 +11,6 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
   const location = useLocation();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState("fadeIn");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const transitionTimeRef = useRef<number | null>(null);
   
   useEffect(() => {
     if (location !== displayLocation) {
@@ -24,32 +22,23 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
       // Clean up any UI elements before transition
       cleanupUIState();
       
-      // Start exit animation without changing container height
+      // Start exit animation
       setTransitionStage("fadeOut");
       
-      // Wait for exit animation to complete
-      if (transitionTimeRef.current) clearTimeout(transitionTimeRef.current);
-      
-      transitionTimeRef.current = window.setTimeout(() => {
+      // Use single timeout for better performance
+      const transitionTimeout = setTimeout(() => {
         // Update location
         setDisplayLocation(location);
         // Start entry animation
         setTransitionStage("fadeIn");
-        
-        transitionTimeRef.current = null;
-      }, 280);
+      }, 250);
+      
+      return () => clearTimeout(transitionTimeout);
     }
-    
-    return () => {
-      if (transitionTimeRef.current) {
-        clearTimeout(transitionTimeRef.current);
-      }
-    };
   }, [location, displayLocation]);
 
   return (
     <div 
-      ref={containerRef}
       className={`page-transition ${transitionStage} hw-accelerated`}
       aria-live="polite"
     >

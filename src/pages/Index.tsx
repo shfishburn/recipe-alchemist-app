@@ -2,14 +2,17 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import '@/styles/touch-optimizations.css';
 import { useAuth } from '@/hooks/use-auth';
-import { MarketingHomepage } from '@/components/landing/MarketingHomepage';
-import { UserDashboard } from '@/components/landing/UserDashboard';
+
+// Lazy load these components
+const UserDashboard = lazy(() => import('@/components/landing/UserDashboard').then(module => ({
+  default: module.UserDashboard
+})));
+const MarketingHomepage = lazy(() => import('@/components/landing/MarketingHomepage'));
 
 const Index = () => {
-  console.log('Rendering Index page');
   // Use our scroll restoration hook
   useScrollRestoration();
   
@@ -43,32 +46,17 @@ const Index = () => {
   return (
     <div className={`min-h-screen flex flex-col ${isTouch ? 'touch-optimized' : ''}`}>
       <Navbar />
-      <main className="flex-1 animate-fadeIn pb-8 md:pb-12 touch-scroll">
+      <main className="flex-1 pb-8 md:pb-12 touch-scroll">
         {loading ? (
-          <PageLoadingSkeleton />
-        ) : session ? (
-          <UserDashboard />
+          <PageLoadingFallback />
         ) : (
-          <MarketingHomepage />
+          <Suspense fallback={<PageLoadingFallback />}>
+            {session ? <UserDashboard /> : <MarketingHomepage />}
+          </Suspense>
         )}
       </main>
     </div>
   );
 };
-
-// Loading skeleton component for when authentication status is being checked
-const PageLoadingSkeleton = () => (
-  <div className="w-full max-w-7xl mx-auto px-4 py-8">
-    <div className="space-y-8">
-      <Skeleton className="h-12 w-48 md:w-64 mx-auto" />
-      <Skeleton className="h-6 w-full max-w-2xl mx-auto" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {Array(3).fill(0).map((_, i) => (
-          <Skeleton key={i} className="h-48 rounded-lg" />
-        ))}
-      </div>
-    </div>
-  </div>
-);
 
 export default Index;
