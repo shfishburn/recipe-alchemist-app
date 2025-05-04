@@ -1,133 +1,49 @@
 
-/* Global touch optimizations */
-.touch-optimized {
-  /* Remove user-select none which blocks copy-paste */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+/* Touch optimizations for mobile devices */
+.touch-optimized .touch-target {
+  min-height: 44px; /* Apple's recommended minimum touch target size */
 }
 
-/* Hardware acceleration for critical elements */
-.hw-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform, opacity;
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
-/* Properly sized touch targets */
-.touch-target {
+/* Better touch targets for interactive elements */
+.touch-optimized button,
+.touch-optimized .button,
+.touch-optimized [role="button"],
+.touch-optimized input[type="checkbox"],
+.touch-optimized input[type="radio"],
+.touch-optimized .checkbox,
+.touch-optimized label {
   min-height: 44px;
   min-width: 44px;
 }
 
-/* Immediate visual feedback for touch */
-.touch-feedback:active {
-  transform: scale(0.97);
-  opacity: 0.9;
-  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+/* Increase spacing for touch targets */
+.touch-optimized li,
+.touch-optimized tr,
+.touch-optimized .selectable-item {
+  padding: 8px 0;
 }
 
-/* Optimized carousel touch handling */
-.swipe-horizontal {
-  touch-action: pan-x;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  cursor: grab;
+.data-[state=checked]:bg-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
-.swipe-horizontal:active {
-  cursor: grabbing;
-}
-
-/* Fast transitions for responsive feel */
-.touch-transition {
-  transition-duration: 0.15s !important;
-}
-
-/* Remove delay on touch actions */
-.no-touch-delay {
-  touch-action: manipulation;
-}
-
-/* Preserve focus outlines for keyboard navigation while improving touch */
+/* Add active state feedback for touch */
 @media (hover: none) {
-  *:focus:not(:focus-visible) {
-    outline: none !important;
-  }
-  
-  *:focus-visible {
-    outline: 2px solid rgba(56, 189, 248, 0.5) !important;
-    outline-offset: 2px !important;
+  .touch-optimized button:active,
+  .touch-optimized .button:active,
+  .touch-optimized [role="button"]:active {
+    opacity: 0.7;
+    transition: opacity 0.1s;
   }
 }
 
-/* Card optimizations for touch devices */
-.card-touch-optimized {
-  position: relative;
-  z-index: 1;
+/* Add class to apply when page is loaded to avoid transition flashes */
+.completed-loading * {
+  transition: background-color 0.2s, opacity 0.2s, color 0.2s;
 }
-
-.card-touch-optimized:active {
-  transform: translateY(1px) scale(0.99);
-}
-
-/* Better touch scrolling */
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-/* Touch-friendly form elements */
-input, 
-button, 
-textarea, 
-select {
-  font-size: 16px; /* Prevent zoom on iOS */
-}
-
-/* Add clear visual feedback for taps */
-.tap-highlight {
-  position: relative;
-  overflow: hidden;
-}
-
-.tap-highlight::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: currentColor;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-
-.tap-highlight:active::after {
-  opacity: 0.1;
-}
-
-/* Better momentum scrolling on iOS */
-* {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Ensure touch events work properly in loading states */
-.touch-action-auto {
-  touch-action: auto !important;
-  pointer-events: auto !important;
-}
-
-/* Ensure touch events work on elements that should be interactive */
-.pointer-events-none {
-  pointer-events: none !important;
-}
-
-/* Ensure body elements properly reset after loading */
-body.completed-loading {
-  overflow: initial !important;
-  touch-action: auto !important;
-}
-

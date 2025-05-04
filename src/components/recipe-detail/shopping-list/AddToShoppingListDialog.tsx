@@ -52,23 +52,24 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add to Shopping List</DialogTitle>
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl">Add to Shopping List</DialogTitle>
         </DialogHeader>
         
-        <div>
+        <div className="py-3">
           <ShoppingListSettings />
-          <Separator className="my-4" />
         </div>
         
-        <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Separator className="my-3" />
+        
+        <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab} className="mt-2">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="new">New List</TabsTrigger>
             <TabsTrigger value="existing">Existing Lists</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="new" className="mt-4 space-y-4">
+          <TabsContent value="new" className="space-y-4 pt-2">
             <NewListForm 
               recipe={recipe}
               onSubmit={handleCreateNewList}
@@ -78,7 +79,7 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
             />
           </TabsContent>
           
-          <TabsContent value="existing" className="mt-4 space-y-4">
+          <TabsContent value="existing" className="space-y-4 pt-2">
             <ExistingListForm 
               shoppingLists={shoppingLists}
               isFetching={isFetching}
