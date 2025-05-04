@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Info } from 'lucide-react';
+import { CirclePercent } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -97,15 +97,15 @@ export function NutritionConfidenceIndicator({
   const unmatchedIngredients = nutrition.data_quality?.unmatched_or_low_confidence_ingredients || [];
   
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="inline-flex items-center gap-1">
+          <div className="inline-flex items-center gap-1 cursor-help">
             {badge}
-            <Info className="h-3.5 w-3.5 text-muted-foreground" />
+            <CirclePercent className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         </TooltipTrigger>
-        <TooltipContent className="max-w-xs">
+        <TooltipContent side="top" className="max-w-xs p-4">
           <div className="space-y-2">
             <p className="font-semibold">Nutrition Confidence: {formatScore(confidenceScore)}</p>
             <p className="text-sm text-muted-foreground">{getHowItWorksText()}</p>
