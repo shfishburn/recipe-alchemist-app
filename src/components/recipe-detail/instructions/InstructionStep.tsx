@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { CookingStep } from '../cooking/CookingStep';
-import { StepReaction, getStepReaction } from './useStepReactions';
+import { StepReaction } from './useStepReactions';
 import { ScienceNote } from './ScienceNote';
+import { StepHeader } from './StepHeader';
+import { FormatIngredientText } from './FormatIngredientText';
 
 interface InstructionStepProps {
   step: string;
@@ -28,22 +29,33 @@ export function InstructionStep({
                       Array.isArray(stepReaction.reactions) && 
                       stepReaction.reactions.length > 0;
   
-  const toggleNotes = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
+  const toggleNotes = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setExpandedNotes(prev => !prev);
   };
   
   return (
     <li key={index} className="group">
-      <CookingStep
-        stepNumber={index + 1}
-        instruction={step}
-        isCompleted={isCompleted}
-        onToggleComplete={() => toggleStep(index)}
-        hasScience={hasReactions}
-        onToggleScience={toggleNotes}
-        showingScience={expandedNotes}
-      />
+      <div 
+        onClick={() => toggleStep(index)}
+        className={`flex flex-col cursor-pointer p-3 rounded-md transition-colors ${
+          isCompleted ? "bg-green-50 hover:bg-green-100" : "hover:bg-muted/50"
+        }`}
+      >
+        {/* Step Header Component */}
+        <StepHeader
+          stepNumber={index + 1}
+          isCompleted={isCompleted}
+          hasScience={hasReactions}
+          showingScience={expandedNotes}
+          onToggleScience={toggleNotes}
+        />
+        
+        {/* Step Content */}
+        <p className={`text-lg leading-relaxed ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
+          <FormatIngredientText text={step} />
+        </p>
+      </div>
       
       {/* Science note content */}
       {hasReactions && expandedNotes && (
