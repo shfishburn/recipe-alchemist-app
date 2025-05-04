@@ -7,18 +7,22 @@ interface TimerProps {
   timeRemaining: number | null;
   onStart: (minutes: number) => void;
   onCancel: () => void;
+  isLowTime?: boolean;
 }
 
-export function Timer({ timeRemaining, onStart, onCancel }: TimerProps) {
-  const LOW_TIME_THRESHOLD = 30; // seconds
-
+export function Timer({ 
+  timeRemaining, 
+  onStart, 
+  onCancel,
+  isLowTime = false
+}: TimerProps) {
   return (
     <div className="mt-8 flex flex-col items-center">
       {timeRemaining !== null ? (
         <TimerDisplay
           timeRemaining={timeRemaining}
           onCancel={onCancel}
-          isLowTime={timeRemaining < LOW_TIME_THRESHOLD}
+          isLowTime={isLowTime}
         />
       ) : (
         <TimerControls onStart={onStart} />

@@ -24,6 +24,7 @@ export function CookingProgress({ currentStep, totalSteps, completedSteps }: Coo
       <StepProgressIndicator 
         currentStep={currentStep} 
         totalSteps={totalSteps} 
+        completedPercentage={completionPercentage}
       />
     </div>
   );

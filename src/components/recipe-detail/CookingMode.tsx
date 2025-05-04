@@ -30,7 +30,7 @@ export function CookingMode({ recipe }: CookingModeProps) {
   
   const { currentStep, completedSteps, isOpen } = state;
   const { toggleStepCompletion, goToNextStep, goToPrevStep, setIsOpen } = actions;
-  const { timeRemaining, startTimer, cancelTimer } = timer;
+  const { timeRemaining, startTimer, cancelTimer, isLowTime } = timer;
   
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
@@ -53,6 +53,7 @@ export function CookingMode({ recipe }: CookingModeProps) {
           <StepContent 
             currentStep={currentStepObject}
             timeRemaining={timeRemaining}
+            isLowTime={isLowTime}
             onToggleComplete={() => toggleStepCompletion(currentStep)}
             onStartTimer={startTimer}
             onCancelTimer={cancelTimer}

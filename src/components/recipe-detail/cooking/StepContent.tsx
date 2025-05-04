@@ -7,6 +7,7 @@ import type { RecipeStep } from '@/types/recipe-steps';
 interface StepContentProps {
   currentStep: RecipeStep | null;
   timeRemaining: number | null;
+  isLowTime?: boolean;
   onToggleComplete: () => void;
   onStartTimer: (minutes: number) => void;
   onCancelTimer: () => void;
@@ -14,7 +15,8 @@ interface StepContentProps {
 
 export function StepContent({ 
   currentStep, 
-  timeRemaining, 
+  timeRemaining,
+  isLowTime = false,
   onToggleComplete,
   onStartTimer,
   onCancelTimer
@@ -32,6 +34,7 @@ export function StepContent({
         timeRemaining={timeRemaining}
         onStart={onStartTimer}
         onCancel={onCancelTimer}
+        isLowTime={isLowTime}
       />
     </div>
   );
