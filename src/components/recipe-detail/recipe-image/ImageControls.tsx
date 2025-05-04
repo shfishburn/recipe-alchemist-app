@@ -21,7 +21,7 @@ export function ImageControls({
   const shouldShowGenerateButton = !imageUrl || imageError;
 
   return (
-    <div className="flex flex-wrap justify-center gap-2 mt-3">
+    <div className="flex flex-wrap justify-center gap-2">
       {shouldShowGenerateButton ? (
         <Button
           onClick={onGenerate}

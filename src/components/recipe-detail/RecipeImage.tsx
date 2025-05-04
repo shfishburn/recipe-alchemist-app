@@ -7,7 +7,6 @@ import { LoadingState } from './recipe-image/LoadingState';
 import { PlaceholderImage } from './recipe-image/PlaceholderImage';
 import { ImageDrawer } from './recipe-image/ImageDrawer';
 import { ImageRegenerationForm } from './recipe-image/ImageRegenerationForm';
-import { ImageControls } from './recipe-image/ImageControls';
 import { ImageLoader } from '@/components/ui/image-loader';
 
 interface RecipeImageProps {
@@ -36,13 +35,10 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     }
   }, [imageUrl, imageError]);
 
-  const handleGenerateImage = useCallback(() => {
-    if (imageError || !imageUrl) {
-      generateNewImage();
-    } else {
-      setShowImageDrawer(true);
-    }
-  }, [imageError, imageUrl, generateNewImage]);
+  // Opening the drawer either to generate an image or view existing one
+  const handleImageClick = useCallback(() => {
+    setShowImageDrawer(true);
+  }, []);
 
   const handleRegenerationComplete = useCallback(() => {
     window.location.reload();
@@ -70,30 +66,25 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
             ) : (
               <PlaceholderImage 
                 hasError={imageError} 
-                onClick={handleGenerateImage}
+                onClick={handleImageClick}
               />
             )}
           </div>
         </div>
       </CardContent>
 
-      {/* Image controls now inside the drawer/modal rather than beneath the image */}
-      <ImageControls 
-        imageUrl={imageUrl}
-        imageError={imageError}
-        isGenerating={isGenerating}
-        onGenerate={generateNewImage}
-        onCustomize={() => setShowRegenerationForm(true)}
-      />
-
-      {/* Using a safer way to conditionally render the drawer to prevent portal issues */}
-      {imageUrl && (
+      {/* Image drawer to show full image and controls */}
+      {showImageDrawer && (
         <ImageDrawer
           open={showImageDrawer}
           onOpenChange={closeImageDrawer}
           imageUrl={imageUrl}
+          imageError={imageError}
           title={recipe.title}
           onError={handleImageError}
+          onGenerate={generateNewImage}
+          isGenerating={isGenerating}
+          onCustomize={() => setShowRegenerationForm(true)}
         />
       )}
 
