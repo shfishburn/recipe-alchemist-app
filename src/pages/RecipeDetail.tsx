@@ -7,7 +7,7 @@ import { RecipeDetailLoading } from '@/components/recipe-detail/loading/RecipeDe
 import { RecipeNotFound } from '@/components/recipe-detail/error/RecipeNotFound';
 import { RecipeDetailContent } from '@/components/recipe-detail/RecipeDetailContent';
 import { isValidUUID } from '@/utils/slug-utils';
-import { ErrorDisplay } from '@/components/profile/ErrorDisplay';
+import { ErrorDisplay } from '@/components/ui/error-display';
 import { BreadcrumbNav, type BreadcrumbItem } from '@/components/ui/breadcrumb-nav';
 
 const RecipeDetail = () => {
@@ -37,30 +37,50 @@ const RecipeDetail = () => {
     };
   }, [recipe]);
   
-  // Handle React.Children.only errors specifically
-  if (error instanceof Error && error.message.includes('React.Children.only')) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <ErrorDisplay 
-            error={error} 
-            title="There was an issue rendering this recipe" 
-            onRetry={refetch}
-          />
-        </main>
-      </div>
-    );
-  }
+  console.log('Recipe Detail rendering:', {
+    isLoading,
+    hasError: !!error,
+    recipe: recipe ? recipe.id : null,
+    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+  });
   
-  // If there's an error, show the not found component
-  if (error) {
+  // Generic error handler for unexpected errors
+  const handleError = () => {
+    console.log('Recipe detail page error:', error);
+    
+    // Handle React.Children.only errors specifically
+    if (error instanceof Error && error.message.includes('React.Children.only')) {
+      return (
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 flex items-center justify-center p-4">
+            <ErrorDisplay 
+              error={error} 
+              title="There was an issue rendering this recipe" 
+              onRetry={refetch}
+            />
+          </main>
+        </div>
+      );
+    }
+    
+    // If we have a specific error or 404, show the not found component
     return <RecipeNotFound />;
+  };
+  
+  // If there's an error, show the error handler result
+  if (error) {
+    return handleError();
   }
 
   // If we're loading, show the loading component
   if (isLoading) {
     return <RecipeDetailLoading />;
+  }
+  
+  // Guard against null recipe after loading is complete
+  if (!recipe) {
+    return <RecipeNotFound />;
   }
   
   // Create breadcrumb items
@@ -79,7 +99,7 @@ const RecipeDetail = () => {
           {/* Breadcrumb Navigation */}
           <BreadcrumbNav items={breadcrumbItems} />
           
-          {recipe && <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />}
+          <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />
         </div>
       </main>
     </div>

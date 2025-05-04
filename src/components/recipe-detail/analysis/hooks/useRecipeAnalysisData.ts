@@ -96,7 +96,9 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     enabled: false, // Don't auto-fetch on mount
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 1,
-    onError: (error: any) => setError(error)
+    meta: {
+      onError: (error: any) => setError(error) // Use the meta option for error handling
+    }
   });
 
   // Function to analyze reactions with OpenAI

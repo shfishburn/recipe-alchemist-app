@@ -7,6 +7,7 @@ import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { TabsView } from '@/components/recipe-detail/navigation/TabsView';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
+import { ErrorDisplay } from '@/components/ui/error-display';
 import type { Recipe } from '@/types/recipe';
 import { isValidUUID } from '@/utils/slug-utils';
 
@@ -17,10 +18,15 @@ interface RecipeDetailContentProps {
 }
 
 export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContentProps) {
-  // Safety check - if recipe is invalid, don't render
+  // Safety check - if recipe is invalid, show error
   if (!recipe || !recipe.id) {
-    console.error("Invalid recipe data:", recipe);
-    return null;
+    return (
+      <ErrorDisplay
+        error="Invalid recipe data"
+        title="Could not load recipe"
+        onRetry={refetch}
+      />
+    );
   }
   
   const [localRecipe, setLocalRecipe] = useState<Recipe>(recipe);
