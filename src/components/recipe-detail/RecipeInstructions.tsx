@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,19 @@ interface RecipeInstructionsProps {
   onToggle: () => void;
 }
 
-export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructionsProps) {
+export const RecipeInstructions = memo(function RecipeInstructions({ 
+  recipe, 
+  isOpen, 
+  onToggle 
+}: RecipeInstructionsProps) {
   const { toggleStep, isStepCompleted } = useStepCompletion();
   const { stepReactions } = useRecipeScience(recipe);
   
-  const hasInstructions = recipe.instructions && recipe.instructions.length > 0;
+  // Memoize hasInstructions check to prevent unnecessary evaluations
+  const hasInstructions = useMemo(() => 
+    recipe.instructions && recipe.instructions.length > 0, 
+    [recipe.instructions]
+  );
   
   return (
     <Card>
@@ -31,7 +39,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
               Instructions
             </CardTitle>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hw-accelerated">
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 <span className="sr-only">Toggle instructions</span>
               </Button>
@@ -68,4 +76,4 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
       </Collapsible>
     </Card>
   );
-}
+});

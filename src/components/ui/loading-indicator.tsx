@@ -9,95 +9,73 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
   const progressTimerRef = useRef<number | null>(null);
   const completionTimerRef = useRef<number | null>(null);
   
+  // Clear timers on mount/unmount
   useEffect(() => {
-    // Clear any existing timers when component mounts or unmounts
     return () => {
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
-      if (completionTimerRef.current) {
-        clearTimeout(completionTimerRef.current);
-      }
+      if (progressTimerRef.current) window.clearInterval(progressTimerRef.current);
+      if (completionTimerRef.current) window.clearTimeout(completionTimerRef.current);
     };
   }, []);
   
+  // Handle location changes to trigger loading indicator
   useEffect(() => {
-    // Start loading when location changes
     const startLoading = () => {
-      // Clear any existing timers
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
-      if (completionTimerRef.current) {
-        clearTimeout(completionTimerRef.current);
-      }
+      // Clean up existing timers
+      if (progressTimerRef.current) window.clearInterval(progressTimerRef.current);
+      if (completionTimerRef.current) window.clearTimeout(completionTimerRef.current);
       
+      // Start new loading sequence
       setIsLoading(true);
-      setProgress(0);
+      setProgress(30); // Initial jump for perceived responsiveness
       
-      // Initial progress jump to give feeling of responsiveness
-      requestAnimationFrame(() => {
-        setProgress(30);
-      });
-      
-      // Use requestAnimationFrame for smoother animation
+      // Use RAF for smoother animation with optimized intervals
       progressTimerRef.current = window.setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) return prev;
-          // Gradually slow down progress as it approaches 90%
+          // Gradually slow progress as it approaches 90%
           const increment = Math.max(1, Math.min(5, (90 - prev) / 10));
           return Math.min(90, prev + increment);
         });
-      }, 150);
+      }, 180);
       
-      // Fallback completion after 2.5 seconds if page load doesn't complete
-      completionTimerRef.current = window.setTimeout(completeLoading, 2500);
+      // Fallback completion timer
+      completionTimerRef.current = window.setTimeout(completeLoading, 2000);
     };
     
     const completeLoading = () => {
-      // Clean up interval
       if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
+        window.clearInterval(progressTimerRef.current);
         progressTimerRef.current = null;
       }
       
-      // Set to 100%
       setProgress(100);
       
       // Hide after animation completes
-      const hideTimer = window.setTimeout(() => {
+      window.setTimeout(() => {
         setIsLoading(false);
         setProgress(0);
       }, 300);
-      
-      return () => clearTimeout(hideTimer);
     };
 
     // Start loading on location change
     startLoading();
     
-    // Set up listener for page load completion
-    const handleLoad = () => {
+    // Complete loading when document is ready
+    const handleReadyState = () => {
       if (document.readyState === 'complete') {
         completeLoading();
       }
     };
     
-    window.addEventListener('load', handleLoad);
-    
-    // Also listen for readystatechange to handle different loading scenarios
-    document.addEventListener('readystatechange', handleLoad);
+    document.addEventListener('readystatechange', handleReadyState);
+    window.addEventListener('load', completeLoading);
     
     return () => {
-      window.removeEventListener('load', handleLoad);
-      document.removeEventListener('readystatechange', handleLoad);
+      document.removeEventListener('readystatechange', handleReadyState);
+      window.removeEventListener('load', completeLoading);
       
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
-      if (completionTimerRef.current) {
-        clearTimeout(completionTimerRef.current);
-      }
+      if (progressTimerRef.current) window.clearInterval(progressTimerRef.current);
+      if (completionTimerRef.current) window.clearTimeout(completionTimerRef.current);
     };
   }, [location]);
 
@@ -107,8 +85,7 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
   return (
     <div 
       className="nprogress-container" 
-      aria-hidden="true" 
-      role="presentation"
+      aria-hidden="true"
     >
       <div 
         className="nprogress-bar hw-accelerated" 
@@ -127,5 +104,5 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
   );
 });
 
-// Legacy default export for compatibility
+// Default export for compatibility
 export default LoadingIndicator;
