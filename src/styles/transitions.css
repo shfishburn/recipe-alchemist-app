@@ -35,14 +35,8 @@
   }
 }
 
-/* Ensure we maintain hardware acceleration on all transitions */
-.page-transition,
-.animate-in,
-.animate-out,
-.slide-in,
-.slide-out,
-.fade-in,
-.fade-out {
+/* Ensure we maintain hardware acceleration but simplify the approach */
+.hw-accelerated {
   backface-visibility: hidden;
   transform: translateZ(0);
 }
