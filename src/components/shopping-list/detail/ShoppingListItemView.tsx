@@ -50,9 +50,15 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
     >
       <div className="flex-grow min-w-0">
         <div className="flex items-baseline flex-wrap gap-x-1">
-          <span className="font-medium truncate max-w-[200px]">{capitalizedName}</span>
+          <span className={cn(
+            "font-medium truncate max-w-[200px]",
+            item.checked && "text-gray-400 line-through"
+          )}>{capitalizedName}</span>
           
-          <div className="text-sm text-gray-600 truncate max-w-[200px]">
+          <div className={cn(
+            "text-sm truncate max-w-[200px]",
+            item.checked ? "text-gray-400 line-through" : "text-gray-600"
+          )}>
             {item.quantity && item.unit && (
               <span className="mr-1">{item.quantity} {item.unit}</span>
             )}
@@ -73,13 +79,19 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
         </div>
         
         {formatNotes() && (
-          <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded inline-block truncate max-w-full">
+          <div className={cn(
+            "mt-1 text-xs bg-gray-50 px-2 py-1 rounded inline-block truncate max-w-full",
+            item.checked ? "text-gray-400 line-through" : "text-gray-600"
+          )}>
             {formatNotes()}
           </div>
         )}
         
         {item.package_notes && (
-          <div className="mt-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded inline-block truncate max-w-full">
+          <div className={cn(
+            "mt-1 text-xs px-2 py-1 rounded inline-block truncate max-w-full",
+            item.checked ? "bg-green-50/50 text-green-600/60" : "bg-green-50 text-green-700"
+          )}>
             {item.package_notes}
           </div>
         )}

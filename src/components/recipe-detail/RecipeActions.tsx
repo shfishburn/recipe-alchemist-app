@@ -39,19 +39,6 @@ export function RecipeActions({
             Ask AI Chef
           </Button>
         )}
-        
-        {/* Secondary action - Save/Favorite button */}
-        <div className="flex justify-center">
-          <Button 
-            variant={isFavorite ? "secondary" : "outline"}
-            onClick={toggleFavorite}
-            className="flex flex-col h-auto py-2 px-6 items-center justify-center touch-target"
-            size={isMobile ? "mobile" : "sm"}
-          >
-            <Heart className={`h-5 w-5 mb-1 ${isFavorite ? "fill-current" : ""}`} />
-            <span className="text-xs">{isFavorite ? "Saved" : "Save"}</span>
-          </Button>
-        </div>
       </div>
     </div>
   );

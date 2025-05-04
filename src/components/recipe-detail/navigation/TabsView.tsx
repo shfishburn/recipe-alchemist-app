@@ -19,9 +19,10 @@ interface TabsViewProps {
   recipe: Recipe;
   onRecipeUpdate: (recipe: Recipe) => void;
   refetch: () => void;
+  onTabChange?: (tab: string) => void;
 }
 
-export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
+export function TabsView({ recipe, onRecipeUpdate, refetch, onTabChange }: TabsViewProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useLocalStorage<string>('recipe-active-tab', 'recipe');
@@ -34,13 +35,22 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
     const hash = location.hash.slice(1);
     if (hash && ['recipe', 'nutrition', 'science', 'modify', 'utilities'].includes(hash)) {
       setActiveTab(hash);
+      // Notify parent of tab change
+      if (onTabChange) {
+        onTabChange(hash);
+      }
     }
-  }, [location.hash, setActiveTab]);
+  }, [location.hash, setActiveTab, onTabChange]);
 
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     navigate(`#${value}`, { replace: true });
+    
+    // Notify parent of tab change
+    if (onTabChange) {
+      onTabChange(value);
+    }
   };
 
   const tabItems = [
