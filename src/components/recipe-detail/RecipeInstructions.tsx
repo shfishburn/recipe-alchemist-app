@@ -23,22 +23,22 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
   
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold flex items-center">
-            <BookOpen className="h-5 w-5 mr-2 text-recipe-blue" />
-            Instructions
-          </CardTitle>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              <span className="sr-only">Toggle instructions</span>
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-      </CardHeader>
-      
       <Collapsible open={isOpen} onOpenChange={onToggle}>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-semibold flex items-center">
+              <BookOpen className="h-5 w-5 mr-2 text-recipe-blue" />
+              Instructions
+            </CardTitle>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                <span className="sr-only">Toggle instructions</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+        </CardHeader>
+        
         <CollapsibleContent>
           <CardContent className="pt-0">
             {hasInstructions ? (
