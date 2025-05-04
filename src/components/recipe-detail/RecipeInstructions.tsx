@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,14 @@ interface RecipeInstructionsProps {
   recipe: Recipe;
   isOpen: boolean;
   onToggle: () => void;
+  className?: string;
 }
 
 export const RecipeInstructions = memo(function RecipeInstructions({ 
   recipe, 
   isOpen, 
-  onToggle 
+  onToggle,
+  className
 }: RecipeInstructionsProps) {
   const { toggleStep, isStepCompleted } = useStepCompletion();
   const { stepReactions } = useRecipeScience(recipe);
@@ -29,8 +31,30 @@ export const RecipeInstructions = memo(function RecipeInstructions({
     [recipe.instructions]
   );
   
+  // Memoize the instructions rendering for better performance
+  const instructionsList = useMemo(() => {
+    if (!hasInstructions) return null;
+    
+    return recipe.instructions.map((step, index) => {
+      const stepReaction = stepReactions?.[index] || null;
+      const isLastStep = index === recipe.instructions.length - 1;
+      
+      return (
+        <InstructionStep
+          key={index}
+          step={step}
+          index={index}
+          isCompleted={isStepCompleted(index)}
+          toggleStep={toggleStep}
+          stepReaction={stepReaction}
+          isLastStep={isLastStep}
+        />
+      );
+    });
+  }, [hasInstructions, recipe.instructions, stepReactions, isStepCompleted, toggleStep]);
+  
   return (
-    <Card>
+    <Card className={className}>
       <Collapsible open={isOpen} onOpenChange={onToggle}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -51,22 +75,7 @@ export const RecipeInstructions = memo(function RecipeInstructions({
           <CardContent className="pt-0">
             {hasInstructions ? (
               <ol className="space-y-4">
-                {recipe.instructions.map((step, index) => {
-                  const stepReaction = stepReactions?.[index] || null;
-                  const isLastStep = index === recipe.instructions.length - 1;
-                  
-                  return (
-                    <InstructionStep
-                      key={index}
-                      step={step}
-                      index={index}
-                      isCompleted={isStepCompleted(index)}
-                      toggleStep={toggleStep}
-                      stepReaction={stepReaction}
-                      isLastStep={isLastStep}
-                    />
-                  );
-                })}
+                {instructionsList}
               </ol>
             ) : (
               <p className="text-muted-foreground">No instructions available</p>

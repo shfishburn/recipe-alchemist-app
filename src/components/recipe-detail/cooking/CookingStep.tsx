@@ -1,16 +1,17 @@
 
-import React, { memo, useCallback } from 'react';
-import { StepDisplay } from '../common/StepDisplay';
+import React, { memo } from 'react';
+import { StepDisplay, type StepDisplayProps } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
 import type { StepCategory } from '../common/StepCategoryLabel';
 
-interface CookingStepProps {
+export interface CookingStepProps {
   stepNumber: number;
   instruction: string;
   isCompleted: boolean;
   onToggleComplete: () => void;
   stepReaction?: StepReaction | null;
   stepCategory?: StepCategory | string;
+  className?: string;
 }
 
 export const CookingStep = memo(function CookingStep({ 
@@ -19,10 +20,11 @@ export const CookingStep = memo(function CookingStep({
   isCompleted, 
   onToggleComplete,
   stepReaction,
-  stepCategory
+  stepCategory,
+  className
 }: CookingStepProps) {
   return (
-    <div className="mb-6">
+    <div className={cn("mb-6", className)}>
       <StepDisplay
         stepNumber={stepNumber}
         stepText={instruction}
@@ -35,3 +37,8 @@ export const CookingStep = memo(function CookingStep({
     </div>
   );
 });
+
+// Utility for className concatenation
+function cn(...classes: (string | undefined)[]): string {
+  return classes.filter(Boolean).join(' ');
+}

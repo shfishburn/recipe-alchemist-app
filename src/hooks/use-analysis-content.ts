@@ -11,20 +11,27 @@ interface AnalysisResponse {
   error?: string;
 }
 
-interface AnalysisContentData {
+export interface AnalysisContentData {
   chemistry: string | null;
   techniques: string | null;
   troubleshooting: string | null;
   hasAnyContent: boolean;
 }
 
+/**
+ * Hook for efficiently extracting and processing recipe analysis content
+ */
 export function useAnalysisContent(
   analysis: AnalysisResponse | undefined,
   scienceNotes: string[],
   stepReactions: StepReaction[]
 ): AnalysisContentData {
   // Use memoize with caching for expensive content extraction
-  const extractAnalysisContent = useMemoize((
+  const extractAnalysisContent = useMemoize<{
+    chemistry: string | null;
+    techniques: string | null;
+    troubleshooting: string | null;
+  }, [AnalysisResponse | undefined, string[]]>((
     currentAnalysis: AnalysisResponse | undefined,
     currentScienceNotes: string[]
   ) => {
@@ -57,24 +64,26 @@ export function useAnalysisContent(
     
     return { chemistry, techniques, troubleshooting };
   }, {
-    // Cache settings
-    ttl: 60000, // Cache for 1 minute
-    maxSize: 10
+    // Cache settings - improve cache duration for better performance
+    ttl: 300000, // Cache for 5 minutes (increased from 1 minute)
+    maxSize: 20   // Increase cache size to store more recipe analysis data
   });
 
-  // Get memoized content
+  // Get memoized content with proper dependencies
   const content = useMemo(() => 
     extractAnalysisContent(analysis, scienceNotes), 
     [extractAnalysisContent, analysis, scienceNotes]
   );
   
-  // Determine if there's any analysis content available
+  // Determine if there's any analysis content available - memoize this calculation
   const hasAnyContent = useMemo(() => 
-    (content.chemistry !== null) || 
-    (content.techniques !== null) || 
-    (content.troubleshooting !== null) ||
-    (analysis?.textResponse && analysis.textResponse.length > 50) ||
-    (stepReactions && stepReactions.length > 0),
+    Boolean(
+      content.chemistry || 
+      content.techniques || 
+      content.troubleshooting ||
+      (analysis?.textResponse && analysis.textResponse.length > 50) ||
+      (stepReactions && stepReactions.length > 0)
+    ),
     [content, analysis?.textResponse, stepReactions]
   );
 

@@ -1,7 +1,9 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
+import { useMemoize } from '@/hooks/use-memoize';
 
 // Define standardized interfaces for science data
 export interface StepReaction {
@@ -10,7 +12,7 @@ export interface StepReaction {
   reactions: string[];
   reaction_details: string[];
   confidence: number;
-  cooking_method?: string; // Added cooking_method property
+  cooking_method?: string;
 }
 
 export interface RecipeScienceData {
@@ -26,9 +28,17 @@ export interface RecipeScienceData {
  * Centralized hook to access all scientific data for a recipe
  */
 export function useRecipeScience(recipe: Recipe): RecipeScienceData {
+  // Cache expensive operations
+  const processReactions = useMemoize((data: any[]): StepReaction[] => {
+    return (data || []) as StepReaction[];
+  }, {
+    ttl: 300000, // 5 minutes
+    maxSize: 50
+  });
+
   // Fetch reaction data for this recipe
   const {
-    data: stepReactions,
+    data: rawStepReactions,
     isLoading,
     error,
     refetch
@@ -47,27 +57,35 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
           return [];
         }
         
-        return (data || []) as StepReaction[];
+        return data || [];
       } catch (err) {
         console.error('Error in reaction query execution:', err);
         return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 300000, // Cache for 5 minutes (increased from initial value)
   });
   
-  // Determine if we have any science data
-  const hasAnalysisData = 
-    (stepReactions && stepReactions.length > 0) || 
-    (recipe?.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0);
+  // Process step reactions with memoization
+  const stepReactions = useMemo(() => 
+    processReactions(rawStepReactions || []),
+    [processReactions, rawStepReactions]
+  );
   
-  // Extract science notes from recipe
-  const scienceNotes = recipe?.science_notes && Array.isArray(recipe.science_notes) 
-    ? recipe.science_notes 
-    : [];
+  // Extract science notes from recipe with proper type checking
+  const scienceNotes = useMemo(() => {
+    if (!recipe?.science_notes) return [];
+    return Array.isArray(recipe.science_notes) ? recipe.science_notes : [];
+  }, [recipe?.science_notes]);
+  
+  // Determine if we have any science data
+  const hasAnalysisData = useMemo(() => 
+    (stepReactions.length > 0) || (scienceNotes.length > 0),
+    [stepReactions, scienceNotes]
+  );
 
   return {
-    stepReactions: stepReactions || [],
+    stepReactions,
     hasAnalysisData,
     scienceNotes,
     isLoading,

@@ -5,13 +5,14 @@ import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
 import type { StepCategory } from '../common/StepCategoryLabel';
 
-interface InstructionStepProps {
+export interface InstructionStepProps {
   step: string;
   index: number;
   isCompleted: boolean;
   toggleStep: (index: number) => void;
   stepReaction: StepReaction | null;
   isLastStep: boolean;
+  className?: string;
 }
 
 // Use memo to prevent unnecessary re-renders
@@ -21,13 +22,14 @@ export const InstructionStep = memo(function InstructionStep({
   isCompleted, 
   toggleStep,
   stepReaction,
-  isLastStep
+  isLastStep,
+  className
 }: InstructionStepProps) {
   // Memoize the toggle handler to prevent recreation on each render
   const handleToggle = useCallback(() => toggleStep(index), [toggleStep, index]);
   
   return (
-    <li className="group">
+    <li className={cn("group", className)}>
       <StepDisplay
         stepNumber={index + 1}
         stepText={step}
@@ -42,3 +44,8 @@ export const InstructionStep = memo(function InstructionStep({
     </li>
   );
 });
+
+// Import cn utility
+function cn(...classes: (string | undefined)[]): string {
+  return classes.filter(Boolean).join(' ');
+}

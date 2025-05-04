@@ -5,15 +5,21 @@ import { FormattedIngredientText } from '@/components/recipe-chat/response/Forma
 
 interface RecipeStepsProps {
   steps: string[];
+  className?: string;
+  compact?: boolean;
 }
 
-export const RecipeSteps = memo(function RecipeSteps({ steps }: RecipeStepsProps) {
+export const RecipeSteps = memo(function RecipeSteps({ 
+  steps, 
+  className,
+  compact = false
+}: RecipeStepsProps) {
   // Use useMemo to avoid unnecessary re-evaluations
   const hasSteps = useMemo(() => steps && steps.length > 0, [steps]);
   
   if (!hasSteps) {
     return (
-      <div>
+      <div className={className}>
         <RecipeSectionHeader title="Quick Steps" />
         <p className="text-muted-foreground">No steps available</p>
       </div>
@@ -21,11 +27,11 @@ export const RecipeSteps = memo(function RecipeSteps({ steps }: RecipeStepsProps
   }
   
   return (
-    <div>
+    <div className={className}>
       <RecipeSectionHeader title="Quick Steps" />
-      <ol className="list-decimal pl-5 space-y-2">
+      <ol className={`list-decimal pl-5 ${compact ? 'space-y-1' : 'space-y-2'}`}>
         {steps.map((step, index) => (
-          <li key={index} className="py-1">
+          <li key={index} className={`${compact ? 'py-0.5' : 'py-1'}`}>
             <FormattedIngredientText text={step} />
           </li>
         ))}

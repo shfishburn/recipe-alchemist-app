@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { StepCategoryLabel } from './StepCategoryLabel';
 import type { StepCategory } from './StepCategoryLabel';
 
-interface StepDisplayProps {
+export interface StepDisplayProps {
   stepNumber: number;
   stepText: string;
   isCompleted?: boolean;
@@ -15,6 +15,7 @@ interface StepDisplayProps {
   stepReaction?: StepReaction | null;
   variant: 'instruction' | 'cooking';
   stepCategory?: StepCategory | string;
+  className?: string;
 }
 
 // Use memo for the entire component to prevent unnecessary re-renders
@@ -25,7 +26,8 @@ export const StepDisplay = memo(function StepDisplay({
   onToggleComplete,
   stepReaction,
   variant,
-  stepCategory
+  stepCategory,
+  className
 }: StepDisplayProps) {
   const [showScience, setShowScience] = useState<boolean>(false);
   
@@ -45,7 +47,8 @@ export const StepDisplay = memo(function StepDisplay({
     "flex flex-col p-4 rounded-md transition-colors border hw-accelerated",
     isCompleted ? "bg-green-50 hover:bg-green-100 border-green-200" : "hover:bg-gray-50 border-gray-100",
     onToggleComplete ? "cursor-pointer" : "",
-    variant === 'cooking' ? "shadow-sm" : ""
+    variant === 'cooking' ? "shadow-sm" : "",
+    className
   );
   
   const textClasses = cn(
