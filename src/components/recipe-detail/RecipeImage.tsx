@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeImage } from '@/hooks/use-recipe-image';
@@ -8,6 +8,7 @@ import { PlaceholderImage } from './recipe-image/PlaceholderImage';
 import { ImageDrawer } from './recipe-image/ImageDrawer';
 import { ImageRegenerationForm } from './recipe-image/ImageRegenerationForm';
 import { ImageControls } from './recipe-image/ImageControls';
+import { ImageLoader } from '@/components/ui/image-loader';
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -25,19 +26,23 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
     setImageError
   } = useRecipeImage(recipe);
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     setImageError(true);
-  };
+  }, [setImageError]);
 
-  const openFullImage = () => {
+  const openFullImage = useCallback(() => {
     if (imageUrl && !imageError) {
       setShowImageDrawer(true);
     }
-  };
+  }, [imageUrl, imageError]);
 
-  const handleRegenerationComplete = () => {
+  const handleRegenerationComplete = useCallback(() => {
     window.location.reload();
-  };
+  }, []);
+
+  const closeImageDrawer = useCallback(() => {
+    setShowImageDrawer(false);
+  }, []);
 
   return (
     <Card className="mb-6 overflow-hidden border-0 shadow-md">
@@ -47,7 +52,7 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
             {isMigratingImage ? (
               <LoadingState />
             ) : imageUrl && !imageError ? (
-              <img
+              <ImageLoader
                 src={imageUrl}
                 alt={recipe.title}
                 className="w-full aspect-video object-cover cursor-pointer"
@@ -73,13 +78,16 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
         onCustomize={() => setShowRegenerationForm(true)}
       />
 
-      <ImageDrawer
-        open={showImageDrawer}
-        onOpenChange={setShowImageDrawer}
-        imageUrl={imageUrl || ''}
-        title={recipe.title}
-        onError={handleImageError}
-      />
+      {/* Using a safer way to conditionally render the drawer to prevent portal issues */}
+      {imageUrl && (
+        <ImageDrawer
+          open={showImageDrawer}
+          onOpenChange={closeImageDrawer}
+          imageUrl={imageUrl}
+          title={recipe.title}
+          onError={handleImageError}
+        />
+      )}
 
       <ImageRegenerationForm
         open={showRegenerationForm}

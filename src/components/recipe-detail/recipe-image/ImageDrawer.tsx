@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -21,10 +21,28 @@ interface ImageDrawerProps {
 
 export function ImageDrawer({ open, onOpenChange, imageUrl, title, onError }: ImageDrawerProps) {
   const [expanded, setExpanded] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Safe mounting/unmounting lifecycle
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+  
+  // Don't render when not mounted
+  if (!isMounted) return null;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className={expanded ? "h-[95vh]" : "h-[70vh]"}>
+    <Drawer 
+      open={open} 
+      onOpenChange={(value) => {
+        if (onOpenChange) {
+          // Short delay to allow animations to complete before state changes
+          setTimeout(() => onOpenChange(value), 50);
+        }
+      }}
+    >
+      <DrawerContent className={expanded ? "h-[95vh]" : "h-[70vh] drawer-content image-view-touch"}>
         <div className="mx-auto w-full max-w-md">
           <DrawerHeader className="text-center">
             <DrawerTitle>{title}</DrawerTitle>

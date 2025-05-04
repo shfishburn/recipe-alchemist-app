@@ -71,3 +71,21 @@
 .image-view-touch {
   touch-action: pinch-zoom;
 }
+
+/* Portal element and overlay safety */
+[data-radix-portal] {
+  pointer-events: auto !important; /* Ensure portals receive events */
+}
+
+/* Prevent active drawer/dialog conflicts */
+body:has([role="dialog"][data-state="open"]) [role="dialog"]:not([data-state="open"]),
+body:has(.drawer-content[data-state="open"]) .drawer-content:not([data-state="open"]) {
+  display: none !important;
+}
+
+/* Hardware acceleration for transitions */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

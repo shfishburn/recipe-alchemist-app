@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { cleanupUIState } from "@/utils/dom-cleanup";
 
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -19,6 +20,9 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
       const currentPosition = window.scrollY;
       const currentPath = displayLocation.pathname;
       sessionStorage.setItem(`scroll_${currentPath}`, currentPosition.toString());
+      
+      // Clean up any UI elements before transition
+      cleanupUIState();
       
       // Start exit animation without changing container height
       setTransitionStage("fadeOut");
