@@ -3,93 +3,76 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { HelpCircle } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 
 interface NewListFormProps {
   recipe: Recipe;
-  onSubmit: (name: string) => Promise<any>;
+  onSubmit: (name: string) => Promise<void>;
   isLoading: boolean;
   usePackageSizes: boolean;
   setUsePackageSizes: (value: boolean) => void;
 }
 
-export function NewListForm({ 
-  recipe, 
-  onSubmit, 
-  isLoading, 
-  usePackageSizes, 
-  setUsePackageSizes 
+export function NewListForm({
+  recipe,
+  onSubmit,
+  isLoading,
+  usePackageSizes,
+  setUsePackageSizes
 }: NewListFormProps) {
-  const [newListName, setNewListName] = useState(`${recipe.title} Ingredients`);
+  const [name, setName] = useState(`${recipe.title} Ingredients`);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newListName.trim()) {
-      onSubmit(newListName);
+    if (name.trim()) {
+      onSubmit(name.trim());
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2.5">
-        <Label htmlFor="list-name" className="text-sm font-medium">List Name</Label>
+        <Label htmlFor="list-name" className="text-base">
+          List Name
+        </Label>
         <Input
           id="list-name"
-          value={newListName}
-          onChange={(e) => setNewListName(e.target.value)}
-          placeholder="Enter a name for your shopping list"
-          disabled={isLoading}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="h-12 text-base"
+          placeholder="Enter list name"
+          autoComplete="off"
           required
-          className="w-full"
         />
       </div>
       
-      <div className="flex items-center space-x-2 rounded-md border p-3 bg-muted/20">
-        <Checkbox 
-          id="use-package-sizes-override" 
-          checked={usePackageSizes}
-          onCheckedChange={(checked) => setUsePackageSizes(!!checked)}
-          disabled={isLoading}
-          className="data-[state=checked]:bg-primary"
-        />
-        <div className="grid gap-1.5 leading-none">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="use-package-sizes-override" className="text-sm font-medium cursor-pointer">
-              Use standard package sizes
-            </Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-[250px]">
-                  Override the global setting just for this list
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+      <div className="bg-gray-50 dark:bg-gray-800/50 border rounded-lg p-4 mt-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-600 rounded-md w-12 h-12 flex items-center justify-center text-white">
+            <Check className="h-6 w-6" />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Adjust quantities to match common grocery store packaging
-          </p>
+          <div className="flex-1">
+            <p className="font-medium">Use standard package sizes</p>
+            <p className="text-muted-foreground text-sm mt-0.5">
+              Adjust quantities to match common grocery store packages
+            </p>
+          </div>
         </div>
       </div>
       
-      <Button 
-        type="submit" 
-        disabled={!newListName.trim() || isLoading}
-        className="w-full"
+      <Button
+        type="submit"
+        disabled={!name.trim() || isLoading}
+        className="w-full h-12 text-base mt-4 bg-recipe-blue hover:bg-recipe-blue/90"
       >
         {isLoading ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Creating...
           </>
         ) : (
-          'Create New List'
+          'Create List'
         )}
       </Button>
     </form>

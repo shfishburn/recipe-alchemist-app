@@ -10,7 +10,7 @@ import { ShoppingListControls } from './ShoppingListControls';
 import { AddItemForm } from './AddItemForm';
 import { ShoppingListItemsView } from './ShoppingListItemsView';
 import { ShoppingListProgress } from './ShoppingListProgress';
-import { useShoppingList } from '@/hooks/shopping-list';
+import { useShoppingList } from '@/hooks/shopping-list/use-shopping-list';
 
 // Import touch optimizations
 import '@/styles/touch-optimizations.css';
@@ -70,7 +70,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
   };
 
   return (
-    <Card className="p-2 md:p-3 max-w-full">
+    <Card className="p-4 md:p-6 max-w-full shadow-sm border-gray-200">
       <ShoppingListHeader 
         list={list} 
         onDelete={onDelete}
@@ -81,7 +81,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         totalItems={totalItems}
       />
       
-      <CardContent className="px-0 pt-2 space-y-2">
+      <CardContent className="px-0 pt-4 space-y-4">
         <ShoppingListProgress
           completedCount={completedCount}
           totalItems={totalItems}
@@ -98,8 +98,8 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
         
         {/* Shopping Items Section */}
-        <div>
-          <h3 className="text-lg font-medium mb-1.5">Shopping List</h3>
+        <div className="mt-4">
+          <h3 className="text-lg font-medium mb-3">Shopping List</h3>
           <div className="touch-scroll max-w-full">
             <ShoppingListItemsView
               groupedItems={groupedItems}
@@ -114,21 +114,21 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
 
         {/* Add Item Button/Form */}
-        <div className="border rounded-md">
+        <div className="mt-6 border rounded-lg overflow-hidden shadow-sm">
           <Button 
             variant="ghost" 
-            className="w-full flex items-center justify-between p-1.5"
+            className="w-full flex items-center justify-between p-4"
             onClick={() => setShowAddItemForm(!showAddItemForm)}
           >
             <span className="flex items-center">
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add New Item
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-medium">Add New Item</span>
             </span>
-            {showAddItemForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showAddItemForm ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
           
           {showAddItemForm && (
-            <div className="p-2">
+            <div className="p-4 border-t">
               <AddItemForm 
                 onAddItem={handleAddItemWrapper}
                 availableDepartments={allDepartments}
@@ -138,20 +138,20 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
         
         {/* Notes Section */}
-        <div className="border rounded-md">
+        <div className="mt-4 border rounded-lg overflow-hidden shadow-sm">
           <Button 
             variant="ghost" 
-            className="w-full flex items-center justify-between p-1.5"
+            className="w-full flex items-center justify-between p-4"
             onClick={() => setShowNotes(!showNotes)}
           >
             <span className="flex items-center">
               <span className="font-medium">Notes & Tips</span>
             </span>
-            {showNotes ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showNotes ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
           
           {showNotes && (
-            <div className="p-2">
+            <div className="p-4 border-t">
               <ShoppingListNotes list={list} />
             </div>
           )}

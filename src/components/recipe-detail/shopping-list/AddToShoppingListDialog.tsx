@@ -6,8 +6,11 @@ import { useShoppingLists } from './useShoppingLists';
 import { useShoppingListActions } from './useShoppingListActions';
 import { ExistingListForm } from './ExistingListForm';
 import { NewListForm } from './NewListForm';
-import { ShoppingListSettings } from '@/components/shopping-list/ShoppingListSettings';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { HelpCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Recipe } from '@/types/recipe';
 
 interface AddToShoppingListDialogProps {
@@ -23,6 +26,7 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
   
   // For local override of package size optimization
   const [localUsePackageSizes, setLocalUsePackageSizes] = useState(usePackageSizes);
+  const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
   
   // Update local state when global setting changes
   useEffect(() => {
@@ -52,42 +56,95 @@ export function AddToShoppingListDialog({ recipe, open, onOpenChange }: AddToSho
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl">Add to Shopping List</DialogTitle>
+          <DialogTitle className="text-xl text-center">Add to Shopping List</DialogTitle>
         </DialogHeader>
         
-        <div className="py-3">
-          <ShoppingListSettings />
+        <div className="py-5 space-y-8">
+          {/* Settings Section */}
+          <div className="space-y-6">
+            {/* Package Size Optimization */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="use-package-sizes" className="text-base font-medium">
+                    Optimize for package sizes
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-[250px]">
+                        Adjust quantities to match common grocery package sizes
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Switch 
+                  id="use-package-sizes" 
+                  checked={localUsePackageSizes}
+                  onCheckedChange={setLocalUsePackageSizes}
+                  className="data-[state=checked]:bg-green-600"
+                />
+              </div>
+            </div>
+            
+            <Separator />
+            
+            {/* Unit System */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-base font-medium">Unit system</Label>
+              <div className="flex items-center justify-between mt-2">
+                <span className={`text-base ${unitSystem === 'metric' ? 'font-medium' : 'text-muted-foreground'}`}>
+                  Metric
+                </span>
+                <Switch 
+                  checked={unitSystem === 'imperial'}
+                  onCheckedChange={(checked) => setUnitSystem(checked ? 'imperial' : 'metric')}
+                  className="data-[state=checked]:bg-blue-600 mx-4"
+                />
+                <span className={`text-base ${unitSystem === 'imperial' ? 'font-medium' : 'text-muted-foreground'}`}>
+                  Imperial
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          {/* Tabs Section */}
+          <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6 rounded-full h-12 p-1 bg-muted">
+              <TabsTrigger value="new" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-black">
+                New List
+              </TabsTrigger>
+              <TabsTrigger value="existing" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-black">
+                Existing Lists
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="new" className="space-y-4 pt-2">
+              <NewListForm 
+                recipe={recipe}
+                onSubmit={handleCreateNewList}
+                isLoading={isLoading}
+                usePackageSizes={localUsePackageSizes}
+                setUsePackageSizes={setLocalUsePackageSizes}
+              />
+            </TabsContent>
+            
+            <TabsContent value="existing" className="space-y-4 pt-2">
+              <ExistingListForm 
+                shoppingLists={shoppingLists}
+                isFetching={isFetching}
+                onSubmit={handleAddToExistingList}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
-        
-        <Separator className="my-3" />
-        
-        <Tabs defaultValue="new" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="new">New List</TabsTrigger>
-            <TabsTrigger value="existing">Existing Lists</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="new" className="space-y-4 pt-2">
-            <NewListForm 
-              recipe={recipe}
-              onSubmit={handleCreateNewList}
-              isLoading={isLoading}
-              usePackageSizes={localUsePackageSizes}
-              setUsePackageSizes={setLocalUsePackageSizes}
-            />
-          </TabsContent>
-          
-          <TabsContent value="existing" className="space-y-4 pt-2">
-            <ExistingListForm 
-              shoppingLists={shoppingLists}
-              isFetching={isFetching}
-              onSubmit={handleAddToExistingList}
-              isLoading={isLoading}
-            />
-          </TabsContent>
-        </Tabs>
       </DialogContent>
     </Dialog>
   );

@@ -11,60 +11,49 @@ export function ShoppingListSettings() {
   const { usePackageSizes, setUsePackageSizes, unitSystem, setUnitSystem } = useShoppingListSettings();
   
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="use-package-sizes" className="cursor-pointer">
-            Optimize for package sizes
-          </Label>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[250px]">
-                When enabled, shopping list items will be adjusted to align with common package sizes from grocery stores
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="use-package-sizes" className="text-base font-medium">
+              Optimize for package sizes
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[250px]">
+                  Adjust quantities to match common grocery package sizes
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Switch 
+            id="use-package-sizes" 
+            checked={usePackageSizes}
+            onCheckedChange={setUsePackageSizes}
+            className="data-[state=checked]:bg-green-600"
+          />
         </div>
-        <Switch 
-          id="use-package-sizes" 
-          checked={usePackageSizes}
-          onCheckedChange={setUsePackageSizes}
-        />
       </div>
       
-      <Separator className="my-2" />
+      <Separator className="my-4" />
       
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="unit-system" className="cursor-pointer">
-            Unit system
-          </Label>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[250px]">
-                Choose between metric (g, kg, ml, l) or imperial (oz, lb, fl oz, cups) units
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="unit-system-metric" className={`text-sm cursor-pointer ${unitSystem === 'metric' ? 'font-medium' : 'text-muted-foreground'}`}>
+      <div className="flex flex-col gap-2">
+        <Label className="text-base font-medium">Unit system</Label>
+        <div className="flex items-center justify-between mt-2">
+          <span className={`text-base ${unitSystem === 'metric' ? 'font-medium' : 'text-muted-foreground'}`}>
             Metric
-          </Label>
+          </span>
           <Switch 
-            id="unit-system"
             checked={unitSystem === 'imperial'}
             onCheckedChange={(checked) => setUnitSystem(checked ? 'imperial' : 'metric')}
+            className="data-[state=checked]:bg-blue-600 mx-4"
           />
-          <Label htmlFor="unit-system-imperial" className={`text-sm cursor-pointer ${unitSystem === 'imperial' ? 'font-medium' : 'text-muted-foreground'}`}>
+          <span className={`text-base ${unitSystem === 'imperial' ? 'font-medium' : 'text-muted-foreground'}`}>
             Imperial
-          </Label>
+          </span>
         </div>
       </div>
     </div>
