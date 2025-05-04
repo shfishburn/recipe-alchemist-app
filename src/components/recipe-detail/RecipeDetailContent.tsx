@@ -17,6 +17,7 @@ import { RecipeImage } from '@/components/recipe-detail/RecipeImage';
 import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
+import { useRecipeScience } from '@/hooks/use-recipe-science';
 import type { Recipe } from '@/types/recipe';
 import { isValidUUID } from '@/utils/slug-utils';
 
@@ -42,6 +43,9 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(recipe);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { updateRecipe } = useRecipeUpdates(validId || '');
+  
+  // Use the unified science hook to check for analysis data
+  const { hasAnalysisData } = useRecipeScience(recipe);
   
   const handleOpenChat = () => {
     setChatOpen(true);
@@ -94,18 +98,13 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     if (!sections.analysis) {
       setIsAnalyzing(true);
       // Set a timeout to hide the loading state after a reasonable delay
-      setTimeout(() => setIsAnalyzing(false), 3000); // Increased from 500ms to 3000ms
+      setTimeout(() => setIsAnalyzing(false), 3000);
     }
     toggleSection('analysis');
   };
 
   const currentRecipe = localRecipe || recipe;
   
-  // Check if the recipe has analysis data (any science_notes)
-  const hasAnalysisData = currentRecipe?.science_notes && 
-                          Array.isArray(currentRecipe.science_notes) && 
-                          currentRecipe.science_notes.length > 0;
-
   // If we have no valid recipe data, return null
   if (!currentRecipe || !currentRecipe.title) {
     return null;

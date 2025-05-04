@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { InstructionStep } from './instructions/InstructionStep';
-import { useStepReactions, getStepReaction } from './instructions/useStepReactions';
 import { useStepCompletion } from './instructions/useStepCompletion';
+import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
@@ -16,11 +16,11 @@ interface RecipeInstructionsProps {
 }
 
 export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructionsProps) {
-  // Use our new custom hook for step completion
+  // Use the unified step completion hook
   const { toggleStep, isStepCompleted } = useStepCompletion();
   
-  // Fetch reaction data for this recipe
-  const { data: stepReactions } = useStepReactions(recipe.id);
+  // Use our new unified science data hook
+  const { stepReactions } = useRecipeScience(recipe);
   
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>

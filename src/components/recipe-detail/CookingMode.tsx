@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Timer as TimerComponent } from './cooking/Timer';
 import { CookingStep } from './cooking/CookingStep';
 import { CookingProgress } from './cooking/CookingProgress';
+import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface CookingModeProps {
@@ -26,6 +27,9 @@ export function CookingMode({ recipe }: CookingModeProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([]);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  
+  // Use the unified science data hook
+  const { stepReactions } = useRecipeScience(recipe);
   
   useEffect(() => {
     if (recipe.instructions) {
@@ -93,6 +97,9 @@ export function CookingMode({ recipe }: CookingModeProps) {
   
   const completedCount = completedSteps.filter(Boolean).length;
   
+  // Get reaction data for the current step
+  const currentStepReaction = getStepReaction(stepReactions, currentStep);
+  
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
@@ -153,6 +160,7 @@ export function CookingMode({ recipe }: CookingModeProps) {
                 instruction={recipe.instructions[currentStep]}
                 isCompleted={completedSteps[currentStep]}
                 onToggleComplete={() => toggleStepCompletion(currentStep)}
+                stepReaction={currentStepReaction}
               />
             )}
             

@@ -9,16 +9,8 @@ import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
+import { useRecipeScience, formatReactionName } from '@/hooks/use-recipe-science';
 import type { Recipe } from '@/types/recipe';
-
-// Define reaction item type
-interface ReactionItem {
-  step_index: number;
-  step_text: string;
-  reactions: string[];
-  reaction_details: string[];
-  confidence: number;
-}
 
 // Define the analysis response type
 interface AnalysisResponse {
@@ -42,36 +34,10 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [reactionData, setReactionData] = useState<ReactionItem[]>([]);
   const analysisRequestRef = useRef<AbortController | null>(null);
-  
-  // Fetch reaction data from Supabase
-  const { data: reactions, isLoading: isLoadingReactions, refetch: refetchReactions } = useQuery({
-    queryKey: ['recipe-reactions', recipe.id],
-    queryFn: async () => {
-      console.log('Fetching recipe reactions for', recipe.id);
-      
-      try {
-        const { data, error } = await supabase
-          .from('recipe_step_reactions')
-          .select('*')
-          .eq('recipe_id', recipe.id)
-          .order('step_index', { ascending: true });
-        
-        if (error) {
-          console.error('Error fetching recipe reactions:', error);
-          return [];
-        }
-        
-        return (data || []) as ReactionItem[];
-      } catch (err) {
-        console.error('Error in query execution:', err);
-        return [];
-      }
-    },
-    enabled: isOpen, // Only fetch when the analysis section is open
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-  });
+
+  // Use our new unified science data hook
+  const { stepReactions, hasAnalysisData, scienceNotes, refetch: refetchReactions } = useRecipeScience(recipe);
   
   // Fetch general analysis data from recipe-chat
   const { data: analysis, isLoading, refetch } = useQuery<AnalysisResponse, Error>({
@@ -217,13 +183,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   }, [isOpen, handleAnalyze, isAnalyzing]);
 
-  // Process reactions when they're loaded
-  useEffect(() => {
-    if (reactions && reactions.length > 0) {
-      setReactionData(reactions);
-    }
-  }, [reactions]);
-
   // Apply analysis updates to recipe when data is available
   useEffect(() => {
     // Only run this effect if we have analysis data, we haven't applied updates yet,
@@ -275,23 +234,62 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   }, [analysis, hasAppliedUpdates, updateRecipe, onRecipeUpdated, recipe.id, isLoading]);
 
-  // Format reaction names for display
-  const formatReactionName = (reaction: string): string => {
-    return reaction
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+  // Build reaction content with improved display
+  const buildReactionContent = useCallback(() => {
+    if (!stepReactions || stepReactions.length === 0) return null;
+    
+    return (
+      <div className="mt-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Step-by-Step Reaction Analysis</h3>
+        <div className="space-y-6">
+          {stepReactions.map((reaction, index) => {
+            // Skip entries without step text
+            if (!reaction.step_text) return null;
+            
+            // Safely access reaction details
+            const reactionDetails = Array.isArray(reaction.reaction_details) && reaction.reaction_details.length > 0 
+              ? reaction.reaction_details[0] 
+              : '';
+              
+            return (
+              <div key={`reaction-${index}`} className="mb-6 p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-start gap-3 mb-2">
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-800">Step {index + 1}: {reaction.step_text}</p>
+                    {reactionDetails && (
+                      <p className="text-sm text-slate-600 mt-1">{reactionDetails}</p>
+                    )}
+                  </div>
+                </div>
+                {reaction.reactions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {reaction.reactions.map((type, i) => (
+                      <span 
+                        key={`${index}-${i}`} 
+                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                      >
+                        {formatReactionName(type)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }, [stepReactions]);
 
-  // Extract content from analysis response with improved fallbacks
+  // Extract and format the content sections from the analysis
   const extractAnalysisContent = useCallback(() => {
     // First check for pre-existing notes in the recipe
-    const existingNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0;
+    const existingNotes = scienceNotes.length > 0;
     
     // If we don't have analysis data, fall back to recipe notes
     if (!analysis) {
       return { 
-        chemistry: existingNotes ? recipe.science_notes.join('\n\n') : null,
+        chemistry: existingNotes ? scienceNotes.join('\n\n') : null,
         techniques: null,
         troubleshooting: null
       };
@@ -336,7 +334,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     const chemistry = (analysis.science_notes && Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0)
       ? analysis.science_notes.join('\n\n')
       : extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science|Maillard|Reaction)")
-        || (existingNotes ? recipe.science_notes.join('\n\n') : null);
+        || (existingNotes ? scienceNotes.join('\n\n') : null);
     
     // Extract techniques section
     const techniques = (analysis.techniques && Array.isArray(analysis.techniques) && analysis.techniques.length > 0)
@@ -349,79 +347,28 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       : extractSectionFromText(analysis.textResponse, "(Troubleshoot|Problem|Issue|Common)");
     
     return { chemistry, techniques, troubleshooting };
-  }, [analysis, recipe.science_notes]);
+  }, [analysis, scienceNotes]);
 
-  // Build reaction content with improved display
-  const buildReactionContent = useCallback(() => {
-    if (!reactionData || reactionData.length === 0) return null;
-    
-    return (
-      <div className="mt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Step-by-Step Reaction Analysis</h3>
-        <div className="space-y-6">
-          {reactionData.map((reaction, index) => {
-            // Skip entries without step text
-            if (!reaction.step_text) return null;
-            
-            // Safely access reaction types
-            const reactionTypes = Array.isArray(reaction.reactions) ? reaction.reactions : [];
-            
-            // Safely access reaction details
-            const reactionDetails = Array.isArray(reaction.reaction_details) && reaction.reaction_details.length > 0 
-              ? reaction.reaction_details[0] 
-              : '';
-              
-            return (
-              <div key={`reaction-${index}`} className="mb-6 p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-start gap-3 mb-2">
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-800">{reaction.step_text}</p>
-                    {reactionDetails && (
-                      <p className="text-sm text-slate-600 mt-1">{reactionDetails}</p>
-                    )}
-                  </div>
-                </div>
-                {reactionTypes.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {reactionTypes.map((type, i) => (
-                      <span 
-                        key={`${index}-${i}`} 
-                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
-                      >
-                        {formatReactionName(type)}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }, [reactionData]);
-
-  // Extract and format the content sections from the analysis
   const { chemistry, techniques, troubleshooting } = extractAnalysisContent();
   const reactionsContent = buildReactionContent();
 
   // Determine if there's any analysis content available
-  const hasAnyAnalysisContent = 
+  const hasAnyContent = 
     (chemistry !== null && chemistry !== undefined) || 
     (techniques !== null && techniques !== undefined) || 
     (troubleshooting !== null && troubleshooting !== undefined) ||
     (analysis?.textResponse && analysis.textResponse.length > 50) ||
-    (reactionData && reactionData.length > 0);
+    (stepReactions && stepReactions.length > 0);
 
   // Check if we should show the analysis prompt
-  const showAnalysisPrompt = (!analysis && !isLoading && (!reactionData || reactionData.length === 0) && !isAnalyzing) || 
-    (!hasAnyAnalysisContent && !isAnalyzing && !isLoading && !isLoadingReactions);
+  const showAnalysisPrompt = (!analysis && !isLoading && (!stepReactions || stepReactions.length === 0) && !isAnalyzing) || 
+    (!hasAnyContent && !isAnalyzing && !isLoading);
 
   // Show only section headers that have content
   const hasChemistry = chemistry !== null && chemistry !== undefined && chemistry.length > 0;
   const hasTechniques = techniques !== null && techniques !== undefined && techniques.length > 0;
   const hasTroubleshooting = troubleshooting !== null && troubleshooting !== undefined && troubleshooting.length > 0;
-  const hasReactions = reactionData && reactionData.length > 0;
+  const hasReactions = stepReactions && stepReactions.length > 0;
   const hasRawResponse = analysis?.textResponse && analysis.textResponse.length > 50 &&
     !hasChemistry && !hasTechniques && !hasTroubleshooting;
 
@@ -435,7 +382,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               Scientific Analysis
             </CardTitle>
             <div className="flex items-center space-x-2">
-              {!isAnalyzing && hasAnyAnalysisContent && (
+              {!isAnalyzing && hasAnyContent && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -471,7 +418,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
         <CollapsibleContent>
           <CardContent>
-            {isLoading || isAnalyzing || isLoadingReactions ? (
+            {isLoading || isAnalyzing ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 <span className="ml-2 text-muted-foreground">Analyzing recipe chemistry...</span>
@@ -484,7 +431,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                   Analyze Recipe
                 </Button>
               </div>
-            ) : hasAnyAnalysisContent ? (
+            ) : hasAnyContent ? (
               <div className="space-y-6">
                 {/* Chemistry Section - only show if we have content */}
                 {hasChemistry && (
