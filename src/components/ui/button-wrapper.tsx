@@ -1,41 +1,92 @@
 
 import React, { forwardRef } from 'react';
-import { Button, ButtonProps } from '@/components/ui/button';
-import { Slot } from '@/components/ui/slot';
+import { Button as ShadcnButton, ButtonProps as ShadcnButtonProps } from '@/components/ui/button';
+import { Slot } from '@radix-ui/react-slot';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface ButtonWrapperProps extends ButtonProps {
+export interface ButtonProps extends ShadcnButtonProps {
+  /**
+   * If true, the button will show a loading spinner.
+   */
+  isLoading?: boolean;
+  
+  /**
+   * The text to show when the button is in a loading state.
+   */
+  loadingText?: string;
+  
+  /**
+   * If true, the child of the button will be treated as a slot.
+   * Allows for composition with other components.
+   */
   asChild?: boolean;
+  
+  /**
+   * Icon to display at the start of the button.
+   */
+  startIcon?: React.ReactNode;
+  
+  /**
+   * Icon to display at the end of the button.
+   */
+  endIcon?: React.ReactNode;
 }
 
 /**
- * Enhanced ButtonWrapper that safely handles the asChild prop
- * and provides better error handling for child elements
+ * Enhanced button component with standardized API for loading states and icons
  */
-const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonWrapperProps>(
-  ({ asChild, className, children, ...props }, ref) => {
-    // Handle the case where there are no children
-    if (!children) {
-      return <Button ref={ref} className={className} {...props} />;
-    }
+export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({
+    className,
+    variant,
+    size,
+    isLoading = false,
+    loadingText,
+    disabled,
+    asChild = false,
+    startIcon,
+    endIcon,
+    children,
+    ...props
+  }, ref) => {
+    // Determine if the button should be disabled
+    const isDisabled = disabled || isLoading;
     
-    // When asChild is true, use our custom Slot component
-    if (asChild) {
-      return (
-        <Slot
-          className={className} 
-          {...props}
-          ref={ref}
-        >
-          {children}
-        </Slot>
-      );
-    }
+    // Create the button content based on loading state
+    const buttonContent = (
+      <>
+        {isLoading && (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        )}
+        {!isLoading && startIcon && (
+          <span className="mr-2">{startIcon}</span>
+        )}
+        {isLoading && loadingText ? loadingText : children}
+        {!isLoading && endIcon && (
+          <span className="ml-2">{endIcon}</span>
+        )}
+      </>
+    );
     
-    // Regular button when asChild is false
-    return <Button ref={ref} className={className} {...props}>{children}</Button>;
+    // Use Slot if asChild is true
+    const Comp = asChild ? Slot : ShadcnButton;
+    
+    return (
+      <Comp
+        className={cn(className)}
+        variant={variant}
+        size={size}
+        disabled={isDisabled}
+        ref={ref}
+        {...props}
+      >
+        {buttonContent}
+      </Comp>
+    );
   }
 );
 
 ButtonWrapper.displayName = 'ButtonWrapper';
 
-export { ButtonWrapper };
+export default ButtonWrapper;

@@ -1,10 +1,11 @@
 
-/* Base page transition classes */
+/* Base page transition classes with improved performance */
 .page-transition {
-  will-change: opacity;
+  will-change: opacity, transform;
   transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 250ms;
+  backface-visibility: hidden;
 }
 
 /* Only apply transform animations on desktop for better mobile performance */
@@ -35,10 +36,13 @@
   }
 }
 
-/* Ensure we maintain hardware acceleration but simplify the approach */
+/* Hardware acceleration optimization */
 .hw-accelerated {
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transform: translateZ(0);
+  perspective: 1000;
+  will-change: transform, opacity;
 }
 
 /* Reduce motion preference support */
@@ -52,7 +56,7 @@
   .fade-out,
   .zoom-in,
   .zoom-out {
-    transition-duration: 0.1s !important;
-    animation-duration: 0.1s !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }

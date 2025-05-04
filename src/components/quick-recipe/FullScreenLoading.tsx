@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef, memo } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { LoadingTipCard } from './loading/LoadingTipCard';
-import { AlertCircle, ArrowLeft, Clock, RefreshCw, ChefHat } from 'lucide-react';
+import { AlertCircle, ArrowLeft, RefreshCw, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Progress } from '@/components/ui/progress';
@@ -13,13 +13,29 @@ interface FullScreenLoadingProps {
   error?: string | null;
 }
 
-export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadingProps) {
+export const FullScreenLoading = memo(function FullScreenLoading({ 
+  onCancel, 
+  onRetry, 
+  error 
+}: FullScreenLoadingProps) {
   const { loadingState, updateLoadingState } = useQuickRecipeStore();
   const isErrorState = !!error;
   const [completedLoading, setCompletedLoading] = useState(false);
   
-  // Simulate loading progress
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Clean up on unmount
   useEffect(() => {
+    return () => {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, []);
+  
+  // Simulate loading progress with memoized function
+  const simulateProgress = useCallback(() => {
     if (!isErrorState) {
       const steps = [
         "Analyzing your ingredients...",
@@ -32,7 +48,12 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
       let currentStep = 0;
       let progress = 0;
       
-      const interval = setInterval(() => {
+      // Clean previous timer if exists
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+      }
+      
+      progressTimerRef.current = setInterval(() => {
         progress += 1;
         
         // Change step description at certain progress points
@@ -48,28 +69,30 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
         });
         
         if (progress >= 100) {
-          clearInterval(interval);
+          if (progressTimerRef.current) {
+            clearInterval(progressTimerRef.current);
+            progressTimerRef.current = null;
+          }
           // Mark loading as completed to enable pointer events
           setCompletedLoading(true);
         }
       }, 300); // Update every 300ms
-      
-      return () => clearInterval(interval);
     }
   }, [isErrorState, updateLoadingState]);
   
-  // Add a class to prevent body scrolling when loading is shown
+  // Start progress simulation on mount
   useEffect(() => {
-    // Only add overflow-hidden if we're actually loading
+    simulateProgress();
+    
+    // Add overflow-hidden only if loading
     if (!completedLoading && !isErrorState) {
       document.body.classList.add('overflow-hidden');
     }
     
-    // Cleanup function to ensure overflow-hidden is removed when component unmounts
     return () => {
       document.body.classList.remove('overflow-hidden');
     };
-  }, [completedLoading, isErrorState]);
+  }, [completedLoading, isErrorState, simulateProgress]);
 
   // Set appropriate pointer events based on loading state
   const pointerEventsClass = completedLoading && !isErrorState ? 'pointer-events-none' : '';
@@ -123,15 +146,12 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
                   <div className="absolute inset-0 rounded-full bg-recipe-green/10 animate-pulse"></div>
                   <ChefHat className="h-12 w-12 text-recipe-green animate-cooking-pot" />
                   
-                  {/* Animated 'steam' effects */}
-                  <div className="absolute -top-2 left-0">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green/60 animate-steam"></div>
+                  {/* Animated 'steam' effects - simplified for better performance */}
+                  <div className="absolute -top-2 left-0 opacity-60">
+                    <div className="h-2 w-2 rounded-full bg-recipe-green animate-steam"></div>
                   </div>
-                  <div className="absolute -top-1 right-0">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green/70 animate-steam delay-150"></div>
-                  </div>
-                  <div className="absolute -top-3 left-2">
-                    <div className="h-3 w-3 rounded-full bg-recipe-green/50 animate-steam delay-300"></div>
+                  <div className="absolute -top-1 right-0 opacity-70">
+                    <div className="h-2 w-2 rounded-full bg-recipe-green animate-steam delay-150"></div>
                   </div>
                 </div>
               </div>
@@ -149,27 +169,26 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
             </div>
             
             {/* Enhanced loading progress */}
-            <div className="mb-8 animate-fade-in" style={{animationDelay: "0.2s"}}>
+            <div className="mb-8 animate-fade-in">
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-medium animate-float">
+                <span className="font-medium">
                   {loadingState?.stepDescription || "Analyzing your ingredients..."}
                 </span>
-                <span className="text-muted-foreground flex items-center">
-                  <Clock className="h-3 w-3 mr-1 inline" />
-                  <span>{Math.ceil(loadingState?.percentComplete || 0)}%</span>
+                <span className="text-muted-foreground">
+                  {Math.ceil(loadingState?.percentComplete || 0)}%
                 </span>
               </div>
               
               <Progress
                 value={loadingState?.percentComplete || 10}
-                className="h-2 bg-gray-100 glow-recipe-green"
-                indicatorClassName="bg-recipe-green animate-progress-pulse transition-all duration-500"
+                className="h-2 bg-gray-100"
+                indicatorClassName="bg-recipe-green"
                 aria-label="Recipe generation progress"
               />
             </div>
             
-            {/* Cooking tip card with animation */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto animate-float">
+            {/* Cooking tip card */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto">
               <LoadingTipCard />
             </div>
             
@@ -179,7 +198,6 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
                 variant="ghost" 
                 onClick={onCancel} 
                 className="text-muted-foreground hover:text-foreground animate-fade-in"
-                style={{animationDelay: "0.5s"}}
                 aria-label="Cancel recipe generation"
               >
                 Cancel
@@ -190,5 +208,6 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
       </div>
     </div>
   );
-}
+});
 
+export default FullScreenLoading;
