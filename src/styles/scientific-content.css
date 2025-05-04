@@ -1,0 +1,74 @@
+
+/* Scientific content styling */
+.scientific-content {
+  line-height: 1.6;
+}
+
+.scientific-content h3, 
+.scientific-content h4 {
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.scientific-content ul,
+.scientific-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.scientific-content li {
+  margin-bottom: 0.5em;
+}
+
+.scientific-content p {
+  margin-bottom: 1em;
+}
+
+.scientific-content p:last-child {
+  margin-bottom: 0;
+}
+
+.scientific-content code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.scientific-content strong {
+  font-weight: 600;
+}
+
+.scientific-content em {
+  font-style: italic;
+}
+
+.scientific-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+/* Tables for scientific data */
+.scientific-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.scientific-content th,
+.scientific-content td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.scientific-content th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.scientific-content tr:nth-child(even) {
+  background-color: #f9f9f9;
+}

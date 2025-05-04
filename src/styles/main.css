@@ -1,181 +1,48 @@
 
-/* Base styles and utilities */
+@import './components.css';
 @import './theme.css';
 @import './transitions.css';
-@import './components.css';
 @import './loading.css';
+@import './touch-optimizations.css';
+@import './scientific-content.css';
 
-/* Additional animation utilities */
-.animate-scale-in {
-  animation: scaleIn 0.5s ease-out forwards;
+:root {
+  --recipe-blue: rgb(29, 78, 216);
+  --recipe-blue-hover: rgb(37, 99, 235);
 }
 
-@keyframes scaleIn {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+/* Global focus styles */
+*:focus-visible {
+  outline: 2px solid var(--recipe-blue);
+  outline-offset: 2px;
 }
 
-/* Gradient animation for buttons */
-@keyframes gradient-x {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* Custom focus ring for interactive elements */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--recipe-blue);
 }
 
-.animate-gradient-x {
-  animation: gradient-x 3s ease infinite;
+.container-page {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
-/* Celebration animation styles */
-@keyframes celebrate {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-}
-
-.animate-celebrate {
-  animation: celebrate 0.7s ease-in-out;
-}
-
-/* Standardized responsive spacing classes */
-.responsive-spacing-y {
-  @apply space-y-3 sm:space-y-4 md:space-y-6;
-}
-
-.responsive-padding {
-  @apply p-3 sm:p-4 md:p-6;
-}
-
-.responsive-margin {
-  @apply m-3 sm:m-4 md:m-6;
-}
-
-/* Error indicator for debugging */
-.error-indicator {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(255, 0, 0, 0.8);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 4px;
-  z-index: 9999;
-}
-
-/* Mobile performance optimizations */
-@media (max-width: 640px) {
-  /* Disable hover effects on mobile for performance */
-  .hover-only {
-    @apply transition-none;
-  }
-  
-  /* Optimize repaints for elements with animations */
-  .mobile-optimized {
-    will-change: transform, opacity;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
-  
-  /* Reduce motion for elements with continuous animations */
-  .reduce-motion-mobile {
-    animation-duration: 0.5s !important;
-    transition-duration: 0.3s !important;
-  }
-  
-  /* Optimize scroll performance */
-  .scroll-container {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    overscroll-behavior: contain;
+@media (min-width: 640px) {
+  .container-page {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
-/* Touch-friendly styles for mobile */
-@media (max-width: 640px) {
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px];
+@media (min-width: 1024px) {
+  .container-page {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
-  
-  .touch-spacing > * + * {
-    margin-top: 12px;
-  }
-  
-  .touch-padding {
-    padding: 16px;
-  }
-  
-  /* Improved tap/touch states */
-  .tap-highlight {
-    @apply transition-opacity duration-100;
-  }
-  
-  .tap-highlight:active {
-    @apply opacity-70;
-  }
-  
-  /* Active state visual feedback */
-  .touch-active:active {
-    @apply bg-gray-100 dark:bg-gray-800;
-    transition: background-color 0.1s ease-out;
-  }
-  
-  /* Remove default tap highlight on mobile */
-  .tap-highlight-none {
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  /* Gesture hints for swipeable content */
-  .swipeable-hint::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    height: 50px;
-    width: 30px;
-    transform: translateY(-50%);
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.1));
-    pointer-events: none;
-    opacity: 0.8;
-  }
-}
-
-/* Content visibility optimizations */
-.content-visibility-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 500px;
-}
-
-.content-visibility-auto-card {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 300px;
-}
-
-/* Animation performance class */
-.hw-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Mobile-friendly gestures */
-.swipe-horizontal {
-  touch-action: pan-x;
-}
-
-.swipe-vertical {
-  touch-action: pan-y;
-}
-
-.swipe-none {
-  touch-action: none;
-}
-
-/* Consistent overscroll behavior to prevent rubber band effect */
-.prevent-overscroll {
-  overscroll-behavior: contain;
 }
