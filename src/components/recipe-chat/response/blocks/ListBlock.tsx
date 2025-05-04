@@ -17,7 +17,7 @@ export function ListBlock({ block, blockIndex, type }: ListBlockProps) {
   
   if (type === 'bullet') {
     return (
-      <ul key={blockIndex} className="list-disc pl-5 space-y-1 my-2">
+      <ul key={blockIndex} className="list-disc pl-5 space-y-1.5 my-2.5">
         {items.map((item, itemIndex) => {
           // Handle nested bullets by checking for indentation
           const indentMatch = item.match(/^(\s+)/);
@@ -25,7 +25,7 @@ export function ListBlock({ block, blockIndex, type }: ListBlockProps) {
           const indentClass = indent > 2 ? "ml-4" : "";
           
           return (
-            <li key={`${blockIndex}-${itemIndex}`} className={`${indentClass} break-words`}>
+            <li key={`${blockIndex}-${itemIndex}`} className={`${indentClass} break-words text-sm sm:text-base`}>
               {processInlineFormatting(item.replace(/^[\s\t]*[•\-*]\s+/, ''))}
             </li>
           );
@@ -34,9 +34,9 @@ export function ListBlock({ block, blockIndex, type }: ListBlockProps) {
     );
   } else {
     return (
-      <ol key={blockIndex} className="list-decimal pl-5 space-y-1 my-2">
+      <ol key={blockIndex} className="list-decimal pl-5 space-y-1.5 my-2.5">
         {items.map((item, itemIndex) => (
-          <li key={`${blockIndex}-${itemIndex}`} className="break-words">
+          <li key={`${blockIndex}-${itemIndex}`} className="break-words text-sm sm:text-base">
             {processInlineFormatting(item.replace(/^[\s\t]*\d+\.\s+/, ''))}
           </li>
         ))}

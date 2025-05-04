@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Heart, Share2 } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, MessageCircle } from 'lucide-react';
 import { useFavoriteRecipe } from '@/hooks/use-favorite-recipe';
 import { AddToShoppingListDialog } from './shopping-list/AddToShoppingListDialog';
 import { ShareRecipeDialog } from './ShareRecipeDialog';
@@ -50,6 +50,17 @@ export function RecipeActions({
           <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
           <span>{isFavorite ? "Saved" : "Save"}</span>
         </Button>
+        
+        {onOpenChat && (
+          <Button 
+            variant="outline" 
+            onClick={onOpenChat}
+            className="flex items-center gap-2"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>Ask AI Chef</span>
+          </Button>
+        )}
         
         <Button 
           variant="outline" 

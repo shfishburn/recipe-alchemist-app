@@ -38,85 +38,87 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Tabs defaultValue="comparison" className="w-full">
-          <div className="flex justify-between items-center mb-2">
-            <TabsList className="justify-start">
-              <TabsTrigger value="comparison">Comparison</TabsTrigger>
-              <TabsTrigger value="distribution">Distribution</TabsTrigger>
-            </TabsList>
-            <div className="flex space-x-2 items-center">
-              <Toggle
-                pressed={showPercentage}
-                onPressedChange={setShowPercentage}
-                aria-label="Toggle percentage view"
-                size="sm"
-              >
-                <Percent className="h-4 w-4 mr-1" />
-                {showPercentage ? "%" : "Values"}
-              </Toggle>
-              <Toggle
-                pressed={viewType === 'horizontal'}
-                onPressedChange={(pressed) => setViewType(pressed ? 'horizontal' : 'vertical')}
-                aria-label="Toggle chart orientation"
-                size="sm"
-              >
-                <BarChartHorizontal className="h-4 w-4 mr-1" />
-                {viewType === 'horizontal' ? "Horizontal" : "Vertical"}
-              </Toggle>
-            </div>
+    <div className="space-y-6">
+      <Tabs defaultValue="comparison" className="w-full">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+          <TabsList className="justify-start">
+            <TabsTrigger value="comparison">Comparison</TabsTrigger>
+            <TabsTrigger value="distribution">Distribution</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex space-x-2 items-center">
+            <Toggle
+              pressed={showPercentage}
+              onPressedChange={setShowPercentage}
+              aria-label="Toggle percentage view"
+              size="sm"
+              className="data-[state=on]:bg-slate-200"
+            >
+              <Percent className="h-4 w-4 mr-1" />
+              {showPercentage ? "%" : "Values"}
+            </Toggle>
+            
+            <Toggle
+              pressed={viewType === 'horizontal'}
+              onPressedChange={(pressed) => setViewType(pressed ? 'horizontal' : 'vertical')}
+              aria-label="Toggle chart orientation"
+              size="sm"
+              className="data-[state=on]:bg-slate-200"
+            >
+              <BarChartHorizontal className="h-4 w-4 mr-1" />
+              {viewType === 'horizontal' ? "Horizontal" : "Vertical"}
+            </Toggle>
           </div>
-          
-          <TabsContent value="comparison" className="pt-2">
-            <div className="space-y-6">
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="text-sm font-medium text-center mb-2">Macronutrients</h4>
-                  <HorizontalBarChart 
-                    data={macroData} 
-                    showPercentage={showPercentage} 
-                  />
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <h4 className="text-sm font-medium text-center mb-2">Calories</h4>
-                  <HorizontalBarChart 
-                    data={calorieData} 
-                    showPercentage={showPercentage} 
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="distribution" className="pt-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        </div>
+        
+        <TabsContent value="comparison" className="pt-2 mt-0">
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="text-sm font-medium text-center mb-3">Macronutrients</h4>
+                <HorizontalBarChart 
+                  data={macroData} 
+                  showPercentage={showPercentage} 
+                />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <h4 className="text-sm font-medium text-center mb-3">Calories</h4>
+                <HorizontalBarChart 
+                  data={calorieData} 
+                  showPercentage={showPercentage} 
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="distribution" className="pt-2 mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-4">
+                <MacroDistributionPie
+                  data={macrosData}
+                  title="Recipe Macro Breakdown"
+                />
+              </CardContent>
+            </Card>
+            
+            {userPreferences && (
               <Card>
                 <CardContent className="p-4">
                   <MacroDistributionPie
-                    data={macrosData}
-                    title="Recipe Macro Breakdown"
+                    data={targetMacrosData}
+                    title="Your Target Macro Breakdown"
                   />
                 </CardContent>
               </Card>
-              
-              {userPreferences && (
-                <Card>
-                  <CardContent className="p-4">
-                    <MacroDistributionPie
-                      data={targetMacrosData}
-                      title="Your Target Macro Breakdown"
-                    />
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
       
       <NutritionSummary
         calories={recipeNutrition.calories}

@@ -27,7 +27,7 @@ export function ShoppingListDepartment({
   const departmentColorClass = getDepartmentColor(department);
   
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-1">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-1.5">
       <CollapsibleTrigger 
         className={`flex items-center justify-between w-full p-2.5 text-sm font-medium hover:bg-muted/50 rounded-md ${departmentColorClass} touch-target transition-colors`}
       >
@@ -41,7 +41,7 @@ export function ShoppingListDepartment({
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent className="animate-accordion-down">
-        <div className="pl-6 space-y-1 py-1">
+        <div className="pl-6 space-y-1.5 py-1">
           {items.map((item) => (
             <ShoppingListItem 
               key={itemIndices[item.text]} 

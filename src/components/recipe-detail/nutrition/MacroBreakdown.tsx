@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { NUTRITION_COLORS } from '@/constants/nutrition';
 
 interface MacroBreakdownProps {
   protein: number;
@@ -24,22 +25,22 @@ export function MacroBreakdown({ protein, carbs, fat }: MacroBreakdownProps) {
 
   return (
     <div className="space-y-4">
-      <h5 className="text-xs font-medium mb-2">Macro Distribution</h5>
+      <h5 className="text-sm font-medium mb-2">Macro Distribution</h5>
       
-      <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
         <div 
           className="bg-purple-500 h-full" 
-          style={{ width: `${proteinPercent}%` }}
+          style={{ width: `${proteinPercent}%`, backgroundColor: NUTRITION_COLORS.protein || "#9b87f5" }}
           title={`Protein: ${proteinPercent}%`}
         />
         <div 
           className="bg-blue-500 h-full" 
-          style={{ width: `${carbsPercent}%` }}
+          style={{ width: `${carbsPercent}%`, backgroundColor: NUTRITION_COLORS.carbs || "#0EA5E9" }}
           title={`Carbs: ${carbsPercent}%`}
         />
         <div 
           className="bg-green-500 h-full" 
-          style={{ width: `${fatPercent}%` }}
+          style={{ width: `${fatPercent}%`, backgroundColor: NUTRITION_COLORS.fat || "#22c55e" }}
           title={`Fat: ${fatPercent}%`}
         />
       </div>
@@ -47,21 +48,21 @@ export function MacroBreakdown({ protein, carbs, fat }: MacroBreakdownProps) {
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-purple-500 mr-1.5"></div>
+            <div className="w-3 h-3 rounded-full mr-1.5" style={{ backgroundColor: NUTRITION_COLORS.protein || "#9b87f5" }}></div>
             <span className="font-medium">Protein</span>
           </div>
           <span className="text-muted-foreground">{proteinPercent}%</span>
         </div>
         <div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-blue-500 mr-1.5"></div>
+            <div className="w-3 h-3 rounded-full mr-1.5" style={{ backgroundColor: NUTRITION_COLORS.carbs || "#0EA5E9" }}></div>
             <span className="font-medium">Carbs</span>
           </div>
           <span className="text-muted-foreground">{carbsPercent}%</span>
         </div>
         <div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-green-500 mr-1.5"></div>
+            <div className="w-3 h-3 rounded-full mr-1.5" style={{ backgroundColor: NUTRITION_COLORS.fat || "#22c55e" }}></div>
             <span className="font-medium">Fat</span>
           </div>
           <span className="text-muted-foreground">{fatPercent}%</span>

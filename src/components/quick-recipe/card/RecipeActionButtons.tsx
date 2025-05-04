@@ -17,7 +17,7 @@ export function RecipeActionButtons({
   isSaving = false 
 }: RecipeActionButtonsProps) {
   return (
-    <div className="pt-4 flex flex-col gap-2 w-full">
+    <div className="pt-5 flex flex-col gap-2.5 w-full">
       {/* Primary action - Start Cooking */}
       <Button 
         onClick={onCook} 
@@ -29,7 +29,7 @@ export function RecipeActionButtons({
       </Button>
       
       {/* Secondary actions in a proper grid layout */}
-      <div className="grid grid-cols-2 gap-2 w-full">
+      <div className="grid grid-cols-2 gap-2.5 w-full">
         <Button 
           variant="outline" 
           onClick={onSave}
