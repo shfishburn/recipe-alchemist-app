@@ -1,15 +1,42 @@
 
 import { Ingredient } from '@/types/recipe';
 
-// Categories for ingredients with matching patterns
-const DEPARTMENT_PATTERNS = {
-  'Produce': /lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i,
-  'Meat & Seafood': /beef|steak|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|ground meat|bacon|sausage/i,
-  'Dairy & Eggs': /milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i,
-  'Bakery': /bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i,
-  'Pantry': /flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i,
-  'Frozen': /frozen|ice cream|popsicle/i,
-  'Beverages': /water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i
+/**
+ * Department definitions with matching patterns
+ */
+export const DEPARTMENT_DEFINITIONS = {
+  'Produce': {
+    pattern: /lettuce|spinach|kale|arugula|cabbage|carrot|onion|garlic|potato|tomato|pepper|cucumber|zucchini|squash|apple|banana|orange|lemon|lime|berries|fruit|vegetable|produce|greens/i,
+    order: 1
+  },
+  'Meat & Seafood': {
+    pattern: /beef|steak|chicken|pork|turkey|lamb|fish|salmon|tuna|shrimp|seafood|meat|ground meat|bacon|sausage/i,
+    order: 2
+  },
+  'Dairy & Eggs': {
+    pattern: /milk|cheese|yogurt|butter|cream|sour cream|egg|dairy/i,
+    order: 3
+  },
+  'Bakery': {
+    pattern: /bread|bagel|bun|roll|tortilla|pita|muffin|cake|pastry|bakery/i,
+    order: 4
+  },
+  'Pantry': {
+    pattern: /flour|sugar|oil|vinegar|sauce|condiment|spice|herb|rice|pasta|bean|legume|canned|jar|shelf-stable|pantry/i,
+    order: 5
+  },
+  'Frozen': {
+    pattern: /frozen|ice cream|popsicle/i,
+    order: 6
+  },
+  'Beverages': {
+    pattern: /water|juice|soda|pop|coffee|tea|drink|beverage|wine|beer|alcohol/i,
+    order: 7
+  },
+  'Other': {
+    pattern: /.*/i, // Match anything as fallback
+    order: 8
+  }
 };
 
 /**
@@ -24,7 +51,7 @@ export const getDepartmentForIngredient = (item: string): string => {
   
   const itemName = item.toLowerCase();
   
-  for (const [department, pattern] of Object.entries(DEPARTMENT_PATTERNS)) {
+  for (const [department, { pattern }] of Object.entries(DEPARTMENT_DEFINITIONS)) {
     if (pattern.test(itemName)) {
       return department;
     }
@@ -65,13 +92,9 @@ export function groupIngredientsByDepartment(ingredients: Ingredient[]): Record<
  * Get the recommended order for displaying departments
  * @returns Array of department names in display order
  */
-export const getDepartmentDisplayOrder = (): string[] => [
-  'Produce',
-  'Meat & Seafood',
-  'Dairy & Eggs',
-  'Bakery',
-  'Pantry',
-  'Frozen',
-  'Beverages',
-  'Other'
-];
+export const getDepartmentDisplayOrder = (): string[] => {
+  // Sort departments by their defined order
+  return Object.entries(DEPARTMENT_DEFINITIONS)
+    .sort(([, a], [, b]) => a.order - b.order)
+    .map(([dept]) => dept);
+};

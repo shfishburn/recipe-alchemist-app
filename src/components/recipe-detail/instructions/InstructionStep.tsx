@@ -2,45 +2,35 @@
 import React, { memo, useCallback } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
-import { StepReaction } from '@/hooks/use-recipe-science';
-import type { StepCategory } from '../common/StepCategoryLabel';
+import type { RecipeStep, StepToggleHandler } from '@/types/recipe-steps';
 
-export interface InstructionStepProps {
-  step: string;
-  index: number;
-  isCompleted: boolean;
-  toggleStep: (index: number) => void;
-  stepReaction: StepReaction | null;
+interface InstructionStepProps {
+  step: RecipeStep;
   isLastStep: boolean;
+  toggleStep: StepToggleHandler;
   className?: string;
 }
 
 // Use memo to prevent unnecessary re-renders
 export const InstructionStep = memo(function InstructionStep({ 
   step, 
-  index, 
-  isCompleted, 
-  toggleStep,
-  stepReaction,
   isLastStep,
+  toggleStep,
   className
 }: InstructionStepProps) {
   // Memoize the toggle handler to prevent recreation on each render
-  const handleToggle = useCallback(() => toggleStep(index), [toggleStep, index]);
-  
-  // Extract cooking method as step category if available
-  const stepCategory = stepReaction?.cooking_method as StepCategory | undefined;
+  const handleToggle = useCallback(() => toggleStep(step.index), [toggleStep, step.index]);
   
   return (
     <li className={cn("group", className)}>
       <StepDisplay
-        stepNumber={index + 1}
-        stepText={step}
-        isCompleted={isCompleted}
+        stepNumber={step.index + 1}
+        stepText={step.text}
+        isCompleted={step.isCompleted}
         onToggleComplete={handleToggle}
-        stepReaction={stepReaction}
+        stepReaction={step.reaction}
         variant="instruction"
-        stepCategory={stepCategory}
+        stepCategory={step.category}
       />
       
       {!isLastStep && <Separator className="my-6" />}

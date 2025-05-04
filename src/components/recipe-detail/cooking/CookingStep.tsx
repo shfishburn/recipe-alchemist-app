@@ -1,41 +1,29 @@
 
 import React, { memo } from 'react';
-import { StepDisplay, type StepDisplayProps } from '../common/StepDisplay';
-import { StepReaction } from '@/hooks/use-recipe-science';
-import type { StepCategory } from '../common/StepCategoryLabel';
+import { StepDisplay } from '../common/StepDisplay';
+import type { RecipeStep } from '@/types/recipe-steps';
 
 export interface CookingStepProps {
-  stepNumber: number;
-  instruction: string;
-  isCompleted: boolean;
+  step: RecipeStep;
   onToggleComplete: () => void;
-  stepReaction?: StepReaction | null;
-  stepCategory?: StepCategory | string;
   className?: string;
 }
 
 export const CookingStep = memo(function CookingStep({ 
-  stepNumber, 
-  instruction, 
-  isCompleted, 
+  step, 
   onToggleComplete,
-  stepReaction,
-  stepCategory,
   className
 }: CookingStepProps) {
-  // We derive stepCategory from stepReaction if it's not explicitly provided
-  const effectiveStepCategory = stepCategory || (stepReaction?.cooking_method as StepCategory | undefined);
-  
   return (
     <div className={cn("mb-6", className)}>
       <StepDisplay
-        stepNumber={stepNumber}
-        stepText={instruction}
-        isCompleted={isCompleted}
+        stepNumber={step.index + 1}
+        stepText={step.text}
+        isCompleted={step.isCompleted}
         onToggleComplete={onToggleComplete}
-        stepReaction={stepReaction}
+        stepReaction={step.reaction}
         variant="cooking"
-        stepCategory={effectiveStepCategory}
+        stepCategory={step.category}
       />
     </div>
   );
