@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Beaker, BookOpen } from "lucide-react";
+import { Loader2, Beaker } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -63,7 +63,7 @@ export function RecipeAnalysis({ recipe, isOpen, onToggle, onRecipeUpdated }: Re
           return [];
         }
         
-        return data as ReactionItem[];
+        return (data || []) as ReactionItem[];
       } catch (err) {
         console.error('Error in query execution:', err);
         return [];
@@ -285,9 +285,13 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
   // Extract content from analysis response with improved fallbacks
   const extractAnalysisContent = useCallback(() => {
+    // First check for pre-existing notes in the recipe
+    const existingNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0;
+    
+    // If we don't have analysis data, fall back to recipe notes
     if (!analysis) {
       return { 
-        chemistry: recipe.science_notes?.length > 0 ? recipe.science_notes.join('\n\n') : null,
+        chemistry: existingNotes ? recipe.science_notes.join('\n\n') : null,
         techniques: null,
         troubleshooting: null
       };
@@ -329,19 +333,18 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     };
 
     // Extract chemistry section with more robust fallbacks
-    const chemistry = analysis.science_notes && analysis.science_notes.length > 0
+    const chemistry = (analysis.science_notes && Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0)
       ? analysis.science_notes.join('\n\n')
       : extractSectionFromText(analysis.textResponse, "(Chemistry|Chemical|Science|Maillard|Reaction)")
-        || recipe.science_notes?.join('\n\n')
-        || null;
+        || (existingNotes ? recipe.science_notes.join('\n\n') : null);
     
     // Extract techniques section
-    const techniques = analysis.techniques && analysis.techniques.length > 0
+    const techniques = (analysis.techniques && Array.isArray(analysis.techniques) && analysis.techniques.length > 0)
       ? analysis.techniques.join('\n\n')
       : extractSectionFromText(analysis.textResponse, "(Technique|Method|Cooking|Temperature)");
     
     // Extract troubleshooting section
-    const troubleshooting = analysis.troubleshooting && analysis.troubleshooting.length > 0
+    const troubleshooting = (analysis.troubleshooting && Array.isArray(analysis.troubleshooting) && analysis.troubleshooting.length > 0)
       ? analysis.troubleshooting.join('\n\n')
       : extractSectionFromText(analysis.textResponse, "(Troubleshoot|Problem|Issue|Common)");
     
@@ -357,9 +360,13 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         <h3 className="text-lg font-medium text-gray-900 mb-3">Step-by-Step Reaction Analysis</h3>
         <div className="space-y-6">
           {reactionData.map((reaction, index) => {
+            // Skip entries without step text
             if (!reaction.step_text) return null;
             
+            // Safely access reaction types
             const reactionTypes = Array.isArray(reaction.reactions) ? reaction.reactions : [];
+            
+            // Safely access reaction details
             const reactionDetails = Array.isArray(reaction.reaction_details) && reaction.reaction_details.length > 0 
               ? reaction.reaction_details[0] 
               : '';
@@ -400,14 +407,23 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
 
   // Determine if there's any analysis content available
   const hasAnyAnalysisContent = 
-    (chemistry && chemistry.length > 0) || 
-    (techniques && techniques.length > 0) || 
-    (troubleshooting && troubleshooting.length > 0) ||
+    (chemistry !== null && chemistry !== undefined) || 
+    (techniques !== null && techniques !== undefined) || 
+    (troubleshooting !== null && troubleshooting !== undefined) ||
     (analysis?.textResponse && analysis.textResponse.length > 50) ||
     (reactionData && reactionData.length > 0);
 
   // Check if we should show the analysis prompt
-  const showAnalysisPrompt = !analysis && !isLoading && !reactionData.length && !isAnalyzing;
+  const showAnalysisPrompt = (!analysis && !isLoading && (!reactionData || reactionData.length === 0) && !isAnalyzing) || 
+    (!hasAnyAnalysisContent && !isAnalyzing && !isLoading && !isLoadingReactions);
+
+  // Show only section headers that have content
+  const hasChemistry = chemistry !== null && chemistry !== undefined && chemistry.length > 0;
+  const hasTechniques = techniques !== null && techniques !== undefined && techniques.length > 0;
+  const hasTroubleshooting = troubleshooting !== null && troubleshooting !== undefined && troubleshooting.length > 0;
+  const hasReactions = reactionData && reactionData.length > 0;
+  const hasRawResponse = analysis?.textResponse && analysis.textResponse.length > 50 &&
+    !hasChemistry && !hasTechniques && !hasTroubleshooting;
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle} className="mt-6">
@@ -470,8 +486,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               </div>
             ) : hasAnyAnalysisContent ? (
               <div className="space-y-6">
-                {/* Chemistry Section */}
-                {chemistry && (
+                {/* Chemistry Section - only show if we have content */}
+                {hasChemistry && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Chemistry</h3>
                     <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg">
@@ -480,8 +496,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                   </div>
                 )}
                 
-                {/* Techniques Section */}
-                {techniques && (
+                {/* Techniques Section - only show if we have content */}
+                {hasTechniques && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Techniques</h3>
                     <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg">
@@ -490,8 +506,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                   </div>
                 )}
                 
-                {/* Troubleshooting Section */}
-                {troubleshooting && (
+                {/* Troubleshooting Section - only show if we have content */}
+                {hasTroubleshooting && (
                   <div className="mb-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Troubleshooting</h3>
                     <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg">
@@ -500,11 +516,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                   </div>
                 )}
                 
-                {/* Reaction Analysis Section */}
-                {reactionsContent}
+                {/* Reaction Analysis Section - only show if we have content */}
+                {hasReactions && reactionsContent}
                 
                 {/* Fallback when structured sections aren't extracted */}
-                {!chemistry && !techniques && !troubleshooting && !reactionsContent && analysis?.textResponse && (
+                {hasRawResponse && (
                   <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg">
                     <FormattedText text={analysis.textResponse} preserveWhitespace={true} />
                   </div>

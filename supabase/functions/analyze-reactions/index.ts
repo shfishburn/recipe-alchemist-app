@@ -137,20 +137,45 @@ ${instructions.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")}
 
     // Map parsed analysis to database records and validate required fields
     const inserts = parsed.map((step: any, idx: number) => {
-      // Ensure step_text is never null (critical fix)
-      const stepText = typeof step.step === 'string' && step.step.trim().length > 0 
-        ? step.step 
-        : instructions[idx] || `Step ${idx + 1}`; // Fallback to original instruction or generic step name
+      // Ensure we always have valid data to insert by providing fallbacks
+      const stepIndex = idx;
+      
+      // Critical fix: Ensure step_text is never null by using multiple fallbacks
+      let stepText = "";
+      
+      // Try to get step text from multiple possible sources with strict validation
+      if (typeof step.step === 'string' && step.step.trim().length > 0) {
+        stepText = step.step.trim();
+      } else if (instructions[idx] && typeof instructions[idx] === 'string') {
+        stepText = instructions[idx].trim();
+      } else {
+        // Last resort fallback - create a generic step name that won't be null
+        stepText = `Step ${idx + 1}`;
+      }
+      
+      // Ensure reactions are always an array
+      const reactions = Array.isArray(step.reactions) ? step.reactions : [];
+      
+      // Ensure reaction_details is always a string in an array
+      let reactionDetails;
+      if (typeof step.reaction_details === 'string') {
+        reactionDetails = [step.reaction_details];
+      } else if (Array.isArray(step.reaction_details)) {
+        reactionDetails = step.reaction_details;
+      } else {
+        reactionDetails = ["No detailed analysis available"];
+      }
+      
+      // Ensure confidence is always a valid number
+      const confidence = typeof step.confidence === 'number' ? step.confidence : 0.8;
       
       return {
         recipe_id,
-        step_index: idx,
+        step_index: stepIndex,
         step_text: stepText,
-        reactions: Array.isArray(step.reactions) ? step.reactions : [],
-        reaction_details: Array.isArray(step.reaction_details) 
-          ? step.reaction_details 
-          : [step.reaction_details || ""],
-        confidence: typeof step.confidence === 'number' ? step.confidence : 0.8,
+        reactions: reactions,
+        reaction_details: reactionDetails,
+        confidence: confidence,
         ai_model: "gpt-4o",
         version: "1.0"
       };
@@ -172,8 +197,21 @@ ${instructions.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")}
 
     // Collect summarized scientific notes for the recipe
     const scienceNotes = parsed.flatMap((step: any) => {
-      if (step.reaction_details && step.reactions && step.reactions.length > 0) {
-        return [`${step.step || ''} — ${step.reaction_details} (${step.reactions.join(", ")})`];
+      // Ensure we have valid data to create a note
+      if (step && step.reaction_details && step.reactions && step.reactions.length > 0) {
+        // Get the step text from step, or fall back to the original instruction
+        const stepText = (typeof step.step === 'string' && step.step.trim()) 
+          ? step.step.trim() 
+          : (instructions[parsed.indexOf(step)] || `Step ${parsed.indexOf(step) + 1}`);
+          
+        // Get the reaction details safely
+        const details = typeof step.reaction_details === 'string' 
+          ? step.reaction_details 
+          : Array.isArray(step.reaction_details) && step.reaction_details.length > 0
+            ? step.reaction_details[0]
+            : "Chemical reaction identified";
+            
+        return [`${stepText} — ${details} (${step.reactions.join(", ")})`];
       }
       return [];
     });

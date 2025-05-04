@@ -23,18 +23,18 @@ export function CookingStep({
   showingScience
 }: CookingStepProps) {
   // Create handler to prevent bubbling for science toggle with better touch handling
-  const handleScienceToggle = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleScienceToggle = React.useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (onToggleScience) {
       e.stopPropagation();
       e.preventDefault();
       onToggleScience();
     }
-  };
+  }, [onToggleScience]);
   
   // Handle step click with better event handling
-  const handleStepClick = () => {
+  const handleStepClick = React.useCallback(() => {
     onToggleComplete();
-  };
+  }, [onToggleComplete]);
   
   return (
     <div className="mb-4">
@@ -50,7 +50,7 @@ export function CookingStep({
           isCompleted={isCompleted}
           hasScience={!!hasScience}
           showingScience={!!showingScience}
-          onToggleScience={handleScienceToggle}
+          onToggleScience={hasScience ? handleScienceToggle : undefined}
         />
         
         {/* Step content */}
