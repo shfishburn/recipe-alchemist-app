@@ -33,6 +33,29 @@ export const InstructionStep = memo(function InstructionStep({
         stepCategory={step.category}
       />
       
+      {/* Display science notes if available */}
+      {step.scienceNotes && step.scienceNotes.length > 0 && (
+        <div className="ml-8 mt-2 mb-3">
+          {step.scienceNotes.map((note, i) => (
+            <div 
+              key={i} 
+              className="text-sm text-recipe-blue bg-blue-50 p-2 rounded border border-blue-100 mb-1"
+            >
+              {note}
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Display reaction details if available */}
+      {step.reaction && step.reaction.reaction_details && step.reaction.reaction_details.length > 0 && (
+        <div className="ml-8 mt-2 mb-3 text-sm text-muted-foreground">
+          <div className="p-2 rounded bg-gray-50 border border-gray-100">
+            {step.reaction.reaction_details[0]}
+          </div>
+        </div>
+      )}
+      
       {!isLastStep && <Separator className="my-6" />}
     </li>
   );

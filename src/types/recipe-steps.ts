@@ -11,6 +11,7 @@ export interface RecipeStep {
   isCompleted: boolean;
   reaction?: StepReaction | null;
   category?: StepCategory | string;
+  scienceNotes?: string[]; // Added science notes array
 }
 
 /**

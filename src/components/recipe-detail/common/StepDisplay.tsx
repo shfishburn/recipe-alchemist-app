@@ -1,6 +1,5 @@
 
 import React, { memo, useCallback } from 'react';
-import { CheckCircle2, Circle } from 'lucide-react';
 import { StepReaction } from '@/hooks/use-recipe-science';
 import { StepCategoryLabel, StepCategory } from './StepCategoryLabel';
 
@@ -43,8 +42,6 @@ export const StepDisplay = memo(function StepDisplay({
     ? "text-base sm:text-lg"
     : "text-sm sm:text-base";
   
-  const checkboxSize = isCooking ? "h-6 w-6" : "h-5 w-5";
-  
   const stepNumberStyle = isCooking 
     ? "hidden" 
     : "text-muted-foreground font-medium mr-1.5";
@@ -55,23 +52,22 @@ export const StepDisplay = memo(function StepDisplay({
       isCompleted ? "text-muted-foreground" : "", 
       className
     )}>
-      <button
+      <div 
         onClick={handleToggle}
-        className="flex-shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 rounded-full"
+        className="flex-shrink-0 mt-0.5 cursor-pointer focus:outline-none touch-target-lg"
         aria-label={isCompleted ? "Mark as incomplete" : "Mark as complete"}
       >
-        {isCompleted ? (
-          <CheckCircle2 className={cn(checkboxSize, "text-green-500")} />
-        ) : (
-          <Circle className={cn(checkboxSize, "text-muted-foreground")} />
-        )}
-      </button>
+        {/* No icons - just an empty clickable area */}
+      </div>
       
       <div className="flex-1">
-        <div className={cn(
-          "flex flex-wrap gap-2 items-start mb-1",
-          textStyle
-        )}>
+        <div 
+          className={cn(
+            "flex flex-wrap gap-2 items-start mb-1 cursor-pointer",
+            textStyle
+          )}
+          onClick={handleToggle}
+        >
           <span className={stepNumberStyle}>{stepNumber}.</span>
           <span className={cn(
             "flex-1", 

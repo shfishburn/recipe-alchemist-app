@@ -25,6 +25,15 @@ export const CookingStep = memo(function CookingStep({
         variant="cooking"
         stepCategory={step.category}
       />
+      
+      {/* Display reaction details if available */}
+      {step.reaction && step.reaction.reaction_details && step.reaction.reaction_details.length > 0 && (
+        <div className="ml-8 mt-2 mb-3 text-sm">
+          <div className="p-2 rounded bg-blue-50 border border-blue-100">
+            {step.reaction.reaction_details[0]}
+          </div>
+        </div>
+      )}
     </div>
   );
 });

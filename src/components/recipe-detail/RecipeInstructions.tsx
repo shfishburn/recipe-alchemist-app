@@ -24,7 +24,7 @@ export const RecipeInstructions = memo(function RecipeInstructions({
   className
 }: RecipeInstructionsProps) {
   const { toggleStep, isStepCompleted } = useStepCompletion();
-  const { stepReactions } = useRecipeScience(recipe);
+  const { stepReactions, scienceNotes } = useRecipeScience(recipe);
   
   // Memoize hasInstructions check to prevent unnecessary evaluations
   const hasInstructions = useMemo(() => 
@@ -39,15 +39,31 @@ export const RecipeInstructions = memo(function RecipeInstructions({
     return recipe.instructions.map((text, index) => {
       const stepReaction = stepReactions?.find(r => r.step_index === index);
       
+      // Find any science notes that might relate to this step
+      // This is a simple matching strategy - can be improved with more sophisticated matching
+      let relevantNotes = [];
+      if (scienceNotes && scienceNotes.length > 0) {
+        // Try to find notes that mention keywords from this step
+        const keywords = text.toLowerCase().split(' ')
+          .filter(word => word.length > 4)
+          .map(word => word.replace(/[^\w]/g, ''));
+          
+        relevantNotes = scienceNotes.filter(note => {
+          const noteLower = note.toLowerCase();
+          return keywords.some(keyword => noteLower.includes(keyword));
+        });
+      }
+      
       return {
         text,
         index,
         isCompleted: isStepCompleted(index),
         reaction: stepReaction || null,
-        category: stepReaction?.cooking_method
+        category: stepReaction?.cooking_method,
+        scienceNotes: relevantNotes
       };
     });
-  }, [recipe.instructions, stepReactions, isStepCompleted]);
+  }, [recipe.instructions, stepReactions, isStepCompleted, scienceNotes]);
   
   // Memoize the instructions rendering for better performance
   const instructionsList = useMemo(() => {
