@@ -80,7 +80,20 @@ export function NutritionConfidenceIndicator({
   };
   
   const getHowItWorksText = () => {
-    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence rating indicates how reliable we think these values are based on the quality of ingredient data.";
+    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence score (70%) indicates moderate reliability in these values based on ingredient data quality.";
+  };
+  
+  const getQualityExplanation = () => {
+    switch (confidence) {
+      case 'high': 
+        return "High confidence means most ingredients were accurately matched to our nutrition database.";
+      case 'medium': 
+        return "Medium confidence means some ingredients may have been difficult to match precisely to our nutrition database.";
+      case 'low': 
+        return "Low confidence means many ingredients couldn't be matched accurately, so these values are rough estimates.";
+      default:
+        return "";
+    }
   };
   
   const badge = (
@@ -105,9 +118,10 @@ export function NutritionConfidenceIndicator({
             <CirclePercent className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs p-4">
+        <TooltipContent side="top" className="max-w-xs p-4 z-50">
           <div className="space-y-2">
             <p className="font-semibold">Nutrition Confidence: {formatScore(confidenceScore)}</p>
+            <p className="text-sm">{getQualityExplanation()}</p>
             <p className="text-sm text-muted-foreground">{getHowItWorksText()}</p>
             <p className="text-sm text-muted-foreground">{getLimitationText()}</p>
             {unmatchedIngredients.length > 0 && (
