@@ -30,7 +30,7 @@ export function CookingStep({
         onToggleComplete={onToggleComplete}
         stepReaction={stepReaction}
         variant="cooking"
-        stepCategory={stepCategory || stepReaction?.cooking_method}
+        stepCategory={stepCategory || (stepReaction?.cooking_method as StepCategory | undefined)}
       />
     </div>
   );

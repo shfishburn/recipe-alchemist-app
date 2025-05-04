@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { 
-  Knife, 
+  ChefHat, 
   Utensils, 
-  PotFood, 
-  PanFood, 
+  Flame,
+  Cooking,
   EggFried,
   Carrot,
-  AppleLogo as Apple
+  Apple
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,22 +29,22 @@ interface StepCategoryLabelProps {
 // Map categories to icons and colors
 const categoryConfig: Record<string, { icon: React.ReactNode, color: string, label: string }> = {
   prep: {
-    icon: <Knife className="h-3 w-3" />,
+    icon: <ChefHat className="h-3 w-3" />,
     color: 'bg-blue-50 text-blue-700 border-blue-200',
     label: 'Prep'
   },
   cooking: {
-    icon: <PotFood className="h-3 w-3" />,
+    icon: <Flame className="h-3 w-3" />,
     color: 'bg-orange-50 text-orange-700 border-orange-200',
     label: 'Cooking'
   },
   baking: {
-    icon: <PotFood className="h-3 w-3" />,
+    icon: <Cooking className="h-3 w-3" />,
     color: 'bg-amber-50 text-amber-700 border-amber-200',
     label: 'Baking'
   },
   frying: {
-    icon: <PanFood className="h-3 w-3" />,
+    icon: <Cooking className="h-3 w-3" />,
     color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     label: 'Frying'
   },

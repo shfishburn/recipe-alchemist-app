@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
@@ -10,6 +9,7 @@ export interface StepReaction {
   reactions: string[];
   reaction_details: string[];
   confidence: number;
+  cooking_method?: string; // Added cooking_method property
 }
 
 export interface RecipeScienceData {
