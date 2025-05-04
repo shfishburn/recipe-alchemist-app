@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useShoppingListSettings } from '@/hooks/use-shopping-list-settings';
 import type { Recipe } from '@/types/recipe';
 
-export function useShoppingListActions(recipe: any = null) {
+export function useShoppingListActions(recipe: Recipe | null = null) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -24,6 +24,11 @@ export function useShoppingListActions(recipe: any = null) {
   const handleCreateNewList = async (listName: string, usePackageSizesOverride?: boolean) => {
     try {
       setIsLoading(true);
+      
+      if (!recipe) {
+        throw new Error('No recipe provided');
+      }
+      
       // Use the override value if provided, otherwise use the setting from useShoppingListSettings
       const usePackageSizesValue = usePackageSizesOverride !== undefined 
         ? usePackageSizesOverride 
@@ -47,6 +52,14 @@ export function useShoppingListActions(recipe: any = null) {
       }
       
       return result;
+    } catch (error) {
+      console.error('Error in createNewList:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create shopping list",
+        variant: "destructive",
+      });
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
@@ -56,6 +69,11 @@ export function useShoppingListActions(recipe: any = null) {
   const handleAddToExistingList = async (listId: string) => {
     try {
       setIsLoading(true);
+      
+      if (!recipe) {
+        throw new Error('No recipe provided');
+      }
+      
       const result = await addToExistingList(listId, recipe, usePackageSizes);
       
       if (result.success) {
@@ -74,6 +92,14 @@ export function useShoppingListActions(recipe: any = null) {
       }
       
       return result;
+    } catch (error) {
+      console.error("Error in addToExistingList:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update shopping list",
+        variant: "destructive",
+      });
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }

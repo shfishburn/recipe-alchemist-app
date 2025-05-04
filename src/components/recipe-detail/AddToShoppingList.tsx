@@ -1,53 +1,36 @@
 
-import React from 'react';
-import type { Recipe } from '@/hooks/use-recipe-detail';
-import { useAddToShoppingList } from './shopping-list/useAddToShoppingList';
-import { AddToListSheet } from './shopping-list/AddToListSheet';
-import { AddSuccessDialog } from './shopping-list/AddSuccessDialog';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ShoppingBag } from 'lucide-react';
+import { AddToShoppingListDialog } from './shopping-list/AddToShoppingListDialog';
+import type { Recipe } from '@/types/recipe';
 
 interface AddToShoppingListProps {
   recipe: Recipe;
 }
 
 export function AddToShoppingList({ recipe }: AddToShoppingListProps) {
-  const {
-    newListName,
-    setNewListName,
-    selectedListId,
-    setSelectedListId,
-    sheetOpen,
-    handleSheetOpenChange,
-    successDialogOpen,
-    setSuccessDialogOpen,
-    shoppingLists,
-    isFetching,
-    handleSubmit,
-    handleTriggerClick,
-    isLoading
-  } = useAddToShoppingList(recipe);
+  const [open, setOpen] = useState(false);
   
   return (
-    <div className="relative">
-      <AddToListSheet 
-        open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-        isLoading={isLoading}
-        recipeTitle={recipe.title}
-        newListName={newListName}
-        onNewListNameChange={setNewListName}
-        selectedListId={selectedListId}
-        onSelectedListChange={setSelectedListId}
-        shoppingLists={shoppingLists}
-        isFetching={isFetching}
-        onSubmit={handleSubmit}
-        onTriggerClick={handleTriggerClick}
-      />
+    <>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="flex items-center gap-2 w-full"
+        onClick={() => setOpen(true)}
+      >
+        <ShoppingBag className="h-4 w-4" />
+        <span>Add to Shopping List</span>
+      </Button>
       
-      <AddSuccessDialog 
-        open={successDialogOpen} 
-        setOpen={setSuccessDialogOpen}
-        recipeTitle={recipe.title}
+      <AddToShoppingListDialog
+        recipe={recipe}
+        open={open}
+        onOpenChange={setOpen}
+        data-testid="shopping-list-dialog"
       />
-    </div>
+    </>
   );
 }
