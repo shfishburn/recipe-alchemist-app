@@ -2,7 +2,6 @@
 import React, { memo } from 'react';
 import { StepDisplay } from '../common/StepDisplay';
 import type { RecipeStep } from '@/types/recipe-steps';
-import { StepReaction } from '@/hooks/use-recipe-science';
 
 export interface CookingStepProps {
   step: RecipeStep;

@@ -5,7 +5,7 @@ import { AnalysisChemistrySection } from './AnalysisChemistrySection';
 import { AnalysisTechniquesSection } from './AnalysisTechniquesSection';
 import { AnalysisTroubleshootingSection } from './AnalysisTroubleshootingSection';
 import { AnalysisFallbackSection } from './AnalysisFallbackSection';
-import { ReactionsList } from '../ReactionsList';
+import { ReactionsList } from '../reactions/ReactionsList';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
