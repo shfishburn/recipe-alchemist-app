@@ -11,9 +11,7 @@ export function CookieConsent() {
   const { isOpen, setIsOpen, hasConsented, acceptAll, declineAll, acceptSelected } = useCookieConsent();
   const isMobile = useIsMobile();
   
-  // Only render the component if user hasn't consented yet and banner should be shown
-  if (hasConsented || !isOpen) return null;
-  
+  // Define state hooks BEFORE any conditional returns to maintain consistent hook calls
   const [settings, setSettings] = useState({
     essential: true,
     preferences: false,
@@ -28,6 +26,11 @@ export function CookieConsent() {
   const handleCustomize = () => {
     acceptSelected(settings);
   };
+  
+  // Only render the component content if user hasn't consented yet and banner should be shown
+  if (hasConsented || !isOpen) {
+    return null; // Early return after all hooks are defined
+  }
 
   const cookieOptions = (
     <div className="py-4 space-y-4">
@@ -122,7 +125,7 @@ export function CookieConsent() {
       {/* Desktop UI - Dialog */}
       {!isMobile && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="sm:max-w-[500px] p-6">
+          <DialogContent className={`${isMobile ? "w-[95vw] max-w-md p-6" : "sm:max-w-[500px] p-6"}`}>
             <DialogHeader className="pb-2">
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Cookie className="h-5 w-5" />
