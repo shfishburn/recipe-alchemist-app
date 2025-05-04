@@ -12,6 +12,22 @@ interface ShoppingListItemViewProps {
 }
 
 export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListItemViewProps) {
+  // Ensure we don't have any conditional hook calls
+  // All component logic should be executed in the same order on every render
+  
+  // Handle click with proper event stopping
+  const handleItemClick = (e: React.MouseEvent) => {
+    // Prevent toggling if clicking on the delete button
+    if ((e.target as HTMLElement).closest('button')) return;
+    onToggle();
+  };
+  
+  // Handle delete with proper event stopping
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
+  };
+
   return (
     <div 
       className={cn(
@@ -21,11 +37,7 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
           : "hover:bg-muted/50",
         "touch-feedback-optimized"
       )}
-      onClick={(e) => {
-        // Prevent toggling if clicking on the delete button
-        if ((e.target as HTMLElement).closest('button')) return;
-        onToggle();
-      }}
+      onClick={handleItemClick}
     >
       <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium">
         {item.checked ? (
@@ -72,10 +84,7 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
+          onClick={handleDelete}
           className="h-8 w-8 p-0 rounded-full touch-target"
         >
           <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />

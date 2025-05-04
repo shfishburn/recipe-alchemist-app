@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Apple, Beef, Egg, Bread, Package2, Snowflake, Coffee } from 'lucide-react';
+import { Apple, Beef, Egg, BaggageClaim, Package2, Snowflake, Coffee } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
 // Get appropriate icon for a department
@@ -20,7 +20,7 @@ export function getDepartmentIcon(department: string): LucideIcon | null {
   }
   
   if (deptLower.includes('bakery') || deptLower.includes('bread')) {
-    return Bread;
+    return BaggageClaim; // Replaced Bread with BaggageClaim as Bread is not available in lucide-react
   }
   
   if (deptLower.includes('pantry') || deptLower.includes('dry')) {
