@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check, Square, Atom } from 'lucide-react';
+import { Atom } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CookingStepProps {
@@ -48,53 +48,39 @@ export function CookingStep({
   
   return (
     <div className="mb-4">
-      <div className="flex items-start">
-        {/* Compact step number */}
-        <div className="flex-shrink-0 flex items-center justify-center h-7 w-7 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium mr-3">
-          {stepNumber}
-        </div>
+      <div 
+        onClick={onToggleComplete}
+        className={`flex items-start cursor-pointer p-3 rounded-md transition-colors ${
+          isCompleted ? "bg-green-50 hover:bg-green-100" : "hover:bg-muted/50"
+        }`}
+      >
+        {/* Minimal step number */}
+        <span className="flex-shrink-0 mr-3 font-medium text-muted-foreground">
+          {stepNumber}.
+        </span>
         
         {/* Step content */}
         <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">Step {stepNumber}</h2>
-            <div className="flex items-center space-x-1">
-              {/* Science button - only if has science */}
-              {hasScience && onToggleScience && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onToggleScience}
-                  className="h-8 w-8"
-                  title={showingScience ? "Hide Science" : "View Science"}
-                >
-                  <Atom className="h-4 w-4 text-blue-600" />
-                </Button>
-              )}
-              
-              {/* Complete button */}
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onToggleComplete}
-                className="flex items-center gap-1 h-8"
-              >
-                {isCompleted ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Square className="h-4 w-4" />
-                )}
-                <span className="text-xs sm:text-sm">
-                  {isCompleted ? "Done" : "Mark Done"}
-                </span>
-              </Button>
-            </div>
-          </div>
-          
-          <div className="rounded-lg border p-4 bg-background mt-3">
-            <p className="text-lg leading-relaxed">
+          <div className="flex items-start justify-between">
+            <p className={`text-lg leading-relaxed ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
               {renderInstructionWithBoldIngredients(instruction)}
             </p>
+            
+            {/* Science button - only if has science */}
+            {hasScience && onToggleScience && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleScience();
+                }}
+                className="h-8 w-8 ml-2 flex-shrink-0"
+                title={showingScience ? "Hide Science" : "View Science"}
+              >
+                <Atom className="h-4 w-4 text-blue-600" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, ChevronDown, ChevronUp, Check, Atom } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, Atom } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/hooks/use-recipe-detail';
@@ -60,8 +60,8 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
     }));
   };
   
-  const toggleNotes = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleNotes = (index: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setExpandedNotes(prev => ({
       ...prev,
       [index]: !prev[index]
@@ -140,21 +140,22 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                   return (
                     <li key={index} className="group">
                       <div 
-                        className={`flex flex-col gap-2 p-3 rounded-md transition-colors ${
+                        onClick={() => toggleStep(index)}
+                        className={`flex flex-col gap-2 p-3 rounded-md transition-colors cursor-pointer ${
                           completedSteps[index] 
                             ? "bg-green-50 hover:bg-green-100" 
                             : "hover:bg-muted/50"
                         }`}
                       >
                         <div className="flex items-start">
-                          {/* Smaller, more compact step number */}
-                          <div 
-                            className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium text-sm mr-2"
+                          {/* Small, compact step number */}
+                          <span 
+                            className="flex-shrink-0 mr-3 font-medium text-muted-foreground"
                           >
-                            {index + 1}
-                          </div>
+                            {index + 1}.
+                          </span>
                           
-                          {/* Main instruction content with more space */}
+                          {/* Main instruction content */}
                           <div className="flex-1">
                             <p className={`leading-relaxed ${completedSteps[index] ? "line-through text-muted-foreground" : ""}`}>
                               {renderInstructionWithBoldIngredients(step)}
@@ -181,32 +182,18 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
                             )}
                           </div>
                           
-                          {/* Action buttons in a row, aligned to top right */}
-                          <div className="flex items-center gap-1 ml-2 flex-shrink-0">
-                            {/* Science button as icon only */}
-                            {hasReactions && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={(e) => toggleNotes(index, e)}
-                                title={expandedNotes[index] ? "Hide Science" : "View Science"}
-                              >
-                                <Atom className="h-4 w-4 text-blue-600" />
-                              </Button>
-                            )}
-                            
-                            {/* Mark complete button */}
-                            <Button 
-                              variant="ghost"
+                          {/* Science button - only if has reactions */}
+                          {hasReactions && (
+                            <Button
+                              onClick={(e) => toggleNotes(index, e)} 
+                              variant="ghost" 
                               size="icon"
-                              className="h-7 w-7"
-                              onClick={() => toggleStep(index)}
-                              title={completedSteps[index] ? "Mark Incomplete" : "Mark Complete"}
+                              className="h-7 w-7 ml-2 flex-shrink-0"
+                              title={expandedNotes[index] ? "Hide Science" : "View Science"}
                             >
-                              <Check className={`h-4 w-4 ${completedSteps[index] ? "text-green-500" : "text-gray-400"}`} />
+                              <Atom className="h-4 w-4 text-blue-600" />
                             </Button>
-                          </div>
+                          )}
                         </div>
                         
                         {/* Science note content */}
