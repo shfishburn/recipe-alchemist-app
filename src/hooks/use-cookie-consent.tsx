@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 
@@ -65,10 +64,16 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
       } catch (e) {
         console.error('Error parsing cookie consent settings', e);
       }
+      // Make sure to keep the dialog closed if consent was already given
       setIsOpen(false);
     } else {
-      // If no consent cookie exists, show the banner
-      setIsOpen(true);
+      // If no consent cookie exists, show the banner after a short delay
+      // This prevents the dialog from appearing immediately during initial page load
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
     }
     
     setInitialized(true);

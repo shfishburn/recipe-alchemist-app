@@ -8,8 +8,11 @@ import { Check, Cookie } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function CookieConsent() {
-  const { isOpen, setIsOpen, acceptAll, declineAll, acceptSelected } = useCookieConsent();
+  const { isOpen, setIsOpen, hasConsented, acceptAll, declineAll, acceptSelected } = useCookieConsent();
   const isMobile = useIsMobile();
+  
+  // Only render the component if user hasn't consented yet
+  if (hasConsented) return null;
   
   const [settings, setSettings] = useState({
     essential: true,
@@ -94,7 +97,7 @@ export function CookieConsent() {
   return (
     <>
       {/* Mobile UI - Sheet */}
-      {isMobile && (
+      {isMobile && isOpen && (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
             <SheetHeader className="pb-2">
@@ -117,7 +120,7 @@ export function CookieConsent() {
       )}
 
       {/* Desktop UI - Dialog */}
-      {!isMobile && (
+      {!isMobile && isOpen && (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent className="sm:max-w-[500px] p-6">
             <DialogHeader className="pb-2">
