@@ -2,18 +2,20 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
+import { ShoppingListService } from '@/services/ShoppingListService';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
+import { useShoppingListSettingsStore } from '@/stores/shoppingListSettings';
 
 export function useCreateShoppingList() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { usePackageSizes } = useShoppingListSettingsStore();
 
   const createNewList = async (
     title: string, 
     recipe: Recipe, 
-    usePackageSizes: boolean = true
+    usePackageSizesOverride?: boolean
   ) => {
     try {
       setIsLoading(true);
@@ -24,9 +26,18 @@ export function useCreateShoppingList() {
         throw new Error('User not authenticated');
       }
 
-      // Convert recipe ingredients to shopping list items
-      console.log(`Creating list with package sizes: ${usePackageSizes ? "enabled" : "disabled"}`);
-      const items = await recipeIngredientsToShoppingItems(recipe.ingredients, recipe.id, usePackageSizes);
+      // Use the override value if provided, otherwise use the setting from store
+      const shouldUsePackageSizes = usePackageSizesOverride !== undefined 
+        ? usePackageSizesOverride 
+        : usePackageSizes;
+
+      // Convert recipe ingredients to shopping list items using our unified service
+      console.log(`Creating list with package sizes: ${shouldUsePackageSizes ? "enabled" : "disabled"}`);
+      const items = await ShoppingListService.ingredientsToShoppingItems(
+        recipe.ingredients, 
+        recipe.id, 
+        shouldUsePackageSizes
+      );
 
       // Create shopping list
       const { data, error } = await supabase

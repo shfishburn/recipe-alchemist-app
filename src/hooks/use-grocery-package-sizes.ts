@@ -1,19 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { GroceryPackageSize } from '@/services/ShoppingListService';
 
-export interface GroceryPackageSize {
-  id: string;
-  ingredient: string;
-  category: string;
-  package_sizes: number[];  // Changed from Json to number[]
-  package_unit: string;
-  standard_qty?: number;
-  standard_unit?: string;
-  metric_equiv?: string;
-  notes?: string;
-}
-
+/**
+ * Hook for fetching and managing grocery package sizes
+ */
 export function useGroceryPackageSizes() {
   const [packageSizes, setPackageSizes] = useState<GroceryPackageSize[]>([]);
   const [isLoading, setIsLoading] = useState(false);

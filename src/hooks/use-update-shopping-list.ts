@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { recipeIngredientsToShoppingItems } from '@/utils/ingredient-shopping-converter';
-import { useShoppingListSettings } from './use-shopping-list-settings';
+import { ShoppingListService } from '@/services/ShoppingListService';
+import { useShoppingListSettingsStore } from '@/stores/shoppingListSettings';
 import type { Recipe } from '@/types/recipe';
 import type { ShoppingListItem } from '@/types/shopping-list';
 import type { Json } from '@/integrations/supabase/types';
@@ -11,7 +11,7 @@ import type { Json } from '@/integrations/supabase/types';
 export function useUpdateShoppingList() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { usePackageSizes } = useShoppingListSettings();
+  const { usePackageSizes } = useShoppingListSettingsStore();
 
   // Add recipe ingredients to an existing shopping list
   const addToExistingList = async (
@@ -22,8 +22,8 @@ export function useUpdateShoppingList() {
     try {
       setIsLoading(true);
       
-      // Use the override value if provided, otherwise use the setting from useShoppingListSettings
-      const usePackageSizesValue = usePackageSizesOverride !== undefined 
+      // Use the override value if provided, otherwise use the setting from store
+      const shouldUsePackageSizes = usePackageSizesOverride !== undefined 
         ? usePackageSizesOverride 
         : usePackageSizes;
 
@@ -40,8 +40,12 @@ export function useUpdateShoppingList() {
       }
 
       // Convert recipe ingredients to shopping list items
-      console.log(`Adding recipe ingredients to list with package sizes: ${usePackageSizesValue ? "enabled" : "disabled"}`);
-      const newItems = await recipeIngredientsToShoppingItems(recipe.ingredients, recipe.id, usePackageSizesValue);
+      console.log(`Adding recipe ingredients to list with package sizes: ${shouldUsePackageSizes ? "enabled" : "disabled"}`);
+      const newItems = await ShoppingListService.ingredientsToShoppingItems(
+        recipe.ingredients, 
+        recipe.id, 
+        shouldUsePackageSizes
+      );
 
       // Combine with existing items, avoiding duplicates
       const existingItems = listData.items as ShoppingListItem[];
