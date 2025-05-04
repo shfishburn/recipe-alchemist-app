@@ -1,9 +1,15 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Trash2, Check } from 'lucide-react';
+import { Trash2, Check, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ShoppingListItem } from '@/types/shopping-list';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider
+} from "@/components/ui/tooltip";
 
 interface ShoppingListItemViewProps {
   item: ShoppingListItem;
@@ -12,9 +18,6 @@ interface ShoppingListItemViewProps {
 }
 
 export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListItemViewProps) {
-  // Ensure we don't have any conditional hook calls
-  // All component logic should be executed in the same order on every render
-  
   // Handle click with proper event stopping
   const handleItemClick = (e: React.MouseEvent) => {
     // Prevent toggling if clicking on the delete button
@@ -27,70 +30,82 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
     e.stopPropagation();
     onDelete();
   };
+  
+  // Format and standardize the notes display
+  const formatNotes = () => {
+    if (!item.notes) return null;
+    
+    // Standardize parentheses format
+    const notes = item.notes.startsWith('(') ? item.notes : `(${item.notes})`;
+    return <span className="text-gray-500 italic">{notes}</span>;
+  };
 
   return (
     <div 
       className={cn(
-        "flex items-start gap-3 p-2 rounded-md transition-colors",
+        "flex items-center gap-3 p-3 transition-colors",
         item.checked 
-          ? "bg-green-50 hover:bg-green-100" 
-          : "hover:bg-muted/50",
-        "touch-feedback-optimized"
+          ? "bg-green-50" 
+          : "hover:bg-gray-50",
+        "cursor-pointer"
       )}
       onClick={handleItemClick}
     >
-      <div className="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-recipe-blue/10 text-recipe-blue font-medium">
+      <div className={cn(
+        "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center",
+        item.checked ? "bg-green-100" : "bg-gray-100"
+      )}>
         {item.checked ? (
-          <Check className="h-4 w-4" />
+          <Check className="h-4 w-4 text-green-600" />
         ) : (
-          <span>•</span>
+          <div className="w-2 h-2 rounded-full bg-green-600" />
         )}
       </div>
       
-      <div className="flex-1 pt-0.5 flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <div className={cn(
-            "text-base font-medium",
-            item.checked && "line-through text-muted-foreground"
-          )}>
-            {item.name}
-          </div>
+      <div className="flex-grow min-w-0">
+        <div className={cn(
+          "flex items-baseline flex-wrap gap-x-1",
+          item.checked && "line-through text-gray-500"
+        )}>
+          <span className="font-medium">{item.name}</span>
           
-          <div className="flex flex-wrap items-center gap-1 text-sm">
-            <span className="text-muted-foreground">{item.quantity} {item.unit}</span>
-            {item.notes && (
-              <span className="text-muted-foreground italic">
-                ({item.notes})
-              </span>
+          <div className="text-sm text-gray-600">
+            {item.quantity && item.unit && (
+              <span className="mr-1">{item.quantity} {item.unit}</span>
             )}
+            {formatNotes()}
           </div>
           
-          {item.package_notes && (
-            <div className="text-sm text-primary-foreground/80 bg-primary/10 px-2 py-1 rounded mt-1 inline-block">
-              {item.package_notes}
-            </div>
+          {item.quality_indicators && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-blue-500 ml-1 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-sm">{item.quality_indicators}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
         
-        {item.checked && (
-          <Check className="h-5 w-5 text-green-500 mr-2" />
+        {item.package_notes && (
+          <div className="mt-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded inline-block">
+            {item.package_notes}
+          </div>
         )}
       </div>
       
-      <div className={cn(
-        "ml-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity",
-        "sm:opacity-0 touch-optimized:opacity-100"
-      )}>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleDelete}
-          className="h-8 w-8 p-0 rounded-full touch-target"
-        >
-          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-          <span className="sr-only">Delete</span>
-        </Button>
-      </div>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handleDelete}
+        className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-red-50"
+      >
+        <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
+        <span className="sr-only">Delete</span>
+      </Button>
     </div>
   );
 }

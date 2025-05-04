@@ -26,7 +26,7 @@ export function ShoppingListItemsView({
 }: ShoppingListItemsViewProps) {
   if (Object.keys(groupedItems).length === 0) {
     return (
-      <div className="py-6 text-center border rounded-md bg-muted/20">
+      <div className="py-8 text-center border rounded-lg bg-gray-50/50">
         <p className="text-base text-muted-foreground">No items in this shopping list yet.</p>
         <p className="text-sm mt-2 text-muted-foreground">
           Use the "Add New Item" button below to start adding items.
@@ -36,57 +36,57 @@ export function ShoppingListItemsView({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {Object.entries(groupedItems).map(([department, items]) => {
         const isExpanded = expandedDepts[department] !== false;
         const allChecked = items.every(item => item.checked);
+        const someChecked = items.some(item => item.checked);
+        const completedCount = items.filter(i => i.checked).length;
         
         return (
-          <div key={department} className="border rounded-md overflow-hidden">
-            <div className="flex items-center justify-between p-3 bg-muted/30">
+          <div key={department} className="rounded-lg overflow-hidden border shadow-sm">
+            <div 
+              className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 cursor-pointer"
+              onClick={() => onToggleDept(department)}
+            >
               <div className="flex items-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mr-2 h-8 w-8 p-0 rounded-full"
-                  onClick={() => onToggleDept(department)}
-                >
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  <span className="sr-only">{isExpanded ? 'Collapse' : 'Expand'} {department}</span>
-                </Button>
-                
+                {isExpanded ? 
+                  <ChevronDown className="h-5 w-5 text-green-600 mr-2" /> : 
+                  <ChevronUp className="h-5 w-5 text-green-600 mr-2" />
+                }
                 <div>
-                  <h3 className="font-medium text-base">{department}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {items.filter(i => i.checked).length} of {items.length} complete
+                  <h3 className="font-medium text-green-800">{department}</h3>
+                  <p className="text-xs text-green-700">
+                    {completedCount} of {items.length} complete
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center">
-                <Button
-                  variant={allChecked ? "outline" : "default"}
-                  size="sm"
-                  className="h-8 px-3 text-sm"
-                  onClick={() => onToggleDepartmentItems(department, !allChecked)}
-                >
-                  {allChecked ? (
-                    <>
-                      <Plus className="h-4 w-4 mr-1" /> 
-                      <span>Uncheck All</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4 mr-1" /> 
-                      <span>Complete All</span>
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                variant={allChecked ? "outline" : "default"}
+                size="sm"
+                className={`h-9 px-3 text-sm ${allChecked ? 'bg-white text-green-700 border-green-300 hover:bg-green-50' : 'bg-green-600 hover:bg-green-700'}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleDepartmentItems(department, !allChecked);
+                }}
+              >
+                {allChecked ? (
+                  <>
+                    <Plus className="h-4 w-4 mr-1" /> 
+                    <span>Uncheck All</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-1" /> 
+                    <span>Complete All</span>
+                  </>
+                )}
+              </Button>
             </div>
             
             {isExpanded && (
-              <div className="p-2 space-y-1">
+              <div className="divide-y divide-gray-100 bg-white">
                 {items.map((item) => (
                   <ShoppingListItemView 
                     key={`${item.name}-${item.unit}-${item.quantity}`}

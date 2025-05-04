@@ -20,17 +20,20 @@ export function ShoppingListNotes({ list }: ShoppingListNotesProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Shopping Tips */}
       {hasTips && (
-        <div className="p-4 bg-amber-50 rounded-md border border-amber-100">
-          <div className="flex items-center mb-3">
-            <ShoppingBag className="h-5 w-5 text-amber-600 mr-2" />
-            <h3 className="font-medium text-lg text-amber-800">Shopping Tips</h3>
+        <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 shadow-sm">
+          <div className="flex items-center mb-2">
+            <ShoppingBag className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
+            <h3 className="font-medium text-amber-800">Shopping Tips</h3>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-2">
             {list.tips?.map((tip, index) => (
-              <li key={index} className="text-base text-amber-800 pl-4 border-l-2 border-amber-300">
+              <li 
+                key={index} 
+                className="text-amber-800 pl-4 border-l-2 border-amber-200 text-sm leading-relaxed"
+              >
                 {tip}
               </li>
             ))}
@@ -40,14 +43,17 @@ export function ShoppingListNotes({ list }: ShoppingListNotesProps) {
 
       {/* Preparation Notes */}
       {hasNotes && (
-        <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
-          <div className="flex items-center mb-3">
-            <BookOpen className="h-5 w-5 text-blue-600 mr-2" />
-            <h3 className="font-medium text-lg text-blue-800">Preparation Notes</h3>
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
+          <div className="flex items-center mb-2">
+            <BookOpen className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+            <h3 className="font-medium text-blue-800">Preparation Notes</h3>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-2">
             {list.preparation_notes?.map((note, index) => (
-              <li key={index} className="text-base text-blue-800 pl-4 border-l-2 border-blue-300">
+              <li 
+                key={index} 
+                className="text-blue-800 pl-4 border-l-2 border-blue-200 text-sm leading-relaxed"
+              >
                 {note}
               </li>
             ))}

@@ -65,25 +65,27 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
   };
 
   return (
-    <Card className="p-3 md:p-6">
-      <ShoppingListHeader 
-        list={list} 
-        onDelete={onDelete}
-        itemsByDepartment={itemsByDepartment}
-        onCopyToClipboard={handleCopyToClipboard}
-        completionPercentage={completionPercentage}
-        completedCount={completedCount}
-        totalItems={totalItems}
-      />
+    <Card className="shadow-md border-0 overflow-hidden">
+      <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 md:p-5">
+        <ShoppingListHeader 
+          list={list} 
+          onDelete={onDelete}
+          itemsByDepartment={itemsByDepartment}
+          onCopyToClipboard={handleCopyToClipboard}
+          completionPercentage={completionPercentage}
+          completedCount={completedCount}
+          totalItems={totalItems}
+        />
+      </div>
       
-      <CardContent className="px-0 pt-2">
+      <CardContent className="p-4 md:p-5 space-y-4">
         <ShoppingListProgress
           completedCount={completedCount}
           totalItems={totalItems}
           completionPercentage={completionPercentage}
         />
 
-        <div className="mb-4">
+        <div className="bg-white rounded-lg p-3 shadow-sm border">
           <ShoppingListControls 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -93,9 +95,9 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
         
         {/* Shopping Items Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-3">Shopping List</h3>
-          <div className="touch-scroll">
+        <div>
+          <h3 className="text-lg font-medium mb-3 px-1">Shopping Items</h3>
+          <div className="touch-scroll max-w-full">
             <ShoppingListItemsView
               groupedItems={groupedItems}
               expandedDepts={expandedDepts}
@@ -109,21 +111,21 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
 
         {/* Add Item Button/Form */}
-        <div className="mb-6 border rounded-md">
+        <div className="rounded-lg border shadow-sm overflow-hidden">
           <Button 
             variant="ghost" 
-            className="w-full flex items-center justify-between p-3 touch-target"
+            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800"
             onClick={() => setShowAddItemForm(!showAddItemForm)}
           >
             <span className="flex items-center">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2 text-blue-600" />
               Add New Item
             </span>
-            {showAddItemForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showAddItemForm ? <ChevronUp className="h-4 w-4 text-blue-600" /> : <ChevronDown className="h-4 w-4 text-blue-600" />}
           </Button>
           
           {showAddItemForm && (
-            <div className="p-4">
+            <div className="p-4 bg-white">
               <AddItemForm 
                 onAddItem={handleAddItem}
                 availableDepartments={allDepartments}
@@ -133,20 +135,20 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
         </div>
         
         {/* Notes Section */}
-        <div className="mb-6 border rounded-md">
+        <div className="rounded-lg border shadow-sm overflow-hidden">
           <Button 
             variant="ghost" 
-            className="w-full flex items-center justify-between p-3 touch-target"
+            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800"
             onClick={() => setShowNotes(!showNotes)}
           >
-            <span className="flex items-center">
-              <span className="font-medium">Notes & Tips</span>
+            <span className="flex items-center font-medium">
+              Notes & Tips
             </span>
-            {showNotes ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showNotes ? <ChevronUp className="h-4 w-4 text-amber-600" /> : <ChevronDown className="h-4 w-4 text-amber-600" />}
           </Button>
           
           {showNotes && (
-            <div className="p-4">
+            <div className="p-4 bg-white">
               <ShoppingListNotes list={list} />
             </div>
           )}
