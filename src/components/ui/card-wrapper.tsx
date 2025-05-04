@@ -47,7 +47,7 @@ const cardVariants = cva(
 );
 
 export interface CardWrapperProps extends 
-  React.HTMLAttributes<HTMLDivElement>,
+  Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
   VariantProps<typeof cardVariants> {
   /**
    * Card title

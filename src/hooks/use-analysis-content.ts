@@ -7,7 +7,6 @@ interface AnalysisResponse {
   science_notes?: string[];
   techniques?: string[];
   troubleshooting?: string[];
-  changes?: any;
   error?: string;
 }
 

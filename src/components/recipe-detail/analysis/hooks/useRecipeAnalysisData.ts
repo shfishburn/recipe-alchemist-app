@@ -7,6 +7,17 @@ import { toast } from 'sonner';
 import type { Recipe } from '@/types/recipe';
 
 /**
+ * Type definition for the analysis response from the edge function
+ */
+interface AnalysisResponse {
+  textResponse?: string;
+  science_notes?: string[];
+  techniques?: string[];
+  troubleshooting?: string[];
+  error?: string;
+}
+
+/**
  * Hook to manage recipe analysis data fetching and state
  */
 export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedRecipe: Recipe) => void) {
@@ -37,7 +48,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         }, 30000);
         
         // The actual fetch operation
-        const response = await supabase.functions.invoke('recipe-chat', {
+        const { data, error } = await supabase.functions.invoke('recipe-chat', {
           body: { 
             recipe,
             userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
@@ -57,8 +68,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         clearTimeout(timeoutId);
         analysisRequestRef.current = null;
         
-        console.log('Analysis data received:', response);
-        return response;
+        console.log('Analysis data received:', data);
+
+        if (error) {
+          throw new Error(error.message || 'Failed to get analysis');
+        }
+        
+        // Return properly typed response
+        return data as AnalysisResponse;
       } catch (error: any) {
         if (error.name === 'AbortError' || error.message?.includes('timed out')) {
           console.error('Recipe analysis request timed out');
@@ -137,7 +154,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         setIsAnalyzing(false);
       });
     }
-  }, [refetch, isLoading, isAnalyzing, analyzeReactions]);
+  }, [refetch, isLoading, isAnalyzing]);
 
   // Auto-analyze when opened for the first time
   useEffect(() => {
