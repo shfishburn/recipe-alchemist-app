@@ -73,6 +73,68 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
     }
   }, [recipe.nutrition, recipeNutrition]);
 
+  // Determine if we should use the collapsible UI or not
+  // If we're directly on the Nutrition tab, we'll skip the collapsible wrapper
+  const isInDedicatedTab = window.location.hash === '#nutrition';
+
+  // If we're on the dedicated nutrition tab, always render as expanded
+  if (isInDedicatedTab) {
+    // If there's no valid nutrition data, show a placeholder instead of nothing
+    if (!hasValidNutrition) {
+      return (
+        <Card className="w-full">
+          <CardContent className="text-center py-6">
+            <p className="text-muted-foreground">
+              Nutrition information is not available for this recipe.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+    
+    // Use type assertion to avoid type incompatibility
+    const standardizedNutrition = recipeNutrition as unknown as EnhancedNutrition;
+
+    // Make sure userPreferences has unitSystem, dailyCalories and macroSplit
+    const defaultPreferences = {
+      unitSystem,
+      dailyCalories: 2000,
+      macroSplit: {
+        protein: 30,
+        carbs: 40,
+        fat: 30
+      }
+    };
+    
+    const updatedUserPreferences = nutritionPreferences ? {
+      ...defaultPreferences,
+      ...nutritionPreferences,
+      unitSystem: nutritionPreferences.unitSystem || unitSystem
+    } : defaultPreferences;
+
+    return (
+      <Card className="w-full">
+        <div className="flex items-center justify-between p-4">
+          <NutritionHeader
+            showToggle={!!user && !!updatedUserPreferences}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            cookingMethod={cookingMethod}
+            totalTime={totalTime}
+            nutrition={standardizedNutrition}
+          />
+        </div>
+        <CardContent className={isMobile ? "p-2" : "p-4"}>
+          <NutritionBlock 
+            recipeNutrition={recipeNutrition}
+            userPreferences={updatedUserPreferences}
+            viewMode={viewMode}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   // If there's no valid nutrition data, show a placeholder instead of nothing
   if (!hasValidNutrition) {
     return (

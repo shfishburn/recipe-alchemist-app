@@ -1,117 +1,32 @@
 
-/* Touch optimizations for mobile devices */
-.touch-optimized .touch-target {
-  min-height: 48px; /* Increased from Apple's recommended minimum (44px) for better usability */
+/* Make tabs more touch-friendly */
+.touch-optimized .tabs-container {
+  margin-bottom: 1.5rem;
 }
 
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
+.touch-optimized [data-radix-tabs-trigger] {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
 }
 
-/* Better touch targets for interactive elements */
+/* Enhanced tap target for touch interfaces */
+.touch-target, 
 .touch-optimized button,
-.touch-optimized .button,
-.touch-optimized [role="button"],
-.touch-optimized input[type="checkbox"],
-.touch-optimized input[type="radio"],
-.touch-optimized .checkbox,
-.touch-optimized label {
+.touch-optimized .select,
+.touch-optimized a {
   min-height: 44px;
   min-width: 44px;
 }
 
-/* Increase spacing for touch targets */
-.touch-optimized li,
-.touch-optimized tr,
-.touch-optimized .selectable-item {
-  padding: 8px 0;
-}
-
-.data-[state=checked]:bg-primary {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
-
-/* Add active state feedback for touch */
-@media (hover: none) {
-  .touch-optimized button:active,
-  .touch-optimized .button:active,
-  .touch-optimized [role="button"]:active {
-    opacity: 0.7;
-    transform: scale(0.98);
-    transition: opacity 0.1s, transform 0.1s;
-  }
-  
-  /* Always show delete buttons on touch devices */
-  .touch-optimized .group:hover .opacity-0 {
-    opacity: 1 !important;
-  }
-}
-
-/* Visual feedback on touch */
-.touch-feedback:active {
-  opacity: 0.8;
-  transform: scale(0.98);
-}
-
-.touch-feedback-optimized {
-  will-change: transform, opacity;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.touch-feedback-optimized:active {
-  opacity: 0.8;
-  transform: scale(0.98);
-}
-
-/* Add class to apply when page is loaded to avoid transition flashes */
-.completed-loading * {
-  transition: background-color 0.2s, opacity 0.2s, color 0.2s, transform 0.15s;
-}
-
-/* Improved scrolling indication for overflow content */
+/* Touch-friendly scrolling container */
 .touch-scroll {
-  position: relative;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
-.touch-scroll:after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 20px;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.2));
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.touch-scroll.has-overflow:after {
-  opacity: 1;
-}
-
-/* Add haptic feedback for iOS devices */
-@supports (-webkit-touch-callout: none) {
-  .touch-optimized .haptic-feedback {
-    cursor: pointer;
-    -webkit-touch-callout: none;
-  }
-}
-
-/* Prevent text selection during taps */
-.touch-optimized .prevent-select {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Adaptive touch targets based on device size */
-@media (max-width: 380px) {
-  .touch-optimized .touch-target-adaptive {
-    min-height: 52px;
-    min-width: 52px;
-  }
+.touch-scroll::-webkit-scrollbar {
+  display: none;
 }

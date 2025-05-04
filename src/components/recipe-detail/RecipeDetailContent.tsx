@@ -1,22 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { RecipeHeader } from '@/components/recipe-detail/RecipeHeader';
-import { RecipeOverview } from '@/components/recipe-detail/RecipeOverview'; 
-import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients';
-import { RecipeNutrition } from '@/components/recipe-detail/RecipeNutrition';
-import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
-import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
-import { CookingMode } from '@/components/recipe-detail/CookingMode';
-import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
-import { RecipeChatDrawer } from '@/components/recipe-chat/RecipeChatDrawer';
-import { Separator } from '@/components/ui/separator';
-import { RecipeAnalysis } from '@/components/recipe-detail/analysis/RecipeAnalysis';
-import { ChefNotes } from "@/components/recipe-detail/notes/ChefNotes";
 import { RecipeImage } from '@/components/recipe-detail/RecipeImage';
-import { SectionControls } from '@/components/recipe-detail/controls/SectionControls';
+import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
+import { TabsView } from '@/components/recipe-detail/navigation/TabsView';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
-import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import type { Recipe } from '@/types/recipe';
 import { isValidUUID } from '@/utils/slug-utils';
@@ -37,19 +26,12 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   // Ensure ID is valid
   const validId = id && isValidUUID(id.split('-').pop() || id) ? id : null;
   
-  const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
-  const [chatOpen, setChatOpen] = useState(false);
-  const chatTriggerRef = useRef<HTMLButtonElement>(null);
   const [localRecipe, setLocalRecipe] = useState<Recipe | null>(recipe);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { updateRecipe } = useRecipeUpdates(validId || '');
   
   // Use the unified science hook to check for analysis data
   const { hasAnalysisData } = useRecipeScience(recipe);
-  
-  const handleOpenChat = () => {
-    setChatOpen(true);
-  };
   
   const handleNotesUpdate = (notes: string) => {
     if (localRecipe) {
@@ -93,16 +75,6 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     }
   };
 
-  const handleToggleAnalysis = () => {
-    // If we're opening the analysis section and it's not already open, show loading state
-    if (!sections.analysis) {
-      setIsAnalyzing(true);
-      // Set a timeout to hide the loading state after a reasonable delay
-      setTimeout(() => setIsAnalyzing(false), 3000);
-    }
-    toggleSection('analysis');
-  };
-
   const currentRecipe = localRecipe || recipe;
   
   // If we have no valid recipe data, return null
@@ -112,84 +84,35 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
 
   return (
     <ProfileProvider>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto mb-20">
         {/* Recipe Header with title */}
         <RecipeHeader recipe={currentRecipe} hideReasoning={true} />
         
-        {/* Recipe Image - Positioned between title and overview */}
+        {/* Recipe Image - Positioned between title and tabs */}
         <RecipeImage recipe={currentRecipe} />
         
-        {/* Recipe Overview - Now separate from header */}
-        <RecipeOverview recipe={currentRecipe} />
-        
-        <div className="hidden">
-          <PrintRecipe recipe={currentRecipe} />
-          <CookingMode recipe={currentRecipe} />
-        </div>
-        
-        <Separator className="mb-4 sm:mb-8 mt-4" />
-        
-        <SectionControls onExpandAll={expandAll} onCollapseAll={collapseAll} />
-        
-        <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3">
-          <div className="md:col-span-1">
-            <RecipeIngredients 
-              recipe={currentRecipe}
-              isOpen={sections.ingredients}
-              onToggle={() => toggleSection('ingredients')}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <RecipeInstructions 
-              recipe={currentRecipe}
-              isOpen={sections.instructions}
-              onToggle={() => toggleSection('instructions')}
-            />
-          </div>
-        </div>
-
-        {/* Scientific Analysis Section - Always include it but let it handle visibility */}
-        <RecipeAnalysis 
-          recipe={currentRecipe}
-          isOpen={sections.analysis}
-          onToggle={handleToggleAnalysis}
-          onRecipeUpdated={handleRecipeUpdate}
+        {/* Tabbed Navigation - Main content area */}
+        <TabsView 
+          recipe={currentRecipe} 
+          onRecipeUpdate={handleRecipeUpdate}
+          refetch={refetch}
         />
-
-        <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-6">
-          <ChefNotes 
-            recipe={currentRecipe} 
-            onUpdate={handleNotesUpdate}
-            isOpen={sections.chef}
-            onToggle={() => toggleSection('chef')}
-          />
-        </div>
-
-        {currentRecipe.nutrition && Object.keys(currentRecipe.nutrition).length > 0 && (
-          <div className="mt-4 sm:mt-8 mb-40 sm:mb-28">
-            <RecipeNutrition 
-              recipe={currentRecipe}
-              isOpen={sections.nutrition}
-              onToggle={() => toggleSection('nutrition')}
-              onRecipeUpdate={handleRecipeUpdate}
-            />
-          </div>
-        )}
-
+        
+        {/* Floating action buttons at bottom */}
         <RecipeActions 
           recipe={currentRecipe} 
           sticky={true} 
-          onOpenChat={handleOpenChat}
-          onToggleAnalysis={handleToggleAnalysis}
-          isAnalysisOpen={sections.analysis}
+          onOpenChat={() => {
+            // Navigate to modify tab and open chat
+            window.location.hash = 'modify';
+          }}
+          onToggleAnalysis={() => {
+            // Navigate to science tab
+            window.location.hash = 'science';
+          }}
+          isAnalysisOpen={window.location.hash === '#science'}
           isAnalyzing={isAnalyzing}
           hasAnalysisData={hasAnalysisData}
-        />
-        
-        <RecipeChatDrawer 
-          recipe={currentRecipe} 
-          open={chatOpen} 
-          onOpenChange={setChatOpen}
         />
       </div>
     </ProfileProvider>
