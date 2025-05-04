@@ -80,7 +80,7 @@ export function FormattedText({
       
       // Handle plain paragraphs with proper spacing
       return (
-        <p key={blockIndex} className={blockIndex > 0 ? 'mt-3' : undefined}>
+        <p key={blockIndex} className={`${blockIndex > 0 ? 'mt-3' : ''} break-words`}>
           {processInlineFormatting(block)}
         </p>
       );
@@ -92,7 +92,7 @@ export function FormattedText({
 
   return (
     <div className={cn(
-      "text-sm text-neutral-800", 
+      "text-sm text-neutral-800 break-words", 
       isScientific ? 'scientific-content' : '',
       className
     )}>

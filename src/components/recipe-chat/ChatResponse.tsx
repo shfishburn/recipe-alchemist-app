@@ -6,6 +6,7 @@ import { ApplyChangesSection } from './response/ApplyChangesSection';
 import { FollowUpQuestions } from './response/FollowUpQuestions';
 import { useResponseFormatter } from './response/hooks/useResponseFormatter';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ChangesResponse } from '@/types/chat';
 
 interface ChatResponseProps {
@@ -57,12 +58,14 @@ export function ChatResponse({
           <WarningAlert showWarning={showWarning} isMobile={isMobile} />
           
           {/* Main response text content */}
-          <div className={`prose prose-sm max-w-none ${textSize} text-slate-800`}>
-            <FormattedText 
-              text={displayText} 
-              preserveWhitespace={isMethodology}
-            />
-          </div>
+          <ScrollArea className="max-h-[300px]">
+            <div className={`prose prose-sm max-w-none ${textSize} text-slate-800 break-words`}>
+              <FormattedText 
+                text={displayText} 
+                preserveWhitespace={isMethodology}
+              />
+            </div>
+          </ScrollArea>
           
           {/* Apply changes section with summary and confirmation */}
           <ApplyChangesSection 

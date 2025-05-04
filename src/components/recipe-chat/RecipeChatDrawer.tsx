@@ -8,13 +8,13 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { X, Loader2 } from 'lucide-react';
 import { RecipeChat } from './RecipeChat';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RecipeChatDrawerProps {
   recipe: Recipe;
@@ -42,10 +42,10 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto`} 
+        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden`} 
         style={{ zIndex: 50 }} // Lower z-index than shopping list components
       >
-        <DrawerHeader className="border-b flex items-center justify-between bg-white py-2">
+        <DrawerHeader className="border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <DrawerTitle className="text-primary font-medium text-base">
               Recipe Chat
@@ -85,11 +85,9 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        <div className={`p-2 sm:p-4 flex-1 overflow-hidden flex flex-col ${isMobile ? 'h-[calc(95vh-48px)]' : 'h-[calc(85vh-60px)]'} bg-[#F9FAFB]`}>
-          <div className="overflow-y-auto flex-1">
-            <RecipeChat recipe={recipe} />
-          </div>
-        </div>
+        <ScrollArea className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(95vh-48px)]' : 'h-[calc(85vh-60px)]'}`}>
+          <RecipeChat recipe={recipe} />
+        </ScrollArea>
       </DrawerContent>
     </Drawer>
   );

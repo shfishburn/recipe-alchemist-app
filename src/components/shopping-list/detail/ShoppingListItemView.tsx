@@ -37,7 +37,7 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
     
     // Standardize parentheses format
     const notes = item.notes.startsWith('(') ? item.notes : `(${item.notes})`;
-    return <span className="text-gray-500 italic">{notes}</span>;
+    return <span className="text-gray-500 italic truncate">{notes}</span>;
   };
 
   return (
@@ -67,9 +67,9 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
           "flex items-baseline flex-wrap gap-x-1",
           item.checked && "line-through text-gray-500"
         )}>
-          <span className="font-medium">{item.name}</span>
+          <span className="font-medium truncate max-w-[200px]">{item.name}</span>
           
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 truncate max-w-[200px]">
             {item.quantity && item.unit && (
               <span className="mr-1">{item.quantity} {item.unit}</span>
             )}
@@ -91,7 +91,7 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
         </div>
         
         {item.package_notes && (
-          <div className="mt-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded inline-block">
+          <div className="mt-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded inline-block truncate max-w-full">
             {item.package_notes}
           </div>
         )}

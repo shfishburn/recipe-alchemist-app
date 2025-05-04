@@ -31,7 +31,7 @@ export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProp
           {hasTitle && (
             <div>
               <Badge variant="outline" className="bg-amber-50 text-amber-700 mb-1">Title</Badge>
-              <p className={`${textSize} text-slate-600 pl-1`}>{changes.title}</p>
+              <p className={`${textSize} text-slate-600 pl-1 break-words`}>{changes.title}</p>
             </div>
           )}
           
@@ -42,7 +42,7 @@ export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProp
               </Badge>
               <ul className={`${textSize} list-disc list-inside text-slate-600 pl-1`}>
                 {changes.ingredients.items.slice(0, 5).map((ingredient, index) => (
-                  <li key={index}>
+                  <li key={index} className="break-words truncate">
                     {ingredient.qty} {ingredient.unit} {ingredient.item}
                     {ingredient.notes ? <span className="text-slate-500 italic"> ({ingredient.notes})</span> : ''}
                   </li>
@@ -64,7 +64,7 @@ export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProp
               <ul className={`${textSize} list-disc list-inside text-slate-600 pl-1`}>
                 {Array.isArray(changes.instructions) && 
                   changes.instructions.slice(0, 3).map((instruction, index) => (
-                    <li key={index}>
+                    <li key={index} className="break-words truncate">
                       {typeof instruction === 'string' 
                         ? instruction.substring(0, 60) + (instruction.length > 60 ? '...' : '')
                         : instruction.action?.substring(0, 60) + (instruction.action?.length > 60 ? '...' : '')}

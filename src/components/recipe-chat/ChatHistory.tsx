@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { ChatMessage } from './ChatMessage';
-import { EmptyChatState } from './EmptyChatState';
 import { ChangesConfirmationDialog } from './changes/ChangesConfirmationDialog';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import type { Recipe } from '@/types/recipe';
@@ -13,7 +12,7 @@ interface ChatHistoryProps {
   setMessage: (message: string) => void;
   applyChanges: (recipe: Recipe, chatMessage: ChatMessageType) => Promise<void>;
   isApplying: boolean;
-  recipe: Recipe; // Add recipe prop
+  recipe: Recipe;
 }
 
 export function ChatHistory({
@@ -44,12 +43,7 @@ export function ChatHistory({
   
   // Display all messages
   const allMessages = [...chatHistory, ...optimisticMessages];
-  const showEmptyState = allMessages.length === 0 && !isSending;
-
-  if (showEmptyState) {
-    return <EmptyChatState />;
-  }
-
+  
   return (
     <div className="space-y-4 min-h-[120px]">
       {allMessages.map((message) => (

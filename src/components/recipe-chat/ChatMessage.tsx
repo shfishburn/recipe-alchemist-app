@@ -5,6 +5,7 @@ import { ChatResponse } from './ChatResponse';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatMessageProps {
   chat: ChatMessageType;
@@ -95,8 +96,8 @@ export function ChatMessage({
         <Avatar className={`${avatarSize} border-2 border-blue-100 bg-blue-50 shrink-0`}>
           <AvatarFallback className="text-blue-500 font-medium text-xs sm:text-sm">U</AvatarFallback>
         </Avatar>
-        <div className="bg-blue-50 rounded-[20px] rounded-tl-[5px] p-2 sm:p-4 shadow-sm">
-          <span className="text-xs sm:text-sm text-slate-800">{chat.user_message}</span>
+        <div className="bg-blue-50 rounded-[20px] rounded-tl-[5px] p-2 sm:p-4 shadow-sm overflow-hidden">
+          <span className="text-xs sm:text-sm text-slate-800 break-words">{chat.user_message}</span>
         </div>
       </div>
       

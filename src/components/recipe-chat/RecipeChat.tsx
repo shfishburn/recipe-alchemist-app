@@ -9,6 +9,7 @@ import { EmptyChatState } from './EmptyChatState';
 import { ChatHeader } from './ChatHeader';
 import { ChatLoading } from './ChatLoading';
 import { ClearChatDialog } from './ClearChatDialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -68,18 +69,22 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             onClearChat={handleClearChat} 
           />
           
-          {/* Only show EmptyChatState here, removed from ChatHistory */}
-          {showEmptyState && <EmptyChatState />}
-          
-          <ChatHistory
-            chatHistory={chatHistory}
-            optimisticMessages={optimisticMessages}
-            isSending={isSending}
-            setMessage={setMessage}
-            applyChanges={applyChanges}
-            isApplying={isApplying}
-            recipe={recipe}
-          />
+          <ScrollArea className="h-[calc(100%-120px)] max-h-[60vh]">
+            {/* Show EmptyChatState if there are no messages */}
+            {showEmptyState ? (
+              <EmptyChatState />
+            ) : (
+              <ChatHistory
+                chatHistory={chatHistory}
+                optimisticMessages={optimisticMessages}
+                isSending={isSending}
+                setMessage={setMessage}
+                applyChanges={applyChanges}
+                isApplying={isApplying}
+                recipe={recipe}
+              />
+            )}
+          </ScrollArea>
 
           <RecipeChatInput
             message={message}
