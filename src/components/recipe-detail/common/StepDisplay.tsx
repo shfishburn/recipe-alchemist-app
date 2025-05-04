@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Atom } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StepReaction, formatReactionName } from '@/hooks/use-recipe-science';
+import { cn } from '@/lib/utils';
 
 interface StepDisplayProps {
   stepNumber: number;
@@ -48,67 +49,70 @@ export function StepDisplay({
   }, [onToggleComplete]);
   
   // Determine the correct CSS classes based on variant and completed state
-  const containerClasses = variant === 'cooking'
-    ? `flex flex-col cursor-pointer p-3 rounded-md transition-colors ${
-        isCompleted ? "bg-green-50 hover:bg-green-100" : "hover:bg-muted/50"
-      }`
-    : `flex flex-col cursor-pointer p-3 rounded-md transition-colors ${
-        isCompleted ? "bg-green-50 hover:bg-green-100" : "hover:bg-muted/50"
-      }`;
+  const containerClasses = cn(
+    "flex flex-col cursor-pointer p-4 rounded-md transition-colors border",
+    isCompleted ? 
+      "bg-green-50 hover:bg-green-100 border-green-200" : 
+      "hover:bg-gray-50 border-gray-100",
+    variant === 'cooking' ? "shadow-sm" : ""
+  );
   
-  const textClasses = isCompleted 
-    ? "line-through text-muted-foreground" 
-    : "";
+  const textClasses = cn(
+    "text-lg leading-relaxed",
+    isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+  );
   
   return (
-    <div>
+    <div className="mb-3">
       <div 
         onClick={handleStepClick}
         className={containerClasses}
       >
         {/* Step header with step number and science toggle */}
-        <div className="flex items-center justify-between mb-2">
-          <span className={`flex-shrink-0 mr-2 font-medium ${
-            isCompleted ? "text-muted-foreground" : "text-foreground"
-          }`}>
+        <div className="flex items-center justify-between mb-3">
+          <span className={cn(
+            "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md",
+            isCompleted ? "bg-green-100 text-green-700" : "bg-recipe-blue/10 text-recipe-blue"
+          )}>
             Step {stepNumber}
           </span>
           
           {/* Science button - only shown if step has science data */}
           {hasScience && (
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={handleScienceToggle}
-              className="h-6 w-6 ml-auto flex-shrink-0"
+              className="ml-auto flex-shrink-0 gap-1.5"
               title={showScience ? "Hide Science" : "View Science"}
             >
-              <Atom className="h-4 w-4 text-blue-600" />
+              <Atom className="h-4 w-4 text-recipe-blue" />
+              <span>{showScience ? "Hide Science" : "Science"}</span>
             </Button>
           )}
         </div>
         
         {/* Step content */}
-        <p className={`text-lg leading-relaxed ${textClasses}`}>
+        <p className={textClasses}>
           {stepText}
         </p>
       </div>
       
       {/* Science note - only shown if step has science data and showScience is true */}
       {hasScience && showScience && stepReaction && (
-        <div className="ml-8 mt-1 p-3 bg-blue-50 rounded-md">
-          <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-            <Atom className="h-4 w-4 mr-1" />
-            <span>Science Notes</span>
+        <div className="ml-6 mt-2 p-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm">
+          <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+            <Atom className="h-4 w-4 mr-1.5" />
+            <span>Scientific Explanation</span>
           </h4>
           <div className="text-sm text-blue-700 space-y-2">
             {stepReaction.reaction_details?.map((detail, i) => (
-              <p key={i}>{detail}</p>
+              <p key={i} className="leading-relaxed">{detail}</p>
             ))}
             {stepReaction.reactions?.length > 0 && (
-              <div className="flex flex-wrap gap-1 pt-1">
+              <div className="flex flex-wrap gap-2 pt-2 mt-2 border-t border-blue-200">
                 {stepReaction.reactions.map((type, i) => (
-                  <span key={i} className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">
+                  <span key={i} className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
                     {formatReactionName(type)}
                   </span>
                 ))}

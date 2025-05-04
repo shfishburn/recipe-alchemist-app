@@ -19,7 +19,7 @@ export function CookingStep({
   stepReaction
 }: CookingStepProps) {
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       <StepDisplay
         stepNumber={stepNumber}
         stepText={instruction}

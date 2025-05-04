@@ -37,7 +37,7 @@ export function InstructionStep({
       />
       
       {!isLastStep && (
-        <Separator className="my-4" />
+        <Separator className="my-6" />
       )}
     </li>
   );

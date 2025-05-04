@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Beaker } from "lucide-react";
@@ -240,8 +239,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Step-by-Step Reaction Analysis</h3>
-        <div className="space-y-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
+          <Beaker className="h-5 w-5 mr-2 text-recipe-blue" />
+          Step-by-Step Reaction Analysis
+        </h3>
+        <div className="space-y-4">
           {stepReactions.map((reaction, index) => {
             // Skip entries without step text
             if (!reaction.step_text) return null;
@@ -252,21 +254,21 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
               : '';
               
             return (
-              <div key={`reaction-${index}`} className="mb-6 p-3 bg-blue-50 rounded-lg">
+              <div key={`reaction-${index}`} className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
                 <div className="flex items-start gap-3 mb-2">
                   <div className="flex-1">
-                    <p className="font-medium text-slate-800">Step {index + 1}: {reaction.step_text}</p>
+                    <p className="font-semibold text-slate-800">Step {index + 1}: {reaction.step_text}</p>
                     {reactionDetails && (
-                      <p className="text-sm text-slate-600 mt-1">{reactionDetails}</p>
+                      <p className="text-sm text-slate-600 mt-2">{reactionDetails}</p>
                     )}
                   </div>
                 </div>
                 {reaction.reactions.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-blue-200">
                     {reaction.reactions.map((type, i) => (
                       <span 
                         key={`${index}-${i}`} 
-                        className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                        className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full"
                       >
                         {formatReactionName(type)}
                       </span>
@@ -436,8 +438,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 {/* Chemistry Section - only show if we have content */}
                 {hasChemistry && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Chemistry</h3>
-                    <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                      <Beaker className="h-5 w-5 mr-2 text-blue-600" />
+                      Chemistry
+                    </h3>
+                    <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                       <FormattedText text={chemistry} preserveWhitespace={true} />
                     </div>
                   </div>
@@ -446,8 +451,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 {/* Techniques Section - only show if we have content */}
                 {hasTechniques && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Techniques</h3>
-                    <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-amber-600">
+                        <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
+                        <path d="m8 12 4 4 4-4"/>
+                        <path d="M12 8v8"/>
+                      </svg>
+                      Cooking Techniques
+                    </h3>
+                    <div className="prose prose-sm max-w-none bg-amber-50/50 p-4 rounded-lg border border-amber-100">
                       <FormattedText text={techniques} preserveWhitespace={true} />
                     </div>
                   </div>
@@ -456,8 +468,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 {/* Troubleshooting Section - only show if we have content */}
                 {hasTroubleshooting && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Troubleshooting</h3>
-                    <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-green-600">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                      </svg>
+                      Troubleshooting Guide
+                    </h3>
+                    <div className="prose prose-sm max-w-none bg-green-50/50 p-4 rounded-lg border border-green-100">
                       <FormattedText text={troubleshooting} preserveWhitespace={true} />
                     </div>
                   </div>
@@ -468,7 +486,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 
                 {/* Fallback when structured sections aren't extracted */}
                 {hasRawResponse && (
-                  <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg">
+                  <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                     <FormattedText text={analysis.textResponse} preserveWhitespace={true} />
                   </div>
                 )}
