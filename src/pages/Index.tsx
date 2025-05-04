@@ -6,11 +6,13 @@ import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import '@/styles/touch-optimizations.css';
 import { useAuth } from '@/hooks/use-auth';
 
-// Lazy load these components
+// Properly lazy load these components with consistent import pattern
 const UserDashboard = lazy(() => import('@/components/landing/UserDashboard').then(module => ({
   default: module.UserDashboard
 })));
-const MarketingHomepage = lazy(() => import('@/components/landing/MarketingHomepage'));
+const MarketingHomepage = lazy(() => import('@/components/landing/MarketingHomepage').then(module => ({
+  default: module.MarketingHomepage
+})));
 
 const Index = () => {
   // Use our scroll restoration hook

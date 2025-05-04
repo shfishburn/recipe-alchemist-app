@@ -54,3 +54,6 @@ export function MarketingHomepage() {
     </>
   );
 }
+
+// Add default export to support lazy loading
+export default MarketingHomepage;
