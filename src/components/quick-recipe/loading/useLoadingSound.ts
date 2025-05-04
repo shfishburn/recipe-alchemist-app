@@ -1,50 +1,69 @@
 
-import { useState, useEffect } from 'react';
-import { useSoundEffect } from '@/hooks/use-sound-effect';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useState, useEffect, useCallback } from 'react';
 
-interface UseLoadingSoundParams {
+interface UseLoadingSoundProps {
   completedLoading: boolean;
 }
 
-export function useLoadingSound({ completedLoading }: UseLoadingSoundParams) {
-  const isMobile = useIsMobile();
-  const [audioEnabled, setAudioEnabled] = useState(false);
+export function useLoadingSound({ completedLoading }: UseLoadingSoundProps) {
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(false);
   
-  // Initialize sound effect for typing with mobile-friendly settings
-  const { play: playTypingSound, pause: pauseTypingSound } = useSoundEffect('/lovable-uploads/typing.mp3', {
-    loop: true,
-    volume: isMobile ? 0.5 : 0.3 // Higher volume for mobile
-  });
-  
-  // Enable audio after a user interaction on mobile
+  // Initialize audio on component mount
   useEffect(() => {
-    const enableAudio = () => {
-      if (!audioEnabled) {
-        setAudioEnabled(true);
-        // Try to play audio now that we have user interaction
-        if (!completedLoading) {
-          playTypingSound();
-        }
-        // Remove listener once enabled
-        document.removeEventListener('touchstart', enableAudio);
-        document.removeEventListener('click', enableAudio);
-      }
-    };
-
-    // Add listeners for user interaction
-    document.addEventListener('touchstart', enableAudio);
-    document.addEventListener('click', enableAudio);
+    const audioElement = new Audio('/lovable-uploads/typing.mp3');
+    audioElement.loop = true;
+    setAudio(audioElement);
+    
+    // Check if audio is enabled in localStorage
+    const storedPreference = localStorage.getItem('recipe-audio-enabled');
+    setAudioEnabled(storedPreference === 'true');
     
     return () => {
-      document.removeEventListener('touchstart', enableAudio);
-      document.removeEventListener('click', enableAudio);
+      audioElement.pause();
+      audioElement.src = '';
     };
-  }, [audioEnabled, completedLoading, playTypingSound]);
+  }, []);
+  
+  // Play typing sound
+  const playTypingSound = useCallback(() => {
+    if (audio && audioEnabled && !completedLoading) {
+      audio.currentTime = 0;
+      audio.play().catch(err => console.error('Error playing sound:', err));
+    }
+  }, [audio, audioEnabled, completedLoading]);
+  
+  // Pause typing sound
+  const pauseTypingSound = useCallback(() => {
+    if (audio) {
+      audio.pause();
+    }
+  }, [audio]);
+  
+  // Toggle audio
+  const toggleAudio = useCallback(() => {
+    const newState = !audioEnabled;
+    setAudioEnabled(newState);
+    localStorage.setItem('recipe-audio-enabled', String(newState));
+    
+    if (newState && !completedLoading && audio) {
+      audio.play().catch(err => console.error('Error playing sound:', err));
+    } else if (audio) {
+      audio.pause();
+    }
+  }, [audioEnabled, completedLoading, audio]);
+  
+  // Stop audio when loading completes
+  useEffect(() => {
+    if (completedLoading && audio) {
+      audio.pause();
+    }
+  }, [completedLoading, audio]);
   
   return {
     audioEnabled,
     playTypingSound,
-    pauseTypingSound
+    pauseTypingSound,
+    toggleAudio
   };
 }
