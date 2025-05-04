@@ -21,10 +21,10 @@ export function PlaceholderImage({ hasError, onClick }: PlaceholderImageProps) {
       }}
       aria-label="Tap to add recipe image"
     >
-      <ImagePlus className="h-12 w-12 text-muted-foreground mb-2" />
+      <ImagePlus className="h-12 w-12 text-recipe-blue mb-2" />
       
       <div className="text-center px-4">
-        <p className="text-muted-foreground font-medium">Tap to add a recipe image</p>
+        <p className="text-muted-foreground font-medium">Generate Recipe Image</p>
         <p className="text-xs text-muted-foreground mt-1">
           Create a beautiful AI-generated image of this recipe
         </p>

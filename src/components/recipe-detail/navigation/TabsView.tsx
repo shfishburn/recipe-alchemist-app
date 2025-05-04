@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Utensils, BarChart, Beaker, MessageCircle } from 'lucide-react';
+import { Utensils, BarChart, Beaker, MessageCircle, Settings } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -13,6 +13,7 @@ import { RecipeTabContent } from './tabs/RecipeTabContent';
 import { NutritionTabContent } from './tabs/NutritionTabContent';
 import { ScienceTabContent } from './tabs/ScienceTabContent';
 import { ModifyTabContent } from './tabs/ModifyTabContent';
+import { UtilitiesTabContent } from './tabs/UtilitiesTabContent';
 
 interface TabsViewProps {
   recipe: Recipe;
@@ -31,7 +32,7 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
   // Check if there's a tab hash in the URL
   React.useEffect(() => {
     const hash = location.hash.slice(1);
-    if (hash && ['recipe', 'nutrition', 'science', 'modify'].includes(hash)) {
+    if (hash && ['recipe', 'nutrition', 'science', 'modify', 'utilities'].includes(hash)) {
       setActiveTab(hash);
     }
   }, [location.hash, setActiveTab]);
@@ -49,7 +50,7 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
       className="w-full"
     >
       <div className="touch-friendly-tabs">
-        <TabsList className="w-full grid grid-cols-4 mb-6 touch-scroll">
+        <TabsList className="w-full grid grid-cols-5 mb-6 touch-scroll">
           <TabsTrigger value="recipe" className="flex items-center">
             <Utensils className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Recipe</span>
@@ -71,6 +72,10 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
           <TabsTrigger value="modify" className="flex items-center">
             <MessageCircle className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Modify</span>
+          </TabsTrigger>
+          <TabsTrigger value="utilities" className="flex items-center">
+            <Settings className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Utilities</span>
           </TabsTrigger>
         </TabsList>
       </div>
@@ -94,6 +99,10 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
           setChatOpen={setChatOpen}
           refetch={refetch}
         />
+      </TabsContent>
+      
+      <TabsContent value="utilities" className="mt-0">
+        <UtilitiesTabContent recipe={recipe} />
       </TabsContent>
     </Tabs>
   );
