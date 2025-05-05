@@ -5,7 +5,7 @@ import { RecipeIngredients } from '@/components/recipe-detail/RecipeIngredients'
 import { RecipeInstructions } from '@/components/recipe-detail/RecipeInstructions';
 import { EnhancedAddToList } from '@/components/recipe-detail/shopping-list/EnhancedAddToList';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, ChefHat } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -56,20 +56,22 @@ export function RecipeTabContent({ recipe }: RecipeTabContentProps) {
             isOpen={sections.instructions}
             onToggle={() => toggleSection('instructions')}
           />
+          
+          {/* Start cooking button */}
+          <div className="mt-4">
+            <Button 
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2 transition-colors"
+              onClick={() => window.location.href = "#cooking"}
+            >
+              <ChefHat className="h-5 w-5" />
+              <span className="font-medium">Start Cooking</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Start cooking button - mobile only */}
-      {isMobile && (
-        <div className="mt-8 py-4 flex justify-center">
-          <a 
-            href="#cooking"
-            className="bg-recipe-green hover:bg-recipe-green/90 text-white px-6 py-3 rounded-full shadow-md text-lg font-medium touch-target-lg touch-feedback-optimized inline-flex items-center"
-          >
-            Start Cooking
-          </a>
-        </div>
-      )}
+      {/* Mobile only cooking button is now removed as we have the consistent button under instructions */}
     </div>
   );
 }
