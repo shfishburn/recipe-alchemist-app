@@ -54,10 +54,6 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
         
         <CollapsibleContent>
           <CardContent className="pt-0 relative">
-            <div className="mb-4">
-              <EnhancedAddToList recipe={recipe} />
-            </div>
-            
             {recipe.ingredients && Array.isArray(recipe.ingredients) ? (
               <div className="space-y-5">
                 {sortedDepartments.map((department) => (

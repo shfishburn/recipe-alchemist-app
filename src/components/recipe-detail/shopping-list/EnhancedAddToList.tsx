@@ -21,6 +21,7 @@ export function EnhancedAddToList({ recipe }: EnhancedAddToListProps) {
         variant="outline" 
         className="flex-1 flex items-center gap-2 transition-colors"
         onClick={() => setOpen(true)}
+        id="shopping-list-trigger"
       >
         <ShoppingBag className="h-5 w-5" />
         <span className="font-medium">Add to Shopping List</span>
