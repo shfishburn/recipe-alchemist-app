@@ -67,7 +67,7 @@ export function StepDisplay({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className={cn(
-              "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md",
+              "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md text-sm",
               isCompleted ? "bg-green-100 text-green-700" : "bg-recipe-blue/10 text-recipe-blue"
             )}>
               Step {stepNumber}
