@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { RecipeHeader } from '@/components/recipe-detail/RecipeHeader';
 import { RecipeImage } from '@/components/recipe-detail/RecipeImage';
-import { RecipeActions } from '@/components/recipe-detail/RecipeActions';
 import { TabsView } from '@/components/recipe-detail/navigation/TabsView';
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
@@ -63,7 +61,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     }
   };
 
-  // Handle opening the chat in modify tab
+  // Handle opening the chat in modify tab - keeping this function for now in case we need it later
   const handleOpenChat = () => {
     window.location.hash = 'modify';
   };
@@ -82,14 +80,6 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
           recipe={localRecipe} 
           onRecipeUpdate={handleRecipeUpdate}
           refetch={refetch}
-        />
-        
-        {/* Actions - now with sticky={false} to position it naturally in document flow */}
-        <RecipeActions 
-          recipe={localRecipe} 
-          sticky={false} 
-          onOpenChat={handleOpenChat}
-          currentTab={window.location.hash.slice(1) || 'recipe'}
         />
       </div>
     </ProfileProvider>
