@@ -32,10 +32,12 @@ export function QuickRecipeFormContainer() {
   };
 
   const handleCuisineChange = (cuisine: string) => {
+    console.log("Cuisine selected:", cuisine);
     setSelectedCuisine(cuisine);
   };
 
   const handleDietaryChange = (dietary: string) => {
+    console.log("Dietary selected:", dietary);
     setSelectedDietary(dietary);
   };
 
@@ -65,11 +67,19 @@ export function QuickRecipeFormContainer() {
       return;
     }
     
-    // Format the data properly for the API - FIXED: Convert "any" values to empty arrays
+    // Explicitly log cuisine and dietary values before conversion
+    console.log("Original form values:", {
+      ingredients: formData.ingredients,
+      servings: formData.servings,
+      cuisine: formData.cuisine,
+      dietary: formData.dietary
+    });
+    
+    // Format the data properly for the API - Handle cuisine and dietary values carefully
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(), // Map ingredients to mainIngredient
-      cuisine: formData.cuisine === 'any' ? [] : formData.cuisine, // Convert "any" to empty array
-      dietary: formData.dietary === 'any' ? [] : formData.dietary, // Convert "any" to empty array
+      cuisine: formData.cuisine === 'any' ? 'Global' : formData.cuisine, // Use 'Global' instead of empty array for 'any'
+      dietary: formData.dietary === 'any' ? '' : formData.dietary, // Convert "any" to empty string
       servings: Number(formData.servings) || 2
     };
     

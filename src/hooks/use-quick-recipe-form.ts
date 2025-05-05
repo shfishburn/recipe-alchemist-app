@@ -43,12 +43,21 @@ export function useQuickRecipeForm() {
         return null;
       }
       
+      // Ensure cuisine has a valid value - never undefined or null
+      const processedFormData = {
+        ...formData,
+        cuisine: formData.cuisine || 'Global', // Default to 'Global' if not provided
+        dietary: formData.dietary || ''  // Default to empty string if not provided
+      };
+
+      console.log("Processed form data:", processedFormData);
+      
       // Reset any previous state
       reset();
       
       // Set loading state immediately so it shows the loading animation
       setLoading(true);
-      setFormData(formData);
+      setFormData(processedFormData);
       
       // Initialize loading state with estimated time
       updateLoadingState({
@@ -65,7 +74,7 @@ export function useQuickRecipeForm() {
       // This will allow us to resume the recipe generation after login
       sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
         path: location.pathname,
-        formData: formData
+        formData: processedFormData
       }));
       
       // Navigate to the quick recipe page BEFORE starting the API call
@@ -77,10 +86,10 @@ export function useQuickRecipeForm() {
       // Start generating the recipe immediately after navigation
       try {
         console.log("Starting recipe generation with payload:", {
-          cuisine: formData.cuisine,
-          dietary: formData.dietary,
-          mainIngredient: formData.mainIngredient,
-          servings: formData.servings || 2 // Ensure servings has a default value
+          cuisine: processedFormData.cuisine,
+          dietary: processedFormData.dietary,
+          mainIngredient: processedFormData.mainIngredient,
+          servings: processedFormData.servings || 2 // Ensure servings has a default value
         });
         
         // Add a small delay to ensure navigation completes
@@ -88,7 +97,7 @@ export function useQuickRecipeForm() {
         
         // If not logged in, we'll be redirected to login page
         // and the recipe generation will resume after login
-        const generatedRecipe = await generateQuickRecipe(formData);
+        const generatedRecipe = await generateQuickRecipe(processedFormData);
         
         // Validate the recipe structure before setting it
         if (!isRecipeValid(generatedRecipe)) {

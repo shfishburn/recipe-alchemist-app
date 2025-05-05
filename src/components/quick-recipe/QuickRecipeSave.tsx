@@ -9,7 +9,6 @@ import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
-import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -75,10 +74,13 @@ export const useQuickRecipeSave = () => {
         ? recipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
         : (recipe.science_notes ? [String(recipe.science_notes)] : []);
       
-      // Get the cuisine string, ensuring it's never undefined
-      const cuisineString = recipe.cuisine || "";
+      // CRUCIAL FIX: Process cuisine value to ensure it's valid
+      // If cuisine is null, undefined, or empty, set it to 'any' as a fallback
+      const cuisineString = recipe.cuisine && recipe.cuisine.trim() !== '' 
+        ? recipe.cuisine.trim() 
+        : 'any';
       
-      console.log(`Recipe cuisine: "${cuisineString}"`);
+      console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
       
       // Convert the quick recipe format to database format
       const recipeData = {
@@ -88,8 +90,8 @@ export const useQuickRecipeSave = () => {
         instructions: recipe.steps || recipe.instructions || [],
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
-        cuisine: cuisineString, // Use cuisine from recipe, can be empty string
-        // No need to set cuisine_category - the database trigger will handle it
+        cuisine: cuisineString, // Use processed cuisine value
+        // Let database trigger handle cuisine_category
         dietary: recipe.dietary, // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
@@ -116,11 +118,11 @@ export const useQuickRecipeSave = () => {
 
       if (error) {
         console.error("Error saving recipe:", error);
+        console.error("Error details:", error.details, error.hint, error.code);
         
         // Provide more helpful error messages based on the error
         if (error.message.includes('cuisine_category')) {
-          // This shouldn't happen anymore due to our trigger, but just in case
-          throw new Error(`Failed to save recipe: The cuisine category couldn't be determined. Please try a different cuisine.`);
+          throw new Error(`Failed to save recipe: The cuisine category couldn't be determined. Please try a different cuisine. Value provided: "${cuisineString}"`);
         } else if (error.message.includes('violates foreign key constraint')) {
           throw new Error(`Failed to save recipe: There was an issue with the user account. Please try logging in again.`);
         } else {

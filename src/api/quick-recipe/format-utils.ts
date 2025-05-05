@@ -5,7 +5,11 @@ import { QuickRecipeFormData } from '@/types/quick-recipe';
 
 // Determine cuisine category from cuisine values
 export const getCuisineCategory = (cuisineValue: string): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" => {
-  const lowerCuisine = cuisineValue.toLowerCase();
+  if (!cuisineValue || cuisineValue.trim() === '' || cuisineValue.toLowerCase() === 'any') {
+    return "Global";
+  }
+  
+  const lowerCuisine = cuisineValue.toLowerCase().trim();
   
   // Regional American cuisines
   if (['cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex']
@@ -45,32 +49,60 @@ export const getCuisineCategory = (cuisineValue: string): "Global" | "Regional A
 
 // Process cuisine values properly to match database enum values
 export const processCuisineValue = (cuisineValue: string | string[]): string => {
-  if (typeof cuisineValue === 'string') {
-    if (cuisineValue.toLowerCase() === 'any') {
-      return "";
-    } else if (cuisineValue) {
-      // Convert UI cuisine values to match database enum values if needed
-      // This ensures values like "thai" are properly formatted
-      return cuisineValue.split(',').map(c => c.trim()).filter(Boolean).join(', ');
-    }
-    return cuisineValue || "";
+  // Safety check for null or undefined
+  if (cuisineValue === null || cuisineValue === undefined) {
+    console.log("Cuisine value is null or undefined, defaulting to empty string");
+    return "";
   }
   
-  return Array.isArray(cuisineValue) ? cuisineValue.join(', ') : "";
+  if (typeof cuisineValue === 'string') {
+    const trimmedValue = cuisineValue.trim();
+    
+    if (trimmedValue.toLowerCase() === 'any' || trimmedValue === '') {
+      console.log("Processing cuisine value 'any' or empty string to empty string");
+      return "";
+    } else if (trimmedValue) {
+      // Convert UI cuisine values to match database enum values if needed
+      console.log(`Processing string cuisine value: "${trimmedValue}"`);
+      return trimmedValue.split(',').map(c => c.trim()).filter(Boolean).join(', ');
+    }
+    console.log("Cuisine string was falsy, returning empty string");
+    return "";
+  }
+  
+  if (Array.isArray(cuisineValue)) {
+    const filteredValues = cuisineValue.filter(Boolean).map(v => v.trim());
+    console.log(`Processing array cuisine value with ${filteredValues.length} items: ${JSON.stringify(filteredValues)}`);
+    return filteredValues.join(', ');
+  }
+  
+  console.log(`Unknown cuisine value type: ${typeof cuisineValue}, value:`, cuisineValue);
+  return "";
 };
 
 // Process dietary values properly
 export const processDietaryValue = (dietaryValue: string | string[]): string => {
-  if (typeof dietaryValue === 'string') {
-    if (dietaryValue.toLowerCase() === 'any') {
-      return "";
-    } else if (dietaryValue) {
-      return dietaryValue.split(',').map(d => d.trim()).filter(Boolean).join(', ');
-    }
-    return dietaryValue || "";
+  // Safety check for null or undefined
+  if (dietaryValue === null || dietaryValue === undefined) {
+    return "";
   }
   
-  return Array.isArray(dietaryValue) ? dietaryValue.join(', ') : "";
+  if (typeof dietaryValue === 'string') {
+    const trimmedValue = dietaryValue.trim();
+    
+    if (trimmedValue.toLowerCase() === 'any' || trimmedValue === '') {
+      return "";
+    } else if (trimmedValue) {
+      return trimmedValue.split(',').map(d => d.trim()).filter(Boolean).join(', ');
+    }
+    return "";
+  }
+  
+  if (Array.isArray(dietaryValue)) {
+    return dietaryValue.filter(Boolean).map(v => v.trim()).join(', ');
+  }
+  
+  return "";
 };
 
 // Format request body for the API call
