@@ -21,8 +21,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Set a timeout for the request (60 seconds)
-    const timeoutPromise = createTimeoutPromise(60000);
+    // Set a timeout for the request (90 seconds - increased from 60)
+    const timeoutPromise = createTimeoutPromise(90000);
     
     // Create a direct fetch function that we'll race against the timeout
     const directFetchPromise = async () => {
