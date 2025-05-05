@@ -62,7 +62,7 @@ export function NutriScoreBadge({
   // Default to null if grade is undefined
   const safeGrade = grade || null;
   
-  // Don't show anything if there's no valid grade (null grades will still be shown)
+  // Don't show anything if there's no valid grade (null grades will show only if explicitly requested)
   if (safeGrade === null && !showLabel) {
     return null;
   }

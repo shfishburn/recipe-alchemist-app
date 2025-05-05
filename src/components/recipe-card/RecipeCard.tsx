@@ -2,8 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import { RecipeCardActions } from './RecipeCardActions';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
+import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 import { NutriScoreBadge } from '../recipe-detail/nutrition/NutriScoreBadge';
 import { useNutriScore } from '@/hooks/use-nutri-score';
 

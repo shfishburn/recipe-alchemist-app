@@ -1,4 +1,4 @@
-import { Nutrition } from './nutrition-utils';
+import { Nutrition } from './nutrition';
 
 // Define the ingredient structure
 export interface RecipeIngredient {

@@ -1,3 +1,4 @@
+
 import { NutritionPreferencesType, MacroSplitType } from './nutrition-preferences';
 
 export interface Nutrition {
@@ -81,10 +82,26 @@ export type NutritionDataQuality = {
   };
 } & Record<string, any>;
 
-export type ExtendedNutritionData = Nutrition & {
+export type ExtendedNutritionData = {
+  calories: number;
+  protein: number;
+  fat: number;
+  carbohydrates?: number;
+  carbs: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  cholesterol?: number;
+  calcium: number;
+  iron: number;
+  potassium: number;
+  vitamin_d?: number;
+  vitamin_c?: number;
+  vitamin_a?: number;
+  vitaminA: number;
+  vitaminC: number;
+  vitaminD: number;
   data_quality?: NutritionDataQuality;
-  per_ingredient?: Record<string, any>;
-  audit_log?: any[];
   // Legacy property aliases
   kcal?: number;
   protein_g?: number;
@@ -96,12 +113,28 @@ export type ExtendedNutritionData = Nutrition & {
   calcium_mg?: number;
   iron_mg?: number;
   potassium_mg?: number;
-  vitaminA?: number;
-  vitaminC?: number;
-  vitaminD?: number;
   vitamin_a_iu?: number;
   vitamin_c_mg?: number;
   vitamin_d_iu?: number;
+  per_ingredient?: Record<string, any>;
+  audit_log?: any[];
+};
+
+export type RecipeNutrition = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  vitaminA: number;
+  vitaminC: number;
+  vitaminD: number;
+  calcium: number;
+  iron: number;
+  potassium: number;
+  data_quality?: NutritionDataQuality;
 };
 
 export type NutritionResponse = {
@@ -109,6 +142,9 @@ export type NutritionResponse = {
   data_quality: NutritionDataQuality;
   total: NutritionTotals;
 };
+
+// Export NutritionPreferencesType for use in other files
+export type { NutritionPreferencesType };
 
 // Helper function to check if an object matches the NutritionPreferencesType interface
 export function isNutritionPreferences(obj: any): obj is NutritionPreferencesType {
