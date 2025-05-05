@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 type SectionState = {
@@ -50,24 +49,16 @@ export function useRecipeSections() {
     }));
   };
 
+  // We'll keep the hook interface the same to avoid breaking changes elsewhere,
+  // but we can mark these as deprecated if needed
   const expandAll = () => {
-    setSections({
-      ingredients: true,
-      instructions: true,
-      nutrition: true,
-      analysis: true,
-      chef: true,
-    });
+    // Keeping function to maintain API compatibility
+    console.log('expandAll is deprecated with tabbed interface');
   };
 
   const collapseAll = () => {
-    setSections({
-      ingredients: false,
-      instructions: false,
-      nutrition: false,
-      analysis: false,
-      chef: false,
-    });
+    // Keeping function to maintain API compatibility
+    console.log('collapseAll is deprecated with tabbed interface');
   };
 
   return {
