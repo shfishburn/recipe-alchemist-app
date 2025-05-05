@@ -10,7 +10,7 @@ import { useNutritionData } from './nutrition/useNutritionData';
 import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Nutrition } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition, validateNutritionData } from '@/types/nutrition-utils';
 
@@ -77,6 +77,25 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   // If we're directly on the Nutrition tab, we'll skip the collapsible wrapper
   const isInDedicatedTab = window.location.hash === '#nutrition';
 
+  // Process nutrition data into the format expected by the components
+  const processedNutrition = React.useMemo(() => {
+    // If there's no valid nutrition data, return a fallback object
+    if (!hasValidNutrition) {
+      return {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0
+      } as Nutrition;
+    }
+    
+    // Use the nutrition data from the hook or standardize the recipe's nutrition data
+    return recipeNutrition || standardizeNutrition(recipe.nutrition || {});
+  }, [hasValidNutrition, recipe.nutrition, recipeNutrition]);
+
   // If we're on the dedicated nutrition tab, always render as expanded
   if (isInDedicatedTab) {
     // If there's no valid nutrition data, show a placeholder instead of nothing
@@ -91,9 +110,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
         </Card>
       );
     }
-    
-    // Use type assertion to avoid type incompatibility
-    const standardizedNutrition = recipeNutrition as unknown as EnhancedNutrition;
 
     // Make sure userPreferences has unitSystem, dailyCalories and macroSplit
     const defaultPreferences = {
@@ -121,12 +137,12 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             onViewModeChange={setViewMode}
             cookingMethod={cookingMethod}
             totalTime={totalTime}
-            nutrition={standardizedNutrition}
+            nutrition={processedNutrition}
           />
         </div>
         <CardContent className={isMobile ? "p-2" : "p-4"}>
           <NutritionBlock 
-            recipeNutrition={recipeNutrition}
+            recipeNutrition={processedNutrition}
             userPreferences={updatedUserPreferences}
             viewMode={viewMode}
           />
@@ -168,9 +184,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
       </Collapsible>
     );
   }
-  
-  // Use type assertion to avoid type incompatibility
-  const standardizedNutrition = recipeNutrition as unknown as EnhancedNutrition;
 
   // Make sure userPreferences has unitSystem, dailyCalories and macroSplit
   const defaultPreferences = {
@@ -199,7 +212,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             onViewModeChange={setViewMode}
             cookingMethod={cookingMethod}
             totalTime={totalTime}
-            nutrition={standardizedNutrition}
+            nutrition={processedNutrition}
           />
           <div className="flex items-center gap-2">
             <CollapsibleTrigger asChild>
@@ -222,7 +235,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
         <CollapsibleContent>
           <CardContent className={isMobile ? "p-2" : "p-4"}>
             <NutritionBlock 
-              recipeNutrition={recipeNutrition}
+              recipeNutrition={processedNutrition}
               userPreferences={updatedUserPreferences}
               viewMode={viewMode}
             />

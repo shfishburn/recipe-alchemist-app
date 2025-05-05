@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
+import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 import { isValidUUID } from '@/utils/slug-utils';
 
@@ -52,11 +52,20 @@ export const useRecipeDetail = (idOrSlug?: string) => {
             ? standardizeNutrition(JSON.parse(data.nutrition))
             : standardizeNutrition(data.nutrition || {});
           
+          // Parse nutri_score to the proper type
+          const nutriScore: NutriScore | undefined = data.nutri_score
+            ? (typeof data.nutri_score === 'string'
+                ? JSON.parse(data.nutri_score)
+                : data.nutri_score as unknown as NutriScore)
+            : undefined;
+            
+          // Build the full recipe object
           const recipe: Recipe = {
             ...data,
             ingredients: data.ingredients as unknown as Ingredient[],
             nutrition: nutrition,
-            science_notes: Array.isArray(scienceNotes) ? scienceNotes : []
+            science_notes: Array.isArray(scienceNotes) ? scienceNotes.map(note => String(note)) : [],
+            nutri_score: nutriScore
           };
           
           return recipe;

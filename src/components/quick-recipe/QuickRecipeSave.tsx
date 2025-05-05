@@ -91,8 +91,8 @@ export const useQuickRecipeSave = () => {
       
       // Ensure science_notes is an array of strings
       const scienceNotes = Array.isArray(recipe.science_notes) 
-        ? recipe.science_notes 
-        : (recipe.science_notes ? [recipe.science_notes.toString()] : []);
+        ? recipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
+        : (recipe.science_notes ? [String(recipe.science_notes)] : []);
       
       // Determine cuisine category from cuisine
       const cuisineCategory = mapCuisineToCategory(recipe.cuisine);

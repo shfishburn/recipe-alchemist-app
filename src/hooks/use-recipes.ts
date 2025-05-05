@@ -3,7 +3,8 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-import type { Recipe, Ingredient, Nutrition } from '@/types/recipe';
+import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
+import { standardizeNutrition } from '@/types/nutrition-utils';
 import { toast } from 'sonner';
 
 // Database recipe type coming directly from Supabase
@@ -35,7 +36,7 @@ export const useRecipes = () => {
       try {
         if (dbRecipe.science_notes) {
           scienceNotes = Array.isArray(dbRecipe.science_notes) 
-            ? (dbRecipe.science_notes as unknown as string[])
+            ? dbRecipe.science_notes.map((note: any) => typeof note === 'string' ? note : String(note))
             : [];
         }
       } catch (e) {
@@ -43,13 +44,34 @@ export const useRecipes = () => {
       }
       
       // Parse nutrition JSON to Nutrition object
-      let nutrition: Nutrition = {};
+      let nutrition: Nutrition = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0
+      };
+      
       try {
         if (dbRecipe.nutrition) {
-          nutrition = dbRecipe.nutrition as unknown as Nutrition;
+          nutrition = standardizeNutrition(dbRecipe.nutrition);
         }
       } catch (e) {
         console.error('Failed to parse nutrition', e);
+      }
+      
+      // Parse nutri_score JSON to NutriScore object
+      let nutriScore: NutriScore | undefined;
+      try {
+        if (dbRecipe.nutri_score) {
+          nutriScore = typeof dbRecipe.nutri_score === 'string'
+            ? JSON.parse(dbRecipe.nutri_score)
+            : dbRecipe.nutri_score as unknown as NutriScore;
+        }
+      } catch (e) {
+        console.error('Failed to parse nutri_score', e);
       }
       
       // Return a complete Recipe object with default values for missing properties
@@ -80,6 +102,7 @@ export const useRecipes = () => {
         nutrition: nutrition,
         science_notes: scienceNotes,
         chef_notes: dbRecipe.chef_notes || '',
+        nutri_score: nutriScore
       };
     });
   }, []);

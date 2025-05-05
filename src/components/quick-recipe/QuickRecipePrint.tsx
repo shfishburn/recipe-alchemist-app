@@ -75,7 +75,14 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           prep_time_min: recipe.prepTime,
           cook_time_min: recipe.cookTime,
           nutrition: recipe.nutritionHighlight ? {
-            // Basic placeholder for nutrition data
+            // Basic minimum valid nutrition object
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0,
+            sugar: 0,
+            sodium: 0,
             kcal: 0
           } : undefined,
           science_notes: [],

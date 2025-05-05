@@ -64,6 +64,27 @@ export interface Nutrition {
   carbohydrates?: number;
 }
 
+export interface NutriScore {
+  score: number;
+  grade: "A" | "B" | "C" | "D" | "E";
+  negative_points: {
+    energy: number;
+    saturated_fat: number;
+    sugars: number;
+    sodium: number;
+    total: number;
+  };
+  positive_points: {
+    fiber: number;
+    protein: number;
+    fruit_veg_nuts: number;
+    total: number;
+  };
+  category?: string;
+  calculation_version?: string;
+  calculated_at?: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
@@ -93,26 +114,7 @@ export interface Recipe {
   chef_notes?: string;
   cooking_tip?: string;
   slug?: string;
-  nutri_score?: {
-    score: number;
-    grade: "A" | "B" | "C" | "D" | "E";
-    negative_points: {
-      energy: number;
-      saturated_fat: number;
-      sugars: number;
-      sodium: number;
-      total: number;
-    };
-    positive_points: {
-      fiber: number;
-      protein: number;
-      fruit_veg_nuts: number;
-      total: number;
-    };
-    category?: string;
-    calculation_version?: string;
-    calculated_at?: string;
-  };
+  nutri_score?: NutriScore;
 }
 
 // Export the Nutrition type explicitly

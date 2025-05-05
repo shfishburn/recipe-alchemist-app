@@ -106,14 +106,17 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     console.log(`Mapped cuisine '${updatedRecipe.cuisine}' to category: ${updatedRecipe.cuisine_category}`);
   }
   
+  // Process science_notes to ensure it's always a valid array of strings
+  const scienceNotes = Array.isArray(updatedRecipe.science_notes) 
+    ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
+    : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
+  
   // Transform recipe for database storage with improved type safety
   const dbRecipe = {
     ...updatedRecipe,
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
-    science_notes: Array.isArray(updatedRecipe.science_notes) 
-      ? updatedRecipe.science_notes 
-      : (updatedRecipe.science_notes ? [updatedRecipe.science_notes.toString()] : []) as unknown as Json
+    science_notes: scienceNotes as unknown as Json
   };
 
   console.log("Saving recipe update with data:", {
@@ -122,8 +125,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
-    hasNotes: Array.isArray(dbRecipe.science_notes) && dbRecipe.science_notes.length > 0,
-    noteCount: Array.isArray(dbRecipe.science_notes) ? dbRecipe.science_notes.length : 0,
+    hasNotes: Array.isArray(scienceNotes) && scienceNotes.length > 0,
+    noteCount: scienceNotes.length,
     hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
     nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : [],
     cuisine: updatedRecipe.cuisine,
