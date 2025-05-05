@@ -81,13 +81,28 @@ export const useQuickRecipeSave = () => {
         ? originalCuisine.trim() 
         : "any";
       
-      // Always use 'Global' as the cuisine_category to ensure recipes can be saved
-      // The database expects an enum value, not just any string
-      // Using "Global" as a literal enum value rather than a variable string
-      const cuisineCategoryValue = "Global" as const;
+      // Get cuisine category based on the cuisine value, but always ensure it's a valid enum value
+      // These must match the database enum values exactly: "Global", "Regional American", "European", "Asian", "Dietary Styles", "Middle Eastern"
+      const validCategories = ["Global", "Regional American", "European", "Asian", "Dietary Styles", "Middle Eastern"];
+      
+      // Attempt to get the proper category first
+      let cuisineCategoryValue;
+      try {
+        const determinedCategory = getCuisineCategoryByValue(cuisineString);
+        // Verify it's one of our valid categories
+        if (validCategories.includes(determinedCategory)) {
+          cuisineCategoryValue = determinedCategory;
+        } else {
+          console.warn(`Category "${determinedCategory}" is not a valid enum value, defaulting to "Global"`);
+          cuisineCategoryValue = "Global";
+        }
+      } catch (error) {
+        console.error("Error determining cuisine category:", error);
+        cuisineCategoryValue = "Global"; // Fallback to known valid value
+      }
       
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
-      console.log(`Using cuisine category: "${cuisineCategoryValue}" for all cuisines to avoid errors`);
+      console.log(`Using cuisine category: "${cuisineCategoryValue}" for database compatibility`);
       
       // Convert the quick recipe format to database format
       const recipeData = {
@@ -98,7 +113,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: cuisineString, // Use processed cuisine value
-        cuisine_category: cuisineCategoryValue, // Use the enum value directly
+        cuisine_category: cuisineCategoryValue, // Use properly determined category
         dietary: recipe.dietary || "", // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
