@@ -38,7 +38,7 @@ export const InstructionStep = memo(function InstructionStep({
         stepCategory={stepReaction?.cooking_method as StepCategory | undefined}
       />
       
-      {!isLastStep && <Separator className="my-6" />}
+      {!isLastStep && <Separator className="my-4" />}
     </li>
   );
 });

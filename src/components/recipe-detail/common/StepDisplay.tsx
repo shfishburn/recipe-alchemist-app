@@ -35,7 +35,7 @@ export function StepDisplay({
     
   // Styling classes based on state
   const containerClasses = cn(
-    "flex flex-col p-4 rounded-md transition-colors border",
+    "flex flex-col p-3 rounded-md transition-colors border",
     isCompleted ? "bg-green-50 hover:bg-green-100 border-green-200" : "hover:bg-gray-50 border-gray-100",
     onToggleComplete ? "cursor-pointer" : "",
     variant === 'cooking' ? "shadow-sm" : ""
@@ -64,7 +64,7 @@ export function StepDisplay({
     <>
       <div onClick={handleClick} className={containerClasses}>
         {/* Step header row */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className={cn(
               "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md",
@@ -97,7 +97,7 @@ export function StepDisplay({
       
       {/* Science info panel */}
       {hasScience && showScience && stepReaction && (
-        <div className="ml-6 mt-2 p-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm">
+        <div className="ml-6 mt-2 p-3 bg-blue-50 rounded-md border border-blue-100 shadow-sm">
           <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
             <Atom className="h-4 w-4 mr-1.5" />
             <span>Scientific Explanation</span>
@@ -110,9 +110,9 @@ export function StepDisplay({
           
           {/* Reaction tags */}
           {stepReaction.reactions?.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-2 mt-2 border-t border-blue-200">
+            <div className="flex flex-wrap gap-2 pt-1 mt-1 border-t border-blue-200">
               {stepReaction.reactions.map((type, i) => (
-                <span key={i} className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
+                <span key={i} className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
                   {formatReactionName(type)}
                 </span>
               ))}
