@@ -37,6 +37,7 @@ export interface AdaptationTrackingType {
   weeksDieting?: number;
   initialWeight?: number;
   lastDietBreakDate?: string;
+  adaptationPercentage?: number;
 }
 
 export interface MatadorProtocolType {
@@ -71,7 +72,7 @@ export interface NutritionPreferencesType {
   exerciseIntensity?: 'light' | 'moderate' | 'challenging' | 'intense' | 'extreme';
   macroDetails?: MacroDetailsType;
   
-  // New fields that were missing
+  // Fields referenced in the components
   personalDetails?: PersonalDetailsType;
   bodyComposition?: BodyCompositionType;
   mealTiming?: MealTimingType;
@@ -110,5 +111,23 @@ export const DEFAULT_NUTRITION_PREFERENCES: NutritionPreferencesType = {
     fastingWindow: 12,
     preworkoutTiming: 60,
     postworkoutTiming: 30
-  }
+  },
+  // Set default values for other fields
+  bodyComposition: {
+    bodyFatPercentage: undefined,
+    leanMass: undefined,
+    fatMass: undefined
+  },
+  activityComponents: {
+    activityLevel: 'moderate',
+    nonExerciseActivity: 'moderate',
+    exerciseIntensity: 'moderate'
+  },
+  matadorProtocol: {
+    enabled: false,
+    dietPhaseLength: 14,
+    breakPhaseLength: 7
+  },
+  bmr: 0,
+  tdee: 0
 };

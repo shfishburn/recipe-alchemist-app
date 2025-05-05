@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Recipe } from '@/types/recipe';
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HeartIcon, ClockIcon, UsersIcon } from 'lucide-react';
@@ -18,7 +19,7 @@ export function FeaturedRecipe({ recipe }: FeaturedRecipeProps) {
   return (
     <Card className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
       {recipe.image_url && (
-        <Link href={`/recipes/${recipe.slug}`}>
+        <Link to={`/recipes/${recipe.slug}`}>
           <img
             src={recipe.image_url}
             alt={recipe.title}
@@ -29,7 +30,7 @@ export function FeaturedRecipe({ recipe }: FeaturedRecipeProps) {
 
       <CardContent className="p-6 flex-grow">
         <div className="mb-4">
-          <Link href={`/recipes/${recipe.slug}`}>
+          <Link to={`/recipes/${recipe.slug}`}>
             <h3 className="text-xl font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-200">
               {recipe.title}
             </h3>
@@ -62,7 +63,7 @@ export function FeaturedRecipe({ recipe }: FeaturedRecipeProps) {
         </div>
 
         <ul className="list-disc pl-5 text-gray-700 mb-4">
-          {recipe.instructions.map((step, index) => (
+          {recipe.instructions.slice(0, 3).map((step, index) => (
             <li key={index} className="mb-4">
               {typeof step === 'string' 
                 ? step 
@@ -77,7 +78,7 @@ export function FeaturedRecipe({ recipe }: FeaturedRecipeProps) {
 
       <CardFooter className="p-6 border-t border-gray-200">
         <Button variant="outline" asChild>
-          <Link href={`/recipes/${recipe.slug}`} className="w-full text-center">
+          <Link to={`/recipes/${recipe.slug}`} className="w-full text-center">
             View Recipe
           </Link>
         </Button>
