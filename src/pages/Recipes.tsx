@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search, Loader } from 'lucide-react';
 import Navbar from '@/components/ui/navbar';
-import RecipeCard from '@/components/recipes/RecipeCard';
+import { RecipeCard } from '@/components/recipe-card/RecipeCard';
 import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -102,7 +102,17 @@ const Recipes = () => {
           {!isLoading && !error && recipes && recipes.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
+                <RecipeCard 
+                  key={recipe.id}
+                  id={recipe.id}
+                  slug={recipe.slug}
+                  title={recipe.title}
+                  image={recipe.image_url}
+                  description={recipe.tagline || recipe.description}
+                  prepTime={recipe.prep_time || recipe.prep_time_min}
+                  cookTime={recipe.cook_time || recipe.cook_time_min}
+                  cuisine={recipe.cuisine}
+                />
               ))}
             </div>
           )}

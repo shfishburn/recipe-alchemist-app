@@ -85,7 +85,7 @@ export function RecipeCard({
 
         {/* Actions */}
         <div className="mt-4">
-          <RecipeCardActions recipeId={id} />
+          <RecipeCardActions recipe={recipe || { id, title }} />
         </div>
       </div>
     </Card>
