@@ -81,28 +81,7 @@ export const useQuickRecipeSave = () => {
         ? originalCuisine.trim() 
         : "any";
       
-      // Get cuisine category based on the cuisine value, but always ensure it's a valid enum value
-      // These must match the database enum values exactly: "Global", "Regional American", "European", "Asian", "Dietary Styles", "Middle Eastern"
-      const validCategories = ["Global", "Regional American", "European", "Asian", "Dietary Styles", "Middle Eastern"];
-      
-      // Attempt to get the proper category first
-      let cuisineCategoryValue;
-      try {
-        const determinedCategory = getCuisineCategoryByValue(cuisineString);
-        // Verify it's one of our valid categories
-        if (validCategories.includes(determinedCategory)) {
-          cuisineCategoryValue = determinedCategory;
-        } else {
-          console.warn(`Category "${determinedCategory}" is not a valid enum value, defaulting to "Global"`);
-          cuisineCategoryValue = "Global";
-        }
-      } catch (error) {
-        console.error("Error determining cuisine category:", error);
-        cuisineCategoryValue = "Global"; // Fallback to known valid value
-      }
-      
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
-      console.log(`Using cuisine category: "${cuisineCategoryValue}" for database compatibility`);
       
       // Convert the quick recipe format to database format
       const recipeData = {
@@ -113,7 +92,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: cuisineString, // Use processed cuisine value
-        cuisine_category: cuisineCategoryValue, // Use properly determined category
+        // Removed cuisine_category field to let database handle it
         dietary: recipe.dietary || "", // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
@@ -128,8 +107,7 @@ export const useQuickRecipeSave = () => {
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
         nutrition: nutritionData ? "present" : "missing",
         nutrition_type: nutritionData ? typeof nutritionData : "N/A",
-        cuisine: cuisineString,
-        cuisine_category: cuisineCategoryValue
+        cuisine: cuisineString
       });
 
       // Insert the recipe into the database
@@ -145,7 +123,7 @@ export const useQuickRecipeSave = () => {
         
         // Provide more helpful error messages based on the error
         if (error.message.includes('cuisine_category')) {
-          throw new Error(`Failed to save recipe: Database issue with cuisine category. We're using a simplified approach to fix this. Please try again.`);
+          throw new Error(`Failed to save recipe: Database issue with cuisine category. Please try again.`);
         } else if (error.message.includes('violates foreign key constraint')) {
           throw new Error(`Failed to save recipe: There was an issue with the user account. Please try logging in again.`);
         } else {
