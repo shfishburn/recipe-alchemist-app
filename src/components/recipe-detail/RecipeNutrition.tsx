@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,8 +52,8 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   const isMobile = useMediaQuery('(max-width: 640px)');
   
   // Calculate total time from prep + cook time (accepting either naming convention)
-  const prepTime = recipe.prep_time_min || recipe.prep_time || 0;
-  const cookTime = recipe.cook_time_min || recipe.cook_time || 0;
+  const prepTime = recipe.prep_time_min || 0;
+  const cookTime = recipe.cook_time_min || 0;
   const totalTime = prepTime + cookTime;
   
   // Use cuisine as cooking method since cooking_method doesn't exist in the type

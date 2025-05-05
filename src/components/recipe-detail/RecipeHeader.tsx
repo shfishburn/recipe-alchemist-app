@@ -4,14 +4,10 @@ import { ShareButton } from './ShareButton';
 import { RecipeActions } from './RecipeActions';
 import { NutriScoreBadge } from './nutrition/NutriScoreBadge';
 import { useNutriScore } from '@/hooks/use-nutri-score';
+import { Recipe } from '@/types/recipe';
 
 interface RecipeHeaderProps {
-  recipe: {
-    id: string;
-    title: string;
-    image_url?: string;
-    tagline?: string;
-  };
+  recipe: Recipe;
   currentTab: string;
   onOpenChat: () => void;
 }
@@ -32,8 +28,8 @@ export function RecipeHeader({ recipe, currentTab, onOpenChat }: RecipeHeaderPro
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           
-          {/* Nutri-Score Badge */}
-          {hasData && (
+          {/* Nutri-Score Badge - Only show when there's valid data */}
+          {hasData && grade !== null && (
             <div className="absolute right-3 top-3">
               <NutriScoreBadge 
                 grade={grade}

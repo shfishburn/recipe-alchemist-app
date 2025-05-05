@@ -35,7 +35,7 @@ export function RecipeCard({
   const { grade, hasData } = useNutriScore(recipe);
   
   // Determine the URL for the recipe
-  const recipeUrl = slug ? `/recipe/${slug}` : `/recipes/${id}`;
+  const recipeUrl = slug ? `/recipes/${slug}` : `/recipes/${id}`;
 
   return (
     <Card className={className}>
@@ -55,8 +55,8 @@ export function RecipeCard({
               </div>
             )}
             
-            {/* Nutri-Score badge */}
-            {hasData && (
+            {/* Nutri-Score badge - only show if we have a valid grade */}
+            {hasData && grade !== null && (
               <div className="absolute right-2 top-2">
                 <NutriScoreBadge grade={grade} size="sm" />
               </div>
@@ -81,11 +81,6 @@ export function RecipeCard({
           {prepTime && <span>Prep: {prepTime} min</span>}
           {cookTime && <span>Cook: {cookTime} min</span>}
           {cuisine && <span>Cuisine: {cuisine}</span>}
-        </div>
-
-        {/* Actions */}
-        <div className="mt-4">
-          <RecipeCardActions recipe={recipe || { id, title }} />
         </div>
       </div>
     </Card>

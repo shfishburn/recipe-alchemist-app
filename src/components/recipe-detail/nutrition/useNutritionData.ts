@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Recipe } from '@/types/recipe';
 import { toast } from 'sonner';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import type { Profile } from '@/hooks/use-auth';
+import { ExtendedNutritionData, NutritionDataQuality, standardizeNutrition } from '@/types/nutrition-utils';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 
@@ -18,9 +17,12 @@ export interface UserNutritionPreferences {
   unitSystem?: 'metric' | 'imperial';
 }
 
+// Re-export ExtendedNutritionData from here so other components can import it
+export type { ExtendedNutritionData };
+
 export function useNutritionData(recipe: Recipe | undefined) {
   const { unitSystem } = useUnitSystem();
-  const [recipeNutrition, setRecipeNutrition] = useState<EnhancedNutrition | null>(null);
+  const [recipeNutrition, setRecipeNutrition] = useState<ExtendedNutritionData | null>(null);
   
   // Query for enhanced nutrition data
   const { data, isLoading, error, refetch } = useQuery({
@@ -32,7 +34,7 @@ export function useNutritionData(recipe: Recipe | undefined) {
       
       // This is where we'd normally fetch enhanced data from an API
       // For now, we'll just enhance the existing data locally
-      const enhancedNutrition: EnhancedNutrition = {
+      const enhancedNutrition: ExtendedNutritionData = {
         ...recipe.nutrition,
         servingSize: recipe.nutrition.serving_size || 100,
         dataQuality: recipe.nutrition.data_quality || 'medium',
@@ -43,6 +45,14 @@ export function useNutritionData(recipe: Recipe | undefined) {
         fiber: recipe.nutrition.fiber || 0,
         sugar: recipe.nutrition.sugar || 0,
         sodium: recipe.nutrition.sodium || 0,
+        cholesterol: recipe.nutrition.cholesterol || 0,
+        calcium: recipe.nutrition.calcium || 0,
+        iron: recipe.nutrition.iron || 0,
+        potassium: recipe.nutrition.potassium || 0,
+        vitamin_d: recipe.nutrition.vitamin_d || 0,
+        vitamin_c: recipe.nutrition.vitamin_c || 0,
+        vitamin_a: recipe.nutrition.vitamin_a || 0,
+        carbohydrates: recipe.nutrition.carbohydrates || recipe.nutrition.carbs || 0,
       };
       
       return enhancedNutrition;
@@ -57,7 +67,7 @@ export function useNutritionData(recipe: Recipe | undefined) {
       setRecipeNutrition(data);
     } else if (recipe?.nutrition) {
       // Create a basic enhanced nutrition object from recipe nutrition
-      const baseNutrition: EnhancedNutrition = {
+      const baseNutrition: ExtendedNutritionData = {
         calories: recipe.nutrition.calories || 0,
         protein: recipe.nutrition.protein || 0,
         carbs: recipe.nutrition.carbs || 0,
@@ -65,6 +75,14 @@ export function useNutritionData(recipe: Recipe | undefined) {
         fiber: recipe.nutrition.fiber || 0,
         sugar: recipe.nutrition.sugar || 0,
         sodium: recipe.nutrition.sodium || 0,
+        cholesterol: recipe.nutrition.cholesterol || 0,
+        calcium: recipe.nutrition.calcium || 0,
+        iron: recipe.nutrition.iron || 0,
+        potassium: recipe.nutrition.potassium || 0,
+        vitamin_d: recipe.nutrition.vitamin_d || 0,
+        vitamin_c: recipe.nutrition.vitamin_c || 0,
+        vitamin_a: recipe.nutrition.vitamin_a || 0,
+        carbohydrates: recipe.nutrition.carbohydrates || recipe.nutrition.carbs || 0,
         servingSize: recipe.nutrition.serving_size || 100,
         dataQuality: recipe.nutrition.data_quality || 'medium',
       };

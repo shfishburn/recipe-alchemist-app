@@ -1,21 +1,35 @@
-
 import { Nutrition } from './nutrition-utils';
+
+// Define the ingredient structure
+export interface RecipeIngredient {
+  name: string;
+  quantity?: string;
+  unit?: string;
+  notes?: string;
+  // For backward compatibility with existing code
+  qty?: number | string;
+  qty_metric?: number | string;
+  qty_imperial?: number | string;
+  unit_metric?: string;
+  unit_imperial?: string;
+  item?: string;
+}
+
+export type RecipeInstruction = string | { step: string; group?: string };
 
 export interface Recipe {
   id: string;
   title: string;
   tagline?: string;
   image_url?: string;
-  ingredients: {
-    name: string;
-    quantity?: string;
-    unit?: string;
-    notes?: string;
-  }[];
-  instructions: (string | { step: string; group?: string })[];
+  ingredients: RecipeIngredient[];
+  instructions: RecipeInstruction[];
   servings: number;
   prep_time_min?: number;
   cook_time_min?: number;
+  // For backward compatibility
+  prep_time?: number;
+  cook_time?: number;
   nutrition?: Nutrition;
   nutri_score?: {
     score: number | null;
@@ -52,4 +66,9 @@ export interface Recipe {
   version_number?: number;
   previous_version_id?: string;
   deleted_at?: string;
+  // Other fields for backward compatibility
+  description?: string;
 }
+
+// Export RecipeIngredient for usage in other files
+export type { RecipeIngredient as Ingredient };

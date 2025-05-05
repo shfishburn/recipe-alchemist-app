@@ -1,48 +1,53 @@
-
 import React, { useRef } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
-import { Ingredient } from '@/types/recipe';
+import { RecipeIngredient } from '@/types/recipe';
 
 // Helper function to format ingredient for database storage
-const formatIngredientForDB = (ingredient: any): Ingredient => {
+const formatIngredientForDB = (ingredient: any): RecipeIngredient => {
   if (typeof ingredient === 'string') {
     return {
-      qty: 1,
+      name: ingredient,
+      quantity: '1',
       unit: '',
-      item: ingredient,
-      // Add required metric/imperial units
-      qty_metric: 1,
+      // For backward compatibility
+      qty: 1,
       unit_metric: '',
+      qty_metric: 1,
+      unit_imperial: '',
       qty_imperial: 1,
-      unit_imperial: ''
+      item: ingredient
     };
   }
   
   // If it's already in the right format, return it
   if (ingredient.item && typeof ingredient.item === 'string') {
     return {
-      qty: ingredient.qty || 1,
+      name: ingredient.item,
+      quantity: ingredient.qty?.toString() || '1',
       unit: ingredient.unit || '',
-      item: ingredient.item,
-      // Add required metric/imperial units
-      qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+      // For backward compatibility
+      qty: ingredient.qty || 1,
       unit_metric: ingredient.unit_metric || ingredient.unit || '',
+      qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+      unit_imperial: ingredient.unit_imperial || ingredient.unit || '',
       qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
-      unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
+      item: ingredient.item
     };
   }
   
   // Otherwise, extract what we can
   return {
-    qty: ingredient.qty || 1,
-    unit: ingredient.unit || '',
-    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient),
-    // Add required metric/imperial units
-    qty_metric: ingredient.qty_metric || ingredient.qty || 1,
-    unit_metric: ingredient.unit_metric || ingredient.unit || '',
-    qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
-    unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
+    name: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient),
+    quantity: '1',
+    unit: '',
+    // For backward compatibility
+    qty: 1,
+    unit_metric: '',
+    qty_metric: 1,
+    unit_imperial: '',
+    qty_imperial: 1,
+    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient)
   };
 };
 
@@ -79,28 +84,46 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           description: recipe.description,
           ingredients: formattedIngredients,
           instructions: formattedInstructions,
-          prep_time: recipe.prepTime || recipe.prep_time_min,
-          cook_time: recipe.cookTime || recipe.cook_time_min,
+          prep_time_min: recipe.prepTime || recipe.prep_time_min,
+          cook_time_min: recipe.cookTime || recipe.cook_time_min,
           nutrition: recipe.nutrition ? {
             calories: recipe.nutrition.calories || 0,
             protein: recipe.nutrition.protein || 0,
             fat: recipe.nutrition.fat || 0,
+            carbohydrates: recipe.nutrition.carbs || 0,
             carbs: recipe.nutrition.carbs || 0,
             fiber: recipe.nutrition.fiber || 0,
             sugar: recipe.nutrition.sugar || 0,
-            sodium: recipe.nutrition.sodium || 0
+            sodium: recipe.nutrition.sodium || 0,
+            cholesterol: recipe.nutrition.cholesterol || 0,
+            calcium: recipe.nutrition.calcium || 0,
+            iron: recipe.nutrition.iron || 0,
+            potassium: recipe.nutrition.potassium || 0,
+            vitamin_a: recipe.nutrition.vitamin_a || 0,
+            vitamin_c: recipe.nutrition.vitamin_c || 0,
+            vitamin_d: recipe.nutrition.vitamin_d || 0
           } : {
             calories: 0,
             protein: 0,
             fat: 0, 
+            carbohydrates: 0,
             carbs: 0,
             fiber: 0,
             sugar: 0,
-            sodium: 0
+            sodium: 0,
+            cholesterol: 0,
+            calcium: 0,
+            iron: 0,
+            potassium: 0,
+            vitamin_a: 0,
+            vitamin_c: 0,
+            vitamin_d: 0
           },
           science_notes: recipe.science_notes || [],
           tagline: recipe.description,
-          chef_notes: recipe.cookingTip || ''
+          chef_notes: recipe.cookingTip || '',
+          user_id: 'quick-recipe',
+          servings: recipe.servings || 1
         }} 
         ref={printDialogTriggerRef}
       />

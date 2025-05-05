@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import { Recipe } from '@/types/recipe';
 
 interface CookingIngredientsSectionProps {
   recipe: Recipe;
@@ -15,7 +15,9 @@ export function CookingIngredientsSection({ recipe }: CookingIngredientsSectionP
           {recipe.ingredients && recipe.ingredients.map((ingredient, idx) => (
             <li key={idx} className="flex items-center gap-2">
               <div className="flex-1">
-                <span className="font-medium">{ingredient.qty} {ingredient.unit}</span> {ingredient.item}
+                <span className="font-medium">
+                  {ingredient.quantity || ingredient.qty} {ingredient.unit}
+                </span> {ingredient.name || ingredient.item}
               </div>
             </li>
           ))}

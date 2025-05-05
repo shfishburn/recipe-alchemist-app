@@ -8,10 +8,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import { ExtendedNutritionData } from '@/types/nutrition-utils';
 
 interface NutritionConfidenceIndicatorProps {
-  nutrition: EnhancedNutrition;
+  nutrition: ExtendedNutritionData;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
 }
@@ -25,9 +25,23 @@ export function NutritionConfidenceIndicator({
     return null;
   }
   
-  // Default values in case they're missing
-  const confidence = nutrition.data_quality?.overall_confidence || 'medium';
-  const confidenceScore = nutrition.data_quality?.overall_confidence_score || 0.7;
+  // Handle both string and object data_quality formats
+  let confidence: 'high' | 'medium' | 'low' = 'medium';
+  let confidenceScore: number = 0.7;
+  let penalties: Record<string, any> = {};
+  let unmatchedIngredients: string[] = [];
+  
+  if (typeof nutrition.data_quality === 'string') {
+    // Simple string format
+    confidence = nutrition.data_quality as 'high' | 'medium' | 'low';
+    confidenceScore = confidence === 'high' ? 0.9 : confidence === 'medium' ? 0.7 : 0.4;
+  } else if (typeof nutrition.data_quality === 'object') {
+    // Complex object format
+    confidence = nutrition.data_quality.overall_confidence || 'medium';
+    confidenceScore = nutrition.data_quality.overall_confidence_score || 0.7;
+    penalties = nutrition.data_quality.penalties || {};
+    unmatchedIngredients = nutrition.data_quality.unmatched_or_low_confidence_ingredients || [];
+  }
   
   const getConfidenceColor = () => {
     switch (confidence) {
@@ -54,22 +68,20 @@ export function NutritionConfidenceIndicator({
   
   const getLimitationText = () => {
     const limitations = [];
-    // Initialize penalties with empty object if undefined
-    const penalties = nutrition.data_quality?.penalties || {};
     
-    // Add proper null checks for all properties
-    if (penalties && 'energy_check_fail' in penalties && penalties.energy_check_fail) {
-      limitations.push('Energy validation check failed');
-    }
-    
-    if (penalties && 'unmatched_ingredients_rate' in penalties && 
-        typeof penalties.unmatched_ingredients_rate === 'number' && 
-        penalties.unmatched_ingredients_rate > 0.2) {
-      limitations.push(`${Math.round(penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
-    }
-    
-    if (penalties && 'low_confidence_top_ingredients' in penalties && penalties.low_confidence_top_ingredients) {
-      limitations.push('Low confidence in main ingredients');
+    if (typeof penalties === 'object') {
+      if (penalties.energy_check_fail) {
+        limitations.push('Energy validation check failed');
+      }
+      
+      if (typeof penalties.unmatched_ingredients_rate === 'number' && 
+          penalties.unmatched_ingredients_rate > 0.2) {
+        limitations.push(`${Math.round(penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
+      }
+      
+      if (penalties.low_confidence_top_ingredients) {
+        limitations.push('Low confidence in main ingredients');
+      }
     }
     
     if (limitations.length === 0) {
@@ -105,9 +117,6 @@ export function NutritionConfidenceIndicator({
   if (!showTooltip) {
     return badge;
   }
-  
-  // Safety check for unmatched_or_low_confidence_ingredients
-  const unmatchedIngredients = nutrition.data_quality?.unmatched_or_low_confidence_ingredients || [];
   
   return (
     <TooltipProvider delayDuration={300}>
