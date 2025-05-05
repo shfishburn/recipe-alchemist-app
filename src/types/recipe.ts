@@ -1,52 +1,21 @@
-
-import { Nutrition } from './nutrition';
+import { Nutrition } from './nutrition-utils';
 
 export interface Recipe {
   id: string;
   title: string;
-  description?: string;
   tagline?: string;
-  user_id?: string;
-  created_at?: string;
-  image_url?: string; 
-  ingredients: Array<{
-    amount?: number;
-    unit?: string;
+  image_url?: string;
+  ingredients: {
     name: string;
-    department?: string;
+    quantity?: string;
+    unit?: string;
     notes?: string;
-    optional?: boolean;
-    // Add compatibility properties for older code
-    qty?: number;
-    item?: string;
-    qty_metric?: number;
-    unit_metric?: string;
-    qty_imperial?: number;
-    unit_imperial?: string;
-  }>;
-  instructions: Array<{
-    step: string;
-    group?: string;
-  }>;
-  nutrition: Nutrition;
-  prep_time?: number;
-  cook_time?: number;
-  // Add compatibility properties for newer code
+  }[];
+  instructions: (string | { step: string; group?: string })[];
+  servings: number;
   prep_time_min?: number;
   cook_time_min?: number;
-  servings?: number;
-  cuisine?: string;
-  cuisine_category?: string;
-  difficulty?: string;
-  dietary_preferences?: string[];
-  tags?: string[];
-  rating?: number;
-  is_public?: boolean;
-  chef_notes?: string;
-  science_notes?: string[];
-  slug?: string;
-  media?: any;
-  version?: number;
+  nutrition?: Nutrition;
   nutri_score?: {
     score: number | null;
     grade: 'A' | 'B' | 'C' | 'D' | 'E' | null;
@@ -67,19 +36,19 @@ export interface Recipe {
     calculation_version?: string;
     calculated_at?: string;
   };
-}
-
-// Export Ingredient type for use in other components
-export interface Ingredient {
-  qty?: number;
-  unit?: string;
-  item: string | Record<string, any>;
-  notes?: string;
-  // Add metric/imperial properties
-  qty_metric?: number;
-  unit_metric?: string;
-  qty_imperial?: number;
-  unit_imperial?: string;
-  shop_size_qty?: number;
-  shop_size_unit?: string;
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
+  cuisine?: string;
+  cuisine_category?: string[];
+  dietary?: string;
+  chef_notes?: string;
+  flavor_tags?: string[];
+  slug?: string;
+  reasoning?: string;
+  science_notes?: any[];
+  cooking_tip?: string;
+  version_number?: number;
+  previous_version_id?: string;
+  deleted_at?: string;
 }
