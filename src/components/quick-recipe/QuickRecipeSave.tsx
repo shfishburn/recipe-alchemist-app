@@ -103,7 +103,7 @@ export const useQuickRecipeSave = () => {
         title: recipe.title,
         tagline: recipe.description, // Map description to tagline
         ingredients: recipe.ingredients as unknown as Json,
-        instructions: recipe.steps,
+        instructions: recipe.steps || recipe.instructions || [],
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: recipe.cuisine, // Use cuisine instead of cuisineType
@@ -120,7 +120,8 @@ export const useQuickRecipeSave = () => {
         ...recipeData,
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.length + " items" : "no ingredients",
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
-        nutrition: nutritionData ? "present" : "missing"
+        nutrition: nutritionData ? "present" : "missing",
+        cuisine_category: cuisineCategory
       });
 
       // Insert the recipe into the database

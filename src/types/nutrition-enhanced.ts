@@ -14,5 +14,5 @@ export interface EnhancedNutrition extends Nutrition {
     limitations?: string[];
   };
   per_ingredient?: Record<string, any>;
-  audit_log?: any[];
+  audit_log?: any[] | Record<string, any>; // Modified to accept both array and record for backward compatibility
 }

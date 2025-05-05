@@ -118,7 +118,9 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     nutrition: updatedRecipe.nutrition as unknown as Json,
     science_notes: scienceNotes as unknown as Json,
     // Convert nutri_score to Json if present
-    nutri_score: updatedRecipe.nutri_score ? updatedRecipe.nutri_score as unknown as Json : undefined
+    nutri_score: updatedRecipe.nutri_score ? updatedRecipe.nutri_score as unknown as Json : undefined,
+    // Ensure cuisine_category is one of the allowed enum values
+    cuisine_category: updatedRecipe.cuisine_category || "Global"
   };
 
   console.log("Saving recipe update with data:", {
@@ -132,7 +134,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
     nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : [],
     cuisine: updatedRecipe.cuisine,
-    cuisine_category: updatedRecipe.cuisine_category
+    cuisine_category: dbRecipe.cuisine_category
   });
 
   try {

@@ -6,12 +6,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { NutritionHeader } from './nutrition/NutritionHeader';
-import { useNutritionData } from './nutrition/useNutritionData';
+import { useNutritionData, EnhancedNutrition } from './nutrition/useNutritionData';
 import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
-import type { Recipe, Nutrition } from '@/types/recipe';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import type { Recipe } from '@/types/recipe';
 import { standardizeNutrition, validateNutritionData } from '@/types/nutrition-utils';
 
 // Safe import for ProfileContext - don't throw errors if not available
@@ -78,7 +77,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
   const isInDedicatedTab = window.location.hash === '#nutrition';
 
   // Process nutrition data into the format expected by the components
-  const processedNutrition = React.useMemo(() => {
+  const processedNutrition: EnhancedNutrition = React.useMemo(() => {
     // If there's no valid nutrition data, return a fallback object
     if (!hasValidNutrition) {
       return {
@@ -89,11 +88,12 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
         fiber: 0,
         sugar: 0,
         sodium: 0
-      } as Nutrition;
+      } as EnhancedNutrition;
     }
     
     // Use the nutrition data from the hook or standardize the recipe's nutrition data
-    return recipeNutrition || standardizeNutrition(recipe.nutrition || {});
+    const standardized = recipeNutrition || standardizeNutrition(recipe.nutrition || {});
+    return standardized as EnhancedNutrition;
   }, [hasValidNutrition, recipe.nutrition, recipeNutrition]);
 
   // If we're on the dedicated nutrition tab, always render as expanded
