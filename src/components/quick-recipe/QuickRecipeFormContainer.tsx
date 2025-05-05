@@ -78,7 +78,7 @@ export function QuickRecipeFormContainer() {
     // Format the data properly for the API - Handle cuisine and dietary values carefully
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(), // Map ingredients to mainIngredient
-      cuisine: formData.cuisine === 'any' ? 'Global' : formData.cuisine, // Use 'Global' instead of empty array for 'any'
+      cuisine: formData.cuisine === 'any' ? 'any' : formData.cuisine, // Keep 'any' as-is
       dietary: formData.dietary === 'any' ? '' : formData.dietary, // Convert "any" to empty string
       servings: Number(formData.servings) || 2
     };

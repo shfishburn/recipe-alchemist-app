@@ -9,6 +9,7 @@ import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
+import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -74,25 +75,29 @@ export const useQuickRecipeSave = () => {
         ? recipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
         : (recipe.science_notes ? [String(recipe.science_notes)] : []);
       
-      // CRUCIAL FIX: Process cuisine value to ensure it's valid
-      // If cuisine is null, undefined, or empty, set it to 'any' as a fallback
-      const cuisineString = recipe.cuisine && recipe.cuisine.trim() !== '' 
-        ? recipe.cuisine.trim() 
-        : 'any';
+      // Process cuisine value properly - ensure it's never null/undefined/empty
+      const originalCuisine = recipe.cuisine;
+      const cuisineString = originalCuisine && originalCuisine.trim() !== '' 
+        ? originalCuisine.trim() 
+        : "any";
+      
+      // Determine cuisine category with our utility
+      const cuisineCategoryValue = getCuisineCategory(cuisineString);
       
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
+      console.log(`Determined cuisine category: "${cuisineCategoryValue}"`);
       
       // Convert the quick recipe format to database format
       const recipeData = {
-        title: recipe.title,
-        tagline: recipe.description, // Map description to tagline
+        title: recipe.title || "Untitled Recipe",
+        tagline: recipe.description || "", // Map description to tagline
         ingredients: recipe.ingredients as unknown as Json,
         instructions: recipe.steps || recipe.instructions || [],
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: cuisineString, // Use processed cuisine value
-        // Let database trigger handle cuisine_category
-        dietary: recipe.dietary, // Use dietary instead of dietaryType
+        cuisine_category: cuisineCategoryValue, // Explicitly set cuisine_category
+        dietary: recipe.dietary || "", // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
         servings: recipe.servings || 2,
@@ -107,6 +112,7 @@ export const useQuickRecipeSave = () => {
         nutrition: nutritionData ? "present" : "missing",
         nutrition_type: nutritionData ? typeof nutritionData : "N/A",
         cuisine: cuisineString,
+        cuisine_category: cuisineCategoryValue
       });
 
       // Insert the recipe into the database
@@ -122,7 +128,7 @@ export const useQuickRecipeSave = () => {
         
         // Provide more helpful error messages based on the error
         if (error.message.includes('cuisine_category')) {
-          throw new Error(`Failed to save recipe: The cuisine category couldn't be determined. Please try a different cuisine. Value provided: "${cuisineString}"`);
+          throw new Error(`Failed to save recipe: There was an issue with the cuisine category. Using "${cuisineString}" resulted in category "${cuisineCategoryValue}". Please try a different cuisine or contact support.`);
         } else if (error.message.includes('violates foreign key constraint')) {
           throw new Error(`Failed to save recipe: There was an issue with the user account. Please try logging in again.`);
         } else {

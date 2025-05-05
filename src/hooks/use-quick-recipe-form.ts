@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -46,7 +45,7 @@ export function useQuickRecipeForm() {
       // Ensure cuisine has a valid value - never undefined or null
       const processedFormData = {
         ...formData,
-        cuisine: formData.cuisine || 'Global', // Default to 'Global' if not provided
+        cuisine: formData.cuisine || 'any', // Default to 'any' if not provided
         dietary: formData.dietary || ''  // Default to empty string if not provided
       };
 
@@ -102,6 +101,12 @@ export function useQuickRecipeForm() {
         // Validate the recipe structure before setting it
         if (!isRecipeValid(generatedRecipe)) {
           throw new Error("The recipe format returned from the API was invalid. Please try again.");
+        }
+        
+        // Ensure recipe has valid cuisine value
+        if (!generatedRecipe.cuisine || generatedRecipe.cuisine.trim() === '') {
+          console.log("Setting default cuisine for recipe as it was missing");
+          generatedRecipe.cuisine = "any";
         }
         
         console.log("Recipe generation successful:", generatedRecipe);
