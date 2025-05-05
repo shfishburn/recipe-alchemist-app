@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 import type { Recipe } from '@/types/recipe';
@@ -58,7 +59,7 @@ export function ChatHistory({
       ))}
       
       {/* Show loading indicator when sending a message */}
-      {isSending && <ChatProcessingIndicator />}
+      {isSending && <ChatProcessingIndicator stage="sending" />}
     </div>
   );
 }

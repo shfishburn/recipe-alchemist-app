@@ -10,10 +10,10 @@ export function useApplyChanges() {
   const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
   
-  async function applyChanges(recipe: Recipe, chatMessage: ChatMessage) {
+  async function applyChanges(recipe: Recipe, chatMessage: ChatMessage): Promise<boolean> {
     if (isApplying) {
       console.warn('Already applying changes, ignoring duplicate request');
-      return;
+      return false;
     }
     
     console.log('Starting to apply changes from chat message:', chatMessage.id);
@@ -27,7 +27,7 @@ export function useApplyChanges() {
         description: errorMsg,
         variant: 'destructive',
       });
-      return;
+      return false;
     }
     
     if (!chatMessage || !chatMessage.recipe_id) {
@@ -38,7 +38,7 @@ export function useApplyChanges() {
         description: errorMsg,
         variant: 'destructive',
       });
-      return;
+      return false;
     }
     
     try {
@@ -62,6 +62,7 @@ export function useApplyChanges() {
             title: 'Changes Applied',
             description: 'Recipe has been successfully updated.',
           });
+          return true;
         })
         .catch((error) => {
           console.error('Error applying changes:', error);
@@ -83,7 +84,7 @@ export function useApplyChanges() {
         const instructionsArray = chatMessage.changes_suggested.instructions;
         if (Array.isArray(instructionsArray) && instructionsArray.length === 0) {
           console.log('Skipping reactions analysis: empty instructions array');
-          return;
+          return true;
         }
         
         try {
@@ -98,7 +99,7 @@ export function useApplyChanges() {
             
           if (loadError) {
             console.error('Error loading updated recipe:', loadError);
-            return; // Continue without scientific analysis
+            return true; // Continue without scientific analysis
           }
           
           // Call the reactions analysis edge function
@@ -129,8 +130,10 @@ export function useApplyChanges() {
         }
       }
       
+      return true;
     } catch (error) {
       console.error('Error in apply changes flow:', error);
+      return false;
       // Error already handled in updateRecipe catch
     } finally {
       setIsApplying(false);

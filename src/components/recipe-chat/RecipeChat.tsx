@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import type { Recipe } from '@/types/recipe';
+import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import { RecipeChatInput } from './RecipeChatInput';
 import { ChatHistory } from './ChatHistory';
 import { EmptyChatState } from './EmptyChatState';
@@ -24,12 +25,17 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isLoadingHistory,
     sendMessage,
     isSending,
-    applyChanges,
+    applyChanges: rawApplyChanges,
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
     clearChatHistory,
   } = useRecipeChat(recipe);
+
+  // Create a wrapper for applyChanges that only takes the chatMessage parameter
+  const applyChanges = async (chatMessage: ChatMessageType) => {
+    return await rawApplyChanges(recipe, chatMessage);
+  };
 
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {

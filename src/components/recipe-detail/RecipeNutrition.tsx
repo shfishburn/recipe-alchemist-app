@@ -11,7 +11,8 @@ import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
-import { standardizeNutrition, validateNutritionData } from '@/types/nutrition-utils';
+import { standardizeNutrition } from '@/types/nutrition-utils';
+import { validateNutritionData } from '@/utils/nutrition-utils';
 
 // Safe import for ProfileContext - don't throw errors if not available
 let useProfileSettings: () => any | null = () => null;
