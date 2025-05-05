@@ -10,6 +10,42 @@ import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 
+// Map cuisine values to cuisine_category enum values
+function mapCuisineToCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" {
+  if (!cuisine) return "Global";
+  
+  const lowerCuisine = cuisine.toLowerCase();
+  
+  // Regional American cuisines
+  if (['cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Regional American";
+  }
+  
+  // European cuisines
+  if (['british', 'irish', 'eastern-european', 'french', 'german', 'greek', 'italian', 'mediterranean', 
+       'scandinavian', 'nordic', 'spanish']
+      .some(c => lowerCuisine.includes(c))) {
+    return "European";
+  }
+  
+  // Asian cuisines
+  if (['chinese', 'indian', 'japanese', 'korean', 'southeast-asian', 'thai', 'vietnamese']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Asian";
+  }
+  
+  // Dietary styles
+  if (['gluten-free', 'keto', 'low-fodmap', 'mediterranean', 'paleo', 'plant-based', 'vegetarian', 'whole30',
+       'vegan', 'dairy-free', 'low-carb']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Dietary Styles";
+  }
+  
+  // Default
+  return "Global";
+}
+
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -53,6 +89,15 @@ export const useQuickRecipeSave = () => {
         console.log("Final nutrition data being saved:", nutritionData);
       }
       
+      // Ensure science_notes is an array of strings
+      const scienceNotes = Array.isArray(recipe.science_notes) 
+        ? recipe.science_notes 
+        : (recipe.science_notes ? [recipe.science_notes.toString()] : []);
+      
+      // Determine cuisine category from cuisine
+      const cuisineCategory = mapCuisineToCategory(recipe.cuisine);
+      console.log(`Mapped cuisine '${recipe.cuisine}' to category: ${cuisineCategory}`);
+      
       // Convert the quick recipe format to database format
       const recipeData = {
         title: recipe.title,
@@ -62,13 +107,21 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: recipe.cuisine, // Use cuisine instead of cuisineType
+        cuisine_category: cuisineCategory, // Set the proper enum value
         dietary: recipe.dietary, // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
-        science_notes: recipe.science_notes as unknown as Json || [], // Use science_notes instead of scienceNotes
+        science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
         servings: recipe.servings || 2,
         user_id: user.id, // Add the user_id to the recipe data
         nutrition: nutritionData as unknown as Json // Add enhanced nutrition data
       };
+      
+      console.log("Recipe data prepared for database:", {
+        ...recipeData,
+        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.length + " items" : "no ingredients",
+        science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
+        nutrition: nutritionData ? "present" : "missing"
+      });
 
       // Insert the recipe into the database
       const { data, error } = await supabase
@@ -98,7 +151,7 @@ export const useQuickRecipeSave = () => {
       }
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in saveRecipe:", error);
       toast({
         title: "Save failed",

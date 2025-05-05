@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { standardizeNutrition } from '@/types/nutrition-utils';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Nutrition } from '@/types/recipe';
 import type { Profile } from '@/hooks/use-auth';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { isNutritionPreferences } from '@/types/nutrition';
@@ -16,26 +16,8 @@ export interface UserNutritionPreferences {
   unitSystem?: 'metric' | 'imperial';
 }
 
-export interface ExtendedNutritionData {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  vitaminA?: number;
-  vitaminC?: number;
-  vitaminD?: number;
-  calcium?: number;
-  iron?: number;
-  potassium?: number;
-  data_quality?: {
-    overall_confidence: 'high' | 'medium' | 'low';
-    overall_confidence_score: number;
-  };
-  per_ingredient?: Record<string, any>;
-  // Add any other properties you need
+export interface ExtendedNutritionData extends Nutrition {
+  // Any additional properties specific to the extended data
 }
 
 // Validate nutrition data to ensure reasonable values
@@ -58,6 +40,15 @@ function validateNutritionValues(nutrition: any): ExtendedNutritionData {
   if (nutrition.calcium !== undefined) validated.calcium = Math.min(Math.abs(nutrition.calcium), 2000);
   if (nutrition.iron !== undefined) validated.iron = Math.min(Math.abs(nutrition.iron), 100);
   if (nutrition.potassium !== undefined) validated.potassium = Math.min(Math.abs(nutrition.potassium), 10000);
+  
+  // Include aliases for compatibility
+  validated.kcal = validated.calories;
+  validated.protein_g = validated.protein;
+  validated.carbs_g = validated.carbs;
+  validated.fat_g = validated.fat;
+  validated.fiber_g = validated.fiber;
+  validated.sugar_g = validated.sugar;
+  validated.sodium_mg = validated.sodium;
 
   // Include data quality info if present
   if (nutrition.data_quality) {

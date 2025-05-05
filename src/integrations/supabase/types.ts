@@ -245,6 +245,291 @@ export type Database = {
         }
         Relationships: []
       }
+      nutri_score_beverage_grades: {
+        Row: {
+          created_at: string | null
+          grade: string
+          id: number
+          max_score: number
+          min_score: number
+          region: string
+        }
+        Insert: {
+          created_at?: string | null
+          grade: string
+          id?: number
+          max_score: number
+          min_score: number
+          region: string
+        }
+        Update: {
+          created_at?: string | null
+          grade?: string
+          id?: number
+          max_score?: number
+          min_score?: number
+          region?: string
+        }
+        Relationships: []
+      }
+      nutri_score_category_rules: {
+        Row: {
+          category: string
+          created_at: string | null
+          fiber_allowed: boolean
+          fruit_veg_nuts_allowed: boolean
+          id: number
+          protein_allowed: boolean
+          special_rules: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          fiber_allowed: boolean
+          fruit_veg_nuts_allowed: boolean
+          id?: number
+          protein_allowed: boolean
+          special_rules?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          fiber_allowed?: boolean
+          fruit_veg_nuts_allowed?: boolean
+          id?: number
+          protein_allowed?: boolean
+          special_rules?: string | null
+        }
+        Relationships: []
+      }
+      nutri_score_energy_thresholds: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
+      nutri_score_fiber_thresholds: {
+        Row: {
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
+      nutri_score_fruit_veg_nuts_thresholds: {
+        Row: {
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
+      nutri_score_grades: {
+        Row: {
+          created_at: string | null
+          grade: string
+          id: number
+          max_score: number
+          min_score: number
+        }
+        Insert: {
+          created_at?: string | null
+          grade: string
+          id?: number
+          max_score: number
+          min_score: number
+        }
+        Update: {
+          created_at?: string | null
+          grade?: string
+          id?: number
+          max_score?: number
+          min_score?: number
+        }
+        Relationships: []
+      }
+      nutri_score_protein_rules: {
+        Row: {
+          condition: string
+          created_at: string | null
+          description: string
+          id: number
+          protein_counting: boolean
+        }
+        Insert: {
+          condition: string
+          created_at?: string | null
+          description: string
+          id?: number
+          protein_counting: boolean
+        }
+        Update: {
+          condition?: string
+          created_at?: string | null
+          description?: string
+          id?: number
+          protein_counting?: boolean
+        }
+        Relationships: []
+      }
+      nutri_score_protein_thresholds: {
+        Row: {
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
+      nutri_score_saturated_fat_thresholds: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
+      nutri_score_sodium_thresholds: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
+      nutri_score_sugar_thresholds: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: number
+          max_value: number
+          min_value: number
+          points: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: number
+          max_value?: number
+          min_value?: number
+          points?: number
+        }
+        Relationships: []
+      }
       nutrition_feedback: {
         Row: {
           comment: string | null
@@ -484,6 +769,7 @@ export type Database = {
           image_url: string | null
           ingredients: Json
           instructions: string[]
+          nutri_score: Json | null
           nutrition: Json | null
           prep_time_min: number | null
           previous_version_id: string | null
@@ -513,6 +799,7 @@ export type Database = {
           image_url?: string | null
           ingredients: Json
           instructions: string[]
+          nutri_score?: Json | null
           nutrition?: Json | null
           prep_time_min?: number | null
           previous_version_id?: string | null
@@ -542,6 +829,7 @@ export type Database = {
           image_url?: string | null
           ingredients?: Json
           instructions?: string[]
+          nutri_score?: Json | null
           nutrition?: Json | null
           prep_time_min?: number | null
           previous_version_id?: string | null
@@ -800,6 +1088,14 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      calculate_nutri_score: {
+        Args: {
+          nutrition: Json
+          category?: string
+          fruit_veg_nuts_percent?: number
+        }
+        Returns: Json
       }
       find_similar_foods_by_embedding: {
         Args: {

@@ -1,47 +1,6 @@
 
-// This file has a type error we need to fix
-// The error is that we're trying to assign a number to a complex type
-
-export type Nutrition = {
-  calories: number;
-  protein: number;
-  fat: number;
-  carbohydrates: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  cholesterol: number;
-  calcium: number;
-  iron: number;
-  potassium: number;
-  vitamin_d: number;
-  vitamin_c: number;
-  vitamin_a: number;
-  // Allow for aliased properties
-  carbs?: number;  // Alternative to carbohydrates
-  
-  // Legacy property aliases for backward compatibility
-  kcal?: number;
-  protein_g?: number;
-  fat_g?: number;
-  fiber_g?: number;
-  sugar_g?: number;
-  sodium_mg?: number;
-  calcium_mg?: number;
-  iron_mg?: number;
-  potassium_mg?: number;
-  vitaminA?: number;
-  vitaminC?: number;
-  vitaminD?: number;
-  vitamin_a_iu?: number;
-  vitamin_c_mg?: number;
-  vitamin_d_iu?: number;
-  
-  // Enhanced properties for extended nutrition data
-  data_quality?: NutritionDataQuality;
-  per_ingredient?: Record<string, any>;
-  audit_log?: any[];
-};
+// This file has been simplified to avoid type conflicts
+import { Nutrition } from './recipe';
 
 export type NutritionTotals = {
   calories: number;
@@ -75,7 +34,6 @@ export type NutritionDataQuality = {
   penalties: Record<string, any>;
   unmatched_or_low_confidence_ingredients: string[];
   limitations: string[];
-  // Add the recommended_macros property to fix the type error
   recommended_macros?: {
     protein: number;
     carbs: number;
@@ -87,23 +45,6 @@ export type ExtendedNutritionData = Nutrition & {
   data_quality?: NutritionDataQuality;
   per_ingredient?: Record<string, any>;
   audit_log?: any[];
-  // Legacy property aliases
-  kcal?: number;
-  protein_g?: number;
-  carbs_g?: number;
-  fat_g?: number;
-  fiber_g?: number;
-  sugar_g?: number;
-  sodium_mg?: number;
-  calcium_mg?: number;
-  iron_mg?: number;
-  potassium_mg?: number;
-  vitaminA?: number;
-  vitaminC?: number;
-  vitaminD?: number;
-  vitamin_a_iu?: number;
-  vitamin_c_mg?: number;
-  vitamin_d_iu?: number;
 };
 
 export type NutritionResponse = {
@@ -112,30 +53,23 @@ export type NutritionResponse = {
   total: NutritionTotals;
 };
 
-// Add these exported functions to fix build errors
+// Helper functions to standardize nutrition data
 export const standardizeNutrition = (nutrition: any): Nutrition => {
   if (!nutrition) return {
     calories: 0,
     protein: 0,
     fat: 0,
-    carbohydrates: 0,
+    carbs: 0,
     fiber: 0,
     sugar: 0,
     sodium: 0,
-    cholesterol: 0,
-    calcium: 0,
-    iron: 0,
-    potassium: 0,
-    vitamin_d: 0,
-    vitamin_c: 0,
-    vitamin_a: 0,
-    carbs: 0,
   };
 
   return {
     calories: nutrition?.calories || nutrition?.kcal || 0,
     protein: nutrition?.protein || nutrition?.protein_g || 0,
     fat: nutrition?.fat || nutrition?.fat_g || 0,
+    carbs: nutrition?.carbs || nutrition?.carbs_g || 0,
     carbohydrates: nutrition?.carbohydrates || nutrition?.carbs || nutrition?.carbs_g || 0,
     fiber: nutrition?.fiber || nutrition?.fiber_g || 0,
     sugar: nutrition?.sugar || nutrition?.sugar_g || 0,
@@ -147,32 +81,29 @@ export const standardizeNutrition = (nutrition: any): Nutrition => {
     vitamin_d: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
     vitamin_c: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
     vitamin_a: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
-    // Add carbs alias for compatibility
-    carbs: nutrition?.carbohydrates || nutrition?.carbs || nutrition?.carbs_g || 0,
-    // Include extended fields if present
-    data_quality: nutrition?.data_quality,
-    per_ingredient: nutrition?.per_ingredient,
-    audit_log: nutrition?.audit_log,
-    // Include legacy aliases for compatibility
+    
+    // Include aliases for compatibility
     kcal: nutrition?.calories || nutrition?.kcal || 0,
     protein_g: nutrition?.protein || nutrition?.protein_g || 0,
+    carbs_g: nutrition?.carbs || nutrition?.carbs_g || 0,
     fat_g: nutrition?.fat || nutrition?.fat_g || 0,
     fiber_g: nutrition?.fiber || nutrition?.fiber_g || 0,
     sugar_g: nutrition?.sugar || nutrition?.sugar_g || 0,
     sodium_mg: nutrition?.sodium || nutrition?.sodium_mg || 0,
-    calcium_mg: nutrition?.calcium || nutrition?.calcium_mg || 0,
-    iron_mg: nutrition?.iron || nutrition?.iron_mg || 0,
-    potassium_mg: nutrition?.potassium || nutrition?.potassium_mg || 0,
+    
+    // Include extended metadata if present
+    data_quality: nutrition?.data_quality,
+    per_ingredient: nutrition?.per_ingredient,
+    audit_log: nutrition?.audit_log,
+    
+    // Alternative naming for micronutrients
     vitaminA: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
     vitaminC: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
     vitaminD: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
-    vitamin_a_iu: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
-    vitamin_c_mg: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
-    vitamin_d_iu: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
   };
 };
 
-// Add validateNutritionData that was missing
+// Add validateNutritionData that checks for essential fields
 export const validateNutritionData = (nutrition: any): boolean => {
   if (!nutrition) return false;
   
