@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     message,
@@ -30,17 +31,21 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     clearChatHistory,
   } = useRecipeChat(recipe);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        setTimeout(() => {
-          scrollElement.scrollTop = scrollElement.scrollHeight;
-        }, 100);
+    scrollToBottom();
+  }, [chatHistory.length, optimisticMessages.length, isSending]);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
       }
     }
-  }, [chatHistory.length, optimisticMessages.length, isSending]);
+  };
 
   const handleUpload = async (file: File) => {
     uploadRecipeImage(file);
@@ -54,6 +59,8 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     if (message.trim()) {
       console.log("Sending message:", message);
       sendMessage();
+      // Immediately scroll down when sending
+      setTimeout(scrollToBottom, 50);
     }
   };
   
@@ -84,26 +91,32 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
             />
           </div>
           
-          <div className="flex-grow overflow-hidden" ref={scrollAreaRef}>
-            <ScrollArea className="h-[calc(100%-60px)] max-h-[60vh] pt-3 px-3 sm:px-5">
+          <div className="flex-grow overflow-hidden relative">
+            <ScrollArea 
+              className="h-[calc(100vh-200px)] sm:h-[60vh] px-3 sm:px-5"
+              ref={scrollAreaRef}
+            >
               {/* Show EmptyChatState if there are no messages */}
               {showEmptyState ? (
                 <EmptyChatState />
               ) : (
-                <ChatHistory
-                  chatHistory={chatHistory}
-                  optimisticMessages={optimisticMessages}
-                  isSending={isSending}
-                  setMessage={setMessage}
-                  applyChanges={applyChanges}
-                  isApplying={isApplying}
-                  recipe={recipe}
-                />
+                <div className="py-3">
+                  <ChatHistory
+                    chatHistory={chatHistory}
+                    optimisticMessages={optimisticMessages}
+                    isSending={isSending}
+                    setMessage={setMessage}
+                    applyChanges={applyChanges}
+                    isApplying={isApplying}
+                    recipe={recipe}
+                  />
+                  <div ref={messagesEndRef} />
+                </div>
               )}
             </ScrollArea>
           </div>
 
-          <div className="sticky bottom-0 bg-white border-t pt-2 pb-3 px-3 sm:px-5 mt-auto">
+          <div className="sticky bottom-0 bg-white border-t pt-2 pb-3 px-3 sm:px-5 mt-auto z-10">
             <RecipeChatInput
               message={message}
               setMessage={setMessage}

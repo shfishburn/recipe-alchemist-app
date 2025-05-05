@@ -10,10 +10,6 @@ import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 
-// This function is no longer needed as we are getting cuisine values already matched to categories
-// The cuisine value from the UI will directly map to a valid cuisine, and the category is determined
-// by how we've grouped them in the CuisineSelector component
-
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -114,7 +110,7 @@ export const useQuickRecipeSave = () => {
       };
       
       console.log("Recipe data prepared for database:", {
-        ...recipeData,
+        title: recipeData.title,
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.length + " items" : "no ingredients",
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
         nutrition: nutritionData ? "present" : "missing",

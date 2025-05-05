@@ -21,8 +21,8 @@ export function ChatMessage({
   isOptimistic = false,
   applied = false
 }: ChatMessageProps) {
-  // Don't render if this is just a pending optimistic message
-  if (chat.pending && !chat.ai_response) {
+  // Only render optimistic message if it has no AI response yet
+  if (chat.meta?.optimistic_id && !chat.ai_response) {
     return (
       <UserMessage message={chat.user_message} isOptimistic={true} />
     );

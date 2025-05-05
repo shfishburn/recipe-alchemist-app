@@ -1,145 +1,50 @@
 
-// This file has been simplified to avoid type conflicts
-import { Nutrition } from './recipe';
+/**
+ * This file provides utility functions for standardizing nutrition data across different formats
+ */
 
-export type { Nutrition }; // Export Nutrition type
-
-export type NutritionTotals = {
-  calories: number;
-  protein: number;
-  fat: number;
-  carbohydrates: number;
-  fiber: number;
-  sugar: number;
-  sodium: number;
-  cholesterol: number;
-  calcium: number;
-  iron: number;
-  potassium: number;
-  vitamin_d: number;
-  vitamin_c: number;
-  vitamin_a: number;
-  // Add more nutrients as needed
+type NutritionData = {
+  [key: string]: any;
 };
 
-export type NutritionDataQualitySummary = {
-  overall_confidence: 'high' | 'medium' | 'low';
-  overall_confidence_score: number;
-  penalties: Record<string, any>;
-  unmatched_or_low_confidence_ingredients: string[];
-  limitations: string[];
-};
-
-export type NutritionDataQuality = {
-  overall_confidence: 'high' | 'medium' | 'low';
-  overall_confidence_score: number;
-  penalties: Record<string, any>;
-  unmatched_or_low_confidence_ingredients: string[];
-  limitations: string[];
-  recommended_macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-} & Record<string, any>;
-
-export type ExtendedNutritionData = Nutrition & {
-  data_quality?: NutritionDataQuality;
-  per_ingredient?: Record<string, any>;
-  audit_log?: any[];
-};
-
-export type NutritionResponse = {
-  nutrition: Nutrition | ExtendedNutritionData;
-  data_quality: NutritionDataQuality;
-  total: NutritionTotals;
-};
-
-// Helper functions to standardize nutrition data
-export const standardizeNutrition = (nutrition: any): Nutrition => {
-  if (!nutrition) return {
-    calories: 0,
-    protein: 0,
-    fat: 0,
-    carbs: 0,
-    fiber: 0,
-    sugar: 0,
-    sodium: 0,
-  };
-
-  return {
-    calories: nutrition?.calories || nutrition?.kcal || 0,
-    protein: nutrition?.protein || nutrition?.protein_g || 0,
-    fat: nutrition?.fat || nutrition?.fat_g || 0,
-    carbs: nutrition?.carbs || nutrition?.carbs_g || 0,
-    carbohydrates: nutrition?.carbohydrates || nutrition?.carbs || nutrition?.carbs_g || 0,
-    fiber: nutrition?.fiber || nutrition?.fiber_g || 0,
-    sugar: nutrition?.sugar || nutrition?.sugar_g || 0,
-    sodium: nutrition?.sodium || nutrition?.sodium_mg || 0,
-    cholesterol: nutrition?.cholesterol || 0,
-    calcium: nutrition?.calcium || nutrition?.calcium_mg || 0,
-    iron: nutrition?.iron || nutrition?.iron_mg || 0,
-    potassium: nutrition?.potassium || nutrition?.potassium_mg || 0,
-    vitamin_d: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
-    vitamin_c: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
-    vitamin_a: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
-    
-    // Include aliases for compatibility
-    kcal: nutrition?.calories || nutrition?.kcal || 0,
-    protein_g: nutrition?.protein || nutrition?.protein_g || 0,
-    carbs_g: nutrition?.carbs || nutrition?.carbs_g || 0,
-    fat_g: nutrition?.fat || nutrition?.fat_g || 0,
-    fiber_g: nutrition?.fiber || nutrition?.fiber_g || 0,
-    sugar_g: nutrition?.sugar || nutrition?.sugar_g || 0,
-    sodium_mg: nutrition?.sodium || nutrition?.sodium_mg || 0,
-    
-    // Include extended metadata if present
-    data_quality: nutrition?.data_quality,
-    per_ingredient: nutrition?.per_ingredient,
-    audit_log: nutrition?.audit_log,
-    
-    // Alternative naming for micronutrients
-    vitaminA: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
-    vitaminC: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
-    vitaminD: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
-  };
-};
-
-// Add validateNutritionData that checks for essential fields
-export const validateNutritionData = (nutrition: any): boolean => {
-  if (!nutrition) return false;
+/**
+ * Standardizes nutrition keys to ensure consistent naming across all recipe data
+ */
+export function standardizeNutrition(nutrition: NutritionData): NutritionData {
+  if (!nutrition) return {};
   
-  // Check for essential macronutrients
-  const hasCalories = nutrition.calories !== undefined || nutrition.kcal !== undefined;
-  const hasProtein = nutrition.protein !== undefined || nutrition.protein_g !== undefined;
-  const hasFat = nutrition.fat !== undefined || nutrition.fat_g !== undefined;
-  const hasCarbs = 
-    nutrition.carbohydrates !== undefined || 
-    nutrition.carbs !== undefined || 
-    nutrition.carbs_g !== undefined;
+  const standardized: NutritionData = { ...nutrition };
+  
+  // Map common alternate keys to standard keys
+  const keyMappings: Record<string, string> = {
+    // Calories
+    'kcal': 'calories',
     
-  return hasCalories && (hasProtein || hasFat || hasCarbs);
-};
-
-export const DAILY_REFERENCE_VALUES = {
-  calories: 2000,
-  protein: 50,
-  fat: 78,
-  carbohydrates: 275,
-  fiber: 28,
-  sugar: 50,
-  sodium: 2300,
-  cholesterol: 300,
-  calcium: 1300,
-  iron: 18,
-  potassium: 4700,
-  vitamin_d: 20,
-  vitamin_c: 90,
-  vitamin_a: 900,
-};
-
-export const getDailyValuePercentage = (nutrient: string, amount: number): number => {
-  const reference = DAILY_REFERENCE_VALUES[nutrient as keyof typeof DAILY_REFERENCE_VALUES];
-  if (!reference) return 0;
-  return (amount / reference) * 100;
-};
+    // Macronutrients with units
+    'protein_g': 'protein',
+    'carbs_g': 'carbs',
+    'carbohydrates': 'carbs',
+    'carbohydrates_g': 'carbs',
+    'fat_g': 'fat',
+    'fiber_g': 'fiber',
+    'sugar_g': 'sugar',
+    'sodium_mg': 'sodium',
+    
+    // Vitamins with and without units
+    'vitamin_a': 'vitaminA',
+    'vitamin_c': 'vitaminC',
+    'vitamin_d': 'vitaminD',
+    'vitamin_a_iu': 'vitaminA',
+    'vitamin_c_mg': 'vitaminC',
+    'vitamin_d_iu': 'vitaminD',
+  };
+  
+  // Apply mappings
+  for (const [alternate, standard] of Object.entries(keyMappings)) {
+    if (nutrition[alternate] !== undefined && nutrition[standard] === undefined) {
+      standardized[standard] = nutrition[alternate];
+    }
+  }
+  
+  return standardized;
+}
