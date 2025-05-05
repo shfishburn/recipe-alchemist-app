@@ -24,15 +24,27 @@ export function buildOpenAIPrompt(params: {
     ? `• Maximum calories per serving – ${maxCalories} kcal`
     : "";
 
-  // Build cuisine category guidance to ensure valid database values
+  // Enhanced cuisine category guidance to ensure valid database values
   const cuisineCategoryGuidance = `
 IMPORTANT: All cuisines must align with one of these cuisine_category values:
-• Global - For general cuisines or when no specific category applies
-• Regional American - For cajun-creole, midwest, southern, southwestern, etc.
+• Global - For general cuisines like american, brazilian, caribbean, fusion
+• Regional American - For mexican, cajun-creole, midwest, southern, southwestern, tex-mex, etc.
 • European - For french, italian, greek, mediterranean, eastern-european, etc.
 • Asian - For chinese, indian, japanese, korean, thai, vietnamese, etc.
 • Dietary Styles - For dietary-focused cuisines (keto, gluten-free, vegan, etc.)
-• Middle Eastern - For middle-eastern cuisines`;
+• Middle Eastern - For middle-eastern, lebanese, turkish, persian, moroccan cuisines
+
+VALID CUISINE VALUES (you must use EXACTLY one of these):
+• any, american, brazilian, caribbean, fusion (→ Global)
+• mexican, cajun-creole, midwest, new-england, pacific-northwest, southern, southwestern, tex-mex (→ Regional American)
+• british-irish, eastern-european, french, german, greek, italian, mediterranean, scandinavian-nordic, spanish (→ European)
+• chinese, indian, japanese, korean, southeast-asian, thai, vietnamese (→ Asian)
+• gluten-free, keto, low-fodmap, paleo, plant-based, vegetarian, whole30 (→ Dietary Styles)
+• middle-eastern, lebanese, turkish, persian, moroccan (→ Middle Eastern)
+
+Always set both the cuisine and cuisine_category fields in your response:
+• cuisine should be one of the exact values from the list above
+• cuisine_category should be one of: "Global", "Regional American", "European", "Asian", "Dietary Styles", or "Middle Eastern"`;
 
   return `
 As a culinary scientist in the López-Alt tradition, create a comprehensive recipe:
@@ -143,7 +155,7 @@ Format each as object → {
   "prep_time_min": number,
   "cook_time_min": number,
   "servings": number,
-  "cuisine": "string - must match one of the standard cuisine values",
+  "cuisine": "string - MUST be one of the VALID CUISINE VALUES listed above",
   "cuisine_category": "string - MUST be one of: Global, Regional American, European, Asian, Dietary Styles, or Middle Eastern",
   "nutritionHighlight": "ONE evidence-based benefit",
   "cookingTip": "ONE science-backed technique note",

@@ -9,7 +9,7 @@ import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
-import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
+import { getCuisineCategoryByValue } from '@/config/cuisine-config';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -81,8 +81,8 @@ export const useQuickRecipeSave = () => {
         ? originalCuisine.trim() 
         : "any";
       
-      // Determine cuisine category with our utility
-      const cuisineCategoryValue = getCuisineCategory(cuisineString);
+      // Determine cuisine category with our centralized helper function
+      const cuisineCategoryValue = getCuisineCategoryByValue(cuisineString);
       
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
       console.log(`Determined cuisine category: "${cuisineCategoryValue}"`);
