@@ -1,9 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
 import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
-import { standardizeNutrition } from '@/types/nutrition-utils';
+import { standardizeNutrition } from '@/utils/nutrition-utils';
 
 // Get the correct cuisine category based on cuisine value
 function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,8 +10,7 @@ import { NutritionBlock } from './nutrition/NutritionBlock';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
-import { standardizeNutrition } from '@/types/nutrition-utils';
-import { validateNutritionData } from '@/utils/nutrition-utils';
+import { standardizeNutrition, validateNutritionData } from '@/utils/nutrition-utils';
 
 // Safe import for ProfileContext - don't throw errors if not available
 let useProfileSettings: () => any | null = () => null;

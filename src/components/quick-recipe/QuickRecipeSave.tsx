@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
-import { standardizeNutrition } from '@/types/nutrition-utils';
+import { standardizeNutrition } from '@/utils/nutrition-utils';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -51,6 +50,22 @@ export const useQuickRecipeSave = () => {
         
         // Log the final nutrition data for debugging
         console.log("Final nutrition data being saved:", nutritionData);
+      }
+      
+      // Enhanced error handling for nutrition data
+      try {
+        // Validate nutrition data to ensure it's well-formed
+        if (nutritionData && typeof nutritionData === 'object') {
+          console.log("Nutrition fields present:", Object.keys(nutritionData));
+        } else {
+          console.warn("Nutrition data is not an object:", nutritionData);
+          nutritionData = estimateNutrition(recipe.ingredients, recipe.servings || 2);
+          console.log("Using estimated nutrition instead:", nutritionData);
+        }
+      } catch (nutritionError) {
+        console.error("Error processing nutrition data:", nutritionError);
+        // Fallback to estimated nutrition
+        nutritionData = estimateNutrition(recipe.ingredients, recipe.servings || 2);
       }
       
       // Ensure science_notes is an array of strings
@@ -100,7 +115,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: recipe.cuisine, // Use cuisine from selected value
-        cuisine_category: cuisineCategory, // Set the proper enum value
+        cuisine_category: "Global", // Default value, will be updated by the database trigger
         dietary: recipe.dietary, // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
@@ -114,7 +129,7 @@ export const useQuickRecipeSave = () => {
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.length + " items" : "no ingredients",
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
         nutrition: nutritionData ? "present" : "missing",
-        cuisine_category: cuisineCategory
+        nutrition_type: nutritionData ? typeof nutritionData : "N/A"
       });
 
       // Insert the recipe into the database

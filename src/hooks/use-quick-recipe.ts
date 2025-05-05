@@ -11,6 +11,10 @@ export const useQuickRecipe = (id?: string) => {
       queryKey: ['quick-recipe', id],
       queryFn: () => fetchRecipe(id as string),
       enabled: !!id,
+      retry: 2, // Retry 2 times before giving up
+      staleTime: 60000, // 1 minute
+      gcTime: 300000, // 5 minutes
+      refetchOnWindowFocus: false,
     }),
     generateQuickRecipe
   };

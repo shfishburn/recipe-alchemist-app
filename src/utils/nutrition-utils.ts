@@ -1,5 +1,8 @@
 
-import { Nutrition } from '@/types/recipe';
+import type { Nutrition } from '@/types/recipe';
+
+// Define NutritionData type to match the Nutrition type from recipe
+export type NutritionData = Nutrition;
 
 /**
  * Standardizes nutrition data to ensure consistent format across the application
