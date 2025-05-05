@@ -65,7 +65,7 @@ export function IngredientDepartmentHeader({ department }: IngredientDepartmentH
   const colorClass = getDepartmentColor(department);
   
   return (
-    <div className={cn("flex items-center px-2 py-1 rounded text-sm font-medium mb-2", colorClass)}>
+    <div className={cn("flex items-center px-2.5 py-1 rounded text-sm font-semibold mb-2", colorClass)}>
       {Icon}
       <span className="ml-1.5">{department}</span>
     </div>
