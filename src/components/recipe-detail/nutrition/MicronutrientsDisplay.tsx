@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ExtendedNutritionData } from './useNutritionData';
+import { EnhancedNutrition } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { DAILY_REFERENCE_VALUES, NUTRIENT_DESCRIPTIONS, NUTRIENT_DISPLAY_NAMES, NUTRIENT_UNITS } from '@/constants/nutrition';
@@ -8,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Info } from 'lucide-react';
 
 interface MicronutrientsDisplayProps {
-  nutrition: ExtendedNutritionData;
+  nutrition: EnhancedNutrition;
   unitSystem: 'metric' | 'imperial';
 }
 

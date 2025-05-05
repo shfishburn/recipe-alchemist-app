@@ -3,12 +3,12 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ComparisonChart } from './charts/ComparisonChart';
 import { DistributionCharts } from './charts/DistributionCharts';
-import { ExtendedNutritionData } from './useNutritionData';
+import { EnhancedNutrition } from './useNutritionData';
 import { MicronutrientsDisplay } from './MicronutrientsDisplay';
 import { NUTRITION_COLORS } from '@/constants/nutrition';
 
 interface NutritionChartProps {
-  recipeNutrition: ExtendedNutritionData;
+  recipeNutrition: EnhancedNutrition;
   userPreferences?: {
     dailyCalories: number;
     macroSplit: {

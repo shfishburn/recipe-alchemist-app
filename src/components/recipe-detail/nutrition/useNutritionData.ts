@@ -1,9 +1,10 @@
 
 import { useState } from 'react';
-import { Recipe, Nutrition } from '@/types/recipe';
+import { Recipe } from '@/types/recipe';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 
+// Export the EnhancedNutrition type for components that need it
 export type { EnhancedNutrition };
 
 interface NutritionDataResult {
@@ -19,7 +20,7 @@ export function useNutritionData(recipe: Recipe): NutritionDataResult {
 
   // Process recipe nutrition to ensure it has all required fields
   const recipeNutrition: EnhancedNutrition = recipe.nutrition ? 
-    standardizeNutrition(recipe.nutrition) : 
+    standardizeNutrition(recipe.nutrition) as EnhancedNutrition : 
     {
       calories: 0,
       protein: 0,

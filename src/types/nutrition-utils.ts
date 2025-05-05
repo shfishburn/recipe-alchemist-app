@@ -2,6 +2,8 @@
 // This file has been simplified to avoid type conflicts
 import { Nutrition } from './recipe';
 
+export type { Nutrition }; // Export Nutrition type
+
 export type NutritionTotals = {
   calories: number;
   protein: number;

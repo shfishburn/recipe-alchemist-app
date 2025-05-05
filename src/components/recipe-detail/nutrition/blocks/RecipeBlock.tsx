@@ -7,13 +7,13 @@ import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakdown';
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
-import { ExtendedNutritionData } from '@/components/recipe-detail/nutrition/useNutritionData';
+import { EnhancedNutrition } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { NUTRITION_COLORS, DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 import { UnitSystem } from '@/stores/unitSystem';
 
 interface RecipeBlockProps {
-  recipeNutrition: ExtendedNutritionData;
+  recipeNutrition: EnhancedNutrition;
   unitSystem: UnitSystem;
 }
 

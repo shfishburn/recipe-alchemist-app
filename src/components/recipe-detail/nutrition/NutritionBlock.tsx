@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
-import { ExtendedNutritionData } from './useNutritionData';
+import { EnhancedNutrition } from './useNutritionData';
 
 interface NutritionBlockProps {
-  recipeNutrition: ExtendedNutritionData;
+  recipeNutrition: EnhancedNutrition;
   viewMode: 'recipe' | 'personal';
   userPreferences?: {
     dailyCalories: number;
@@ -35,7 +34,7 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
     const processed: Record<string, any> = {};
     
     for (const field of fieldsToProcess) {
-      const value = recipeNutrition[field as keyof ExtendedNutritionData];
+      const value = recipeNutrition[field as keyof EnhancedNutrition];
       
       // Only process numeric values and ensure they're rounded for display
       if (typeof value === 'number') {
@@ -54,8 +53,8 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
       processed.data_quality = recipeNutrition.data_quality;
     }
     
-    // Create a properly typed ExtendedNutritionData object
-    const result: ExtendedNutritionData = {
+    // Create a properly typed EnhancedNutrition object
+    const result: EnhancedNutrition = {
       calories: processed.calories || 0,
       protein: processed.protein || 0,
       carbs: processed.carbs || 0,

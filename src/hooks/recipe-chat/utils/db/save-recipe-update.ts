@@ -116,7 +116,9 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     ...updatedRecipe,
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
-    science_notes: scienceNotes as unknown as Json
+    science_notes: scienceNotes as unknown as Json,
+    // Convert nutri_score to Json if present
+    nutri_score: updatedRecipe.nutri_score ? updatedRecipe.nutri_score as unknown as Json : undefined
   };
 
   console.log("Saving recipe update with data:", {
