@@ -81,10 +81,10 @@ export const useQuickRecipeSave = () => {
         ? originalCuisine.trim() 
         : "any";
       
-      // Always use 'Global' as the cuisine_category regardless of the cuisine
-      // This is a temporary fix to ensure recipes can be saved
-      // The database will handle categorization properly via trigger or function
-      const cuisineCategoryValue = "Global";
+      // Always use 'Global' as the cuisine_category to ensure recipes can be saved
+      // The database expects an enum value, not just any string
+      // Using "Global" as a literal enum value rather than a variable string
+      const cuisineCategoryValue = "Global" as const;
       
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
       console.log(`Using cuisine category: "${cuisineCategoryValue}" for all cuisines to avoid errors`);
@@ -98,7 +98,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: cuisineString, // Use processed cuisine value
-        cuisine_category: cuisineCategoryValue, // Always use Global to avoid enum errors
+        cuisine_category: cuisineCategoryValue, // Use the enum value directly
         dietary: recipe.dietary || "", // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
