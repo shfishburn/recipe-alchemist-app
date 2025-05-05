@@ -9,7 +9,6 @@ import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
-import { getCuisineCategoryByValue } from '@/config/cuisine-config';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -92,7 +91,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: cuisineString, // Use processed cuisine value
-        // Removed cuisine_category field to let database handle it
+        // Cuisine category is now handled by database trigger
         dietary: recipe.dietary || "", // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings

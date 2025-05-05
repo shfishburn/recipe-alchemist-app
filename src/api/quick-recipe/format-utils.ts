@@ -1,12 +1,27 @@
+
 import { QuickRecipeFormData } from '@/types/quick-recipe';
-import { getCuisineCategoryByValue } from '@/config/cuisine-config';
 
 // Functions to format and process form data for API requests
 
-// Determine cuisine category from cuisine values
+// Determine cuisine category from cuisine values - used for API calls only
+// NOTE: Database uses the trigger to set this value, not this function
 export const getCuisineCategory = (cuisineValue: string): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" => {
-  // Use the centralized configuration to determine the category
-  return getCuisineCategoryByValue(cuisineValue);
+  // This function now matches database trigger logic
+  const cuisine = cuisineValue.toLowerCase().trim();
+  
+  if (['mexican', 'cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex'].includes(cuisine)) {
+    return "Regional American";
+  } else if (['british-irish', 'eastern-european', 'french', 'german', 'greek', 'italian', 'mediterranean', 'scandinavian-nordic', 'spanish'].includes(cuisine)) {
+    return "European";
+  } else if (['chinese', 'indian', 'japanese', 'korean', 'southeast-asian', 'thai', 'vietnamese'].includes(cuisine)) {
+    return "Asian";
+  } else if (['middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan'].includes(cuisine)) {
+    return "Middle Eastern";
+  } else if (['gluten-free', 'keto', 'low-fodmap', 'paleo', 'plant-based', 'vegetarian', 'whole30'].includes(cuisine)) {
+    return "Dietary Styles";
+  } else {
+    return "Global";
+  }
 };
 
 // Process cuisine values properly to match database enum values
