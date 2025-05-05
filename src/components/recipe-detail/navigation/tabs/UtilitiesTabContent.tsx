@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Printer, Share2, Trash2, Edit } from 'lucide-react';
+import { Printer, Share2, Trash2, Edit, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { ShareRecipeDialog } from '@/components/recipe-detail/ShareRecipeDialog';
@@ -8,6 +8,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
+import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
+import { useUnitSystem } from '@/hooks/use-unit-system';
 import type { Recipe } from '@/types/recipe';
 
 interface UtilitiesTabContentProps {
@@ -21,6 +23,7 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { mutate: deleteRecipe, isDeleting } = useDeleteRecipe();
+  const { unitSystem } = useUnitSystem();
 
   // Handle printing
   const handlePrint = () => {
@@ -65,6 +68,24 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
       <h2 className="text-2xl font-semibold mb-4">Recipe Utilities</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Unit System Card */}
+        <div className="bg-card rounded-lg p-6 border shadow-sm">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-lg font-medium">Unit System</h3>
+              <p className="text-muted-foreground text-sm mt-1">Toggle between metric and imperial units</p>
+            </div>
+            <Scale className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-sm font-medium">Current: {unitSystem === 'metric' ? 'Metric' : 'Imperial'}</span>
+            <UnitSystemToggle className="ml-2" />
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            Affects how ingredients and nutrition information are displayed
+          </p>
+        </div>
+        
         {/* Print Recipe Card */}
         <div className="bg-card rounded-lg p-6 border shadow-sm">
           <div className="flex justify-between items-start mb-4">

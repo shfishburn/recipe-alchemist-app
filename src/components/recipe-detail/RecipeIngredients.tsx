@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Recipe } from '@/hooks/use-recipe-detail';
 import { useUnitSystem } from '@/hooks/use-unit-system';
-import { UnitSystemToggle } from '@/components/ui/unit-system-toggle';
 import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
 import { groupIngredientsByDepartment, getDepartmentDisplayOrder } from '@/utils/ingredient-department-utils';
 import { IngredientDepartmentHeader } from './ingredients/IngredientDepartmentHeader';
@@ -39,7 +38,6 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
               Ingredients
             </CardTitle>
             <div className="flex items-center gap-2">
-              <UnitSystemToggle size="sm" />
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   {isOpen ? (
