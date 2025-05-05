@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Drawer,
   DrawerContent,
@@ -14,7 +14,6 @@ import { RecipeChat } from './RecipeChat';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RecipeChatDrawerProps {
   recipe: Recipe;
@@ -24,6 +23,8 @@ interface RecipeChatDrawerProps {
 
 export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawerProps) {
   const isMobile = useIsMobile();
+  const contentRef = useRef<HTMLDivElement>(null);
+  
   const {
     isSending,
     isApplying
@@ -39,11 +40,23 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
     onOpenChange(newOpenState);
   };
   
+  // Reset scroll position when drawer opens
+  useEffect(() => {
+    if (open && contentRef.current) {
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.scrollTop = 0;
+        }
+      }, 100);
+    }
+  }, [open]);
+  
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden`} 
+        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col`} 
         style={{ zIndex: 50 }} // Lower z-index than shopping list components
+        ref={contentRef}
       >
         <DrawerHeader className="border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10">
           <div className="flex items-center gap-2">
@@ -85,9 +98,9 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        <ScrollArea className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(95vh-48px)]' : 'h-[calc(85vh-60px)]'}`}>
+        <div className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(95vh-48px)]' : 'h-[calc(85vh-60px)]'} flex`}>
           <RecipeChat recipe={recipe} />
-        </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );

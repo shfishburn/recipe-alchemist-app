@@ -107,6 +107,9 @@ export const useChatMutations = (recipe: Recipe) => {
         console.log("Saving chat message to database with response:", aiResponse.substring(0, 100) + "...");
         
         try {
+          // Create meta object for optimistic updates tracking
+          const meta = messageId ? { optimistic_id: messageId } : null;
+          
           // Insert the chat message into the database
           const { data, error } = await supabase
             .from('recipe_chats')
@@ -118,8 +121,7 @@ export const useChatMutations = (recipe: Recipe) => {
               source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
-              // Store the message ID to help with optimistic updates
-              meta: messageId ? { optimistic_id: messageId } : null
+              meta: meta
             })
             .select()
             .single();
@@ -153,7 +155,7 @@ export const useChatMutations = (recipe: Recipe) => {
         description: "Culinary analysis complete",
       });
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: any, variables) => {
       console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
       
       // Enhanced error handling with better UX

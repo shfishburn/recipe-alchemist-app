@@ -6,7 +6,6 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import type { ChangesResponse } from '@/types/chat';
 import { ChangesSummary } from '../changes/ChangesSummary';
-import { ChangesConfirmationDialog } from '../changes/ChangesConfirmationDialog';
 
 interface ApplyChangesSectionProps {
   changesSuggested: ChangesResponse | null;
@@ -24,12 +23,10 @@ export function ApplyChangesSection({
   isMobile = false 
 }: ApplyChangesSectionProps) {
   const [applyError, setApplyError] = useState<string | null>(null);
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [applyTimeout, setApplyTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [forceReset, setForceReset] = useState(false);
 
   // Safety mechanism: automatically clear "applying" state after 15 seconds
-  // to prevent UI from being stuck in applying state indefinitely
   useEffect(() => {
     if (isApplying) {
       console.log("Starting apply timeout monitoring");
@@ -40,12 +37,6 @@ export function ApplyChangesSection({
         
         // Show an error to the user
         setApplyError("Operation timed out. Please try again.");
-        
-        const applyButton = document.getElementById('apply-changes-button');
-        if (applyButton) {
-          applyButton.classList.remove('animate-pulse');
-          applyButton.querySelector('.animate-spin')?.classList.remove('animate-spin');
-        }
       }, 15000);
       
       setApplyTimeout(timeout);
@@ -86,7 +77,7 @@ export function ApplyChangesSection({
     setApplyError(null); // Reset any previous errors
     
     try {
-      // Enhanced validation before opening confirmation dialog
+      // Enhanced validation before applying changes
       if (!changesSuggested) {
         setApplyError("No changes to apply. The AI didn't suggest any modifications.");
         return;
@@ -97,25 +88,12 @@ export function ApplyChangesSection({
         return;
       }
       
-      // Open the confirmation dialog
-      setConfirmationOpen(true);
+      // Call the apply changes function
+      onApplyChanges();
       
     } catch (error) {
-      console.error("Error preparing to apply changes:", error);
+      console.error("Error applying changes:", error);
       setApplyError(error instanceof Error ? error.message : "Failed to apply changes. Please try again.");
-    }
-  };
-  
-  const handleConfirmApply = () => {
-    try {
-      console.log("Initiating apply changes from confirmation dialog");
-      // Capture any error that might happen when applying changes
-      onApplyChanges();
-      setConfirmationOpen(false);
-    } catch (error) {
-      console.error("Error during apply changes:", error);
-      setApplyError(error instanceof Error ? error.message : "An unexpected error occurred while applying changes.");
-      setConfirmationOpen(false);
     }
   };
 
@@ -143,7 +121,9 @@ export function ApplyChangesSection({
         disabled={isButtonDisabled}
         className={`${
           applied ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary/90'
-        } text-white text-xs sm:text-sm h-7 sm:h-9 mt-2`}
+        } text-white text-xs sm:text-sm h-7 sm:h-9 mt-2 ${
+          isApplying ? 'opacity-70' : ''
+        }`}
         style={{ zIndex: 10 }}
         size={isMobile ? "sm" : "default"}
       >
@@ -161,14 +141,6 @@ export function ApplyChangesSection({
           'Apply Changes'
         )}
       </Button>
-      
-      <ChangesConfirmationDialog
-        open={confirmationOpen}
-        onOpenChange={setConfirmationOpen}
-        onConfirm={handleConfirmApply}
-        changes={changesSuggested}
-        isApplying={isApplying}
-      />
     </div>
   );
 }

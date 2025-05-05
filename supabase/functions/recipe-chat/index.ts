@@ -203,7 +203,7 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json()
-    const { recipe, userMessage, sourceType, sourceUrl, sourceImage } = requestData
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId } = requestData
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
@@ -331,6 +331,9 @@ serve(async (req) => {
 
       // Store the chat interaction if it's not an analysis
       if (sourceType !== 'analysis' && recipe.id) {
+        // Create meta object for optimistic updates tracking
+        const meta = messageId ? { optimistic_id: messageId } : null;
+        
         const { error: chatError } = await supabaseClient
           .from('recipe_chats')
           .insert({
@@ -340,7 +343,8 @@ serve(async (req) => {
             changes_suggested: changes,
             source_type: sourceType || 'manual',
             source_url: sourceUrl,
-            source_image: sourceImage
+            source_image: sourceImage,
+            meta: meta
           })
 
         if (chatError) {
