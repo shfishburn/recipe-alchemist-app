@@ -5,13 +5,13 @@ type SectionState = {
   ingredients: boolean;
   instructions: boolean;
   nutrition: boolean;
-  analysis: boolean; // Changed from 'science' to 'analysis'
+  analysis: boolean;
   chef: boolean;
 };
 
 export function useRecipeSections() {
   const [sections, setSections] = useState<SectionState>(() => {
-    const saved = localStorage.getItem('recipe-sections-v2'); // Updated key to prevent conflicts
+    const saved = localStorage.getItem('recipe-sections-v2');
     // If we have saved settings, use them. Otherwise check if old settings exist and migrate them.
     if (saved) {
       return JSON.parse(saved);
@@ -24,7 +24,7 @@ export function useRecipeSections() {
           ingredients: oldSections.ingredients,
           instructions: oldSections.instructions,
           nutrition: oldSections.nutrition,
-          analysis: oldSections.science || true, // Map the old 'science' to new 'analysis'
+          analysis: oldSections.science || true,
           chef: oldSections.chef,
         };
       }
@@ -33,7 +33,7 @@ export function useRecipeSections() {
         ingredients: true,
         instructions: true,
         nutrition: true,
-        analysis: true, // Changed from 'science' to 'analysis'
+        analysis: true,
         chef: true,
       };
     }
@@ -55,7 +55,7 @@ export function useRecipeSections() {
       ingredients: true,
       instructions: true,
       nutrition: true,
-      analysis: true, // Changed from 'science' to 'analysis'
+      analysis: true,
       chef: true,
     });
   };
@@ -65,7 +65,7 @@ export function useRecipeSections() {
       ingredients: false,
       instructions: false,
       nutrition: false,
-      analysis: false, // Changed from 'science' to 'analysis'
+      analysis: false,
       chef: false,
     });
   };

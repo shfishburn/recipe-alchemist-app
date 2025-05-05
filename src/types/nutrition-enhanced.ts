@@ -1,5 +1,5 @@
 
-import { Nutrition } from './recipe';
+import { Nutrition } from '@/types/recipe';
 
 /**
  * Enhanced nutrition data with quality and confidence information

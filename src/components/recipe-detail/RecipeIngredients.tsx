@@ -30,8 +30,8 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
   );
   
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle} className="relative">
-      <Card>
+    <Card>
+      <Collapsible open={isOpen} onOpenChange={onToggle}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base sm:text-xl font-semibold flex items-center">
@@ -53,6 +53,7 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
             </div>
           </div>
         </CardHeader>
+        
         <CollapsibleContent>
           <CardContent className="pt-0 relative">
             <div className="mb-4">
@@ -97,7 +98,7 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
             )}
           </CardContent>
         </CollapsibleContent>
-      </Card>
-    </Collapsible>
+      </Collapsible>
+    </Card>
   );
 }

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Toggle } from '@/components/ui/toggle';
 import { User, Users } from 'lucide-react';
-import { EnhancedNutrition } from './useNutritionData';
+import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
 interface NutritionHeaderProps {
   showToggle: boolean;

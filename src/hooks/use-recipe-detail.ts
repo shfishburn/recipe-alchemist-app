@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
-import { standardizeNutrition } from '@/types/nutrition-utils';
+import { standardizeNutrition } from '@/utils/nutrition-utils';
 import { isValidUUID } from '@/utils/slug-utils';
 
 export type { Recipe, Ingredient, Nutrition };
