@@ -41,8 +41,9 @@ export function StepDisplay({
     variant === 'cooking' ? "shadow-sm" : ""
   );
   
+  // Updated text classes to match ingredient sizing
   const textClasses = cn(
-    "text-lg leading-relaxed",
+    "text-sm sm:text-base leading-relaxed",
     isCompleted ? "line-through text-muted-foreground" : "text-foreground"
   );
   

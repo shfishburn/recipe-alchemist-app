@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
 import { StepReaction } from '@/hooks/use-recipe-science';
 import type { StepCategory } from '../common/StepCategoryLabel';
-import { FormatIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
+import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 
 interface InstructionStepProps {
   step: string;
@@ -30,7 +30,7 @@ export const InstructionStep = memo(function InstructionStep({
     <li className="group">
       <StepDisplay
         stepNumber={index + 1}
-        stepText={<FormatIngredientText text={step} />}
+        stepText={<FormattedIngredientText text={step} />}
         isCompleted={isCompleted}
         onToggleComplete={handleToggle}
         stepReaction={stepReaction}
