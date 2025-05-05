@@ -2,38 +2,28 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-interface MacroChartData {
+interface MacronutrientData {
   name: string;
   value: number;
   color: string;
 }
 
 interface MacronutrientChartProps {
-  data: MacroChartData[];
+  data: MacronutrientData[];
+  height?: number;
 }
 
-export function MacronutrientChart({ data }: MacronutrientChartProps) {
+export function MacronutrientChart({ data, height = 300 }: MacronutrientChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">No macronutrient data available</p>
+      <div className="flex h-full items-center justify-center p-4 text-center text-muted-foreground">
+        No macronutrient data available
       </div>
     );
   }
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="rounded-lg border bg-background p-2 shadow-md">
-          <p className="font-medium">{`${payload[0].name}: ${payload[0].value}%`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
+  
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height={height}>
       <PieChart>
         <Pie
           data={data}
@@ -43,13 +33,14 @@ export function MacronutrientChart({ data }: MacronutrientChartProps) {
           outerRadius={80}
           fill="#8884d8"
           dataKey="value"
-          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+          nameKey="name"
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip formatter={(value) => `${value}%`} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

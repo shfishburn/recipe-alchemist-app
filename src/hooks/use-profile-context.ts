@@ -28,7 +28,12 @@ export function useProfileSettings() {
   return {
     profile: context.profile,
     isLoading: context.isLoading,
+    error: context.error,
     nutritionPreferences,
-    saveNutritionPreferences: context.saveNutritionPreferences
+    saveNutritionPreferences: (preferences: NutritionPreferencesType) => {
+      return context.updateProfile({
+        nutrition_preferences: preferences
+      });
+    },
   };
 }

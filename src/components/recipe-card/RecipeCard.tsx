@@ -2,8 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { RecipeCardActions } from './RecipeCardActions';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
-import { NutritionPreferencesType } from '@/types/nutrition-preferences';
 import { NutriScoreBadge } from '../recipe-detail/nutrition/NutriScoreBadge';
 import { useNutriScore } from '@/hooks/use-nutri-score';
 
@@ -35,7 +35,7 @@ export function RecipeCard({
   const { grade, hasData } = useNutriScore(recipe);
   
   // Determine the URL for the recipe
-  const recipeUrl = slug ? `/recipes/${slug}` : `/recipes/${id}`;
+  const recipeUrl = slug ? `/recipe/${slug}` : `/recipes/${id}`;
 
   return (
     <Card className={className}>
@@ -55,8 +55,8 @@ export function RecipeCard({
               </div>
             )}
             
-            {/* Nutri-Score badge - only show if we have a valid grade */}
-            {hasData && grade !== null && (
+            {/* Nutri-Score badge */}
+            {hasData && (
               <div className="absolute right-2 top-2">
                 <NutriScoreBadge grade={grade} size="sm" />
               </div>
@@ -81,6 +81,11 @@ export function RecipeCard({
           {prepTime && <span>Prep: {prepTime} min</span>}
           {cookTime && <span>Cook: {cookTime} min</span>}
           {cuisine && <span>Cuisine: {cuisine}</span>}
+        </div>
+
+        {/* Actions */}
+        <div className="mt-4">
+          <RecipeCardActions recipeId={id} />
         </div>
       </div>
     </Card>

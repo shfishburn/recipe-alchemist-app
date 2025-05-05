@@ -1,7 +1,8 @@
 
-import { NutritionPreferencesType, MacroSplitType } from './nutrition-preferences';
+// This file has a type error we need to fix
+// The error is that we're trying to assign a number to a complex type
 
-export interface Nutrition {
+export type Nutrition = {
   calories: number;
   protein: number;
   fat: number;
@@ -18,6 +19,28 @@ export interface Nutrition {
   vitamin_a: number;
   // Allow for aliased properties
   carbs?: number;  // Alternative to carbohydrates
+  
+  // Legacy property aliases for backward compatibility
+  kcal?: number;
+  protein_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+  calcium_mg?: number;
+  iron_mg?: number;
+  potassium_mg?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  vitamin_a_iu?: number;
+  vitamin_c_mg?: number;
+  vitamin_d_iu?: number;
+  
+  // Enhanced properties for extended nutrition data
+  data_quality?: NutritionDataQuality;
+  per_ingredient?: Record<string, any>;
+  audit_log?: any[];
 };
 
 export type NutritionTotals = {
@@ -35,6 +58,7 @@ export type NutritionTotals = {
   vitamin_d: number;
   vitamin_c: number;
   vitamin_a: number;
+  // Add more nutrients as needed
 };
 
 export type NutritionDataQualitySummary = {
@@ -51,6 +75,7 @@ export type NutritionDataQuality = {
   penalties: Record<string, any>;
   unmatched_or_low_confidence_ingredients: string[];
   limitations: string[];
+  // Add the recommended_macros property to fix the type error
   recommended_macros?: {
     protein: number;
     carbs: number;
@@ -79,10 +104,6 @@ export type ExtendedNutritionData = Nutrition & {
   vitamin_a_iu?: number;
   vitamin_c_mg?: number;
   vitamin_d_iu?: number;
-  // Add enhanced properties
-  servingSize?: number;
-  dataQuality?: 'low' | 'medium' | 'high';
-  data_quality?: NutritionDataQuality | 'low' | 'medium' | 'high';
 };
 
 export type NutritionResponse = {
@@ -91,18 +112,7 @@ export type NutritionResponse = {
   total: NutritionTotals;
 };
 
-// Helper function to check if an object matches the NutritionPreferencesType interface
-export function isNutritionPreferences(obj: any): obj is NutritionPreferencesType {
-  return obj 
-    && typeof obj === 'object'
-    && (typeof obj.dailyCalories === 'number' || obj.dailyCalories === undefined)
-    && (typeof obj.macroSplit === 'object' || obj.macroSplit === undefined);
-}
-
-// Export the default preferences for backward compatibility
-export { NutritionPreferencesType, MacroSplitType, DEFAULT_NUTRITION_PREFERENCES } from './nutrition-preferences';
-
-// Add standardizeNutrition function to fix build errors
+// Add these exported functions to fix build errors
 export const standardizeNutrition = (nutrition: any): Nutrition => {
   if (!nutrition) return {
     calories: 0,
@@ -139,6 +149,26 @@ export const standardizeNutrition = (nutrition: any): Nutrition => {
     vitamin_a: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
     // Add carbs alias for compatibility
     carbs: nutrition?.carbohydrates || nutrition?.carbs || nutrition?.carbs_g || 0,
+    // Include extended fields if present
+    data_quality: nutrition?.data_quality,
+    per_ingredient: nutrition?.per_ingredient,
+    audit_log: nutrition?.audit_log,
+    // Include legacy aliases for compatibility
+    kcal: nutrition?.calories || nutrition?.kcal || 0,
+    protein_g: nutrition?.protein || nutrition?.protein_g || 0,
+    fat_g: nutrition?.fat || nutrition?.fat_g || 0,
+    fiber_g: nutrition?.fiber || nutrition?.fiber_g || 0,
+    sugar_g: nutrition?.sugar || nutrition?.sugar_g || 0,
+    sodium_mg: nutrition?.sodium || nutrition?.sodium_mg || 0,
+    calcium_mg: nutrition?.calcium || nutrition?.calcium_mg || 0,
+    iron_mg: nutrition?.iron || nutrition?.iron_mg || 0,
+    potassium_mg: nutrition?.potassium || nutrition?.potassium_mg || 0,
+    vitaminA: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
+    vitaminC: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
+    vitaminD: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
+    vitamin_a_iu: nutrition?.vitamin_a || nutrition?.vitaminA || nutrition?.vitamin_a_iu || 0,
+    vitamin_c_mg: nutrition?.vitamin_c || nutrition?.vitaminC || nutrition?.vitamin_c_mg || 0,
+    vitamin_d_iu: nutrition?.vitamin_d || nutrition?.vitaminD || nutrition?.vitamin_d_iu || 0,
   };
 };
 

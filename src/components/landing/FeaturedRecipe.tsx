@@ -1,112 +1,117 @@
 
 import React from 'react';
-import { Recipe } from '@/types/recipe';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ClockIcon, UsersIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useNutriScore } from '@/hooks/use-nutri-score';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useRecipeDetail } from "@/hooks/use-recipe-detail";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface FeaturedRecipeProps {
-  recipe: Recipe;
-}
+// Featured recipe ID for the Japanese Curry - update to your actual recipe ID
+const FEATURED_RECIPE_ID = "d2f44866-5ee9-4dc4-8537-21f01ed42ac2";
 
-export function FeaturedRecipe({ recipe }: FeaturedRecipeProps) {
-  const recipeCreatedAt = recipe.created_at ? new Date(recipe.created_at) : null;
-  const { grade, hasData } = useNutriScore(recipe);
-  
-  const renderStep = (step: string | { step: string; group?: string }) => {
-    if (typeof step === 'string') {
-      return step;
-    } else if (typeof step === 'object' && 'step' in step) {
-      return step.step;
-    } else {
-      return String(step);
-    }
-  };
+export function FeaturedRecipe() {
+  const { data: recipe, isLoading } = useRecipeDetail(FEATURED_RECIPE_ID);
+
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-muted/30">
+        <div className="container-page">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-recipe-blue" />
+                  Featured Recipe
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <Skeleton className="h-8 w-[250px]" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-[200px] w-full" />
+                <Skeleton className="h-[200px] w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
+
+  if (!recipe) {
+    return null;
+  }
 
   return (
-    <Card className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col h-full">
-      {recipe.image_url && (
-        <Link to={`/recipes/${recipe.slug}`} className="relative">
-          <img
-            src={recipe.image_url}
-            alt={recipe.title}
-            className="w-full h-48 object-cover transition-transform transform hover:scale-105"
-          />
-          
-          {/* Only show badge when we have a valid grade */}
-          {hasData && grade !== null && (
-            <div className="absolute right-2 top-2">
-              <Badge 
-                className={`font-bold ${
-                  grade === 'A' ? 'bg-green-500 text-white' :
-                  grade === 'B' ? 'bg-green-400 text-white' :
-                  grade === 'C' ? 'bg-yellow-500 text-black' :
-                  grade === 'D' ? 'bg-orange-500 text-white' :
-                  grade === 'E' ? 'bg-red-500 text-white' :
-                  'bg-gray-300 text-gray-700'
-                }`}>
-                {grade || '?'}
-              </Badge>
+    <section className="py-16 bg-muted/30">
+      <div className="container-page">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-recipe-blue" />
+                Featured Recipe
+              </CardTitle>
+              <Button variant="outline" onClick={() => window.location.href = `/recipes/${FEATURED_RECIPE_ID}`}>
+                View Full Recipe
+              </Button>
             </div>
-          )}
-        </Link>
-      )}
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">{recipe.title}</h3>
+                <p className="text-muted-foreground">{recipe.tagline || recipe.description}</p>
+              </div>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Quantity</TableHead>
+                    <TableHead className="w-[100px]">Unit</TableHead>
+                    <TableHead>Ingredient</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recipe.ingredients.slice(0, 5).map((ingredient, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{ingredient.qty}</TableCell>
+                      <TableCell>{ingredient.unit}</TableCell>
+                      <TableCell>{ingredient.item}</TableCell>
+                    </TableRow>
+                  ))}
+                  {recipe.ingredients.length > 5 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        +{recipe.ingredients.length - 5} more ingredients
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
 
-      <CardContent className="p-6 flex-grow">
-        <div className="mb-4">
-          <Link to={`/recipes/${recipe.slug}`}>
-            <h3 className="text-xl font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-200">
-              {recipe.title}
-            </h3>
-          </Link>
-          <p className="text-gray-500 mt-1">{recipe.tagline}</p>
-        </div>
-
-        <div className="flex items-center space-x-2 mb-3">
-          {recipe.cuisine_category && recipe.cuisine_category.map((category, index) => (
-            <Badge key={index} variant="secondary">
-              {category}
-            </Badge>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between text-gray-600 mb-3">
-          <div className="flex items-center space-x-1">
-            <ClockIcon className="h-4 w-4" />
-            <span>{(recipe.prep_time_min || recipe.prep_time || 0)}m Prep</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <UsersIcon className="h-4 w-4" />
-            <span>{recipe.servings} Servings</span>
-          </div>
-          {recipeCreatedAt && (
-            <div className="text-sm text-gray-500">
-              {format(recipeCreatedAt, 'MMM d, yyyy')}
+              <div>
+                <h4 className="font-semibold mb-4">Instructions</h4>
+                <ol className="list-decimal list-inside space-y-2">
+                  {recipe.instructions.slice(0, 3).map((step, index) => (
+                    <li key={index} className="text-muted-foreground ml-4">
+                      <span className="text-foreground">{step}</span>
+                    </li>
+                  ))}
+                  {recipe.instructions.length > 3 && (
+                    <li className="text-center text-muted-foreground mt-2">
+                      +{recipe.instructions.length - 3} more steps available in the full recipe
+                    </li>
+                  )}
+                </ol>
+              </div>
             </div>
-          )}
-        </div>
-
-        <ul className="list-disc pl-5 text-gray-700 mb-4">
-          {recipe.instructions.slice(0, 3).map((step, index) => (
-            <li key={index} className="mb-4">
-              {renderStep(step)}
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-
-      <CardFooter className="p-6 border-t border-gray-200">
-        <Button variant="outline" asChild className="w-full">
-          <Link to={`/recipes/${recipe.slug}`}>
-            View Recipe
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   );
 }

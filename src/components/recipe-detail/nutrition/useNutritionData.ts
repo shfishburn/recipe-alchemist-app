@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Recipe } from '@/types/recipe';
-import { toast } from 'sonner';
-import { ExtendedNutritionData, NutritionDataQuality, standardizeNutrition } from '@/types/nutrition-utils';
+import { standardizeNutrition } from '@/types/nutrition-utils';
+import type { Recipe } from '@/types/recipe';
+import type { Profile } from '@/hooks/use-auth';
 import { useUnitSystem } from '@/hooks/use-unit-system';
-import { NutritionPreferencesType } from '@/types/nutrition-preferences';
+import { isNutritionPreferences, type NutritionPreferencesType } from '@/types/nutrition';
 
 export interface UserNutritionPreferences {
   dailyCalories: number;
@@ -17,91 +15,147 @@ export interface UserNutritionPreferences {
   unitSystem?: 'metric' | 'imperial';
 }
 
-// Re-export ExtendedNutritionData from here so other components can import it
-export type { ExtendedNutritionData };
-
-export function useNutritionData(recipe: Recipe | undefined) {
-  const { unitSystem } = useUnitSystem();
-  const [recipeNutrition, setRecipeNutrition] = useState<ExtendedNutritionData | null>(null);
-  
-  // Query for enhanced nutrition data
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['recipe-nutrition', recipe?.id],
-    queryFn: async () => {
-      if (!recipe?.nutrition) {
-        throw new Error('No nutrition data available');
-      }
-      
-      // This is where we'd normally fetch enhanced data from an API
-      // For now, we'll just enhance the existing data locally
-      const enhancedNutrition: ExtendedNutritionData = {
-        ...recipe.nutrition,
-        servingSize: recipe.nutrition.serving_size || 100,
-        dataQuality: recipe.nutrition.data_quality || 'medium',
-        calories: recipe.nutrition.calories || 0,
-        protein: recipe.nutrition.protein || 0,
-        carbs: recipe.nutrition.carbs || 0,
-        fat: recipe.nutrition.fat || 0,
-        fiber: recipe.nutrition.fiber || 0,
-        sugar: recipe.nutrition.sugar || 0,
-        sodium: recipe.nutrition.sodium || 0,
-        cholesterol: recipe.nutrition.cholesterol || 0,
-        calcium: recipe.nutrition.calcium || 0,
-        iron: recipe.nutrition.iron || 0,
-        potassium: recipe.nutrition.potassium || 0,
-        vitamin_d: recipe.nutrition.vitamin_d || 0,
-        vitamin_c: recipe.nutrition.vitamin_c || 0,
-        vitamin_a: recipe.nutrition.vitamin_a || 0,
-        carbohydrates: recipe.nutrition.carbohydrates || recipe.nutrition.carbs || 0,
-      };
-      
-      return enhancedNutrition;
-    },
-    enabled: !!recipe?.nutrition && Object.keys(recipe.nutrition).length > 0,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-  
-  // Set nutrition data when available
-  useEffect(() => {
-    if (data) {
-      setRecipeNutrition(data);
-    } else if (recipe?.nutrition) {
-      // Create a basic enhanced nutrition object from recipe nutrition
-      const baseNutrition: ExtendedNutritionData = {
-        calories: recipe.nutrition.calories || 0,
-        protein: recipe.nutrition.protein || 0,
-        carbs: recipe.nutrition.carbs || 0,
-        fat: recipe.nutrition.fat || 0,
-        fiber: recipe.nutrition.fiber || 0,
-        sugar: recipe.nutrition.sugar || 0,
-        sodium: recipe.nutrition.sodium || 0,
-        cholesterol: recipe.nutrition.cholesterol || 0,
-        calcium: recipe.nutrition.calcium || 0,
-        iron: recipe.nutrition.iron || 0,
-        potassium: recipe.nutrition.potassium || 0,
-        vitamin_d: recipe.nutrition.vitamin_d || 0,
-        vitamin_c: recipe.nutrition.vitamin_c || 0,
-        vitamin_a: recipe.nutrition.vitamin_a || 0,
-        carbohydrates: recipe.nutrition.carbohydrates || recipe.nutrition.carbs || 0,
-        servingSize: recipe.nutrition.serving_size || 100,
-        dataQuality: recipe.nutrition.data_quality || 'medium',
-      };
-      setRecipeNutrition(baseNutrition);
-    }
-  }, [recipe, data]);
-  
-  // Show error toast if nutrition data fails to load
-  useEffect(() => {
-    if (error) {
-      toast.error('Failed to load nutrition data');
-      console.error('Nutrition data error:', error);
-    }
-  }, [error]);
-
-  return {
-    recipeNutrition,
-    isLoading,
-    error,
-    refetchNutrition: refetch
+export interface ExtendedNutritionData {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  calcium?: number;
+  iron?: number;
+  potassium?: number;
+  data_quality?: {
+    overall_confidence: 'high' | 'medium' | 'low';
+    overall_confidence_score: number;
   };
+  per_ingredient?: Record<string, any>;
+  // Add any other properties you need
+}
+
+// Validate nutrition data to ensure reasonable values
+function validateNutritionValues(nutrition: any): ExtendedNutritionData {
+  // Create a copy to avoid mutating the original
+  const validated: ExtendedNutritionData = {
+    calories: Math.min(Math.abs(nutrition.calories || 0), 5000),  // Max 5000 calories
+    protein: Math.min(Math.abs(nutrition.protein || 0), 300),     // Max 300g protein
+    carbs: Math.min(Math.abs(nutrition.carbs || 0), 500),         // Max 500g carbs
+    fat: Math.min(Math.abs(nutrition.fat || 0), 300),             // Max 300g fat
+    fiber: Math.min(Math.abs(nutrition.fiber || 0), 100),         // Max 100g fiber
+    sugar: Math.min(Math.abs(nutrition.sugar || 0), 100),         // Max 100g sugar
+    sodium: Math.min(Math.abs(nutrition.sodium || 0), 5000)       // Max 5000mg sodium
+  };
+
+  // Handle micronutrients with reasonable caps
+  if (nutrition.vitaminA !== undefined) validated.vitaminA = Math.min(Math.abs(nutrition.vitaminA), 10000);
+  if (nutrition.vitaminC !== undefined) validated.vitaminC = Math.min(Math.abs(nutrition.vitaminC), 1000);
+  if (nutrition.vitaminD !== undefined) validated.vitaminD = Math.min(Math.abs(nutrition.vitaminD), 1000);
+  if (nutrition.calcium !== undefined) validated.calcium = Math.min(Math.abs(nutrition.calcium), 2000);
+  if (nutrition.iron !== undefined) validated.iron = Math.min(Math.abs(nutrition.iron), 100);
+  if (nutrition.potassium !== undefined) validated.potassium = Math.min(Math.abs(nutrition.potassium), 10000);
+
+  // Include data quality info if present
+  if (nutrition.data_quality) {
+    validated.data_quality = nutrition.data_quality;
+  }
+
+  // Include per-ingredient data if available
+  if (nutrition.per_ingredient) {
+    validated.per_ingredient = nutrition.per_ingredient;
+  }
+
+  return validated;
+}
+
+export function useNutritionData(recipe: Recipe, profile?: Profile | null) {
+  const [recipeNutrition, setRecipeNutrition] = useState<ExtendedNutritionData | null>(null);
+  const [userPreferences, setUserPreferences] = useState<UserNutritionPreferences | null>(null);
+  const { unitSystem } = useUnitSystem();
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    // Process recipe nutrition
+    if (recipe?.nutrition) {
+      try {
+        const standardized = standardizeNutrition(recipe.nutrition);
+        
+        // Apply validation to ensure reasonable values
+        const validated = validateNutritionValues(standardized);
+        
+        // Log if we found unreasonable values
+        if (standardized.calories > 5000 || standardized.fat > 300) {
+          console.warn('Recipe has unusually high nutrition values, applying caps:', {
+            originalCalories: standardized.calories,
+            originalFat: standardized.fat,
+            cappedCalories: validated.calories,
+            cappedFat: validated.fat
+          });
+        }
+        
+        setRecipeNutrition(validated);
+      } catch (error) {
+        console.error('Error processing nutrition data:', error);
+        setRecipeNutrition(null);
+      }
+    } else {
+      setRecipeNutrition(null);
+    }
+
+    // Process user preferences
+    if (profile) {
+      let dailyCalories = 2000;
+      let macroSplit = {
+        protein: 30,
+        carbs: 40,
+        fat: 30,
+      };
+
+      // Try to get nutrition preferences from the profile
+      if (profile.nutrition_preferences) {
+        try {
+          // Check if nutrition_preferences is properly structured
+          if (isNutritionPreferences(profile.nutrition_preferences)) {
+            const nutritionPrefs = profile.nutrition_preferences;
+            
+            // Extract values from nutrition preferences
+            dailyCalories = nutritionPrefs.dailyCalories || 2000;
+            macroSplit = {
+              protein: nutritionPrefs.macroSplit?.protein || 30,
+              carbs: nutritionPrefs.macroSplit?.carbs || 40,
+              fat: nutritionPrefs.macroSplit?.fat || 30,
+            };
+          }
+        } catch (error) {
+          console.error('Error processing nutrition preferences:', error);
+        }
+      }
+
+      setUserPreferences({
+        dailyCalories,
+        macroSplit,
+        unitSystem
+      });
+    } else {
+      // Default preferences
+      setUserPreferences({
+        dailyCalories: 2000,
+        macroSplit: {
+          protein: 30,
+          carbs: 40,
+          fat: 30
+        },
+        unitSystem
+      });
+    }
+  }, [recipe, profile, unitSystem, version]);
+
+  const refetchNutrition = () => {
+    setVersion(prev => prev + 1);
+  };
+
+  return { recipeNutrition, userPreferences, refetchNutrition };
 }

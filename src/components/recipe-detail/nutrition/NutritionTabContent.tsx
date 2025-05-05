@@ -4,8 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { NutritionFacts } from './NutritionFacts';
 import { MacronutrientChart } from './charts/MacronutrientChart';
 import { NutritionalAttributes } from './NutritionalAttributes';
-import { NutriScoreBadge } from './NutriScoreBadge';
-import { useNutriScore } from '@/hooks/use-nutri-score';
 import type { Recipe } from '@/types/recipe';
 
 interface NutritionTabContentProps {
@@ -13,8 +11,6 @@ interface NutritionTabContentProps {
 }
 
 export function NutritionTabContent({ recipe }: NutritionTabContentProps) {
-  const { grade, hasData, score, positives, negatives } = useNutriScore(recipe);
-  
   // Extract nutrition data for the macronutrient chart
   const macroData = React.useMemo(() => {
     if (!recipe?.nutrition) return [];
@@ -33,30 +29,6 @@ export function NutritionTabContent({ recipe }: NutritionTabContentProps) {
   
   return (
     <div className="space-y-6">
-      {/* Nutri-Score Card */}
-      <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6">
-          <div className="flex flex-col items-center sm:flex-row sm:justify-between">
-            <div className="mb-4 sm:mb-0">
-              <h2 className="text-xl font-semibold">Recipe Nutri-Score</h2>
-              <p className="text-muted-foreground">
-                Nutritional quality assessment
-              </p>
-            </div>
-            
-            <div className="flex items-center">
-              {hasData ? (
-                <NutriScoreBadge grade={grade} size="lg" showLabel={true} />
-              ) : (
-                <div className="text-muted-foreground">
-                  No Nutri-Score available
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
-      
       {/* Nutrition Facts Card */}
       <Card>
         <CardContent className="pt-6">
