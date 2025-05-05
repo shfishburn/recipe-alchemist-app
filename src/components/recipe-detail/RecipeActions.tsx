@@ -25,8 +25,13 @@ export function RecipeActions({
   // Only show chat button when not already on the modify tab
   const showChatButton = onOpenChat && currentTab !== 'modify';
   
+  // Change styling based on sticky prop
+  const containerClasses = sticky 
+    ? "fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm p-4 border-t z-50 shadow-md" 
+    : "py-8 mt-6";
+  
   return (
-    <div className={`${sticky ? "fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm p-4 border-t z-50 shadow-md" : ""}`}>
+    <div className={containerClasses}>
       <div className="container mx-auto max-w-3xl px-4">
         {/* Primary action - Ask AI Chef button */}
         {showChatButton && (

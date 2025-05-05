@@ -84,11 +84,12 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
           refetch={refetch}
         />
         
-        {/* Floating action buttons */}
+        {/* Actions - now with sticky={false} to position it naturally in document flow */}
         <RecipeActions 
           recipe={localRecipe} 
-          sticky={true} 
+          sticky={false} 
           onOpenChat={handleOpenChat}
+          currentTab={window.location.hash.slice(1) || 'recipe'}
         />
       </div>
     </ProfileProvider>
