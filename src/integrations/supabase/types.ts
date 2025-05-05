@@ -695,6 +695,7 @@ export type Database = {
           generated_by: string | null
           id: string
           ingredient_context: string[] | null
+          metadata: Json | null
           reaction_details: string[]
           reactions: string[]
           recipe_id: string
@@ -714,6 +715,7 @@ export type Database = {
           generated_by?: string | null
           id?: string
           ingredient_context?: string[] | null
+          metadata?: Json | null
           reaction_details: string[]
           reactions: string[]
           recipe_id: string
@@ -733,6 +735,7 @@ export type Database = {
           generated_by?: string | null
           id?: string
           ingredient_context?: string[] | null
+          metadata?: Json | null
           reaction_details?: string[]
           reactions?: string[]
           recipe_id?: string

@@ -108,6 +108,17 @@ export function StepDisplay({
             <p key={i} className="text-sm text-blue-700 leading-relaxed mb-2">{detail}</p>
           ))}
           
+          {/* Additional metadata if available */}
+          {stepReaction.metadata && Object.keys(stepReaction.metadata).length > 0 && (
+            <div className="mt-2">
+              {stepReaction.metadata.temperatureNote && (
+                <p className="text-xs text-blue-600 italic mb-1">
+                  {stepReaction.metadata.temperatureNote}
+                </p>
+              )}
+            </div>
+          )}
+          
           {/* Reaction tags */}
           {stepReaction.reactions?.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1 mt-1 border-t border-blue-200">

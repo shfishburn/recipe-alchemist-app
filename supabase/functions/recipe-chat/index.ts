@@ -8,37 +8,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Inline validation functions (previously imported from ./validation.ts)
+// Function to validate and process the AI response
 function validateRecipeChanges(rawResponse) {
   try {
-    // Check if the raw response already looks like JSON
-    if (rawResponse.trim().startsWith('{') && rawResponse.trim().endsWith('}')) {
-      // Try to parse as JSON directly
-      const jsonResponse = JSON.parse(rawResponse);
-      // Add validation logic here if needed
-      return jsonResponse;
+    // Now that we're using response_format: { type: "json_object" },
+    // the response should be a JSON object directly
+    const jsonResponse = typeof rawResponse === 'string' 
+      ? JSON.parse(rawResponse) 
+      : rawResponse;
+    
+    // Safety checks for required fields
+    if (!jsonResponse.textResponse && !jsonResponse.text_response) {
+      jsonResponse.textResponse = rawResponse;
     }
-
-    // Try to extract JSON from the text response using regex
-    const jsonMatch = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonMatch && jsonMatch[1]) {
-      try {
-        const jsonResponse = JSON.parse(jsonMatch[1]);
-        // Add textResponse to contain the original text
-        jsonResponse.textResponse = rawResponse.replace(jsonMatch[0], '').trim();
-        return jsonResponse;
-      } catch (jsonError) {
-        console.error("Error parsing JSON from code block:", jsonError);
+    
+    // Ensure changes object exists with safe defaults
+    if (!jsonResponse.changes) {
+      jsonResponse.changes = { mode: "none" };
+    }
+    
+    // Ensure ingredients structure is consistent
+    if (jsonResponse.changes && jsonResponse.changes.ingredients) {
+      if (!Array.isArray(jsonResponse.changes.ingredients.items) || 
+          jsonResponse.changes.ingredients.items.length === 0) {
+        jsonResponse.changes.ingredients.mode = "none";
+        jsonResponse.changes.ingredients.items = [];
+      }
+    } else if (jsonResponse.changes) {
+      // Initialize ingredients with safe defaults if missing
+      jsonResponse.changes.ingredients = { mode: "none", items: [] };
+    }
+    
+    // Standardize science_notes format
+    if (jsonResponse.science_notes) {
+      if (!Array.isArray(jsonResponse.science_notes)) {
+        jsonResponse.science_notes = [];
+      } else {
+        // Filter out any non-string values
+        jsonResponse.science_notes = jsonResponse.science_notes
+          .filter(note => typeof note === 'string' && note.trim() !== '')
+          .map(note => note.trim());
       }
     }
-
-    // If we couldn't extract valid JSON, return the raw text as textResponse
-    return {
-      textResponse: rawResponse,
-      changes: { mode: "none" }
-    };
+    
+    return jsonResponse;
   } catch (error) {
     console.error("Error validating recipe changes:", error);
+    // Fallback to wrapping the raw response as text
     return {
       textResponse: rawResponse,
       changes: { mode: "none" }
@@ -68,71 +84,19 @@ Focus on:
    - Recommend evidence-based technique modifications
    - Explain the chemistry behind each suggested change
 
-4. MEASUREMENT & UNIT:
-   - US-imperial first, metric in ( ), lower-case units, vulgar fractions for <1 tbsp
-   - Allow for reasonable measurement flexibility where appropriate
-   - Consider both volume and weight measurements where helpful
-
-5. SHOPPABLE INGREDIENTS:
-   - Each item gets a typical US grocery package size
-   - \`shop_size_qty\` ≥ \`qty\` (spices/herbs exempt)
-   - Choose the nearest standard package (e.g., 14.5-oz can, 2-lb bag)
-
-6. TONE & STYLE – inspired by López-Alt approach:
-   - Generally use active voice, focus on clarity
-   - Include diverse sensory cues (e.g., "deep mahogany crust", "butter foams noisily")
-   - Ingredient tags: wrap each referenced ingredient in \`**double-asterisks**\`
-   - Parenthetical science notes allowed where helpful (e.g., "… (initiates Maillard reaction)")
-   - Balance precision with approachable language for different skill levels
-
-Return response as JSON:
+Return response as JSON with this exact structure:
 {
-  "title": "Improved recipe title with key technique",
+  "textResponse": "Detailed conversational analysis of the recipe chemistry",
   "science_notes": ["Array of scientific explanations"],
   "techniques": ["Array of technique details"],
   "troubleshooting": ["Array of science-based solutions"],
   "changes": {
-    "title": "string",
+    "title": "string or null",
     "ingredients": {
       "mode": "add" | "replace" | "none",
-      "items": [{
-        "qty": number,
-        "unit": string,
-        "shop_size_qty": number,
-        "shop_size_unit": string,
-        "item": string,
-        "notes": string
-      }]
+      "items": []
     },
-    "instructions": ["Array of updated steps"],
-    "cookingDetails": {
-      "temperature": {
-        "fahrenheit": number,
-        "celsius": number
-      },
-      "duration": {
-        "prep": number,
-        "cook": number,
-        "rest": number
-      }
-    }
-  },
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number,
-    "sugar_g": number,
-    "sodium_mg": number,
-    "vitamin_a_iu": number,
-    "vitamin_c_mg": number,
-    "vitamin_d_iu": number,
-    "calcium_mg": number,
-    "iron_mg": number,
-    "potassium_mg": number,
-    "data_quality": "complete" | "partial",
-    "calorie_check_pass": boolean
+    "instructions": []
   }
 }`;
 
@@ -151,18 +115,12 @@ const chatSystemPrompt = `You are a culinary scientist specializing in food chem
    - Each item gets a typical US grocery package size
    - Include \`shop_size_qty\` and \`shop_size_unit\`
 4. Validate all titles are descriptive and clear
-5. Follow López-Alt tone and style:
-   - Active voice, ≤25 words per step
-   - Concrete sensory cues
-   - Ingredient tags: wrap each referenced ingredient in \`**double-asterisks**\`
-   - No vague language
 
 Example format:
 {
-  "title": "Herb-Crusted Chicken Breast with Thyme-Infused Pan Sauce",
   "textResponse": "Detailed explanation of changes...",
   "changes": {
-    "title": "string",
+    "title": "string or null",
     "ingredients": {
       "mode": "add" | "replace" | "none",
       "items": [{
@@ -184,25 +142,59 @@ Example format:
         "prep": number,
         "cook": number,
         "rest": number
-      },
-      "equipment": [{
-        "type": string,
-        "settings": string
-      }]
+      }
     }
   },
-  "followUpQuestions": ["Array of suggested follow-up questions"],
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number,
-    "sugar_g": number,
-    "sodium_mg": number,
-    "data_quality": "complete" | "partial"
-  }
+  "followUpQuestions": ["Array of suggested follow-up questions"]
 }`;
+
+// Helper function to extract science notes from text if none were properly structured
+function extractScienceNotesFromText(text: string): string[] {
+  const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
+  const paragraphs = text.split(/\n\n+/);
+  const scienceNotes: string[] = [];
+  
+  // Look for paragraphs containing science keywords
+  paragraphs.forEach(paragraph => {
+    const lowerParagraph = paragraph.toLowerCase();
+    
+    for (const keyword of scienceKeywords) {
+      if (lowerParagraph.includes(keyword) && paragraph.length > 30) {
+        // Clean up the paragraph
+        const cleaned = paragraph
+          .replace(/^#+\s+/, '') // Remove markdown headers
+          .replace(/^\d+\.\s+/, '') // Remove numbered list markers
+          .replace(/^\*\s+/, '') // Remove bullet points
+          .trim();
+        
+        if (cleaned.length > 0) {
+          scienceNotes.push(cleaned);
+          break; // Break after finding first keyword match in paragraph
+        }
+      }
+    }
+  });
+  
+  // If we still don't have any science notes, look for sentences
+  if (scienceNotes.length === 0) {
+    const sentences = text.split(/[.!?]+\s+/);
+    
+    for (const sentence of sentences) {
+      const lowerSentence = sentence.toLowerCase();
+      for (const keyword of scienceKeywords) {
+        if (lowerSentence.includes(keyword) && sentence.length > 20) {
+          scienceNotes.push(sentence.trim());
+          break;
+        }
+      }
+      
+      // Limit to 3 extracted notes
+      if (scienceNotes.length >= 3) break;
+    }
+  }
+  
+  return scienceNotes.slice(0, 5); // Return at most 5 notes
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -285,9 +277,8 @@ serve(async (req) => {
             },
           ],
           temperature: 0.7,
-          max_tokens: 2500, // Increased max tokens to ensure complete responses
-          n: 1,
-          stop: null,
+          response_format: { type: "json_object" }, // Enforce JSON output format
+          max_tokens: 2500,
         }),
       }).then((res) => res.json())
       
@@ -299,57 +290,15 @@ serve(async (req) => {
       const rawResponse = aiResponse.choices[0].message.content;
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
 
-      // Extract any changes suggested from the response
+      // Process the response with our validation function
       const processedResponse = validateRecipeChanges(rawResponse);
       
       // Prepare the response data format
-      let textResponse = rawResponse;
-      let changes = { mode: "none" };
-      let scienceNotes = [];
-      let techniques = [];
-      let troubleshooting = [];
-      
-      // Check if we successfully extracted structured changes
-      if (processedResponse && typeof processedResponse === 'object') {
-        if (processedResponse.textResponse) {
-          textResponse = processedResponse.textResponse;
-        }
-        if (processedResponse.changes) {
-          // Add safety check for empty or missing ingredients
-          if (processedResponse.changes.ingredients) {
-            if (!processedResponse.changes.ingredients.mode) {
-              processedResponse.changes.ingredients.mode = "none";
-            }
-            if (!processedResponse.changes.ingredients.items || 
-                !Array.isArray(processedResponse.changes.ingredients.items) ||
-                processedResponse.changes.ingredients.items.length === 0) {
-              processedResponse.changes.ingredients.mode = "none";
-              processedResponse.changes.ingredients.items = [];
-            }
-          }
-          changes = processedResponse.changes;
-        }
-        // Extract analysis sections if available
-        if (processedResponse.science_notes) {
-          scienceNotes = processedResponse.science_notes;
-        }
-        if (processedResponse.techniques) {
-          techniques = processedResponse.techniques;
-        }
-        if (processedResponse.troubleshooting) {
-          troubleshooting = processedResponse.troubleshooting;
-        }
-      }
-      
-      console.log("Processed response:", { 
-        textLength: textResponse.length, 
-        hasChanges: !!changes,
-        scienceNotesCount: scienceNotes.length,
-        techniquesCount: techniques.length,
-        troubleshootingCount: troubleshooting.length,
-        ingredientsMode: changes.ingredients?.mode || 'none',
-        hasIngredients: Array.isArray(changes.ingredients?.items) && changes.ingredients?.items.length > 0
-      });
+      let textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;
+      let changes = processedResponse.changes || { mode: "none" };
+      let scienceNotes = processedResponse.science_notes || [];
+      let techniques = processedResponse.techniques || [];
+      let troubleshooting = processedResponse.troubleshooting || [];
       
       // Add additional safety checks for analysis mode
       if (sourceType === 'analysis') {
@@ -426,52 +375,4 @@ serve(async (req) => {
       }
     )
   }
-})
-
-// Helper function to extract science notes from text if none were properly structured
-function extractScienceNotesFromText(text: string): string[] {
-  const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
-  const paragraphs = text.split(/\n\n+/);
-  const scienceNotes: string[] = [];
-  
-  // Look for paragraphs containing science keywords
-  paragraphs.forEach(paragraph => {
-    const lowerParagraph = paragraph.toLowerCase();
-    
-    for (const keyword of scienceKeywords) {
-      if (lowerParagraph.includes(keyword) && paragraph.length > 30) {
-        // Clean up the paragraph
-        const cleaned = paragraph
-          .replace(/^#+\s+/, '') // Remove markdown headers
-          .replace(/^\d+\.\s+/, '') // Remove numbered list markers
-          .replace(/^\*\s+/, '') // Remove bullet points
-          .trim();
-        
-        if (cleaned.length > 0) {
-          scienceNotes.push(cleaned);
-          break; // Break after finding first keyword match in paragraph
-        }
-      }
-    }
-  });
-  
-  // If we still don't have any science notes, look for sentences
-  if (scienceNotes.length === 0) {
-    const sentences = text.split(/[.!?]+\s+/);
-    
-    for (const sentence of sentences) {
-      const lowerSentence = sentence.toLowerCase();
-      for (const keyword of scienceKeywords) {
-        if (lowerSentence.includes(keyword) && sentence.length > 20) {
-          scienceNotes.push(sentence.trim());
-          break;
-        }
-      }
-      
-      // Limit to 3 extracted notes
-      if (scienceNotes.length >= 3) break;
-    }
-  }
-  
-  return scienceNotes.slice(0, 5); // Return at most 5 notes
-}
+});

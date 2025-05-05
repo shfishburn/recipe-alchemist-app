@@ -1,9 +1,10 @@
+
 // This function validates and formats the AI response to extract structured changes
 export function validateRecipeChanges(rawResponse: string) {
   console.log("Validating response length:", rawResponse.length);
   
   try {
-    // First try to parse the entire response as JSON
+    // With response_format: { type: "json_object" }, the response should be valid JSON
     const parsedResponse = JSON.parse(rawResponse);
     
     // Ensure that ingredients have a "mode" property and it's set to "none" if items array is empty or missing
@@ -30,263 +31,22 @@ export function validateRecipeChanges(rawResponse: string) {
       }
     }
     
-    // Ensure changes_suggested.science_notes is always a valid array if it exists
-    if (parsedResponse.changes && parsedResponse.changes.science_notes) {
-      if (!Array.isArray(parsedResponse.changes.science_notes)) {
-        parsedResponse.changes.science_notes = [];
-      } else {
-        // Filter out any non-string values
-        parsedResponse.changes.science_notes = parsedResponse.changes.science_notes
-          .filter(note => typeof note === 'string' && note.trim() !== '')
-          .map(note => note.trim());
-      }
+    // Standardize response format
+    if (!parsedResponse.textResponse && parsedResponse.text_response) {
+      parsedResponse.textResponse = parsedResponse.text_response;
     }
-    
-    // Ensure instructions are valid if present
-    if (parsedResponse.changes && parsedResponse.changes.instructions) {
-      if (!Array.isArray(parsedResponse.changes.instructions)) {
-        parsedResponse.changes.instructions = [];
-      } else {
-        // Process and filter instructions to ensure they're valid
-        parsedResponse.changes.instructions = parsedResponse.changes.instructions
-          .map(instruction => {
-            if (typeof instruction === 'string') {
-              return instruction.trim();
-            } else if (instruction && typeof instruction === 'object' && instruction.action) {
-              return instruction.action.trim();
-            }
-            return null;
-          })
-          .filter(Boolean);
-      }
+
+    if (!parsedResponse.textResponse) {
+      parsedResponse.textResponse = "Analysis complete.";
     }
     
     return parsedResponse;
-  } catch (e) {
-    console.log("Failed to parse response as direct JSON, trying to extract from text...");
-    
-    // Try to extract content from markdown code blocks
-    const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)```/;
-    const codeBlockMatches = rawResponse.match(codeBlockRegex);
-    
-    if (codeBlockMatches && codeBlockMatches[1]) {
-      try {
-        console.log("Found content in backticks, attempting to parse");
-        const jsonContent = codeBlockMatches[1];
-        const parsedContent = JSON.parse(jsonContent);
-        
-        // Apply the same safety checks as above
-        if (parsedContent.changes && parsedContent.changes.ingredients) {
-          if (!Array.isArray(parsedContent.changes.ingredients.items) || 
-              parsedContent.changes.ingredients.items.length === 0) {
-            parsedContent.changes.ingredients.mode = "none";
-            parsedContent.changes.ingredients.items = [];
-          }
-        } else if (parsedContent.changes) {
-          parsedContent.changes.ingredients = { mode: "none", items: [] };
-        }
-        
-        // Ensure science_notes is an array
-        if (parsedContent.science_notes) {
-          if (!Array.isArray(parsedContent.science_notes)) {
-            parsedContent.science_notes = [];
-          } else {
-            parsedContent.science_notes = parsedContent.science_notes
-              .filter(note => typeof note === 'string' && note.trim() !== '')
-              .map(note => note.trim());
-          }
-        }
-        
-        // Ensure changes.science_notes is an array if it exists
-        if (parsedContent.changes && parsedContent.changes.science_notes) {
-          if (!Array.isArray(parsedContent.changes.science_notes)) {
-            parsedContent.changes.science_notes = [];
-          } else {
-            parsedContent.changes.science_notes = parsedContent.changes.science_notes
-              .filter(note => typeof note === 'string' && note.trim() !== '')
-              .map(note => note.trim());
-          }
-        }
-        
-        // Ensure instructions are valid
-        if (parsedContent.changes && parsedContent.changes.instructions) {
-          if (!Array.isArray(parsedContent.changes.instructions)) {
-            parsedContent.changes.instructions = [];
-          } else {
-            parsedContent.changes.instructions = parsedContent.changes.instructions
-              .map(instruction => {
-                if (typeof instruction === 'string') {
-                  return instruction.trim();
-                } else if (instruction && typeof instruction === 'object' && instruction.action) {
-                  return instruction.action.trim();
-                }
-                return null;
-              })
-              .filter(Boolean);
-          }
-        }
-        
-        return parsedContent;
-      } catch (parseError) {
-        console.error("Failed to parse JSON from backticks:", parseError);
-      }
-    }
-    
-    // Enhanced extraction - extract sections intelligently from the text
-    console.log("Creating enhanced response object from raw text");
-    const response = {
-      textResponse: formatResponseForDisplay(rawResponse),
-      changes: { 
-        mode: "none",
-        ingredients: { mode: "none", items: [] } // Ensure ingredients are initialized safely
-      },
-      science_notes: extractSectionContent(rawResponse, "Chemistry", "Science", "Chemical", "Maillard"),
-      techniques: extractSectionContent(rawResponse, "Technique", "Method", "Cooking", "Temperature"),
-      troubleshooting: extractSectionContent(rawResponse, "Troubleshoot", "Problem", "Issue")
+  } catch (error) {
+    console.error("Error validating recipe changes:", error);
+    // If JSON parsing fails, return a simple object with the raw text
+    return {
+      textResponse: rawResponse,
+      changes: { mode: "none" }
     };
-    
-    return response;
   }
-}
-
-// Format the response for better display in the UI
-function formatResponseForDisplay(text: string): string {
-  // Remove any markdown code blocks
-  text = text.replace(/```[^`]*```/g, '');
-  
-  // Add paragraph breaks for better readability
-  return text.split('\n\n').filter(p => p.trim().length > 0).join('<br><br>');
-}
-
-// Extract section content using multiple methods - returns an array of strings
-function extractSectionContent(text: string, ...sectionKeywords: string[]): string[] {
-  const results: string[] = [];
-  
-  // First try to extract by headings
-  const headingSections = extractSectionWithHeader(text, ...sectionKeywords);
-  if (headingSections && headingSections.length > 0) {
-    return headingSections;
-  }
-  
-  // Next try to extract by numbered or bulleted lists
-  const listItems = extractListItems(text, ...sectionKeywords);
-  if (listItems && listItems.length > 0) {
-    return listItems;
-  }
-  
-  // Finally, try to extract by keyword relevance
-  const keywords = new RegExp(`(${sectionKeywords.join('|')})`, 'i');
-  const paragraphs = text.split('\n\n');
-  
-  paragraphs.forEach(paragraph => {
-    if (keywords.test(paragraph) && paragraph.length > 20) {
-      // Clean the paragraph
-      const cleaned = paragraph
-        .replace(/^[#\s-]*/, '') // Remove leading hashes, spaces, dashes
-        .replace(/^\d+\.\s*/, '') // Remove leading numbers with periods
-        .trim();
-      
-      if (cleaned.length > 0) {
-        results.push(cleaned);
-      }
-    }
-  });
-  
-  // Try to extract sentences as a last resort
-  if (results.length === 0) {
-    const sentences = text.split(/[.!?]+/);
-    sentences.forEach(sentence => {
-      if (keywords.test(sentence) && sentence.length > 20) {
-        const cleaned = sentence.trim();
-        if (cleaned.length > 0) {
-          results.push(cleaned);
-        }
-      }
-    });
-  }
-  
-  // Only return up to 5 results
-  return results.slice(0, 5);
-}
-
-// Extract numbered or bulleted list items related to keywords
-function extractListItems(text: string, ...keywords: string[]): string[] | null {
-  // Find sections with relevant keywords
-  const keywordRegex = new RegExp(`(${keywords.join('|')})`, 'i');
-  const sections = text.split(/#{1,3}\s+/); // Split by headings
-  
-  for (const section of sections) {
-    if (keywordRegex.test(section)) {
-      // Extract list items (numbered or bullet points)
-      const listItemRegex = /(?:^|\n)[\s-]*(?:\d+\.|\*|\-)\s+(.+?)(?=(?:\n[\s-]*(?:\d+\.|\*|\-)\s+)|$)/g;
-      const items: string[] = [];
-      let match;
-      
-      while ((match = listItemRegex.exec(section)) !== null) {
-        if (match[1] && match[1].trim().length > 20) {
-          items.push(match[1].trim());
-        }
-      }
-      
-      if (items.length > 0) {
-        return items.slice(0, 5);
-      }
-    }
-  }
-  
-  return null;
-}
-
-// Extract sections with headers from the text
-function extractSectionWithHeader(text: string, ...headerKeywords: string[]): string[] | null {
-  // Pattern to match section headers like "### Something" or "## Something"
-  const headerRegex = new RegExp(`(#{1,3}\\s*(?:${headerKeywords.join('|')}).*?)(?:#{1,3}|$)`, 'gi');
-  const sections: string[] = [];
-  
-  let matches;
-  let lastIndex = 0;
-  
-  while ((matches = headerRegex.exec(text)) !== null) {
-    const startIndex = matches.index;
-    const headerText = matches[1];
-    
-    // If this is not the first match, extract the content of the previous section
-    if (lastIndex > 0) {
-      const sectionContent = text.substring(lastIndex, startIndex).trim();
-      if (sectionContent) {
-        sections.push(cleanUpSection(sectionContent));
-      }
-    }
-    
-    lastIndex = startIndex + headerText.length;
-  }
-  
-  // Extract the last section if there was at least one match
-  if (lastIndex > 0 && lastIndex < text.length) {
-    const sectionContent = text.substring(lastIndex).trim();
-    if (sectionContent) {
-      sections.push(cleanUpSection(sectionContent));
-    }
-  }
-  
-  return sections.length > 0 ? sections : null;
-}
-
-// Clean up a section by removing markdown artifacts and splitting into paragraphs
-function cleanUpSection(text: string): string {
-  // Remove markdown headers
-  text = text.replace(/^#{1,3}\s+.*$/gm, '');
-  
-  // Remove any code blocks
-  text = text.replace(/```[^`]*```/g, '');
-  
-  // Remove bullet points and numbered lists
-  text = text.replace(/^[\s-]*[-\d.]\s+/gm, '');
-  
-  // Join short lines and trim whitespace
-  return text.split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .join(' ')
-    .trim();
 }

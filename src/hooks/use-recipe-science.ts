@@ -10,7 +10,8 @@ export interface StepReaction {
   reactions: string[];
   reaction_details: string[];
   confidence: number;
-  cooking_method?: string; // Added cooking_method property
+  cooking_method?: string;
+  metadata?: Record<string, any>; // New field for additional structured data
 }
 
 export interface RecipeScienceData {
