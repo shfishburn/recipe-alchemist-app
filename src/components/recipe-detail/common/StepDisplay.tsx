@@ -9,7 +9,7 @@ import type { StepCategory } from './StepCategoryLabel';
 
 interface StepDisplayProps {
   stepNumber: number;
-  stepText: string;
+  stepText: React.ReactNode;
   isCompleted?: boolean;
   onToggleComplete?: () => void;
   stepReaction?: StepReaction | null;
@@ -91,7 +91,7 @@ export function StepDisplay({
         </div>
         
         {/* Step content */}
-        <p className={textClasses}>{stepText}</p>
+        <div className={textClasses}>{stepText}</div>
       </div>
       
       {/* Science info panel */}
