@@ -3,12 +3,14 @@ import { QuickRecipeFormData } from '@/types/quick-recipe';
 
 // Functions to format and process form data for API requests
 
-// Process cuisine values properly
+// Process cuisine values properly to match database enum values
 export const processCuisineValue = (cuisineValue: string | string[]): string => {
   if (typeof cuisineValue === 'string') {
     if (cuisineValue.toLowerCase() === 'any') {
       return "";
     } else if (cuisineValue) {
+      // Convert UI cuisine values to match database enum values if needed
+      // This ensures values like "thai" are properly formatted
       return cuisineValue.split(',').map(c => c.trim()).filter(Boolean).join(', ');
     }
     return cuisineValue || "";

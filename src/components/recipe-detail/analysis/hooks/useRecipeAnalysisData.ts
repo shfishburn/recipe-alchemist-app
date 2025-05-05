@@ -34,7 +34,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   });
 
   // Use our unified science data hook
-  const { stepReactions, hasAnalysisData, scienceNotes, refetch: refetchReactions } = useRecipeScience(recipe);
+  const { stepReactions, hasAnalysisData, scienceNotes, globalAnalysis, refetch: refetchReactions } = useRecipeScience(recipe);
   
   // Fetch general analysis data from recipe-chat
   const { data: analysis, isLoading, refetch } = useQuery({
@@ -213,6 +213,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     isAnalyzing,
     stepReactions,
     scienceNotes,
+    globalAnalysis,
     hasAnalysisData,
     handleAnalyze,
     error
