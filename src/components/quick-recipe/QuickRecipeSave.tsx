@@ -36,7 +36,7 @@ function mapCuisineToCategory(cuisine: string | undefined): "Global" | "Regional
   }
   
   // Dietary styles
-  if (['gluten-free', 'keto', 'low-fodmap', 'mediterranean', 'paleo', 'plant-based', 'vegetarian', 'whole30',
+  if (['gluten-free', 'keto', 'low-fodmap', 'paleo', 'plant-based', 'vegetarian', 'whole30',
        'vegan', 'dairy-free', 'low-carb']
       .some(c => lowerCuisine.includes(c))) {
     return "Dietary Styles";
