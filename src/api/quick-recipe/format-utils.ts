@@ -33,15 +33,40 @@ export const processCuisineValue = (cuisineValue: string | string[]): string => 
   }
   
   if (typeof cuisineValue === 'string') {
-    const trimmedValue = cuisineValue.trim();
+    const trimmedValue = cuisineValue.trim().toLowerCase(); // Always normalize to lowercase
     
-    if (trimmedValue.toLowerCase() === 'any' || trimmedValue === '') {
+    // Define valid cuisine values that match exactly what the database trigger expects
+    const validCuisines = [
+      'any', 
+      // Regional American cuisines
+      'mexican', 'cajun-creole', 'midwest', 'new-england', 
+      'pacific-northwest', 'southern', 'southwestern', 'tex-mex',
+      // European cuisines
+      'british-irish', 'eastern-european', 'french', 'german', 
+      'greek', 'italian', 'mediterranean', 'scandinavian-nordic', 'spanish',
+      // Asian cuisines
+      'chinese', 'indian', 'japanese', 'korean', 
+      'southeast-asian', 'thai', 'vietnamese',
+      // Middle Eastern cuisines
+      'middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan',
+      // Dietary styles
+      'gluten-free', 'keto', 'low-fodmap', 'paleo', 
+      'plant-based', 'vegetarian', 'whole30'
+    ];
+    
+    if (trimmedValue === '' || trimmedValue.toLowerCase() === 'any') {
       console.log("Processing cuisine value 'any' or empty string to 'any'");
       return "any";
     } else if (trimmedValue) {
-      // Convert UI cuisine values to match database enum values if needed
-      console.log(`Processing string cuisine value: "${trimmedValue}"`);
-      return trimmedValue.split(',').map(c => c.trim()).filter(Boolean).join(', ');
+      // Check if the cuisine value is valid as is
+      if (validCuisines.includes(trimmedValue)) {
+        console.log(`Using validated cuisine value: "${trimmedValue}"`);
+        return trimmedValue;
+      } else {
+        // If not valid, try to find a close match or default to "any"
+        console.log(`Warning: Cuisine value "${trimmedValue}" not in valid list, defaulting to "any"`);
+        return "any";
+      }
     }
     console.log("Cuisine string was falsy, returning 'any'");
     return "any";
@@ -52,9 +77,35 @@ export const processCuisineValue = (cuisineValue: string | string[]): string => 
       console.log("Empty cuisine array, returning 'any'");
       return "any";
     }
-    const filteredValues = cuisineValue.filter(Boolean).map(v => v.trim());
+    
+    // Process array of values - take the first valid one or default to "any"
+    const filteredValues = cuisineValue.filter(Boolean).map(v => v.trim().toLowerCase());
     console.log(`Processing array cuisine value with ${filteredValues.length} items: ${JSON.stringify(filteredValues)}`);
-    return filteredValues.length > 0 ? filteredValues.join(', ') : "any";
+    
+    // Define valid cuisine values that match exactly what the database trigger expects
+    const validCuisines = [
+      'any', 'mexican', 'cajun-creole', 'midwest', 'new-england', 
+      'pacific-northwest', 'southern', 'southwestern', 'tex-mex',
+      'british-irish', 'eastern-european', 'french', 'german', 
+      'greek', 'italian', 'mediterranean', 'scandinavian-nordic', 'spanish',
+      'chinese', 'indian', 'japanese', 'korean', 
+      'southeast-asian', 'thai', 'vietnamese',
+      'middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan',
+      'gluten-free', 'keto', 'low-fodmap', 'paleo', 
+      'plant-based', 'vegetarian', 'whole30'
+    ];
+    
+    // Find the first valid cuisine value
+    for (const value of filteredValues) {
+      if (validCuisines.includes(value)) {
+        console.log(`Using first valid cuisine from array: "${value}"`);
+        return value;
+      }
+    }
+    
+    // If no valid values found, return "any"
+    console.log("No valid cuisines found in array, returning 'any'");
+    return "any";
   }
   
   console.log(`Unknown cuisine value type: ${typeof cuisineValue}, value:`, cuisineValue);
