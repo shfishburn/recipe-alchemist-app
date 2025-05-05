@@ -75,13 +75,10 @@ export const useQuickRecipeSave = () => {
         ? recipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
         : (recipe.science_notes ? [String(recipe.science_notes)] : []);
       
-      // Get the cuisine from the recipe
-      const selectedCuisine = recipe.cuisine?.toLowerCase() || "";
+      // Get the cuisine string, ensuring it's never undefined
+      const cuisineString = recipe.cuisine || "";
       
-      // Determine cuisine category using the utility function
-      const cuisineCategory = getCuisineCategory(selectedCuisine);
-      
-      console.log(`Determined cuisine category: ${cuisineCategory} for cuisine: ${recipe.cuisine}`);
+      console.log(`Recipe cuisine: "${cuisineString}"`);
       
       // Convert the quick recipe format to database format
       const recipeData = {
@@ -91,8 +88,8 @@ export const useQuickRecipeSave = () => {
         instructions: recipe.steps || recipe.instructions || [],
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
-        cuisine: recipe.cuisine, // Use cuisine from selected value
-        cuisine_category: cuisineCategory, // Use properly typed cuisine category
+        cuisine: cuisineString, // Use cuisine from recipe, can be empty string
+        // No need to set cuisine_category - the database trigger will handle it
         dietary: recipe.dietary, // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
@@ -107,7 +104,7 @@ export const useQuickRecipeSave = () => {
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
         nutrition: nutritionData ? "present" : "missing",
         nutrition_type: nutritionData ? typeof nutritionData : "N/A",
-        cuisine_category: cuisineCategory
+        cuisine: cuisineString,
       });
 
       // Insert the recipe into the database
@@ -119,7 +116,16 @@ export const useQuickRecipeSave = () => {
 
       if (error) {
         console.error("Error saving recipe:", error);
-        throw new Error(`Failed to save recipe: ${error.message}`);
+        
+        // Provide more helpful error messages based on the error
+        if (error.message.includes('cuisine_category')) {
+          // This shouldn't happen anymore due to our trigger, but just in case
+          throw new Error(`Failed to save recipe: The cuisine category couldn't be determined. Please try a different cuisine.`);
+        } else if (error.message.includes('violates foreign key constraint')) {
+          throw new Error(`Failed to save recipe: There was an issue with the user account. Please try logging in again.`);
+        } else {
+          throw new Error(`Failed to save recipe: ${error.message}`);
+        }
       }
 
       // Invalidate the recipes query to refresh the list
