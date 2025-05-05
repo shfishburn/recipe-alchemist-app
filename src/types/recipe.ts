@@ -1,3 +1,4 @@
+
 import { Nutrition } from './nutrition';
 
 export interface Recipe {
@@ -15,6 +16,13 @@ export interface Recipe {
     department?: string;
     notes?: string;
     optional?: boolean;
+    // Add compatibility properties for older code
+    qty?: number;
+    item?: string;
+    qty_metric?: number;
+    unit_metric?: string;
+    qty_imperial?: number;
+    unit_imperial?: string;
   }>;
   instructions: Array<{
     step: string;
@@ -23,6 +31,9 @@ export interface Recipe {
   nutrition: Nutrition;
   prep_time?: number;
   cook_time?: number;
+  // Add compatibility properties for newer code
+  prep_time_min?: number;
+  cook_time_min?: number;
   servings?: number;
   cuisine?: string;
   cuisine_category?: string;
@@ -32,7 +43,7 @@ export interface Recipe {
   rating?: number;
   is_public?: boolean;
   chef_notes?: string;
-  science_notes?: string;
+  science_notes?: string[];
   slug?: string;
   media?: any;
   version?: number;
@@ -56,4 +67,19 @@ export interface Recipe {
     calculation_version?: string;
     calculated_at?: string;
   };
+}
+
+// Export Ingredient type for use in other components
+export interface Ingredient {
+  qty?: number;
+  unit?: string;
+  item: string | Record<string, any>;
+  notes?: string;
+  // Add metric/imperial properties
+  qty_metric?: number;
+  unit_metric?: string;
+  qty_imperial?: number;
+  unit_imperial?: string;
+  shop_size_qty?: number;
+  shop_size_unit?: string;
 }

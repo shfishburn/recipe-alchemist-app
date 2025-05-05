@@ -36,7 +36,8 @@ export const RecipeInstructions = memo(function RecipeInstructions({
   const formattedInstructions = useMemo(() => {
     if (!recipe.instructions) return [];
     
-    return recipe.instructions.map((text, index) => {
+    return recipe.instructions.map((instruction, index) => {
+      const stepText = typeof instruction === 'string' ? instruction : instruction.step;
       const stepReaction = stepReactions?.find(r => r.step_index === index);
       
       // Find any science notes that might relate to this step
@@ -44,7 +45,7 @@ export const RecipeInstructions = memo(function RecipeInstructions({
       let relevantNotes = [];
       if (scienceNotes && scienceNotes.length > 0) {
         // Try to find notes that mention keywords from this step
-        const keywords = text.toLowerCase().split(' ')
+        const keywords = stepText.toLowerCase().split(' ')
           .filter(word => word.length > 4)
           .map(word => word.replace(/[^\w]/g, ''));
           
@@ -55,11 +56,11 @@ export const RecipeInstructions = memo(function RecipeInstructions({
       }
       
       return {
-        text,
+        text: stepText,
         index,
         isCompleted: isStepCompleted(index),
         reaction: stepReaction || null,
-        category: stepReaction?.cooking_method,
+        category: stepReaction?.cooking_method || '',
         scienceNotes: relevantNotes
       };
     });

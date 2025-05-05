@@ -1,4 +1,3 @@
-
 import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,15 +35,16 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
     
     // For unit system-aware formatting
     const qty = unitSystem === 'metric' 
-      ? (ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty || 0) 
-      : (ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty || 0);
+      ? (ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty || ingredient.amount || 0) 
+      : (ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty || ingredient.amount || 0);
       
     const unit = unitSystem === 'metric'
       ? (ingredient.unit_metric || ingredient.unit || '')
       : (ingredient.unit_imperial || ingredient.unit || '');
     
-    const item = typeof ingredient.item === 'string' ? ingredient.item : 
-                (ingredient.item ? JSON.stringify(ingredient.item) : '');
+    const itemName = ingredient.item || ingredient.name || '';
+    const item = typeof itemName === 'string' ? itemName : 
+                (itemName ? JSON.stringify(itemName) : '');
     
     const qtyStr = qty !== 0 ? `${qty} ` : '';
     const unitStr = unit ? `${unit} ` : '';
@@ -291,6 +291,27 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
     printWindow.document.close();
   };
 
+  // Get prep time from either prep_time_min or prep_time
+  const prepTimeMinutes = recipe.prep_time_min || recipe.prep_time || 0;
+  // Get cook time from either cook_time_min or cook_time
+  const cookTimeMinutes = recipe.cook_time_min || recipe.cook_time || 0;
+  // Calculate total time
+  const totalTimeMinutes = prepTimeMinutes + cookTimeMinutes;
+  
+  // Format instruction steps properly
+  const formatInstruction = (instruction: any, index: number) => {
+    if (typeof instruction === 'string') {
+      // If the instruction is a plain string, apply highlighting
+      return instruction.replace(/\*\*([^*]+)\*\*/g, '<span class="step-highlight">$1</span>');
+    } else if (instruction && typeof instruction.step === 'string') {
+      // If the instruction is an object with a step property
+      return instruction.step.replace(/\*\*([^*]+)\*\*/g, '<span class="step-highlight">$1</span>');
+    } else {
+      // Fallback
+      return `Step ${index + 1}`;
+    }
+  };
+
   // Determine if we should use a two-column layout based on recipe complexity
   const usesTwoColumnLayout = () => {
     // If ingredients are more than 5 or instructions are more than 4, use single column
@@ -320,19 +341,19 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
                   <span className="icon">👥</span> Servings: {recipe.servings}
                 </div>
               )}
-              {recipe.prep_time_min && (
+              {prepTimeMinutes > 0 && (
                 <div className="meta-item">
-                  <span className="icon">⏱</span> Prep: {recipe.prep_time_min} min
+                  <span className="icon">⏱</span> Prep: {prepTimeMinutes} min
                 </div>
               )}
-              {recipe.cook_time_min && (
+              {cookTimeMinutes > 0 && (
                 <div className="meta-item">
-                  <span className="icon">🍳</span> Cook: {recipe.cook_time_min} min
+                  <span className="icon">🍳</span> Cook: {cookTimeMinutes} min
                 </div>
               )}
-              {recipe.prep_time_min && recipe.cook_time_min && (
+              {totalTimeMinutes > 0 && (
                 <div className="meta-item">
-                  <span className="icon">⌛</span> Total: {recipe.prep_time_min + recipe.cook_time_min} min
+                  <span className="icon">⌛</span> Total: {totalTimeMinutes} min
                 </div>
               )}
             </div>
@@ -358,8 +379,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
                 <h2>Instructions</h2>
                 <ol>
                   {recipe.instructions && recipe.instructions.map((step, index) => {
-                    // Bold any text in **asterisks** to highlight important parts
-                    const highlightedStep = step.replace(/\*\*([^*]+)\*\*/g, '<span class="step-highlight">$1</span>');
+                    const highlightedStep = formatInstruction(step, index);
                     
                     return (
                       <li key={index} dangerouslySetInnerHTML={{ __html: highlightedStep }} />
@@ -388,8 +408,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
                 <h2>Instructions</h2>
                 <ol>
                   {recipe.instructions && recipe.instructions.map((step, index) => {
-                    // Bold any text in **asterisks** to highlight important parts
-                    const highlightedStep = step.replace(/\*\*([^*]+)\*\*/g, '<span class="step-highlight">$1</span>');
+                    const highlightedStep = formatInstruction(step, index);
                     
                     return (
                       <li key={index} dangerouslySetInnerHTML={{ __html: highlightedStep }} />

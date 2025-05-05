@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
@@ -61,6 +62,12 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
 
   // Convert ingredients to expected format for PrintRecipe
   const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
+  
+  // Convert steps to the format expected by PrintRecipe
+  const formattedInstructions = (recipe.steps || recipe.instructions || []).map(step => ({
+    step: typeof step === 'string' ? step : JSON.stringify(step),
+    group: undefined
+  }));
 
   return (
     <>
@@ -71,16 +78,29 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           title: recipe.title,
           description: recipe.description,
           ingredients: formattedIngredients,
-          instructions: recipe.steps,
-          prep_time_min: recipe.prepTime,
-          cook_time_min: recipe.cookTime,
-          nutrition: recipe.nutritionHighlight ? {
-            // Basic placeholder for nutrition data
-            kcal: 0
-          } : undefined,
-          science_notes: [],
+          instructions: formattedInstructions,
+          prep_time: recipe.prepTime || recipe.prep_time_min,
+          cook_time: recipe.cookTime || recipe.cook_time_min,
+          nutrition: recipe.nutrition ? {
+            calories: recipe.nutrition.calories || 0,
+            protein: recipe.nutrition.protein || 0,
+            fat: recipe.nutrition.fat || 0,
+            carbs: recipe.nutrition.carbs || 0,
+            fiber: recipe.nutrition.fiber || 0,
+            sugar: recipe.nutrition.sugar || 0,
+            sodium: recipe.nutrition.sodium || 0
+          } : {
+            calories: 0,
+            protein: 0,
+            fat: 0, 
+            carbs: 0,
+            fiber: 0,
+            sugar: 0,
+            sodium: 0
+          },
+          science_notes: recipe.science_notes || [],
           tagline: recipe.description,
-          cooking_tip: recipe.cookingTip
+          chef_notes: recipe.cookingTip || ''
         }} 
         ref={printDialogTriggerRef}
       />
