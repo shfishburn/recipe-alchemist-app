@@ -1,52 +1,43 @@
+
 import React from 'react';
+import { Bug, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { PenLine } from 'lucide-react';
 
 interface QuickRecipeHeroProps {
-  hasRecipe?: boolean;
-  toggleDebugMode?: () => void;
-  debugMode?: boolean;
+  hasRecipe: boolean;
+  toggleDebugMode: () => void;
+  debugMode: boolean;
 }
 
 export function QuickRecipeHero({ 
   hasRecipe, 
-  toggleDebugMode,
+  toggleDebugMode, 
   debugMode 
 }: QuickRecipeHeroProps) {
-  const navigate = useNavigate();
-  
   return (
-    <div className="mb-8 text-center">
-      <h1 className="text-2xl md:text-4xl font-bold pb-3 bg-gradient-to-r from-recipe-blue to-recipe-green bg-clip-text text-transparent">
-        Recipe Alchemy Quick Recipe
+    <div className="text-center mb-8 md:mb-10">
+      <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl flex items-center justify-center gap-2">
+        <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
+        {hasRecipe ? "Your Custom Recipe" : "What's in your kitchen tonight?"}
       </h1>
-      <p className="text-muted-foreground max-w-2xl mx-auto mb-4">
-        Get instant cooking ideas using what you already have in your kitchen.
-      </p>
       
-      <div className="flex justify-center gap-4">
-        {/* Add button to create a recipe manually */}
+      {!hasRecipe && (
+        <p className="text-base sm:text-lg text-muted-foreground max-w-4xl mx-auto mt-3 md:mt-4">
+          Share what you've got and what you're craving. Pick your flavor inspiration. 
+          I'll instantly transform your ingredients into delicious, foolproof recipes.
+        </p>
+      )}
+      
+      {/* Debug mode toggle - hidden in UI but can be triggered with keyboard shortcut */}
+      <div className="absolute top-2 right-2">
         <Button 
-          variant="outline" 
-          className="gap-2 border-recipe-green text-recipe-green hover:bg-recipe-green/10"
-          onClick={() => navigate('/create-recipe')}
+          variant="ghost" 
+          size="sm"
+          className={`opacity-20 hover:opacity-100 ${debugMode ? 'bg-amber-100' : ''}`}
+          onClick={toggleDebugMode}
         >
-          <PenLine className="h-4 w-4" />
-          Create Your Own
+          <Bug size={16} />
         </Button>
-        
-        {/* Keep any existing buttons */}
-        {debugMode !== undefined && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={toggleDebugMode}
-            className="text-xs text-muted-foreground"
-          >
-            {debugMode ? 'Hide Debug' : 'Show Debug'}
-          </Button>
-        )}
       </div>
     </div>
   );
