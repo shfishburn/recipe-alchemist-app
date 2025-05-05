@@ -5,8 +5,8 @@ import type { Json } from '@/integrations/supabase/types';
 import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 
-// Map cuisine values to cuisine_category enum values
-function mapCuisineToCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" {
+// Get the correct cuisine category based on cuisine value
+function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" {
   if (!cuisine) return "Global";
   
   const lowerCuisine = cuisine.toLowerCase();
@@ -35,6 +35,12 @@ function mapCuisineToCategory(cuisine: string | undefined): "Global" | "Regional
        'vegan', 'dairy-free', 'low-carb']
       .some(c => lowerCuisine.includes(c))) {
     return "Dietary Styles";
+  }
+
+  // Middle Eastern cuisines
+  if (['middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Middle Eastern";
   }
   
   // Default
@@ -100,10 +106,10 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     }
   }
   
-  // Handle cuisine_category enum value
+  // Handle cuisine_category enum value - use our new utility function
   if (updatedRecipe.cuisine) {
-    updatedRecipe.cuisine_category = mapCuisineToCategory(updatedRecipe.cuisine);
-    console.log(`Mapped cuisine '${updatedRecipe.cuisine}' to category: ${updatedRecipe.cuisine_category}`);
+    updatedRecipe.cuisine_category = getCuisineCategory(updatedRecipe.cuisine);
+    console.log(`Determined cuisine category: ${updatedRecipe.cuisine_category} for cuisine: ${updatedRecipe.cuisine}`);
   }
   
   // Process science_notes to ensure it's always a valid array of strings

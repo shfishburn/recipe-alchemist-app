@@ -7,6 +7,164 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function safeJsonParse(input: string) {
+  try {
+    return JSON.parse(input);
+  } catch (e) {
+    console.error("Failed to parse JSON:", e);
+    return null;
+  }
+}
+
+function extractValidJson(str: string): string | null {
+  // Find the opening and closing braces of what seems to be a JSON object
+  const startIndex = str.indexOf('{');
+  if (startIndex === -1) return null;
+  
+  let depth = 0;
+  let inString = false;
+  let escapeNext = false;
+  
+  for (let i = startIndex; i < str.length; i++) {
+    const char = str[i];
+    
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\' && inString) {
+      escapeNext = true;
+      continue;
+    }
+    
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+    
+    if (!inString) {
+      if (char === '{') {
+        depth++;
+      } else if (char === '}') {
+        depth--;
+        if (depth === 0) {
+          // We found a complete JSON object, try to return it
+          const jsonCandidate = str.substring(startIndex, i + 1);
+          try {
+            JSON.parse(jsonCandidate); // Validate if it's valid JSON
+            return jsonCandidate;
+          } catch (e) {
+            // Not valid, continue searching
+          }
+        }
+      }
+    }
+  }
+  
+  return null; // No valid JSON found
+}
+
+// Creates a fallback analysis structure when OpenAI fails
+function createFallbackAnalysis(instructions: string[]) {
+  const fallbackData = {
+    step_analyses: instructions.map((step, index) => ({
+      step_index: index,
+      step_text: step,
+      reactions: ["basic_cooking"],
+      reaction_details: ["Automatic fallback analysis"],
+      cooking_method: "unknown",
+      temperature_celsius: null,
+      duration_minutes: null,
+      confidence: 0.5,
+      chemical_systems: {
+        primary_reactions: [],
+        secondary_reactions: [],
+        reaction_mechanisms: "Not analyzed",
+        critical_compounds: [],
+      },
+      thermal_engineering: {
+        heat_transfer_mode: "unknown",
+        thermal_gradient: "unknown",
+      },
+      process_parameters: {
+        critical_times: {
+          minimum: 0,
+          optimal: 0,
+          maximum: 0,
+          unit: "minutes"
+        }
+      },
+      troubleshooting_matrix: [
+        {
+          problem: "analysis_failed",
+          diagnostic_tests: ["Retry analysis"],
+          corrections: ["Try again later"],
+          prevention: ["No prevention steps available"]
+        }
+      ],
+      safety_protocols: {
+        critical_limits: "Follow recipe instructions carefully",
+        allergen_concerns: "Check ingredients for allergens"
+      },
+      metadata: {
+        generatedByFallback: true
+      }
+    })),
+    global_analysis: {
+      cascade_effects: "No cascade effects analyzed",
+      scaling_considerations: "Default scaling applies",
+      energy_efficiency: "Use standard cooking practices",
+      process_flow_optimization: "Follow recipe steps in order",
+      equipment_integration: "Use equipment as specified in recipe"
+    }
+  };
+  
+  return fallbackData;
+}
+
+// Function to retry OpenAI calls with exponential backoff
+async function retryOpenAI(url: string, options: any, maxRetries = 2) {
+  let lastError;
+  let delay = 1000;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`Retry attempt ${attempt} after ${delay}ms delay`);
+      }
+      
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      // If response is not OK, get error details
+      let errorBody = "Unknown error";
+      try {
+        errorBody = await response.text();
+      } catch {
+        // Ignore error reading response
+      }
+      
+      lastError = new Error(`OpenAI API error (${response.status}): ${errorBody}`);
+      
+      // Don't retry on certain status codes
+      if (response.status === 400 || response.status === 401 || response.status === 429) {
+        throw lastError;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+    
+    // Wait before retrying
+    await new Promise(resolve => setTimeout(resolve, delay));
+    delay *= 2; // Exponential backoff
+  }
+  
+  throw lastError;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -94,21 +252,11 @@ Return structured JSON with the following format:
         "ph_effects": {
           "range": "5.5-6.5",
           "impact": "Affects browning rate and flavor development"
-        },
-        "water_activity": {
-          "value": 0.95,
-          "significance": "Controls texture development"
         }
       },
       "thermal_engineering": {
         "heat_transfer_mode": "convection",
-        "thermal_gradient": "15°C/cm",
-        "temperature_profile": {
-          "surface": 190,
-          "core": 165,
-          "unit": "celsius"
-        },
-        "heat_capacity_considerations": "Metal pan vs ceramic effects"
+        "thermal_gradient": "15°C/cm"
       },
       "process_parameters": {
         "critical_times": {
@@ -116,11 +264,6 @@ Return structured JSON with the following format:
           "optimal": 25,
           "maximum": 30,
           "unit": "minutes"
-        },
-        "tolerance_windows": {
-          "temperature": "±10°C",
-          "time": "±3 minutes",
-          "humidity": "±5%"
         }
       },
       "troubleshooting_matrix": [
@@ -132,25 +275,14 @@ Return structured JSON with the following format:
         }
       ],
       "safety_protocols": {
-        "critical_limits": "Internal temperature must reach at least 74°C (165°F)",
-        "allergen_concerns": "Contains wheat proteins that may trigger gluten sensitivity"
-      },
-      "metadata": {
-        "temperatureNote": "Lower temperature for fan-assisted ovens by 20°C",
-        "techniqueImportance": "Preheating is critical for proper crust formation"
+        "critical_limits": "Internal temperature must reach at least 74°C (165°F)"
       }
     }
   ],
   "global_analysis": {
-    "cascade_effects": "How steps interact and influence each other",
-    "scaling_considerations": "How recipe responds to doubling or halving quantities",
-    "energy_efficiency": "Tips for reducing energy use in preparation",
-    "process_flow_optimization": "Sequence and timing improvements",
-    "equipment_integration": "Ideal tool combinations for this recipe"
+    "cascade_effects": "How steps interact and influence each other"
   }
-}
-
-Provide physics-based, chemistry-grounded analysis with practical applications. Always include temperature in both Celsius and Fahrenheit. Focus on actionable insights that improve cooking outcomes.`;
+}`;
 
     // User message containing the recipe steps to analyze
     const userMessage = `Analyze the scientific principles in each step of this recipe titled "${title}":
@@ -159,7 +291,7 @@ Provide physics-based, chemistry-grounded analysis with practical applications. 
     
     Give a structured response following the required JSON format with comprehensive scientific details.`;
 
-    // Call OpenAI
+    // Call OpenAI with retry mechanism
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not found');
@@ -167,42 +299,72 @@ Provide physics-based, chemistry-grounded analysis with practical applications. 
 
     console.log("Calling OpenAI to analyze recipe steps with enhanced scientific prompt...");
     
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" }, // Enforce JSON output
-        max_tokens: 3000, // Increased token limit for more detailed analysis
-      }),
-    }).then(res => res.json());
+    let openAIResponse;
+    let analysisContent;
+    
+    try {
+      // Attempt to call OpenAI with retry logic
+      openAIResponse = await retryOpenAI('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage },
+          ],
+          temperature: 0.7,
+          response_format: { type: "json_object" }, // Enforce JSON output
+          max_tokens: 3000, // Increased token limit for more detailed analysis
+        }),
+      });
+      
+      if (!openAIResponse.choices || !openAIResponse.choices[0]?.message?.content) {
+        throw new Error("Invalid response from OpenAI");
+      }
 
-    if (!openAIResponse.choices || !openAIResponse.choices[0]?.message?.content) {
-      throw new Error("Invalid response from OpenAI");
+      analysisContent = openAIResponse.choices[0].message.content;
+      console.log("Analysis received from OpenAI:", analysisContent.substring(0, 100) + "...");
+      
+    } catch (error) {
+      console.error("OpenAI API error:", error);
+      console.log("Using fallback analysis due to OpenAI error");
+      analysisContent = JSON.stringify(createFallbackAnalysis(instructions));
     }
 
-    const analysisContent = openAIResponse.choices[0].message.content;
-    console.log("Analysis received from OpenAI:", analysisContent.substring(0, 100) + "...");
-
-    // Parse the JSON response (should be direct JSON now)
+    // Parse the JSON response (with enhanced error handling)
     let analysis;
     try {
-      analysis = JSON.parse(analysisContent);
+      // First try direct parsing
+      analysis = safeJsonParse(analysisContent);
+      
+      // If that fails, try to extract valid JSON
+      if (!analysis) {
+        console.log("Direct parsing failed, trying to extract valid JSON...");
+        const extractedJson = extractValidJson(analysisContent);
+        if (extractedJson) {
+          analysis = safeJsonParse(extractedJson);
+          console.log("Successfully extracted valid JSON");
+        }
+      }
+      
+      // If all parsing attempts fail, use fallback
+      if (!analysis) {
+        console.log("All JSON parsing attempts failed, using fallback analysis");
+        analysis = createFallbackAnalysis(instructions);
+      }
     } catch (e) {
-      console.error("Failed to parse OpenAI response as JSON:", e);
-      throw new Error("Failed to parse OpenAI response");
+      console.error("Failed to parse OpenAI response:", e);
+      analysis = createFallbackAnalysis(instructions);
     }
 
+    // Validate analysis structure
     if (!analysis.step_analyses || !Array.isArray(analysis.step_analyses)) {
-      throw new Error("Invalid analysis structure from OpenAI");
+      console.log("Invalid or missing step_analyses in response, using fallback");
+      analysis = createFallbackAnalysis(instructions);
     }
 
     console.log(`Processing ${analysis.step_analyses.length} step analyses with enhanced data`);
@@ -211,28 +373,38 @@ Provide physics-based, chemistry-grounded analysis with practical applications. 
     const globalAnalysis = analysis.global_analysis || {};
 
     // Prepare step reactions for database
-    const stepReactions = analysis.step_analyses.map(stepAnalysis => ({
-      recipe_id,
-      step_index: stepAnalysis.step_index,
-      step_text: instructions[stepAnalysis.step_index],
-      reactions: stepAnalysis.reactions || [],
-      reaction_details: stepAnalysis.reaction_details || [],
-      cooking_method: stepAnalysis.cooking_method || null,
-      temperature_celsius: stepAnalysis.temperature_celsius || null,
-      duration_minutes: stepAnalysis.duration_minutes || null,
-      confidence: stepAnalysis.confidence || 0.9,
-      chemical_systems: stepAnalysis.chemical_systems || null,
-      thermal_engineering: stepAnalysis.thermal_engineering || null,
-      process_parameters: stepAnalysis.process_parameters || null,
-      troubleshooting_matrix: stepAnalysis.troubleshooting_matrix || null,
-      safety_protocols: stepAnalysis.safety_protocols || null,
-      ai_model: 'gpt-4o',
-      version: '3.0',
-      metadata: {
-        ...(stepAnalysis.metadata || {}),
-        global_analysis: globalAnalysis
-      }
-    }));
+    const stepReactions = analysis.step_analyses.map((stepAnalysis, index) => {
+      // Ensure step_index exists and is valid
+      const step_index = typeof stepAnalysis.step_index === 'number' ? 
+        stepAnalysis.step_index : index;
+      
+      // Ensure step_text is a string
+      const step_text = instructions[step_index] || `Step ${step_index + 1}`;
+      
+      return {
+        recipe_id,
+        step_index,
+        step_text,
+        reactions: Array.isArray(stepAnalysis.reactions) ? stepAnalysis.reactions : [],
+        reaction_details: Array.isArray(stepAnalysis.reaction_details) ? stepAnalysis.reaction_details : [],
+        cooking_method: stepAnalysis.cooking_method || null,
+        temperature_celsius: stepAnalysis.temperature_celsius || null,
+        duration_minutes: stepAnalysis.duration_minutes || null,
+        confidence: stepAnalysis.confidence || 0.9,
+        chemical_systems: stepAnalysis.chemical_systems || null,
+        thermal_engineering: stepAnalysis.thermal_engineering || null,
+        process_parameters: stepAnalysis.process_parameters || null,
+        troubleshooting_matrix: stepAnalysis.troubleshooting_matrix || null,
+        safety_protocols: stepAnalysis.safety_protocols || null,
+        ai_model: 'gpt-4o',
+        version: '3.0',
+        metadata: {
+          ...(stepAnalysis.metadata || {}),
+          global_analysis: globalAnalysis,
+          retried: !!openAIResponse.retried
+        }
+      };
+    });
 
     // Insert step reactions into database
     const { error: insertError } = await supabase
@@ -248,7 +420,8 @@ Provide physics-based, chemistry-grounded analysis with practical applications. 
       JSON.stringify({
         success: true,
         message: `Analyzed ${stepReactions.length} recipe steps with enhanced scientific data`,
-        step_count: stepReactions.length
+        step_count: stepReactions.length,
+        used_fallback: !openAIResponse
       }),
       {
         headers: {
@@ -262,7 +435,8 @@ Provide physics-based, chemistry-grounded analysis with practical applications. 
     
     return new Response(
       JSON.stringify({
-        error: error.message || "An unexpected error occurred"
+        error: error.message || "An unexpected error occurred",
+        stack: error.stack
       }),
       {
         status: 500,

@@ -24,6 +24,16 @@ export function buildOpenAIPrompt(params: {
     ? `• Maximum calories per serving – ${maxCalories} kcal`
     : "";
 
+  // Build cuisine category guidance to ensure valid database values
+  const cuisineCategoryGuidance = `
+IMPORTANT: All cuisines must align with one of these cuisine_category values:
+• Global - For general cuisines or when no specific category applies
+• Regional American - For cajun-creole, midwest, southern, southwestern, etc.
+• European - For french, italian, greek, mediterranean, eastern-european, etc.
+• Asian - For chinese, indian, japanese, korean, thai, vietnamese, etc.
+• Dietary Styles - For dietary-focused cuisines (keto, gluten-free, vegan, etc.)
+• Middle Eastern - For middle-eastern cuisines`;
+
   return `
 As a culinary scientist in the López-Alt tradition, create a comprehensive recipe:
 • Cuisine – ${safeCuisine}  
@@ -33,6 +43,8 @@ As a culinary scientist in the López-Alt tradition, create a comprehensive reci
 • Servings – ${safeServings}
 ${calorieConstraint}
 • Unique Generation ID – ${uniqueId}
+
+${cuisineCategoryGuidance}
 
 ──────── MANDATORY INSTRUCTION DETAILS ────────
 • You MUST write a KENJI LÓPEZ-ALT style recipe with SCIENTIFIC explanations
@@ -131,6 +143,8 @@ Format each as object → {
   "prep_time_min": number,
   "cook_time_min": number,
   "servings": number,
+  "cuisine": "string - must match one of the standard cuisine values",
+  "cuisine_category": "string - MUST be one of: Global, Regional American, European, Asian, Dietary Styles, or Middle Eastern",
   "nutritionHighlight": "ONE evidence-based benefit",
   "cookingTip": "ONE science-backed technique note",
   "nutrition": {
