@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +9,7 @@ import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
+import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -73,36 +75,11 @@ export const useQuickRecipeSave = () => {
         ? recipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
         : (recipe.science_notes ? [String(recipe.science_notes)] : []);
       
-      // Determine cuisine category based on the cuisine grouping in CuisineSelector
-      // If we can't determine the category, default to "Global"
-      let cuisineCategory: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" = "Global"; // Default value
-
       // Get the cuisine from the recipe
-      const selectedCuisine = recipe.cuisine?.toLowerCase();
+      const selectedCuisine = recipe.cuisine?.toLowerCase() || "";
       
-      // If we have a selected cuisine, determine the correct category
-      if (selectedCuisine && selectedCuisine !== "any") {
-        // Asian cuisines
-        if (["chinese", "indian", "japanese", "korean", "thai", "vietnamese"].includes(selectedCuisine)) {
-          cuisineCategory = "Asian";
-        } 
-        // European cuisines
-        else if (["eastern-european", "french", "german", "greek", "italian", "mediterranean", "spanish"].includes(selectedCuisine)) {
-          cuisineCategory = "European";
-        } 
-        // Regional American cuisines
-        else if (["cajun-creole", "southern", "southwestern", "tex-mex"].includes(selectedCuisine)) {
-          cuisineCategory = "Regional American";
-        } 
-        // Dietary styles
-        else if (["gluten-free", "keto", "low-fodmap", "paleo", "plant-based", "vegetarian", "whole30"].includes(selectedCuisine)) {
-          cuisineCategory = "Dietary Styles";
-        }
-        // Middle Eastern cuisines
-        else if (["middle-eastern"].includes(selectedCuisine)) {
-          cuisineCategory = "Middle Eastern";
-        }
-      }
+      // Determine cuisine category using the utility function
+      const cuisineCategory = getCuisineCategory(selectedCuisine);
       
       console.log(`Determined cuisine category: ${cuisineCategory} for cuisine: ${recipe.cuisine}`);
       
@@ -115,7 +92,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: recipe.cuisine, // Use cuisine from selected value
-        cuisine_category: "Global", // Default value, will be updated by the database trigger
+        cuisine_category: cuisineCategory, // Use properly typed cuisine category
         dietary: recipe.dietary, // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
@@ -129,7 +106,8 @@ export const useQuickRecipeSave = () => {
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.length + " items" : "no ingredients",
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
         nutrition: nutritionData ? "present" : "missing",
-        nutrition_type: nutritionData ? typeof nutritionData : "N/A"
+        nutrition_type: nutritionData ? typeof nutritionData : "N/A",
+        cuisine_category: cuisineCategory
       });
 
       // Insert the recipe into the database
