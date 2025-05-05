@@ -1,93 +1,124 @@
 
-import React, { memo, useCallback } from 'react';
-import { StepReaction } from '@/hooks/use-recipe-science';
-import { StepCategoryLabel, StepCategory } from './StepCategoryLabel';
+import React, { useState } from 'react';
+import { Atom } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { StepReaction, formatReactionName } from '@/hooks/use-recipe-science';
+import { cn } from '@/lib/utils';
+import { StepCategoryLabel } from './StepCategoryLabel';
+import type { StepCategory } from './StepCategoryLabel';
 
-export interface StepDisplayProps {
+interface StepDisplayProps {
   stepNumber: number;
   stepText: string;
-  isCompleted: boolean;
-  onToggleComplete: () => void;
-  variant?: 'cooking' | 'instruction';
+  isCompleted?: boolean;
+  onToggleComplete?: () => void;
   stepReaction?: StepReaction | null;
+  variant: 'instruction' | 'cooking';
   stepCategory?: StepCategory | string;
-  className?: string;
 }
 
-/**
- * Shared component for displaying recipe steps in both instruction and cooking views
- */
-export const StepDisplay = memo(function StepDisplay({ 
+export function StepDisplay({
   stepNumber,
   stepText,
-  isCompleted,
+  isCompleted = false,
   onToggleComplete,
-  variant = 'instruction',
   stepReaction,
-  stepCategory,
-  className
+  variant,
+  stepCategory
 }: StepDisplayProps) {
-  // Memoize callbacks to prevent unnecessary re-renders
-  const handleToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleComplete();
-  }, [onToggleComplete]);
-
-  // Determine if we should show the category label based on its presence
-  const showCategoryLabel = !!stepCategory;
+  const [showScience, setShowScience] = useState<boolean>(false);
   
-  // Custom styles based on variant 
-  const isCooking = variant === 'cooking';
-  const textStyle = isCooking
-    ? "text-base sm:text-lg"
-    : "text-sm sm:text-base";
-  
-  const stepNumberStyle = isCooking 
-    ? "hidden" 
-    : "text-muted-foreground font-medium mr-1.5";
+  // Determine if this step has scientific data
+  const hasScience = stepReaction && 
+                     Array.isArray(stepReaction.reactions) && 
+                     stepReaction.reactions.length > 0;
     
+  // Styling classes based on state
+  const containerClasses = cn(
+    "flex flex-col p-4 rounded-md transition-colors border",
+    isCompleted ? "bg-green-50 hover:bg-green-100 border-green-200" : "hover:bg-gray-50 border-gray-100",
+    onToggleComplete ? "cursor-pointer" : "",
+    variant === 'cooking' ? "shadow-sm" : ""
+  );
+  
+  const textClasses = cn(
+    "text-lg leading-relaxed",
+    isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+  );
+  
+  // Handle toggling
+  const handleClick = () => {
+    if (onToggleComplete) {
+      onToggleComplete();
+    }
+  };
+
+  // Handle science button click
+  const handleScienceClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowScience(!showScience);
+  };
+  
   return (
-    <div className={cn(
-      "flex items-start gap-3", 
-      isCompleted ? "text-muted-foreground" : "", 
-      className
-    )}>
-      <div 
-        onClick={handleToggle}
-        className="flex-shrink-0 mt-0.5 cursor-pointer focus:outline-none touch-target-lg"
-        aria-label={isCompleted ? "Mark as incomplete" : "Mark as complete"}
-      >
-        {/* No icons - just an empty clickable area */}
-      </div>
-      
-      <div className="flex-1">
-        <div 
-          className={cn(
-            "flex flex-wrap gap-2 items-start mb-1 cursor-pointer",
-            textStyle
+    <>
+      <div onClick={handleClick} className={containerClasses}>
+        {/* Step header row */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "flex-shrink-0 font-semibold px-2.5 py-1 rounded-md",
+              isCompleted ? "bg-green-100 text-green-700" : "bg-recipe-blue/10 text-recipe-blue"
+            )}>
+              Step {stepNumber}
+            </span>
+            
+            {stepCategory && <StepCategoryLabel category={stepCategory} />}
+          </div>
+          
+          {/* Science button */}
+          {hasScience && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleScienceClick}
+              className="ml-auto flex-shrink-0 gap-1.5"
+              title={showScience ? "Hide Science" : "View Science"}
+            >
+              <Atom className="h-4 w-4 text-recipe-blue" />
+              <span>{showScience ? "Hide Science" : "Science"}</span>
+            </Button>
           )}
-          onClick={handleToggle}
-        >
-          <span className={stepNumberStyle}>{stepNumber}.</span>
-          <span className={cn(
-            "flex-1", 
-            isCompleted ? "line-through text-muted-foreground" : ""
-          )}>
-            {stepText}
-          </span>
         </div>
         
-        {showCategoryLabel && (
-          <div className="mt-2">
-            <StepCategoryLabel category={stepCategory} />
-          </div>
-        )}
+        {/* Step content */}
+        <p className={textClasses}>{stepText}</p>
       </div>
-    </div>
+      
+      {/* Science info panel */}
+      {hasScience && showScience && stepReaction && (
+        <div className="ml-6 mt-2 p-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm">
+          <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+            <Atom className="h-4 w-4 mr-1.5" />
+            <span>Scientific Explanation</span>
+          </h4>
+          
+          {/* Reaction details */}
+          {stepReaction.reaction_details?.map((detail, i) => (
+            <p key={i} className="text-sm text-blue-700 leading-relaxed mb-2">{detail}</p>
+          ))}
+          
+          {/* Reaction tags */}
+          {stepReaction.reactions?.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 mt-2 border-t border-blue-200">
+              {stepReaction.reactions.map((type, i) => (
+                <span key={i} className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full">
+                  {formatReactionName(type)}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
-});
-
-// Utility function for class name concatenation
-function cn(...classes: (string | undefined)[]): string {
-  return classes.filter(Boolean).join(' ');
 }

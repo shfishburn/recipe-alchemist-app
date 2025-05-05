@@ -12,42 +12,51 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState("fadeIn");
   
-  // Memoize the location change handler for better performance
+  // Memoize the location change handler
   const handleLocationChange = useCallback(() => {
-    // Skip if path is the same
     if (location.pathname === displayLocation.pathname && 
         location.search === displayLocation.search) {
       return;
     }
     
-    // Store scroll position before transition
-    const currentPosition = window.scrollY;
-    const currentPath = displayLocation.pathname;
-    
     try {
-      sessionStorage.setItem(`scroll_${currentPath}`, currentPosition.toString());
-    } catch (e) {
-      // Silent fail for private browsing
-    }
-    
-    // Clean up UI elements before transition
-    cleanupUIState();
-    
-    // Start exit animation
-    setTransitionStage("fadeOut");
-    
-    // Use requestAnimationFrame for better performance
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        // Update location
-        setDisplayLocation(location);
-        
-        // Start entry animation in next frame
-        requestAnimationFrame(() => {
-          setTransitionStage("fadeIn");
+      // Store scroll position before transition
+      const currentPosition = window.scrollY;
+      const currentPath = displayLocation.pathname;
+      
+      try {
+        sessionStorage.setItem(`scroll_${currentPath}`, currentPosition.toString());
+      } catch (e) {
+        // Silent fail if sessionStorage is unavailable
+      }
+      
+      // Clean up UI elements before transition
+      cleanupUIState();
+      
+      // Start exit animation
+      setTransitionStage("fadeOut");
+      
+      // Use requestAnimationFrame for smoother transitions
+      const transitionTimeout = setTimeout(() => {
+        window.requestAnimationFrame(() => {
+          // Update location
+          setDisplayLocation(location);
+          // Start entry animation in the next frame for better performance
+          window.requestAnimationFrame(() => {
+            setTransitionStage("fadeIn");
+          });
         });
-      }, 150); // Shorter duration for better perceived performance
-    });
+      }, 180); // Slightly shorter duration for better perceived performance
+      
+      return () => {
+        clearTimeout(transitionTimeout);
+      };
+    } catch (err) {
+      // Fallback in case of errors - just update immediately
+      console.error("Transition error:", err);
+      setDisplayLocation(location);
+      setTransitionStage("fadeIn");
+    }
   }, [location, displayLocation]);
   
   // Handle location changes
@@ -55,19 +64,15 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
     handleLocationChange();
   }, [location, handleLocationChange]);
   
-  // Restore scroll position when entering page
+  // Restore scroll position when entering a page
   useEffect(() => {
     if (transitionStage === "fadeIn") {
       try {
         const savedPosition = sessionStorage.getItem(`scroll_${location.pathname}`);
         if (savedPosition) {
-          // Use microtask for smoother scroll restoration
-          queueMicrotask(() => {
-            window.scrollTo({
-              top: parseInt(savedPosition, 10),
-              behavior: 'auto' // Use 'auto' for better performance
-            });
-          });
+          window.setTimeout(() => {
+            window.scrollTo(0, parseInt(savedPosition, 10));
+          }, 0);
         } else {
           window.scrollTo(0, 0);
         }

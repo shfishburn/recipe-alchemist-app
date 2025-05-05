@@ -1,43 +1,35 @@
 
-import React, { useMemo, memo } from 'react';
+import React, { useMemo } from 'react';
 import { RecipeSectionHeader } from './RecipeSectionHeader';
-import { StepsList } from './steps/StepsList';
-import { EmptySteps } from './steps/EmptySteps';
-import type { RecipeStep } from '@/types/recipe-steps';
+import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 
 interface RecipeStepsProps {
   steps: string[];
-  className?: string;
-  compact?: boolean;
 }
 
-export const RecipeSteps = memo(function RecipeSteps({ 
-  steps, 
-  className,
-  compact = false
-}: RecipeStepsProps) {
-  // Use useMemo to avoid unnecessary re-evaluations
+export function RecipeSteps({ steps }: RecipeStepsProps) {
+  // Use useMemo to avoid unnecessary re-renders
   const hasSteps = useMemo(() => steps && steps.length > 0, [steps]);
   
-  // Create formatted step objects from raw step strings
-  const formattedSteps = useMemo(() => {
-    if (!hasSteps) return [];
-    
-    return steps.map((text, index) => ({
-      text,
-      index,
-      isCompleted: false
-    } as RecipeStep));
-  }, [steps, hasSteps]);
+  if (!hasSteps) {
+    return (
+      <div>
+        <RecipeSectionHeader title="Quick Steps" />
+        <p className="text-muted-foreground">No steps available</p>
+      </div>
+    );
+  }
   
   return (
-    <div className={className}>
+    <div>
       <RecipeSectionHeader title="Quick Steps" />
-      {hasSteps ? (
-        <StepsList steps={formattedSteps} compact={compact} />
-      ) : (
-        <EmptySteps />
-      )}
+      <ol className="list-decimal pl-5 space-y-2">
+        {steps.map((step, index) => (
+          <li key={index} className="py-1">
+            <FormattedIngredientText text={step} />
+          </li>
+        ))}
+      </ol>
     </div>
   );
-});
+}

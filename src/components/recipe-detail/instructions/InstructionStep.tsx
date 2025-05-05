@@ -1,67 +1,43 @@
 
-import React, { memo, useCallback } from 'react';
+import React, { memo } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
-import type { RecipeStep, StepToggleHandler } from '@/types/recipe-steps';
+import { StepReaction } from '@/hooks/use-recipe-science';
+import type { StepCategory } from '../common/StepCategoryLabel';
 
 interface InstructionStepProps {
-  step: RecipeStep;
+  step: string;
+  index: number;
+  isCompleted: boolean;
+  toggleStep: (index: number) => void;
+  stepReaction: StepReaction | null;
   isLastStep: boolean;
-  toggleStep: StepToggleHandler;
-  className?: string;
 }
 
 // Use memo to prevent unnecessary re-renders
 export const InstructionStep = memo(function InstructionStep({ 
   step, 
-  isLastStep,
+  index, 
+  isCompleted, 
   toggleStep,
-  className
+  stepReaction,
+  isLastStep
 }: InstructionStepProps) {
-  // Memoize the toggle handler to prevent recreation on each render
-  const handleToggle = useCallback(() => toggleStep(step.index), [toggleStep, step.index]);
+  const handleToggle = () => toggleStep(index);
   
   return (
-    <li className={cn("group", className)}>
+    <li className="group">
       <StepDisplay
-        stepNumber={step.index + 1}
-        stepText={step.text}
-        isCompleted={step.isCompleted}
+        stepNumber={index + 1}
+        stepText={step}
+        isCompleted={isCompleted}
         onToggleComplete={handleToggle}
-        stepReaction={step.reaction}
+        stepReaction={stepReaction}
         variant="instruction"
-        stepCategory={step.category}
+        stepCategory={stepReaction?.cooking_method as StepCategory | undefined}
       />
-      
-      {/* Display science notes if available */}
-      {step.scienceNotes && step.scienceNotes.length > 0 && (
-        <div className="ml-8 mt-2 mb-3">
-          {step.scienceNotes.map((note, i) => (
-            <div 
-              key={i} 
-              className="text-sm text-recipe-blue bg-blue-50 p-2 rounded border border-blue-100 mb-1"
-            >
-              {note}
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {/* Display reaction details if available */}
-      {step.reaction && step.reaction.reaction_details && step.reaction.reaction_details.length > 0 && (
-        <div className="ml-8 mt-2 mb-3 text-sm text-muted-foreground">
-          <div className="p-2 rounded bg-gray-50 border border-gray-100">
-            {step.reaction.reaction_details[0]}
-          </div>
-        </div>
-      )}
       
       {!isLastStep && <Separator className="my-6" />}
     </li>
   );
 });
-
-// Import cn utility
-function cn(...classes: (string | undefined)[]): string {
-  return classes.filter(Boolean).join(' ');
-}

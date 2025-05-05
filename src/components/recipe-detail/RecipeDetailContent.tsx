@@ -30,7 +30,6 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   }
   
   const [localRecipe, setLocalRecipe] = useState<Recipe>(recipe);
-  const [currentTab, setCurrentTab] = useState<string>('recipe');
   const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id.split('-').pop() || id) ? id : '');
   const { hasAnalysisData } = useRecipeScience(recipe);
 
@@ -68,17 +67,12 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   const handleOpenChat = () => {
     window.location.hash = 'modify';
   };
-
-  // Handle tab change from TabsView
-  const handleTabChange = (tab: string) => {
-    setCurrentTab(tab);
-  };
   
   return (
     <ProfileProvider>
       <div className="max-w-4xl mx-auto mb-20">
         {/* Recipe Header with title */}
-        <RecipeHeader recipe={localRecipe} currentTab={currentTab} onOpenChat={handleOpenChat} />
+        <RecipeHeader recipe={localRecipe} hideReasoning={true} />
         
         {/* Recipe Image */}
         <RecipeImage recipe={localRecipe} />
@@ -88,7 +82,6 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
           recipe={localRecipe} 
           onRecipeUpdate={handleRecipeUpdate}
           refetch={refetch}
-          onTabChange={handleTabChange}
         />
         
         {/* Floating action buttons */}
@@ -96,7 +89,6 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
           recipe={localRecipe} 
           sticky={true} 
           onOpenChat={handleOpenChat}
-          currentTab={currentTab}
         />
       </div>
     </ProfileProvider>

@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { standardizeNutrition } from '@/types/nutrition-utils';
 import type { Recipe } from '@/types/recipe';
 import type { Profile } from '@/hooks/use-auth';
 import { useUnitSystem } from '@/hooks/use-unit-system';
-import { isNutritionPreferences, type NutritionPreferencesType } from '@/types/nutrition';
+import { isNutritionPreferences } from '@/types/nutrition';
 
 export interface UserNutritionPreferences {
   dailyCalories: number;

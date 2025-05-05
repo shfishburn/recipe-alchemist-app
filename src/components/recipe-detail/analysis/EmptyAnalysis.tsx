@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Beaker } from "lucide-react";
 
 interface EmptyAnalysisProps {
   onAnalyze: () => void;
@@ -8,16 +9,10 @@ interface EmptyAnalysisProps {
 
 export function EmptyAnalysis({ onAnalyze }: EmptyAnalysisProps) {
   return (
-    <div className="p-8 text-center">
-      <h3 className="text-lg font-medium mb-2">No Analysis Available</h3>
-      <p className="text-muted-foreground mb-4">
-        No analysis data was found for this recipe.
-      </p>
-      <Button 
-        variant="outline" 
-        onClick={onAnalyze}
-        className="mt-2"
-      >
+    <div className="text-center py-6">
+      <p className="mb-4 text-muted-foreground">No analysis data available for this recipe.</p>
+      <Button onClick={onAnalyze}>
+        <Beaker className="h-5 w-5 mr-2" />
         Generate Analysis
       </Button>
     </div>

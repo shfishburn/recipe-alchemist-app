@@ -1,8 +1,8 @@
 
 import React from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Trash2, Info } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { ShoppingListItem } from '@/types/shopping-list';
 import { 
   Tooltip, 
@@ -26,33 +26,20 @@ export function ShoppingItemComponent({ item, onToggle, onDelete }: ShoppingItem
       ? `Standard package: ${item.shop_size_qty} ${item.shop_size_unit}`
       : '');
   
-  // Handle delete with proper event stopping
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete();
-  };
-  
   return (
-    <div 
-      className={cn(
-        "flex items-center gap-2 py-1 px-1 rounded-md",
-        "cursor-pointer hover:bg-muted/50",
-        item.checked && "opacity-60"
-      )}
-      onClick={onToggle}
-    >
+    <div className={`flex items-center gap-2 py-1 px-1 rounded-md ${item.checked ? 'opacity-60' : ''}`}>
+      <Checkbox 
+        checked={item.checked}
+        onCheckedChange={() => onToggle()}
+        className="h-5 w-5 touch-target"
+      />
+      
       <div className="flex-1">
         <div className="flex items-center">
-          <span className={cn(
-            "flex-1",
-            item.checked && "line-through text-muted-foreground"
-          )}>
+          <span className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
             {displayText}
             {item.notes && (
-              <span className={cn(
-                "text-sm ml-1",
-                item.checked ? "line-through" : "text-muted-foreground"
-              )}>
+              <span className="text-muted-foreground text-sm ml-1">
                 ({item.notes})
               </span>
             )}
@@ -79,7 +66,7 @@ export function ShoppingItemComponent({ item, onToggle, onDelete }: ShoppingItem
         variant="ghost" 
         size="sm"
         className="h-7 w-7 p-0 touch-target"
-        onClick={handleDelete}
+        onClick={onDelete}
       >
         <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
       </Button>

@@ -1,9 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
-import { useMemoize } from '@/hooks/use-memoize';
 
 // Define standardized interfaces for science data
 export interface StepReaction {
@@ -12,7 +10,7 @@ export interface StepReaction {
   reactions: string[];
   reaction_details: string[];
   confidence: number;
-  cooking_method?: string;
+  cooking_method?: string; // Added cooking_method property
 }
 
 export interface RecipeScienceData {
@@ -21,24 +19,16 @@ export interface RecipeScienceData {
   scienceNotes: string[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => Promise<any>;
+  refetch: () => void;
 }
 
 /**
  * Centralized hook to access all scientific data for a recipe
  */
 export function useRecipeScience(recipe: Recipe): RecipeScienceData {
-  // Cache expensive operations
-  const processReactions = useMemoize((data: any[]): StepReaction[] => {
-    return (data || []) as StepReaction[];
-  }, {
-    ttl: 300000, // 5 minutes
-    maxSize: 50
-  });
-
   // Fetch reaction data for this recipe
   const {
-    data: rawStepReactions,
+    data: stepReactions,
     isLoading,
     error,
     refetch
@@ -57,35 +47,32 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
           return [];
         }
         
-        return data || [];
+        return (data || []) as StepReaction[];
       } catch (err) {
         console.error('Error in reaction query execution:', err);
         return [];
       }
     },
-    staleTime: 300000, // Cache for 5 minutes (increased from initial value)
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
   
-  // Process step reactions with memoization
-  const stepReactions = useMemo(() => 
-    processReactions(rawStepReactions || []),
-    [processReactions, rawStepReactions]
-  );
-  
-  // Extract science notes from recipe with proper type checking
-  const scienceNotes = useMemo(() => {
-    if (!recipe?.science_notes) return [];
-    return Array.isArray(recipe.science_notes) ? recipe.science_notes : [];
-  }, [recipe?.science_notes]);
+  // Check URL hash to see if we're on the science tab
+  const isOnScienceTab = () => {
+    return window.location.hash === '#science';
+  };
   
   // Determine if we have any science data
-  const hasAnalysisData = useMemo(() => 
-    (stepReactions.length > 0) || (scienceNotes.length > 0),
-    [stepReactions, scienceNotes]
-  );
+  const hasAnalysisData = 
+    (stepReactions && stepReactions.length > 0) || 
+    (recipe?.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0);
+  
+  // Extract science notes from recipe
+  const scienceNotes = recipe?.science_notes && Array.isArray(recipe.science_notes) 
+    ? recipe.science_notes 
+    : [];
 
   return {
-    stepReactions,
+    stepReactions: stepReactions || [],
     hasAnalysisData,
     scienceNotes,
     isLoading,

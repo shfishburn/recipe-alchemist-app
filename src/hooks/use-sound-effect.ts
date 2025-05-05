@@ -7,37 +7,63 @@ interface UseSoundEffectOptions {
   volume?: number;
 }
 
-export function useSoundEffect(options: UseSoundEffectOptions = {}) {
+export function useSoundEffect(
+  soundUrl: string, 
+  options: UseSoundEffectOptions = {}
+) {
   const { enabled = true, loop = false, volume = 0.5 } = options;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   
-  // Initialize audio element dynamically when needed
-  const getAudioElement = useCallback((soundUrl: string) => {
-    if (!audioRef.current) {
-      const audio = new Audio(soundUrl);
-      audio.loop = loop;
-      audio.volume = volume;
-      audio.preload = "auto";
-      audioRef.current = audio;
+  // Initialize audio on mount with preload
+  useEffect(() => {
+    const audio = new Audio(soundUrl);
+    audio.loop = loop;
+    audio.volume = volume;
+    audio.preload = "auto"; // Preload the audio file
+    
+    // For iOS devices - needs to be set after a user interaction
+    if (typeof document !== 'undefined') {
+      const unlockAudio = () => {
+        if (audioRef.current) {
+          // Create and play a silent audio buffer to unlock audio playback
+          const silentPlay = audioRef.current.play();
+          if (silentPlay !== undefined) {
+            silentPlay
+              .then(() => {
+                // Successfully unlocked audio
+                audioRef.current?.pause();
+              })
+              .catch(() => {
+                // Audio still locked, retry on next user interaction
+              });
+          }
+        }
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+      };
+      
+      document.addEventListener('touchstart', unlockAudio, { once: true });
+      document.addEventListener('click', unlockAudio, { once: true });
     }
-    return audioRef.current;
-  }, [loop, volume]);
+    
+    audioRef.current = audio;
+    
+    return () => {
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
+    };
+  }, [soundUrl, loop, volume]);
   
   // Play sound with better error handling
-  const play = useCallback((soundUrl: string, options: { volume?: number } = {}) => {
-    if (!enabled || isMuted) return;
+  const play = useCallback(() => {
+    if (!audioRef.current || !enabled || isMuted) return;
     
+    // For browsers that require user interaction
     try {
-      const audio = getAudioElement(soundUrl);
-      
-      // Apply optional volume override for this play instance
-      if (options.volume !== undefined) {
-        audio.volume = Math.max(0, Math.min(1, options.volume));
-      }
-      
-      const playPromise = audio.play();
+      const playPromise = audioRef.current.play();
       
       if (playPromise !== undefined) {
         playPromise
@@ -45,7 +71,8 @@ export function useSoundEffect(options: UseSoundEffectOptions = {}) {
             setIsPlaying(true);
           })
           .catch(error => {
-            // Silent error handling to prevent app crashing
+            // Don't log the error, it's usually just browser autoplay policy
+            // and can clutter the console
             setIsPlaying(false);
           });
       }
@@ -53,7 +80,7 @@ export function useSoundEffect(options: UseSoundEffectOptions = {}) {
       // Silent error handling to prevent app crashing
       setIsPlaying(false);
     }
-  }, [enabled, isMuted, getAudioElement]);
+  }, [enabled, isMuted]);
   
   // Pause sound
   const pause = useCallback(() => {
@@ -65,32 +92,28 @@ export function useSoundEffect(options: UseSoundEffectOptions = {}) {
   
   // Toggle mute
   const toggleMute = useCallback(() => {
-    if (!audioRef.current) return isMuted;
+    if (!audioRef.current) return;
     
     const newMuteState = !isMuted;
     audioRef.current.muted = newMuteState;
     setIsMuted(newMuteState);
     
+    // If unmuting and was playing, resume
+    if (!newMuteState && isPlaying) {
+      audioRef.current.play().catch(() => {
+        // Silent catch - don't break the UI if audio fails
+      });
+    }
+    
     return newMuteState;
-  }, [isMuted]);
+  }, [isMuted, isPlaying]);
   
   // Set volume
-  const setVolume = useCallback((vol: number) => {
+  const setAudioVolume = useCallback((vol: number) => {
     if (!audioRef.current) return;
     
     const clampedVol = Math.max(0, Math.min(1, vol));
     audioRef.current.volume = clampedVol;
-  }, []);
-  
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-        audioRef.current = null;
-      }
-    };
   }, []);
   
   return {
@@ -99,6 +122,6 @@ export function useSoundEffect(options: UseSoundEffectOptions = {}) {
     isPlaying,
     isMuted,
     toggleMute,
-    setVolume
+    setVolume: setAudioVolume
   };
 }

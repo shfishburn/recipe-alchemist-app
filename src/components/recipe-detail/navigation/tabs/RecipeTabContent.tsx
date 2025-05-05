@@ -17,14 +17,6 @@ export function RecipeTabContent({ recipe }: RecipeTabContentProps) {
   const { sections, toggleSection, expandAll, collapseAll } = useRecipeSections();
   const isMobile = useIsMobile();
 
-  // Function to trigger cooking mode
-  const triggerCookingMode = () => {
-    const cookingModeTrigger = document.getElementById('cooking-mode-trigger');
-    if (cookingModeTrigger) {
-      cookingModeTrigger.click();
-    }
-  };
-
   return (
     <div>
       {/* Recipe overview section */}
@@ -62,12 +54,12 @@ export function RecipeTabContent({ recipe }: RecipeTabContentProps) {
       {/* Start cooking button - mobile only */}
       {isMobile && (
         <div className="mt-8 py-4 flex justify-center">
-          <button 
+          <a 
+            href="#cooking"
             className="bg-recipe-green hover:bg-recipe-green/90 text-white px-6 py-3 rounded-full shadow-md text-lg font-medium touch-target-lg touch-feedback-optimized inline-flex items-center"
-            onClick={triggerCookingMode}
           >
             Start Cooking
-          </button>
+          </a>
         </div>
       )}
     </div>

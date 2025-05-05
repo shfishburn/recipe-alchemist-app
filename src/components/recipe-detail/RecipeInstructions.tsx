@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo, useCallback } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -8,105 +8,57 @@ import type { Recipe } from '@/types/recipe';
 import { InstructionStep } from './instructions/InstructionStep';
 import { useStepCompletion } from './instructions/useStepCompletion';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
-import type { RecipeStep } from '@/types/recipe-steps';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
   isOpen: boolean;
   onToggle: () => void;
-  className?: string;
 }
 
-export const RecipeInstructions = memo(function RecipeInstructions({ 
-  recipe, 
-  isOpen, 
-  onToggle,
-  className
-}: RecipeInstructionsProps) {
+export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructionsProps) {
   const { toggleStep, isStepCompleted } = useStepCompletion();
-  const { stepReactions, scienceNotes } = useRecipeScience(recipe);
+  const { stepReactions } = useRecipeScience(recipe);
   
-  // Memoize hasInstructions check to prevent unnecessary evaluations
-  const hasInstructions = useMemo(() => 
-    recipe.instructions && recipe.instructions.length > 0, 
-    [recipe.instructions]
-  );
-  
-  // Convert raw instruction strings to proper RecipeStep objects
-  const formattedInstructions = useMemo(() => {
-    if (!recipe.instructions) return [];
-    
-    return recipe.instructions.map((instruction, index) => {
-      const stepText = typeof instruction === 'string' ? instruction : instruction.step;
-      const stepReaction = stepReactions?.find(r => r.step_index === index);
-      
-      // Find any science notes that might relate to this step
-      // This is a simple matching strategy - can be improved with more sophisticated matching
-      let relevantNotes = [];
-      if (scienceNotes && scienceNotes.length > 0) {
-        // Try to find notes that mention keywords from this step
-        const keywords = stepText.toLowerCase().split(' ')
-          .filter(word => word.length > 4)
-          .map(word => word.replace(/[^\w]/g, ''));
-          
-        relevantNotes = scienceNotes.filter(note => {
-          const noteLower = note.toLowerCase();
-          return keywords.some(keyword => noteLower.includes(keyword));
-        });
-      }
-      
-      return {
-        text: stepText,
-        index,
-        isCompleted: isStepCompleted(index),
-        reaction: stepReaction || null,
-        category: stepReaction?.cooking_method || '',
-        scienceNotes: relevantNotes
-      };
-    });
-  }, [recipe.instructions, stepReactions, isStepCompleted, scienceNotes]);
-  
-  // Memoize the instructions rendering for better performance
-  const instructionsList = useMemo(() => {
-    if (!hasInstructions) return null;
-    
-    return formattedInstructions.map((step, index) => {
-      const isLastStep = index === formattedInstructions.length - 1;
-      
-      return (
-        <InstructionStep
-          key={index}
-          step={step}
-          isLastStep={isLastStep}
-          toggleStep={toggleStep}
-        />
-      );
-    });
-  }, [hasInstructions, formattedInstructions, toggleStep]);
+  const hasInstructions = recipe.instructions && recipe.instructions.length > 0;
   
   return (
-    <Card className={className}>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl font-semibold flex items-center">
+            <BookOpen className="h-5 w-5 mr-2 text-recipe-blue" />
+            Instructions
+          </CardTitle>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <span className="sr-only">Toggle instructions</span>
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+      </CardHeader>
+      
       <Collapsible open={isOpen} onOpenChange={onToggle}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-semibold flex items-center">
-              <BookOpen className="h-5 w-5 mr-2 text-recipe-blue" />
-              Instructions
-            </CardTitle>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hw-accelerated">
-                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                <span className="sr-only">Toggle instructions</span>
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-        </CardHeader>
-        
         <CollapsibleContent>
           <CardContent className="pt-0">
             {hasInstructions ? (
               <ol className="space-y-4">
-                {instructionsList}
+                {recipe.instructions.map((step, index) => {
+                  const stepReaction = stepReactions?.[index] || null;
+                  const isLastStep = index === recipe.instructions.length - 1;
+                  
+                  return (
+                    <InstructionStep
+                      key={index}
+                      step={step}
+                      index={index}
+                      isCompleted={isStepCompleted(index)}
+                      toggleStep={toggleStep}
+                      stepReaction={stepReaction}
+                      isLastStep={isLastStep}
+                    />
+                  );
+                })}
               </ol>
             ) : (
               <p className="text-muted-foreground">No instructions available</p>
@@ -116,4 +68,4 @@ export const RecipeInstructions = memo(function RecipeInstructions({
       </Collapsible>
     </Card>
   );
-});
+}

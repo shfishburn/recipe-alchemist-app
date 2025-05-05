@@ -87,7 +87,7 @@ export function useMemoize<T, Args extends any[] = any[]>(
       
       // Manage cache size limit
       if (cacheRef.current.size >= maxSize) {
-        // Remove oldest entry
+        // Remove oldest entry (first key in Map)
         const firstKey = cacheRef.current.keys().next().value;
         cacheRef.current.delete(firstKey);
       }
@@ -107,7 +107,8 @@ export function useMemoize<T, Args extends any[] = any[]>(
 }
 
 /**
- * Hook to memoize a value with custom dependency array
+ * Hook to memoize a value with a custom dependency array
+ * Works like useMemo but with additional caching and TTL options
  */
 export function useMemoizedValue<T>(
   factory: () => T,

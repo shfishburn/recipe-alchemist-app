@@ -1,44 +1,37 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 import { StepDisplay } from '../common/StepDisplay';
-import type { RecipeStep } from '@/types/recipe-steps';
+import { StepReaction } from '@/hooks/use-recipe-science';
+import type { StepCategory } from '../common/StepCategoryLabel';
 
-export interface CookingStepProps {
-  step: RecipeStep;
+interface CookingStepProps {
+  stepNumber: number;
+  instruction: string;
+  isCompleted: boolean;
   onToggleComplete: () => void;
-  className?: string;
+  stepReaction?: StepReaction | null;
+  stepCategory?: StepCategory | string;
 }
 
-export const CookingStep = memo(function CookingStep({ 
-  step, 
+export function CookingStep({ 
+  stepNumber, 
+  instruction, 
+  isCompleted, 
   onToggleComplete,
-  className
+  stepReaction,
+  stepCategory
 }: CookingStepProps) {
   return (
-    <div className={cn("mb-6", className)}>
+    <div className="mb-6">
       <StepDisplay
-        stepNumber={step.index + 1}
-        stepText={step.text}
-        isCompleted={step.isCompleted}
+        stepNumber={stepNumber}
+        stepText={instruction}
+        isCompleted={isCompleted}
         onToggleComplete={onToggleComplete}
-        stepReaction={step.reaction}
+        stepReaction={stepReaction}
         variant="cooking"
-        stepCategory={step.category}
+        stepCategory={stepCategory || (stepReaction?.cooking_method as StepCategory | undefined)}
       />
-      
-      {/* Display reaction details if available */}
-      {step.reaction && step.reaction.reaction_details && step.reaction.reaction_details.length > 0 && (
-        <div className="ml-8 mt-2 mb-3 text-sm">
-          <div className="p-2 rounded bg-blue-50 border border-blue-100">
-            {step.reaction.reaction_details[0]}
-          </div>
-        </div>
-      )}
     </div>
   );
-});
-
-// Utility for className concatenation
-function cn(...classes: (string | undefined)[]): string {
-  return classes.filter(Boolean).join(' ');
 }

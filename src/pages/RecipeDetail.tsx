@@ -37,11 +37,16 @@ const RecipeDetail = () => {
     };
   }, [recipe]);
   
+  console.log('Recipe Detail rendering:', {
+    isLoading,
+    hasError: !!error,
+    recipe: recipe ? recipe.id : null,
+    errorMessage: error instanceof Error ? error.message : 'Unknown error'
+  });
+  
   // Generic error handler for unexpected errors
   const handleError = () => {
-    if (!error) return <RecipeNotFound />;
-    
-    console.error('Recipe detail page error:', error);
+    console.log('Recipe detail page error:', error);
     
     // Handle React.Children.only errors specifically
     if (error instanceof Error && error.message.includes('React.Children.only')) {
@@ -94,7 +99,7 @@ const RecipeDetail = () => {
           {/* Breadcrumb Navigation */}
           <BreadcrumbNav items={breadcrumbItems} />
           
-          <RecipeDetailContent recipe={recipe} id={recipeIdOrSlug} refetch={refetch} />
+          <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />
         </div>
       </main>
     </div>

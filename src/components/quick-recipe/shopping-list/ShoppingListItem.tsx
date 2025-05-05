@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ShoppingItem } from './types';
-import { cn } from '@/lib/utils';
 
 interface ShoppingListItemProps {
   item: ShoppingItem;
@@ -63,22 +62,13 @@ export function ShoppingListItem({ item, index, onToggle }: ShoppingListItemProp
       className="flex items-center gap-2 p-2 rounded-md touch-optimized tap-highlight hover:bg-muted/50"
       onClick={() => onToggle(index)}
     >
-      <span className={cn(
-        "break-words",
-        item.checked && "text-gray-400 line-through"
-      )}>
-        {formattedQuantity && <strong className={cn("mr-1", item.checked && "font-normal")}>{formattedQuantity}</strong>}
+      <span className="break-words">
+        {formattedQuantity && <strong className="mr-1">{formattedQuantity}</strong>}
         {displayName}
-        {item.notes && <span className={cn(
-          "text-sm ml-1 break-words",
-          item.checked ? "text-gray-400 line-through" : "text-muted-foreground"
-        )}>({item.notes})</span>}
+        {item.notes && <span className="text-sm text-muted-foreground ml-1 break-words">({item.notes})</span>}
       </span>
       {item.pantryStaple && (
-        <span className={cn(
-          "text-xs px-1.5 py-0.5 rounded-full ml-auto whitespace-nowrap",
-          item.checked ? "bg-yellow-50 text-yellow-600/60" : "bg-yellow-100 text-yellow-800"
-        )}>
+        <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full ml-auto whitespace-nowrap">
           Pantry
         </span>
       )}
