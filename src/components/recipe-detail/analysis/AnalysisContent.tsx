@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
 import { AnalysisSection } from './AnalysisSection';
 import { ReactionsList } from './ReactionsList';
+import { GlobalAnalysis } from './GlobalAnalysis';
 import { ChemistryIcon, TechniquesIcon, TroubleshootingIcon } from './icons/AnalysisIcons';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
@@ -13,6 +14,13 @@ interface AnalysisContentProps {
   troubleshooting: string | null;
   rawResponse: string | null;
   stepReactions: StepReaction[];
+  globalAnalysis?: {
+    cascade_effects?: string;
+    energy_systems?: string;
+    scaling_considerations?: string;
+    process_flow_optimization?: string;
+    equipment_integration?: string;
+  };
 }
 
 export function AnalysisContent({ 
@@ -20,7 +28,8 @@ export function AnalysisContent({
   techniques, 
   troubleshooting,
   rawResponse,
-  stepReactions
+  stepReactions,
+  globalAnalysis
 }: AnalysisContentProps) {
   // Check if there's any content to display
   const hasChemistry = chemistry !== null && chemistry.length > 0;
@@ -32,6 +41,9 @@ export function AnalysisContent({
   return (
     <ScrollArea className="h-[60vh] sm:h-[70vh] pr-4">
       <div className="space-y-6">
+        {/* Global Analysis Section */}
+        <GlobalAnalysis globalAnalysis={globalAnalysis} />
+        
         {/* Chemistry Section */}
         <AnalysisSection
           title="Chemistry"

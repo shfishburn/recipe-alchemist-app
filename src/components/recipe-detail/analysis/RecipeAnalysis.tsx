@@ -28,6 +28,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     isAnalyzing,
     stepReactions,
     scienceNotes,
+    globalAnalysis,
     hasAnalysisData,
     handleAnalyze,
     error
@@ -97,6 +98,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           troubleshooting={troubleshooting}
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
+          globalAnalysis={globalAnalysis}
         />
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />

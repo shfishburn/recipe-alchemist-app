@@ -11,13 +11,58 @@ export interface StepReaction {
   reaction_details: string[];
   confidence: number;
   cooking_method?: string;
-  metadata?: Record<string, any>; // New field for additional structured data
+  temperature_celsius?: number;
+  duration_minutes?: number;
+  
+  // Enhanced scientific data
+  chemical_systems?: {
+    primary_reactions?: string[];
+    secondary_reactions?: string[];
+    reaction_mechanisms?: string;
+    critical_compounds?: string[];
+    ph_effects?: { range?: string; impact?: string };
+    water_activity?: { value?: number; significance?: string };
+  };
+  
+  thermal_engineering?: {
+    heat_transfer_mode?: string;
+    thermal_gradient?: string;
+    temperature_profile?: { surface?: number; core?: number; unit?: string };
+    heat_capacity_considerations?: string;
+  };
+  
+  process_parameters?: {
+    critical_times?: { minimum?: number; optimal?: number; maximum?: number; unit?: string };
+    tolerance_windows?: { temperature?: string; time?: string; humidity?: string };
+  };
+  
+  troubleshooting_matrix?: Array<{
+    problem?: string;
+    diagnostic_tests?: string[];
+    corrections?: string[];
+    prevention?: string[];
+  }>;
+  
+  safety_protocols?: {
+    critical_limits?: string;
+    haccp_points?: string;
+    allergen_concerns?: string;
+  };
+  
+  metadata?: Record<string, any>; // Backwards compatibility for additional structured data
 }
 
 export interface RecipeScienceData {
   stepReactions: StepReaction[];
   hasAnalysisData: boolean;
   scienceNotes: string[];
+  globalAnalysis?: {
+    cascade_effects?: string;
+    energy_systems?: string;
+    scaling_considerations?: string;
+    process_flow_optimization?: string;
+    equipment_integration?: string;
+  };
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -71,11 +116,17 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
   const scienceNotes = recipe?.science_notes && Array.isArray(recipe.science_notes) 
     ? recipe.science_notes 
     : [];
+    
+  // Extract global recipe analysis from step reactions if available
+  const globalAnalysis = stepReactions && stepReactions.length > 0 && 
+    stepReactions[0].metadata && stepReactions[0].metadata.global_analysis ? 
+    stepReactions[0].metadata.global_analysis : undefined;
 
   return {
     stepReactions: stepReactions || [],
     hasAnalysisData,
     scienceNotes,
+    globalAnalysis,
     isLoading,
     error: error as Error | null,
     refetch

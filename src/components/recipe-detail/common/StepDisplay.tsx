@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Atom } from 'lucide-react';
+import { Atom, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StepReaction, formatReactionName } from '@/hooks/use-recipe-science';
 import { cn } from '@/lib/utils';
@@ -30,8 +30,10 @@ export function StepDisplay({
   
   // Determine if this step has scientific data
   const hasScience = stepReaction && 
-                     Array.isArray(stepReaction.reactions) && 
-                     stepReaction.reactions.length > 0;
+                     ((Array.isArray(stepReaction.reactions) && stepReaction.reactions.length > 0) ||
+                      stepReaction.chemical_systems || 
+                      stepReaction.thermal_engineering ||
+                      stepReaction.process_parameters);
     
   // Styling classes based on state
   const containerClasses = cn(
@@ -108,6 +110,50 @@ export function StepDisplay({
             <p key={i} className="text-sm text-blue-700 leading-relaxed mb-2">{detail}</p>
           ))}
           
+          {/* Enhanced scientific data section */}
+          {(stepReaction.chemical_systems || 
+            stepReaction.thermal_engineering || 
+            stepReaction.process_parameters) && (
+            <div className="mt-3 pt-3 border-t border-blue-200">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // This would toggle more detailed scientific information
+                  // For now, we'll link to the science tab
+                  window.location.hash = 'science';
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto flex items-center"
+              >
+                <ChevronDown className="h-3 w-3 mr-1" />
+                <span>View detailed scientific analysis in Science tab</span>
+              </Button>
+            </div>
+          )}
+          
+          {/* Temperature display if available */}
+          {(stepReaction.temperature_celsius || 
+            stepReaction.thermal_engineering?.temperature_profile?.core) && (
+            <div className="mt-2 text-xs text-blue-600">
+              <span className="font-medium">Temperature: </span>
+              {stepReaction.temperature_celsius ? 
+                `${stepReaction.temperature_celsius}°C / ${Math.round(stepReaction.temperature_celsius * 9/5 + 32)}°F` : 
+                `${stepReaction.thermal_engineering?.temperature_profile?.core}°C / ${Math.round((stepReaction.thermal_engineering?.temperature_profile?.core || 0) * 9/5 + 32)}°F`}
+            </div>
+          )}
+          
+          {/* Duration display if available */}
+          {(stepReaction.duration_minutes || 
+            stepReaction.process_parameters?.critical_times?.optimal) && (
+            <div className="mt-1 text-xs text-blue-600">
+              <span className="font-medium">Duration: </span>
+              {stepReaction.duration_minutes ? 
+                `${stepReaction.duration_minutes} minutes` : 
+                `${stepReaction.process_parameters?.critical_times?.optimal} ${stepReaction.process_parameters?.critical_times?.unit || 'minutes'}`}
+            </div>
+          )}
+          
           {/* Additional metadata if available */}
           {stepReaction.metadata && Object.keys(stepReaction.metadata).length > 0 && (
             <div className="mt-2">
@@ -116,12 +162,17 @@ export function StepDisplay({
                   {stepReaction.metadata.temperatureNote}
                 </p>
               )}
+              {stepReaction.metadata.techniqueImportance && (
+                <p className="text-xs text-blue-600 italic mb-1">
+                  <strong>Technique note:</strong> {stepReaction.metadata.techniqueImportance}
+                </p>
+              )}
             </div>
           )}
           
           {/* Reaction tags */}
           {stepReaction.reactions?.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1 mt-1 border-t border-blue-200">
+            <div className="flex flex-wrap gap-2 pt-1 mt-2 border-t border-blue-200">
               {stepReaction.reactions.map((type, i) => (
                 <span key={i} className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
                   {formatReactionName(type)}

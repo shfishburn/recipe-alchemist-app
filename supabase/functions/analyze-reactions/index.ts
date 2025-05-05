@@ -47,43 +47,117 @@ serve(async (req) => {
       }
     }
 
-    // System prompt for analyzing recipe steps
-    const systemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. 
-    Analyze each recipe step to identify chemical reactions, cooking processes, and scientific principles at work. 
-    
-    For each step, provide:
-    1. The key reactions occurring (e.g., maillard_reaction, protein_denaturation, etc.)
-    2. A brief scientific explanation of what's happening
-    3. An identification of the cooking method being used
-    4. The temperature range in Celsius (if applicable)
-    
-    Return your analysis as structured JSON with this format:
+    // Enhanced system prompt for analyzing recipe steps with scientific rigor
+    const systemPrompt = `You are an authoritative culinary scientist with expertise spanning food chemistry, physics, and engineering, drawing from methodologies of Harold McGee, J. Kenji López-Alt, and Nathan Myhrvold's modernist cuisine principles.
+
+Analyze each recipe step with scientific rigor, considering chemical reactions, thermal properties, and process parameters.
+
+For each step, provide comprehensive scientific analysis including:
+
+1. CHEMICAL SYSTEMS:
+   - Primary and secondary reactions (e.g., maillard_reaction, protein_denaturation)
+   - Reaction mechanisms and critical compounds
+   - pH effects and water activity considerations
+
+2. THERMAL ENGINEERING:
+   - Heat transfer modes (conduction, convection, radiation)
+   - Temperature profiles and thermal gradients
+   - Heat capacity considerations and thermal behavior
+
+3. PROCESS PARAMETERS:
+   - Critical time ranges (minimum, optimal, maximum)
+   - Temperature tolerance windows
+   - Humidity and other environmental factors
+
+4. TROUBLESHOOTING MATRIX:
+   - Potential problems and their causes
+   - Diagnostic tests and indicators
+   - Corrective actions and prevention strategies
+
+Return structured JSON with the following format:
+{
+  "step_analyses": [
     {
-      "step_analyses": [
-        {
-          "step_index": 0,
-          "reactions": ["reaction_type1", "reaction_type2"],
-          "reaction_details": ["Scientific explanation in 1-2 sentences"],
-          "cooking_method": "method_name",
-          "temperature_celsius": 175,
-          "duration_minutes": 15,
-          "metadata": {
-            "temperatureNote": "Optional note about temperature significance",
-            "techniqueImportance": "Optional note about why technique matters",
-            "additionalDetail": "Any other relevant scientific details"
-          }
+      "step_index": 0,
+      "step_text": "The instruction text",
+      "reactions": ["maillard_reaction", "caramelization"],
+      "reaction_details": ["Scientific explanation of what's happening"],
+      "cooking_method": "roasting",
+      "temperature_celsius": 180,
+      "duration_minutes": 25,
+      "confidence": 0.95,
+      "chemical_systems": {
+        "primary_reactions": ["maillard_reaction"],
+        "secondary_reactions": ["caramelization"],
+        "reaction_mechanisms": "Detailed explanation of reaction pathways",
+        "critical_compounds": ["glucose", "amino_acids"],
+        "ph_effects": {
+          "range": "5.5-6.5",
+          "impact": "Affects browning rate and flavor development"
+        },
+        "water_activity": {
+          "value": 0.95,
+          "significance": "Controls texture development"
         }
-      ]
+      },
+      "thermal_engineering": {
+        "heat_transfer_mode": "convection",
+        "thermal_gradient": "15°C/cm",
+        "temperature_profile": {
+          "surface": 190,
+          "core": 165,
+          "unit": "celsius"
+        },
+        "heat_capacity_considerations": "Metal pan vs ceramic effects"
+      },
+      "process_parameters": {
+        "critical_times": {
+          "minimum": 20,
+          "optimal": 25,
+          "maximum": 30,
+          "unit": "minutes"
+        },
+        "tolerance_windows": {
+          "temperature": "±10°C",
+          "time": "±3 minutes",
+          "humidity": "±5%"
+        }
+      },
+      "troubleshooting_matrix": [
+        {
+          "problem": "undercooking",
+          "diagnostic_tests": ["Internal temperature check"],
+          "corrections": ["Extend cooking time by 5 minutes"],
+          "prevention": ["Use oven thermometer to verify temperature"]
+        }
+      ],
+      "safety_protocols": {
+        "critical_limits": "Internal temperature must reach at least 74°C (165°F)",
+        "allergen_concerns": "Contains wheat proteins that may trigger gluten sensitivity"
+      },
+      "metadata": {
+        "temperatureNote": "Lower temperature for fan-assisted ovens by 20°C",
+        "techniqueImportance": "Preheating is critical for proper crust formation"
+      }
     }
-    
-    Use snake_case for reaction types. Keep explanations concise, evidence-based, and focused on chemistry/physics.`;
+  ],
+  "global_analysis": {
+    "cascade_effects": "How steps interact and influence each other",
+    "scaling_considerations": "How recipe responds to doubling or halving quantities",
+    "energy_efficiency": "Tips for reducing energy use in preparation",
+    "process_flow_optimization": "Sequence and timing improvements",
+    "equipment_integration": "Ideal tool combinations for this recipe"
+  }
+}
+
+Provide physics-based, chemistry-grounded analysis with practical applications. Always include temperature in both Celsius and Fahrenheit. Focus on actionable insights that improve cooking outcomes.`;
 
     // User message containing the recipe steps to analyze
     const userMessage = `Analyze the scientific principles in each step of this recipe titled "${title}":
 
     ${instructions.map((step: string, index: number) => `Step ${index + 1}: ${step}`).join('\n\n')}
     
-    Give a structured response following the required JSON format.`;
+    Give a structured response following the required JSON format with comprehensive scientific details.`;
 
     // Call OpenAI
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -91,7 +165,7 @@ serve(async (req) => {
       throw new Error('OpenAI API key not found');
     }
 
-    console.log("Calling OpenAI to analyze recipe steps...");
+    console.log("Calling OpenAI to analyze recipe steps with enhanced scientific prompt...");
     
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -107,7 +181,7 @@ serve(async (req) => {
         ],
         temperature: 0.7,
         response_format: { type: "json_object" }, // Enforce JSON output
-        max_tokens: 2000,
+        max_tokens: 3000, // Increased token limit for more detailed analysis
       }),
     }).then(res => res.json());
 
@@ -131,7 +205,10 @@ serve(async (req) => {
       throw new Error("Invalid analysis structure from OpenAI");
     }
 
-    console.log(`Processing ${analysis.step_analyses.length} step analyses`);
+    console.log(`Processing ${analysis.step_analyses.length} step analyses with enhanced data`);
+
+    // Extract global analysis if present
+    const globalAnalysis = analysis.global_analysis || {};
 
     // Prepare step reactions for database
     const stepReactions = analysis.step_analyses.map(stepAnalysis => ({
@@ -144,9 +221,17 @@ serve(async (req) => {
       temperature_celsius: stepAnalysis.temperature_celsius || null,
       duration_minutes: stepAnalysis.duration_minutes || null,
       confidence: stepAnalysis.confidence || 0.9,
+      chemical_systems: stepAnalysis.chemical_systems || null,
+      thermal_engineering: stepAnalysis.thermal_engineering || null,
+      process_parameters: stepAnalysis.process_parameters || null,
+      troubleshooting_matrix: stepAnalysis.troubleshooting_matrix || null,
+      safety_protocols: stepAnalysis.safety_protocols || null,
       ai_model: 'gpt-4o',
-      version: '2.0',
-      metadata: stepAnalysis.metadata || {}
+      version: '3.0',
+      metadata: {
+        ...(stepAnalysis.metadata || {}),
+        global_analysis: globalAnalysis
+      }
     }));
 
     // Insert step reactions into database
@@ -162,7 +247,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Analyzed ${stepReactions.length} recipe steps`,
+        message: `Analyzed ${stepReactions.length} recipe steps with enhanced scientific data`,
         step_count: stepReactions.length
       }),
       {
