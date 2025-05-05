@@ -35,41 +35,14 @@ export const processCuisineValue = (cuisineValue: string | string[]): string => 
   if (typeof cuisineValue === 'string') {
     const trimmedValue = cuisineValue.trim().toLowerCase(); // Always normalize to lowercase
     
-    // Define valid cuisine values that match exactly what the database trigger expects
-    const validCuisines = [
-      'any', 
-      // Regional American cuisines
-      'mexican', 'cajun-creole', 'midwest', 'new-england', 
-      'pacific-northwest', 'southern', 'southwestern', 'tex-mex',
-      // European cuisines
-      'british-irish', 'eastern-european', 'french', 'german', 
-      'greek', 'italian', 'mediterranean', 'scandinavian-nordic', 'spanish',
-      // Asian cuisines
-      'chinese', 'indian', 'japanese', 'korean', 
-      'southeast-asian', 'thai', 'vietnamese',
-      // Middle Eastern cuisines
-      'middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan',
-      // Dietary styles
-      'gluten-free', 'keto', 'low-fodmap', 'paleo', 
-      'plant-based', 'vegetarian', 'whole30'
-    ];
-    
     if (trimmedValue === '' || trimmedValue.toLowerCase() === 'any') {
       console.log("Processing cuisine value 'any' or empty string to 'any'");
       return "any";
-    } else if (trimmedValue) {
-      // Check if the cuisine value is valid as is
-      if (validCuisines.includes(trimmedValue)) {
-        console.log(`Using validated cuisine value: "${trimmedValue}"`);
-        return trimmedValue;
-      } else {
-        // If not valid, try to find a close match or default to "any"
-        console.log(`Warning: Cuisine value "${trimmedValue}" not in valid list, defaulting to "any"`);
-        return "any";
-      }
+    } else {
+      // Return the normalized value - the database trigger will handle categorization
+      console.log(`Using normalized cuisine value: "${trimmedValue}"`);
+      return trimmedValue;
     }
-    console.log("Cuisine string was falsy, returning 'any'");
-    return "any";
   }
   
   if (Array.isArray(cuisineValue)) {
@@ -82,29 +55,12 @@ export const processCuisineValue = (cuisineValue: string | string[]): string => 
     const filteredValues = cuisineValue.filter(Boolean).map(v => v.trim().toLowerCase());
     console.log(`Processing array cuisine value with ${filteredValues.length} items: ${JSON.stringify(filteredValues)}`);
     
-    // Define valid cuisine values that match exactly what the database trigger expects
-    const validCuisines = [
-      'any', 'mexican', 'cajun-creole', 'midwest', 'new-england', 
-      'pacific-northwest', 'southern', 'southwestern', 'tex-mex',
-      'british-irish', 'eastern-european', 'french', 'german', 
-      'greek', 'italian', 'mediterranean', 'scandinavian-nordic', 'spanish',
-      'chinese', 'indian', 'japanese', 'korean', 
-      'southeast-asian', 'thai', 'vietnamese',
-      'middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan',
-      'gluten-free', 'keto', 'low-fodmap', 'paleo', 
-      'plant-based', 'vegetarian', 'whole30'
-    ];
-    
-    // Find the first valid cuisine value
-    for (const value of filteredValues) {
-      if (validCuisines.includes(value)) {
-        console.log(`Using first valid cuisine from array: "${value}"`);
-        return value;
-      }
+    // Return the first value from the array
+    if (filteredValues.length > 0) {
+      console.log(`Using first value from cuisine array: "${filteredValues[0]}"`);
+      return filteredValues[0];
     }
     
-    // If no valid values found, return "any"
-    console.log("No valid cuisines found in array, returning 'any'");
     return "any";
   }
   
@@ -139,7 +95,16 @@ export const processDietaryValue = (dietaryValue: string | string[]): string => 
 
 // Format request body for the API call
 export const formatRequestBody = (formData: QuickRecipeFormData) => {
-  const cuisineString = processCuisineValue(formData.cuisine);
+  // Handle array and string formats consistently
+  let cuisineValue = formData.cuisine;
+  if (Array.isArray(cuisineValue) && cuisineValue.length > 0) {
+    // Use first selected cuisine if it's an array
+    cuisineValue = cuisineValue[0];
+  } else if (Array.isArray(cuisineValue) && cuisineValue.length === 0) {
+    cuisineValue = "any";
+  }
+  
+  const cuisineString = processCuisineValue(cuisineValue);
   const dietaryString = processDietaryValue(formData.dietary);
   
   // Define the request body with properly formatted values

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,15 +60,19 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       return;
     }
     
-    // Debugging: log the submission data
-    console.log("Submitting form data:", {
-      cuisine: formData.cuisine,
-      dietary: formData.dietary,
-      mainIngredient: formData.mainIngredient,
-      servings: formData.servings
-    });
+    // Create a sanitized copy of the form data to ensure proper format
+    const sanitizedData = {
+      ...formData,
+      // Ensure cuisine is always an array of strings
+      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : formData.cuisine ? [formData.cuisine] : [],
+      // Ensure dietary is always an array of strings
+      dietary: Array.isArray(formData.dietary) ? formData.dietary : formData.dietary ? [formData.dietary] : []
+    };
     
-    onSubmit(formData);
+    // Log the submission data with proper format
+    console.log("Submitting form data:", sanitizedData);
+    
+    onSubmit(sanitizedData);
   };
 
   const toggleCuisine = (value: string) => {
