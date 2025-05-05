@@ -96,7 +96,7 @@ export interface Recipe {
   servings?: number;
   image_url?: string;
   cuisine?: string;
-  cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles";
+  cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern";
   tags?: string[];
   user_id?: string;
   created_at?: string;

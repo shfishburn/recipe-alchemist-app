@@ -1,68 +1,199 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
+// Define CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function safeJsonParse(input: string) {
+// Function to validate and process the AI response
+function validateRecipeChanges(rawResponse) {
   try {
-    return JSON.parse(input);
-  } catch (e) {
-    console.error("Failed to parse JSON:", e);
-    return null;
+    // Now that we're using response_format: { type: "json_object" },
+    // the response should be a JSON object directly
+    const jsonResponse = typeof rawResponse === 'string' 
+      ? JSON.parse(rawResponse) 
+      : rawResponse;
+    
+    // Safety checks for required fields
+    if (!jsonResponse.textResponse && !jsonResponse.text_response) {
+      jsonResponse.textResponse = rawResponse;
+    }
+    
+    // Ensure changes object exists with safe defaults
+    if (!jsonResponse.changes) {
+      jsonResponse.changes = { mode: "none" };
+    }
+    
+    // Ensure ingredients structure is consistent
+    if (jsonResponse.changes && jsonResponse.changes.ingredients) {
+      if (!Array.isArray(jsonResponse.changes.ingredients.items) || 
+          jsonResponse.changes.ingredients.items.length === 0) {
+        jsonResponse.changes.ingredients.mode = "none";
+        jsonResponse.changes.ingredients.items = [];
+      }
+    } else if (jsonResponse.changes) {
+      // Initialize ingredients with safe defaults if missing
+      jsonResponse.changes.ingredients = { mode: "none", items: [] };
+    }
+    
+    // Standardize science_notes format
+    if (jsonResponse.science_notes) {
+      if (!Array.isArray(jsonResponse.science_notes)) {
+        jsonResponse.science_notes = [];
+      } else {
+        // Filter out any non-string values
+        jsonResponse.science_notes = jsonResponse.science_notes
+          .filter(note => typeof note === 'string' && note.trim() !== '')
+          .map(note => note.trim());
+      }
+    }
+    
+    return jsonResponse;
+  } catch (error) {
+    console.error("Error validating recipe changes:", error);
+    // Fallback to wrapping the raw response as text
+    return {
+      textResponse: rawResponse,
+      changes: { mode: "none" }
+    };
   }
 }
 
-function extractValidJson(str: string): string | null {
-  // Find the opening and closing braces of what seems to be a JSON object
-  const startIndex = str.indexOf('{');
-  if (startIndex === -1) return null;
+// Inline recipe analysis prompt
+const recipeAnalysisPrompt = `You are a culinary scientist and expert chef in the López-Alt tradition, analyzing recipes through the lens of food chemistry and precision cooking techniques.
+
+Focus on:
+1. COOKING CHEMISTRY:
+   - Identify key chemical processes (e.g., Maillard reactions, protein denaturation, emulsification)
+   - Explain temperature-dependent reactions and their impact on flavor/texture
+   - Note critical control points where chemistry affects outcome
+   - Consider various reactions relevant to the specific recipe context
+
+2. TECHNIQUE OPTIMIZATION:
+   - Provide appropriate temperature ranges (°F and °C) and approximate timing guidelines
+   - Include multiple visual/tactile/aromatic doneness indicators when possible
+   - Consider how ingredient preparation affects final results
+   - Suggest equipment options and configuration alternatives
+   - Balance precision with flexibility based on context
+
+3. INGREDIENT SCIENCE:
+   - Functional roles, temp-sensitive items, evidence-based substitutions
+   - Recommend evidence-based technique modifications
+   - Explain the chemistry behind each suggested change
+
+Return response as JSON with this exact structure:
+{
+  "textResponse": "Detailed conversational analysis of the recipe chemistry",
+  "science_notes": ["Array of scientific explanations"],
+  "techniques": ["Array of technique details"],
+  "troubleshooting": ["Array of science-based solutions"],
+  "changes": {
+    "title": "string or null",
+    "ingredients": {
+      "mode": "add" | "replace" | "none",
+      "items": []
+    },
+    "instructions": []
+  }
+}`;
+
+// Inline chat system prompt
+const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. When suggesting changes to recipes:
+
+1. Always format responses as JSON with changes
+2. For cooking instructions:
+   - Include specific temperatures (F° and C°)
+   - Specify cooking durations
+   - Add equipment setup details
+   - Include doneness indicators
+   - Add resting times when needed
+3. Format ingredients with exact measurements and shopability:
+   - US-imperial first, metric in ( )
+   - Each item gets a typical US grocery package size
+   - Include \`shop_size_qty\` and \`shop_size_unit\`
+4. Validate all titles are descriptive and clear
+
+Example format:
+{
+  "textResponse": "Detailed explanation of changes...",
+  "changes": {
+    "title": "string or null",
+    "ingredients": {
+      "mode": "add" | "replace" | "none",
+      "items": [{
+        "qty": number,
+        "unit": string,
+        "shop_size_qty": number,
+        "shop_size_unit": string,
+        "item": string,
+        "notes": string
+      }]
+    },
+    "instructions": ["Array of steps"],
+    "cookingDetails": {
+      "temperature": {
+        "fahrenheit": number,
+        "celsius": number
+      },
+      "duration": {
+        "prep": number,
+        "cook": number,
+        "rest": number
+      }
+    }
+  },
+  "followUpQuestions": ["Array of suggested follow-up questions"]
+}`;
+
+// Helper function to extract science notes from text if none were properly structured
+function extractScienceNotesFromText(text: string): string[] {
+  const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
+  const paragraphs = text.split(/\n\n+/);
+  const scienceNotes: string[] = [];
   
-  let depth = 0;
-  let inString = false;
-  let escapeNext = false;
-  
-  for (let i = startIndex; i < str.length; i++) {
-    const char = str[i];
+  // Look for paragraphs containing science keywords
+  paragraphs.forEach(paragraph => {
+    const lowerParagraph = paragraph.toLowerCase();
     
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-    
-    if (char === '\\' && inString) {
-      escapeNext = true;
-      continue;
-    }
-    
-    if (char === '"' && !escapeNext) {
-      inString = !inString;
-      continue;
-    }
-    
-    if (!inString) {
-      if (char === '{') {
-        depth++;
-      } else if (char === '}') {
-        depth--;
-        if (depth === 0) {
-          // We found a complete JSON object, try to return it
-          const jsonCandidate = str.substring(startIndex, i + 1);
-          try {
-            JSON.parse(jsonCandidate); // Validate if it's valid JSON
-            return jsonCandidate;
-          } catch (e) {
-            // Not valid, continue searching
-          }
+    for (const keyword of scienceKeywords) {
+      if (lowerParagraph.includes(keyword) && paragraph.length > 30) {
+        // Clean up the paragraph
+        const cleaned = paragraph
+          .replace(/^#+\s+/, '') // Remove markdown headers
+          .replace(/^\d+\.\s+/, '') // Remove numbered list markers
+          .replace(/^\*\s+/, '') // Remove bullet points
+          .trim();
+        
+        if (cleaned.length > 0) {
+          scienceNotes.push(cleaned);
+          break; // Break after finding first keyword match in paragraph
         }
       }
     }
+  });
+  
+  // If we still don't have any science notes, look for sentences
+  if (scienceNotes.length === 0) {
+    const sentences = text.split(/[.!?]+\s+/);
+    
+    for (const sentence of sentences) {
+      const lowerSentence = sentence.toLowerCase();
+      for (const keyword of scienceKeywords) {
+        if (lowerSentence.includes(keyword) && sentence.length > 20) {
+          scienceNotes.push(sentence.trim());
+          break;
+        }
+      }
+      
+      // Limit to 3 extracted notes
+      if (scienceNotes.length >= 3) break;
+    }
   }
   
-  return null; // No valid JSON found
+  return scienceNotes.slice(0, 5); // Return at most 5 notes
 }
 
 // Creates a fallback analysis structure when OpenAI fails
@@ -303,7 +434,7 @@ Return structured JSON with the following format:
     let analysisContent;
     
     try {
-      // Attempt to call OpenAI with retry logic
+      // Use a lighter model (gpt-4o-mini) to improve performance
       openAIResponse = await retryOpenAI('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -311,7 +442,7 @@ Return structured JSON with the following format:
           'Authorization': `Bearer ${openaiApiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-4o-mini', // Changed from gpt-4o to improve performance
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
@@ -335,35 +466,18 @@ Return structured JSON with the following format:
       analysisContent = JSON.stringify(createFallbackAnalysis(instructions));
     }
 
-    // Parse the JSON response (with enhanced error handling)
+    // Parse the JSON response with better error handling
     let analysis;
     try {
-      // First try direct parsing
-      analysis = safeJsonParse(analysisContent);
+      analysis = JSON.parse(analysisContent);
       
-      // If that fails, try to extract valid JSON
-      if (!analysis) {
-        console.log("Direct parsing failed, trying to extract valid JSON...");
-        const extractedJson = extractValidJson(analysisContent);
-        if (extractedJson) {
-          analysis = safeJsonParse(extractedJson);
-          console.log("Successfully extracted valid JSON");
-        }
-      }
-      
-      // If all parsing attempts fail, use fallback
-      if (!analysis) {
-        console.log("All JSON parsing attempts failed, using fallback analysis");
+      // If parsing succeeds but we don't have the expected structure, use fallback
+      if (!analysis.step_analyses || !Array.isArray(analysis.step_analyses)) {
+        console.log("Invalid analysis structure, using fallback");
         analysis = createFallbackAnalysis(instructions);
       }
     } catch (e) {
       console.error("Failed to parse OpenAI response:", e);
-      analysis = createFallbackAnalysis(instructions);
-    }
-
-    // Validate analysis structure
-    if (!analysis.step_analyses || !Array.isArray(analysis.step_analyses)) {
-      console.log("Invalid or missing step_analyses in response, using fallback");
       analysis = createFallbackAnalysis(instructions);
     }
 
@@ -372,7 +486,7 @@ Return structured JSON with the following format:
     // Extract global analysis if present
     const globalAnalysis = analysis.global_analysis || {};
 
-    // Prepare step reactions for database
+    // Prepare step reactions for database using the new columns structure
     const stepReactions = analysis.step_analyses.map((stepAnalysis, index) => {
       // Ensure step_index exists and is valid
       const step_index = typeof stepAnalysis.step_index === 'number' ? 
@@ -391,18 +505,20 @@ Return structured JSON with the following format:
         temperature_celsius: stepAnalysis.temperature_celsius || null,
         duration_minutes: stepAnalysis.duration_minutes || null,
         confidence: stepAnalysis.confidence || 0.9,
+        // Use our new JSONB columns for complex data
         chemical_systems: stepAnalysis.chemical_systems || null,
         thermal_engineering: stepAnalysis.thermal_engineering || null,
         process_parameters: stepAnalysis.process_parameters || null,
         troubleshooting_matrix: stepAnalysis.troubleshooting_matrix || null,
         safety_protocols: stepAnalysis.safety_protocols || null,
-        ai_model: 'gpt-4o',
-        version: '3.0',
+        // Store any other data in metadata
         metadata: {
-          ...(stepAnalysis.metadata || {}),
           global_analysis: globalAnalysis,
-          retried: !!openAIResponse.retried
-        }
+          retried: !!openAIResponse?.retried,
+          model: 'gpt-4o-mini'
+        },
+        ai_model: 'gpt-4o-mini', // Use the lighter model
+        version: '3.0'
       };
     });
 

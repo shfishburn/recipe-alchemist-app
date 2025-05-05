@@ -687,6 +687,7 @@ export type Database = {
       recipe_step_reactions: {
         Row: {
           ai_model: string | null
+          chemical_systems: Json | null
           confidence: number
           cooking_method: string | null
           created_at: string | null
@@ -696,17 +697,22 @@ export type Database = {
           id: string
           ingredient_context: string[] | null
           metadata: Json | null
+          process_parameters: Json | null
           reaction_details: string[]
           reactions: string[]
           recipe_id: string
+          safety_protocols: Json | null
           step_index: number
           step_text: string
           temperature_celsius: number | null
+          thermal_engineering: Json | null
+          troubleshooting_matrix: Json | null
           updated_at: string | null
           version: string | null
         }
         Insert: {
           ai_model?: string | null
+          chemical_systems?: Json | null
           confidence: number
           cooking_method?: string | null
           created_at?: string | null
@@ -716,17 +722,22 @@ export type Database = {
           id?: string
           ingredient_context?: string[] | null
           metadata?: Json | null
+          process_parameters?: Json | null
           reaction_details: string[]
           reactions: string[]
           recipe_id: string
+          safety_protocols?: Json | null
           step_index: number
           step_text: string
           temperature_celsius?: number | null
+          thermal_engineering?: Json | null
+          troubleshooting_matrix?: Json | null
           updated_at?: string | null
           version?: string | null
         }
         Update: {
           ai_model?: string | null
+          chemical_systems?: Json | null
           confidence?: number
           cooking_method?: string | null
           created_at?: string | null
@@ -736,12 +747,16 @@ export type Database = {
           id?: string
           ingredient_context?: string[] | null
           metadata?: Json | null
+          process_parameters?: Json | null
           reaction_details?: string[]
           reactions?: string[]
           recipe_id?: string
+          safety_protocols?: Json | null
           step_index?: number
           step_text?: string
           temperature_celsius?: number | null
+          thermal_engineering?: Json | null
+          troubleshooting_matrix?: Json | null
           updated_at?: string | null
           version?: string | null
         }
@@ -1289,6 +1304,7 @@ export type Database = {
         | "European"
         | "Asian"
         | "Dietary Styles"
+        | "Middle Eastern"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1410,6 +1426,7 @@ export const Constants = {
         "European",
         "Asian",
         "Dietary Styles",
+        "Middle Eastern",
       ],
     },
   },

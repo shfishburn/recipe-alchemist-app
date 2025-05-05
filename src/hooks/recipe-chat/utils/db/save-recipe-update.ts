@@ -106,7 +106,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     }
   }
   
-  // Handle cuisine_category enum value - use our new utility function
+  // Handle cuisine_category enum value - use our updated utility function
   if (updatedRecipe.cuisine) {
     updatedRecipe.cuisine_category = getCuisineCategory(updatedRecipe.cuisine);
     console.log(`Determined cuisine category: ${updatedRecipe.cuisine_category} for cuisine: ${updatedRecipe.cuisine}`);
@@ -125,7 +125,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     science_notes: scienceNotes as unknown as Json,
     // Convert nutri_score to Json if present
     nutri_score: updatedRecipe.nutri_score ? updatedRecipe.nutri_score as unknown as Json : undefined,
-    // Ensure cuisine_category is one of the allowed enum values
+    // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
     cuisine_category: updatedRecipe.cuisine_category || "Global"
   };
 

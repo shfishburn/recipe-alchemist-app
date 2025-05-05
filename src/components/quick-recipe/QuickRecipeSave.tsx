@@ -64,7 +64,7 @@ export const useQuickRecipeSave = () => {
       
       // Determine cuisine category based on the cuisine grouping in CuisineSelector
       // If we can't determine the category, default to "Global"
-      let cuisineCategory = "Global"; // Default value
+      let cuisineCategory: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" = "Global"; // Default value
 
       // Get the cuisine from the recipe
       const selectedCuisine = recipe.cuisine?.toLowerCase();
@@ -87,9 +87,9 @@ export const useQuickRecipeSave = () => {
         else if (["gluten-free", "keto", "low-fodmap", "paleo", "plant-based", "vegetarian", "whole30"].includes(selectedCuisine)) {
           cuisineCategory = "Dietary Styles";
         }
-        // Middle Eastern cuisines (added as a separate category)
+        // Middle Eastern cuisines
         else if (["middle-eastern"].includes(selectedCuisine)) {
-          cuisineCategory = "Middle Eastern"; // Note: Verify this category exists in the database enum
+          cuisineCategory = "Middle Eastern";
         }
       }
       
