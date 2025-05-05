@@ -1,199 +1,260 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Carrot, WheatOff, MilkOff, Heart, LeafyGreen } from 'lucide-react';
-import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { CookingPot, Plus, Save } from 'lucide-react';
+import { QuickRecipeFormData, QuickRecipe } from '@/types/quick-recipe';
 import { useToast } from '@/hooks/use-toast';
+import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { ServingsSelector } from './form-components/ServingsSelector';
+import { CuisineSelector } from './form-components/CuisineSelector';
+import { DietarySelector } from './form-components/DietarySelector';
 
-// Cuisine options with flag emojis instead of icons
-const CUISINES = [
-  { name: "American", value: "american", flag: "🇺🇸" },
-  { name: "Italian", value: "italian", flag: "🇮🇹" },
-  { name: "Mexican", value: "mexican", flag: "🇲🇽" },
-  { name: "Asian", value: "asian", flag: "🇨🇳" },
-  { name: "Mediterranean", value: "mediterranean", flag: "🇬🇷" },
-  { name: "French", value: "french", flag: "🇫🇷" },
-  { name: "Indian", value: "indian", flag: "🇮🇳" }
-];
-
-// Dietary options with icons
-const DIETARY = [
-  { name: "Low-Carb", value: "low-carb", icon: Carrot },
-  { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
-  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff },
-  { name: "Healthy", value: "healthy", icon: Heart },
-  { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
-];
-
-// Maximum number of selections allowed
-const MAX_CUISINE_SELECTIONS = 2;
-const MAX_DIETARY_SELECTIONS = 2;
-
-interface QuickRecipeFormProps {
+export function QuickRecipeForm({ onSubmit, isLoading }: { 
   onSubmit: (data: QuickRecipeFormData) => void;
   isLoading: boolean;
-}
-
-export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
-  const [formData, setFormData] = useState<QuickRecipeFormData>({
-    cuisine: [],
-    dietary: [],
-    mainIngredient: '',
-    servings: 2, // Default value for servings
+}) {
+  const [recipe, setRecipe] = useState<QuickRecipe>({
+    title: '',
+    description: '',
+    ingredients: [],
+    steps: [],
+    servings: 2,
+    cuisine: 'any',
+    dietary: ''
   });
-  const isMobile = useIsMobile();
+  const [newIngredient, setNewIngredient] = useState('');
+  const [newStep, setNewStep] = useState('');
   const { toast } = useToast();
+  const { saveRecipe, isSaving } = useQuickRecipeSave();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate mainIngredient before submitting
-    if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
+  const handleAddIngredient = () => {
+    if (newIngredient.trim()) {
+      setRecipe(prev => ({
+        ...prev,
+        ingredients: [...prev.ingredients, { 
+          item: newIngredient.trim(),
+          qty: 1,
+          unit: ''
+        }]
+      }));
+      setNewIngredient('');
+    }
+  };
+
+  const handleAddStep = () => {
+    if (newStep.trim()) {
+      setRecipe(prev => ({
+        ...prev,
+        steps: [...prev.steps, newStep.trim()]
+      }));
+      setNewStep('');
+    }
+  };
+
+  const handleRemoveIngredient = (index: number) => {
+    setRecipe(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleRemoveStep = (index: number) => {
+    setRecipe(prev => ({
+      ...prev,
+      steps: prev.steps.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleCuisineChange = (value: string) => {
+    setRecipe(prev => ({
+      ...prev,
+      cuisine: value
+    }));
+  };
+
+  const handleDietaryChange = (value: string) => {
+    setRecipe(prev => ({
+      ...prev,
+      dietary: value
+    }));
+  };
+
+  const handleServingsChange = (value: number) => {
+    setRecipe(prev => ({
+      ...prev,
+      servings: value
+    }));
+  };
+
+  const handleSaveRecipe = async () => {
+    if (!recipe.title) {
       toast({
-        title: "Missing ingredient",
-        description: "Please enter at least one main ingredient",
+        title: "Missing recipe title",
+        description: "Please provide a title for your recipe",
         variant: "destructive",
       });
       return;
     }
-    
-    // Debugging: log the submission data
-    console.log("Submitting form data:", {
-      cuisine: formData.cuisine,
-      dietary: formData.dietary,
-      mainIngredient: formData.mainIngredient,
-      servings: formData.servings
-    });
-    
-    onSubmit(formData);
-  };
 
-  const toggleCuisine = (value: string) => {
-    setFormData(prev => {
-      const cuisineArray = Array.isArray(prev.cuisine) ? prev.cuisine : prev.cuisine ? [prev.cuisine] : [];
-      
-      // If the cuisine is already selected, remove it
-      if (cuisineArray.includes(value)) {
-        return { ...prev, cuisine: cuisineArray.filter(c => c !== value) };
-      } 
-      // Otherwise, check if we've reached the maximum number of selections
-      else if (cuisineArray.length >= MAX_CUISINE_SELECTIONS) {
-        toast({
-          title: "Selection limit reached",
-          description: `You can select up to ${MAX_CUISINE_SELECTIONS} cuisines.`,
-          variant: "default"
-        });
-        return prev;
-      }
-      // Add it to the selection
-      else {
-        return { ...prev, cuisine: [...cuisineArray, value] };
-      }
-    });
-  };
-
-  const toggleDietary = (value: string) => {
-    setFormData(prev => {
-      const dietaryArray = Array.isArray(prev.dietary) ? prev.dietary : prev.dietary ? [prev.dietary] : [];
-      
-      // If the dietary option is already selected, remove it
-      if (dietaryArray.includes(value)) {
-        return { ...prev, dietary: dietaryArray.filter(d => d !== value) };
-      } 
-      // Otherwise, check if we've reached the maximum number of selections
-      else if (dietaryArray.length >= MAX_DIETARY_SELECTIONS) {
-        toast({
-          title: "Selection limit reached",
-          description: `You can select up to ${MAX_DIETARY_SELECTIONS} dietary preferences.`,
-          variant: "default"
-        });
-        return prev;
-      }
-      // Add it to the selection
-      else {
-        return { ...prev, dietary: [...dietaryArray, value] };
-      }
-    });
-  };
-
-  // Helper function to check if a value is selected
-  const isCuisineSelected = (value: string): boolean => {
-    if (Array.isArray(formData.cuisine)) {
-      return formData.cuisine.includes(value);
+    if (recipe.ingredients.length === 0) {
+      toast({
+        title: "Missing ingredients",
+        description: "Please add at least one ingredient",
+        variant: "destructive",
+      });
+      return;
     }
-    return formData.cuisine === value;
-  };
 
-  const isDietarySelected = (value: string): boolean => {
-    if (Array.isArray(formData.dietary)) {
-      return formData.dietary.includes(value);
+    if (recipe.steps.length === 0) {
+      toast({
+        title: "Missing steps",
+        description: "Please add at least one cooking step",
+        variant: "destructive",
+      });
+      return;
     }
-    return formData.dietary === value;
+
+    try {
+      await saveRecipe(recipe);
+    } catch (error: any) {
+      toast({
+        title: "Failed to save recipe",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 w-full mx-auto">
-      <div className="space-y-2 w-full">
-        <Input 
-          placeholder="Main ingredient (e.g., chicken, pasta, etc.)"
-          value={formData.mainIngredient}
-          onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
-          className={isMobile ? "h-10 w-full" : "h-12 text-lg w-full"}
-          aria-label="Main ingredient"
-        />
-      </div>
-
-      <div className="space-y-4 w-full">
+    <Card className="p-5 space-y-5 bg-white shadow-md rounded-lg max-w-3xl mx-auto">
+      <h2 className="text-2xl font-semibold text-center">Create Your Own Recipe</h2>
+      
+      <div className="space-y-3">
         <div>
-          <label className="text-sm font-medium block mb-2">Cuisine (select up to {MAX_CUISINE_SELECTIONS}):</label>
-          <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full">
-            {CUISINES.map((cuisine) => (
-              <Badge 
-                key={cuisine.value} 
-                variant="outline" 
-                className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  isCuisineSelected(cuisine.value) ? 'bg-recipe-green text-white hover:bg-recipe-green/90' : ''
-                }`}
-                onClick={() => toggleCuisine(cuisine.value)}
-              >
-                <span className="mr-1">{cuisine.flag}</span>
-                {cuisine.name}
-              </Badge>
-            ))}
-          </div>
+          <Label htmlFor="title">Recipe Title</Label>
+          <Input 
+            id="title"
+            placeholder="Enter recipe title" 
+            value={recipe.title}
+            onChange={(e) => setRecipe(prev => ({ ...prev, title: e.target.value }))}
+          />
         </div>
-
+        
         <div>
-          <label className="text-sm font-medium block mb-2">Dietary Restrictions (select up to {MAX_DIETARY_SELECTIONS}):</label>
-          <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full">
-            {DIETARY.map((diet) => (
-              <Badge 
-                key={diet.value} 
-                variant="outline" 
-                className={`cursor-pointer hover:bg-accent px-3 py-1.5 text-sm ${
-                  isDietarySelected(diet.value) ? 'bg-recipe-orange text-white hover:bg-recipe-orange/90' : ''
-                }`}
-                onClick={() => toggleDietary(diet.value)}
-              >
-                <diet.icon className="w-3.5 h-3.5 mr-1" />
-                {diet.name}
-              </Badge>
-            ))}
-          </div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea 
+            id="description"
+            placeholder="Brief description of your recipe" 
+            value={recipe.description || ''}
+            onChange={(e) => setRecipe(prev => ({ ...prev, description: e.target.value }))}
+            className="min-h-[80px]"
+          />
         </div>
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
-        size={isMobile ? "default" : "lg"}
-        disabled={isLoading}
-      >
-        <CookingPot className="mr-2 h-5 w-5" />
-        {isLoading ? 'Creating...' : 'Create Quick Recipe'}
-      </Button>
-    </form>
+      <div className="space-y-3">
+        <Label>Ingredients</Label>
+        <div className="flex space-x-2">
+          <Input 
+            placeholder="Add an ingredient" 
+            value={newIngredient}
+            onChange={(e) => setNewIngredient(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddIngredient()}
+          />
+          <Button type="button" onClick={handleAddIngredient}>
+            <Plus className="h-4 w-4 mr-1" /> Add
+          </Button>
+        </div>
+        
+        <ul className="list-disc pl-5 space-y-1">
+          {recipe.ingredients.map((ingredient, index) => (
+            <li key={index} className="flex justify-between items-center">
+              <span>{ingredient.item}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleRemoveIngredient(index)}
+                className="h-6 px-2 text-red-500 hover:text-red-700"
+              >
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      
+      <div className="space-y-3">
+        <Label>Cooking Steps</Label>
+        <div className="flex space-x-2">
+          <Textarea 
+            placeholder="Add a cooking step" 
+            value={newStep}
+            onChange={(e) => setNewStep(e.target.value)}
+            className="min-h-[80px]"
+          />
+          <Button type="button" onClick={handleAddStep} className="h-10">
+            <Plus className="h-4 w-4 mr-1" /> Add
+          </Button>
+        </div>
+        
+        <ol className="list-decimal pl-5 space-y-2">
+          {recipe.steps.map((step, index) => (
+            <li key={index} className="flex justify-between items-start">
+              <span>{step}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleRemoveStep(index)}
+                className="h-6 px-2 text-red-500 hover:text-red-700"
+              >
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="servings">Servings</Label>
+          <ServingsSelector 
+            selectedServings={recipe.servings} 
+            onServingsChange={handleServingsChange} 
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="cuisine">Cuisine</Label>
+          <CuisineSelector 
+            value={recipe.cuisine} 
+            onChange={handleCuisineChange}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="dietary">Dietary</Label>
+          <DietarySelector
+            value={recipe.dietary}
+            onChange={handleDietaryChange}
+          />
+        </div>
+      </div>
+      
+      <div className="pt-4 space-x-3 flex justify-center">
+        <Button 
+          type="button" 
+          onClick={handleSaveRecipe} 
+          className="bg-recipe-green hover:bg-recipe-green/90"
+          disabled={isSaving}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {isSaving ? 'Saving...' : 'Save Recipe'}
+        </Button>
+      </div>
+    </Card>
   );
 }
