@@ -7,6 +7,10 @@ import { QuickRecipeFormData } from '@/types/quick-recipe';
 // NOTE: Database uses the trigger to set this value, not this function
 export const getCuisineCategory = (cuisineValue: string): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" => {
   // This function now matches database trigger logic
+  if (!cuisineValue || typeof cuisineValue !== 'string') {
+    return "Global";
+  }
+  
   const cuisine = cuisineValue.toLowerCase().trim();
   
   if (['mexican', 'cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex'].includes(cuisine)) {
@@ -106,6 +110,7 @@ export const formatRequestBody = (formData: QuickRecipeFormData) => {
   
   const cuisineString = processCuisineValue(cuisineValue);
   const dietaryString = processDietaryValue(formData.dietary);
+  const cuisineCategory = getCuisineCategory(cuisineString);
   
   // Define the request body with properly formatted values
   return {
@@ -114,6 +119,6 @@ export const formatRequestBody = (formData: QuickRecipeFormData) => {
     mainIngredient: formData.mainIngredient.trim(),
     servings: formData.servings || 2,
     maxCalories: formData.maxCalories,
-    cuisineCategory: getCuisineCategory(cuisineString)
+    cuisineCategory: cuisineCategory
   };
 };

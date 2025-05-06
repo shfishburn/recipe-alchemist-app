@@ -115,10 +115,10 @@ export const useQuickRecipeSave = () => {
         cuisine_category: cuisineCategory
       });
 
-      // Insert the recipe into the database
+      // Insert the recipe into the database - using a cleaner insert approach
       const { data, error } = await supabase
         .from('recipes')
-        .insert(recipeData)
+        .insert([recipeData])
         .select('id')
         .single();
 
