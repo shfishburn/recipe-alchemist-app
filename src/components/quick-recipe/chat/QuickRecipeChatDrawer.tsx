@@ -12,7 +12,7 @@ import { X, Loader2, MessageCircle } from 'lucide-react';
 import { QuickRecipeChat } from './QuickRecipeChat';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useQuickRecipeChat } from '@/hooks/use-quick-recipe-chat';
+import { useUnifiedRecipeChat } from '@/hooks/use-unified-recipe-chat';
 
 interface QuickRecipeChatDrawerProps {
   recipe: QuickRecipe;
@@ -24,11 +24,11 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
   const isMobile = useIsMobile();
   const contentRef = useRef<HTMLDivElement>(null);
   
-  // Get basic chat info without creating UI elements
+  // Get essential state from unified chat hook without creating full UI elements
   const {
     isSending,
     isApplying
-  } = useQuickRecipeChat(recipe);
+  } = useUnifiedRecipeChat(recipe);
   
   const isPending = isSending || isApplying;
   

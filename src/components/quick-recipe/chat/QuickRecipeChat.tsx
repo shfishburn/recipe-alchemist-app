@@ -1,7 +1,6 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useQuickRecipeChat } from '@/hooks/use-quick-recipe-chat';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { RecipeChatInput } from '@/components/recipe-chat/RecipeChatInput';
 import { ImprovedChatHistory } from '@/components/recipe-chat/ImprovedChatHistory';
@@ -10,6 +9,8 @@ import { ClearChatDialog } from '@/components/recipe-chat/ClearChatDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
+import { useUnifiedRecipeChat } from '@/hooks/use-unified-recipe-chat';
 
 export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -21,23 +22,29 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   const {
     message,
     setMessage,
-    chatHistory,
+    messages,
     optimisticMessages,
     messageStates,
-    isLoadingHistory,
-    sendMessage,
+    isLoadingMessages,
     isSending,
+    sendMessage,
     applyChanges,
     isApplying,
     clearChatHistory,
-  } = useQuickRecipeChat(recipe);
+    fetchChatHistory
+  } = useUnifiedRecipeChat(recipe);
+  
+  // Load chat history when component mounts
+  useEffect(() => {
+    fetchChatHistory();
+  }, [fetchChatHistory]);
 
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
-    if (chatHistory.length > 0 || optimisticMessages.length > 0 || isSending) {
+    if (messages.length > 0 || optimisticMessages.length > 0 || isSending) {
       setTimeout(scrollToBottom, 100);
     }
-  }, [chatHistory.length, optimisticMessages.length, isSending]);
+  }, [messages.length, optimisticMessages.length, isSending]);
   
   // Reset scroll position when opening the chat
   useEffect(() => {
@@ -115,7 +122,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   };
 
   // Check if we should show the empty state
-  const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
+  const showEmptyState = messages.length === 0 && optimisticMessages.length === 0;
   
   // Calculate height based on device
   const chatHeight = isMobile ? 'calc(90vh - 160px)' : '60vh';
@@ -126,7 +133,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
         <div className="flex flex-col h-full">
           <div className="pt-2 sm:pt-4 px-3 sm:px-5 border-b">
             <ChatHeader 
-              hasChatHistory={chatHistory.length > 0} 
+              hasChatHistory={messages.length > 0} 
               onClearChat={handleClearChat} 
             />
           </div>
@@ -138,7 +145,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
             >
               <div className="py-3 flex flex-col space-y-6">
                 <ImprovedChatHistory
-                  chatHistory={chatHistory}
+                  chatHistory={messages}
                   optimisticMessages={optimisticMessages}
                   isSending={isSending}
                   setMessage={setMessage}

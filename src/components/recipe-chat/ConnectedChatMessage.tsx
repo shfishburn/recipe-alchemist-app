@@ -2,7 +2,7 @@
 import React from 'react';
 import { ImprovedChatMessage } from './ImprovedChatMessage';
 import type { ChatMessage } from '@/types/chat';
-import { useChatStore } from '@/store/use-chat-store';
+import { useUnifiedChatStore } from '@/store/unified-chat-store';
 
 interface ConnectedChatMessageProps {
   chat: ChatMessage;
@@ -17,8 +17,8 @@ export function ConnectedChatMessage({
   applyChanges,
   isApplying = false
 }: ConnectedChatMessageProps) {
-  // Get message state from store
-  const messageState = useChatStore(state => 
+  // Get message state from unified store
+  const messageState = useUnifiedChatStore(state => 
     state.messageStates[chat.id || ''] || { pending: false, failed: false, applied: false }
   );
   
