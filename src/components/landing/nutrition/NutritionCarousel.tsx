@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Carousel,
-  CarouselContent,
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-  CarouselDots
+  CarouselPagination
 } from '@/components/ui/carousel';
 import { 
   macroDistributionData, 
@@ -15,7 +14,6 @@ import {
 } from './nutrition-sample-data';
 import { MacroCarouselItem } from './MacroCarouselItem';
 import { MacroLegend } from './MacroLegend';
-import { cn } from '@/lib/utils';
 import { ChartPie, Activity } from 'lucide-react';
 
 export function NutritionCarousel() {
@@ -27,7 +25,7 @@ export function NutritionCarousel() {
     if (!api || isPaused) return;
     
     const interval = setInterval(() => {
-      api.scrollNext();
+      api.slideNext();
     }, 5000);
     
     return () => clearInterval(interval);
@@ -54,29 +52,28 @@ export function NutritionCarousel() {
       >
         <Carousel
           opts={{
-            align: "center",
             loop: true,
+            slidesPerView: 1,
+            spaceBetween: 0,
           }}
           setApi={setApi}
           className="w-full"
         >
-          <CarouselContent>
-            {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="p-4 md:p-6">
-                <MacroCarouselItem 
-                  item={item} 
-                  carbsData={carbsData} 
-                  fatsData={fatsData} 
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
+          {macroDistributionData.map((item, index) => (
+            <CarouselItem key={index} className="p-4 md:p-6">
+              <MacroCarouselItem 
+                item={item} 
+                carbsData={carbsData} 
+                fatsData={fatsData} 
+              />
+            </CarouselItem>
+          ))}
           
           <CarouselPrevious className="left-2 md:left-4" />
           <CarouselNext className="right-2 md:right-4" />
           
           <div className="p-4 pb-6">
-            <CarouselDots showNumbers />
+            <CarouselPagination showNumbers variant="dots" />
             <MacroLegend />
           </div>
         </Carousel>

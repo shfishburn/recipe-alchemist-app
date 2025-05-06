@@ -3,11 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useRecipes } from '@/hooks/use-recipes';
 import {
   Carousel,
-  CarouselContent,
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-  CarouselDots
+  CarouselPagination
 } from '@/components/ui/carousel';
 import { RecipeCard } from './RecipeCard';
 import { CookingPot } from 'lucide-react';
@@ -26,7 +25,7 @@ export function RecipeCarousel() {
     if (!api || isPaused) return;
     
     const interval = setInterval(() => {
-      api.scrollNext();
+      api.slideNext();
     }, 6000);
     
     return () => clearInterval(interval);
@@ -37,7 +36,7 @@ export function RecipeCarousel() {
   }
 
   const featuredRecipes = recipes?.slice(0, 6) || [];
-
+  
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="flex flex-col items-center text-center mb-6">
@@ -59,25 +58,25 @@ export function RecipeCarousel() {
       >
         <Carousel
           opts={{
-            align: "center",
+            slidesPerView: isMobile ? 1 : 2,
+            spaceBetween: 16,
+            breakpoints: {
+              640: { slidesPerView: 2 },
+              768: { slidesPerView: 3 }
+            },
             loop: true,
           }}
           setApi={setApi}
           className="w-full"
         >
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {featuredRecipes.map((recipe, index) => (
-              <CarouselItem key={recipe.id} className={cn(
-                "px-2 md:px-4",
-                isMobile ? "basis-full" : "basis-1/2 md:basis-1/3"
-              )}>
-                <RecipeCard 
-                  recipe={recipe} 
-                  priority={index < 2} 
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
+          {featuredRecipes.map((recipe, index) => (
+            <CarouselItem key={recipe.id}>
+              <RecipeCard 
+                recipe={recipe} 
+                priority={index < 2} 
+              />
+            </CarouselItem>
+          ))}
           
           <CarouselPrevious className={cn(
             "hidden md:flex left-0 md:-left-3 lg:-left-6"
@@ -85,11 +84,11 @@ export function RecipeCarousel() {
           <CarouselNext className={cn(
             "hidden md:flex right-0 md:-right-3 lg:-right-6"
           )} />
+          
+          <div className="mt-4 pb-2">
+            <CarouselPagination showNumbers />
+          </div>
         </Carousel>
-        
-        <div className="mt-4 pb-2">
-          <CarouselDots showNumbers />
-        </div>
       </div>
     </div>
   );
