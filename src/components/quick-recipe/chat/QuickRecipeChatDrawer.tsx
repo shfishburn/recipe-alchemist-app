@@ -5,7 +5,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerClose,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -25,6 +24,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
   const isMobile = useIsMobile();
   const contentRef = useRef<HTMLDivElement>(null);
   
+  // Get basic chat info without creating UI elements
   const {
     isSending,
     isApplying
@@ -51,10 +51,13 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
     }
   }, [open]);
   
+  const drawerHeight = isMobile ? 'h-[85vh]' : 'h-[80vh]';
+  const contentHeight = isMobile ? 'h-[calc(85vh-60px)]' : 'h-[calc(80vh-60px)]';
+  
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${isMobile ? 'h-[90vh]' : 'h-[90vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
+        className={`${drawerHeight} max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
         style={{ zIndex: 50 }}
         ref={contentRef}
       >
@@ -65,7 +68,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
               Recipe Chat
               {isPending && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  (Processing request...)
+                  (Processing...)
                 </span>
               )}
             </DrawerTitle>
@@ -99,7 +102,8 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        <div className={`p-4 sm:p-6 flex-1 ${isMobile ? 'h-[calc(90vh-48px)]' : 'h-[calc(90vh-60px)]'} flex`}>
+        
+        <div className={`p-2 sm:p-4 flex-1 ${contentHeight} w-full overflow-hidden`}>
           <QuickRecipeChat recipe={recipe} />
         </div>
       </DrawerContent>

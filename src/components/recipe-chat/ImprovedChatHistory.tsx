@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 import type { Recipe } from '@/types/recipe';
-import { ImprovedChatMessage } from './ImprovedChatMessage';
+import { ConnectedChatMessage } from './ConnectedChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
 import { EmptyChatState } from './EmptyChatState';
 import { AlertCircle } from 'lucide-react';
@@ -77,7 +77,7 @@ export function ImprovedChatHistory({
     <div className="flex flex-col space-y-6">
       {/* Render all chat messages */}
       {chatHistory.map((chat) => (
-        <ImprovedChatMessage
+        <ConnectedChatMessage
           key={chat.id || `chat-${Date.now()}-${Math.random()}`}
           chat={chat}
           setMessage={setMessage}
@@ -88,7 +88,7 @@ export function ImprovedChatHistory({
       
       {/* Render optimistic messages */}
       {optimisticMessages.map((message) => (
-        <ImprovedChatMessage
+        <ConnectedChatMessage
           key={message.id || `optimistic-${Date.now()}-${Math.random()}`}
           chat={message}
           setMessage={setMessage}

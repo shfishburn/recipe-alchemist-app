@@ -5,18 +5,18 @@ import { useQuickRecipeChat } from '@/hooks/use-quick-recipe-chat';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { RecipeChatInput } from '@/components/recipe-chat/RecipeChatInput';
 import { ImprovedChatHistory } from '@/components/recipe-chat/ImprovedChatHistory';
-import { EmptyChatState } from '@/components/recipe-chat/EmptyChatState';
 import { ChatHeader } from '@/components/recipe-chat/ChatHeader';
-import { ChatLoading } from '@/components/recipe-chat/ChatLoading';
 import { ClearChatDialog } from '@/components/recipe-chat/ClearChatDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const {
     message,
@@ -35,7 +35,6 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
     if (chatHistory.length > 0 || optimisticMessages.length > 0 || isSending) {
-      // Use setTimeout to ensure DOM has updated before scrolling
       setTimeout(scrollToBottom, 100);
     }
   }, [chatHistory.length, optimisticMessages.length, isSending]);
@@ -47,7 +46,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
 
   // Improved scroll function with fallbacks
   const scrollToBottom = () => {
-    // Try scrolling to the messages end marker first
+    // Try using message end ref first
     if (messagesEndRef.current) {
       try {
         messagesEndRef.current.scrollIntoView({ 
@@ -60,7 +59,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
       }
     }
     
-    // Fall back to scroll area if available
+    // Try using scroll area viewport
     if (scrollAreaRef.current) {
       try {
         const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -72,23 +71,15 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
         console.error("Error scrolling viewport:", err);
       }
     }
-    
-    // Last resort: use document scrolling
-    try {
-      window.scrollTo(0, document.body.scrollHeight);
-    } catch (err) {
-      console.error("Error with window.scrollTo:", err);
-    }
   };
 
-  // Enhanced message submission with better error handling
   const handleSubmit = async () => {
     if (message.trim() && !isSending) {
       try {
         await sendMessage();
-        // Scroll immediately after sending for better UX
+        // Scroll after sending
         setTimeout(scrollToBottom, 50);
-        setTimeout(scrollToBottom, 300); // Try again after a short delay
+        setTimeout(scrollToBottom, 300); // Try again after a delay
       } catch (error) {
         console.error("Failed to send message:", error);
         toast({
@@ -123,16 +114,14 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     }
   };
 
-  // Show loading state while retrieving chat history
-  if (isLoadingHistory) {
-    return <ChatLoading />;
-  }
-
   // Check if we should show the empty state
   const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
+  
+  // Calculate height based on device
+  const chatHeight = isMobile ? 'calc(90vh - 160px)' : '60vh';
 
   return (
-    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full w-full">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="flex flex-col h-full">
           <div className="pt-2 sm:pt-4 px-3 sm:px-5 border-b">
@@ -144,27 +133,22 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
           
           <div className="flex-grow overflow-hidden relative">
             <ScrollArea 
-              className="h-[calc(100vh-220px)] sm:h-[60vh] px-3 sm:px-5 overflow-y-auto"
+              className={`h-[${chatHeight}] px-3 sm:px-5 overflow-y-auto`}
               ref={scrollAreaRef}
             >
-              {/* Show EmptyChatState if there are no messages */}
-              {showEmptyState ? (
-                <EmptyChatState />
-              ) : (
-                <div className="py-3 flex flex-col space-y-6">
-                  <ImprovedChatHistory
-                    chatHistory={chatHistory}
-                    optimisticMessages={optimisticMessages}
-                    isSending={isSending}
-                    setMessage={setMessage}
-                    applyChanges={applyChanges}
-                    isApplying={isApplying}
-                    recipe={recipe as any} // Cast to Recipe type for compatibility
-                    messageStates={messageStates}
-                  />
-                  <div ref={messagesEndRef} className="h-4" />
-                </div>
-              )}
+              <div className="py-3 flex flex-col space-y-6">
+                <ImprovedChatHistory
+                  chatHistory={chatHistory}
+                  optimisticMessages={optimisticMessages}
+                  isSending={isSending}
+                  setMessage={setMessage}
+                  applyChanges={applyChanges}
+                  isApplying={isApplying}
+                  recipe={recipe as any} // Cast to Recipe type for compatibility
+                  messageStates={messageStates}
+                />
+                <div ref={messagesEndRef} className="h-4" />
+              </div>
             </ScrollArea>
           </div>
 
@@ -174,7 +158,6 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
               setMessage={setMessage}
               onSubmit={handleSubmit}
               isSending={isSending}
-              // We're not supporting image upload for quick recipes in this version
             />
           </div>
         </div>
