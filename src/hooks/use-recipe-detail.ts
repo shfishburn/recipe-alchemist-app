@@ -5,8 +5,6 @@ import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
 import { isValidUUID } from '@/utils/slug-utils';
 
-export type { Recipe, Ingredient, Nutrition };
-
 export const useRecipeDetail = (idOrSlug?: string) => {
   return useQuery({
     queryKey: ['recipe', idOrSlug],
@@ -48,9 +46,12 @@ export const useRecipeDetail = (idOrSlug?: string) => {
               ? JSON.parse(data.science_notes)
               : [];
           
-          const nutrition = typeof data.nutrition === 'string'
-            ? standardizeNutrition(JSON.parse(data.nutrition))
-            : standardizeNutrition(data.nutrition || {});
+          // Use our standardizeNutrition helper
+          const nutrition = standardizeNutrition(
+            typeof data.nutrition === 'string'
+              ? JSON.parse(data.nutrition)
+              : data.nutrition
+          );
           
           // Parse nutri_score to the proper type
           const nutriScore: NutriScore | undefined = data.nutri_score
@@ -59,7 +60,7 @@ export const useRecipeDetail = (idOrSlug?: string) => {
                 : data.nutri_score as unknown as NutriScore)
             : undefined;
             
-          // Build the full recipe object
+          // Build the full recipe object with proper typing
           const recipe: Recipe = {
             ...data,
             ingredients: data.ingredients as unknown as Ingredient[],

@@ -60,11 +60,12 @@ export interface Ingredient {
   storage_tips?: string;
 }
 
+// Updated Recipe interface to match the database schema
 export interface Recipe {
   id: string;
   title: string;
   description?: string;
-  tagline?: string;  // Added tagline
+  tagline?: string;
   ingredients: Array<Ingredient>;
   instructions: string[];
   prep_time_min?: number;
@@ -77,15 +78,18 @@ export interface Recipe {
   cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern";
   nutrition?: Nutrition;
   nutri_score?: NutriScore;
-  // Additional fields needed by the app
+  // Updated fields to match database schema
   science_notes?: string[];
-  chef_notes?: string[];
+  chef_notes?: string;
   updated_at?: string;
   user_id?: string;
   dietary?: string;
   flavor_tags?: string[];
   cooking_tip?: string;
+  // Additional fields that might exist in the database
+  created_at?: string;
+  version_number?: number;
+  previous_version_id?: string;
+  deleted_at?: string;
+  reasoning?: string;
 }
-
-// Re-export types that are used across the application
-export type { Recipe, Ingredient, Nutrition, NutriScore };

@@ -5,7 +5,7 @@ import type { Nutrition } from '@/types/recipe';
  * Standardizes nutrition data to ensure all required fields are present
  * and both alias versions of properties are populated
  */
-export function standardizeNutrition(nutrition: Partial<Nutrition>): Nutrition {
+export function standardizeNutrition(nutrition: Partial<Nutrition> | null | undefined): Nutrition {
   if (!nutrition) {
     return createEmptyNutrition();
   }
@@ -78,7 +78,7 @@ export function standardizeNutrition(nutrition: Partial<Nutrition>): Nutrition {
 /**
  * Validates nutrition data to ensure it contains reasonable values
  */
-export function validateNutritionData(nutrition: Partial<Nutrition>): boolean {
+export function validateNutritionData(nutrition: Partial<Nutrition> | null | undefined): boolean {
   if (!nutrition) return false;
   
   // Check if we have at least some basic nutrition data
