@@ -63,3 +63,56 @@
 .momentum-scroll > * {
   scroll-snap-align: start;
 }
+
+/* Chart scroll specific styles */
+.chart-scroll-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  padding-bottom: 12px; /* Space for the scroll indicator */
+}
+
+/* Visual indicator for scrollable content */
+.swipe-indicator {
+  position: relative;
+}
+
+.swipe-indicator::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background-color: #e2e8f0;
+  border-radius: 2px;
+}
+
+/* Enhanced touch feedback for chart interactions */
+.chart-interaction {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.chart-interaction:active {
+  opacity: 0.7;
+}
+
+/* Improved visual affordance for horizontal scrolling */
+@media (hover: hover) {
+  .chart-scroll-wrapper:hover::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 80%;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(0,0,0,0.05) 100%);
+    border-radius: 0 8px 8px 0;
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 1;
+  }
+}

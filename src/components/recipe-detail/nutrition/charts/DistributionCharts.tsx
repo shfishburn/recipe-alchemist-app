@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { MacroDistributionPie } from './MacroDistributionPie';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { HorizontalChartScroll } from '@/components/ui/chart-scroll/HorizontalChartScroll';
 
 interface MacroChartData {
   name: string;
@@ -20,8 +21,11 @@ export function DistributionCharts({ recipeMacros, targetMacros }: DistributionC
   
   return (
     <div className="w-full mx-auto space-y-4 md:space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <Card className="border border-slate-200 w-full">
+      <HorizontalChartScroll 
+        slidesPerView={isMobile ? 1 : 2}
+        spaceBetween={16}
+      >
+        <Card className="border border-slate-200 w-full min-w-[260px]">
           <CardContent className={`flex flex-col items-center justify-center ${isMobile ? "p-3" : "p-4"}`}>
             <MacroDistributionPie 
               data={recipeMacros}
@@ -31,7 +35,7 @@ export function DistributionCharts({ recipeMacros, targetMacros }: DistributionC
           </CardContent>
         </Card>
         
-        <Card className="border border-slate-200 w-full">
+        <Card className="border border-slate-200 w-full min-w-[260px]">
           <CardContent className={`flex flex-col items-center justify-center ${isMobile ? "p-3" : "p-4"}`}>
             <MacroDistributionPie 
               data={targetMacros}
@@ -40,7 +44,7 @@ export function DistributionCharts({ recipeMacros, targetMacros }: DistributionC
             />
           </CardContent>
         </Card>
-      </div>
+      </HorizontalChartScroll>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Legend } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { HorizontalChartScroll } from '@/components/ui/chart-scroll/HorizontalChartScroll';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MacroPieChartsProps {
   carbsData: Array<{
@@ -17,58 +19,45 @@ interface MacroPieChartsProps {
 }
 
 const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h3 className="text-lg font-medium mb-4 text-center">Carbohydrate Distribution</h3>
-        <ChartContainer config={{
-          'Complex Carbs': { color: '#4f46e5' },
-          'Simple Carbs': { color: '#818cf8' },
-        }} className="h-40 w-full">
-          <PieChart>
-            <Pie 
-              data={carbsData}
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, value }) => `${name}: ${value}%`}
-            >
-              {carbsData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Legend />
-          </PieChart>
-        </ChartContainer>
-      </div>
-      
-      <div>
-        <h3 className="text-lg font-medium mb-4 text-center">Fat Distribution</h3>
-        <ChartContainer config={{
-          'Saturated Fat': { color: '#22c55e' },
-          'Unsaturated Fat': { color: '#86efac' },
-        }} className="h-40 w-full">
-          <PieChart>
-            <Pie 
-              data={fatsData}
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, value }) => `${name}: ${value}%`}
-            >
-              {fatsData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Legend />
-          </PieChart>
-        </ChartContainer>
-      </div>
+  const isMobile = useIsMobile();
+  const chartHeight = isMobile ? 40 : 40;
+  
+  const renderChart = (data: any[], title: string) => (
+    <div className="min-w-[260px]">
+      <h3 className="text-lg font-medium mb-4 text-center">{title}</h3>
+      <ChartContainer config={{
+        [data[0].name]: { color: data[0].color },
+        [data[1].name]: { color: data[1].color },
+      }} className={`h-${chartHeight} w-full`}>
+        <PieChart>
+          <Pie 
+            data={data}
+            cx="50%"
+            cy="50%"
+            outerRadius={70}
+            fill="#8884d8"
+            dataKey="value"
+            label={({ name, value }) => `${name}: ${value}%`}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Legend />
+        </PieChart>
+      </ChartContainer>
     </div>
+  );
+  
+  return (
+    <HorizontalChartScroll 
+      slidesPerView={isMobile ? 1 : 2}
+      spaceBetween={24}
+      className="space-y-4"
+    >
+      {renderChart(carbsData, "Carbohydrate Distribution")}
+      {renderChart(fatsData, "Fat Distribution")}
+    </HorizontalChartScroll>
   );
 };
 

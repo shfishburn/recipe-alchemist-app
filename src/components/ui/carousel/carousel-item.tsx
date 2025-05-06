@@ -7,11 +7,10 @@ import { cn } from "@/lib/utils";
 
 const CarouselItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  React.ComponentProps<typeof SwiperSlide>
 >(({ className, ...props }, ref) => {
   return (
     <SwiperSlide
-      ref={ref}
       className={cn("", className)}
       {...props}
     />

@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { formatNutrientWithUnit } from '@/utils/unit-conversion';
+import { HorizontalChartScroll } from '@/components/ui/chart-scroll/HorizontalChartScroll';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ComparisonDataItem {
   name: string;
@@ -17,6 +19,9 @@ interface ComparisonChartProps {
 }
 
 export function ComparisonChart({ compareData, unitSystem = 'metric' }: ComparisonChartProps) {
+  const isMobile = useIsMobile();
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0].payload;
@@ -55,43 +60,66 @@ export function ComparisonChart({ compareData, unitSystem = 'metric' }: Comparis
     return formatted.replace(' g', '').replace(' oz', '');
   };
 
+  const chartWidth = isMobile ? compareData.length * 120 : compareData.length * 150;
+  const minWidth = Math.max(chartWidth, 300); // Ensure minimum width
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart
-        data={compareData}
-        margin={{
-          top: 20,
-          right: 30,
-          left: 20,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis tickFormatter={formatYAxis} />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend />
-        <Bar dataKey="Recipe" fill="#8884d8" name="Recipe" />
-        <Bar dataKey="Target" fill="#82ca9d" name="Daily Target" />
-        {compareData.map((item, index) => (
-          <ReferenceLine
-            key={`ref-upper-${index}`}
-            y={item.Target * 1.2}
-            stroke="#ff7300"
-            strokeDasharray="3 3"
-            label={{ value: '+20%', position: 'insideTopRight', fill: '#ff7300', fontSize: 10 }}
-          />
-        ))}
-        {compareData.map((item, index) => (
-          <ReferenceLine
-            key={`ref-lower-${index}`}
-            y={item.Target * 0.8}
-            stroke="#ff7300"
-            strokeDasharray="3 3"
-            label={{ value: '-20%', position: 'insideBottomRight', fill: '#ff7300', fontSize: 10 }}
-          />
-        ))}
-      </BarChart>
-    </ResponsiveContainer>
+    <HorizontalChartScroll className="w-full">
+      <div style={{ width: minWidth, height: 300, minWidth: '100%' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={compareData}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+            onMouseMove={(data) => {
+              if (data.activeTooltipIndex !== undefined) {
+                setActiveIndex(data.activeTooltipIndex);
+              }
+            }}
+            onMouseLeave={() => setActiveIndex(null)}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis tickFormatter={formatYAxis} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            <Bar 
+              dataKey="Recipe" 
+              fill="#8884d8" 
+              name="Recipe" 
+              className="chart-interaction"
+            />
+            <Bar 
+              dataKey="Target" 
+              fill="#82ca9d" 
+              name="Daily Target" 
+              className="chart-interaction"
+            />
+            {compareData.map((item, index) => (
+              <ReferenceLine
+                key={`ref-upper-${index}`}
+                y={item.Target * 1.2}
+                stroke="#ff7300"
+                strokeDasharray="3 3"
+                label={{ value: '+20%', position: 'insideTopRight', fill: '#ff7300', fontSize: 10 }}
+              />
+            ))}
+            {compareData.map((item, index) => (
+              <ReferenceLine
+                key={`ref-lower-${index}`}
+                y={item.Target * 0.8}
+                stroke="#ff7300"
+                strokeDasharray="3 3"
+                label={{ value: '-20%', position: 'insideBottomRight', fill: '#ff7300', fontSize: 10 }}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </HorizontalChartScroll>
   );
 }
