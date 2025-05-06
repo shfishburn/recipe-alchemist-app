@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChefHat, Timer, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Timer as TimerComponent } from './cooking/Timer';
 import { CookingStep } from './cooking/CookingStep';
 import { CookingProgress } from './cooking/CookingProgress';
 import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Recipe } from '@/types/recipe';
 
 interface CookingModeProps {
   recipe: Recipe;

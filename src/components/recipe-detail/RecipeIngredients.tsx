@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Recipe } from '@/types/recipe';
 import { useUnitSystem } from '@/hooks/use-unit-system';
 import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
 import { groupIngredientsByDepartment, getDepartmentDisplayOrder } from '@/utils/ingredient-department-utils';

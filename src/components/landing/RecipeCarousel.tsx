@@ -23,13 +23,19 @@ export function RecipeCarousel() {
     activeIndex, 
     touchHandlers,
     getCarouselOptions,
-    isMobile
+    isMobile,
+    setupAutoScroll
   } = useOptimizedCarousel();
 
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
     return recipes?.slice(0, 5) || [];
   }, [recipes]);
+  
+  // Setup auto-scroll for the carousel
+  React.useEffect(() => {
+    return setupAutoScroll(5000, true, featuredRecipes.length);
+  }, [setupAutoScroll, featuredRecipes.length]);
   
   if (isLoading) {
     return (
@@ -65,7 +71,13 @@ export function RecipeCarousel() {
         
         <div className="w-full flex flex-col items-center">
           <div 
-            className="w-full"
+            className="w-full will-change-transform"
+            style={{
+              WebkitBackfaceVisibility: "hidden",
+              WebkitPerspective: "1000",
+              WebkitTransform: "translate3d(0,0,0)",
+              WebkitTransformStyle: "preserve-3d"
+            }}
             {...touchHandlers}
           >
             <Carousel
@@ -77,7 +89,7 @@ export function RecipeCarousel() {
                 {featuredRecipes.map((recipe, index) => (
                   <CarouselItem key={recipe.id} className={cn(
                     isMobile ? "basis-full pl-2" : "basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
-                    "hw-accelerated"
+                    "will-change-transform"
                   )}>
                     <div className="flex justify-center h-full">
                       <RecipeCard 

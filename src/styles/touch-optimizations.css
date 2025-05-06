@@ -1,136 +1,47 @@
 
-/**
- * Touch Optimizations for Mobile Experience
- */
-
-/* Touch action improvements */
-.touch-optimized * {
-  touch-action: manipulation; /* Disable double-tap zoom */
+/* Touch optimization for carousel and other interactive elements */
+.hw-accelerated {
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  -webkit-transform: translate3d(0,0,0);
+  -webkit-transform-style: preserve-3d;
 }
 
-.touch-scroll {
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  overscroll-behavior: contain; /* Prevent scroll chaining */
-}
-
-/* Touch feedback */
-.touch-device .touch-feedback:active {
-  transform: scale(0.97);
-  transition: transform 0.2s ease;
-}
-
-/* Carousel touch improvements */
-.touch-device .embla__container {
-  cursor: grab;
-}
-
-.touch-device .embla__container:active {
-  cursor: grabbing;
-}
-
-/* Input optimizations for touch */
-.touch-device input,
-.touch-device select,
-.touch-device textarea,
-.touch-device button {
-  font-size: 16px; /* Prevent zoom on focus in iOS */
-}
-
-/* Larger tap targets on touch devices */
-.touch-device .tap-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Enhanced buttons on touch devices */
-.touch-device button,
-.touch-device [role="button"],
-.touch-device a.button {
-  cursor: pointer;
-  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
-}
-
-/* Ripple effect for button feedback */
-.touch-ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.touch-ripple::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.touch-ripple:active::after {
-  opacity: 1;
-  transition: opacity 0s;
-}
-
-/* Reduce motion for better performance */
-.reduce-animations * {
-  animation-duration: 0.001ms !important;
-  transition-duration: 0.001ms !important;
-}
-
-/* No tap highlight */
-.tap-highlight-none {
+.card-touch-optimized {
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Enhanced touch targets */
-.touch-action-auto {
-  touch-action: auto;
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
 }
 
-.touch-action-none {
-  touch-action: none;
+.touch-device {
+  /* Touch-specific styles for the entire app */
+  --touch-target-min: 44px;
+}
+
+.touch-optimized {
+  /* Increase touch targets */
+  --touch-padding: 0.25rem;
+}
+
+.reduce-animations {
+  /* Reduce animations when battery is low */
+  transition-duration: 0.1s !important;
+}
+
+.reduce-motion-mobile * {
+  transition-duration: 0.1s !important;
+  animation-duration: 0.1s !important;
 }
 
 .touch-action-pan-y {
   touch-action: pan-y;
 }
 
-/* Optimized card components for touch */
-.card-touch-optimized {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Carousel optimizations */
-.swipe-horizontal {
-  touch-action: pan-x;
-}
-
-/* Content visibility optimizations */
-.content-visibility-auto-card {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 300px;
-}
-
-/* Hardware acceleration helpers */
-.hw-accelerated {
-  will-change: transform;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-}
-
-/* Low power mode styles */
-.low-power-mode .animate-carousel,
-.low-power-mode .animate-float,
-.low-power-mode .animate-pulse {
-  animation: none !important;
-}
-
-.low-power-mode .reduce-motion-mobile {
-  transition: none !important;
-}
-
-.low-power-mode img {
-  image-rendering: auto;
+/* Optimize image loading for carousels */
+.carousel-image-container {
+  background-color: #f3f4f6;
 }

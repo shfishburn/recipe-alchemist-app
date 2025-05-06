@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import type { Recipe } from '@/hooks/use-recipe-detail';
+import type { Recipe } from '@/types/recipe';
 import { useUnitSystemStore } from '@/stores/unitSystem';
 
 interface PrintRecipeProps {

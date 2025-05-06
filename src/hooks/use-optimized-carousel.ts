@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMediaQuery } from './use-media-query';
 import { useBatteryStatus } from './use-battery-status';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
@@ -18,7 +18,7 @@ export function useOptimizedCarousel() {
   // Auto-scroll state
   const [isPaused, setIsPaused] = useState(false);
 
-  // Carousel event handlers
+  // Carousel event handlers - memoized to prevent recreation
   const onSelect = useCallback(() => {
     if (!api) return;
     
@@ -36,12 +36,14 @@ export function useOptimizedCarousel() {
     if (!api || !shouldAutoScroll || isPaused || totalSlides <= 1) return () => {};
     
     const timer = setInterval(() => {
-      const nextSlide = (activeIndex + 1) % totalSlides;
-      api.scrollTo(nextSlide);
+      if (api && !isPaused && !isTouching) {
+        const nextSlide = (activeIndex + 1) % totalSlides;
+        api.scrollTo(nextSlide);
+      }
     }, interval);
     
     return () => clearInterval(timer);
-  }, [api, activeIndex, isPaused]);
+  }, [api, activeIndex, isPaused, isTouching]);
 
   // Setup events when API changes
   useEffect(() => {
@@ -72,9 +74,12 @@ export function useOptimizedCarousel() {
     return { ...defaultOptions, ...customOptions };
   }, [isMobile, lowPowerMode]);
 
-  // Touch handlers with passive event listeners
-  const touchHandlers = {
-    onTouchStart: () => setIsTouching(true),
+  // Touch handlers with passive event listeners - memoized for performance
+  const touchHandlers = useMemo(() => ({
+    onTouchStart: () => {
+      setIsTouching(true);
+      setIsPaused(true);
+    },
     onTouchEnd: () => {
       setIsTouching(false);
       // Resume auto-scroll after a delay
@@ -82,9 +87,9 @@ export function useOptimizedCarousel() {
     },
     onMouseEnter: () => setIsPaused(true),
     onMouseLeave: () => setIsPaused(false),
-  };
+  }), []);
 
-  // Pagination control functions
+  // Pagination control functions - memoized to prevent recreation
   const scrollTo = useCallback((index: number) => {
     if (!api) return;
     api.scrollTo(index);
