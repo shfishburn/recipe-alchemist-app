@@ -1,4 +1,3 @@
-
 /**
  * Color constants for nutrition visualization
  */
@@ -26,6 +25,13 @@ export const NUTRITION_COLORS = {
   potassium: '#f97316',
   sodium: '#f43f5e',
   sugar: '#ec4899',
+  
+  // NutriScore colors
+  nutriScoreA: '#22c55e', // Green
+  nutriScoreB: '#84cc16', // Lime
+  nutriScoreC: '#f59e0b', // Amber
+  nutriScoreD: '#f97316', // Orange
+  nutriScoreE: '#ef4444', // Red
 };
 
 /**
@@ -112,4 +118,15 @@ export const NUTRIENT_UNITS = {
   vitaminC: 'mg',
   vitaminD: 'μg',
   sugar: 'g'
+};
+
+/**
+ * NutriScore descriptions for each grade
+ */
+export const NUTRI_SCORE_DESCRIPTIONS = {
+  A: 'Excellent nutritional quality - high in nutrients, low in calories, sugar, salt, and saturated fats.',
+  B: 'Good nutritional quality - generally balanced with moderate levels of nutrients and limited unhealthy components.',
+  C: 'Average nutritional quality - contains a mix of healthy and less healthy components.',
+  D: 'Poor nutritional quality - contains higher levels of unhealthy components like sugars, salt, or saturated fats.',
+  E: 'Very poor nutritional quality - high in calories, sugar, salt, and/or saturated fats with limited nutritional benefits.'
 };

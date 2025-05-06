@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MacroBreakdown } from '@/components/recipe-detail/nutrition/MacroBreakdown';
 import { MicronutrientsDisplay } from '@/components/recipe-detail/nutrition/MicronutrientsDisplay';
+import { NutriScoreDisplay } from '@/components/recipe-detail/nutrition/nutri-score/NutriScoreDisplay';
 import { EnhancedNutrition } from '@/components/recipe-detail/nutrition/useNutritionData';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { NUTRITION_COLORS, DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
@@ -15,6 +16,7 @@ import { UnitSystem } from '@/stores/unitSystem';
 interface RecipeBlockProps {
   recipeNutrition: EnhancedNutrition;
   unitSystem: UnitSystem;
+  nutriScore?: Recipe['nutri_score'];
 }
 
 // Define the shape of the data_quality.recommended_macros property
@@ -31,7 +33,7 @@ interface NutritionDataQuality {
   recommended_macros?: RecommendedMacros;
 }
 
-export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
+export function RecipeBlock({ recipeNutrition, unitSystem, nutriScore }: RecipeBlockProps) {
   const isMobile = useIsMobile();
   
   if (!recipeNutrition) {
@@ -89,6 +91,14 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
       </CardHeader>
       <CardContent className="px-0">
         <div className={isMobile ? "px-3" : "px-6"}>
+          {/* NutriScore section */}
+          {nutriScore && (
+            <>
+              <NutriScoreDisplay nutriScore={nutriScore} className="mb-4" />
+              <Separator className="mb-4" />
+            </>
+          )}
+          
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium">
               <span className="text-lg">{calories}</span> calories

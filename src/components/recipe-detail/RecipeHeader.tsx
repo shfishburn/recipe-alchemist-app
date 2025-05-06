@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { NutriScoreBadge } from './nutrition/nutri-score/NutriScoreBadge';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeHeaderProps {
@@ -15,7 +16,7 @@ export function RecipeHeader({ recipe, hideReasoning = false }: RecipeHeaderProp
   return (
     <div className="mb-4">
       {hasTags && (
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-2 items-center">
           {recipe.cuisine && (
             <Badge variant="outline" className="bg-recipe-blue/10 text-recipe-blue">
               {recipe.cuisine}
@@ -25,6 +26,11 @@ export function RecipeHeader({ recipe, hideReasoning = false }: RecipeHeaderProp
             <Badge variant="outline" className="bg-green-500/10 text-green-700">
               {recipe.dietary}
             </Badge>
+          )}
+          {recipe.nutri_score && (
+            <div className="ml-1">
+              <NutriScoreBadge nutriScore={recipe.nutri_score} size="sm" />
+            </div>
           )}
           {recipe.flavor_tags?.map((tag, index) => (
             <Badge key={index} variant="outline" className="bg-gray-100">

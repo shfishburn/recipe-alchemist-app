@@ -1,11 +1,14 @@
+
 import React from 'react';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
 import { EnhancedNutrition } from './useNutritionData';
+import type { Recipe } from '@/types/recipe';
 
 interface NutritionBlockProps {
   recipeNutrition: EnhancedNutrition;
   viewMode: 'recipe' | 'personal';
+  nutriScore?: Recipe['nutri_score'];
   userPreferences?: {
     dailyCalories: number;
     macroSplit: {
@@ -17,7 +20,7 @@ interface NutritionBlockProps {
   };
 }
 
-export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: NutritionBlockProps) {
+export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, userPreferences }: NutritionBlockProps) {
   const unitSystem = userPreferences?.unitSystem || 'metric';
   
   // Process nutrition data more efficiently without deep cloning
@@ -88,7 +91,8 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
       {viewMode === 'recipe' ? (
         <RecipeBlock 
           recipeNutrition={processedNutrition} 
-          unitSystem={unitSystem} 
+          unitSystem={unitSystem}
+          nutriScore={nutriScore}
         />
       ) : (
         <PersonalBlock
