@@ -4,6 +4,8 @@ import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/
 import type { Recipe } from '@/types/recipe';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
+import { hasChatMeta } from '@/utils/chat-meta';
+import { AlertCircle } from 'lucide-react';
 
 interface ChatHistoryProps {
   chatHistory: ChatMessageType[];
@@ -13,6 +15,7 @@ interface ChatHistoryProps {
   applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
   isApplying?: boolean;
   recipe: Recipe;
+  failedMessageIds?: string[];
 }
 
 export function ChatHistory({
@@ -22,16 +25,35 @@ export function ChatHistory({
   setMessage,
   applyChanges,
   isApplying = false,
-  recipe
+  recipe,
+  failedMessageIds = []
 }: ChatHistoryProps) {
-  // Filter out optimistic messages that already have a corresponding real message
-  const optimisticIds = optimisticMessages.map(msg => msg.meta?.optimistic_id).filter(Boolean);
+  // Create a map of optimistic message IDs for quick lookup
+  const optimisticIds = new Map();
+  optimisticMessages.forEach(msg => {
+    const id = msg.id || msg.meta?.optimistic_id;
+    if (id) optimisticIds.set(id, true);
+  });
   
   // Filter out real messages that have a corresponding optimistic message
   const filteredChatHistory = chatHistory.filter(msg => {
-    // Keep all messages that don't have an optimistic_id
-    return !optimisticIds.includes(msg.meta?.optimistic_id);
+    const msgOptId = msg.meta?.optimistic_id;
+    return !msgOptId || !optimisticIds.has(msgOptId);
   });
+  
+  // Processing stage based on time elapsed
+  const getProcessingStage = () => {
+    if (optimisticMessages.length === 0) return 'sending';
+    
+    const now = Date.now();
+    const firstOptimisticTime = parseInt(optimisticMessages[0].id?.split('-')[1] || '0');
+    
+    if (now - firstOptimisticTime > 5000) return 'processing';
+    if (now - firstOptimisticTime > 2000) return 'analyzing';
+    return 'sending';
+  };
+  
+  const hasFailedMessages = failedMessageIds.length > 0;
   
   return (
     <div className="flex flex-col space-y-6">
@@ -47,7 +69,7 @@ export function ChatHistory({
         />
       ))}
       
-      {/* Render optimistic messages that don't have a real message yet */}
+      {/* Render optimistic messages */}
       {optimisticMessages.map((message) => (
         <ChatMessage
           key={message.id || `optimistic-${Date.now()}-${Math.random()}`}
@@ -55,11 +77,22 @@ export function ChatHistory({
           setMessage={setMessage}
           applyChanges={applyChanges}
           isOptimistic={true}
+          isFailed={failedMessageIds.includes(message.id || '')}
         />
       ))}
       
-      {/* Show loading indicator when sending a message */}
-      {isSending && <ChatProcessingIndicator stage="sending" />}
+      {/* Show a more informative loading indicator based on the current stage */}
+      {isSending && <ChatProcessingIndicator stage={getProcessingStage()} />}
+      
+      {/* Show error message for failed messages */}
+      {hasFailedMessages && (
+        <div className="flex items-center justify-center">
+          <div className="flex items-center space-x-2 text-red-500 text-sm p-2 bg-red-50 rounded-lg">
+            <AlertCircle className="h-4 w-4" />
+            <span>Message failed to send. Please try again.</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
