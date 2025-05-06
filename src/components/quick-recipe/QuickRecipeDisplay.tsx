@@ -33,6 +33,7 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
         onSave={handleSave}
         onChatWithAi={() => setChatDrawerOpen(true)}
         isSaving={isSaving}
+        showCookButton={false}
       />
       
       {/* Dialog for cooking mode */}
