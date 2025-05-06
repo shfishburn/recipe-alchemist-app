@@ -12,11 +12,12 @@ import { EnhancedNutrition } from '@/components/recipe-detail/nutrition/useNutri
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { NUTRITION_COLORS, DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 import { UnitSystem } from '@/stores/unitSystem';
+import type { Recipe, NutriScore } from '@/types/recipe';
 
 interface RecipeBlockProps {
   recipeNutrition: EnhancedNutrition;
   unitSystem: UnitSystem;
-  nutriScore?: Recipe['nutri_score'];
+  nutriScore?: NutriScore;
 }
 
 // Define the shape of the data_quality.recommended_macros property
