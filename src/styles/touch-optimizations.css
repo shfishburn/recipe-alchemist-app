@@ -6,6 +6,7 @@
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  perspective: 1000px;
 }
 
 .card-touch-optimized {
@@ -33,12 +34,16 @@
 .touch-pan-x {
   touch-action: pan-x;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Optimize vertical swipe carousels */
 .touch-pan-y {
   touch-action: pan-y;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Carousel touch target enhancements */
@@ -115,4 +120,14 @@
     opacity: 0.6;
     z-index: 1;
   }
+}
+
+/* Prevent iOS overscroll effects on carousels */
+.swiper-container {
+  overscroll-behavior: none !important;
+}
+
+.swiper-wrapper {
+  overscroll-behavior: contain !important;
+  touch-action: pan-x !important;
 }

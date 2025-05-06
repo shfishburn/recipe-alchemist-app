@@ -20,10 +20,6 @@ const CarouselPrevious = React.forwardRef<
 >(({ className, variant = "outline", size = "icon", ...props }, ref) => {
   const { scrollPrev, canScrollPrev } = useCarousel();
 
-  if (!canScrollPrev) {
-    return null;
-  }
-
   return (
     <Button
       ref={ref}
@@ -31,12 +27,16 @@ const CarouselPrevious = React.forwardRef<
       size={size}
       className={cn(
         "absolute left-3 top-1/2 -translate-y-1/2 rounded-full z-10",
+        !canScrollPrev && "opacity-50 cursor-not-allowed",
         className
       )}
       onClick={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         scrollPrev();
+        console.log("Previous button clicked");
       }}
+      disabled={!canScrollPrev}
       aria-label="Previous slide"
       {...props}
     >
@@ -53,10 +53,6 @@ const CarouselNext = React.forwardRef<
 >(({ className, variant = "outline", size = "icon", ...props }, ref) => {
   const { scrollNext, canScrollNext } = useCarousel();
 
-  if (!canScrollNext) {
-    return null;
-  }
-
   return (
     <Button
       ref={ref}
@@ -64,12 +60,16 @@ const CarouselNext = React.forwardRef<
       size={size}
       className={cn(
         "absolute right-3 top-1/2 -translate-y-1/2 rounded-full z-10",
+        !canScrollNext && "opacity-50 cursor-not-allowed", 
         className
       )}
       onClick={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         scrollNext();
+        console.log("Next button clicked");
       }}
+      disabled={!canScrollNext}
       aria-label="Next slide"
       {...props}
     >

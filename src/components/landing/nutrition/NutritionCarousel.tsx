@@ -50,8 +50,7 @@ export function NutritionCarousel() {
   // Debug API initialization - with safety checks
   useEffect(() => {
     if (api && api.slides) {
-      console.log('Nutrition Carousel API initialized:', api);
-      console.log('Total slides:', api.slides.length);
+      console.log('Nutrition Carousel API initialized with', api.slides.length, 'slides');
     }
   }, [api]);
 
@@ -73,6 +72,8 @@ export function NutritionCarousel() {
         className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
       >
         <Carousel
           opts={{
@@ -80,17 +81,23 @@ export function NutritionCarousel() {
             slidesPerView: 1.2,
             spaceBetween: 20,
             breakpoints: {
-              640: { slidesPerView: 2.2, spaceBetween: 24 }, // Small screens show 2+ slides
-              768: { slidesPerView: 2.5, spaceBetween: 28 }, // Medium screens show 2.5 slides
-              1024: { slidesPerView: 3.2, spaceBetween: 32 }, // Large screens show 3+ slides
+              640: { slidesPerView: 2.2, spaceBetween: 24 },
+              768: { slidesPerView: 2.5, spaceBetween: 28 },
+              1024: { slidesPerView: 3.2, spaceBetween: 32 },
             },
             centeredSlides: false,
             grabCursor: true,
+            touchEventsTarget: 'container',
             touchStartPreventDefault: false,
-            touchMoveStopPropagation: true,
+            touchMoveStopPropagation: false,
+            touchReleaseOnEdges: false,
+            cssMode: false, // Disable CSS mode for better touch support
+            resistance: false,
+            longSwipesRatio: 0.2,
+            threshold: 10, // Lower threshold to detect swipes more easily
           }}
           setApi={setApi}
-          className="w-full touch-pan-x hw-accelerated"
+          className="w-full hw-accelerated"
         >
           <CarouselContent className="px-2">
             {macroDistributionData.map((item, index) => (
@@ -104,8 +111,9 @@ export function NutritionCarousel() {
             ))}
           </CarouselContent>
           
-          <CarouselPrevious className="left-2 md:left-4" />
-          <CarouselNext className="right-2 md:right-4" />
+          {/* Make arrows clearly visible and always present */}
+          <CarouselPrevious className="left-2 md:left-4 bg-white dark:bg-slate-800 shadow-md opacity-90 hover:opacity-100" />
+          <CarouselNext className="right-2 md:right-4 bg-white dark:bg-slate-800 shadow-md opacity-90 hover:opacity-100" />
           
           <div className="p-4 pb-6">
             <CarouselPagination variant="fraction" />

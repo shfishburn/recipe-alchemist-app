@@ -77,6 +77,8 @@ export const Carousel = forwardRef<
     const [activeIndex, setActiveIndex] = useState(0);
     const [canScrollPrev, setCanScrollPrev] = useState(false);
     const [canScrollNext, setCanScrollNext] = useState(true);
+    const navigationPrevRef = useRef<HTMLDivElement>(null);
+    const navigationNextRef = useRef<HTMLDivElement>(null);
 
     // Set up default Swiper options
     const defaultOptions: SwiperOptions = {
@@ -103,36 +105,57 @@ export const Carousel = forwardRef<
         prevSlideMessage: 'Previous slide',
         nextSlideMessage: 'Next slide',
       },
+      // This is critical for touch events and navigation arrows
+      touchRatio: 1,
+      touchReleaseOnEdges: false,
+      passiveListeners: false,
       on: {
         init: (swiper) => {
           updateButtonState(swiper);
+          console.log('Carousel initialized', swiper.slides?.length || 0, 'slides');
         },
         slideChange: (swiper) => {
           setActiveIndex(swiper.realIndex);
           updateButtonState(swiper);
+          console.log('Slide changed to', swiper.realIndex);
         },
         resize: (swiper) => {
-          // Update state after resize
           updateButtonState(swiper);
         },
         observerUpdate: (swiper) => {
-          // Update state when content changes
           updateButtonState(swiper);
-        }
+        },
+        touchStart: () => {
+          console.log('Touch start detected');
+        },
+        touchEnd: () => {
+          console.log('Touch end detected');
+        },
       },
     };
 
     function updateButtonState(swiper: SwiperCore) {
-      setCanScrollPrev(swiper.isBeginning === false); // Can scroll prev if not at beginning
-      setCanScrollNext(swiper.isEnd === false); // Can scroll next if not at end
+      if (!swiper) return;
+      
+      const isBeginning = swiper.isBeginning === undefined ? false : swiper.isBeginning;
+      const isEnd = swiper.isEnd === undefined ? false : swiper.isEnd;
+      
+      setCanScrollPrev(!isBeginning || !!opts.loop);
+      setCanScrollNext(!isEnd || !!opts.loop);
     }
 
     const scrollPrev = () => {
-      swiperRef.current?.slidePrev();
+      if (swiperRef.current) {
+        console.log('Scrolling to previous slide');
+        swiperRef.current.slidePrev();
+      }
     };
 
     const scrollNext = () => {
-      swiperRef.current?.slideNext();
+      if (swiperRef.current) {
+        console.log('Scrolling to next slide');
+        swiperRef.current.slideNext();
+      }
     };
 
     useEffect(() => {
@@ -167,6 +190,9 @@ export const Carousel = forwardRef<
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
               if (setApi) setApi(swiper);
+              
+              // Initialize button states after swiper is ready
+              updateButtonState(swiper);
             }}
             className={cn(
               "w-full touch-pan-x hw-accelerated",
