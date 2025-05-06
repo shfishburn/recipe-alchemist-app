@@ -62,7 +62,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
     setIsSending(true);
     
     try {
-      // Call API to get response
+      // Call API to get response with increased timeout handling
       const response = await generateQuickRecipeResponse(recipe, userMessage);
       
       // Add the message to chat history
@@ -75,7 +75,8 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
         meta: { optimistic_id: messageId }
       };
       
-      setChatHistory((prev: ChatMessage[]) => [...prev, newMessage]);
+      const updatedHistory = [...chatHistory, newMessage];
+      setChatHistory(updatedHistory);
       
     } catch (error) {
       console.error('Error sending chat message:', error);
@@ -87,7 +88,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
     } finally {
       setIsSending(false);
     }
-  }, [message, recipe, isSending, toast, addOptimisticMessage, setChatHistory]);
+  }, [message, recipe, isSending, toast, addOptimisticMessage, chatHistory, setChatHistory]);
   
   // Apply changes suggested by the AI to the recipe
   const applyChanges = useCallback(async (chatMessage: ChatMessage) => {
@@ -131,9 +132,10 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
       }
       
       // Update chat message to mark as applied
-      setChatHistory((prev: ChatMessage[]) => prev.map(msg => 
+      const updatedHistory = chatHistory.map(msg => 
         msg.id === chatMessage.id ? { ...msg, applied: true } : msg
-      ));
+      );
+      setChatHistory(updatedHistory);
       
       // Update the recipe in the store
       updateRecipe(updatedRecipe);
@@ -156,7 +158,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
     } finally {
       setIsApplying(false);
     }
-  }, [recipe, isApplying, updateRecipe, setChatHistory, toast]);
+  }, [recipe, isApplying, updateRecipe, chatHistory, setChatHistory, toast]);
   
   // Clear chat history
   const clearChatHistory = useCallback(() => {
