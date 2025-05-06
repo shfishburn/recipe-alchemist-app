@@ -39,7 +39,7 @@ export function NutritionCarousel() {
         >
           <CarouselContent className="px-4 py-4">
             {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="p-2 md:p-3 min-w-[85%] sm:min-w-[50%] md:min-w-[33%] lg:min-w-[25%]">
+              <CarouselItem key={index} className="p-2 md:p-3 min-w-[100%] md:min-w-[50%] lg:min-w-[33%]">
                 <MacroCarouselItem 
                   item={item} 
                   carbsData={carbsData} 

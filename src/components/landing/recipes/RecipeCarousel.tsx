@@ -10,7 +10,6 @@ import {
 import { RecipeCard } from './RecipeCard';
 import { CookingPot } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
@@ -44,7 +43,7 @@ export function RecipeCarousel() {
         >
           <CarouselContent>
             {featuredRecipes.map((recipe) => (
-              <CarouselItem key={recipe.id} className="pl-4 min-w-[85%] sm:min-w-[50%] md:min-w-[33%]">
+              <CarouselItem key={recipe.id} className="pl-4 min-w-[100%] sm:min-w-[80%] md:min-w-[50%] lg:min-w-[33%]">
                 <RecipeCard recipe={recipe} />
               </CarouselItem>
             ))}

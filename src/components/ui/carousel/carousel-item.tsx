@@ -12,7 +12,7 @@ const CarouselItem = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "h-full flex-shrink-0 snap-center hw-accelerated",
+        "h-full flex-shrink-0 snap-center w-full max-w-full hw-accelerated",
         className
       )}
       {...props}

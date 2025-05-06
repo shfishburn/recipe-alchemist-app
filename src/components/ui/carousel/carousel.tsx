@@ -84,7 +84,7 @@ export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
             ref={scrollContainerRef}
             className={cn(
               "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x",
-              "scroll-smooth -mx-4 px-4 pb-4 hw-accelerated momentum-scroll",
+              "scroll-smooth -mx-4 px-4 pb-4 hw-accelerated momentum-scroll w-full",
               opts.align === "start" ? "snap-start" : 
               opts.align === "center" ? "snap-center" : 
               "snap-end"

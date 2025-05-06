@@ -35,9 +35,9 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
     <div className="space-y-4 px-4 md:px-8 py-4 flex flex-col items-center w-full">
       <h3 className="text-center text-xl font-semibold text-recipe-purple">{item.title}</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto">
+      <div className="grid grid-cols-1 gap-6 w-full max-w-3xl mx-auto">
         <div className="flex flex-col items-center">
-          <div className="w-full max-w-[280px]">
+          <div className="w-full max-w-[280px] mx-auto">
             <Suspense fallback={
               <div className="h-52 flex items-center justify-center">
                 <Skeleton className="h-40 w-40 rounded-full" />

@@ -23,7 +23,7 @@ const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
   const chartHeight = isMobile ? 40 : 40;
   
   const renderChart = (data: any[], title: string) => (
-    <div className="min-w-[260px]">
+    <div className="w-full">
       <h3 className="text-lg font-medium mb-4 text-center">{title}</h3>
       <ChartContainer config={{
         [data[0].name]: { color: data[0].color },
@@ -50,14 +50,10 @@ const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
   );
   
   return (
-    <HorizontalChartScroll 
-      slidesPerView={isMobile ? 1 : 2}
-      spaceBetween={24}
-      className="space-y-4"
-    >
+    <div className="w-full space-y-4">
       {renderChart(carbsData, "Carbohydrate Distribution")}
       {renderChart(fatsData, "Fat Distribution")}
-    </HorizontalChartScroll>
+    </div>
   );
 };
 
