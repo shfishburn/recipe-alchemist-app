@@ -47,6 +47,8 @@ export function useRecipeUpdates(recipeId: string) {
               ) as unknown as Json
             : undefined,
           nutrition: updates.nutrition ? updates.nutrition as unknown as Json : undefined,
+          // Properly transform nutri_score to JSON format
+          nutri_score: updates.nutri_score ? updates.nutri_score as unknown as Json : undefined,
           updated_at: new Date().toISOString(),
         };
         

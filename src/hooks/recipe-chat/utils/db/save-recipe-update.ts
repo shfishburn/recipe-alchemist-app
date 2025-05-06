@@ -123,6 +123,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
     science_notes: scienceNotes as unknown as Json,
+    // Ensure nutri_score is properly cast to Json type
+    nutri_score: updatedRecipe.nutri_score as unknown as Json,
     // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
     cuisine_category: updatedRecipe.cuisine_category || "Global"
   };
