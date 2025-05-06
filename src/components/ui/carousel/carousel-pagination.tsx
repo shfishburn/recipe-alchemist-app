@@ -20,6 +20,21 @@ const CarouselPagination = React.forwardRef<
   React.useEffect(() => {
     if (!api || !api.slides) return;
     setSlideCount(api.slides.length);
+    
+    // Update on resize events
+    const updateCount = () => {
+      if (api && api.slides) {
+        setSlideCount(api.slides.length);
+      }
+    };
+    
+    api.on('resize', updateCount);
+    api.on('update', updateCount);
+    
+    return () => {
+      api.off('resize', updateCount);
+      api.off('update', updateCount);
+    };
   }, [api]);
 
   // Don't show if there's only one slide

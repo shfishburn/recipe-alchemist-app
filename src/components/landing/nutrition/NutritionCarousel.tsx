@@ -20,6 +20,21 @@ import { ChartPie, Activity } from 'lucide-react';
 export function NutritionCarousel() {
   const [api, setApi] = useState<any>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Update current slide when API changes
+  useEffect(() => {
+    if (!api) return;
+    
+    const handleChange = () => {
+      setCurrentSlide(api.realIndex);
+    };
+    
+    api.on('slideChange', handleChange);
+    return () => {
+      api.off('slideChange', handleChange);
+    };
+  }, [api]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -62,19 +77,24 @@ export function NutritionCarousel() {
         <Carousel
           opts={{
             loop: true,
-            slidesPerView: 1,
-            spaceBetween: 16,
+            slidesPerView: 1.2,
+            spaceBetween: 20,
             breakpoints: {
-              640: { slidesPerView: 1 }, // Small screens
-              768: { slidesPerView: 1 }, // Medium screens 
+              640: { slidesPerView: 2.2, spaceBetween: 24 }, // Small screens show 2+ slides
+              768: { slidesPerView: 2.5, spaceBetween: 28 }, // Medium screens show 2.5 slides
+              1024: { slidesPerView: 3.2, spaceBetween: 32 }, // Large screens show 3+ slides
             },
+            centeredSlides: false,
+            grabCursor: true,
+            touchStartPreventDefault: false,
+            touchMoveStopPropagation: true,
           }}
           setApi={setApi}
-          className="w-full"
+          className="w-full touch-pan-x hw-accelerated"
         >
-          <CarouselContent>
+          <CarouselContent className="px-2">
             {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="p-4 md:p-6">
+              <CarouselItem key={index} className="p-2 md:p-3 min-w-[80%] sm:min-w-[45%] md:min-w-[33%]">
                 <MacroCarouselItem 
                   item={item} 
                   carbsData={carbsData} 
@@ -88,7 +108,7 @@ export function NutritionCarousel() {
           <CarouselNext className="right-2 md:right-4" />
           
           <div className="p-4 pb-6">
-            <CarouselPagination showNumbers variant="dots" />
+            <CarouselPagination variant="fraction" />
             <MacroLegend />
           </div>
         </Carousel>

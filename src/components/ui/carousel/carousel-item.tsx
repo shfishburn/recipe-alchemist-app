@@ -11,7 +11,8 @@ const CarouselItem = React.forwardRef<
 >(({ className, ...props }, ref) => {
   return (
     <SwiperSlide
-      className={cn("", className)}
+      ref={ref}
+      className={cn("h-full", className)}
       {...props}
     />
   );

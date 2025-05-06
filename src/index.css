@@ -3,6 +3,7 @@
 @import './styles/transitions.css';
 @import './styles/components.css';
 @import './styles/loading.css';
+@import './styles/touch-optimizations.css';
 
 /* Smooth scroll behavior */
 html {

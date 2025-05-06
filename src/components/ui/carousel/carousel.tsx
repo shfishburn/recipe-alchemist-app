@@ -87,8 +87,13 @@ export const Carousel = forwardRef<
       spaceBetween: opts.spaceBetween ?? 0,
       centeredSlides: opts.centeredSlides,
       speed: opts.speed ?? 500,
-      touchMoveStopPropagation: true,
+      grabCursor: opts.grabCursor ?? true,
+      touchEventsTarget: "container",
+      preventClicksPropagation: false,
+      preventClicks: false,
+      touchMoveStopPropagation: false,
       touchStartPreventDefault: false,
+      resistance: false,
       keyboard: opts.keyboard ?? {
         enabled: true,
         onlyInViewport: true,
@@ -106,6 +111,14 @@ export const Carousel = forwardRef<
           setActiveIndex(swiper.realIndex);
           updateButtonState(swiper);
         },
+        resize: (swiper) => {
+          // Update state after resize
+          updateButtonState(swiper);
+        },
+        observerUpdate: (swiper) => {
+          // Update state when content changes
+          updateButtonState(swiper);
+        }
       },
     };
 
@@ -126,6 +139,12 @@ export const Carousel = forwardRef<
       if (swiperRef.current && setApi) {
         setApi(swiperRef.current);
       }
+      
+      return () => {
+        if (setApi) {
+          setApi(null);
+        }
+      };
     }, [swiperRef.current, setApi]);
 
     return (
@@ -141,7 +160,7 @@ export const Carousel = forwardRef<
       >
         <div
           ref={ref}
-          className={cn("relative w-full", className)}
+          className={cn("relative w-full overflow-hidden", className)}
           aria-roledescription="carousel"
         >
           <SwiperComponent
