@@ -54,7 +54,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${isMobile ? 'h-[87vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
+        className={`${isMobile ? 'h-[90vh]' : 'h-[90vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
         style={{ zIndex: 50 }}
         ref={contentRef}
       >
@@ -98,7 +98,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        <div className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(87vh-48px)]' : 'h-[calc(85vh-60px)]'} flex`}>
+        <div className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(90vh-48px)]' : 'h-[calc(90vh-60px)]'} flex`}>
           <QuickRecipeChat recipe={recipe} />
         </div>
       </DrawerContent>

@@ -206,7 +206,7 @@ serve(async (req) => {
     const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId } = requestData
     
     // Validate required parameters
-    if (!recipe || !recipe.id) {
+    if (!recipe) {
       console.error("Missing recipe data in request")
       throw new Error("Recipe data is required")
     }
@@ -216,7 +216,7 @@ serve(async (req) => {
       throw new Error("User message is required")
     }
     
-    console.log(`Processing recipe chat request for recipe ${recipe.id} with message: ${userMessage.substring(0, 50)}...`)
+    console.log(`Processing recipe chat request for recipe ${recipe.id || 'new'} with message: ${userMessage.substring(0, 50)}...`)
     
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -299,6 +299,7 @@ serve(async (req) => {
       let scienceNotes = processedResponse.science_notes || [];
       let techniques = processedResponse.techniques || [];
       let troubleshooting = processedResponse.troubleshooting || [];
+      let followUpQuestions = processedResponse.followUpQuestions || [];
       
       // Add additional safety checks for analysis mode
       if (sourceType === 'analysis') {
@@ -325,11 +326,17 @@ serve(async (req) => {
             science_notes: scienceNotes,
             techniques: techniques,
             troubleshooting: troubleshooting,
-            textResponse: textResponse // Include text response for fallback
+            textResponse: textResponse, // Include text response for fallback
+            followUpQuestions: followUpQuestions
           }
-        : { success: true, changes, textResponse };
+        : { 
+            success: true, 
+            changes, 
+            textResponse, 
+            followUpQuestions 
+          };
 
-      // Store the chat interaction if it's not an analysis
+      // Store the chat interaction if it's not an analysis and we have a recipe ID
       if (sourceType !== 'analysis' && recipe.id) {
         // Create meta object for optimistic updates tracking
         const meta = messageId ? { optimistic_id: messageId } : null;
