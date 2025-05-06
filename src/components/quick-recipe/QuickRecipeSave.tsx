@@ -9,6 +9,7 @@ import { Json } from '@/integrations/supabase/types';
 import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
+import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -82,6 +83,10 @@ export const useQuickRecipeSave = () => {
       
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
       
+      // Calculate a valid cuisine_category based on the cuisine string
+      const cuisineCategory = getCuisineCategory(cuisineString);
+      console.log(`Using cuisine_category: "${cuisineCategory}" for cuisine: "${cuisineString}"`);
+      
       // Convert the quick recipe format to database format
       const recipeData = {
         title: recipe.title || "Untitled Recipe",
@@ -91,7 +96,7 @@ export const useQuickRecipeSave = () => {
         prep_time_min: recipe.prepTime,
         cook_time_min: recipe.cookTime,
         cuisine: cuisineString, // Use processed cuisine value
-        // Cuisine category is now handled by database trigger
+        cuisine_category: cuisineCategory, // Explicitly set cuisine_category to a valid value
         dietary: recipe.dietary || "", // Use dietary instead of dietaryType
         cooking_tip: recipe.cookingTip,
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
@@ -106,7 +111,8 @@ export const useQuickRecipeSave = () => {
         science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
         nutrition: nutritionData ? "present" : "missing",
         nutrition_type: nutritionData ? typeof nutritionData : "N/A",
-        cuisine: cuisineString
+        cuisine: cuisineString,
+        cuisine_category: cuisineCategory
       });
 
       // Insert the recipe into the database
