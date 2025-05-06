@@ -1,12 +1,12 @@
 
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { CookingPot, Bookmark, Printer } from 'lucide-react';
+import { CookingPot, Bookmark, MessageSquare } from 'lucide-react';
 
 interface RecipeActionButtonsProps {
   onCook: () => void;
   onSave: () => void;
-  onPrint?: () => void;
+  onChatWithAi?: () => void;
   isSaving?: boolean;
   isSmallScreen?: boolean;
 }
@@ -15,7 +15,7 @@ interface RecipeActionButtonsProps {
 export const RecipeActionButtons = memo(function RecipeActionButtons({ 
   onCook, 
   onSave, 
-  onPrint,
+  onChatWithAi,
   isSaving = false,
   isSmallScreen = false
 }: RecipeActionButtonsProps) {
@@ -24,7 +24,7 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
       {/* Primary action - Start Cooking */}
       <Button 
         onClick={onCook} 
-        className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
+        className="w-full bg-recipe-blue hover:bg-recipe-blue/90 touch-feedback-strong"
         size="lg"
       >
         <CookingPot className="mr-2 h-5 w-5" />
@@ -36,22 +36,23 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
         <Button 
           variant="outline" 
           onClick={onSave}
-          className="w-full"
+          className="w-full touch-feedback-optimized"
           disabled={isSaving}
         >
           <Bookmark className="mr-1 sm:mr-2 h-4 w-4" />
           <span className={isSmallScreen ? "hidden" : "inline"}>Save Recipe</span>
           <span className={isSmallScreen ? "inline" : "hidden"}>Save</span>
         </Button>
-        {onPrint && (
+        
+        {onChatWithAi && (
           <Button 
             variant="outline" 
-            onClick={onPrint}
-            className="w-full"
+            onClick={onChatWithAi}
+            className="w-full touch-feedback-optimized"
           >
-            <Printer className="mr-1 sm:mr-2 h-4 w-4" />
-            <span className={isSmallScreen ? "hidden" : "inline"}>Print</span>
-            <span className={isSmallScreen ? "inline" : "hidden"}>Print</span>
+            <MessageSquare className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className={isSmallScreen ? "hidden" : "inline"}>Chat with AI</span>
+            <span className={isSmallScreen ? "inline" : "hidden"}>Chat</span>
           </Button>
         )}
       </div>

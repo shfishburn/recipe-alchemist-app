@@ -14,7 +14,7 @@ interface QuickRecipeCardProps {
   recipe: QuickRecipe;
   onCook: () => void;
   onSave: () => void;
-  onPrint?: () => void;
+  onChatWithAi?: () => void;
   isSaving?: boolean;
 }
 
@@ -22,11 +22,11 @@ export function QuickRecipeCard({
   recipe, 
   onCook, 
   onSave, 
-  onPrint,
+  onChatWithAi,
   isSaving = false 
 }: QuickRecipeCardProps) {
   return (
-    <Card className="w-full border-2 border-recipe-green/20">
+    <Card className="w-full border-2 border-recipe-green/20 card-touch-optimized">
       <CardHeader className="pb-2">
         <div className="w-full aspect-video overflow-hidden rounded-lg mb-4">
           <PlaceholderImage
@@ -61,7 +61,7 @@ export function QuickRecipeCard({
         <RecipeActionButtons 
           onCook={onCook}
           onSave={onSave}
-          onPrint={onPrint}
+          onChatWithAi={onChatWithAi}
           isSaving={isSaving}
         />
         

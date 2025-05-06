@@ -110,6 +110,6 @@ const QuickRecipePage = () => {
       </main>
     </div>
   );
-};
+}
 
 export default QuickRecipePage;
