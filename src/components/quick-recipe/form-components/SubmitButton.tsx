@@ -17,8 +17,8 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
     <Button 
       type="submit" 
       className={cn(
-        "w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700",
-        "transition-all text-white shadow-md font-medium group",
+        "w-full bg-gradient-to-r from-recipe-primary to-recipe-green hover:from-recipe-primary/90 hover:to-recipe-green/90",
+        "transition-all duration-300 text-white shadow-md font-medium group",
         "relative overflow-hidden rounded-xl",
         isMobile ? "py-4 text-base" : "py-4 text-lg", // Increased padding and text size for desktop
         isLoading ? "opacity-90" : ""
@@ -31,33 +31,37 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
       {isLoading ? (
         <div className="flex items-center justify-center">
           <CookingPot className={cn(
-            "mr-2 animate-bounce",
-            isMobile ? "h-5 w-5" : "h-6 w-6" // Increased icon size for desktop
+            "mr-2 animate-pulse",
+            isMobile ? "h-5 w-5" : "h-6 w-6" // Replaced bounce with pulse animation
           )} />
-          <span className={isMobile ? "font-medium" : "font-medium"}>
+          <span className="font-medium">
             Creating Your Recipe...
           </span>
         </div>
       ) : (
         <div className="flex items-center justify-center">
-          <span className={isMobile ? "font-medium" : "font-medium"}>
+          <span className="font-medium">
             Show My Recipe
           </span>
           <ArrowRight className={cn(
-            "ml-1 group-hover:translate-x-1 transition-transform",
-            isMobile ? "h-5 w-5" : "h-6 w-6" // Increased icon size for desktop
+            "ml-1 group-hover:translate-x-1 transition-transform duration-300",
+            isMobile ? "h-5 w-5" : "h-6 w-6"
           )} />
           <PartyPopper className={cn(
-            "ml-1 opacity-0 group-hover:opacity-100 transition-opacity",
-            isMobile ? "h-4 w-4" : "h-5 w-5" // Increased icon size for desktop
+            "ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+            isMobile ? "h-4 w-4" : "h-5 w-5"
           )} />
         </div>
       )}
       
-      {/* Touch ripple effect for mobile */}
-      {isMobile && (
-        <span className="absolute inset-0 pointer-events-none touch-ripple"></span>
-      )}
+      {/* Improved touch ripple effect for mobile - using CSS variable for performance */}
+      <span aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+        <span className="absolute inset-0 bg-white/10 opacity-0 touch-none" 
+              style={{
+                transform: 'translate3d(0, 0, 0)',
+                willChange: 'opacity'
+              }}></span>
+      </span>
     </Button>
   );
 }

@@ -22,83 +22,86 @@ export const FullScreenLoading = memo(function FullScreenLoading({
   const isErrorState = !!error;
   const [completedLoading, setCompletedLoading] = useState(false);
   
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const progressTimerRef = useRef<number | null>(null);
   
-  // Clean up on unmount
+  // Clean up on unmount with a more efficient approach
   useEffect(() => {
+    if (!isErrorState) {
+      document.body.classList.add('overflow-hidden');
+    }
+    
     return () => {
       if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
+        window.clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
       }
       document.body.classList.remove('overflow-hidden');
     };
-  }, []);
+  }, [isErrorState]);
   
-  // Simulate loading progress with memoized function
+  // Optimize progress simulation with fewer updates
   const simulateProgress = useCallback(() => {
-    if (!isErrorState) {
-      const steps = [
-        "Analyzing your ingredients...",
-        "Crafting the perfect recipe...",
-        "Adding scientific details...",
-        "Calculating nutrition information...",
-        "Finalizing your recipe..."
-      ];
+    if (isErrorState || progressTimerRef.current) return;
+    
+    const steps = [
+      "Analyzing your ingredients...",
+      "Crafting the perfect recipe...",
+      "Adding scientific details...",
+      "Calculating nutrition information...",
+      "Finalizing your recipe..."
+    ];
+    
+    let currentStep = 0;
+    let progress = 0;
+    
+    // Update less frequently (400ms instead of 300ms)
+    progressTimerRef.current = window.setInterval(() => {
+      progress += 1.5; // Larger increment, fewer updates
       
-      let currentStep = 0;
-      let progress = 0;
-      
-      // Clean previous timer if exists
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
+      // Change step description at certain progress points
+      if (progress >= 20 && currentStep === 0) {
+        currentStep = 1;
+      } else if (progress >= 40 && currentStep === 1) {
+        currentStep = 2;
+      } else if (progress >= 60 && currentStep === 2) {
+        currentStep = 3;
+      } else if (progress >= 80 && currentStep === 3) {
+        currentStep = 4;
       }
       
-      progressTimerRef.current = setInterval(() => {
-        progress += 1;
-        
-        // Change step description at certain progress points
-        if (progress === 20 || progress === 40 || progress === 60 || progress === 80) {
-          currentStep = Math.min(currentStep + 1, steps.length - 1);
-        }
-        
+      // Batch state updates with requestAnimationFrame
+      window.requestAnimationFrame(() => {
         updateLoadingState({
           step: currentStep,
           stepDescription: steps[currentStep],
           percentComplete: progress,
           estimatedTimeRemaining: Math.max(30 - progress/3, 0)
         });
-        
-        if (progress >= 100) {
-          if (progressTimerRef.current) {
-            clearInterval(progressTimerRef.current);
-            progressTimerRef.current = null;
-          }
-          // Mark loading as completed to enable pointer events
-          setCompletedLoading(true);
+      });
+      
+      if (progress >= 100) {
+        if (progressTimerRef.current) {
+          window.clearInterval(progressTimerRef.current);
+          progressTimerRef.current = null;
         }
-      }, 300); // Update every 300ms
-    }
+        // Mark loading as completed to enable pointer events
+        setCompletedLoading(true);
+      }
+    }, 400); // Increased interval for better performance
   }, [isErrorState, updateLoadingState]);
   
-  // Start progress simulation on mount
+  // Start progress simulation on mount with debounce
   useEffect(() => {
-    simulateProgress();
-    
-    // Add overflow-hidden only if loading
-    if (!completedLoading && !isErrorState) {
-      document.body.classList.add('overflow-hidden');
-    }
-    
-    return () => {
-      document.body.classList.remove('overflow-hidden');
-    };
-  }, [completedLoading, isErrorState, simulateProgress]);
+    const timer = setTimeout(simulateProgress, 50);
+    return () => clearTimeout(timer);
+  }, [simulateProgress]);
 
   // Set appropriate pointer events based on loading state
   const pointerEventsClass = completedLoading && !isErrorState ? 'pointer-events-none' : '';
   
   return (
-    <div className={`absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
+    <div className={`absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] ${pointerEventsClass}`} 
+         style={{willChange: 'opacity'}}>
       {/* Accessible title for screen readers */}
       <VisuallyHidden asChild>
         <h1>
@@ -108,7 +111,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
       
       <div className="w-full max-w-md mx-auto text-center py-12">
         {isErrorState ? (
-          <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 animate-scale-in">
+          <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6">
             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
             <p className="text-muted-foreground mb-6">{error}</p>
@@ -118,7 +121,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
                 <Button 
                   variant="outline" 
                   onClick={onCancel}
-                  className="flex items-center gap-2 touch-ripple"
+                  className="flex items-center gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Start Over
@@ -128,7 +131,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               {onRetry && (
                 <Button 
                   onClick={onRetry}
-                  className="flex items-center gap-2 touch-ripple"
+                  className="flex items-center gap-2"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Try Again
@@ -138,28 +141,18 @@ export const FullScreenLoading = memo(function FullScreenLoading({
           </div>
         ) : (
           <>
-            {/* Main loading animation */}
+            {/* Main loading animation - simplified for performance */}
             <div className="flex flex-col items-center space-y-6 mb-8">
-              {/* Enhanced animated cooking pot icon with chef hat */}
-              <div className="relative hw-accelerated">
+              <div className="relative">
                 <div className="relative h-20 w-20 flex items-center justify-center">
                   <div className="absolute inset-0 rounded-full bg-recipe-green/10 animate-pulse"></div>
-                  <ChefHat className="h-12 w-12 text-recipe-green animate-cooking-pot" />
-                  
-                  {/* Animated 'steam' effects - simplified for better performance */}
-                  <div className="absolute -top-2 left-0 opacity-60">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green animate-steam"></div>
-                  </div>
-                  <div className="absolute -top-1 right-0 opacity-70">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green animate-steam delay-150"></div>
-                  </div>
+                  <ChefHat className="h-12 w-12 text-recipe-green animate-pulse" />
                 </div>
               </div>
               
-              {/* Title and description with gradient text */}
-              <div className="animate-fade-in">
-                <h2 className="text-xl font-medium mb-1 text-gradient animate-gradient-x" 
-                    style={{backgroundImage: "linear-gradient(90deg, #4caf50, #2196f3, #4caf50)"}}>
+              {/* Title and description - simplified gradient */}
+              <div>
+                <h2 className="text-xl font-medium mb-1 bg-clip-text text-transparent bg-gradient-to-r from-recipe-primary to-recipe-green">
                   Creating Your Recipe
                 </h2>
                 <p className="text-muted-foreground text-sm">
@@ -168,8 +161,8 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               </div>
             </div>
             
-            {/* Enhanced loading progress */}
-            <div className="mb-8 animate-fade-in">
+            {/* Loading progress */}
+            <div className="mb-8">
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-medium">
                   {loadingState?.stepDescription || "Analyzing your ingredients..."}
@@ -192,12 +185,12 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               <LoadingTipCard />
             </div>
             
-            {/* Cancel button with proper aria description */}
+            {/* Cancel button */}
             {onCancel && (
               <Button 
                 variant="ghost" 
                 onClick={onCancel} 
-                className="text-muted-foreground hover:text-foreground animate-fade-in"
+                className="text-muted-foreground hover:text-foreground"
                 aria-label="Cancel recipe generation"
               >
                 Cancel
