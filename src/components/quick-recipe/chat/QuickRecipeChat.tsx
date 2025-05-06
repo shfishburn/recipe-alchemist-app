@@ -30,6 +30,13 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     clearChatHistory,
   } = useQuickRecipeChat(recipe);
 
+  console.log("QuickRecipeChat rendering with:", {
+    messageLength: message.length,
+    historyLength: chatHistory.length,
+    optimisticMessagesLength: optimisticMessages.length,
+    isSending
+  });
+
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
     scrollToBottom();
