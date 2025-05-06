@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RecipeCarousel } from './RecipeCarousel';
+import { RecipeCarousel } from './recipes/RecipeCarousel';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Brain, ChartPie, ChefHat, Sparkles } from 'lucide-react';
@@ -76,17 +76,15 @@ const Hero = () => {
         </div>
         
         {/* Nutrition Preview Section */}
-        <div className="w-full mb-10 md:mb-14 flex justify-center">
-          <div className="w-full max-w-6xl">
-            <NutritionPreview />
-          </div>
+        <div className="w-full mb-10 md:mb-14">
+          <NutritionPreview />
         </div>
         
         {/* Sample Recipes Carousel */}
-        <div className="w-full mb-6 md:mb-8 flex justify-center">
-          <div className="w-full max-w-6xl mx-auto relative overflow-hidden">
-            <div className="absolute -top-6 -left-6 w-16 h-16 md:w-24 md:h-24 bg-green-100 rounded-full z-0"></div>
-            <div className="absolute -bottom-6 -right-6 w-20 h-20 md:w-32 md:h-32 bg-amber-100 rounded-full z-0"></div>
+        <div className="w-full mb-6 md:mb-8">
+          <div className="relative overflow-hidden">
+            <div className="absolute -top-6 -left-6 w-16 h-16 md:w-24 md:h-24 bg-green-100 rounded-full opacity-70 z-0"></div>
+            <div className="absolute -bottom-6 -right-6 w-20 h-20 md:w-32 md:h-32 bg-amber-100 rounded-full opacity-70 z-0"></div>
             <div className="relative z-10 w-full">
               <RecipeCarousel />
             </div>

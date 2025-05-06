@@ -6,7 +6,6 @@
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  contain: layout style paint;
 }
 
 .card-touch-optimized {
@@ -30,41 +29,16 @@
   --touch-spacing-min: 8px; /* Minimum spacing between touch targets */
 }
 
-.touch-optimized {
-  /* Increase touch targets */
-  min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
-  padding: var(--touch-padding, 0.25rem);
-}
-
-.touch-target-base {
-  min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* Optimize horizontal swipe carousels */
-.touch-action-pan-x {
+.touch-pan-x {
   touch-action: pan-x;
   user-select: none;
 }
 
 /* Optimize vertical swipe carousels */
-.touch-action-pan-y {
+.touch-pan-y {
   touch-action: pan-y;
   user-select: none;
-}
-
-/* Reduce animations when battery is low or user prefers reduced motion */
-.reduce-animations {
-  transition-duration: 0.1s !important;
-}
-
-.reduce-motion-mobile * {
-  transition-duration: 0.1s !important;
-  animation-duration: 0.1s !important;
 }
 
 /* Carousel touch target enhancements */
@@ -76,13 +50,6 @@
   justify-content: center;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-}
-
-/* Accessibility focus styles */
-.carousel-focusable:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
 }
 
 /* Momentum scroll for touch devices */

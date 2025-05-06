@@ -6,30 +6,45 @@ import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-reac
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useBatteryStatus } from "@/hooks/use-battery-status";
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
 type CarouselOptions = UseCarouselParameters[0];
 type CarouselPlugin = UseCarouselParameters[1];
 
-interface CarouselProps {
+type CarouselProps = {
   opts?: CarouselOptions;
   plugins?: CarouselPlugin;
   orientation?: "horizontal" | "vertical";
   setApi?: (api: CarouselApi) => void;
   className?: string;
   children?: React.ReactNode;
-  arrowPosition?: "inside" | "outside";
-  showArrows?: boolean;
+};
+
+type CarouselContextProps = {
+  carouselRef: React.RefObject<HTMLDivElement>;
+  api: ReturnType<typeof useEmblaCarousel>[1];
+  scrollPrev: () => void;
+  scrollNext: () => void;
+  canScrollPrev: boolean;
+  canScrollNext: boolean;
+  activeIndex: number;
+};
+
+const CarouselContext = React.createContext<CarouselContextProps | null>(null);
+
+export function useCarousel() {
+  const context = React.useContext(CarouselContext);
+  if (!context) {
+    throw new Error("useCarousel must be used within a <Carousel />");
+  }
+  return context;
 }
 
-interface CarouselPrevNextProps extends React.HTMLAttributes<HTMLButtonElement> {
-  isBatteryLow?: boolean;
-  disabled?: boolean; // Added disabled prop to fix type error
-}
-
-export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
+export const Carousel = React.forwardRef<
+  HTMLDivElement,
+  CarouselProps
+>(
   (
     {
       opts,
@@ -38,102 +53,80 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       setApi,
       className,
       children,
-      arrowPosition = "inside",
-      showArrows = true,
     },
     ref
   ) => {
-    const { lowPowerMode } = useBatteryStatus();
-    
-    // Apply power-saving settings when battery is low
-    const optimizedOpts: CarouselOptions = React.useMemo(() => {
-      // Start with the base options
-      const baseOpts: CarouselOptions = {
+    const [carouselRef, api] = useEmblaCarousel(
+      {
         ...opts,
         axis: orientation === "horizontal" ? "x" : "y",
-      };
-      
-      // Add power-saving adjustments
-      if (lowPowerMode) {
-        return {
-          ...baseOpts,
-          // Reduce motion when battery is low
-          speed: 5, // Slower transitions
-          inViewThreshold: 0.8, // Only load what's closer to view
-        };
-      }
-      
-      return baseOpts;
-    }, [opts, orientation, lowPowerMode]);
-    
-    const [carouselRef, api] = useEmblaCarousel(optimizedOpts, plugins);
+      },
+      plugins
+    );
     const [canScrollPrev, setCanScrollPrev] = React.useState(false);
     const [canScrollNext, setCanScrollNext] = React.useState(false);
-    
-    const onSelect = React.useCallback((api: CarouselApi) => {
+    const [activeIndex, setActiveIndex] = React.useState(0);
+
+    const scrollPrev = React.useCallback(() => {
+      if (api) api.scrollPrev();
+    }, [api]);
+
+    const scrollNext = React.useCallback(() => {
+      if (api) api.scrollNext();
+    }, [api]);
+
+    const handleSelect = React.useCallback(() => {
       if (!api) return;
       
       setCanScrollPrev(api.canScrollPrev());
       setCanScrollNext(api.canScrollNext());
-    }, []);
-    
+      setActiveIndex(api.selectedScrollSnap());
+    }, [api]);
+
     React.useEffect(() => {
       if (!api) return;
       
-      onSelect(api);
-      api.on("select", () => onSelect(api));
-      api.on("reInit", () => onSelect(api));
+      handleSelect();
+      api.on("select", handleSelect);
+      api.on("reInit", handleSelect);
       
       if (setApi) setApi(api);
       
       return () => {
-        api.off("select", () => onSelect(api));
-        api.off("reInit", () => onSelect(api));
+        api.off("select", handleSelect);
+        api.off("reInit", handleSelect);
       };
-    }, [api, setApi, onSelect]);
-    
+    }, [api, handleSelect, setApi]);
+
     return (
-      <div
-        ref={ref}
-        className={cn("relative", arrowPosition === "outside" ? "px-10" : "", className)}
-        aria-roledescription="carousel"
+      <CarouselContext.Provider
+        value={{
+          carouselRef,
+          api: api,
+          scrollPrev,
+          scrollNext,
+          canScrollPrev,
+          canScrollNext,
+          activeIndex,
+        }}
       >
         <div
-          ref={carouselRef}
-          className={cn("overflow-hidden", 
-            lowPowerMode ? "reduce-motion-mobile" : "",
-            "hw-accelerated"
-          )}
+          ref={ref}
+          className={cn("relative", className)}
+          aria-roledescription="carousel"
         >
-          <div className="flex" style={{
-            flexDirection: orientation === "horizontal" ? "row" : "column",
-          }}>
-            {children}
+          <div
+            ref={carouselRef}
+            className="overflow-hidden h-full touch-pan-x"
+          >
+            <div className="flex h-full" style={{
+              flexDirection: orientation === "horizontal" ? "row" : "column",
+            }}>
+              {children}
+            </div>
           </div>
         </div>
-        {showArrows && (
-          <>
-            <CarouselPrevious
-              onClick={() => api?.scrollPrev()}
-              disabled={!canScrollPrev}
-              className={cn(
-                arrowPosition === "outside" ? "-left-10" : "left-2",
-                !canScrollPrev && "hidden"
-              )}
-              isBatteryLow={lowPowerMode}
-            />
-            <CarouselNext
-              onClick={() => api?.scrollNext()}
-              disabled={!canScrollNext}
-              className={cn(
-                arrowPosition === "outside" ? "-right-10" : "right-2",
-                !canScrollNext && "hidden"
-              )}
-              isBatteryLow={lowPowerMode}
-            />
-          </>
-        )}
-      </div>
+      </CarouselContext.Provider>
     );
   }
 );
@@ -142,76 +135,131 @@ Carousel.displayName = "Carousel";
 export const CarouselContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} role="list" className={cn("draggable flex", className)} {...props} />
-));
+>(({ className, ...props }, ref) => {
+  const { carouselRef } = useCarousel();
+
+  return (
+    <div ref={ref} className={cn("flex", className)} {...props} />
+  );
+});
 CarouselContent.displayName = "CarouselContent";
 
 export const CarouselItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="listitem"
-    className={cn(
-      "min-w-0 shrink-0 grow-0 basis-full",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      role="group"
+      aria-roledescription="slide"
+      className={cn("min-w-0 shrink-0 grow-0 basis-full", className)}
+      {...props}
+    />
+  );
+});
 CarouselItem.displayName = "CarouselItem";
 
-// Add the CarouselProgress component
-export const CarouselProgress = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div 
-    ref={ref}
-    className={cn("relative h-1 w-full rounded-full bg-gray-200", className)} 
-    {...props}
-  >
-    <div className="absolute h-full left-0 rounded-full bg-recipe-blue animate-carousel-progress" />
-  </div>
-));
-CarouselProgress.displayName = "CarouselProgress";
+export const CarouselPrevious = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button>
+>(({ className, variant = "outline", size = "icon", ...props }, ref) => {
+  const { scrollPrev, canScrollPrev } = useCarousel();
 
-export function CarouselPrevious({ className, isBatteryLow, disabled, ...props }: CarouselPrevNextProps) {
   return (
     <Button
-      variant="outline"
-      size="icon"
+      ref={ref}
+      variant={variant}
+      size={size}
       className={cn(
-        "absolute top-1/2 -translate-y-1/2 left-4 h-8 w-8 rounded-full",
-        isBatteryLow ? "opacity-70" : "",
+        "absolute h-8 w-8 rounded-full left-4 top-1/2 -translate-y-1/2",
+        !canScrollPrev && "hidden",
         className
       )}
-      disabled={disabled}
+      onClick={scrollPrev}
+      disabled={!canScrollPrev}
       {...props}
     >
       <ArrowLeft className="h-4 w-4" />
       <span className="sr-only">Previous slide</span>
     </Button>
   );
-}
+});
+CarouselPrevious.displayName = "CarouselPrevious";
 
-export function CarouselNext({ className, isBatteryLow, disabled, ...props }: CarouselPrevNextProps) {
+export const CarouselNext = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button>
+>(({ className, variant = "outline", size = "icon", ...props }, ref) => {
+  const { scrollNext, canScrollNext } = useCarousel();
+
   return (
     <Button
-      variant="outline"
-      size="icon"
+      ref={ref}
+      variant={variant}
+      size={size}
       className={cn(
-        "absolute top-1/2 -translate-y-1/2 right-4 h-8 w-8 rounded-full",
-        isBatteryLow ? "opacity-70" : "",
+        "absolute h-8 w-8 rounded-full right-4 top-1/2 -translate-y-1/2",
+        !canScrollNext && "hidden",
         className
       )}
-      disabled={disabled}
+      onClick={scrollNext}
+      disabled={!canScrollNext}
       {...props}
     >
       <ArrowRight className="h-4 w-4" />
       <span className="sr-only">Next slide</span>
     </Button>
   );
-}
+});
+CarouselNext.displayName = "CarouselNext";
+
+export const CarouselDots = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { 
+    showNumbers?: boolean 
+  }
+>(({ className, showNumbers = false, ...props }, ref) => {
+  const { api, activeIndex } = useCarousel();
+  const [slideCount, setSlideCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!api) return;
+    setSlideCount(api.scrollSnapList().length);
+  }, [api]);
+
+  if (slideCount <= 1) {
+    return null;
+  }
+
+  return (
+    <div 
+      ref={ref}
+      className={cn("flex items-center justify-center gap-2 mt-4", className)} 
+      {...props}
+    >
+      {Array.from({ length: slideCount }).map((_, index) => (
+        <Button
+          key={index}
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-2 w-2 p-0 rounded-full",
+            activeIndex === index 
+              ? "bg-primary" 
+              : "bg-muted-foreground/30"
+          )}
+          onClick={() => api?.scrollTo(index)}
+          aria-label={`Go to slide ${index + 1}`}
+          aria-current={activeIndex === index ? "true" : "false"}
+        />
+      ))}
+      {showNumbers && slideCount > 1 && (
+        <span className="text-xs text-muted-foreground ml-2">
+          {activeIndex + 1} / {slideCount}
+        </span>
+      )}
+    </div>
+  );
+});
+CarouselDots.displayName = "CarouselDots";
