@@ -49,26 +49,25 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Momentum scroll for touch devices */
+/* Improved momentum scroll for touch devices */
 .momentum-scroll {
   -webkit-overflow-scrolling: touch;
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.momentum-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .momentum-scroll > * {
   scroll-snap-align: center;
-  width: 100%;
+  scroll-snap-stop: always;
   flex-shrink: 0;
-}
-
-/* Chart scroll specific styles */
-.chart-scroll-wrapper {
-  position: relative;
   width: 100%;
-  overflow: visible;
-  padding-bottom: 8px; /* Reduced space for the scroll indicator */
 }
 
 /* Visual indicator for scrollable content */
@@ -88,44 +87,55 @@
   border-radius: 2px;
 }
 
-/* Enhanced touch feedback for chart interactions */
-.chart-interaction {
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.chart-interaction:active {
-  opacity: 0.7;
-}
-
-/* Improved visual affordance for horizontal scrolling */
-@media (hover: hover) {
-  .chart-scroll-wrapper:hover::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 80%;
-    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(0,0,0,0.05) 100%);
-    border-radius: 0 8px 8px 0;
-    pointer-events: none;
-    opacity: 0.6;
-    z-index: 1;
+/* Enhanced tap feedback */
+@media (hover: none) {
+  .interactive-element:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+    transition: all 0.1s ease;
   }
 }
 
-/* Prevent iOS overscroll effects on carousels */
-.swiper-container {
-  overscroll-behavior: none !important;
+/* Prevent iOS overscroll effects */
+.no-overscroll {
+  overscroll-behavior: none;
 }
 
-.swiper-wrapper {
-  overscroll-behavior: contain !important;
+/* Scrollbar hiding for all browsers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Enhanced snap behavior for carousel items */
-.snap-mandatory > * {
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Compact layouts for mobile */
+@media (max-width: 640px) {
+  .mobile-compact {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  .carousel-item-mobile {
+    height: auto !important;
+    max-height: calc(100vh - 240px) !important;
+  }
+}
+
+/* Responsive spacing for carousel content */
+.carousel-content {
+  min-height: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure consistent snap behavior */
+.snap-x.snap-mandatory > * {
+  scroll-snap-align: center;
   scroll-snap-stop: always;
 }

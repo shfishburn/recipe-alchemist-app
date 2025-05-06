@@ -39,25 +39,25 @@ interface MacroCarouselItemProps {
 
 export function MacroCarouselItem({ item, carbsData, fatsData, nutriScoreExample = false }: MacroCarouselItemProps) {
   return (
-    <div className="px-1 md:px-4 py-1 flex flex-col items-center w-full">
-      <h3 className="text-center text-lg font-semibold text-recipe-purple mb-1">{item.title}</h3>
+    <div className="flex flex-col h-full w-full">
+      <h3 className="text-center text-lg font-semibold text-recipe-purple">{item.title}</h3>
       
-      <div className="flex flex-col gap-2 w-full max-w-3xl mx-auto">
+      <div className="flex flex-col flex-1 w-full max-w-3xl mx-auto">
         {nutriScoreExample && item.nutriScore ? (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center justify-center flex-1">
             <div className="w-full max-w-[320px] mx-auto">
               <NutriScoreInfoCard nutriScore={item.nutriScore} />
-              <div className="text-xs text-center text-gray-500 mt-2">
+              <div className="text-xs text-center text-gray-500 mt-1">
                 <p>{item.description}</p>
               </div>
             </div>
           </div>
         ) : (
           <>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center justify-center flex-shrink-0">
               <div className="w-full max-w-[240px] mx-auto">
                 <Suspense fallback={
-                  <div className="h-32 flex items-center justify-center">
+                  <div className="flex items-center justify-center">
                     <Skeleton className="h-24 w-24 rounded-full" />
                   </div>
                 }>
@@ -65,10 +65,10 @@ export function MacroCarouselItem({ item, carbsData, fatsData, nutriScoreExample
                     <>
                       <MacroChart 
                         data={item.data}
-                        height={150}
+                        height={120}
                         showTooltip 
                       />
-                      <div className="text-xs text-center text-gray-500 mt-0.5">
+                      <div className="text-xs text-center text-gray-500">
                         <p className="italic">*Protein and carbs: 4 cal/g, fat: 9 cal/g</p>
                       </div>
                     </>
@@ -78,17 +78,17 @@ export function MacroCarouselItem({ item, carbsData, fatsData, nutriScoreExample
             </div>
             
             {item.special ? (
-              <div className="flex flex-col items-center w-full">
+              <div className="flex flex-col items-center w-full flex-1">
                 <Suspense fallback={
-                  <div className="h-32 w-full flex items-center justify-center">
-                    <Skeleton className="h-24 w-full" />
+                  <div className="flex items-center justify-center w-full">
+                    <Skeleton className="h-20 w-full" />
                   </div>
                 }>
                   <MacroPieCharts carbsData={carbsData} fatsData={fatsData} />
                 </Suspense>
               </div>
             ) : (
-              <div className="flex flex-col items-center w-full">
+              <div className="flex flex-col items-center w-full flex-1">
                 {item.data && (
                   <MacroDetailsPanel 
                     title={item.title}

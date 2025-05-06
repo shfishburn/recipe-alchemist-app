@@ -22,7 +22,7 @@ export function NutritionCarousel() {
   
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-      <div className="text-center mb-4">
+      <div className="text-center mb-2 sm:mb-4">
         <div className="inline-flex items-center justify-center gap-2 mb-1">
           <ChartPie className="h-5 w-5 text-recipe-purple" />
           <Activity className="h-5 w-5 text-recipe-blue" />
@@ -42,9 +42,9 @@ export function NutritionCarousel() {
           }}
           className="w-full"
         >
-          <CarouselContent className="px-2 py-2">
+          <CarouselContent className="py-2">
             {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="w-full">
+              <CarouselItem key={index} className="w-full flex-grow-0 flex-shrink-0">
                 <MacroCarouselItem 
                   item={item} 
                   carbsData={carbsData} 
@@ -54,7 +54,7 @@ export function NutritionCarousel() {
             ))}
             
             {nutriScoreExamples.map((item, index) => (
-              <CarouselItem key={`nutriscore-${index}`} className="w-full">
+              <CarouselItem key={`nutriscore-${index}`} className="w-full flex-grow-0 flex-shrink-0">
                 <MacroCarouselItem 
                   item={item}
                   nutriScoreExample={true}
@@ -65,7 +65,7 @@ export function NutritionCarousel() {
             ))}
           </CarouselContent>
           
-          <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center justify-between px-3 py-1 mt-1">
             <CarouselPagination />
             <MacroLegend />
           </div>
@@ -74,7 +74,7 @@ export function NutritionCarousel() {
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">
           <div className="h-full w-16 bg-gray-300 rounded-full mx-auto"></div>
         </div>
-        <div className="text-xs text-center text-muted-foreground pb-1 pt-0.5">
+        <div className="text-xs text-center text-muted-foreground py-0.5">
           Swipe to see more
         </div>
       </div>

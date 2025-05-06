@@ -19,7 +19,7 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
   const isMobile = useIsMobile();
   
   // Calculate responsive dimensions
-  const outerRadius = isMobile ? 50 : 60;
+  const outerRadius = isMobile ? 45 : 55;
   const innerRadius = outerRadius * 0.6;
   
   // Custom label rendering function
@@ -56,20 +56,19 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
       <div className="bg-white p-2 border rounded-md shadow-md text-xs">
         <p className="font-medium mb-1" style={{ color: data.color }}>{data.name}</p>
         <p><span className="font-semibold">{data.value}%</span> of daily intake</p>
-        {data.name === 'Protein' && <p className="mt-1 text-[10px] text-gray-500">4 calories per gram</p>}
-        {data.name === 'Carbs' && <p className="mt-1 text-[10px] text-gray-500">4 calories per gram</p>}
-        {data.name === 'Fat' && <p className="mt-1 text-[10px] text-gray-500">9 calories per gram</p>}
       </div>
     );
   };
 
-  // Custom legend formatter
+  // Custom legend formatter for more compact display
   const customLegendFormatter = (value: string, entry: any) => {
-    return <span className="text-[10px]">{value}: <strong>{entry.payload.value}%</strong></span>;
+    return <span className="text-[10px]">{`${value}: ${entry.payload.value}%`}</span>;
   };
 
+  const chartHeight = isMobile ? Math.min(height, 120) : height;
+
   return (
-    <div className="w-full" style={{ height: `${height}px` }}>
+    <div className="w-full" style={{ height: `${chartHeight}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <Pie
@@ -103,8 +102,8 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
               verticalAlign="bottom"
               align="center"
               wrapperStyle={{ 
-                paddingTop: '2px',
-                fontSize: '10px'
+                fontSize: '10px',
+                paddingTop: '0px'
               }}
             />
           )}

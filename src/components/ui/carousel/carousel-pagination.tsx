@@ -13,13 +13,13 @@ interface CarouselPaginationProps extends React.HTMLAttributes<HTMLDivElement> {
 const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationProps>(
   ({ className, variant = "dots", showNumbers = false, ...props }, ref) => {
     const { activeIndex, api } = useCarousel();
-    const totalSlides = api?.scrollSnapList().length || 7; // Default to 7 slides (4 macro + 3 nutriscore)
+    const totalSlides = api?.scrollSnapList().length || 7; // Default to 7 slides if api is null
     
     return (
       <div 
         ref={ref} 
         className={cn(
-          "flex justify-center items-center gap-1 mt-1", 
+          "flex justify-center items-center gap-1", 
           className
         )}
         aria-label="Carousel pagination"
@@ -38,7 +38,7 @@ const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationPr
               )}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={activeIndex === index ? "true" : "false"}
-              onClick={() => api?.scrollTo(index)}
+              onClick={() => api?.scrollTo(index)} // This is safe since we're using optional chaining
             />
           ))}
         </div>

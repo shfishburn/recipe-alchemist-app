@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { forwardRef } from "react";
+import React, { forwardRef, useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 type CarouselProps = {
@@ -23,7 +23,7 @@ type CarouselContextProps = {
   canScrollPrev: boolean;
   canScrollNext: boolean;
   activeIndex: number;
-  api: null;
+  api: any;
 };
 
 const CarouselContext = React.createContext<CarouselContextProps>({
@@ -42,28 +42,56 @@ export function useCarousel() {
 const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
   ({ className, children, opts = {} }, ref) => {
     // Simple scrolling implementation
-    const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-    const [activeIndex, setActiveIndex] = React.useState(0);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [canScrollPrev, setCanScrollPrev] = useState(false);
+    const [canScrollNext, setCanScrollNext] = useState(true);
+    const [totalItems, setTotalItems] = useState(0);
+    
+    // Detect number of items
+    useEffect(() => {
+      if (scrollContainerRef.current) {
+        const items = scrollContainerRef.current.querySelectorAll('[aria-roledescription="slide"]');
+        setTotalItems(items.length);
+      }
+    }, [children]);
     
     // Track scroll position to detect active slide
-    React.useEffect(() => {
+    useEffect(() => {
       const container = scrollContainerRef.current;
       if (!container) return;
       
       const handleScroll = () => {
         if (!container) return;
         const scrollLeft = container.scrollLeft;
-        const itemWidth = container.offsetWidth;
-        const newIndex = Math.round(scrollLeft / itemWidth);
+        const containerWidth = container.offsetWidth;
+        const newIndex = Math.round(scrollLeft / containerWidth);
         
         if (newIndex !== activeIndex) {
           setActiveIndex(newIndex);
+          setCanScrollPrev(newIndex > 0);
+          setCanScrollNext(newIndex < totalItems - 1);
         }
       };
       
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
-    }, [activeIndex]);
+    }, [activeIndex, totalItems]);
+    
+    // Create a mock API object to support scrollSnapList
+    const mockApi = {
+      scrollSnapList: () => {
+        return Array.from({ length: totalItems });
+      },
+      scrollTo: (index: number) => {
+        if (!scrollContainerRef.current) return;
+        const itemWidth = scrollContainerRef.current.offsetWidth;
+        scrollContainerRef.current.scrollTo({ 
+          left: itemWidth * index, 
+          behavior: 'smooth' 
+        });
+      }
+    };
     
     // Placeholder functions to maintain API compatibility
     const scrollPrev = () => {
@@ -89,10 +117,10 @@ const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
         value={{
           scrollPrev,
           scrollNext,
-          canScrollPrev: activeIndex > 0, 
-          canScrollNext: true,
+          canScrollPrev,
+          canScrollNext,
           activeIndex,
-          api: null,
+          api: mockApi,
         }}
       >
         <div
@@ -107,12 +135,16 @@ const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
             ref={scrollContainerRef}
             className={cn(
               "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory",
-              "scroll-smooth -mx-2 px-2 pb-2 hw-accelerated momentum-scroll w-full",
+              "scroll-smooth -mx-1 px-1 hw-accelerated momentum-scroll w-full",
               opts.align === "start" ? "snap-start" : 
               opts.align === "center" ? "snap-center" : 
               "snap-end"
             )}
-            style={{ touchAction: "pan-x", scrollSnapType: "x mandatory" }}
+            style={{ 
+              touchAction: "pan-x", 
+              scrollSnapType: "x mandatory",
+              scrollPaddingInline: "0.25rem"
+            }}
             tabIndex={0}
             role="region"
             aria-label="Carousel content"
@@ -127,5 +159,4 @@ const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
 
 Carousel.displayName = "Carousel";
 
-// Only export once - removing the duplicate export at the end
 export { Carousel };
