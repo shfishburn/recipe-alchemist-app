@@ -82,6 +82,8 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
     queryKey: ['recipe-reactions', recipe.id],
     queryFn: async () => {
       try {
+        console.log('Fetching recipe reactions for recipe ID:', recipe.id);
+        
         const { data, error } = await supabase
           .from('recipe_step_reactions')
           .select('*')
@@ -91,6 +93,12 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
         if (error) {
           console.error('Error fetching recipe reactions:', error);
           return [];
+        }
+        
+        console.log('Recipe step reactions data received:', data);
+        
+        if (!data || data.length === 0) {
+          console.log('No reaction data found for recipe ID:', recipe.id);
         }
         
         return (data || []) as StepReaction[];

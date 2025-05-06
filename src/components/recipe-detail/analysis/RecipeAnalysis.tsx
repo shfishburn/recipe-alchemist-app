@@ -99,6 +99,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
           globalAnalysis={globalAnalysis}
+          onRegenerate={handleAnalyze}
         />
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />

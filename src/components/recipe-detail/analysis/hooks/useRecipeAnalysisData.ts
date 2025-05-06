@@ -111,6 +111,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     try {
       toast.info('Analyzing recipe reactions...');
       
+      console.log('Starting analysis of recipe reactions for recipe ID:', recipe.id);
+      
       const abortController = new AbortController();
       const timeoutId = setTimeout(() => abortController.abort(), 30000);
       
@@ -125,12 +127,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         
         clearTimeout(timeoutId);
         
+        console.log('Reaction analysis response:', response);
+        
         if (response.error) {
           throw new Error(response.error as string || 'Failed to analyze reactions');
         }
         
         toast.success('Reaction analysis complete');
-        refetchReactions();
+        await refetchReactions();
       } catch (error: any) {
         if (error.name === 'AbortError' || error.message?.includes('timed out')) {
           throw new Error('Analysis request timed out. Please try again later.');

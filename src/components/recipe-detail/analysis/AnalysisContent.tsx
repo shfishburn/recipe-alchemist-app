@@ -21,6 +21,7 @@ interface AnalysisContentProps {
     process_flow_optimization?: string;
     equipment_integration?: string;
   };
+  onRegenerate?: () => void;
 }
 
 export function AnalysisContent({ 
@@ -29,7 +30,8 @@ export function AnalysisContent({
   troubleshooting,
   rawResponse,
   stepReactions,
-  globalAnalysis
+  globalAnalysis,
+  onRegenerate
 }: AnalysisContentProps) {
   // Check if there's any content to display
   const hasChemistry = chemistry !== null && chemistry.length > 0;
@@ -72,7 +74,10 @@ export function AnalysisContent({
         />
         
         {/* Reaction Analysis Section */}
-        <ReactionsList stepReactions={stepReactions} />
+        <ReactionsList 
+          stepReactions={stepReactions} 
+          onRegenerateClick={onRegenerate}
+        />
         
         {/* Fallback Section */}
         {hasRawResponse && (
