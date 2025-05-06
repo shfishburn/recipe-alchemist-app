@@ -146,6 +146,8 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             userPreferences={updatedUserPreferences}
             viewMode={viewMode}
             nutriScore={recipe.nutri_score}
+            recipeId={recipe.id}
+            ingredients={recipe.ingredients}
           />
         </CardContent>
       </Card>
@@ -240,6 +242,8 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
               userPreferences={updatedUserPreferences}
               viewMode={viewMode}
               nutriScore={recipe.nutri_score}
+              recipeId={recipe.id}
+              ingredients={recipe.ingredients}
             />
           </CardContent>
         </CollapsibleContent>

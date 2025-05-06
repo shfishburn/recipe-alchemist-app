@@ -3,12 +3,14 @@ import React from 'react';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
 import { EnhancedNutrition } from './useNutritionData';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, NutriScore } from '@/types/recipe';
 
 interface NutritionBlockProps {
   recipeNutrition: EnhancedNutrition;
   viewMode: 'recipe' | 'personal';
-  nutriScore?: Recipe['nutri_score'];
+  nutriScore?: NutriScore;
+  recipeId?: string;
+  ingredients?: any[];
   userPreferences?: {
     dailyCalories: number;
     macroSplit: {
@@ -20,7 +22,7 @@ interface NutritionBlockProps {
   };
 }
 
-export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, userPreferences }: NutritionBlockProps) {
+export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, recipeId, ingredients, userPreferences }: NutritionBlockProps) {
   const unitSystem = userPreferences?.unitSystem || 'metric';
   
   // Process nutrition data more efficiently without deep cloning
@@ -30,7 +32,7 @@ export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, userPref
     // Only process fields that will be displayed
     const fieldsToProcess = [
       'calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium',
-      'vitaminA', 'vitaminC', 'vitaminD', 'calcium', 'iron', 'potassium'
+      'saturated_fat', 'vitaminA', 'vitaminC', 'vitaminD', 'calcium', 'iron', 'potassium'
     ];
     
     // Create a new object with only the processed fields
@@ -56,6 +58,11 @@ export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, userPref
       processed.data_quality = recipeNutrition.data_quality;
     }
     
+    // Preserve verification metadata if present
+    if (recipeNutrition.verification) {
+      processed.verification = recipeNutrition.verification;
+    }
+    
     // Create a properly typed EnhancedNutrition object
     const result: EnhancedNutrition = {
       calories: processed.calories || 0,
@@ -65,13 +72,15 @@ export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, userPref
       fiber: processed.fiber || 0,
       sugar: processed.sugar || 0,
       sodium: processed.sodium || 0,
+      saturated_fat: processed.saturated_fat || 0,
       vitaminA: processed.vitaminA || 0,
       vitaminC: processed.vitaminC || 0,
       vitaminD: processed.vitaminD || 0,
       calcium: processed.calcium || 0,
       iron: processed.iron || 0,
       potassium: processed.potassium || 0,
-      data_quality: processed.data_quality
+      data_quality: processed.data_quality,
+      verification: processed.verification
     };
     
     return result;
@@ -93,6 +102,8 @@ export function NutritionBlock({ recipeNutrition, viewMode, nutriScore, userPref
           recipeNutrition={processedNutrition} 
           unitSystem={unitSystem}
           nutriScore={nutriScore}
+          recipeId={recipeId}
+          ingredients={ingredients}
         />
       ) : (
         <PersonalBlock
