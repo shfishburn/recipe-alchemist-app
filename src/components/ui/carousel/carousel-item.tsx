@@ -11,7 +11,7 @@ const CarouselItem = React.forwardRef<
 >(({ className, ...props }, ref) => {
   return (
     <SwiperSlide
-      className={cn("h-full touch-pan-x hw-accelerated", className)}
+      className={cn("h-full drag-x hw-accelerated", className)}
       {...props}
     />
   );
