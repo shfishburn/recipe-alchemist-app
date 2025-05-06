@@ -15,11 +15,11 @@ interface MacroChartProps {
   showTooltip?: boolean;
 }
 
-export function MacroChart({ data, height = 220, showLegend = true, showTooltip = true }: MacroChartProps) {
+export function MacroChart({ data, height = 180, showLegend = true, showTooltip = true }: MacroChartProps) {
   const isMobile = useIsMobile();
   
   // Calculate responsive dimensions
-  const outerRadius = isMobile ? 70 : 80;
+  const outerRadius = isMobile ? 60 : 70;
   const innerRadius = outerRadius * 0.6;
   
   // Custom label rendering function
@@ -39,7 +39,7 @@ export function MacroChart({ data, height = 220, showLegend = true, showTooltip 
         fill="white" 
         textAnchor="middle" 
         dominantBaseline="central"
-        className="text-[13px] font-semibold"
+        className="text-[12px] font-semibold"
       >
         {`${value}%`}
       </text>
@@ -103,8 +103,8 @@ export function MacroChart({ data, height = 220, showLegend = true, showTooltip 
               verticalAlign="bottom"
               align="center"
               wrapperStyle={{ 
-                paddingTop: '10px',
-                fontSize: '12px'
+                paddingTop: '5px',
+                fontSize: '10px'
               }}
             />
           )}

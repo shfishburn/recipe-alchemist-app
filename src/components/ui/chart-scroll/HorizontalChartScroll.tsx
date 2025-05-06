@@ -31,16 +31,16 @@ export function HorizontalChartScroll({
       aria-label="Horizontally scrollable charts"
       id={id}
     >
-      <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory">
-        <div className="flex flex-col gap-8 w-full">
+      <div className="overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 snap-x snap-mandatory">
+        <div className="flex flex-col gap-4 w-full">
           {childrenArray.map((child, index) => (
             <div 
               key={index} 
               className={cn(
-                "flex-shrink-0 snap-center w-full mb-4",
+                "flex-shrink-0 snap-center w-full mb-2",
                 itemClassName
               )}
-              style={{ marginBottom: index < childrenArray.length - 1 ? `${spaceBetween + 8}px` : '16px' }}
+              style={{ marginBottom: index < childrenArray.length - 1 ? `${spaceBetween}px` : '8px' }}
             >
               {child}
             </div>
@@ -49,7 +49,7 @@ export function HorizontalChartScroll({
       </div>
       
       {childrenArray.length > 1 && (
-        <div className="text-xs text-center text-muted-foreground mt-2 swipe-indicator md:hidden">
+        <div className="text-xs text-center text-muted-foreground mt-1 swipe-indicator md:hidden">
           <span className="inline-block touch-target-base">Scroll to see more</span>
         </div>
       )}

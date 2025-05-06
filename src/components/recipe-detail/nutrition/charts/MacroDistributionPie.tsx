@@ -19,7 +19,7 @@ interface MacroDistributionPieProps {
   height?: number;
 }
 
-export function MacroDistributionPie({ data, title, height = 200 }: MacroDistributionPieProps) {
+export function MacroDistributionPie({ data, title, height = 180 }: MacroDistributionPieProps) {
   const isMobile = useIsMobile();
   
   const renderCustomizedLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
@@ -40,7 +40,7 @@ export function MacroDistributionPie({ data, title, height = 200 }: MacroDistrib
         fill="white" 
         textAnchor="middle" 
         dominantBaseline="central"
-        className="text-[13px] font-semibold"
+        className="text-[12px] font-semibold"
       >
         {`${value}%`}
       </text>
@@ -57,12 +57,12 @@ export function MacroDistributionPie({ data, title, height = 200 }: MacroDistrib
   };
   
   // Calculate responsive dimensions
-  const outerRadius = isMobile ? (window.innerWidth < 350 ? 60 : 70) : 85;
-  const innerRadius = Math.max(outerRadius * 0.65, 40);
+  const outerRadius = isMobile ? (window.innerWidth < 350 ? 50 : 60) : 70;
+  const innerRadius = Math.max(outerRadius * 0.65, 30);
   
   return (
     <div style={{ height: `${height}px` }} aria-label={title} role="img">
-      <h5 className="text-xs font-medium text-center mb-4 text-slate-700">
+      <h5 className="text-xs font-medium text-center mb-2 text-slate-700">
         {title}
       </h5>
       <ResponsiveContainer width="100%" height="100%">
@@ -93,8 +93,8 @@ export function MacroDistributionPie({ data, title, height = 200 }: MacroDistrib
             align="center"
             formatter={customLegendFormatter}
             wrapperStyle={{ 
-              paddingTop: isMobile ? '10px' : '15px',
-              fontSize: '12px'
+              paddingTop: isMobile ? '5px' : '10px',
+              fontSize: '10px'
             }}
           />
           <Tooltip 
@@ -102,7 +102,7 @@ export function MacroDistributionPie({ data, title, height = 200 }: MacroDistrib
               if (!active || !payload || !payload.length) return null;
               const data = payload[0].payload;
               return (
-                <div className="bg-white p-3 border rounded-md shadow-md text-xs">
+                <div className="bg-white p-2 border rounded-md shadow-md text-xs">
                   <p className="font-medium mb-1" style={{ color: data.fill }}>{data.name}</p>
                   <p>
                     <span className="font-semibold">{data.value}%</span>

@@ -21,22 +21,22 @@ const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
   const isMobile = useIsMobile();
   
   const renderChart = (data: any[], title: string) => (
-    <div className="w-full mb-8">
-      <h3 className="text-base font-medium mb-3 text-center">{title}</h3>
-      <div className="max-w-[300px] mx-auto">
+    <div className="w-full mb-3">
+      <h3 className="text-sm font-medium mb-1 text-center">{title}</h3>
+      <div className="max-w-[250px] mx-auto">
         <ChartContainer 
           config={{
             [data[0].name]: { color: data[0].color },
             [data[1].name]: { color: data[1].color },
           }} 
-          className="h-[180px] w-full"
+          className="h-[140px] w-full"
         >
           <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <Pie 
               data={data}
               cx="50%"
               cy="50%"
-              outerRadius={isMobile ? 50 : 60}
+              outerRadius={isMobile ? 40 : 50}
               fill="#8884d8"
               dataKey="value"
               label={({ name, value }) => `${name}: ${value}%`}
@@ -50,8 +50,8 @@ const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
               verticalAlign="bottom" 
               align="center"
               wrapperStyle={{ 
-                paddingTop: '8px',
-                fontSize: '11px',
+                paddingTop: '4px',
+                fontSize: '10px',
                 width: '100%',
                 margin: '0 auto'
               }}

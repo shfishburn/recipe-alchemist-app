@@ -20,27 +20,27 @@ export function DistributionCharts({ recipeMacros, targetMacros }: DistributionC
   const isMobile = useIsMobile();
   
   return (
-    <div className="w-full mx-auto space-y-8">
+    <div className="w-full mx-auto space-y-4">
       <HorizontalChartScroll 
         slidesPerView={1}
-        spaceBetween={24}
+        spaceBetween={16}
       >
-        <Card className="border border-slate-200 w-full mb-6">
-          <CardContent className={`flex flex-col items-center justify-center ${isMobile ? "p-3 py-4" : "p-4"}`}>
+        <Card className="border border-slate-200 w-full mb-3">
+          <CardContent className={`flex flex-col items-center justify-center ${isMobile ? "p-2 py-3" : "p-4"}`}>
             <MacroDistributionPie 
               data={recipeMacros}
               title="Recipe Macro Breakdown"
-              height={isMobile ? 220 : 240}
+              height={isMobile ? 180 : 220}
             />
           </CardContent>
         </Card>
         
-        <Card className="border border-slate-200 w-full mb-6">
-          <CardContent className={`flex flex-col items-center justify-center ${isMobile ? "p-3 py-4" : "p-4"}`}>
+        <Card className="border border-slate-200 w-full mb-3">
+          <CardContent className={`flex flex-col items-center justify-center ${isMobile ? "p-2 py-3" : "p-4"}`}>
             <MacroDistributionPie 
               data={targetMacros}
               title="Your Target Macro Breakdown"
-              height={isMobile ? 220 : 240}
+              height={isMobile ? 180 : 220}
             />
           </CardContent>
         </Card>
