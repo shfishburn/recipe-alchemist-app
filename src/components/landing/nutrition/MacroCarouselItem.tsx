@@ -32,23 +32,23 @@ interface MacroCarouselItemProps {
 
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
   return (
-    <div className="space-y-3 px-2 md:px-6 py-2 flex flex-col items-center w-full">
-      <h3 className="text-center text-xl font-semibold text-recipe-purple">{item.title}</h3>
+    <div className="px-1 md:px-4 py-1 flex flex-col items-center w-full">
+      <h3 className="text-center text-lg font-semibold text-recipe-purple mb-1">{item.title}</h3>
       
-      <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
+      <div className="flex flex-col gap-2 w-full max-w-3xl mx-auto">
         <div className="flex flex-col items-center">
-          <div className="w-full max-w-[280px] mx-auto">
+          <div className="w-full max-w-[240px] mx-auto">
             <Suspense fallback={
-              <div className="h-40 flex items-center justify-center">
-                <Skeleton className="h-32 w-32 rounded-full" />
+              <div className="h-32 flex items-center justify-center">
+                <Skeleton className="h-24 w-24 rounded-full" />
               </div>
             }>
               <MacroChart 
                 data={item.data}
-                height={180}
+                height={150}
                 showTooltip 
               />
-              <div className="text-xs text-center text-gray-500 mt-1">
+              <div className="text-xs text-center text-gray-500 mt-0.5">
                 <p className="italic">*Protein and carbs: 4 cal/g, fat: 9 cal/g</p>
               </div>
             </Suspense>
@@ -56,17 +56,17 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
         </div>
         
         {item.special ? (
-          <div className="flex flex-col items-center w-full pb-4">
+          <div className="flex flex-col items-center w-full">
             <Suspense fallback={
-              <div className="h-40 w-full flex items-center justify-center">
-                <Skeleton className="h-32 w-full" />
+              <div className="h-32 w-full flex items-center justify-center">
+                <Skeleton className="h-24 w-full" />
               </div>
             }>
               <MacroPieCharts carbsData={carbsData} fatsData={fatsData} />
             </Suspense>
           </div>
         ) : (
-          <div className="flex flex-col items-center w-full pb-2">
+          <div className="flex flex-col items-center w-full">
             <MacroDetailsPanel 
               title={item.title}
               description={item.description}

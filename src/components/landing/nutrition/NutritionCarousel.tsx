@@ -21,28 +21,28 @@ export function NutritionCarousel() {
   
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-      <div className="text-center mb-4 md:mb-6">
-        <div className="inline-flex items-center justify-center gap-2 mb-2">
+      <div className="text-center mb-4">
+        <div className="inline-flex items-center justify-center gap-2 mb-1">
           <ChartPie className="h-5 w-5 text-recipe-purple" />
           <Activity className="h-5 w-5 text-recipe-blue" />
         </div>
-        <h2 className="font-bold text-2xl md:text-3xl mb-2">Personalized Nutrition Analysis</h2>
-        <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
+        <h2 className="font-bold text-2xl md:text-3xl mb-1">Personalized Nutrition Analysis</h2>
+        <p className="text-base text-muted-foreground max-w-3xl mx-auto">
           Every recipe comes with detailed nutritional information tailored to your dietary goals,
           helping you make informed choices for your health journey.
         </p>
       </div>
       
-      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden pb-4">
+      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden">
         <Carousel
           opts={{
-            align: "start",
+            align: "center",
           }}
           className="w-full"
         >
-          <CarouselContent className={`px-4 ${isMobile ? 'py-2' : 'py-3'}`}>
+          <CarouselContent className="px-2 py-2">
             {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="p-1 md:p-2 min-w-[100%] md:min-w-[50%] lg:min-w-[33%]">
+              <CarouselItem key={index} className="w-full">
                 <MacroCarouselItem 
                   item={item} 
                   carbsData={carbsData} 
@@ -52,7 +52,7 @@ export function NutritionCarousel() {
             ))}
           </CarouselContent>
           
-          <div className={`flex items-center justify-between ${isMobile ? 'p-2' : 'p-3'}`}>
+          <div className="flex items-center justify-between px-3 py-2">
             <CarouselPagination />
             <MacroLegend />
           </div>

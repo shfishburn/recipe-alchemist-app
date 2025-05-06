@@ -15,11 +15,11 @@ interface MacroChartProps {
   showTooltip?: boolean;
 }
 
-export function MacroChart({ data, height = 180, showLegend = true, showTooltip = true }: MacroChartProps) {
+export function MacroChart({ data, height = 150, showLegend = true, showTooltip = true }: MacroChartProps) {
   const isMobile = useIsMobile();
   
   // Calculate responsive dimensions
-  const outerRadius = isMobile ? 60 : 70;
+  const outerRadius = isMobile ? 50 : 60;
   const innerRadius = outerRadius * 0.6;
   
   // Custom label rendering function
@@ -39,7 +39,7 @@ export function MacroChart({ data, height = 180, showLegend = true, showTooltip 
         fill="white" 
         textAnchor="middle" 
         dominantBaseline="central"
-        className="text-[12px] font-semibold"
+        className="text-[10px] font-semibold"
       >
         {`${value}%`}
       </text>
@@ -65,13 +65,13 @@ export function MacroChart({ data, height = 180, showLegend = true, showTooltip 
 
   // Custom legend formatter
   const customLegendFormatter = (value: string, entry: any) => {
-    return <span className="text-xs">{value}: <strong>{entry.payload.value}%</strong></span>;
+    return <span className="text-[10px]">{value}: <strong>{entry.payload.value}%</strong></span>;
   };
 
   return (
     <div className="w-full" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <Pie
             data={data}
             cx="50%"
@@ -103,7 +103,7 @@ export function MacroChart({ data, height = 180, showLegend = true, showTooltip 
               verticalAlign="bottom"
               align="center"
               wrapperStyle={{ 
-                paddingTop: '5px',
+                paddingTop: '2px',
                 fontSize: '10px'
               }}
             />

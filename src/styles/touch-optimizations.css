@@ -58,7 +58,9 @@
 }
 
 .momentum-scroll > * {
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 /* Chart scroll specific styles */
@@ -66,7 +68,7 @@
   position: relative;
   width: 100%;
   overflow: visible;
-  padding-bottom: 12px; /* Space for the scroll indicator */
+  padding-bottom: 8px; /* Reduced space for the scroll indicator */
 }
 
 /* Visual indicator for scrollable content */
@@ -121,4 +123,9 @@
 
 .swiper-wrapper {
   overscroll-behavior: contain !important;
+}
+
+/* Enhanced snap behavior for carousel items */
+.snap-mandatory > * {
+  scroll-snap-stop: always;
 }
