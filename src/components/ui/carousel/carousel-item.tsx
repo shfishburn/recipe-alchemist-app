@@ -9,9 +9,9 @@ const CarouselItem = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<typeof SwiperSlide>
 >(({ className, ...props }, ref) => {
+  // Create a ref that we can pass to SwiperSlide
   return (
     <SwiperSlide
-      ref={ref}
       className={cn("h-full", className)}
       {...props}
     />
