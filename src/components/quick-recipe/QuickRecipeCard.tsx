@@ -8,6 +8,7 @@ import { RecipeSteps } from './card/RecipeSteps';
 import { RecipeHighlights } from './card/RecipeHighlights';
 import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
+import { PlaceholderImage } from '@/components/recipe-detail/recipe-image/PlaceholderImage';
 
 interface QuickRecipeCardProps {
   recipe: QuickRecipe;
@@ -27,6 +28,13 @@ export function QuickRecipeCard({
   return (
     <Card className="w-full border-2 border-recipe-green/20">
       <CardHeader className="pb-2">
+        <div className="w-full aspect-video overflow-hidden rounded-lg mb-4">
+          <PlaceholderImage
+            hasError={false}
+            variant="card"
+            title={recipe.title}
+          />
+        </div>
         <CardTitle className="text-2xl">
           {recipe.title}
         </CardTitle>
