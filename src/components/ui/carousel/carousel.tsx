@@ -39,7 +39,7 @@ export function useCarousel() {
   return React.useContext(CarouselContext);
 }
 
-export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
+const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
   ({ className, children, opts = {} }, ref) => {
     // Simple scrolling implementation
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -101,4 +101,5 @@ export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
 
 Carousel.displayName = "Carousel";
 
+// Only export once - removing the duplicate export at the end
 export { Carousel };
