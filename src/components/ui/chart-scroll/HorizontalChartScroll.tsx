@@ -26,27 +26,21 @@ export function HorizontalChartScroll({
   
   return (
     <div 
-      className={cn("chart-scroll-wrapper", className)}
+      className={cn("chart-scroll-wrapper w-full", className)}
       role="region" 
       aria-label="Horizontally scrollable charts"
       id={id}
     >
       <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory">
-        <div className="flex flex-col md:flex-row gap-4 w-full">
+        <div className="flex flex-col gap-6 w-full">
           {childrenArray.map((child, index) => (
             <div 
               key={index} 
               className={cn(
-                "flex-shrink-0 snap-center w-full md:w-auto", 
-                typeof slidesPerView === "number" && slidesPerView !== 1
-                  ? `md:w-[calc((100% - ${(slidesPerView - 1) * spaceBetween}px) / ${slidesPerView})]` 
-                  : "md:min-w-[260px]",
+                "flex-shrink-0 snap-center w-full",
                 itemClassName
               )}
-              style={{ 
-                marginRight: index < childrenArray.length - 1 ? `${spaceBetween}px` : 0,
-                marginBottom: index < childrenArray.length - 1 ? `${spaceBetween}px` : 0
-              }}
+              style={{ marginBottom: index < childrenArray.length - 1 ? `${spaceBetween}px` : 0 }}
             >
               {child}
             </div>
@@ -55,7 +49,7 @@ export function HorizontalChartScroll({
       </div>
       
       {childrenArray.length > 1 && (
-        <div className="text-xs text-center text-muted-foreground mt-2 swipe-indicator md:block hidden">
+        <div className="text-xs text-center text-muted-foreground mt-2 swipe-indicator md:hidden">
           <span className="inline-block touch-target-base">Scroll to see more</span>
         </div>
       )}
