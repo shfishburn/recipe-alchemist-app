@@ -2,16 +2,19 @@
 "use client";
 
 import * as React from "react";
-import { SwiperSlide } from "swiper/react";
 import { cn } from "@/lib/utils";
 
 const CarouselItem = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof SwiperSlide>
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
   return (
-    <SwiperSlide
-      className={cn("h-full drag-x hw-accelerated", className)}
+    <div
+      ref={ref}
+      className={cn(
+        "h-full flex-shrink-0 snap-center hw-accelerated",
+        className
+      )}
       {...props}
     />
   );

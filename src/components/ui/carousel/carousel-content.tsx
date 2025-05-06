@@ -9,7 +9,7 @@ interface CarouselContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 const CarouselContent = React.forwardRef<HTMLDivElement, CarouselContentProps>(
   ({ className, children, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn("swiper-wrapper", className)} {...props}>
+      <div ref={ref} className={cn("flex", className)} {...props}>
         {children}
       </div>
     );

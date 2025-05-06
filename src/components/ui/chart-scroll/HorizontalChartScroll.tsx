@@ -2,35 +2,24 @@
 "use client";
 
 import React from "react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 
 interface HorizontalChartScrollProps {
   children: React.ReactNode;
   className?: string;
-  showControls?: boolean;
   spaceBetween?: number;
   itemClassName?: string;
   id?: string;
   slidesPerView?: number | "auto";
-  controlsClassName?: string;
 }
 
 export function HorizontalChartScroll({
   children,
   className,
-  showControls = false,
   spaceBetween = 16,
   itemClassName,
   id,
   slidesPerView = "auto",
-  controlsClassName,
 }: HorizontalChartScrollProps) {
   // Convert children to array for mapping
   const childrenArray = React.Children.toArray(children);
@@ -42,38 +31,25 @@ export function HorizontalChartScroll({
       aria-label="Horizontally scrollable charts"
       id={id}
     >
-      <Carousel
-        opts={{
-          align: "start",
-          loop: false,
-          slidesPerView: slidesPerView,
-          spaceBetween: spaceBetween,
-          breakpoints: {
-            // Responsive settings
-            640: { slidesPerView: typeof slidesPerView === "number" ? slidesPerView : 1 },
-            768: { slidesPerView: typeof slidesPerView === "number" ? Math.min(slidesPerView + 1, childrenArray.length) : 2 }
-          },
-        }}
-        className="w-full hw-accelerated touch-scroll"
-      >
-        <CarouselContent className="!ml-0">
+      <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory">
+        <div className="flex gap-4">
           {childrenArray.map((child, index) => (
-            <CarouselItem 
+            <div 
               key={index} 
-              className={cn("pl-0 touch-pan-x", itemClassName)}
+              className={cn(
+                "flex-shrink-0 snap-center", 
+                typeof slidesPerView === "number" 
+                  ? `w-[calc((100% - ${(slidesPerView - 1) * spaceBetween}px) / ${slidesPerView})]` 
+                  : "min-w-[260px]",
+                itemClassName
+              )}
+              style={{ marginRight: index < childrenArray.length - 1 ? `${spaceBetween}px` : 0 }}
             >
               {child}
-            </CarouselItem>
+            </div>
           ))}
-        </CarouselContent>
-        
-        {showControls && childrenArray.length > 1 && (
-          <>
-            <CarouselPrevious className={cn("left-0", controlsClassName)} />
-            <CarouselNext className={cn("right-0", controlsClassName)} />
-          </>
-        )}
-      </Carousel>
+        </div>
+      </div>
       
       {childrenArray.length > 1 && (
         <div className="text-xs text-center text-muted-foreground mt-2 swipe-indicator">

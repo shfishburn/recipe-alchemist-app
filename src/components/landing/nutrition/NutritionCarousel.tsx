@@ -1,11 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
   CarouselPagination
 } from '@/components/ui/carousel';
 import { 
@@ -18,42 +16,6 @@ import { MacroLegend } from './MacroLegend';
 import { ChartPie, Activity } from 'lucide-react';
 
 export function NutritionCarousel() {
-  const [api, setApi] = useState<any>(null);
-  const [isPaused, setIsPaused] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  // Update current slide when API changes
-  useEffect(() => {
-    if (!api) return;
-    
-    const handleChange = () => {
-      setCurrentSlide(api.realIndex);
-    };
-    
-    api.on('slideChange', handleChange);
-    return () => {
-      api.off('slideChange', handleChange);
-    };
-  }, [api]);
-
-  // Auto-scroll effect
-  useEffect(() => {
-    if (!api || isPaused) return;
-    
-    const interval = setInterval(() => {
-      api.slideNext();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [api, isPaused]);
-
-  // Debug API initialization - with safety checks
-  useEffect(() => {
-    if (api && api.slides) {
-      console.log('Nutrition Carousel API initialized with', api.slides.length, 'slides');
-    }
-  }, [api]);
-
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="text-center mb-6 md:mb-8">
@@ -68,40 +30,16 @@ export function NutritionCarousel() {
         </p>
       </div>
       
-      <div 
-        className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setTimeout(() => setIsPaused(false), 3000)}
-      >
+      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden">
         <Carousel
           opts={{
-            loop: true,
-            slidesPerView: 1.2,
-            spaceBetween: 20,
-            breakpoints: {
-              640: { slidesPerView: 2.2, spaceBetween: 24 },
-              768: { slidesPerView: 2.5, spaceBetween: 28 },
-              1024: { slidesPerView: 3.2, spaceBetween: 32 },
-            },
-            centeredSlides: false,
-            grabCursor: true,
-            touchEventsTarget: 'container',
-            touchStartPreventDefault: false,
-            touchMoveStopPropagation: false,
-            touchReleaseOnEdges: false,
-            cssMode: false, // Disable CSS mode for better touch support
-            resistance: false,
-            longSwipesRatio: 0.2,
-            threshold: 10, // Lower threshold to detect swipes more easily
+            align: "start",
           }}
-          setApi={setApi}
-          className="w-full hw-accelerated"
+          className="w-full"
         >
-          <CarouselContent className="px-2">
+          <CarouselContent className="px-4 py-4">
             {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="p-2 md:p-3 min-w-[80%] sm:min-w-[45%] md:min-w-[33%]">
+              <CarouselItem key={index} className="p-2 md:p-3 min-w-[85%] sm:min-w-[50%] md:min-w-[33%] lg:min-w-[25%]">
                 <MacroCarouselItem 
                   item={item} 
                   carbsData={carbsData} 
@@ -111,15 +49,18 @@ export function NutritionCarousel() {
             ))}
           </CarouselContent>
           
-          {/* Make arrows clearly visible and always present */}
-          <CarouselPrevious className="left-2 md:left-4 bg-white dark:bg-slate-800 shadow-md opacity-90 hover:opacity-100" />
-          <CarouselNext className="right-2 md:right-4 bg-white dark:bg-slate-800 shadow-md opacity-90 hover:opacity-100" />
-          
-          <div className="p-4 pb-6">
-            <CarouselPagination variant="fraction" />
+          <div className="flex items-center justify-between p-4">
+            <CarouselPagination />
             <MacroLegend />
           </div>
         </Carousel>
+        
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">
+          <div className="h-full w-16 bg-gray-300 rounded-full mx-auto"></div>
+        </div>
+        <div className="text-xs text-center text-muted-foreground pb-3 pt-1">
+          Swipe to see more
+        </div>
       </div>
     </div>
   );

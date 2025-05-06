@@ -3,88 +3,42 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { useCarousel } from "./carousel";
 
 interface CarouselPaginationProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "dots" | "fraction" | "numbers";
   showNumbers?: boolean;
-  variant?: "dots" | "numbers" | "fraction";
 }
 
-const CarouselPagination = React.forwardRef<
-  HTMLDivElement,
-  CarouselPaginationProps
->(({ className, showNumbers = false, variant = "dots", ...props }, ref) => {
-  const { api, activeIndex } = useCarousel();
-  const [slideCount, setSlideCount] = React.useState(0);
-
-  React.useEffect(() => {
-    if (!api || !api.slides) return;
-    setSlideCount(api.slides.length);
-    
-    // Update on resize events
-    const updateCount = () => {
-      if (api && api.slides) {
-        setSlideCount(api.slides.length);
-      }
-    };
-    
-    api.on('resize', updateCount);
-    api.on('update', updateCount);
-    
-    return () => {
-      api.off('resize', updateCount);
-      api.off('update', updateCount);
-    };
-  }, [api]);
-
-  // Don't show if there's only one slide
-  if (slideCount <= 1) {
-    return null;
-  }
-
-  if (variant === "fraction") {
+const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationProps>(
+  ({ className, variant = "dots", showNumbers = false, ...props }, ref) => {
+    // Simple pagination display - in a real implementation this would track the active slide
     return (
-      <div
-        ref={ref}
-        className={cn("flex items-center justify-center mt-3", className)}
+      <div 
+        ref={ref} 
+        className={cn(
+          "flex justify-center items-center gap-1 mt-2", 
+          className
+        )}
+        aria-label="Carousel pagination"
         {...props}
       >
-        <span className="text-xs text-muted-foreground">
-          {activeIndex + 1} / {slideCount}
-        </span>
+        {/* Simple dots pagination */}
+        <div className="flex items-center gap-1.5">
+          {[0, 1, 2].map((index) => (
+            <button
+              key={index}
+              className={cn(
+                "w-2 h-2 rounded-full bg-gray-300 transition-colors",
+                index === 0 ? "bg-gray-700 w-3 h-3" : ""
+              )}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </div>
     );
   }
-
-  return (
-    <div
-      ref={ref}
-      className={cn("flex items-center justify-center gap-1.5 mt-3", className)}
-      {...props}
-    >
-      {Array.from({ length: slideCount }).map((_, index) => (
-        <button
-          key={index}
-          className={cn(
-            "w-2 h-2 rounded-full transition-all",
-            activeIndex === index
-              ? "bg-primary scale-125"
-              : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-          )}
-          onClick={() => api?.slideTo(index)}
-          aria-label={`Go to slide ${index + 1}`}
-          aria-current={activeIndex === index ? "true" : "false"}
-        />
-      ))}
-      
-      {showNumbers && (
-        <span className="text-xs text-muted-foreground ml-2">
-          {activeIndex + 1} / {slideCount}
-        </span>
-      )}
-    </div>
-  );
-});
+);
 
 CarouselPagination.displayName = "CarouselPagination";
 
