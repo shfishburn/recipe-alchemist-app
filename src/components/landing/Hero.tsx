@@ -3,7 +3,7 @@ import React from 'react';
 import { RecipeCarousel } from './recipes/RecipeCarousel';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Brain, ChartPie, ChefHat, Sparkles } from 'lucide-react';
+import { Brain, ChartPie, ChefHat, Sparkles, Award } from 'lucide-react';
 import { NutritionPreview } from './NutritionPreview';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -21,6 +21,7 @@ const Hero = () => {
           <div className="flex items-center justify-center gap-2 mb-3">
             <ChefHat className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
             <Brain className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+            <Award className="h-6 w-6 md:h-8 md:w-8 text-amber-500" /> 
           </div>
           
           <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
@@ -31,7 +32,8 @@ const Hero = () => {
           
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-4xl mx-auto mt-4 md:mt-5 px-2">
             Tell us what you have in your kitchen and our <strong>AI chef</strong> will transform your ingredients into 
-            delicious, <strong>personalized recipes</strong> with tailored <strong>nutrition insights</strong>.
+            delicious, <strong>personalized recipes</strong> with <strong>detailed nutrition analysis</strong> and 
+            <strong> NutriScore ratings</strong> to help you reach your health goals.
           </p>
           
           {/* AI Benefits */}
@@ -40,10 +42,10 @@ const Hero = () => {
               <Sparkles className="w-3 h-3 mr-1" /> AI-Powered
             </span>
             <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded flex items-center">
-              <ChartPie className="w-3 h-3 mr-1" /> Personalized Nutrition
+              <ChartPie className="w-3 h-3 mr-1" /> Nutrition Analysis
             </span>
-            <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-1 rounded">
-              Ready in 30 mins
+            <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-1 rounded flex items-center">
+              <Award className="w-3 h-3 mr-1" /> NutriScore Ratings
             </span>
           </div>
           

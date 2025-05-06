@@ -12,8 +12,8 @@ interface CarouselPaginationProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationProps>(
   ({ className, variant = "dots", showNumbers = false, ...props }, ref) => {
-    const { activeIndex } = useCarousel();
-    const totalSlides = 3; // Fixed number for demo, ideally would be computed from children
+    const { activeIndex, api } = useCarousel();
+    const totalSlides = api?.scrollSnapList().length || 7; // Default to 7 slides (4 macro + 3 nutriscore)
     
     return (
       <div 
@@ -38,6 +38,7 @@ const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationPr
               )}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={activeIndex === index ? "true" : "false"}
+              onClick={() => api?.scrollTo(index)}
             />
           ))}
         </div>

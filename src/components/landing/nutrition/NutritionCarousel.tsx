@@ -9,11 +9,12 @@ import {
 import { 
   macroDistributionData, 
   carbsData, 
-  fatsData 
+  fatsData,
+  nutriScoreExamples
 } from './nutrition-sample-data';
 import { MacroCarouselItem } from './MacroCarouselItem';
 import { MacroLegend } from './MacroLegend';
-import { ChartPie, Activity } from 'lucide-react';
+import { ChartPie, Activity, Award } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export function NutritionCarousel() {
@@ -25,11 +26,12 @@ export function NutritionCarousel() {
         <div className="inline-flex items-center justify-center gap-2 mb-1">
           <ChartPie className="h-5 w-5 text-recipe-purple" />
           <Activity className="h-5 w-5 text-recipe-blue" />
+          <Award className="h-5 w-5 text-amber-500" />
         </div>
         <h2 className="font-bold text-2xl md:text-3xl mb-1">Personalized Nutrition Analysis</h2>
         <p className="text-base text-muted-foreground max-w-3xl mx-auto">
-          Every recipe comes with detailed nutritional information tailored to your dietary goals,
-          helping you make informed choices for your health journey.
+          Every recipe comes with detailed nutritional information and NutriScore ratings 
+          tailored to your dietary goals, helping you make informed choices for your health journey.
         </p>
       </div>
       
@@ -47,6 +49,17 @@ export function NutritionCarousel() {
                   item={item} 
                   carbsData={carbsData} 
                   fatsData={fatsData} 
+                />
+              </CarouselItem>
+            ))}
+            
+            {nutriScoreExamples.map((item, index) => (
+              <CarouselItem key={`nutriscore-${index}`} className="w-full">
+                <MacroCarouselItem 
+                  item={item}
+                  nutriScoreExample={true}
+                  carbsData={carbsData}
+                  fatsData={fatsData}
                 />
               </CarouselItem>
             ))}
