@@ -112,6 +112,8 @@ export const formatRequestBody = (formData: QuickRecipeFormData) => {
   const dietaryString = processDietaryValue(formData.dietary);
   const cuisineCategory = getCuisineCategory(cuisineString);
   
+  console.log(`Format request body - cuisine: "${cuisineString}", category: "${cuisineCategory}"`);
+  
   // Define the request body with properly formatted values
   return {
     cuisine: cuisineString || "any",

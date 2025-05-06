@@ -84,6 +84,7 @@ export const useQuickRecipeSave = () => {
       console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
       
       // Calculate a valid cuisine_category based on the cuisine string
+      // IMPORTANT: We explicitly set cuisine_category based on cuisineString to avoid relying on the database trigger
       const cuisineCategory = getCuisineCategory(cuisineString);
       console.log(`Using cuisine_category: "${cuisineCategory}" for cuisine: "${cuisineString}"`);
       
