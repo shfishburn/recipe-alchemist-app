@@ -3,7 +3,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage, OptimisticMessage } from '@/types/chat';
-import { getChatMeta, setChatMeta } from '@/utils/chat-meta';
+import { getChatMetaValue } from '@/utils/chat-meta';
+
+/**
+ * @deprecated This store is deprecated as we're focusing only on Quick Recipe chat
+ */
 
 interface MessageState {
   pending: boolean;

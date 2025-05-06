@@ -6,6 +6,8 @@ import { QuickCookingMode } from '@/components/quick-recipe/QuickCookingMode';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { QuickRecipeChatDrawer } from './chat/QuickRecipeChatDrawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { MessageCircle } from 'lucide-react';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
@@ -35,6 +37,18 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
         isSaving={isSaving}
         showCookButton={false}
       />
+      
+      {/* Prominently display chat button since we're focusing on Quick Recipe chat */}
+      <div className="mt-6 flex justify-center">
+        <Button 
+          onClick={() => setChatDrawerOpen(true)}
+          className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+          size={isMobile ? "default" : "lg"}
+        >
+          <MessageCircle className="h-5 w-5" />
+          Chat About This Recipe
+        </Button>
+      </div>
       
       {/* Dialog for cooking mode */}
       <QuickCookingMode 

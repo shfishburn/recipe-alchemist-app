@@ -1,9 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { ChatMessage, OptimisticMessage } from '@/types/chat';
-import { getChatMeta, hasChatMeta } from '@/utils/chat-meta';
+import { getChatMetaValue, hasChatMeta } from '@/utils/chat-meta';
 
 /**
+ * @deprecated This hook is deprecated as we're focusing only on Quick Recipe chat
  * Hook for managing optimistic UI updates while waiting for real chat responses
  */
 export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
@@ -16,7 +17,7 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
       const replacedOptimisticIds = new Map<string, boolean>();
       
       chatHistory.forEach(message => {
-        const optimisticId = getChatMeta(message, 'optimistic_id', '');
+        const optimisticId = getChatMetaValue(message, 'optimistic_id', '');
         if (optimisticId) {
           replacedOptimisticIds.set(optimisticId, true);
         }
@@ -24,7 +25,7 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
       
       // Filter out optimistic messages that now have real counterparts
       const filteredMessages = optimisticMessages.filter(message => {
-        const messageId = message.id || getChatMeta(message, 'optimistic_id', '');
+        const messageId = message.id || getChatMetaValue(message, 'optimistic_id', '');
         return !messageId || !replacedOptimisticIds.has(messageId);
       });
       
@@ -62,7 +63,7 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
   const removeOptimisticMessage = useCallback((id: string) => {
     setOptimisticMessages(prev => 
       prev.filter(msg => {
-        const msgId = msg.id || getChatMeta(msg, 'optimistic_id', '');
+        const msgId = msg.id || getChatMetaValue(msg, 'optimistic_id', '');
         return msgId !== id;
       })
     );

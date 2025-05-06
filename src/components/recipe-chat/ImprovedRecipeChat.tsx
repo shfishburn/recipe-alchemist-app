@@ -1,4 +1,7 @@
 
+/**
+ * @deprecated This component is deprecated as we're focusing only on Quick Recipe chat
+ */
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useImprovedChat } from '@/hooks/recipe-chat/use-improved-chat';

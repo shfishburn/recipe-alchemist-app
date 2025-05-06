@@ -115,8 +115,8 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     }
   };
 
-  // Calculate height based on device
-  const chatHeight = isMobile ? 'calc(90vh - 160px)' : '60vh';
+  // Use fixed pixel heights instead of dynamic calculations
+  const chatHeight = isMobile ? "450px" : "500px";
 
   return (
     <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full w-full">
@@ -131,7 +131,8 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
           
           <div className="flex-grow overflow-hidden relative">
             <ScrollArea 
-              className={`h-[${chatHeight}] px-3 sm:px-5 overflow-y-auto`}
+              className="px-3 sm:px-5 overflow-y-auto"
+              style={{ height: chatHeight }}
               ref={scrollAreaRef}
             >
               <div className="py-3 flex flex-col space-y-6">

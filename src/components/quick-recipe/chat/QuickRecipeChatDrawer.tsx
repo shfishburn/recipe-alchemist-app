@@ -51,14 +51,15 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
     }
   }, [open]);
   
-  const drawerHeight = isMobile ? 'h-[85vh]' : 'h-[80vh]';
-  const contentHeight = isMobile ? 'h-[calc(85vh-60px)]' : 'h-[calc(80vh-60px)]';
+  // Use fixed height values instead of dynamic calculations for more stability
+  const drawerHeight = isMobile ? '85vh' : '80vh';
+  const contentHeight = isMobile ? 'calc(85vh - 60px)' : 'calc(80vh - 60px)';
   
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${drawerHeight} max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
-        style={{ zIndex: 50 }}
+        className={`max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
+        style={{ height: drawerHeight, zIndex: 50 }}
         ref={contentRef}
       >
         <DrawerHeader className="border-b flex items-center justify-between bg-white py-3 sticky top-0 z-10">
@@ -103,7 +104,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
           </div>
         </DrawerHeader>
         
-        <div className={`p-2 sm:p-4 flex-1 ${contentHeight} w-full overflow-hidden`}>
+        <div className="p-2 sm:p-4 flex-1 w-full overflow-hidden" style={{ height: contentHeight }}>
           <QuickRecipeChat recipe={recipe} />
         </div>
       </DrawerContent>

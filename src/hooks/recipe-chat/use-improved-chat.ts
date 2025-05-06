@@ -1,4 +1,8 @@
 
+/**
+ * @deprecated This hook is deprecated as we're focusing only on Quick Recipe chat
+ * Use useUnifiedRecipeChat with a QuickRecipe instead
+ */
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/hooks/use-toast';

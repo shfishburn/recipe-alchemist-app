@@ -66,3 +66,4 @@ export function formatChatTime(chat: ChatMessage): string {
     minute: '2-digit'
   });
 }
+

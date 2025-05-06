@@ -1,4 +1,8 @@
 
+/**
+ * @deprecated This hook is deprecated as we're focusing only on Quick Recipe chat
+ * Use useUnifiedRecipeChat with a QuickRecipe instead
+ */
 import { useApplyChanges } from './recipe-chat/use-apply-changes';
 import { useChatHistory } from './recipe-chat/use-chat-history';
 import { useOptimisticMessages } from './recipe-chat/use-optimistic-messages';
@@ -10,7 +14,7 @@ import type { ChatMessage } from '@/types/chat';
 export type { ChatMessage };
 
 /**
- * Main hook for recipe chat functionality, integrating all the specialized hooks
+ * @deprecated Main hook for recipe chat functionality. Use useUnifiedRecipeChat instead.
  */
 export const useRecipeChat = (recipe: Recipe) => {
   // Get chat history from the database
@@ -44,6 +48,8 @@ export const useRecipeChat = (recipe: Recipe) => {
   
   // Apply changes from chat to the recipe
   const { applyChanges, isApplying } = useApplyChanges();
+
+  console.warn("useRecipeChat is deprecated, please use useUnifiedRecipeChat instead");
 
   return {
     // Chat state
