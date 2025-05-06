@@ -47,8 +47,8 @@ export function useRecipeUpdates(recipeId: string) {
               ) as unknown as Json
             : undefined,
           nutrition: updates.nutrition ? updates.nutrition as unknown as Json : undefined,
-          // Convert nutri_score to Json if present
-          nutri_score: updates.nutri_score ? updates.nutri_score as unknown as Json : undefined,
+          // IMPORTANT: Set nutri_score to null to bypass calculation
+          nutri_score: null,
           updated_at: new Date().toISOString(),
         };
         
