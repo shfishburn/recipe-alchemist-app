@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRecipes } from '@/hooks/use-recipes';
 import {
   Carousel,
+  CarouselContent,
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
@@ -69,14 +70,16 @@ export function RecipeCarousel() {
           setApi={setApi}
           className="w-full"
         >
-          {featuredRecipes.map((recipe, index) => (
-            <CarouselItem key={recipe.id}>
-              <RecipeCard 
-                recipe={recipe} 
-                priority={index < 2} 
-              />
-            </CarouselItem>
-          ))}
+          <CarouselContent>
+            {featuredRecipes.map((recipe, index) => (
+              <CarouselItem key={recipe.id}>
+                <RecipeCard 
+                  recipe={recipe} 
+                  priority={index < 2} 
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
           
           <CarouselPrevious className={cn(
             "hidden md:flex left-0 md:-left-3 lg:-left-6"
