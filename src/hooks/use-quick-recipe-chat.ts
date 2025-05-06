@@ -66,7 +66,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
       const response = await generateQuickRecipeResponse(recipe, userMessage);
       
       // Add the message to chat history
-      const newMessage = {
+      const newMessage: ChatMessage = {
         id: messageId,
         user_message: userMessage,
         ai_response: response.textResponse,
@@ -75,7 +75,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
         meta: { optimistic_id: messageId }
       };
       
-      setChatHistory(prev => [...prev, newMessage]);
+      setChatHistory((prev: ChatMessage[]) => [...prev, newMessage]);
       
     } catch (error) {
       console.error('Error sending chat message:', error);
@@ -131,7 +131,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
       }
       
       // Update chat message to mark as applied
-      setChatHistory(prev => prev.map(msg => 
+      setChatHistory((prev: ChatMessage[]) => prev.map(msg => 
         msg.id === chatMessage.id ? { ...msg, applied: true } : msg
       ));
       
