@@ -83,12 +83,13 @@ export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
           <div
             ref={scrollContainerRef}
             className={cn(
-              "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory touch-pan-x",
+              "flex overflow-x-auto scrollbar-hide snap-x snap-mandatory",
               "scroll-smooth -mx-4 px-4 pb-4 hw-accelerated momentum-scroll w-full",
               opts.align === "start" ? "snap-start" : 
               opts.align === "center" ? "snap-center" : 
               "snap-end"
             )}
+            style={{ touchAction: "manipulation" }}
           >
             {children}
           </div>
@@ -99,3 +100,5 @@ export const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
 );
 
 Carousel.displayName = "Carousel";
+
+export { Carousel };

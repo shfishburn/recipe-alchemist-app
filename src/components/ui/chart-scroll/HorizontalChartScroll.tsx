@@ -50,7 +50,7 @@ export function HorizontalChartScroll({
       
       {childrenArray.length > 1 && (
         <div className="text-xs text-center text-muted-foreground mt-1 swipe-indicator md:hidden">
-          <span className="inline-block touch-target-base">Scroll to see more</span>
+          <span className="inline-block">Scroll to see more</span>
         </div>
       )}
     </div>
