@@ -1,11 +1,36 @@
 
 import { useState } from 'react';
-import { Recipe } from '@/types/recipe';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { standardizeNutrition } from '@/types/nutrition-utils';
+import { Recipe, Nutrition } from '@/types/recipe';
+import { standardizeNutrition } from '@/utils/nutrition-utils';
 
-// Export the EnhancedNutrition type for components that need it
-export type { EnhancedNutrition };
+// Define EnhancedNutrition type for components that need it
+export interface EnhancedNutrition extends Nutrition {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  saturated_fat?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  calcium?: number;
+  iron?: number;
+  potassium?: number;
+  data_quality?: {
+    overall_confidence: 'high' | 'medium' | 'low';
+    overall_confidence_score: number;
+  };
+  verification?: {
+    verified_at: string;
+    verified_nutrients: string[];
+    verification_source: 'fdc_api' | 'usda_sr28';
+    verification_confidence: number;
+    differences?: Record<string, {old: number, new: number, difference_percent: number}>;
+  };
+}
 
 interface NutritionDataResult {
   recipeNutrition: EnhancedNutrition;

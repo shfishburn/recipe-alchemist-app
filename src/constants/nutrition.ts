@@ -29,6 +29,15 @@ export const NUTRITION_COLORS = {
   satFatBg: "rgb(239, 68, 68, 0.9)", // Red
   sugarBg: "rgb(249, 115, 22, 0.9)", // Orange
   sodiumBg: "rgb(236, 72, 153, 0.9)", // Pink
+  
+  // Add color properties for direct access (without Bg suffix)
+  protein: "rgb(59, 130, 246, 0.9)", 
+  carbs: "rgb(16, 185, 129, 0.9)", 
+  fat: "rgb(245, 158, 11, 0.9)", 
+  fiber: "rgb(168, 85, 247, 0.9)",
+  saturated_fat: "rgb(239, 68, 68, 0.9)",
+  sugar: "rgb(249, 115, 22, 0.9)",
+  sodium: "rgb(236, 72, 153, 0.9)",
 };
 
 // Unit conversion factors for imperial/metric
@@ -75,4 +84,58 @@ export const NUTRI_SCORE_CATEGORIES = {
   C: "Average nutritional quality",
   D: "Poor nutritional quality",
   E: "Very poor nutritional quality",
+};
+
+// Nutrient descriptions for tooltip information
+export const NUTRIENT_DESCRIPTIONS = {
+  vitaminA: "Important for vision, immune function, and cell growth",
+  vitaminC: "Helps with immune function and acts as an antioxidant",
+  vitaminD: "Essential for bone health and immune function",
+  calcium: "Important for bone health, muscle function, and nerve signaling",
+  iron: "Essential for red blood cell production and oxygen transport",
+  potassium: "Helps regulate fluid balance, muscle contractions and nerve signals",
+  sodium: "Helps maintain fluid balance and is needed for nerve and muscle function",
+  fiber: "Aids digestion, helps maintain bowel health, and lowers cholesterol",
+  sugar: "Provides quick energy but should be consumed in moderation",
+  cholesterol: "Used to make hormones and vitamin D, but high levels can increase heart disease risk",
+  saturatedfat: "Type of fat that can raise cholesterol and increase heart disease risk",
+  protein: "Essential for building and repairing tissues and making enzymes and hormones",
+  carbs: "Main source of energy for the body and brain",
+  fat: "Important for energy, cell growth, and hormone production"
+};
+
+// Display names for nutrients
+export const NUTRIENT_DISPLAY_NAMES = {
+  vitaminA: "Vitamin A",
+  vitaminC: "Vitamin C",
+  vitaminD: "Vitamin D",
+  calcium: "Calcium",
+  iron: "Iron",
+  potassium: "Potassium",
+  sodium: "Sodium",
+  fiber: "Fiber",
+  sugar: "Sugar",
+  cholesterol: "Cholesterol",
+  saturatedfat: "Saturated Fat",
+  protein: "Protein",
+  carbs: "Carbohydrates",
+  fat: "Fat"
+};
+
+// Standard units for nutrients
+export const NUTRIENT_UNITS = {
+  vitaminA: "mcg",
+  vitaminC: "mg",
+  vitaminD: "mcg",
+  calcium: "mg",
+  iron: "mg",
+  potassium: "mg",
+  sodium: "mg",
+  fiber: "g",
+  sugar: "g",
+  cholesterol: "mg",
+  saturatedfat: "g",
+  protein: "g",
+  carbs: "g",
+  fat: "g"
 };
