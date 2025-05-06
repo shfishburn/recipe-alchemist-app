@@ -32,6 +32,14 @@ export function RecipeCarousel() {
     return () => clearInterval(interval);
   }, [api, isPaused]);
   
+  // Debug API initialization
+  useEffect(() => {
+    if (api) {
+      console.log('Recipe Carousel API initialized:', api);
+      console.log('Total slides:', api.slides.length);
+    }
+  }, [api]);
+  
   if (isLoading) {
     return <RecipeCarouselSkeleton />;
   }
@@ -59,20 +67,20 @@ export function RecipeCarousel() {
       >
         <Carousel
           opts={{
-            slidesPerView: isMobile ? 1 : 2,
-            spaceBetween: 16,
-            breakpoints: {
-              640: { slidesPerView: 2 },
-              768: { slidesPerView: 3 }
-            },
             loop: true,
+            spaceBetween: 16,
+            slidesPerView: 1,
+            breakpoints: {
+              640: { slidesPerView: 2, spaceBetween: 16 },
+              768: { slidesPerView: 3, spaceBetween: 20 }
+            },
           }}
           setApi={setApi}
           className="w-full"
         >
           <CarouselContent>
             {featuredRecipes.map((recipe, index) => (
-              <CarouselItem key={recipe.id}>
+              <CarouselItem key={recipe.id} className="pl-4 md:pl-6">
                 <RecipeCard 
                   recipe={recipe} 
                   priority={index < 2} 

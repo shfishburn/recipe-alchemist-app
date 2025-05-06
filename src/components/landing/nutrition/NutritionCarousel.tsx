@@ -32,6 +32,14 @@ export function NutritionCarousel() {
     return () => clearInterval(interval);
   }, [api, isPaused]);
 
+  // Debug API initialization
+  useEffect(() => {
+    if (api) {
+      console.log('Nutrition Carousel API initialized:', api);
+      console.log('Total slides:', api.slides.length);
+    }
+  }, [api]);
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="text-center mb-6 md:mb-8">
@@ -55,7 +63,11 @@ export function NutritionCarousel() {
           opts={{
             loop: true,
             slidesPerView: 1,
-            spaceBetween: 0,
+            spaceBetween: 16,
+            breakpoints: {
+              640: { slidesPerView: 1 }, // Small screens
+              768: { slidesPerView: 1 }, // Medium screens 
+            },
           }}
           setApi={setApi}
           className="w-full"
