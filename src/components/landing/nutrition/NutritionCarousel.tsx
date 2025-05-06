@@ -32,9 +32,9 @@ export function NutritionCarousel() {
     return () => clearInterval(interval);
   }, [api, isPaused]);
 
-  // Debug API initialization
+  // Debug API initialization - with safety checks
   useEffect(() => {
-    if (api) {
+    if (api && api.slides) {
       console.log('Nutrition Carousel API initialized:', api);
       console.log('Total slides:', api.slides.length);
     }

@@ -18,7 +18,7 @@ const CarouselPagination = React.forwardRef<
   const [slideCount, setSlideCount] = React.useState(0);
 
   React.useEffect(() => {
-    if (!api) return;
+    if (!api || !api.slides) return;
     setSlideCount(api.slides.length);
   }, [api]);
 
