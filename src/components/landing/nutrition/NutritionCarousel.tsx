@@ -30,7 +30,7 @@ export function NutritionCarousel() {
         </p>
       </div>
       
-      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden">
+      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden pb-8">
         <Carousel
           opts={{
             align: "start",

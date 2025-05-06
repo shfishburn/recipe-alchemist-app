@@ -32,15 +32,15 @@ export function HorizontalChartScroll({
       id={id}
     >
       <div className="overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory">
-        <div className="flex flex-col gap-6 w-full">
+        <div className="flex flex-col gap-8 w-full">
           {childrenArray.map((child, index) => (
             <div 
               key={index} 
               className={cn(
-                "flex-shrink-0 snap-center w-full",
+                "flex-shrink-0 snap-center w-full mb-4",
                 itemClassName
               )}
-              style={{ marginBottom: index < childrenArray.length - 1 ? `${spaceBetween}px` : 0 }}
+              style={{ marginBottom: index < childrenArray.length - 1 ? `${spaceBetween + 8}px` : '16px' }}
             >
               {child}
             </div>
