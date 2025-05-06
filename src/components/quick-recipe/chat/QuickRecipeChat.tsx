@@ -3,9 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuickRecipeChat } from '@/hooks/use-quick-recipe-chat';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
-import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import { RecipeChatInput } from '@/components/recipe-chat/RecipeChatInput';
-import { ChatHistory } from '@/components/recipe-chat/ChatHistory';
+import { ImprovedChatHistory } from '@/components/recipe-chat/ImprovedChatHistory';
 import { EmptyChatState } from '@/components/recipe-chat/EmptyChatState';
 import { ChatHeader } from '@/components/recipe-chat/ChatHeader';
 import { ChatLoading } from '@/components/recipe-chat/ChatLoading';
@@ -24,6 +23,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     setMessage,
     chatHistory,
     optimisticMessages,
+    messageStates,
     isLoadingHistory,
     sendMessage,
     isSending,
@@ -31,9 +31,6 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     isApplying,
     clearChatHistory,
   } = useQuickRecipeChat(recipe);
-
-  // Improved error handling for optimistic messages
-  const [failedMessageIds, setFailedMessageIds] = useState<string[]>([]);
 
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
@@ -87,8 +84,6 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   // Enhanced message submission with better error handling
   const handleSubmit = async () => {
     if (message.trim() && !isSending) {
-      const currentMessage = message.trim();
-      
       try {
         await sendMessage();
         // Scroll immediately after sending for better UX
@@ -112,7 +107,6 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
   const confirmClearChat = async () => {
     try {
       await clearChatHistory();
-      setFailedMessageIds([]);
       toast({
         title: "Chat cleared",
         description: "All messages have been removed"
@@ -158,7 +152,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
                 <EmptyChatState />
               ) : (
                 <div className="py-3 flex flex-col space-y-6">
-                  <ChatHistory
+                  <ImprovedChatHistory
                     chatHistory={chatHistory}
                     optimisticMessages={optimisticMessages}
                     isSending={isSending}
@@ -166,7 +160,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
                     applyChanges={applyChanges}
                     isApplying={isApplying}
                     recipe={recipe as any} // Cast to Recipe type for compatibility
-                    failedMessageIds={failedMessageIds}
+                    messageStates={messageStates}
                   />
                   <div ref={messagesEndRef} className="h-4" />
                 </div>

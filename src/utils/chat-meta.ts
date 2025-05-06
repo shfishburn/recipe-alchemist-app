@@ -2,49 +2,49 @@
 import type { ChatMessage } from '@/types/chat';
 
 /**
- * Helper function to safely extract metadata from a chat message
- * @param message The chat message to extract metadata from
- * @param key The metadata key to extract
- * @param defaultValue Default value if key doesn't exist
- * @returns The metadata value or default
+ * Check if a chat message has a specific meta field
  */
-export function getChatMeta<T>(
-  message: ChatMessage | undefined, 
-  key: string, 
-  defaultValue: T
-): T {
-  if (!message || !message.meta) return defaultValue;
-  return (message.meta[key] as T) || defaultValue;
+export function hasChatMeta(chat: ChatMessage, key: string, checkValue?: any): boolean {
+  if (!chat.meta) return false;
+  
+  if (checkValue !== undefined) {
+    return chat.meta[key] === checkValue;
+  }
+  
+  return chat.meta[key] !== undefined;
 }
 
 /**
- * Helper function to check if a message has specific metadata
- * @param message The chat message to check
- * @param key The metadata key to check
- * @returns True if the message has the metadata key
+ * Get a meta field value from a chat message
  */
-export function hasChatMeta(message: ChatMessage | undefined, key: string): boolean {
-  if (!message || !message.meta) return false;
-  return message.meta[key] !== undefined;
+export function getChatMeta<T>(chat: ChatMessage, key: string, defaultValue: T): T {
+  if (!chat.meta) return defaultValue;
+  return chat.meta[key] as T ?? defaultValue;
 }
 
 /**
- * Helper function to set metadata on a chat message
- * @param message The chat message to modify (creates a new object)
- * @param key The metadata key to set
- * @param value The value to set
- * @returns A new chat message with the updated metadata
+ * Set a meta field on a chat message and return the updated message
  */
-export function setChatMeta<T>(
-  message: ChatMessage,
-  key: string,
-  value: T
-): ChatMessage {
+export function setChatMeta<T>(chat: ChatMessage, key: string, value: T): ChatMessage {
   return {
-    ...message,
+    ...chat,
     meta: {
-      ...(message.meta || {}),
+      ...(chat.meta || {}),
       [key]: value
     }
+  };
+}
+
+/**
+ * Remove a meta field from a chat message and return the updated message
+ */
+export function removeChatMeta(chat: ChatMessage, key: string): ChatMessage {
+  if (!chat.meta || !chat.meta[key]) return chat;
+  
+  const { [key]: _, ...restMeta } = chat.meta;
+  
+  return {
+    ...chat,
+    meta: restMeta
   };
 }
