@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
@@ -11,7 +12,7 @@ function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional A
   const lowerCuisine = cuisine.toLowerCase();
   
   // Regional American cuisines
-  if (['cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex']
+  if (['cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex', 'mexican']
       .some(c => lowerCuisine.includes(c))) {
     return "Regional American";
   }
