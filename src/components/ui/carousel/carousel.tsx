@@ -2,10 +2,10 @@
 import React, { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { useCarousel, CarouselProvider, CarouselDirection, CarouselOptions } from "./carousel-context";
-import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
+import useEmblaCarousel, { type UseEmblaCarouselType, type EmblaOptionsType } from "embla-carousel-react";
 
 export interface CarouselProps extends React.HTMLAttributes<HTMLDivElement> {
-  opts?: CarouselOptions;
+  opts?: EmblaOptionsType;
   plugins?: UseEmblaCarouselType[1];
   orientation?: CarouselDirection;
   setApi?: (api: UseEmblaCarouselType[1]) => void;
@@ -51,13 +51,10 @@ const CarouselContainer = forwardRef<HTMLDivElement, Omit<CarouselProps, "opts" 
       isReducedMotion,
     } = useCarousel();
     
-    const [emblaRef, emblaApi] = useEmblaCarousel(
-      {
-        ...options,
-        axis: direction === "horizontal" ? "x" : "y",
-      },
-      []
-    );
+    const [emblaRef, emblaApi] = useEmblaCarousel({
+      ...options,
+      axis: direction === "horizontal" ? "x" : "y",
+    }, []);
     
     // Update API when emblaApi changes
     React.useEffect(() => {
@@ -66,18 +63,32 @@ const CarouselContainer = forwardRef<HTMLDivElement, Omit<CarouselProps, "opts" 
       }
     }, [emblaApi, setApi]);
     
+    // Create a mutable ref object to combine refs
+    const combinedRef = React.useRef<HTMLDivElement | null>(null);
+    
+    // Update refs
+    React.useEffect(() => {
+      if (!combinedRef.current) return;
+      
+      // Update carouselRef
+      if (carouselRef) {
+        carouselRef.current = combinedRef.current;
+      }
+      
+    }, [carouselRef, combinedRef.current]);
+    
     return (
       <div
         ref={(node) => {
-          // Set both refs
-          if (forwardedRef) {
-            if (typeof forwardedRef === "function") {
-              forwardedRef(node);
-            } else {
-              forwardedRef.current = node;
-            }
+          // Set combinedRef
+          combinedRef.current = node;
+          
+          // Set forwarded ref
+          if (typeof forwardedRef === "function") {
+            forwardedRef(node);
+          } else if (forwardedRef) {
+            forwardedRef.current = node;
           }
-          carouselRef.current = node;
         }}
         className={cn("relative", className)}
         aria-roledescription="carousel"

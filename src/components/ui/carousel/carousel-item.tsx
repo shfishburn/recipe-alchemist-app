@@ -14,12 +14,18 @@ export const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
     const { direction, activeIndex } = useCarousel();
     
     // Style for maintaining aspect ratio
-    const aspectRatioStyle = aspectRatio
+    const aspectRatioStyle: React.CSSProperties = aspectRatio
       ? {
           aspectRatio: typeof aspectRatio === "string" ? aspectRatio : String(aspectRatio),
-          objectFit: fill ? "cover" : "contain",
+          objectFit: fill ? "cover" : "contain" as "cover" | "contain",
         }
       : {};
+    
+    // Add scroll-snap-align for proper snapping
+    const styleWithSnap: React.CSSProperties = {
+      ...aspectRatioStyle,
+      scrollSnapAlign: "start",
+    };
     
     return (
       <div
@@ -33,10 +39,7 @@ export const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
           "min-w-0 shrink-0 grow-0 basis-full hw-accelerated carousel-focusable",
           className
         )}
-        style={{
-          ...aspectRatioStyle,
-          scrollSnapAlign: "start",
-        }}
+        style={styleWithSnap}
         {...props}
       />
     );

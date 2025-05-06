@@ -4,10 +4,9 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPagination,
   CarouselPrevious,
   CarouselNext,
-  CarouselProvider
+  CarouselPagination
 } from "./carousel";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +18,7 @@ export interface CarouselWrapperProps {
     align?: "start" | "center" | "end";
     loop?: boolean;
     dragFree?: boolean;
-    autoPlay?: boolean;
+    autoPlayEnabled?: boolean;
     autoPlayInterval?: number;
     direction?: "horizontal" | "vertical";
   };
@@ -66,18 +65,10 @@ export const CarouselWrapper = forwardRef<HTMLDivElement, CarouselWrapperProps>(
       align = "center",
       loop = true, 
       dragFree = false,
-      autoPlay = false,
+      autoPlayEnabled = false,
       autoPlayInterval = 5000,
       direction = "horizontal"
     } = options;
-    
-    const {
-      arrows = true,
-      pagination = true,
-      paginationVariant = "dots",
-      paginationSize = "md",
-      showNumbers = true
-    } = controls;
     
     // Media query to check if we're on mobile
     const [isMobile, setIsMobile] = React.useState(false);
@@ -98,42 +89,54 @@ export const CarouselWrapper = forwardRef<HTMLDivElement, CarouselWrapperProps>(
       };
     }, [responsive.switchToMobileAt]);
     
+    // Set up auto-play effect
+    const [api, setApi] = React.useState<any>(null);
+    
+    React.useEffect(() => {
+      if (!api || !autoPlayEnabled) return;
+      
+      const interval = setInterval(() => {
+        api.scrollNext();
+      }, autoPlayInterval);
+      
+      return () => clearInterval(interval);
+    }, [api, autoPlayEnabled, autoPlayInterval]);
+    
     return (
       <Carousel
         ref={ref}
         opts={{
           align,
           loop,
-          dragFree: isMobile ? true : dragFree,
-          autoplay: autoPlay,
-          autoplayInterval: autoPlayInterval
+          dragFree: isMobile ? true : dragFree
         }}
         orientation={direction}
         className={cn("w-full", className)}
         ariaLabel={accessibility.ariaLabel}
+        setApi={setApi}
       >
         <CarouselContent>
           {React.Children.map(children, (child, index) => (
-            <CarouselItem key={index} index={index}>
+            <CarouselItem key={index}>
               {child}
             </CarouselItem>
           ))}
         </CarouselContent>
         
-        {arrows && (!responsive.arrowsOnlyOnDesktop || !isMobile) && (
+        {controls.arrows && (!responsive.arrowsOnlyOnDesktop || !isMobile) && (
           <>
             <CarouselPrevious />
             <CarouselNext />
           </>
         )}
         
-        {pagination && (
+        {controls.pagination && (
           <div className="mt-4 flex justify-center">
             <CarouselPagination 
-              variant={paginationVariant}
-              size={paginationSize}
-              showNumbers={showNumbers}
-              showArrows={arrows && responsive.arrowsOnlyOnDesktop && isMobile}
+              variant={controls.paginationVariant}
+              size={controls.paginationSize}
+              showNumbers={controls.showNumbers}
+              showArrows={controls.arrows && responsive.arrowsOnlyOnDesktop && isMobile}
             />
           </div>
         )}

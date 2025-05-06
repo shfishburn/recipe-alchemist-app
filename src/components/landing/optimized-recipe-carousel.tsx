@@ -12,7 +12,7 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselPagination,
+  CarouselPagination
 } from '@/components/ui/carousel';
 
 export function OptimizedRecipeCarousel() {
@@ -55,18 +55,11 @@ export function OptimizedRecipeCarousel() {
       </div>
       
       <div className="w-full max-w-5xl">
-        {/* New Optimized Carousel with Context Provider */}
+        {/* Carousel with auto-scroll effect implemented via wrapper */}
         <Carousel 
           opts={{
             align: "center",
-            loop: true,
-            autoplay: true,
-            autoplayInterval: 5000,
-            breakpoints: {
-              "(max-width: 640px)": {
-                dragFree: true,
-              }
-            }
+            loop: true
           }}
           ariaLabel="Featured recipes"
         >
