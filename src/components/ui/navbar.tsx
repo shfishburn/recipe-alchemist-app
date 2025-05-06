@@ -8,10 +8,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 export function Navbar({ className }: { className?: string }) {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const { isOpen, open, close } = useAuthDrawer();
 
   const navigationLinks = [
@@ -25,6 +25,14 @@ export function Navbar({ className }: { className?: string }) {
   const displayedLinks = navigationLinks.filter(
     link => !link.requiresAuth || (link.requiresAuth && session)
   );
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <header className={cn("border-b bg-background sticky top-0 z-50", className)}>
@@ -56,12 +64,23 @@ export function Navbar({ className }: { className?: string }) {
         {/* Auth Button - Hidden on Mobile */}
         <div className="hidden md:flex items-center space-x-3 ml-6">
           {session ? (
-            <Link to="/profile" className="flex items-center gap-1.5 h-9 py-2 px-4">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 h-9 py-2 px-4">
-                <User className="h-4 w-4" />
-                <span>Profile</span>
+            <div className="flex items-center gap-3">
+              <Link to="/profile" className="flex items-center gap-1.5">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 h-9 py-2 px-4">
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 h-9 py-2 px-4"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
               </Button>
-            </Link>
+            </div>
           ) : (
             <>
               <Button variant="outline" size="sm" onClick={open} className="h-9 py-2 px-4">
