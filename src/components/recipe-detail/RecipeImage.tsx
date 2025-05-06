@@ -8,6 +8,7 @@ import { PlaceholderImage } from './recipe-image/PlaceholderImage';
 import { ImageDrawer } from './recipe-image/ImageDrawer';
 import { ImageRegenerationForm } from './recipe-image/ImageRegenerationForm';
 import { ImageLoader } from '@/components/ui/image-loader';
+import { ImageControls } from './recipe-image/ImageControls';
 
 interface RecipeImageProps {
   recipe: Recipe;
@@ -69,6 +70,17 @@ export function RecipeImage({ recipe }: RecipeImageProps) {
                 onClick={handleImageClick}
               />
             )}
+          </div>
+
+          {/* Inline controls under the image - always visible */}
+          <div className="p-4 bg-white">
+            <ImageControls
+              imageUrl={imageUrl}
+              imageError={imageError}
+              isGenerating={isGenerating}
+              onGenerate={generateNewImage}
+              onCustomize={() => setShowRegenerationForm(true)}
+            />
           </div>
         </div>
       </CardContent>

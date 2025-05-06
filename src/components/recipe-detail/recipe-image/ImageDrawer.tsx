@@ -57,9 +57,9 @@ export function ImageDrawer({
         }
       }}
     >
-      <DrawerContent className={expanded ? "h-[95vh]" : "h-[70vh] drawer-content image-view-touch"}>
+      <DrawerContent className={expanded ? "h-[95vh]" : "h-[80vh] drawer-content image-view-touch"}>
         <div className="mx-auto w-full max-w-md">
-          <DrawerHeader className="text-center">
+          <DrawerHeader className="text-center relative">
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription>
               {imageUrl && !imageError ? "Recipe Image" : "Generate Recipe Image"}
@@ -70,7 +70,7 @@ export function ImageDrawer({
             </DrawerClose>
           </DrawerHeader>
           
-          <div className="flex flex-col items-center justify-center px-4 pb-6 pt-0">
+          <div className="flex flex-col items-center justify-center px-4 pb-6 pt-0 max-h-[50vh] overflow-y-auto">
             {imageUrl && !imageError ? (
               <>
                 <img
@@ -98,7 +98,8 @@ export function ImageDrawer({
             )}
           </div>
           
-          <DrawerFooter className="px-4 pb-8">
+          {/* Fixed bottom drawer footer to ensure buttons are always visible */}
+          <DrawerFooter className="px-4 pb-8 mt-auto sticky bottom-0 bg-background border-t">
             <div className="flex flex-wrap justify-center gap-2">
               {imageUrl && !imageError ? (
                 <>

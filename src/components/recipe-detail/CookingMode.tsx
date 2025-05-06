@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChefHat, Timer, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -140,11 +139,15 @@ export function CookingMode({ recipe }: CookingModeProps) {
             <h3 className="text-lg font-medium mb-2">Ingredients</h3>
             <div className="rounded-lg border p-4 bg-muted/30">
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {recipe.ingredients && recipe.ingredients.map((ingredient, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <span className="font-medium">{ingredient.qty} {ingredient.unit}</span> {ingredient.item}
-                    </div>
+                {recipe.ingredients && recipe.ingredients.map((ingredient, index) => (
+                  <li key={index} className="mb-2 flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>
+                      {typeof ingredient.item === 'string' 
+                        ? ingredient.item 
+                        : JSON.stringify(ingredient.item)}
+                      {ingredient.notes && <span className="text-muted-foreground"> ({ingredient.notes})</span>}
+                    </span>
                   </li>
                 ))}
               </ul>
