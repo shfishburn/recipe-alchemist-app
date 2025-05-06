@@ -123,8 +123,6 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
     science_notes: scienceNotes as unknown as Json,
-    // IMPORTANT: Setting nutri_score to null to bypass the calculation
-    nutri_score: null,
     // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
     cuisine_category: updatedRecipe.cuisine_category || "Global"
   };
@@ -140,8 +138,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
     nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : [],
     cuisine: updatedRecipe.cuisine,
-    cuisine_category: dbRecipe.cuisine_category,
-    nutri_score: 'null (bypassing calculation)'
+    cuisine_category: dbRecipe.cuisine_category
   });
 
   try {

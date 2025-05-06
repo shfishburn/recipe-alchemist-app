@@ -103,9 +103,7 @@ export const useQuickRecipeSave = () => {
         science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
         servings: recipe.servings || 2,
         user_id: user.id, // Add the user_id to the recipe data
-        nutrition: nutritionData as unknown as Json, // Add enhanced nutrition data
-        // IMPORTANT: Setting nutri_score to null to bypass the calculation
-        nutri_score: null
+        nutrition: nutritionData as unknown as Json // Add enhanced nutrition data
       };
       
       console.log("Recipe data prepared for database:", {
@@ -115,8 +113,7 @@ export const useQuickRecipeSave = () => {
         nutrition: nutritionData ? "present" : "missing",
         nutrition_type: nutritionData ? typeof nutritionData : "N/A",
         cuisine: cuisineString,
-        cuisine_category: cuisineCategory,
-        nutri_score: 'null (bypassing calculation)'
+        cuisine_category: cuisineCategory
       });
 
       // Insert the recipe into the database - using a cleaner insert approach

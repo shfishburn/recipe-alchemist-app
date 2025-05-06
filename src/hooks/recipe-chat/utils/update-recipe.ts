@@ -73,16 +73,12 @@ export async function updateRecipe(
       }
     }
 
-    // IMPORTANT: Set nutri_score to null to bypass calculation
-    updatedRecipe.nutri_score = null;
-
     console.log("Final recipe update ready to save:", {
       id: updatedRecipe.id,
       hasIngredients: updatedRecipe.ingredients?.length > 0,
       ingredientCount: updatedRecipe.ingredients?.length,
       hasInstructions: updatedRecipe.instructions?.length > 0,
-      instructionCount: updatedRecipe.instructions?.length,
-      nutri_score: 'null (bypassing calculation)'
+      instructionCount: updatedRecipe.instructions?.length
     });
     
     return await saveRecipeUpdate(updatedRecipe);
