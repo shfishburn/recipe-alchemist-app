@@ -1,10 +1,13 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Recipe } from '@/types/recipe';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import type { ChatMessage, OptimisticMessage } from '@/types/chat';
 import { supabase } from '@/integrations/supabase/client';
+import { RecipeChatService } from '@/services/recipe-chat-service';
+import { logChatEvent } from '@/utils/chat-debug';
+import { dbToChatMessage } from '@/utils/supabase-type-adapters';
 
 /**
  * Represents a message state in the chat store
@@ -61,6 +64,20 @@ interface UnifiedChatActions {
   setLoadingMessages: (recipeId: RecipeId, isLoading: boolean) => void;
 }
 
+// Custom storage handler to properly serialize Set objects
+const customStorage = {
+  getItem: (key: string): string | null => {
+    const value = localStorage.getItem(key);
+    return value === null ? null : value;
+  },
+  setItem: (key: string, value: string): void => {
+    localStorage.setItem(key, value);
+  },
+  removeItem: (key: string): void => {
+    localStorage.removeItem(key);
+  }
+};
+
 export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>()(
   persist(
     (set, get) => ({
@@ -68,12 +85,14 @@ export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>
       optimisticMessages: {},
       messageStates: {},
       isLoadingMessages: {},
-      quickRecipeIds: new Set(),
+      quickRecipeIds: new Set<string>(),
       
       // Recipe type management
-      registerQuickRecipe: (recipeId) => set((state) => ({
-        quickRecipeIds: new Set([...state.quickRecipeIds, recipeId])
-      })),
+      registerQuickRecipe: (recipeId) => {
+        set((state) => ({
+          quickRecipeIds: new Set<string>([...Array.from(state.quickRecipeIds), recipeId])
+        }));
+      },
       
       isQuickRecipe: (recipeId) => {
         return get().quickRecipeIds.has(recipeId);
@@ -163,18 +182,9 @@ export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>
           return;
         }
         
-        // For database recipes, soft delete from the database
+        // For database recipes, use the service
         try {
-          const { error } = await supabase
-            .from('recipe_chats')
-            .update({ deleted_at: new Date().toISOString() })
-            .eq('recipe_id', recipeId)
-            .is('deleted_at', null);
-            
-          if (error) {
-            console.error("Error clearing chat history:", error);
-            throw error;
-          }
+          await RecipeChatService.clearChatHistory(recipeId);
           
           // If successful, also clear from local state
           set((state) => ({
@@ -188,7 +198,7 @@ export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>
             }
           }));
         } catch (error) {
-          console.error("Failed to clear chat history:", error);
+          logChatEvent("Failed to clear chat history", { error, recipeId }, "error");
           throw error;
         }
       },
@@ -209,31 +219,8 @@ export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>
             // For quick recipes, we already have all messages in the store
             messages = get().messages[recipeId] || [];
           } else {
-            // For database recipes, fetch from the database
-            const { data, error } = await supabase
-              .from('recipe_chats')
-              .select('*')
-              .eq('recipe_id', recipeId)
-              .is('deleted_at', null)
-              .order('created_at', { ascending: true });
-              
-            if (error) {
-              console.error("Error loading chat history:", error);
-              throw error;
-            }
-            
-            // Process the database results
-            messages = data.map(chat => ({
-              id: chat.id,
-              user_message: chat.user_message,
-              ai_response: chat.ai_response,
-              changes_suggested: chat.changes_suggested || null,
-              follow_up_questions: chat.follow_up_questions || [],
-              recipe_id: chat.recipe_id,
-              applied: chat.applied || false,
-              created_at: chat.created_at,
-              meta: chat.meta || {}
-            }));
+            // For database recipes, fetch from the database using the service
+            messages = await RecipeChatService.fetchChatHistory(recipeId);
             
             // Update store with fetched messages
             set((state) => ({
@@ -253,7 +240,7 @@ export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>
           
           return messages;
         } catch (error) {
-          console.error("Error loading chat history:", error);
+          logChatEvent("Error loading chat history", { error, recipeId }, "error");
           
           set((state) => ({
             isLoadingMessages: {
@@ -325,11 +312,13 @@ export const useUnifiedChatStore = create<UnifiedChatState & UnifiedChatActions>
         messages: state.messages,
         quickRecipeIds: Array.from(state.quickRecipeIds)
       }),
+      // Use our custom storage implementation
+      storage: createJSONStorage(() => customStorage),
       // Custom merge function to handle Set serialization
-      merge: (persisted, current) => ({
+      merge: (persisted: any, current: UnifiedChatState & UnifiedChatActions) => ({
         ...current,
         ...persisted,
-        quickRecipeIds: new Set(persisted.quickRecipeIds || [])
+        quickRecipeIds: new Set<string>(persisted.quickRecipeIds || [])
       }),
     }
   )

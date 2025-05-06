@@ -16,6 +16,7 @@ interface ImprovedChatHistoryProps {
   isApplying?: boolean;
   recipe: Recipe;
   messageStates: Record<string, { pending: boolean; failed: boolean; applied: boolean; }>;
+  onRetry?: () => void;
 }
 
 export function ImprovedChatHistory({
@@ -26,7 +27,8 @@ export function ImprovedChatHistory({
   applyChanges,
   isApplying = false,
   recipe,
-  messageStates
+  messageStates,
+  onRetry
 }: ImprovedChatHistoryProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasFailedMessages = Object.values(messageStates).some(state => state.failed);
@@ -83,6 +85,7 @@ export function ImprovedChatHistory({
           setMessage={setMessage}
           applyChanges={applyChanges}
           isApplying={isApplying && chat.id === chatHistory[chatHistory.length - 1]?.id}
+          onRetry={onRetry}
         />
       ))}
       
@@ -93,6 +96,7 @@ export function ImprovedChatHistory({
           chat={message}
           setMessage={setMessage}
           applyChanges={applyChanges}
+          onRetry={onRetry}
         />
       ))}
       

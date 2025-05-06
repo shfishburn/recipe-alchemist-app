@@ -9,18 +9,33 @@ interface ConnectedChatMessageProps {
   setMessage: (message: string) => void;
   applyChanges: (chatMessage: ChatMessage) => Promise<boolean>;
   isApplying?: boolean;
+  onRetry?: () => void;
 }
 
 export function ConnectedChatMessage({
   chat,
   setMessage,
   applyChanges,
-  isApplying = false
+  isApplying = false,
+  onRetry
 }: ConnectedChatMessageProps) {
   // Get message state from unified store
   const messageState = useUnifiedChatStore(state => 
     state.messageStates[chat.id || ''] || { pending: false, failed: false, applied: false }
   );
+  
+  // Handle message retry
+  const handleRetry = () => {
+    if (messageState.failed && chat.user_message) {
+      // Set the message back in the input field
+      setMessage(chat.user_message);
+      
+      // Call the parent retry handler if provided
+      if (onRetry) {
+        onRetry();
+      }
+    }
+  };
   
   return (
     <ImprovedChatMessage
@@ -31,6 +46,7 @@ export function ConnectedChatMessage({
       isPending={messageState.pending}
       isFailed={messageState.failed}
       isApplied={messageState.applied}
+      onRetry={handleRetry}
     />
   );
 }

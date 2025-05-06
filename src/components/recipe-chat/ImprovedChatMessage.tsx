@@ -14,6 +14,7 @@ interface ImprovedChatMessageProps {
   isPending?: boolean;
   isFailed?: boolean; 
   isApplied?: boolean;
+  onRetry?: () => void;
 }
 
 export function ImprovedChatMessage({
@@ -23,19 +24,13 @@ export function ImprovedChatMessage({
   isApplying = false,
   isPending = false,
   isFailed = false,
-  isApplied = false
+  isApplied = false,
+  onRetry
 }: ImprovedChatMessageProps) {
   // Check if this is an optimistic message
   const isOptimistic = !chat.ai_response || 
     hasChatMeta(chat, 'optimistic_id') || 
     isPending;
-
-  // Handle retrying a failed message
-  const handleRetry = () => {
-    if (isFailed) {
-      setMessage(chat.user_message);
-    }
-  };
 
   // Render optimistic user message without AI response
   if (isOptimistic) {
@@ -45,7 +40,7 @@ export function ImprovedChatMessage({
         isOptimistic={true} 
         isFailed={isFailed}
         showRetry={isFailed}
-        onRetry={handleRetry}
+        onRetry={onRetry}
       />
     );
   }

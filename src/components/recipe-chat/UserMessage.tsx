@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
-import { cn } from '@/utils/style-utils';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface UserMessageProps {

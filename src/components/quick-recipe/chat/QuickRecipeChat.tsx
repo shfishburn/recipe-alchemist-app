@@ -31,13 +31,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     applyChanges,
     isApplying,
     clearChatHistory,
-    fetchChatHistory
   } = useUnifiedRecipeChat(recipe);
-  
-  // Load chat history when component mounts
-  useEffect(() => {
-    fetchChatHistory();
-  }, [fetchChatHistory]);
 
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
@@ -121,9 +115,6 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
     }
   };
 
-  // Check if we should show the empty state
-  const showEmptyState = messages.length === 0 && optimisticMessages.length === 0;
-  
   // Calculate height based on device
   const chatHeight = isMobile ? 'calc(90vh - 160px)' : '60vh';
 
@@ -153,6 +144,7 @@ export function QuickRecipeChat({ recipe }: { recipe: QuickRecipe }) {
                   isApplying={isApplying}
                   recipe={recipe as any} // Cast to Recipe type for compatibility
                   messageStates={messageStates}
+                  onRetry={handleSubmit}
                 />
                 <div ref={messagesEndRef} className="h-4" />
               </div>

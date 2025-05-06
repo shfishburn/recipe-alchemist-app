@@ -4,6 +4,13 @@ import type { Recipe } from '@/types/recipe';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import type { ChatMessage, OptimisticMessage, AIResponse } from '@/types/chat';
 import { useUnifiedChatStore } from '@/store/unified-chat-store';
+import { 
+  chatToDbMessage, 
+  dbToChatMessage, 
+  processDbChatResponse, 
+  DbChatMessage 
+} from '@/utils/supabase-type-adapters';
+import { logChatEvent } from '@/utils/chat-debug';
 
 /**
  * Service class for recipe chat API interactions
@@ -18,7 +25,7 @@ export class RecipeChatService {
     messageId: string
   ): Promise<AIResponse> {
     try {
-      console.log("Sending recipe chat message:", { recipe: recipe.title, messageId });
+      logChatEvent("Sending message", { recipe: recipe.title, messageId });
       
       const isQuickRecipe = !('id' in recipe) || typeof recipe.id !== 'string' || recipe.id.startsWith('temp-');
       const sourceType = isQuickRecipe ? 'preview' : 'manual';
@@ -52,7 +59,7 @@ export class RecipeChatService {
         followUpQuestions: followUpQuestions || []
       };
     } catch (error: any) {
-      console.error('Error sending chat message:', error);
+      logChatEvent("Error sending message", { error: error.message }, "error");
       
       // Enhanced error handling with specific error types
       if (error.message?.includes('timeout')) {
@@ -85,7 +92,7 @@ export class RecipeChatService {
           error.message?.includes('network') ||
           error.status === 503 || 
           error.status === 504)) {
-        console.log(`Retrying recipe chat request (${retryCount + 1}/${maxRetries})...`);
+        logChatEvent(`Retrying request (${retryCount + 1}/${maxRetries})`, { error: error.message }, "warn");
         
         // Add exponential backoff
         const backoffMs = Math.min(1000 * Math.pow(2, retryCount), 10000);
@@ -130,40 +137,32 @@ export class RecipeChatService {
       // Create meta object for optimistic updates tracking
       const meta = { optimistic_id: messageId };
       
-      // Insert the chat message into the database
+      // Insert the chat message into the database using proper type conversion
       const { data, error } = await supabase
         .from('recipe_chats')
         .insert({
           recipe_id: recipe.id,
           user_message: message,
           ai_response: aiResponse.textResponse,
-          changes_suggested: aiResponse.changes || null,
+          changes_suggested: aiResponse.changes as any,
           source_type: sourceType,
-          follow_up_questions: aiResponse.followUpQuestions || [],
+          follow_up_questions: aiResponse.followUpQuestions as any,
           meta
         })
         .select()
         .single();
 
       if (error) {
-        console.error("Error saving chat to database:", error);
+        logChatEvent("Error saving chat to database", { error }, "error");
         throw error;
       }
       
-      console.log("Chat successfully saved to database with ID:", data.id);
+      logChatEvent("Chat saved to database", { id: data.id });
       
-      return {
-        id: data.id,
-        user_message: data.user_message,
-        ai_response: data.ai_response,
-        changes_suggested: data.changes_suggested,
-        follow_up_questions: data.follow_up_questions || [],
-        recipe_id: data.recipe_id,
-        created_at: data.created_at,
-        meta: data.meta
-      };
+      // Convert database response to application ChatMessage type
+      return dbToChatMessage(data as DbChatMessage);
     } catch (error) {
-      console.error("Failed to save chat message:", error);
+      logChatEvent("Failed to save chat message", { error }, "error");
       throw error;
     }
   }
@@ -179,13 +178,14 @@ export class RecipeChatService {
         .eq('id', messageId);
         
       if (error) {
-        console.error("Error marking message as applied:", error);
+        logChatEvent("Error marking message as applied", { error }, "error");
         throw error;
       }
       
       useUnifiedChatStore.getState().markMessageAsApplied(messageId);
+      logChatEvent("Message marked as applied", { messageId });
     } catch (error) {
-      console.error("Failed to mark message as applied:", error);
+      logChatEvent("Failed to mark message as applied", { error }, "error");
       throw error;
     }
   }
@@ -207,6 +207,8 @@ export class RecipeChatService {
           
           const isQuickRecipe = !('id' in recipe) || typeof recipe.id !== 'string' || recipe.id.startsWith('temp-');
           const sourceType = isQuickRecipe ? 'preview' : 'image';
+          
+          logChatEvent("Processing image", { recipeId: isQuickRecipe ? 'quick-recipe' : recipe.id });
           
           const response = await this.callRecipeChatWithRetry({
             recipe, 
@@ -261,6 +263,8 @@ export class RecipeChatService {
       const isQuickRecipe = !('id' in recipe) || typeof recipe.id !== 'string' || recipe.id.startsWith('temp-');
       const sourceType = isQuickRecipe ? 'preview' : 'url';
       
+      logChatEvent("Processing URL", { url, recipeId: isQuickRecipe ? 'quick-recipe' : recipe.id });
+      
       const response = await this.callRecipeChatWithRetry({
         recipe, 
         userMessage: "Please analyze this recipe URL",
@@ -290,7 +294,57 @@ export class RecipeChatService {
         followUpQuestions: followUpQuestions || []
       };
     } catch (error) {
-      console.error("Failed to process URL:", error);
+      logChatEvent("Failed to process URL", { error, url }, "error");
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch chat history for a recipe
+   */
+  static async fetchChatHistory(recipeId: string): Promise<ChatMessage[]> {
+    try {
+      logChatEvent("Fetching chat history", { recipeId });
+      
+      const { data, error } = await supabase
+        .from('recipe_chats')
+        .select('*')
+        .eq('recipe_id', recipeId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        logChatEvent("Error fetching chat history", { error }, "error");
+        throw error;
+      }
+      
+      // Process the data using our type adapter
+      return (data || []).map(dbToChatMessage);
+    } catch (error) {
+      logChatEvent("Failed to fetch chat history", { error, recipeId }, "error");
+      return [];
+    }
+  }
+  
+  /**
+   * Clear chat history for a recipe
+   */
+  static async clearChatHistory(recipeId: string): Promise<void> {
+    try {
+      logChatEvent("Clearing chat history", { recipeId });
+      
+      const { error } = await supabase
+        .from('recipe_chats')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('recipe_id', recipeId)
+        .is('deleted_at', null);
+        
+      if (error) {
+        logChatEvent("Error clearing chat history", { error }, "error");
+        throw error;
+      }
+    } catch (error) {
+      logChatEvent("Failed to clear chat history", { error, recipeId }, "error");
       throw error;
     }
   }

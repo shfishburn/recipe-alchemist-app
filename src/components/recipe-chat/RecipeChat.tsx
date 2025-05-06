@@ -1,15 +1,14 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useImprovedChat } from '@/hooks/recipe-chat/use-improved-chat';
 import type { Recipe } from '@/types/recipe';
 import { RecipeChatInput } from './RecipeChatInput';
 import { ImprovedChatHistory } from './ImprovedChatHistory';
-import { EmptyChatState } from './EmptyChatState';
 import { ChatHeader } from './ChatHeader';
-import { ChatLoading } from './ChatLoading';
+import { ChatSkeleton } from './ChatSkeleton';
 import { ClearChatDialog } from './ClearChatDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUnifiedRecipeChat } from '@/hooks/use-unified-recipe-chat';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -19,37 +18,21 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const {
     message,
     setMessage,
-    chatHistory,
+    messages,
     optimisticMessages,
     messageStates,
-    isLoadingHistory,
-    sendMessage,
+    isLoadingMessages,
     isSending,
+    sendMessage,
     applyChanges,
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
     clearChatHistory,
-  } = useImprovedChat(recipe);
-
-  // Auto-scroll to bottom when new messages arrive or when sending a message
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatHistory.length, optimisticMessages.length, isSending]);
-
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    } else if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
-    }
-  };
+  } = useUnifiedRecipeChat(recipe);
 
   const handleUpload = async (file: File) => {
-    uploadRecipeImage(file);
+    await uploadRecipeImage(file);
   };
 
   const handleUrlSubmit = (url: string) => {
@@ -58,10 +41,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
 
   const handleSubmit = () => {
     if (message.trim()) {
-      console.log("Sending message:", message);
       sendMessage();
-      // Immediately scroll down when sending
-      setTimeout(scrollToBottom, 50);
     }
   };
   
@@ -74,12 +54,9 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     setIsDialogOpen(false);
   };
 
-  if (isLoadingHistory) {
-    return <ChatLoading />;
+  if (isLoadingMessages) {
+    return <ChatSkeleton />;
   }
-
-  // Check if we should show the empty state
-  const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
   return (
     <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
@@ -87,7 +64,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
         <div className="flex flex-col h-full">
           <div className="pt-2 sm:pt-4 px-3 sm:px-5 border-b">
             <ChatHeader 
-              hasChatHistory={chatHistory.length > 0} 
+              hasChatHistory={messages.length > 0} 
               onClearChat={handleClearChat} 
             />
           </div>
@@ -97,24 +74,20 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
               className="h-[calc(100vh-200px)] sm:h-[60vh] px-3 sm:px-5"
               ref={scrollAreaRef}
             >
-              {/* Show EmptyChatState if there are no messages */}
-              {showEmptyState ? (
-                <EmptyChatState />
-              ) : (
-                <div className="py-3">
-                  <ImprovedChatHistory
-                    chatHistory={chatHistory}
-                    optimisticMessages={optimisticMessages}
-                    isSending={isSending}
-                    setMessage={setMessage}
-                    applyChanges={applyChanges}
-                    isApplying={isApplying}
-                    recipe={recipe}
-                    messageStates={messageStates}
-                  />
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
+              <div className="py-3">
+                <ImprovedChatHistory
+                  chatHistory={messages}
+                  optimisticMessages={optimisticMessages}
+                  isSending={isSending}
+                  setMessage={setMessage}
+                  applyChanges={applyChanges}
+                  isApplying={isApplying}
+                  recipe={recipe}
+                  messageStates={messageStates}
+                  onRetry={handleSubmit}
+                />
+                <div ref={messagesEndRef} />
+              </div>
             </ScrollArea>
           </div>
 
