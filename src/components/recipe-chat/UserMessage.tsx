@@ -11,13 +11,13 @@ interface UserMessageProps {
 export function UserMessage({ message, isOptimistic = false }: UserMessageProps) {
   return (
     <div className={`flex items-start space-x-2 ${isOptimistic ? 'opacity-70' : ''}`}>
-      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-        <User className="h-5 w-5 text-primary-foreground" />
+      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+        <User className="h-4 w-4 text-blue-600" />
       </div>
       
       <div className="flex-1">
-        <div className="bg-muted rounded-lg p-3">
-          <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+        <div className="bg-blue-50 border border-blue-100 rounded-2xl rounded-tl-sm p-3">
+          <p className="text-sm text-slate-800 whitespace-pre-wrap break-words">
             {message}
           </p>
         </div>

@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, MessageCircle } from 'lucide-react';
 import { QuickRecipeChat } from './QuickRecipeChat';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -58,9 +58,10 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
         style={{ zIndex: 50 }}
         ref={contentRef}
       >
-        <DrawerHeader className="border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10">
+        <DrawerHeader className="border-b flex items-center justify-between bg-white py-3 sticky top-0 z-10">
           <div className="flex items-center gap-2">
-            <DrawerTitle className="text-primary font-medium text-base">
+            <MessageCircle className="h-5 w-5 text-green-600" />
+            <DrawerTitle className="text-lg font-medium text-slate-800">
               Recipe Chat
               {isPending && (
                 <span className="ml-2 text-xs text-muted-foreground">
@@ -77,14 +78,14 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full h-8 w-8 touch-target-base"
+                    className="rounded-full h-9 w-9 hover:bg-slate-100"
                     onClick={() => !isPending && onOpenChange(false)}
                     disabled={isPending}
                   >
                     {isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5" />
                     )}
                     <span className="sr-only">Close</span>
                   </Button>
@@ -98,7 +99,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        <div className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(90vh-48px)]' : 'h-[calc(90vh-60px)]'} flex`}>
+        <div className={`p-4 sm:p-6 flex-1 ${isMobile ? 'h-[calc(90vh-48px)]' : 'h-[calc(90vh-60px)]'} flex`}>
           <QuickRecipeChat recipe={recipe} />
         </div>
       </DrawerContent>
