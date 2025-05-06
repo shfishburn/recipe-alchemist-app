@@ -1,89 +1,116 @@
 
 import { useState, useEffect } from 'react';
+import { useMediaQuery } from './use-media-query';
 
 interface BatteryStatus {
-  lowPowerMode: boolean;
-  batteryLevel: number | null;
-  charging: boolean | null;
+  charging: boolean;
+  level: number;
+  chargingTime: number;
+  dischargingTime: number;
 }
 
-export function useBatteryStatus(): BatteryStatus {
-  const [status, setStatus] = useState<BatteryStatus>({
-    lowPowerMode: false,
-    batteryLevel: null,
-    charging: null
+interface BatteryManager extends BatteryStatus, EventTarget {
+  addEventListener(type: string, listener: EventListener): void;
+  removeEventListener(type: string, listener: EventListener): void;
+}
+
+interface NavigatorWithBattery extends Navigator {
+  getBattery?: () => Promise<BatteryManager>;
+}
+
+export function useBatteryStatus() {
+  const [batteryStatus, setBatteryStatus] = useState<Partial<BatteryStatus>>({
+    charging: true, // Assume plugged in by default
+    level: 1, // Assume full battery by default
+    chargingTime: 0,
+    dischargingTime: Infinity,
   });
+  const [supported, setSupported] = useState<boolean | null>(null);
+  
+  // Check if user prefers reduced motion
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  
+  // Use a state to track if device is in low power mode
+  const [lowPowerMode, setLowPowerMode] = useState(false);
 
+  // Check for battery API support and initialize
   useEffect(() => {
-    // Use device memory as a proxy for device capability
-    const deviceMemoryGB = (navigator as any).deviceMemory || 4;
-    const lowMemoryDevice = deviceMemoryGB < 4;
+    const nav = navigator as NavigatorWithBattery;
     
-    // Use hardware concurrency as a proxy for CPU capability
-    const cpuCores = navigator.hardwareConcurrency || 4;
-    const lowPowerCPU = cpuCores < 4;
-
-    // Initial device assessment based on available device info
-    let initialLowPowerEstimation = lowMemoryDevice || lowPowerCPU;
-
-    // Try to access battery API if available
-    const tryBattery = async () => {
-      try {
-        if ('getBattery' in navigator) {
-          const battery = await (navigator as any).getBattery();
-          
-          const updateBatteryInfo = () => {
-            // Consider low power mode if battery is below 20%
-            const lowBattery = battery.level < 0.2;
-            const lowPowerMode = lowBattery || (initialLowPowerEstimation && !battery.charging);
-            
-            setStatus({
-              lowPowerMode,
-              batteryLevel: battery.level,
-              charging: battery.charging
-            });
-          };
-          
-          // Update initially
-          updateBatteryInfo();
-          
-          // Add event listeners for battery changes
-          battery.addEventListener('levelchange', updateBatteryInfo);
-          battery.addEventListener('chargingchange', updateBatteryInfo);
-          
-          // Clean up event listeners
-          return () => {
-            battery.removeEventListener('levelchange', updateBatteryInfo);
-            battery.removeEventListener('chargingchange', updateBatteryInfo);
-          };
-        } else {
-          // Battery API not available, use our initial estimation
-          setStatus({
-            lowPowerMode: initialLowPowerEstimation,
-            batteryLevel: null,
-            charging: null
-          });
-        }
-      } catch (error) {
-        console.warn('Battery API error:', error);
-        // Fallback to device estimation
-        setStatus({
-          lowPowerMode: initialLowPowerEstimation,
-          batteryLevel: null,
-          charging: null
+    if (nav.getBattery) {
+      setSupported(true);
+      
+      const handleBatteryChange = (battery: BatteryManager) => {
+        setBatteryStatus({
+          charging: battery.charging,
+          level: battery.level,
+          chargingTime: battery.chargingTime,
+          dischargingTime: battery.dischargingTime,
         });
-      }
-    };
-    
-    // Check for device power saving mode if available
-    if ('powerPreference' in navigator) {
-      // This is just a placeholder - currently there's no standard API to detect low power mode
-      // Future browsers might implement this feature
+        
+        // Consider device in low power mode if:
+        // 1. Battery level is below 20% and not charging
+        // 2. The user has explicitly chosen reduced motion
+        setLowPowerMode(
+          (battery.level <= 0.2 && !battery.charging) || 
+          prefersReducedMotion
+        );
+      };
+      
+      nav.getBattery().then((battery) => {
+        handleBatteryChange(battery);
+        
+        // Add event listeners
+        battery.addEventListener('chargingchange', () => handleBatteryChange(battery));
+        battery.addEventListener('levelchange', () => handleBatteryChange(battery));
+        battery.addEventListener('chargingtimechange', () => handleBatteryChange(battery));
+        battery.addEventListener('dischargingtimechange', () => handleBatteryChange(battery));
+        
+        // Clean up event listeners
+        return () => {
+          battery.removeEventListener('chargingchange', () => handleBatteryChange(battery));
+          battery.removeEventListener('levelchange', () => handleBatteryChange(battery));
+          battery.removeEventListener('chargingtimechange', () => handleBatteryChange(battery));
+          battery.removeEventListener('dischargingtimechange', () => handleBatteryChange(battery));
+        };
+      }).catch(() => {
+        setSupported(false);
+      });
+    } else {
+      setSupported(false);
+      
+      // If we can't detect battery, use reduced motion preference as a proxy
+      setLowPowerMode(prefersReducedMotion);
     }
+  }, [prefersReducedMotion]);
+  
+  // Consider reduced motion preference changes
+  useEffect(() => {
+    if (!supported) {
+      setLowPowerMode(prefersReducedMotion);
+    }
+  }, [prefersReducedMotion, supported]);
+  
+  // On mobile Safari, we may not have battery API
+  // Use a heuristic for mobile devices without battery API
+  useEffect(() => {
+    if (supported !== false) return;
     
-    // Start battery monitoring
-    tryBattery();
-  }, []);
-
-  return status;
+    // Check if it's likely to be a mobile device
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+    
+    // If it's a mobile device and we don't have battery API access,
+    // assume we should be conservative with animations
+    if (isMobileDevice) {
+      setLowPowerMode(true);
+    }
+  }, [supported]);
+  
+  return {
+    ...batteryStatus,
+    supported,
+    lowPowerMode,
+  };
 }

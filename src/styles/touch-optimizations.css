@@ -6,29 +6,59 @@
   -webkit-perspective: 1000;
   -webkit-transform: translate3d(0,0,0);
   -webkit-transform-style: preserve-3d;
+  contain: layout style paint;
 }
 
 .card-touch-optimized {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.touch-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 .touch-device {
   /* Touch-specific styles for the entire app */
-  --touch-target-min: 44px;
+  --touch-target-min: 44px; /* WCAG compliant touch target size */
+  --touch-spacing-min: 8px; /* Minimum spacing between touch targets */
 }
 
 .touch-optimized {
   /* Increase touch targets */
-  --touch-padding: 0.25rem;
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  padding: var(--touch-padding, 0.25rem);
 }
 
+.touch-target-base {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Optimize horizontal swipe carousels */
+.touch-action-pan-x {
+  touch-action: pan-x;
+  user-select: none;
+}
+
+/* Optimize vertical swipe carousels */
+.touch-action-pan-y {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* Reduce animations when battery is low or user prefers reduced motion */
 .reduce-animations {
-  /* Reduce animations when battery is low */
   transition-duration: 0.1s !important;
 }
 
@@ -37,11 +67,37 @@
   animation-duration: 0.1s !important;
 }
 
-.touch-action-pan-y {
-  touch-action: pan-y;
-}
-
 /* Optimize image loading for carousels */
 .carousel-image-container {
   background-color: #f3f4f6;
+}
+
+/* Carousel touch target enhancements */
+.carousel-control {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* Accessibility focus styles */
+.carousel-focusable:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Momentum scroll for touch devices */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+}
+
+.momentum-scroll > * {
+  scroll-snap-align: start;
 }
