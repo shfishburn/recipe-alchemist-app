@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recha
 import { ChartContainer } from '@/components/ui/chart';
 import { NUTRITION_COLORS } from '@/constants/nutrition';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from "@/lib/utils"; // Added the missing import
 
 interface MacroChartProps {
   chartData: Array<{

@@ -6,25 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { InfoIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { type NutriScore } from '@/types/recipe';
 
 interface NutriScoreInfoCardProps {
-  nutriScore: {
-    grade: string;
-    score: number;
-    negative_points?: {
-      total: number;
-      energy: number;
-      saturated_fat: number;
-      sugars: number;
-      sodium: number;
-    };
-    positive_points?: {
-      total: number;
-      fiber: number;
-      protein: number;
-      fruit_veg_nuts: number;
-    };
-  };
+  nutriScore: NutriScore;
 }
 
 export function NutriScoreInfoCard({ nutriScore }: NutriScoreInfoCardProps) {
@@ -96,7 +81,7 @@ export function NutriScoreInfoCard({ nutriScore }: NutriScoreInfoCardProps) {
   );
 }
 
-function getNutriScoreDescription(grade: string): string {
+function getNutriScoreDescription(grade: "A" | "B" | "C" | "D" | "E"): string {
   switch (grade) {
     case 'A':
       return 'This recipe has excellent nutritional quality with balanced nutrients and limited unhealthy components.';
@@ -113,7 +98,7 @@ function getNutriScoreDescription(grade: string): string {
   }
 }
 
-function getProgressColorByGrade(grade: string): string {
+function getProgressColorByGrade(grade: "A" | "B" | "C" | "D" | "E"): string {
   switch (grade) {
     case 'A':
       return 'rgb(34, 197, 94, 0.9)'; // Green

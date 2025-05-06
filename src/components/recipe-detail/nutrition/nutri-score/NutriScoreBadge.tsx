@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { NutriScore } from '@/types/recipe';
+import { type NutriScore } from '@/types/recipe';
 import { cn } from '@/lib/utils';
 
 const gradeColors = {
@@ -68,7 +68,7 @@ export function NutriScoreBadge({
   );
 }
 
-function getGradeDescription(grade: string): string {
+function getGradeDescription(grade: "A" | "B" | "C" | "D" | "E"): string {
   switch (grade) {
     case 'A':
       return 'Excellent nutritional quality';

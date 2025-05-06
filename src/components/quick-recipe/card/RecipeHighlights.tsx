@@ -5,14 +5,12 @@ import { NutriScoreBadge } from '@/components/recipe-detail/nutrition/nutri-scor
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { type NutriScore } from '@/types/recipe'; // Import the proper type
 
 interface RecipeHighlightsProps {
   nutritionHighlight?: string;
   cookingTip?: string;
-  nutriScore?: {
-    grade: string;
-    score: number;
-  };
+  nutriScore?: NutriScore;
 }
 
 export function RecipeHighlights({ nutritionHighlight, cookingTip, nutriScore }: RecipeHighlightsProps) {
@@ -74,7 +72,7 @@ export function RecipeHighlights({ nutritionHighlight, cookingTip, nutriScore }:
   );
 }
 
-function getNutriScoreDescription(grade: string): string {
+function getNutriScoreDescription(grade: "A" | "B" | "C" | "D" | "E"): string {
   switch (grade) {
     case 'A':
       return 'Excellent nutritional quality';

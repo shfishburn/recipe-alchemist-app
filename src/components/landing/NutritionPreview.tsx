@@ -7,6 +7,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
+import { useOptimizedCarousel } from '@/hooks/use-optimized-carousel';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   macroDistributionData, 
@@ -14,48 +15,31 @@ import {
   fatsData 
 } from './nutrition/nutrition-sample-data';
 import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
-import { CarouselPagination } from './nutrition/CarouselPagination';
+import { CarouselPagination } from '@/components/ui/carousel-pagination';
 import { MacroLegend } from './nutrition/MacroLegend';
 import { NutriScoreBadge } from '@/components/recipe-detail/nutrition/nutri-score/NutriScoreBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { type NutriScore } from '@/types/recipe';
 
 export function NutritionPreview() {
   const isMobile = useIsMobile();
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [api, setApi] = useState<any>(null);
+  const { 
+    api, 
+    setApi, 
+    activeIndex,
+    touchHandlers,
+    getCarouselOptions,
+    scrollTo,
+    setupAutoScroll
+  } = useOptimizedCarousel();
   
-  // Auto-scroll carousel with pause on hover
-  const [isPaused, setIsPaused] = useState(false);
-  
+  // Setup auto-scroll
   useEffect(() => {
-    if (isPaused) return;
-    
-    const interval = setInterval(() => {
-      const nextSlide = (activeSlide + 1) % macroDistributionData.length;
-      setActiveSlide(nextSlide);
-      api?.scrollTo(nextSlide);
-    }, 5000); // Change slide every 5 seconds
-    
-    return () => clearInterval(interval);
-  }, [api, activeSlide, isPaused]);
-  
-  // Handle API events
-  useEffect(() => {
-    if (!api) return;
-    
-    const onSelect = () => {
-      setActiveSlide(api.selectedScrollSnap());
-    };
-    
-    api.on('select', onSelect);
-    
-    return () => {
-      api.off('select', onSelect);
-    };
-  }, [api]);
+    return setupAutoScroll(5000, true, macroDistributionData.length);
+  }, [api, activeIndex, setupAutoScroll]);
 
   // Sample NutriScore for demonstration
-  const sampleNutriScore = { grade: 'A', score: -5 };
+  const sampleNutriScore: NutriScore = { grade: "A", score: -5 };
   
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
@@ -105,17 +89,10 @@ export function NutritionPreview() {
           
           <div 
             className="w-full touch-action-pan-y"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            onTouchStart={() => setIsPaused(true)}
-            onTouchEnd={() => setTimeout(() => setIsPaused(false), 5000)}
+            {...touchHandlers}
           >
             <Carousel
-              opts={{
-                align: "center",
-                loop: true,
-                dragFree: isMobile,
-              }}
+              opts={getCarouselOptions({ align: "center", loop: true })}
               className="w-full"
               setApi={setApi}
             >
@@ -133,16 +110,13 @@ export function NutritionPreview() {
             </Carousel>
           </div>
           
-          <div className="flex justify-center w-full mt-4">
+          <div className="flex justify-center w-full mt-6">
             <CarouselPagination 
               totalItems={macroDistributionData.length}
-              activeSlide={activeSlide}
-              onSelectSlide={(index) => {
-                setActiveSlide(index);
-                api?.scrollTo(index);
-                setIsPaused(true); // Pause auto-scroll when user navigates
-                setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
-              }}
+              activeIndex={activeIndex}
+              onSelect={scrollTo}
+              size={isMobile ? "sm" : "md"}
+              className="mb-2"
             />
           </div>
           

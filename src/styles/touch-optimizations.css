@@ -1,59 +1,136 @@
 
-/* Enhanced touch targets for better mobile experience */
-.touch-target-base {
+/**
+ * Touch Optimizations for Mobile Experience
+ */
+
+/* Touch action improvements */
+.touch-optimized * {
+  touch-action: manipulation; /* Disable double-tap zoom */
+}
+
+.touch-scroll {
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  overscroll-behavior: contain; /* Prevent scroll chaining */
+}
+
+/* Touch feedback */
+.touch-device .touch-feedback:active {
+  transform: scale(0.97);
+  transition: transform 0.2s ease;
+}
+
+/* Carousel touch improvements */
+.touch-device .embla__container {
+  cursor: grab;
+}
+
+.touch-device .embla__container:active {
+  cursor: grabbing;
+}
+
+/* Input optimizations for touch */
+.touch-device input,
+.touch-device select,
+.touch-device textarea,
+.touch-device button {
+  font-size: 16px; /* Prevent zoom on focus in iOS */
+}
+
+/* Larger tap targets on touch devices */
+.touch-device .tap-target {
   min-height: 44px;
   min-width: 44px;
 }
 
-.touch-target-lg {
-  min-height: 54px;
-  min-width: 54px;
+/* Enhanced buttons on touch devices */
+.touch-device button,
+.touch-device [role="button"],
+.touch-device a.button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
 }
 
-/* Touch feedback pattern for cards and buttons */
-.touch-feedback-optimized {
-  transition: transform 150ms ease, opacity 150ms ease;
-  will-change: transform, opacity;
+/* Ripple effect for button feedback */
+.touch-ripple {
+  position: relative;
+  overflow: hidden;
 }
 
-.touch-feedback-optimized:active {
-  transform: scale(0.97);
-  opacity: 0.92;
+.touch-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-/* Stronger touch feedback for CTAs */
-.touch-feedback-strong {
-  transition: transform 100ms ease, opacity 100ms ease, background-color 150ms ease;
-  will-change: transform, opacity, background-color;
+.touch-ripple:active::after {
+  opacity: 1;
+  transition: opacity 0s;
 }
 
-.touch-feedback-strong:active {
-  transform: scale(0.95);
-  opacity: 0.85;
-  background-color: rgba(0, 0, 0, 0.05);
+/* Reduce motion for better performance */
+.reduce-animations * {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
 }
 
-/* Image placeholder enhancements */
-.image-placeholder-cta:active {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-/* Drawer content touch optimization */
-.drawer-content.image-view-touch {
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Card touch optimizations */
-.card-touch-optimized {
-  touch-action: manipulation;
+/* No tap highlight */
+.tap-highlight-none {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Enhanced mobile card interaction */
-@media (max-width: 768px) {
-  .card-touch-optimized:active {
-    transform: scale(0.98);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-  }
+/* Enhanced touch targets */
+.touch-action-auto {
+  touch-action: auto;
+}
+
+.touch-action-none {
+  touch-action: none;
+}
+
+.touch-action-pan-y {
+  touch-action: pan-y;
+}
+
+/* Optimized card components for touch */
+.card-touch-optimized {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Carousel optimizations */
+.swipe-horizontal {
+  touch-action: pan-x;
+}
+
+/* Content visibility optimizations */
+.content-visibility-auto-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+
+/* Hardware acceleration helpers */
+.hw-accelerated {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Low power mode styles */
+.low-power-mode .animate-carousel,
+.low-power-mode .animate-float,
+.low-power-mode .animate-pulse {
+  animation: none !important;
+}
+
+.low-power-mode .reduce-motion-mobile {
+  transition: none !important;
+}
+
+.low-power-mode img {
+  image-rendering: auto;
 }
