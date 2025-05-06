@@ -80,7 +80,7 @@ export function FeaturedRecipe() {
                     <TableRow key={index}>
                       <TableCell className="font-medium">{ingredient.qty}</TableCell>
                       <TableCell>{ingredient.unit}</TableCell>
-                      <TableCell>{ingredient.item}</TableCell>
+                      <TableCell>{typeof ingredient.item === 'string' ? ingredient.item : JSON.stringify(ingredient.item)}</TableCell>
                     </TableRow>
                   ))}
                   {recipe.ingredients.length > 5 && (

@@ -13,7 +13,9 @@ interface NutriScoreDisplayProps {
 }
 
 export function NutriScoreDisplay({ nutriScore, compact = false, className }: NutriScoreDisplayProps) {
-  const { score, grade, negative_points, positive_points } = nutriScore;
+  const { score, grade } = nutriScore;
+  const negative_points = nutriScore.negative_points || { total: 0, energy: 0, saturated_fat: 0, sugars: 0, sodium: 0 };
+  const positive_points = nutriScore.positive_points || { total: 0, fiber: 0, protein: 0, fruit_veg_nuts: 0 };
   
   // Max score for scaling: the Nutri-Score scale typically goes from -15 to +40
   const maxScore = 40;

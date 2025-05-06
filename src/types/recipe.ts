@@ -92,6 +92,20 @@ export interface NutriScore {
     protein?: number;
   };
   recommendation?: string;
+  // Add missing properties needed by NutriScoreDisplay
+  negative_points?: {
+    total: number;
+    energy: number;
+    saturated_fat: number;
+    sugars: number;
+    sodium: number;
+  };
+  positive_points?: {
+    total: number;
+    fiber: number;
+    protein: number;
+    fruit_veg_nuts: number;
+  };
 }
 
 // Define the Recipe interface
@@ -106,7 +120,7 @@ export interface Recipe {
   servings?: number;
   image_url?: string;
   cuisine?: string;
-  cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles";
+  cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern";
   tags?: string[];
   user_id?: string;
   created_at?: string;

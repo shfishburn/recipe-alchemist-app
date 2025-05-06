@@ -38,6 +38,8 @@ export const NUTRITION_COLORS = {
   saturated_fat: "rgb(239, 68, 68, 0.9)",
   sugar: "rgb(249, 115, 22, 0.9)",
   sodium: "rgb(236, 72, 153, 0.9)",
+  // Add calories color property
+  calories: "rgb(220, 38, 38, 0.9)", // Red for calories
 };
 
 // Unit conversion factors for imperial/metric
