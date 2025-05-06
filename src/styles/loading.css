@@ -145,3 +145,29 @@
 .touch-action-pan-y {
   touch-action: pan-y;
 }
+
+/* Enhanced touch targets for mobile */
+.touch-target {
+  position: relative;
+}
+
+.touch-target::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  z-index: -1;
+}
+
+/* NutriScore badge styling */
+.nutriscore-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-weight: 600;
+}

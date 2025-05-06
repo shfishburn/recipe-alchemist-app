@@ -84,6 +84,7 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
       }
     };
     
+    // Add event listeners with passive option for better touch performance
     window.addEventListener('load', handleLoad, { passive: true });
     document.addEventListener('readystatechange', handleLoad, { passive: true });
     

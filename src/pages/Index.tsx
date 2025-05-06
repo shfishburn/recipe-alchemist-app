@@ -46,9 +46,9 @@ const Index = () => {
   }, []);
   
   return (
-    <div className={`min-h-screen flex flex-col ${isTouch ? 'touch-optimized' : ''}`}>
+    <>
       <Navbar />
-      <main className="flex-1 pb-8 md:pb-12 touch-scroll">
+      <main className={`flex-1 pb-8 md:pb-12 touch-scroll ${isTouch ? 'touch-optimized' : ''}`}>
         {loading ? (
           <PageLoadingFallback />
         ) : (
@@ -57,7 +57,7 @@ const Index = () => {
           </Suspense>
         )}
       </main>
-    </div>
+    </>
   );
 };
 

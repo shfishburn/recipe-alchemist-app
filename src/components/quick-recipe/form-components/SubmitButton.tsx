@@ -19,11 +19,11 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
       className={cn(
         "w-full bg-gradient-to-r from-recipe-primary to-recipe-green hover:from-recipe-primary/90 hover:to-recipe-green/90",
         "transition-all duration-300 text-white shadow-md font-medium group",
-        "relative overflow-hidden rounded-xl",
-        isMobile ? "py-4 text-base" : "py-4 text-lg", // Increased padding and text size for desktop
+        "relative overflow-hidden rounded-xl touch-action-auto",
+        isMobile ? "py-5 text-base" : "py-4 text-lg", // Increased padding for better touch target
         isLoading ? "opacity-90" : ""
       )}
-      size={isMobile ? "lg" : "lg"}
+      size="lg"
       disabled={isLoading || disabled}
       aria-disabled={isLoading || disabled}
       aria-busy={isLoading}
@@ -32,7 +32,7 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
         <div className="flex items-center justify-center">
           <CookingPot className={cn(
             "mr-2 animate-pulse",
-            isMobile ? "h-5 w-5" : "h-6 w-6" // Replaced bounce with pulse animation
+            isMobile ? "h-5 w-5" : "h-6 w-6"
           )} />
           <span className="font-medium">
             Creating Your Recipe...
@@ -54,14 +54,8 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
         </div>
       )}
       
-      {/* Improved touch ripple effect for mobile - using CSS variable for performance */}
-      <span aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-        <span className="absolute inset-0 bg-white/10 opacity-0 touch-none" 
-              style={{
-                transform: 'translate3d(0, 0, 0)',
-                willChange: 'opacity'
-              }}></span>
-      </span>
+      {/* Improved touch ripple effect using the touch-ripple class */}
+      <span aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl touch-ripple"></span>
     </Button>
   );
 }

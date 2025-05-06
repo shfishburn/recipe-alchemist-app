@@ -58,22 +58,24 @@ const QuickRecipePage = () => {
   // Show full-screen loading when generating a recipe
   if (isLoading || isRetrying) {
     return (
-      <div className="min-h-screen relative touch-action-auto">
+      <>
         <LoadingIndicator />
-        <FullScreenLoading 
-          onCancel={handleCancel}
-          onRetry={error ? handleRetry : undefined}
-          error={error}
-        />
-      </div>
+        <div className="min-h-screen w-full relative touch-action-auto">
+          <FullScreenLoading 
+            onCancel={handleCancel}
+            onRetry={error ? handleRetry : undefined}
+            error={error}
+          />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Navbar />
       <LoadingIndicator />
-      <main className="flex-1 py-6 md:py-10">
+      <main className="flex-1 py-6 md:py-10 w-full">
         <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Title Section - Always show this */}
           <QuickRecipeHero 
@@ -112,7 +114,7 @@ const QuickRecipePage = () => {
           )}
         </div>
       </main>
-    </div>
+    </>
   );
 }
 
