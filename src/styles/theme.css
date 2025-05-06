@@ -11,7 +11,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 132 96% 32%;  /* #04a118 */
+    --primary: 142 70% 35%;  /* Standardized green */
     --primary-foreground: 210 40% 98%;
     --secondary: 96 57% 41%;  /* #59a52c */
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -23,18 +23,18 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 132 96% 32%; /* Match primary */
+    --ring: 142 70% 35%; /* Match primary */
     --radius: 0.5rem;
 
     /* Sidebar */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 132 96% 32%;  /* Match primary */
+    --sidebar-primary: 142 70% 35%;  /* Match primary */
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 132 96% 32%;  /* Match primary */
+    --sidebar-ring: 142 70% 35%;  /* Match primary */
   }
 
   .dark {
@@ -44,7 +44,7 @@
     --card-foreground: 213 31% 91%;
     --popover: 224 71% 4%;
     --popover-foreground: 213 31% 91%;
-    --primary: 132 96% 32%;  /* #04a118 */
+    --primary: 142 70% 35%;  /* Standardized green */
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 96 57% 41%;  /* #59a52c */
     --secondary-foreground: 210 40% 98%;
@@ -56,17 +56,17 @@
     --destructive-foreground: 210 40% 98%;
     --border: 216 34% 17%;
     --input: 216 34% 17%;
-    --ring: 132 96% 32%; /* Match primary */
+    --ring: 142 70% 35%; /* Match primary */
 
     /* Sidebar */
     --sidebar-background: 224 71% 4%;
     --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 132 96% 32%;  /* Match primary */
+    --sidebar-primary: 142 70% 35%;  /* Match primary */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 216 34% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 216 34% 17%;
-    --sidebar-ring: 132 96% 32%;  /* Match primary */
+    --sidebar-ring: 142 70% 35%;  /* Match primary */
   }
 }
 
@@ -98,5 +98,20 @@
 
   h4 {
     @apply text-xl md:text-2xl;
+  }
+}
+
+/* Form field focus states */
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-75;
+  }
+  
+  .input-focus {
+    @apply focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary;
+  }
+  
+  .touch-target-lg {
+    @apply min-h-[44px] min-w-[44px];
   }
 }

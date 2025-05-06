@@ -14,27 +14,8 @@ interface IngredientInputProps {
 export function IngredientInput({ value, onChange, error }: IngredientInputProps) {
   const isMobile = useIsMobile();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // Change default pulsing state to false to prevent flashing
-  const [isPulsing, setIsPulsing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
-  // Start pulsing after component mounts for a smoother experience
-  useEffect(() => {
-    // Delay the pulse effect to prevent flash on initial load
-    const timer = setTimeout(() => {
-      setIsPulsing(true);
-      
-      // Then stop the pulsing after a few seconds
-      const stopTimer = setTimeout(() => {
-        setIsPulsing(false);
-      }, 3000);
-      
-      return () => clearTimeout(stopTimer);
-    }, 1000); // Delay start by 1 second
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   // Auto-resize textarea based on content using requestAnimationFrame for performance
   useEffect(() => {
     if (textareaRef.current) {
@@ -54,13 +35,13 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
   // Feature badges with better visual design
   const FeatureBadges = () => (
     <div className="flex flex-wrap justify-center gap-2 mb-3">
-      <span className="bg-recipe-green/10 text-recipe-green rounded-full px-3 py-1 text-xs font-medium">
+      <span className="bg-green-100 text-green-700 rounded-full px-3 py-1 text-xs font-medium">
         Ready in 30 mins
       </span>
-      <span className="bg-recipe-blue/10 text-recipe-blue rounded-full px-3 py-1 text-xs font-medium">
+      <span className="bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs font-medium">
         Easy cleanup
       </span>
-      <span className="bg-recipe-orange/10 text-recipe-orange rounded-full px-3 py-1 text-xs font-medium">
+      <span className="bg-amber-100 text-amber-700 rounded-full px-3 py-1 text-xs font-medium">
         Ingredient-based
       </span>
     </div>
@@ -71,18 +52,17 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
       <FeatureBadges />
       
       <label htmlFor="mainIngredient" className={cn(
-        "block pb-1 text-left text-lg font-semibold text-recipe-blue",
+        "block pb-1 text-left text-lg font-semibold text-gray-800",
         isMobile ? "text-base" : "text-lg"
       )}>
         What ingredients do you have today?
       </label>
       
       <div className={cn(
-        "relative rounded-xl shadow-md transition-all duration-300",
-        isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
-        isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
+        "relative rounded-xl shadow-sm transition-all duration-300",
+        isFocused ? 'ring-2 ring-blue-500' : '',
         error ? 'ring-2 ring-red-500' : '',
-        "bg-gradient-to-r from-white to-blue-50/70 dark:from-gray-900 dark:to-gray-800"
+        "bg-white dark:bg-gray-900"
       )}>
         <Textarea 
           id="mainIngredient"
@@ -95,20 +75,20 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           className={cn(
             isMobile ? "min-h-[56px] text-base py-3 px-4" : "min-h-[60px] text-lg",
             "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl",
-            "focus-within:border-recipe-blue placeholder:text-gray-500/80", // Lower opacity for placeholder
-            error ? "border-red-500" : "border-gray-200 focus:border-recipe-blue"
+            "focus-within:border-blue-500 placeholder:text-gray-500/80", // Lower opacity for placeholder
+            error ? "border-red-500" : "border-gray-200 focus:border-blue-500"
           )}
           rows={1}
           // Improved touch handling
           style={{ touchAction: "manipulation" }}
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-recipe-blue" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-500" />
       </div>
       
       {error ? (
         <p className="text-xs text-left text-red-500 font-medium animate-fade-in">{error}</p>
       ) : (
-        <p className="text-xs text-left text-recipe-blue font-medium">Tell us what you want to cook with!</p>
+        <p className="text-xs text-left text-blue-500 font-medium">Tell us what you want to cook with!</p>
       )}
     </div>
   );
