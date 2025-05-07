@@ -61,3 +61,8 @@ vector_port = 54328
 [functions]
 [functions.verify-nutrition-data]
 verify_jwt = true
+
+# Explicitly disable JWT verification for the generate-quick-recipe function
+[functions.generate-quick-recipe]
+verify_jwt = false
+
