@@ -15,13 +15,16 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     // Get auth token for request
     const token = await getAuthToken();
     
-    console.log("Testing direct fetch to edge function");
+    console.log("Starting direct fetch to edge function");
     
     // Create a proper payload with embedding model in body
     const payload = {
       ...requestBody,
       embeddingModel: 'text-embedding-ada-002' // Include model in request body
     };
+    
+    // Log payload size without logging the entire payload
+    console.log(`Request payload size: ${JSON.stringify(payload).length} bytes`);
     
     // Make the direct fetch request with CORS-compatible headers
     const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
@@ -35,8 +38,10 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     });
     
     console.log("Direct fetch response status:", response.status);
-    const responseText = await response.text();
-    console.log("Direct fetch response:", responseText);
+    
+    // Clone the response before reading it
+    const responseClone = response.clone();
+    const responseText = await responseClone.text();
     
     // Check if the response is OK
     if (!response.ok) {
@@ -51,10 +56,10 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     // Parse and return the successful response
     try {
       const data = JSON.parse(responseText);
-      console.log("Direct fetch parsed JSON:", data);
+      console.log("Direct fetch successfully parsed JSON response");
       return data;
     } catch (parseError) {
-      console.error("Direct fetch response is not valid JSON:", responseText);
+      console.error("Direct fetch response is not valid JSON:", responseText.substring(0, 100));
       throw new Error("Invalid JSON response from API");
     }
   } catch (fetchError) {
@@ -65,25 +70,33 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
 
 // Fallback API call using Supabase functions
 export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
-  const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
-    body: {
-      ...requestBody,
-      embeddingModel: 'text-embedding-ada-002' // Include model in request body
-    },
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Debug-Info': 'supabase-invoke-' + Date.now()
+  try {
+    console.log("Falling back to Supabase invoke method");
+    
+    const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+      body: {
+        ...requestBody,
+        embeddingModel: 'text-embedding-ada-002' // Include model in request body
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Info': 'supabase-invoke-' + Date.now()
+      }
+    });
+
+    if (error) {
+      console.error('Supabase functions error:', error);
+      throw error;
     }
-  });
 
-  if (error) {
-    console.error('Supabase functions error:', error);
-    throw error;
+    if (!data) {
+      throw new Error('No data returned from recipe generation');
+    }
+
+    console.log("Supabase invoke returned data successfully");
+    return data;
+  } catch (invokeError) {
+    console.error("Supabase invoke error:", invokeError);
+    throw invokeError;
   }
-
-  if (!data) {
-    throw new Error('No data returned from recipe generation');
-  }
-
-  return data;
 };

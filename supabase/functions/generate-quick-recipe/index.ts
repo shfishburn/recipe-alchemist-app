@@ -15,39 +15,15 @@ serve(async (req) => {
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
     console.log(`Request received with debug info: ${debugInfo}`);
     
-    // Add more request information for debugging
+    // Log request metadata without consuming the body
     console.log(`Request method: ${req.method}`);
     console.log(`Request content-type: ${req.headers.get("content-type")}`);
-    console.log(`Request authorization: ${req.headers.get("authorization") ? "Present" : "Missing"}`);
-    
-    // Log all headers for comprehensive debugging
-    console.log("All request headers:");
-    for (const [key, value] of req.headers.entries()) {
-      console.log(`  ${key}: ${key === "authorization" ? "Bearer ..." : value}`);
-    }
-    
-    // Try to clone and read the request body to check if it's empty
-    try {
-      const clonedReq = req.clone();
-      const bodyText = await clonedReq.text();
-      console.log(`Request body length: ${bodyText.length}`);
-      if (bodyText.length > 0) {
-        console.log(`Request body preview: ${bodyText.substring(0, 100)}...`);
-      } else {
-        console.log("WARNING: Empty request body received!");
-      }
-    } catch (bodyError) {
-      console.error("Error reading request body:", bodyError);
-    }
-    
-    // Extract embedding model from request body
-    const embeddingModel = "text-embedding-ada-002"; // Default model
-    console.log(`Using embedding model: ${embeddingModel}`);
     
     // Add function version and timestamp for deployment tracking
-    console.log(`Function version: v1.0.1, timestamp: ${new Date().toISOString()}`);
+    console.log(`Function version: v1.0.2, timestamp: ${new Date().toISOString()}`);
     
-    return await handleRequest(req, debugInfo, embeddingModel);
+    // Use the original request directly - don't clone or read it here
+    return await handleRequest(req, debugInfo);
   } catch (err) {
     console.error("Quick recipe generation error:", err);
     return new Response(
