@@ -80,14 +80,14 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Process and enhance error message
     const errorMessage = enhanceErrorMessage(error);
     
-    // Return a placeholder recipe with error information
+    // Return a placeholder recipe with error information - ensuring it conforms to QuickRecipe type
     return {
       title: "Recipe Generation Error",
       description: errorMessage,
       ingredients: [],
       steps: ["Please try again with a different ingredient or check your internet connection."],
       servings: 0,
-      error: errorMessage
+      // Remove the error property as it's not in the QuickRecipe type
     };
   }
 };
