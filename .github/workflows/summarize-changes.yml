@@ -1,0 +1,95 @@
+
+name: Summarize Changes and Detect Issues
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your target branch
+
+jobs:
+  analyze_changes:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2  # Need at least 2 commits for diff
+
+    - name: Check commit author
+      id: check_author
+      run: |
+        AUTHOR=$(git log -1 --pretty=format:'%an')
+        echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+        echo "Commit Author: $AUTHOR"
+
+    - name: Summarize code changes
+      id: summarize_changes
+      if: steps.check_author.outputs.author == 'lovable'
+      run: |
+        git diff HEAD^ HEAD > changes.diff
+        echo "changes<<EOF" >> $GITHUB_OUTPUT
+        cat changes.diff >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Setup Node.js
+      if: steps.check_author.outputs.author == 'lovable'
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      if: steps.check_author.outputs.author == 'lovable'
+      run: npm ci || npm install
+
+    - name: Run linter
+      id: run_linter
+      if: steps.check_author.outputs.author == 'lovable'
+      run: |
+        npx eslint . --format json > eslint_results.json || true
+        echo "linter_issues<<EOF" >> $GITHUB_OUTPUT
+        cat eslint_results.json >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create issue with summary
+      if: steps.check_author.outputs.author == 'lovable'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          const changes = fs.readFileSync('changes.diff', 'utf8');
+          let lintResults = '';
+          try {
+            const lintData = fs.readFileSync('eslint_results.json', 'utf8');
+            const lintJson = JSON.parse(lintData);
+            lintResults = JSON.stringify(lintJson, null, 2);
+          } catch (error) {
+            lintResults = 'No linting results available';
+          }
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `Code Review for commit ${context.sha.substring(0, 7)}`,
+            body: `
+            ## Developer Prompt
+            
+            Code changes detected by lovable. Please review the summary and address any linting issues.
+            
+            ### Summary of Changes
+            
+            \`\`\`diff
+            ${changes}
+            \`\`\`
+            
+            ### Linting Issues
+            
+            \`\`\`json
+            ${lintResults}
+            \`\`\`
+            
+            Commit: ${context.sha}
+            `
+          });
