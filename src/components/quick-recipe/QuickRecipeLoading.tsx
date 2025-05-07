@@ -19,7 +19,7 @@ const LOADING_STEPS = [
 ];
 
 // Maximum time to wait before showing error (in seconds)
-const MAX_LOADING_TIME = 40;
+const MAX_LOADING_TIME = 60;
 
 export function QuickRecipeLoading() {
   const { loadingState, formData, updateLoadingState, completedLoading, setCompletedLoading, setError } = useQuickRecipeStore();
@@ -27,10 +27,10 @@ export function QuickRecipeLoading() {
   const { session } = useAuth();
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
   const [showTimeout, setShowTimeout] = useState(false);
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutWarningRef = useRef<NodeJS.Timeout | null>(null);
+  const progressTimerRef = useRef<number | null>(null);
+  const stepTimerRef = useRef<number | null>(null);
+  const timeoutTimerRef = useRef<number | null>(null);
+  const timeoutWarningRef = useRef<number | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   
   // Initialize sound effect for typing with mobile-friendly settings
@@ -65,17 +65,28 @@ export function QuickRecipeLoading() {
     };
   }, [audioEnabled, completedLoading, playTypingSound]);
   
+  // Clear all timers on unmount
+  useEffect(() => {
+    return () => {
+      if (progressTimerRef.current) window.clearInterval(progressTimerRef.current);
+      if (stepTimerRef.current) window.clearInterval(stepTimerRef.current);
+      if (timeoutTimerRef.current) window.clearTimeout(timeoutTimerRef.current);
+      if (timeoutWarningRef.current) window.clearTimeout(timeoutWarningRef.current);
+      pauseTypingSound();
+    };
+  }, [pauseTypingSound]);
+  
   // Set a timeout to prevent infinite loading
   useEffect(() => {
     // Show a timeout warning after 75% of the maximum time
-    timeoutWarningRef.current = setTimeout(() => {
+    timeoutWarningRef.current = window.setTimeout(() => {
       if (!completedLoading) {
         setShowTimeout(true);
       }
     }, (MAX_LOADING_TIME * 0.75) * 1000);
     
     // Set a timeout to prevent infinite loading state
-    timeoutTimerRef.current = setTimeout(() => {
+    timeoutTimerRef.current = window.setTimeout(() => {
       if (!completedLoading) {
         console.error("Recipe generation timeout after", MAX_LOADING_TIME, "seconds");
         pauseTypingSound();
@@ -84,12 +95,8 @@ export function QuickRecipeLoading() {
     }, MAX_LOADING_TIME * 1000);
     
     return () => {
-      if (timeoutWarningRef.current) {
-        clearTimeout(timeoutWarningRef.current);
-      }
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-      }
+      if (timeoutWarningRef.current) window.clearTimeout(timeoutWarningRef.current);
+      if (timeoutTimerRef.current) window.clearTimeout(timeoutTimerRef.current);
     };
   }, [completedLoading, pauseTypingSound, setError]);
   
@@ -105,7 +112,7 @@ export function QuickRecipeLoading() {
       playTypingSound();
     }
     
-    progressTimerRef.current = setInterval(() => {
+    progressTimerRef.current = window.setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
       const remaining = Math.max(0, initialEstimate - elapsed);
       const percent = Math.min(99, Math.floor(((initialEstimate - remaining) / initialEstimate) * 100));
@@ -125,7 +132,7 @@ export function QuickRecipeLoading() {
         
         // Clear interval
         if (progressTimerRef.current) {
-          clearInterval(progressTimerRef.current);
+          window.clearInterval(progressTimerRef.current);
           progressTimerRef.current = null;
         }
       }
@@ -133,7 +140,7 @@ export function QuickRecipeLoading() {
     
     return () => {
       if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
+        window.clearInterval(progressTimerRef.current);
         progressTimerRef.current = null;
       }
       pauseTypingSound();
@@ -142,7 +149,7 @@ export function QuickRecipeLoading() {
   
   // Cycle through loading steps
   useEffect(() => {
-    stepTimerRef.current = setInterval(() => {
+    stepTimerRef.current = window.setInterval(() => {
       updateLoadingState({
         step: (loadingState.step + 1) % LOADING_STEPS.length,
         stepDescription: LOADING_STEPS[(loadingState.step + 1) % LOADING_STEPS.length]
@@ -151,7 +158,7 @@ export function QuickRecipeLoading() {
     
     return () => {
       if (stepTimerRef.current) {
-        clearInterval(stepTimerRef.current);
+        window.clearInterval(stepTimerRef.current);
         stepTimerRef.current = null;
       }
     };

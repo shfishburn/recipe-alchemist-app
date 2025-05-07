@@ -20,15 +20,27 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     console.log("Sending request to edge function");
     
+    // Use a shorter timeout for faster feedback
     let data;
     try {
-      // Try the direct fetch first with a 90-second timeout
-      data = await fetchFromEdgeFunction(requestBody, 90000);
+      // Try the direct fetch first with a 45-second timeout (shorter for better UX)
+      data = await fetchFromEdgeFunction(requestBody, 45000);
     } catch (directFetchError) {
-      console.warn("Direct fetch failed, trying Supabase invoke:", directFetchError);
+      console.warn("Direct fetch failed:", directFetchError.message);
       
-      // Only if direct fetch fails, try the Supabase invoke method as fallback
-      data = await fetchFromSupabaseFunctions(requestBody);
+      // Only try the fallback if not a timeout error (to avoid waiting even longer)
+      if (!directFetchError.message?.includes('timed out')) {
+        try {
+          console.log("Trying fallback Supabase invoke method");
+          data = await fetchFromSupabaseFunctions(requestBody);
+        } catch (fallbackError) {
+          console.error("Fallback also failed:", fallbackError);
+          throw fallbackError; // Let the original error propagate if both methods fail
+        }
+      } else {
+        // Re-throw timeout errors directly without trying the fallback
+        throw directFetchError;
+      }
     }
     
     // Check for error in data
