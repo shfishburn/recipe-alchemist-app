@@ -19,7 +19,7 @@ export async function generateRecipeWithOpenAI(
     
     console.log("Sending request to OpenAI API...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Using faster, more cost-effective model
+      model: "gpt-4o-mini", // Updated to use gpt-4o-mini model
       response_format: { type: "json_object" },
       temperature: 0.4, // Reduced from 0.5 for more consistency
       max_tokens: 3000, // Reduced slightly while still allowing for comprehensive steps
