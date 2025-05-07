@@ -104,33 +104,4 @@
   .cookie-checkbox[data-state="checked"] {
     @apply bg-green-600 border-green-600;
   }
-
-  /* Chart scrolling container */
-  .chart-scroll-container {
-    @apply w-full relative overflow-visible touch-pan-x;
-  }
-  
-  .chart-item {
-    @apply min-w-[240px] h-full flex-shrink-0 touch-pan-x hw-boost;
-  }
-  
-  /* Horizontal scroll indicators */
-  .horizontal-scroll-indicator {
-    @apply text-xs text-center text-muted-foreground mt-2 relative;
-  }
-  
-  .horizontal-scroll-indicator::after {
-    content: "";
-    @apply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-1 bg-slate-200 rounded-full;
-  }
-
-  /* Hide scrollbars but keep functionality */
-  .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
 }

@@ -2,200 +2,46 @@
 /* Touch optimization for carousel and other interactive elements */
 .hw-accelerated {
   will-change: transform;
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  perspective: 1000px;
+  -webkit-perspective: 1000;
+  -webkit-transform: translate3d(0,0,0);
+  -webkit-transform-style: preserve-3d;
 }
 
 .card-touch-optimized {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
 }
 
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-}
-
-.touch-scroll::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
 }
 
 .touch-device {
   /* Touch-specific styles for the entire app */
-  --touch-target-min: 44px; /* WCAG compliant touch target size */
-  --touch-spacing-min: 8px; /* Minimum spacing between touch targets */
+  --touch-target-min: 44px;
 }
 
-/* Optimize vertical swipe carousels */
-.touch-pan-y {
+.touch-optimized {
+  /* Increase touch targets */
+  --touch-padding: 0.25rem;
+}
+
+.reduce-animations {
+  /* Reduce animations when battery is low */
+  transition-duration: 0.1s !important;
+}
+
+.reduce-motion-mobile * {
+  transition-duration: 0.1s !important;
+  animation-duration: 0.1s !important;
+}
+
+.touch-action-pan-y {
   touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
 }
 
-/* Carousel touch target enhancements */
-.carousel-control {
-  min-height: var(--touch-target-min);
-  min-width: var(--touch-target-min);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Improved momentum scroll for touch devices */
-.momentum-scroll {
-  -webkit-overflow-scrolling: touch;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.momentum-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.momentum-scroll > * {
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-/* Visual indicator for scrollable content */
-.swipe-indicator {
-  position: relative;
-}
-
-.swipe-indicator::after {
-  content: "";
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 4px;
-  background-color: #e2e8f0;
-  border-radius: 2px;
-}
-
-/* Enhanced tap feedback */
-@media (hover: none) {
-  .interactive-element:active {
-    opacity: 0.8;
-    transform: scale(0.98);
-    transition: all 0.1s ease;
-  }
-  
-  /* Improve touch target size for navigation dots */
-  .carousel [role="button"] {
-    min-width: 32px;
-    min-height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  /* Better touch feedback for carousel navigation */
-  .carousel [role="button"]:active {
-    transform: scale(0.95);
-    opacity: 0.9;
-  }
-}
-
-/* Prevent iOS overscroll effects */
-.no-overscroll {
-  overscroll-behavior: none;
-}
-
-/* Scrollbar hiding for all browsers */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Compact layouts for mobile */
-@media (max-width: 640px) {
-  .mobile-compact {
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-  }
-  
-  .carousel-item-mobile {
-    height: auto !important;
-    max-height: calc(100vh - 240px) !important;
-  }
-  
-  /* Tighter mobile spacing */
-  .carousel-content {
-    gap: 0.25rem;
-  }
-  
-  /* Improved navigation dots on small screens */
-  .carousel [role="button"] {
-    transform: scale(0.85);
-  }
-}
-
-/* Responsive spacing for carousel content */
-.carousel-content {
-  min-height: 0;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Ensure consistent snap behavior */
-.snap-x.snap-mandatory > * {
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
-}
-
-/* Touch target improvements */
-.touch-target {
-  min-width: 44px;
-  min-height: 44px;
-}
-
-/* Enhanced carousel for mobile devices */
-@media (max-width: 640px) {
-  /* Make sure pagination tappable on small screens */
-  [aria-label="Carousel pagination"] button {
-    padding: 8px 4px;
-    margin: 0 2px;
-  }
-  
-  /* Prevent modal overflow on small screens */
-  .dialog-content,
-  .sheet-content,
-  .drawer-content {
-    max-height: 85vh;
-    overflow-y: auto;
-  }
-  
-  /* Fix text overflow issues in charts */
-  text.recharts-text {
-    font-size: 10px;
-  }
-  
-  /* Compact legend display */
-  .recharts-default-legend {
-    font-size: 10px;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+/* Optimize image loading for carousels */
+.carousel-image-container {
+  background-color: #f3f4f6;
 }

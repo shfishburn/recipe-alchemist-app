@@ -2,7 +2,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Legend } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MacroPieChartsProps {
   carbsData: Array<{
@@ -18,54 +17,57 @@ interface MacroPieChartsProps {
 }
 
 const MacroPieCharts = ({ carbsData, fatsData }: MacroPieChartsProps) => {
-  const isMobile = useIsMobile();
-  
-  const renderChart = (data: any[], title: string) => (
-    <div className="flex-1 min-w-0">
-      <h3 className="text-xs font-medium text-center">{title}</h3>
-      <div className="max-w-[180px] mx-auto">
-        <ChartContainer 
-          config={{
-            [data[0].name]: { color: data[0].color },
-            [data[1].name]: { color: data[1].color },
-          }} 
-          className="h-[90px] w-full"
-        >
-          <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+  return (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-lg font-medium mb-4 text-center">Carbohydrate Distribution</h3>
+        <ChartContainer config={{
+          'Complex Carbs': { color: '#4f46e5' },
+          'Simple Carbs': { color: '#818cf8' },
+        }} className="h-40 w-full">
+          <PieChart>
             <Pie 
-              data={data}
+              data={carbsData}
               cx="50%"
               cy="50%"
-              outerRadius={isMobile ? 30 : 35}
+              outerRadius={70}
               fill="#8884d8"
               dataKey="value"
-              label={({ name, value }) => `${value}%`}
-              labelLine={false}
+              label={({ name, value }) => `${name}: ${value}%`}
             >
-              {data.map((entry, index) => (
+              {carbsData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Legend 
-              layout="horizontal"
-              verticalAlign="bottom" 
-              align="center"
-              wrapperStyle={{ 
-                fontSize: '8px',
-                width: '100%',
-                margin: '0 auto'
-              }}
-            />
+            <Legend />
           </PieChart>
         </ChartContainer>
       </div>
-    </div>
-  );
-  
-  return (
-    <div className="w-full flex flex-row gap-1 justify-center items-start">
-      {renderChart(carbsData, "Carbs Distribution")}
-      {renderChart(fatsData, "Fat Distribution")}
+      
+      <div>
+        <h3 className="text-lg font-medium mb-4 text-center">Fat Distribution</h3>
+        <ChartContainer config={{
+          'Saturated Fat': { color: '#22c55e' },
+          'Unsaturated Fat': { color: '#86efac' },
+        }} className="h-40 w-full">
+          <PieChart>
+            <Pie 
+              data={fatsData}
+              cx="50%"
+              cy="50%"
+              outerRadius={70}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, value }) => `${name}: ${value}%`}
+            >
+              {fatsData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Legend />
+          </PieChart>
+        </ChartContainer>
+      </div>
     </div>
   );
 };

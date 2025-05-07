@@ -15,11 +15,11 @@ interface MacroChartProps {
   showTooltip?: boolean;
 }
 
-export function MacroChart({ data, height = 150, showLegend = true, showTooltip = true }: MacroChartProps) {
+export function MacroChart({ data, height = 220, showLegend = true, showTooltip = true }: MacroChartProps) {
   const isMobile = useIsMobile();
   
   // Calculate responsive dimensions
-  const outerRadius = isMobile ? 40 : 55;
+  const outerRadius = isMobile ? 70 : 80;
   const innerRadius = outerRadius * 0.6;
   
   // Custom label rendering function
@@ -29,8 +29,8 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    // Hide labels on very small screens or for small values
-    if ((isMobile && window.innerWidth < 350) || value < 15) return null;
+    // Hide labels on very small screens
+    if (isMobile && window.innerWidth < 350) return null;
 
     return (
       <text 
@@ -39,7 +39,7 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
         fill="white" 
         textAnchor="middle" 
         dominantBaseline="central"
-        className="text-[10px] font-semibold"
+        className="text-[13px] font-semibold"
       >
         {`${value}%`}
       </text>
@@ -56,22 +56,22 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
       <div className="bg-white p-2 border rounded-md shadow-md text-xs">
         <p className="font-medium mb-1" style={{ color: data.color }}>{data.name}</p>
         <p><span className="font-semibold">{data.value}%</span> of daily intake</p>
+        {data.name === 'Protein' && <p className="mt-1 text-[10px] text-gray-500">4 calories per gram</p>}
+        {data.name === 'Carbs' && <p className="mt-1 text-[10px] text-gray-500">4 calories per gram</p>}
+        {data.name === 'Fat' && <p className="mt-1 text-[10px] text-gray-500">9 calories per gram</p>}
       </div>
     );
   };
 
-  // Custom legend formatter for more compact display
+  // Custom legend formatter
   const customLegendFormatter = (value: string, entry: any) => {
-    return <span className={isMobile ? "text-[9px]" : "text-[10px]"}>{`${value}: ${entry.payload.value}%`}</span>;
+    return <span className="text-xs">{value}: <strong>{entry.payload.value}%</strong></span>;
   };
 
-  // Adaptive height based on device
-  const chartHeight = isMobile ? Math.min(height, 110) : height;
-
   return (
-    <div className="w-full" style={{ height: `${chartHeight}px` }}>
+    <div className="w-full" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+        <PieChart>
           <Pie
             data={data}
             cx="50%"
@@ -103,9 +103,8 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
               verticalAlign="bottom"
               align="center"
               wrapperStyle={{ 
-                fontSize: isMobile ? '9px' : '10px',
-                paddingTop: '0px',
-                lineHeight: '1.2'
+                paddingTop: '10px',
+                fontSize: '12px'
               }}
             />
           )}

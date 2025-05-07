@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MacroDetailsPanelProps {
   title: string;
@@ -13,25 +12,23 @@ interface MacroDetailsPanelProps {
 }
 
 export function MacroDetailsPanel({ title, description, data }: MacroDetailsPanelProps) {
-  const isMobile = useIsMobile();
-  
   return (
-    <div className="w-full flex flex-col">
-      <p className="text-center text-xs">{description}</p>
+    <div className="w-full space-y-3">
+      <p className="text-center text-sm md:text-base">{description}</p>
       
-      <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg w-full mt-1">
-        <ul className="w-full">
+      <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg w-full">
+        <ul className="space-y-2 w-full">
           {data.map((item, i) => (
-            <li key={i} className="flex items-center justify-between py-0.5">
-              <div className="flex items-center gap-1">
+            <li key={i} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <span 
-                  className="h-2 w-2 rounded-full" 
+                  className="h-3 w-3 rounded-full" 
                   style={{ backgroundColor: item.color }}
                   aria-hidden="true"
                 />
-                <span className={isMobile ? "text-[10px]" : "text-xs"}>{item.name}</span>
+                <span className="text-sm">{item.name}</span>
               </div>
-              <span className={`font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>{item.value}%</span>
+              <span className="font-semibold text-sm">{item.value}%</span>
             </li>
           ))}
         </ul>

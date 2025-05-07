@@ -3,21 +3,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMediaQuery } from './use-media-query';
 import { useBatteryStatus } from './use-battery-status';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
-import { throttle } from 'lodash';
 
-export interface OptimizedCarouselOptions {
-  loop?: boolean;
-  align?: 'start' | 'center' | 'end';
-  slidesToScroll?: number;
-  dragFree?: boolean;
-  inViewThreshold?: number;
-  autoScroll?: boolean;
-  autoScrollInterval?: number;
-  skipSnaps?: boolean;
-  speed?: number;
-}
-
-export function useOptimizedCarousel(options: OptimizedCarouselOptions = {}) {
+export function useOptimizedCarousel() {
   const [api, setApi] = useState<UseEmblaCarouselType[1] | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -76,30 +63,28 @@ export function useOptimizedCarousel(options: OptimizedCarouselOptions = {}) {
   // Generate optimized carousel options based on device capabilities
   const getCarouselOptions = useCallback((customOptions = {}) => {
     const defaultOptions = {
-      align: options.align || "center" as const,
-      loop: options.loop !== undefined ? options.loop : true,
-      dragFree: isMobile ? true : options.dragFree,
-      inViewThreshold: lowPowerMode ? 0.8 : (options.inViewThreshold || 0.5),
-      skipSnaps: lowPowerMode,
-      speed: lowPowerMode ? 25 : (options.speed || 15),
+      align: "center" as const,
+      loop: true,
+      dragFree: isMobile, // Enable dragFree for mobile devices
+      inViewThreshold: lowPowerMode ? 0.8 : 0.5, // Higher threshold when battery is low
+      dragThreshold: isMobile ? 8 : 10, // Lower for mobile for more responsive touch
+      speed: lowPowerMode ? 25 : 15, // Slower animations on low power mode
     };
     
     return { ...defaultOptions, ...customOptions };
-  }, [isMobile, lowPowerMode, options]);
+  }, [isMobile, lowPowerMode]);
 
-  // Touch handlers with passive event listeners and throttle for performance
+  // Touch handlers with passive event listeners - memoized for performance
   const touchHandlers = useMemo(() => ({
-    onTouchStart: throttle(() => {
+    onTouchStart: () => {
       setIsTouching(true);
       setIsPaused(true);
-    }, 100, { leading: true }),
-    
-    onTouchEnd: throttle(() => {
+    },
+    onTouchEnd: () => {
       setIsTouching(false);
       // Resume auto-scroll after a delay
       setTimeout(() => setIsPaused(false), 5000);
-    }, 100, { trailing: true }),
-    
+    },
     onMouseEnter: () => setIsPaused(true),
     onMouseLeave: () => setIsPaused(false),
   }), []);
