@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { fetchWithRetry, checkConnectivity } from './timeout-utils';
 
 // Functions for making API requests
 
@@ -26,8 +27,14 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     const origin = window.location.origin;
     console.log(`Request origin: ${origin}`);
     
+    // First check connectivity to supabase domain
+    const isConnected = await checkConnectivity('https://zjyfumqfrtppleftpzjd.supabase.co');
+    if (!isConnected) {
+      console.warn("Connectivity check failed to Supabase domain");
+    }
+    
     // Make the direct fetch request with enhanced CORS-compatible headers
-    const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
+    const response = await fetchWithRetry('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,14 +42,13 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
         'Origin': origin,
         'Accept': 'application/json',
-        'Cache-Control': 'no-cache' // Prevent caching
+        'Cache-Control': 'no-cache', // Prevent caching
+        'Pragma': 'no-cache'
       },
       body: JSON.stringify(payload),
       mode: 'cors',
       credentials: 'omit',
-      // Add a longer timeout
-      signal: AbortSignal.timeout(60000)
-    });
+    }, 3, 1500); // 3 retries with 1.5s base delay
     
     console.log("Direct fetch response status:", response.status);
     const responseText = await response.text();
@@ -85,7 +91,10 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
         clientInfo: {
           url: window.location.href,
           origin: window.location.origin,
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          online: navigator.onLine,
+          platform: navigator.platform
         }
       },
       headers: {
@@ -111,10 +120,15 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
 };
 
 // Try multiple methods to generate recipe with exponential backoff and detailed logging
-export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2): Promise<any> => {
+export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 3): Promise<any> => {
   let lastError: Error | null = null;
   
-  // Try direct fetch first
+  // Check connectivity first
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('You appear to be offline. Please check your internet connection and try again.');
+  }
+  
+  // Try direct fetch first with three attempts
   try {
     console.log("Attempting direct edge function fetch");
     return await fetchFromEdgeFunction(requestBody);
@@ -123,7 +137,7 @@ export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2):
     lastError = error as Error;
   }
   
-  // Then try Supabase invoke
+  // Then try Supabase invoke with two attempts
   try {
     console.log("Attempting supabase.functions.invoke");
     return await fetchFromSupabaseFunctions(requestBody);
@@ -139,19 +153,30 @@ export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2):
     const payload = {
       ...requestBody,
       embeddingModel: 'text-embedding-ada-002',
-      lastResort: true
+      lastResort: true,
+      clientInfo: {
+        url: window.location.href,
+        origin: window.location.origin,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        online: navigator.onLine
+      }
     };
     
-    const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
+    // Try with a different content type as last resort
+    const response = await fetchWithRetry('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
         'X-Debug-Info': 'final-resort-fetch-' + Date.now(),
-        'Origin': window.location.origin
+        'Origin': window.location.origin,
+        'X-Content-Type-Options': 'nosniff'
       },
       body: JSON.stringify(payload),
-      mode: 'cors'
-    });
+      mode: 'cors',
+      cache: 'no-store',
+      keepalive: true
+    }, 2, 2000);
     
     if (!response.ok) {
       throw new Error(`Final resort fetch failed with status ${response.status}`);
@@ -165,7 +190,7 @@ export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2):
     if (lastError) {
       throw lastError;
     } else {
-      throw new Error("All recipe generation methods failed");
+      throw new Error("All recipe generation methods failed. Please check your internet connection and browser settings, or try a different browser.");
     }
   }
 };

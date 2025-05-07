@@ -1,7 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleRequest } from "./request-handler.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+
+// Define CORS headers with more permissive settings
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Allow requests from any origin
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, origin, x-debug-info',
+  'Access-Control-Max-Age': '86400', // 24 hours caching for preflight
+};
 
 // Main entry point for the edge function
 serve(async (req) => {
@@ -13,12 +20,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     console.log("Handling CORS preflight request");
     return new Response(null, { 
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, origin, x-debug-info',
-        'Access-Control-Max-Age': '86400', // 24 hours caching for preflight
-      } 
+      headers: corsHeaders
     });
   }
   
@@ -36,18 +38,46 @@ serve(async (req) => {
     let embeddingModel = "text-embedding-ada-002"; // Default model
     try {
       const reqClone = req.clone();
-      const body = await reqClone.json();
-      if (body && body.embeddingModel) {
-        embeddingModel = body.embeddingModel;
+      const bodyText = await reqClone.text();
+      
+      console.log(`Request body length: ${bodyText.length}`);
+      if (bodyText.length > 0) {
+        try {
+          const body = JSON.parse(bodyText);
+          if (body && body.embeddingModel) {
+            embeddingModel = body.embeddingModel;
+          }
+          console.log("Successfully parsed request body");
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          return new Response(
+            JSON.stringify({ 
+              error: "Invalid JSON in request body", 
+              details: parseError.message,
+              debugInfo: debugInfo
+            }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } else {
+        console.error("Empty request body received");
+        return new Response(
+          JSON.stringify({ 
+            error: "Empty request body", 
+            debugInfo: debugInfo
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      console.log("Successfully parsed request body");
     } catch (e) {
       console.warn("Could not parse request body to extract embeddingModel", e);
     }
+    
     console.log(`Using embedding model: ${embeddingModel}`);
     
+    // Pass the request to the handler
     return await handleRequest(req, debugInfo, embeddingModel);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Quick recipe generation error:", err);
     return new Response(
       JSON.stringify({
@@ -60,8 +90,7 @@ serve(async (req) => {
         status: 500, 
         headers: { 
           ...corsHeaders, 
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*" // Ensure this header is always set
+          "Content-Type": "application/json"
         } 
       },
     );

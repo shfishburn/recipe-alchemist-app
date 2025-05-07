@@ -37,25 +37,42 @@ export const fetchWithTimeout = async (url: string, options: RequestInit, timeou
   }
 };
 
-// Create a fetch request with retry capabilities
+// Create a fetch request with retry capabilities and connection status detection
 export const fetchWithRetry = async (
   url: string, 
   options: RequestInit, 
-  maxRetries: number = 2,
+  maxRetries: number = 3,
   baseDelay: number = 1000
 ) => {
   let lastError: Error | null = null;
+  
+  // First check if online
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('You appear to be offline. Please check your internet connection and try again.');
+  }
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       // Add attempt number to headers for tracking
       const headers = new Headers(options.headers);
       headers.set('X-Retry-Attempt', attempt.toString());
+      headers.set('X-Client-Timestamp', Date.now().toString());
+      
+      console.log(`Attempt ${attempt + 1}/${maxRetries + 1} to fetch from ${url}`);
+      
+      // Use fetch with timeout for each attempt
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, 30000); // 30 second timeout per attempt
       
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -67,6 +84,11 @@ export const fetchWithRetry = async (
       console.error(`Attempt ${attempt + 1}/${maxRetries + 1} failed:`, error);
       lastError = error as Error;
       
+      // Check if error is due to being offline
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new Error('You appear to be offline. Please check your internet connection and try again.');
+      }
+      
       if (attempt < maxRetries) {
         // Exponential backoff with jitter
         const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
@@ -77,4 +99,26 @@ export const fetchWithRetry = async (
   }
   
   throw lastError || new Error('All fetch attempts failed');
+};
+
+// Check if the browser has connectivity to a specific URL
+export const checkConnectivity = async (url: string): Promise<boolean> => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(url, {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: controller.signal,
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (e) {
+    console.warn("Connectivity check failed:", e);
+    return false;
+  }
 };

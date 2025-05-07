@@ -17,7 +17,9 @@ export const enhanceErrorMessage = (error: any): string => {
   // Check if this is an AbortError from timeout
   if (error.name === "AbortError" || error.message?.includes("timeout") || error.message?.includes("timed out")) {
     errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
-  } else if (error.message?.includes("fetch") || error.message?.includes("Load failed")) {
+  } else if (error.name === "TypeError" && error.message === "Load failed") {
+    errorMessage = "Could not connect to our recipe service. This appears to be a network issue. Please check your internet connection, disable any VPN or firewall, and try again.";
+  } else if (error.message?.includes("fetch") || error.message?.includes("Failed to send a request")) {
     errorMessage = "Network error connecting to our recipe service. This could be due to network connectivity issues or a temporary service disruption. Please check your internet connection and try again.";
   } else if (error.status === 500 || error.message?.includes("500")) {
     errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
@@ -30,9 +32,9 @@ export const enhanceErrorMessage = (error: any): string => {
   } else if (error.message?.includes("Empty request body")) {
     errorMessage = "The request couldn't be processed because it was empty. Please try again.";
   } else if (error.message?.includes("Failed to send a request") || error.message?.includes("Edge Function")) {
-    errorMessage = "Could not connect to our recipe service. This might be a temporary issue. Please try again in a moment.";
+    errorMessage = "Could not connect to our recipe service. This might be a temporary issue or could be related to your network. Please try disabling your VPN, ad blocker, or firewall, and try again after a few minutes.";
   } else if (error.message?.includes("CORS")) {
-    errorMessage = "Cross-origin request issue. This is a technical problem on our end. Please try again in a few minutes.";
+    errorMessage = "Cross-origin request issue. This is a technical problem that might be caused by security settings in your browser or network. Please try a different browser or network connection.";
   }
   
   return errorMessage;
@@ -42,6 +44,11 @@ export const enhanceErrorMessage = (error: any): string => {
 export const processErrorResponse = async (error: any): Promise<never> => {
   // Log detailed diagnostics about the error
   console.error("Processing error response:", error);
+  
+  // Check if online
+  if (typeof navigator !== 'undefined') {
+    console.log("Network status - online:", navigator.onLine);
+  }
   
   // Check if the error is from Supabase Functions with response data
   if (error.context?.response) {
@@ -79,6 +86,15 @@ export const processErrorResponse = async (error: any): Promise<never> => {
       console.log("Navigator online status:", navigator.onLine);
       console.log("Current URL:", window.location.href);
       console.log("User agent:", navigator.userAgent);
+      // Try to ping the service to see if it's responsive
+      fetch("https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/health-check", {
+        method: 'HEAD',
+        mode: 'no-cors'
+      }).then(() => {
+        console.log("Supabase functions domain is reachable");
+      }).catch(e => {
+        console.log("Supabase functions domain is NOT reachable:", e);
+      });
     } catch (e) {
       console.error("Could not log navigator diagnostics:", e);
     }
@@ -87,4 +103,18 @@ export const processErrorResponse = async (error: any): Promise<never> => {
   // Enhance the error message and throw
   const enhancedMessage = enhanceErrorMessage(error);
   throw new Error(enhancedMessage);
+};
+
+// Check if error is related to network connectivity
+export const isNetworkError = (error: any): boolean => {
+  if (!error) return false;
+  
+  return (
+    error.name === "TypeError" && error.message === "Load failed" ||
+    error.message?.includes("Failed to fetch") ||
+    error.message?.includes("NetworkError") ||
+    error.message?.includes("Failed to send a request") ||
+    error.message?.includes("Network request failed") ||
+    (typeof navigator !== 'undefined' && !navigator.onLine)
+  );
 };
