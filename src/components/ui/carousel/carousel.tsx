@@ -74,7 +74,7 @@ const Carousel = forwardRef<HTMLDivElement, CarouselProps>(
         }
       };
       
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener('scroll', handleScroll, { passive: true });
       return () => container.removeEventListener('scroll', handleScroll);
     }, [activeIndex, totalItems]);
     

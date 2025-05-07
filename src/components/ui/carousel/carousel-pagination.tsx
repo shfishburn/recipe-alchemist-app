@@ -19,7 +19,7 @@ const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationPr
       <div 
         ref={ref} 
         className={cn(
-          "flex justify-center items-center gap-1", 
+          "flex justify-center items-center gap-1 mt-2 p-1 touch-target", 
           className
         )}
         aria-label="Carousel pagination"
@@ -31,7 +31,7 @@ const CarouselPagination = React.forwardRef<HTMLDivElement, CarouselPaginationPr
             <button
               key={index}
               className={cn(
-                "w-2 h-2 rounded-full transition-all duration-200",
+                "w-2 h-2 rounded-full transition-all duration-200 touch-target",
                 index === activeIndex 
                   ? "bg-gray-700 dark:bg-gray-200 w-4" 
                   : "bg-gray-300 dark:bg-gray-600"

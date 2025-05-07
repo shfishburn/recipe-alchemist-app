@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MacroDetailsPanelProps {
   title: string;
@@ -12,6 +13,8 @@ interface MacroDetailsPanelProps {
 }
 
 export function MacroDetailsPanel({ title, description, data }: MacroDetailsPanelProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="w-full flex flex-col">
       <p className="text-center text-xs">{description}</p>
@@ -26,9 +29,9 @@ export function MacroDetailsPanel({ title, description, data }: MacroDetailsPane
                   style={{ backgroundColor: item.color }}
                   aria-hidden="true"
                 />
-                <span className="text-xs">{item.name}</span>
+                <span className={isMobile ? "text-[10px]" : "text-xs"}>{item.name}</span>
               </div>
-              <span className="font-semibold text-xs">{item.value}%</span>
+              <span className={`font-semibold ${isMobile ? "text-[10px]" : "text-xs"}`}>{item.value}%</span>
             </li>
           ))}
         </ul>

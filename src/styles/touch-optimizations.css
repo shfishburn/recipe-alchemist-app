@@ -94,6 +94,21 @@
     transform: scale(0.98);
     transition: all 0.1s ease;
   }
+  
+  /* Improve touch target size for navigation dots */
+  .carousel [role="button"] {
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Better touch feedback for carousel navigation */
+  .carousel [role="button"]:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
 }
 
 /* Prevent iOS overscroll effects */
@@ -124,6 +139,16 @@
     height: auto !important;
     max-height: calc(100vh - 240px) !important;
   }
+  
+  /* Tighter mobile spacing */
+  .carousel-content {
+    gap: 0.25rem;
+  }
+  
+  /* Improved navigation dots on small screens */
+  .carousel [role="button"] {
+    transform: scale(0.85);
+  }
 }
 
 /* Responsive spacing for carousel content */
@@ -138,4 +163,39 @@
 .snap-x.snap-mandatory > * {
   scroll-snap-align: center;
   scroll-snap-stop: always;
+}
+
+/* Touch target improvements */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Enhanced carousel for mobile devices */
+@media (max-width: 640px) {
+  /* Make sure pagination tappable on small screens */
+  [aria-label="Carousel pagination"] button {
+    padding: 8px 4px;
+    margin: 0 2px;
+  }
+  
+  /* Prevent modal overflow on small screens */
+  .dialog-content,
+  .sheet-content,
+  .drawer-content {
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  /* Fix text overflow issues in charts */
+  text.recharts-text {
+    font-size: 10px;
+  }
+  
+  /* Compact legend display */
+  .recharts-default-legend {
+    font-size: 10px;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 }

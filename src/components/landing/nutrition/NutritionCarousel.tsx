@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -16,9 +16,18 @@ import { MacroCarouselItem } from './MacroCarouselItem';
 import { MacroLegend } from './MacroLegend';
 import { ChartPie, Activity, Award } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export function NutritionCarousel() {
   const isMobile = useIsMobile();
+  const carouselRef = useRef<HTMLDivElement>(null);
+  
+  // Add touch classes to carousel container
+  useEffect(() => {
+    if (carouselRef.current) {
+      carouselRef.current.classList.add('momentum-scroll', 'hw-accelerated');
+    }
+  }, []);
   
   return (
     <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
@@ -35,16 +44,21 @@ export function NutritionCarousel() {
         </p>
       </div>
       
-      <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-md border border-purple-100 dark:border-purple-900 overflow-hidden">
+      <div className={cn(
+        "relative bg-white dark:bg-slate-900 rounded-xl shadow-md border",
+        "border-purple-100 dark:border-purple-900 overflow-hidden",
+        isMobile ? "aspect-[3/4] max-h-[500px]" : "aspect-[16/9] max-h-[550px]"
+      )}>
         <Carousel
+          ref={carouselRef}
           opts={{
             align: "center",
           }}
-          className="w-full"
+          className="w-full h-full"
         >
-          <CarouselContent className="py-2">
+          <CarouselContent className="h-full">
             {macroDistributionData.map((item, index) => (
-              <CarouselItem key={index} className="w-full flex-grow-0 flex-shrink-0">
+              <CarouselItem key={index} className="h-full">
                 <MacroCarouselItem 
                   item={item} 
                   carbsData={carbsData} 
@@ -54,7 +68,7 @@ export function NutritionCarousel() {
             ))}
             
             {nutriScoreExamples.map((item, index) => (
-              <CarouselItem key={`nutriscore-${index}`} className="w-full flex-grow-0 flex-shrink-0">
+              <CarouselItem key={`nutriscore-${index}`} className="h-full">
                 <MacroCarouselItem 
                   item={item}
                   nutriScoreExample={true}
@@ -65,16 +79,16 @@ export function NutritionCarousel() {
             ))}
           </CarouselContent>
           
-          <div className="flex items-center justify-between px-3 py-1 mt-1">
+          <div className="absolute bottom-1 left-0 right-0 flex items-center justify-between px-3">
             <CarouselPagination />
             <MacroLegend />
           </div>
         </Carousel>
         
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100">
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 pointer-events-none">
           <div className="h-full w-16 bg-gray-300 rounded-full mx-auto"></div>
         </div>
-        <div className="text-xs text-center text-muted-foreground py-0.5">
+        <div className="text-xs text-center text-muted-foreground py-0.5 pointer-events-none">
           Swipe to see more
         </div>
       </div>

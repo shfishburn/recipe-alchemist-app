@@ -19,7 +19,7 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
   const isMobile = useIsMobile();
   
   // Calculate responsive dimensions
-  const outerRadius = isMobile ? 45 : 55;
+  const outerRadius = isMobile ? 40 : 55;
   const innerRadius = outerRadius * 0.6;
   
   // Custom label rendering function
@@ -29,8 +29,8 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    // Hide labels on very small screens
-    if (isMobile && window.innerWidth < 350) return null;
+    // Hide labels on very small screens or for small values
+    if ((isMobile && window.innerWidth < 350) || value < 15) return null;
 
     return (
       <text 
@@ -62,10 +62,11 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
 
   // Custom legend formatter for more compact display
   const customLegendFormatter = (value: string, entry: any) => {
-    return <span className="text-[10px]">{`${value}: ${entry.payload.value}%`}</span>;
+    return <span className={isMobile ? "text-[9px]" : "text-[10px]"}>{`${value}: ${entry.payload.value}%`}</span>;
   };
 
-  const chartHeight = isMobile ? Math.min(height, 120) : height;
+  // Adaptive height based on device
+  const chartHeight = isMobile ? Math.min(height, 110) : height;
 
   return (
     <div className="w-full" style={{ height: `${chartHeight}px` }}>
@@ -102,8 +103,9 @@ export function MacroChart({ data, height = 150, showLegend = true, showTooltip 
               verticalAlign="bottom"
               align="center"
               wrapperStyle={{ 
-                fontSize: '10px',
-                paddingTop: '0px'
+                fontSize: isMobile ? '9px' : '10px',
+                paddingTop: '0px',
+                lineHeight: '1.2'
               }}
             />
           )}
