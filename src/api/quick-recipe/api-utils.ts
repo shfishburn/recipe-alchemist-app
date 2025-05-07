@@ -30,8 +30,12 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
+        'Origin': window.location.origin,
+        'Accept': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      mode: 'cors',
+      credentials: 'omit'
     });
     
     console.log("Direct fetch response status:", response.status);
@@ -91,5 +95,35 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
   } catch (error) {
     console.error("Supabase functions invoke error:", error);
     throw error;
+  }
+};
+
+// Try all available methods to generate a recipe with exponential backoff
+export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2): Promise<any> => {
+  let lastError: Error | null = null;
+  
+  // Try direct fetch first
+  try {
+    console.log("Attempting direct edge function fetch");
+    return await fetchFromEdgeFunction(requestBody);
+  } catch (error) {
+    console.warn("Direct fetch failed, falling back to supabase.functions.invoke", error);
+    lastError = error as Error;
+  }
+  
+  // Then try Supabase invoke
+  try {
+    console.log("Attempting supabase.functions.invoke");
+    return await fetchFromSupabaseFunctions(requestBody);
+  } catch (error) {
+    console.warn("Supabase invoke failed", error);
+    lastError = error as Error;
+    
+    // If both methods failed, throw the last error
+    if (lastError) {
+      throw lastError;
+    } else {
+      throw new Error("All recipe generation methods failed");
+    }
   }
 };

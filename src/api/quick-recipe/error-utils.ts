@@ -5,7 +5,7 @@ export const enhanceErrorMessage = (error: any): string => {
   // Add more context to the error message
   let errorMessage = error.message || "Unknown error occurred";
   
-  if (error.name === "FunctionsError" || error.name === "FunctionsHttpError") {
+  if (error.name === "FunctionsError" || error.name === "FunctionsHttpError" || error.name === "FunctionsFetchError") {
     console.error("Supabase Functions error details:", {
       name: error.name,
       message: error.message,
@@ -28,8 +28,10 @@ export const enhanceErrorMessage = (error: any): string => {
     errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
   } else if (error.message?.includes("Empty request body")) {
     errorMessage = "The request couldn't be processed because it was empty. Please try again.";
-  } else if (error.message?.includes("Failed to send a request")) {
+  } else if (error.message?.includes("Failed to send a request") || error.message?.includes("Edge Function")) {
     errorMessage = "Could not connect to our recipe service. This might be a temporary issue. Please try again in a moment.";
+  } else if (error.message?.includes("CORS")) {
+    errorMessage = "Cross-origin request issue. This is a technical problem on our end. Please try again in a few minutes.";
   }
   
   return errorMessage;
@@ -62,6 +64,11 @@ export const processErrorResponse = async (error: any): Promise<never> => {
     } catch (e) {
       console.error("Could not read response body:", e);
     }
+  }
+  
+  // Check for network or CORS issues
+  if (error.name === "TypeError" && error.message === "Load failed") {
+    console.error("Network or CORS issue detected with edge function");
   }
   
   // Enhance the error message and throw

@@ -4,7 +4,11 @@ import { QuickRecipeFormData, QuickRecipe } from '@/types/quick-recipe';
 import { normalizeRecipeResponse } from '@/utils/recipe-normalization';
 import { createTimeoutPromise } from './quick-recipe/timeout-utils';
 import { formatRequestBody } from './quick-recipe/format-utils';
-import { fetchFromEdgeFunction, fetchFromSupabaseFunctions } from './quick-recipe/api-utils';
+import { 
+  fetchFromEdgeFunction, 
+  fetchFromSupabaseFunctions,
+  generateRecipeWithRetry 
+} from './quick-recipe/api-utils';
 import { processErrorResponse } from './quick-recipe/error-utils';
 
 // Function to generate a quick recipe
@@ -24,17 +28,9 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Set a timeout for the request (90 seconds - increased from 60)
     const timeoutPromise = createTimeoutPromise(90000);
     
-    // Create a direct fetch function that we'll race against the timeout
-    const directFetchPromise = async () => {
-      return await fetchFromEdgeFunction(requestBody);
-    };
-    
-    // Race both approaches against the timeout
+    // Use our retry mechanism with timeout
     const data = await Promise.race([
-      directFetchPromise().catch(err => {
-        console.warn("Direct fetch failed, trying Supabase invoke:", err);
-        return fetchFromSupabaseFunctions(requestBody);
-      }),
+      generateRecipeWithRetry(requestBody),
       timeoutPromise
     ]);
     

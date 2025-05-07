@@ -7,6 +7,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
   
@@ -15,8 +16,21 @@ serve(async (req) => {
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
     console.log(`Request received with debug info: ${debugInfo}`);
     
+    // Log request details for debugging
+    console.log(`Request method: ${req.method}`);
+    console.log(`Request headers: ${JSON.stringify(Object.fromEntries(req.headers))}`);
+    
     // Extract embedding model from request body
-    const embeddingModel = "text-embedding-ada-002"; // Default model
+    let embeddingModel = "text-embedding-ada-002"; // Default model
+    try {
+      const reqClone = req.clone();
+      const body = await reqClone.json();
+      if (body && body.embeddingModel) {
+        embeddingModel = body.embeddingModel;
+      }
+    } catch (e) {
+      console.warn("Could not parse request body to extract embeddingModel", e);
+    }
     console.log(`Using embedding model: ${embeddingModel}`);
     
     return await handleRequest(req, debugInfo, embeddingModel);
@@ -26,7 +40,8 @@ serve(async (req) => {
       JSON.stringify({
         error: err.message || "Unexpected error",
         details: err.stack || "No stack trace available",
-        debugInfo: "error-handler"
+        debugInfo: "error-handler",
+        timestamp: new Date().toISOString()
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
