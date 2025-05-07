@@ -17,6 +17,8 @@ const VALID_CUISINE_CATEGORIES = [
 
 // Main request handler function
 export async function handleRequest(req: Request, debugInfo: string, embeddingModel: string = "text-embedding-ada-002"): Promise<Response> {
+  console.log(`Request received with method: ${req.method}, debug info: ${debugInfo}`);
+  
   // Check content type
   const contentType = req.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {

@@ -16,8 +16,8 @@ export const enhanceErrorMessage = (error: any): string => {
   
   if (error.message?.includes("timeout")) {
     errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
-  } else if (error.message?.includes("fetch")) {
-    errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
+  } else if (error.message?.includes("fetch") || error.message?.includes("Load failed")) {
+    errorMessage = "Network error connecting to our recipe service. Please check your internet connection and try again.";
   } else if (error.status === 500 || error.message?.includes("500")) {
     errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
   } else if (error.status === 400 || error.message?.includes("400")) {
@@ -28,6 +28,8 @@ export const enhanceErrorMessage = (error: any): string => {
     errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
   } else if (error.message?.includes("Empty request body")) {
     errorMessage = "The request couldn't be processed because it was empty. Please try again.";
+  } else if (error.message?.includes("Failed to send a request")) {
+    errorMessage = "Could not connect to our recipe service. This might be a temporary issue. Please try again in a moment.";
   }
   
   return errorMessage;

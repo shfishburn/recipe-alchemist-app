@@ -28,7 +28,7 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token ? `Bearer ${token}` : '',
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
       },
       body: JSON.stringify(payload)
@@ -65,25 +65,31 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
 
 // Fallback API call using Supabase functions
 export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
-  const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
-    body: {
-      ...requestBody,
-      embeddingModel: 'text-embedding-ada-002' // Include model in request body
-    },
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Debug-Info': 'supabase-invoke-' + Date.now()
-    }
-  });
+  try {
+    console.log("Attempting Supabase functions invoke after direct fetch failed");
+    const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+      body: {
+        ...requestBody,
+        embeddingModel: 'text-embedding-ada-002' // Include model in request body
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Info': 'supabase-invoke-' + Date.now()
+      }
+    });
 
-  if (error) {
-    console.error('Supabase functions error:', error);
+    if (error) {
+      console.error('Supabase functions error:', error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('No data returned from recipe generation');
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Supabase functions invoke error:", error);
     throw error;
   }
-
-  if (!data) {
-    throw new Error('No data returned from recipe generation');
-  }
-
-  return data;
 };
