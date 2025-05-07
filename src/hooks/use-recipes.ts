@@ -89,6 +89,7 @@ export const useRecipes = () => {
         cuisine_category: dbRecipe.cuisine_category || "Global",
         tags: dbRecipe.tags || [],
         user_id: dbRecipe.user_id,
+        created_at: dbRecipe.created_at || new Date().toISOString(),
         updated_at: dbRecipe.updated_at || new Date().toISOString(),
         original_request: dbRecipe.original_request || '',
         reasoning: dbRecipe.reasoning || '',
@@ -101,10 +102,8 @@ export const useRecipes = () => {
         nutrition: nutrition,
         science_notes: scienceNotes,
         chef_notes: dbRecipe.chef_notes || '',
-        nutri_score: nutriScore,
-        // Add these fields without adding to Recipe interface since they're part of API but not UI
-        created_at: dbRecipe.created_at
-      } as Recipe; // Type assertion to Recipe
+        nutri_score: nutriScore
+      };
     });
   }, []);
 

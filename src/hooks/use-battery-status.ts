@@ -2,88 +2,76 @@
 import { useState, useEffect } from 'react';
 
 interface BatteryStatus {
+  charging: boolean;
+  level: number;
+  chargingTime: number;
+  dischargingTime: number;
   lowPowerMode: boolean;
-  batteryLevel: number | null;
-  charging: boolean | null;
 }
 
-export function useBatteryStatus(): BatteryStatus {
-  const [status, setStatus] = useState<BatteryStatus>({
+interface NavigatorWithBattery extends Navigator {
+  getBattery?: () => Promise<{
+    charging: boolean;
+    level: number;
+    chargingTime: number;
+    dischargingTime: number;
+    addEventListener: (event: string, callback: () => void) => void;
+    removeEventListener: (event: string, callback: () => void) => void;
+  }>;
+}
+
+export function useBatteryStatus() {
+  const [batteryStatus, setBatteryStatus] = useState<BatteryStatus>({
+    charging: true,
+    level: 1,
+    chargingTime: 0,
+    dischargingTime: Infinity,
     lowPowerMode: false,
-    batteryLevel: null,
-    charging: null
   });
 
   useEffect(() => {
-    // Use device memory as a proxy for device capability
-    const deviceMemoryGB = (navigator as any).deviceMemory || 4;
-    const lowMemoryDevice = deviceMemoryGB < 4;
+    const nav = navigator as NavigatorWithBattery;
     
-    // Use hardware concurrency as a proxy for CPU capability
-    const cpuCores = navigator.hardwareConcurrency || 4;
-    const lowPowerCPU = cpuCores < 4;
+    if (!nav.getBattery) {
+      return;
+    }
 
-    // Initial device assessment based on available device info
-    let initialLowPowerEstimation = lowMemoryDevice || lowPowerCPU;
+    let battery: any;
+    
+    const updateBatteryStatus = () => {
+      if (!battery) return;
+      
+      const newStatus = {
+        charging: battery.charging,
+        level: battery.level,
+        chargingTime: battery.chargingTime,
+        dischargingTime: battery.dischargingTime,
+        // Consider low battery when below 20% and not charging
+        lowPowerMode: battery.level < 0.2 && !battery.charging,
+      };
+      
+      setBatteryStatus(newStatus);
+    };
 
-    // Try to access battery API if available
-    const tryBattery = async () => {
-      try {
-        if ('getBattery' in navigator) {
-          const battery = await (navigator as any).getBattery();
-          
-          const updateBatteryInfo = () => {
-            // Consider low power mode if battery is below 20%
-            const lowBattery = battery.level < 0.2;
-            const lowPowerMode = lowBattery || (initialLowPowerEstimation && !battery.charging);
-            
-            setStatus({
-              lowPowerMode,
-              batteryLevel: battery.level,
-              charging: battery.charging
-            });
-          };
-          
-          // Update initially
-          updateBatteryInfo();
-          
-          // Add event listeners for battery changes
-          battery.addEventListener('levelchange', updateBatteryInfo);
-          battery.addEventListener('chargingchange', updateBatteryInfo);
-          
-          // Clean up event listeners
-          return () => {
-            battery.removeEventListener('levelchange', updateBatteryInfo);
-            battery.removeEventListener('chargingchange', updateBatteryInfo);
-          };
-        } else {
-          // Battery API not available, use our initial estimation
-          setStatus({
-            lowPowerMode: initialLowPowerEstimation,
-            batteryLevel: null,
-            charging: null
-          });
-        }
-      } catch (error) {
-        console.warn('Battery API error:', error);
-        // Fallback to device estimation
-        setStatus({
-          lowPowerMode: initialLowPowerEstimation,
-          batteryLevel: null,
-          charging: null
-        });
+    nav.getBattery().then((b) => {
+      battery = b;
+      updateBatteryStatus();
+
+      battery.addEventListener('chargingchange', updateBatteryStatus);
+      battery.addEventListener('levelchange', updateBatteryStatus);
+      battery.addEventListener('chargingtimechange', updateBatteryStatus);
+      battery.addEventListener('dischargingtimechange', updateBatteryStatus);
+    });
+
+    return () => {
+      if (battery) {
+        battery.removeEventListener('chargingchange', updateBatteryStatus);
+        battery.removeEventListener('levelchange', updateBatteryStatus);
+        battery.removeEventListener('chargingtimechange', updateBatteryStatus);
+        battery.removeEventListener('dischargingtimechange', updateBatteryStatus);
       }
     };
-    
-    // Check for device power saving mode if available
-    if ('powerPreference' in navigator) {
-      // This is just a placeholder - currently there's no standard API to detect low power mode
-      // Future browsers might implement this feature
-    }
-    
-    // Start battery monitoring
-    tryBattery();
   }, []);
 
-  return status;
+  return batteryStatus;
 }

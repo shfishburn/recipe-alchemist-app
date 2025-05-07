@@ -1,9 +1,98 @@
 
-// Recipe types
+export interface Nutrition {
+  // Basic nutrition (with both naming conventions)
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  
+  // New property for saturated fat
+  saturated_fat?: number;
+  
+  // Aliases for backwards compatibility
+  kcal?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+  
+  // Micronutrients
+  vitamin_a?: number;
+  vitamin_c?: number;
+  vitamin_d?: number;
+  calcium?: number;
+  iron?: number;
+  potassium?: number;
+  cholesterol?: number;
+  
+  // Alternative naming for micronutrients (aliases)
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  
+  // Enhanced nutrition data properties
+  data_quality?: {
+    overall_confidence: 'high' | 'medium' | 'low';
+    overall_confidence_score: number;
+    penalties?: Record<string, any>;
+    unmatched_or_low_confidence_ingredients?: string[];
+    limitations?: string[];
+  };
+  
+  // Verification metadata
+  verification?: {
+    verified_at: string;
+    verified_nutrients: string[];
+    verification_source: 'fdc_api' | 'usda_sr28';
+    verification_confidence: number;
+    differences?: Record<string, {old: number, new: number, difference_percent: number}>;
+  };
+  
+  per_ingredient?: Record<string, any>;
+  audit_log?: Record<string, any>;
+  
+  // Added for compatibility with standardized nutrition
+  carbohydrates?: number;
+}
 
-export type NutriScore = {
-  grade: "A" | "B" | "C" | "D" | "E";
+// Define the Ingredient interface
+export interface Ingredient {
+  // Metric measurements
+  qty_metric?: number;
+  unit_metric?: string;
+  // Imperial measurements
+  qty_imperial?: number;
+  unit_imperial?: string;
+  // Original measurement (backwards compatibility)
+  qty?: number;
+  unit?: string;
+  // Common fields
+  item: string | Record<string, any>;
+  notes?: string;
+  shop_size_qty?: number;
+  shop_size_unit?: string;
+}
+
+// Define the NutriScore interface
+export interface NutriScore {
   score: number;
+  grade: 'A' | 'B' | 'C' | 'D' | 'E';
+  components?: {
+    energy?: number;
+    sugars?: number;
+    saturated_fat?: number;
+    sodium?: number;
+    fruits_veg_nuts?: number;
+    fiber?: number;
+    protein?: number;
+  };
+  recommendation?: string;
+  // Add missing properties needed by NutriScoreDisplay
   negative_points?: {
     total: number;
     energy: number;
@@ -17,79 +106,37 @@ export type NutriScore = {
     protein: number;
     fruit_veg_nuts: number;
   };
-};
-
-export interface Nutrition {
-  kcal?: number;
-  calories?: number;  // Alias for kcal
-  protein_g?: number;
-  protein?: number;   // Alias for protein_g
-  carbs_g?: number;
-  carbs?: number;     // Alias for carbs_g
-  fat_g?: number;
-  fat?: number;       // Alias for fat_g
-  fiber_g?: number;
-  fiber?: number;     // Alias for fiber_g
-  sugar_g?: number;
-  sugar?: number;     // Alias for sugar_g
-  sodium_mg?: number;
-  sodium?: number;    // Alias for sodium_mg
-  saturated_fat?: number;
-  vitamin_a?: number;
-  vitamin_c?: number;
-  vitamin_d?: number;
-  calcium?: number;
-  iron?: number;
-  potassium?: number;
 }
 
-export interface Ingredient {
-  qty: number;
-  unit: string;
-  item: string | { item: string };
-  notes?: string;
-  shop_size_qty?: number;
-  shop_size_unit?: string;
-  // Metric/imperial conversion fields
-  qty_metric?: number;
-  unit_metric?: string;
-  qty_imperial?: number;
-  unit_imperial?: string;
-  quality_indicators?: string;
-  alternatives?: string[];
-  storage_tips?: string;
-}
-
-// Updated Recipe interface to match the database schema
+// Define the Recipe interface
 export interface Recipe {
   id: string;
   title: string;
   description?: string;
-  tagline?: string;
-  ingredients: Array<Ingredient>;
+  ingredients: Ingredient[];
   instructions: string[];
   prep_time_min?: number;
   cook_time_min?: number;
   servings?: number;
   image_url?: string;
   cuisine?: string;
-  tags?: string[];
-  slug?: string;
   cuisine_category?: "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern";
-  nutrition?: Nutrition;
-  nutri_score?: NutriScore;
-  // Updated fields to match database schema
-  science_notes?: string[];
-  chef_notes?: string;
-  updated_at?: string;
+  tags?: string[];
   user_id?: string;
-  dietary?: string;
-  flavor_tags?: string[];
-  cooking_tip?: string;
-  // Additional fields that might exist in the database
   created_at?: string;
+  updated_at?: string;
+  original_request?: string;
+  reasoning?: string;
+  tagline?: string;
   version_number?: number;
   previous_version_id?: string;
   deleted_at?: string;
-  reasoning?: string;
+  dietary?: string;
+  flavor_tags?: string[];
+  nutrition?: Nutrition;
+  science_notes?: string[];
+  chef_notes?: string;
+  nutri_score?: NutriScore;
+  slug?: string;
+  cooking_tip?: string;
 }

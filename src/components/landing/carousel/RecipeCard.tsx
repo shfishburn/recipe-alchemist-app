@@ -50,16 +50,29 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
   // Safely access the difficulty property (which might not exist in Recipe type)
   const recipeDifficulty = (recipe as any).difficulty;
   
-  // Check if recipe has nutrition information
-  const hasNutrition = Boolean(recipe.nutrition);
+  // Check if recipe has nutrition information - check various possible property names
+  const hasNutrition = Boolean(
+    recipe.nutrition || 
+    (recipe as any).nutrition_per_serving || 
+    (recipe as any).macros
+  );
   
-  // Determine if recipe is AI generated
-  const isAiGenerated = Boolean((recipe as any).ai_generated);
+  // Determine if recipe is AI generated - check various possible property names
+  const isAiGenerated = Boolean(
+    (recipe as any).ai_generated || 
+    (recipe as any).generated_by_ai
+  );
   
   // Generate URL for the recipe using slug if available
   const recipeUrl = recipe.slug
     ? `/recipes/${recipe.slug}`
     : `/recipes/${recipe.id}`;
+  
+  // Use a simple click handler that navigates to the recipe detail
+  const handleClick = (e: React.MouseEvent) => {
+    // Let the Link component handle the navigation
+    e.currentTarget.querySelector('a')?.click();
+  };
   
   return (
     <Card 
@@ -67,15 +80,9 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
         "overflow-hidden relative z-10 h-full transition-all duration-300 card-touch-optimized",
         "border border-gray-100 dark:border-gray-800",
         "hover:shadow-lg hover:-translate-y-1",
-        hovered ? "shadow-md -translate-y-0.5" : "shadow",
-        "will-change-transform"
+        hovered ? "shadow-md -translate-y-0.5" : "shadow"
       )}
-      style={{
-        WebkitBackfaceVisibility: "hidden",
-        WebkitPerspective: "1000",
-        WebkitTransform: "translate3d(0,0,0)",
-        WebkitTransformStyle: "preserve-3d"
-      }}
+      onClick={handleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onTouchStart={() => setHovered(true)}

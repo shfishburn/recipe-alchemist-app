@@ -1,4 +1,5 @@
-import React, { Suspense, lazy, StrictMode, useEffect } from "react";
+
+import React, { Suspense, lazy, StrictMode } from "react";
 import "./styles/loading.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -6,37 +7,29 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { CookieConsentProvider } from "@/hooks/use-cookie-consent";
 import { queryClient } from "@/lib/query-client";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
-import { migrateChatData } from './utils/migrate-chat-data';
 
 // Import AppLayout with lazy loading
 const AppLayout = lazy(() => import("@/components/layout/AppLayout").then(module => ({
   default: module.AppLayout
 })));
 
-const App = () => {
-  // Add migration on app startup
-  useEffect(() => {
-    migrateChatData();
-  }, []);
-  
-  return (
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Suspense fallback={<PageLoadingFallback />}>
-          <ErrorBoundary>
-            <AuthProvider>
-              <ProfileProvider>
-                <CookieConsentProvider>
-                  <AppLayout />
-                </CookieConsentProvider>
-              </ProfileProvider>
-            </AuthProvider>
-          </ErrorBoundary>
-        </Suspense>
-      </QueryClientProvider>
-    </StrictMode>
-  );
-};
+const App = () => (
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<PageLoadingFallback />}>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ProfileProvider>
+              <CookieConsentProvider>
+                <AppLayout />
+              </CookieConsentProvider>
+            </ProfileProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </Suspense>
+    </QueryClientProvider>
+  </StrictMode>
+);
 
 // Simple error boundary component
 class ErrorBoundary extends React.Component<

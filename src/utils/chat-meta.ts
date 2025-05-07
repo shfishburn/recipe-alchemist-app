@@ -2,68 +2,49 @@
 import type { ChatMessage } from '@/types/chat';
 
 /**
- * Helper to check if a chat message has a specific meta property
+ * Helper function to safely extract metadata from a chat message
+ * @param message The chat message to extract metadata from
+ * @param key The metadata key to extract
+ * @param defaultValue Default value if key doesn't exist
+ * @returns The metadata value or default
  */
-export function hasChatMeta(chat: ChatMessage, key: string): boolean {
-  return !!(chat.meta && chat.meta[key] !== undefined);
+export function getChatMeta<T>(
+  message: ChatMessage | undefined, 
+  key: string, 
+  defaultValue: T
+): T {
+  if (!message || !message.meta) return defaultValue;
+  return (message.meta[key] as T) || defaultValue;
 }
 
 /**
- * Safe getter for chat meta data with type casting
+ * Helper function to check if a message has specific metadata
+ * @param message The chat message to check
+ * @param key The metadata key to check
+ * @returns True if the message has the metadata key
  */
-export function getChatMetaValue<T>(chat: ChatMessage, key: string, defaultValue: T): T {
-  if (!chat.meta || chat.meta[key] === undefined) {
-    return defaultValue;
-  }
-  
-  try {
-    return chat.meta[key] as T;
-  } catch (e) {
-    console.error(`Error casting meta value for key ${key}:`, e);
-    return defaultValue;
-  }
+export function hasChatMeta(message: ChatMessage | undefined, key: string): boolean {
+  if (!message || !message.meta) return false;
+  return message.meta[key] !== undefined;
 }
 
 /**
- * Extract created timestamp from chat message
+ * Helper function to set metadata on a chat message
+ * @param message The chat message to modify (creates a new object)
+ * @param key The metadata key to set
+ * @param value The value to set
+ * @returns A new chat message with the updated metadata
  */
-export function getChatTimestamp(chat: ChatMessage): number {
-  // Try to get from meta first
-  if (hasChatMeta(chat, 'created_at')) {
-    const metaTime = getChatMetaValue<number>(chat, 'created_at', 0);
-    if (metaTime > 0) return metaTime;
-  }
-  
-  // Fall back to database timestamp if available
-  if (chat.created_at) {
-    try {
-      return new Date(chat.created_at).getTime();
-    } catch (e) {
-      // Fall through to ID-based timestamp
+export function setChatMeta<T>(
+  message: ChatMessage,
+  key: string,
+  value: T
+): ChatMessage {
+  return {
+    ...message,
+    meta: {
+      ...(message.meta || {}),
+      [key]: value
     }
-  }
-  
-  // Last resort: try to extract from ID if it follows our convention
-  if (chat.id && chat.id.includes('-')) {
-    const parts = chat.id.split('-');
-    if (parts.length > 1) {
-      const possibleTimestamp = parseInt(parts[1], 10);
-      if (!isNaN(possibleTimestamp)) return possibleTimestamp;
-    }
-  }
-  
-  // If all else fails, return current time
-  return Date.now();
+  };
 }
-
-/**
- * Format chat timestamp for display
- */
-export function formatChatTime(chat: ChatMessage): string {
-  const timestamp = getChatTimestamp(chat);
-  return new Date(timestamp).toLocaleTimeString([], { 
-    hour: '2-digit', 
-    minute: '2-digit'
-  });
-}
-

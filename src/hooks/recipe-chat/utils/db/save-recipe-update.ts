@@ -1,92 +1,165 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
-import { Json } from '@/integrations/supabase/types';
+import type { Json } from '@/integrations/supabase/types';
+import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
 
-/**
- * Saves recipe updates to the database
- * Handles proper JSON conversions and data validation
- */
-export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: string }) {
-  console.log("Saving recipe update:", updatedRecipe.id);
+// Get the correct cuisine category based on cuisine value
+function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" {
+  if (!cuisine) return "Global";
   
-  // Validate that we have the minimum required fields
-  if (!updatedRecipe.id) {
-    throw new Error("Recipe ID is required");
+  const lowerCuisine = cuisine.toLowerCase();
+  
+  // Regional American cuisines
+  if (['cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex', 'mexican']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Regional American";
   }
   
-  if (!updatedRecipe.title) {
-    throw new Error("Recipe title is required");
+  // European cuisines
+  if (['british', 'irish', 'eastern-european', 'french', 'german', 'greek', 'italian', 'mediterranean', 
+       'scandinavian', 'nordic', 'spanish']
+      .some(c => lowerCuisine.includes(c))) {
+    return "European";
   }
   
-  if (!updatedRecipe.ingredients || !Array.isArray(updatedRecipe.ingredients) || updatedRecipe.ingredients.length === 0) {
-    throw new Error("Recipe must have at least one ingredient");
+  // Asian cuisines
+  if (['chinese', 'indian', 'japanese', 'korean', 'southeast-asian', 'thai', 'vietnamese']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Asian";
   }
   
-  if (!updatedRecipe.instructions || !Array.isArray(updatedRecipe.instructions) || updatedRecipe.instructions.length === 0) {
-    throw new Error("Recipe must have at least one instruction");
+  // Dietary styles
+  if (['gluten-free', 'keto', 'low-fodmap', 'paleo', 'plant-based', 'vegetarian', 'whole30',
+       'vegan', 'dairy-free', 'low-carb']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Dietary Styles";
   }
 
-  try {
-    // Standardize nutrition data if present
-    let standardizedNutrition = updatedRecipe.nutrition;
-    if (updatedRecipe.nutrition) {
-      standardizedNutrition = standardizeNutrition(updatedRecipe.nutrition);
+  // Middle Eastern cuisines
+  if (['middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan']
+      .some(c => lowerCuisine.includes(c))) {
+    return "Middle Eastern";
+  }
+  
+  // Default
+  return "Global";
+}
+
+export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: string }) {
+  // Ensure recipe integrity before saving to database
+  ensureRecipeIntegrity(updatedRecipe);
+  
+  // Enhanced nutrition data handling with detailed logging
+  if (updatedRecipe.nutrition) {
+    console.log("Original nutrition data:", JSON.stringify(updatedRecipe.nutrition));
+    
+    try {
+      // Deep clone the nutrition data to prevent reference issues
+      const nutritionCopy = JSON.parse(JSON.stringify(updatedRecipe.nutrition));
+      const standardizedNutrition = standardizeNutrition(nutritionCopy);
+      
+      console.log("Standardized nutrition data:", JSON.stringify(standardizedNutrition));
+      
+      // Validate that we have actual nutrition data
+      if (!standardizedNutrition || 
+          typeof standardizedNutrition !== 'object' || 
+          Object.keys(standardizedNutrition).length === 0) {
+        console.warn("Empty or invalid nutrition data detected, using default values");
+        updatedRecipe.nutrition = {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0,
+          sugar: 0,
+          sodium: 0
+        };
+      } else {
+        // Ensure all numerical values are valid non-zero numbers
+        const minValue = 0.1; // Minimum value for nutrition fields
+        
+        for (const key in standardizedNutrition) {
+          if (typeof standardizedNutrition[key] === 'number') {
+            if (isNaN(standardizedNutrition[key]) || standardizedNutrition[key] <= 0) {
+              console.warn(`Found invalid value for nutrition field ${key}, setting to minimum value`);
+              standardizedNutrition[key] = minValue;
+            }
+          }
+        }
+        
+        updatedRecipe.nutrition = standardizedNutrition;
+      }
+    } catch (error) {
+      console.error("Error processing nutrition data:", error);
+      // Fallback to basic nutrition structure
+      updatedRecipe.nutrition = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0
+      };
     }
-    
-    // Process calories from nutrition to update filtered values
-    const calculateAverageCalories = () => {
-      if (!standardizedNutrition) return null;
-      
-      // Get calories or kcal field, but avoid using both
-      const calorieValue = standardizedNutrition.calories || standardizedNutrition.kcal || 0;
-      
-      // Apply per-serving adjustment if needed
-      return updatedRecipe.servings ? calorieValue / updatedRecipe.servings : calorieValue;
-    };
-    
-    // Prepare database update with proper types for Supabase
-    const recipeUpdate = {
-      title: updatedRecipe.title,
-      description: updatedRecipe.description,
-      tagline: updatedRecipe.tagline,
-      ingredients: updatedRecipe.ingredients as unknown as Json,
-      instructions: updatedRecipe.instructions,
-      prep_time_min: updatedRecipe.prep_time_min,
-      cook_time_min: updatedRecipe.cook_time_min,
-      servings: updatedRecipe.servings,
-      image_url: updatedRecipe.image_url,
-      cuisine: updatedRecipe.cuisine,
-      tags: updatedRecipe.tags,
-      nutrition: standardizedNutrition as unknown as Json,
-      nutri_score: updatedRecipe.nutri_score as unknown as Json,
-      cuisine_category: updatedRecipe.cuisine_category,
-      science_notes: updatedRecipe.science_notes as unknown as Json,
-      updated_at: new Date().toISOString(),
-      chef_notes: updatedRecipe.chef_notes,
-      dietary: updatedRecipe.dietary,
-      flavor_tags: updatedRecipe.flavor_tags,
-      cooking_tip: updatedRecipe.cooking_tip
-    };
-    
-    // Update the recipe
-    const { data: updatedData, error: updateError } = await supabase
+  }
+  
+  // Handle cuisine_category enum value - use our updated utility function
+  if (updatedRecipe.cuisine) {
+    updatedRecipe.cuisine_category = getCuisineCategory(updatedRecipe.cuisine);
+    console.log(`Determined cuisine category: ${updatedRecipe.cuisine_category} for cuisine: ${updatedRecipe.cuisine}`);
+  }
+  
+  // Process science_notes to ensure it's always a valid array of strings
+  const scienceNotes = Array.isArray(updatedRecipe.science_notes) 
+    ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
+    : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
+  
+  // Transform recipe for database storage with improved type safety
+  const dbRecipe = {
+    ...updatedRecipe,
+    ingredients: updatedRecipe.ingredients as unknown as Json,
+    nutrition: updatedRecipe.nutrition as unknown as Json,
+    science_notes: scienceNotes as unknown as Json,
+    // Ensure nutri_score is properly cast to Json type
+    nutri_score: updatedRecipe.nutri_score as unknown as Json,
+    // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
+    cuisine_category: updatedRecipe.cuisine_category || "Global"
+  };
+
+  console.log("Saving recipe update with data:", {
+    id: dbRecipe.id,
+    hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
+    ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
+    hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
+    instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
+    hasNotes: Array.isArray(scienceNotes) && scienceNotes.length > 0,
+    noteCount: scienceNotes.length,
+    hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
+    nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : [],
+    cuisine: updatedRecipe.cuisine,
+    cuisine_category: dbRecipe.cuisine_category
+  });
+
+  try {
+    const { data, error } = await supabase
       .from('recipes')
-      .update(recipeUpdate)
-      .match({ id: updatedRecipe.id })
+      .update(dbRecipe)
+      .eq('id', updatedRecipe.id)
       .select()
       .single();
-    
-    if (updateError) {
-      throw updateError;
+
+    if (error) {
+      console.error("Error updating recipe:", error);
+      throw error;
     }
     
-    console.log("Recipe updated successfully:", updatedData.id);
-    
-    return updatedData;
+    console.log("Recipe successfully updated with ID:", data.id);
+    return data;
   } catch (error) {
-    console.error("Error saving recipe update:", error);
+    console.error("Database error updating recipe:", error);
     throw error;
   }
 }

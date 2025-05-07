@@ -1,12 +1,210 @@
 
-import { useUnifiedRecipeChat } from '@/hooks/use-unified-recipe-chat';
+import { useState, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
+import type { ChatMessage, OptimisticMessage } from '@/types/chat';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useOptimisticMessages } from '@/hooks/recipe-chat/use-optimistic-messages';
+import { generateQuickRecipeResponse } from '@/api/quick-recipe-chat';
+import { setChatMeta } from '@/utils/chat-meta';
 
-/**
- * @deprecated Use useUnifiedRecipeChat instead
- * This is kept for backward compatibility - redirects to the new unified implementation
- */
+// We need to generate a unique ID for the quick recipe
+// This helps us track chat history in local storage
+const getRecipeStorageId = (recipe: QuickRecipe) => {
+  if (recipe.id) return recipe.id;
+  
+  // Generate consistent ID based on recipe content for temporary recipes
+  const identifier = recipe.title 
+    ? `${recipe.title.substring(0, 20)}-${recipe.ingredients.length}`
+    : `quick-recipe-${Date.now()}`;
+    
+  return `temp-${identifier}`;
+};
+
 export const useQuickRecipeChat = (recipe: QuickRecipe) => {
-  // Simply redirect to the unified implementation
-  return useUnifiedRecipeChat(recipe);
+  const { toast } = useToast();
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [failedMessageIds, setFailedMessageIds] = useState<string[]>([]);
+  
+  // Generate a storage key for this recipe
+  const recipeStorageId = getRecipeStorageId(recipe);
+  const chatStorageKey = `quick-recipe-chat-${recipeStorageId}`;
+  
+  // Use local storage to persist chat history
+  const [chatHistory, setChatHistory] = useLocalStorage<ChatMessage[]>(chatStorageKey, []);
+  
+  // Get recipe update function from store
+  const updateRecipe = useQuickRecipeStore(state => state.setRecipe);
+  
+  // Use the existing optimistic messages hook with enhanced functionality
+  const { optimisticMessages, addOptimisticMessage, clearOptimisticMessages, removeOptimisticMessage } = 
+    useOptimisticMessages(chatHistory);
+  
+  // Send a message to the AI with retry and failure handling
+  const sendMessage = useCallback(async () => {
+    if (!message.trim() || isSending) return;
+    
+    const messageId = `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const userMessage = message.trim();
+    
+    // Create optimistic message
+    const optimisticMessage: OptimisticMessage = {
+      id: messageId,
+      user_message: userMessage,
+      pending: true,
+      meta: { optimistic_id: messageId, sent_at: Date.now() }
+    };
+    
+    addOptimisticMessage(optimisticMessage);
+    
+    // Clear the input
+    setMessage('');
+    setIsSending(true);
+    
+    try {
+      // Remove from failed messages if retrying
+      setFailedMessageIds(prev => prev.filter(id => id !== messageId));
+      
+      // Call API to get response with increased timeout handling
+      const response = await generateQuickRecipeResponse(recipe, userMessage);
+      
+      // Add the message to chat history
+      const newMessage: ChatMessage = {
+        id: messageId,
+        user_message: userMessage,
+        ai_response: response.textResponse,
+        changes_suggested: response.changes || null,
+        follow_up_questions: response.followUpQuestions || [],
+        meta: { 
+          optimistic_id: messageId,
+          sent_at: Date.now(), 
+          received_at: Date.now()
+        }
+      };
+      
+      const updatedHistory = [...chatHistory, newMessage];
+      setChatHistory(updatedHistory);
+      
+      // Remove the optimistic version once we have the real response
+      setTimeout(() => {
+        removeOptimisticMessage(messageId);
+      }, 100);
+      
+      return true;
+      
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      
+      // Mark this message as failed
+      setFailedMessageIds(prev => [...prev, messageId]);
+      
+      toast({
+        title: 'Failed to get a response',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
+      });
+      
+      return false;
+    } finally {
+      setIsSending(false);
+    }
+  }, [message, recipe, isSending, toast, addOptimisticMessage, chatHistory, setChatHistory, removeOptimisticMessage]);
+  
+  // Apply changes suggested by the AI to the recipe
+  const applyChanges = useCallback(async (chatMessage: ChatMessage) => {
+    if (isApplying || !chatMessage.changes_suggested) return false;
+    
+    setIsApplying(true);
+    
+    try {
+      // Create a copy of the recipe with the changes applied
+      const updatedRecipe = { ...recipe };
+      const changes = chatMessage.changes_suggested;
+      
+      // Apply title changes
+      if (changes.title) {
+        updatedRecipe.title = changes.title;
+      }
+      
+      // Apply ingredients changes
+      if (changes.ingredients?.items && changes.ingredients.items.length > 0) {
+        if (changes.ingredients.mode === 'replace') {
+          updatedRecipe.ingredients = changes.ingredients.items;
+        } else if (changes.ingredients.mode === 'add') {
+          updatedRecipe.ingredients = [...updatedRecipe.ingredients, ...changes.ingredients.items];
+        }
+      }
+      
+      // Apply instructions changes
+      if (changes.instructions && changes.instructions.length > 0) {
+        updatedRecipe.steps = changes.instructions.map(instruction => 
+          typeof instruction === 'string' ? instruction : instruction.action || ''
+        );
+      }
+      
+      // Apply nutrition, science notes, etc.
+      if (changes.nutrition) {
+        updatedRecipe.nutrition = changes.nutrition;
+      }
+      
+      if (changes.science_notes && changes.science_notes.length > 0) {
+        updatedRecipe.science_notes = changes.science_notes;
+      }
+      
+      // Update chat message to mark as applied
+      const updatedHistory = chatHistory.map(msg => 
+        msg.id === chatMessage.id 
+          ? setChatMeta(msg, 'applied', true)
+          : msg
+      );
+      setChatHistory(updatedHistory);
+      
+      // Update the recipe in the store
+      updateRecipe(updatedRecipe);
+      
+      // Show success toast
+      toast({
+        title: 'Changes Applied',
+        description: 'Recipe has been successfully updated.',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error applying changes:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to apply changes to recipe',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setIsApplying(false);
+    }
+  }, [recipe, isApplying, updateRecipe, chatHistory, setChatHistory, toast]);
+  
+  // Clear chat history and reset states
+  const clearChatHistory = useCallback(() => {
+    setChatHistory([]);
+    clearOptimisticMessages();
+    setFailedMessageIds([]);
+    return Promise.resolve();
+  }, [setChatHistory, clearOptimisticMessages]);
+  
+  return {
+    message,
+    setMessage,
+    chatHistory,
+    optimisticMessages,
+    isLoadingHistory: false, // Local storage is instant
+    sendMessage,
+    isSending,
+    applyChanges,
+    isApplying,
+    clearChatHistory,
+    failedMessageIds,
+  };
 };

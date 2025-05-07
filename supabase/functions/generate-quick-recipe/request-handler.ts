@@ -16,7 +16,7 @@ const VALID_CUISINE_CATEGORIES = [
 ];
 
 // Main request handler function
-export async function handleRequest(req: Request, debugInfo: string): Promise<Response> {
+export async function handleRequest(req: Request, debugInfo: string, embeddingModel: string = "text-embedding-ada-002"): Promise<Response> {
   // Check content type
   const contentType = req.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
@@ -45,27 +45,35 @@ export async function handleRequest(req: Request, debugInfo: string): Promise<Re
       );
     }
     
-    // Clone the request once for processing
-    const clonedRequest = req.clone();
+    // Diagnostic log for API key (redacted)
+    console.log(`API key configured: ${apiKey.substring(0, 3)}...${apiKey.substring(apiKey.length - 3)}`);
     
-    // Parse the JSON directly rather than reading as text first
+    // Parse and validate request body - get a CLONE of the request to avoid consuming it
+    const clonedRequest = req.clone();
+    const requestText = await clonedRequest.text();
+    
+    console.log("Raw request body:", requestText.length > 0 ? 
+      `${requestText.substring(0, 200)}... (${requestText.length} chars)` : 
+      "EMPTY REQUEST BODY");
+    
+    if (!requestText || requestText.trim() === "") {
+      console.error("Empty request body received");
+      return new Response(
+        JSON.stringify({ 
+          error: "Empty request body", 
+          debugInfo: debugInfo
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Parse the request text into JSON
     let requestBody;
     try {
-      requestBody = await clonedRequest.json();
-      console.log("Request body successfully parsed as JSON");
+      requestBody = JSON.parse(requestText);
+      console.log("Parsed request body:", JSON.stringify(requestBody).substring(0, 200) + "...");
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
-      
-      // Get more details about the request for debugging
-      try {
-        const errorClone = req.clone();
-        const bodyText = await errorClone.text();
-        console.log(`Request body length: ${bodyText.length}`);
-        console.log(`Request body preview: ${bodyText.length > 0 ? bodyText.substring(0, 100) + "..." : "EMPTY"}`);
-      } catch (debugError) {
-        console.error("Error getting request body details:", debugError);
-      }
-      
       return new Response(
         JSON.stringify({ 
           error: "Invalid JSON in request body", 
@@ -97,13 +105,14 @@ export async function handleRequest(req: Request, debugInfo: string): Promise<Re
     }
     
     // Add embedding model to the params
-    processedParams.embeddingModel = "text-embedding-ada-002";
+    processedParams.embeddingModel = embeddingModel;
     
     // Build the prompt for OpenAI
     const prompt = buildOpenAIPrompt(processedParams);
     
-    // Log prompt length but not the full content to avoid excessive logs
+    // Log the final constructed prompt for debugging
     console.log("Final prompt construction - length:", prompt.length);
+    console.log("Final prompt snippet (first 300 chars):", prompt.substring(0, 300));
     
     // Generate recipe using OpenAI
     const response = await generateRecipeWithOpenAI(apiKey, prompt, processedParams, corsHeaders, debugInfo);

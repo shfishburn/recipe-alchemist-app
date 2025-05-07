@@ -1,113 +1,93 @@
 
 import type { Nutrition } from '@/types/recipe';
 
+// Define NutritionData type to match the Nutrition type from recipe
+export type NutritionData = Nutrition;
+
 /**
- * Standardizes nutrition data to ensure all required fields are present
- * and both alias versions of properties are populated
+ * Standardizes nutrition data to ensure consistent format across the application
+ * @param nutrition The nutrition data to standardize
+ * @returns A consistent format with standardized field names
  */
-export function standardizeNutrition(nutrition: Partial<Nutrition> | null | undefined): Nutrition {
+export function standardizeNutrition(nutrition: any): Nutrition {
   if (!nutrition) {
-    return createEmptyNutrition();
+    return {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+    };
   }
 
+  // Create a new object with standardized field names
   const standardized: Nutrition = {
-    // Start with default values
-    kcal: 0,
-    calories: 0,
-    protein_g: 0, 
-    protein: 0,
-    carbs_g: 0,
-    carbs: 0,
-    fat_g: 0, 
-    fat: 0,
-    fiber_g: 0,
-    fiber: 0,
-    sugar_g: 0,
-    sugar: 0,
-    sodium_mg: 0,
-    sodium: 0,
-    ...nutrition
+    // Base macros - ensure we have values for the required fields
+    calories: getNumericValue(nutrition, ['calories', 'kcal']),
+    protein: getNumericValue(nutrition, ['protein', 'protein_g']),
+    carbs: getNumericValue(nutrition, ['carbs', 'carbs_g', 'carbohydrates']),
+    fat: getNumericValue(nutrition, ['fat', 'fat_g']),
+    fiber: getNumericValue(nutrition, ['fiber', 'fiber_g']),
+    sugar: getNumericValue(nutrition, ['sugar', 'sugar_g']),
+    sodium: getNumericValue(nutrition, ['sodium', 'sodium_mg']),
+    
+    // Optional micronutrients with standardized names
+    cholesterol: getNumericValue(nutrition, ['cholesterol', 'cholesterol_mg']),
+    calcium: getNumericValue(nutrition, ['calcium', 'calcium_mg']),
+    iron: getNumericValue(nutrition, ['iron', 'iron_mg']),
+    potassium: getNumericValue(nutrition, ['potassium', 'potassium_mg']),
+    vitaminA: getNumericValue(nutrition, ['vitaminA', 'vitamin_a', 'vitamin_a_iu']),
+    vitaminC: getNumericValue(nutrition, ['vitaminC', 'vitamin_c', 'vitamin_c_mg']),
+    vitaminD: getNumericValue(nutrition, ['vitaminD', 'vitamin_d', 'vitamin_d_iu']),
   };
 
-  // Ensure aliases are synchronized in both directions
-  if (nutrition.kcal !== undefined && nutrition.calories === undefined) {
-    standardized.calories = nutrition.kcal;
-  } else if (nutrition.calories !== undefined && nutrition.kcal === undefined) {
-    standardized.kcal = nutrition.calories;
+  // Copy over data quality information if it exists
+  if (nutrition.data_quality) {
+    standardized.data_quality = nutrition.data_quality;
   }
 
-  if (nutrition.protein_g !== undefined && nutrition.protein === undefined) {
-    standardized.protein = nutrition.protein_g;
-  } else if (nutrition.protein !== undefined && nutrition.protein_g === undefined) {
-    standardized.protein_g = nutrition.protein;
+  // Copy any per-ingredient breakdown if it exists
+  if (nutrition.per_ingredient) {
+    standardized.per_ingredient = nutrition.per_ingredient;
   }
 
-  if (nutrition.carbs_g !== undefined && nutrition.carbs === undefined) {
-    standardized.carbs = nutrition.carbs_g;
-  } else if (nutrition.carbs !== undefined && nutrition.carbs_g === undefined) {
-    standardized.carbs_g = nutrition.carbs;
-  }
-
-  if (nutrition.fat_g !== undefined && nutrition.fat === undefined) {
-    standardized.fat = nutrition.fat_g;
-  } else if (nutrition.fat !== undefined && nutrition.fat_g === undefined) {
-    standardized.fat_g = nutrition.fat;
-  }
-
-  if (nutrition.fiber_g !== undefined && nutrition.fiber === undefined) {
-    standardized.fiber = nutrition.fiber_g;
-  } else if (nutrition.fiber !== undefined && nutrition.fiber_g === undefined) {
-    standardized.fiber_g = nutrition.fiber;
-  }
-
-  if (nutrition.sugar_g !== undefined && nutrition.sugar === undefined) {
-    standardized.sugar = nutrition.sugar_g;
-  } else if (nutrition.sugar !== undefined && nutrition.sugar_g === undefined) {
-    standardized.sugar_g = nutrition.sugar;
-  }
-
-  if (nutrition.sodium_mg !== undefined && nutrition.sodium === undefined) {
-    standardized.sodium = nutrition.sodium_mg;
-  } else if (nutrition.sodium !== undefined && nutrition.sodium_mg === undefined) {
-    standardized.sodium_mg = nutrition.sodium;
+  // Preserving any other custom fields that might be useful
+  if (nutrition.audit_log) {
+    standardized.audit_log = nutrition.audit_log;
   }
 
   return standardized;
 }
 
 /**
- * Validates nutrition data to ensure it contains reasonable values
+ * Helper function to get a numeric value from multiple possible field names
  */
-export function validateNutritionData(nutrition: Partial<Nutrition> | null | undefined): boolean {
-  if (!nutrition) return false;
-  
-  // Check if we have at least some basic nutrition data
-  return (
-    (nutrition.kcal !== undefined || nutrition.calories !== undefined) ||
-    (nutrition.protein_g !== undefined || nutrition.protein !== undefined) ||
-    (nutrition.carbs_g !== undefined || nutrition.carbs !== undefined) ||
-    (nutrition.fat_g !== undefined || nutrition.fat !== undefined)
-  );
+function getNumericValue(obj: any, fieldNames: string[]): number {
+  for (const field of fieldNames) {
+    if (obj[field] !== undefined) {
+      const value = parseFloat(obj[field]);
+      if (!isNaN(value)) {
+        return value;
+      }
+    }
+  }
+  return 0; // Default to 0 if no valid value is found
 }
 
 /**
- * Creates an empty nutrition object with default zero values
+ * Validates that nutrition data has the minimum required fields
  */
-export function createEmptyNutrition(): Nutrition {
-  return {
-    kcal: 0,
-    calories: 0,
-    protein_g: 0,
-    protein: 0,
-    carbs_g: 0,
-    carbs: 0,
-    fat_g: 0,
-    fat: 0,
-    fiber_g: 0,
-    fiber: 0,
-    sugar_g: 0,
-    sugar: 0,
-    sodium_mg: 0,
-    sodium: 0
-  };
+export function validateNutritionData(nutrition: any): boolean {
+  if (!nutrition) return false;
+  
+  // Check for required fields
+  const requiredFields = ['calories', 'protein', 'carbs', 'fat'];
+  const hasRequiredFields = requiredFields.every(field => {
+    const value = nutrition[field];
+    return value !== undefined && value !== null && !isNaN(parseFloat(value));
+  });
+  
+  return hasRequiredFields;
 }

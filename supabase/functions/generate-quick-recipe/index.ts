@@ -15,15 +15,11 @@ serve(async (req) => {
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
     console.log(`Request received with debug info: ${debugInfo}`);
     
-    // Log request metadata without consuming the body
-    console.log(`Request method: ${req.method}`);
-    console.log(`Request content-type: ${req.headers.get("content-type")}`);
+    // Extract embedding model from request body
+    const embeddingModel = "text-embedding-ada-002"; // Default model
+    console.log(`Using embedding model: ${embeddingModel}`);
     
-    // Add function version and timestamp for deployment tracking
-    console.log(`Function version: v1.0.2, timestamp: ${new Date().toISOString()}`);
-    
-    // Use the original request directly - don't clone or read it here
-    return await handleRequest(req, debugInfo);
+    return await handleRequest(req, debugInfo, embeddingModel);
   } catch (err) {
     console.error("Quick recipe generation error:", err);
     return new Response(

@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useShoppingLists } from './useShoppingLists';
 import { useRecipeToShoppingList } from '@/hooks/use-recipe-to-shopping-list';
 import { useToast } from '@/hooks/use-toast';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe } from '@/hooks/use-recipe-detail';
 
 export function useAddToShoppingList(recipe: Recipe) {
   const { user } = useAuth();

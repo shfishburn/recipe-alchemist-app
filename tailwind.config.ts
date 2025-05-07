@@ -64,21 +64,13 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				recipe: {
-					// Standardized color system - using proper semantic colors
-					primary: '#04a118', // Primary green
-					secondary: '#59a52c', // Secondary green
-					blue: '#2563eb', // Standard blue
+					blue: '#04a118', // Primary green color
 					orange: '#fb923c',
-					green: '#16a34a', // Standardized green
+					green: '#59a52c', // Secondary green color
 					yellow: '#facc15',
-					purple: '#9b87f5', // Purple color for servings
-					teal: '#14b8a6', // Teal color for cuisine
-					amber: '#d97706',  // Amber color for dietary
-					// Adding additional semantic colors
-					error: '#ef4444',
-					success: '#22c55e',
-					warning: '#f59e0b',
-					info: '#3b82f6'
+                    purple: '#9b87f5', // Purple color for servings
+                    teal: '#14b8a6', // Teal color for cuisine
+                    amber: '#d97706'  // Amber color for dietary
 				}
 			},
 			borderRadius: {
@@ -110,23 +102,13 @@ export default {
 				slideUp: {
 					from: { transform: 'translateY(10%)' },
 					to: { transform: 'translateY(0)' }
-				},
-				// Add a smoother gradient animation
-				'gradient-x': {
-					'0%, 100%': {
-						'background-position': '0% 50%'
-					},
-					'50%': {
-						'background-position': '100% 50%'
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fadeIn 0.5s ease-out forwards',
-				'slide-up': 'slideUp 0.5s ease-out',
-				'gradient-x': 'gradient-x 10s ease infinite'
+				'slide-up': 'slideUp 0.5s ease-out'
 			}
 		}
 	},

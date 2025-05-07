@@ -1,47 +1,59 @@
 
-/* Touch optimization for carousel and other interactive elements */
-.hw-accelerated {
-  will-change: transform;
-  -webkit-backface-visibility: hidden;
-  -webkit-perspective: 1000;
-  -webkit-transform: translate3d(0,0,0);
-  -webkit-transform-style: preserve-3d;
+/* Enhanced touch targets for better mobile experience */
+.touch-target-base {
+  min-height: 44px;
+  min-width: 44px;
 }
 
+.touch-target-lg {
+  min-height: 54px;
+  min-width: 54px;
+}
+
+/* Touch feedback pattern for cards and buttons */
+.touch-feedback-optimized {
+  transition: transform 150ms ease, opacity 150ms ease;
+  will-change: transform, opacity;
+}
+
+.touch-feedback-optimized:active {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+/* Stronger touch feedback for CTAs */
+.touch-feedback-strong {
+  transition: transform 100ms ease, opacity 100ms ease, background-color 150ms ease;
+  will-change: transform, opacity, background-color;
+}
+
+.touch-feedback-strong:active {
+  transform: scale(0.95);
+  opacity: 0.85;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Image placeholder enhancements */
+.image-placeholder-cta:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Drawer content touch optimization */
+.drawer-content.image-view-touch {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Card touch optimizations */
 .card-touch-optimized {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-}
-
-.touch-device {
-  /* Touch-specific styles for the entire app */
-  --touch-target-min: 44px;
-}
-
-.touch-optimized {
-  /* Increase touch targets */
-  --touch-padding: 0.25rem;
-}
-
-.reduce-animations {
-  /* Reduce animations when battery is low */
-  transition-duration: 0.1s !important;
-}
-
-.reduce-motion-mobile * {
-  transition-duration: 0.1s !important;
-  animation-duration: 0.1s !important;
-}
-
-.touch-action-pan-y {
-  touch-action: pan-y;
-}
-
-/* Optimize image loading for carousels */
-.carousel-image-container {
-  background-color: #f3f4f6;
+/* Enhanced mobile card interaction */
+@media (max-width: 768px) {
+  .card-touch-optimized:active {
+    transform: scale(0.98);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  }
 }

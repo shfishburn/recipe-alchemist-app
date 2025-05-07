@@ -5,6 +5,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerClose,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,7 +13,7 @@ import { X, Loader2, MessageCircle } from 'lucide-react';
 import { QuickRecipeChat } from './QuickRecipeChat';
 import type { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useUnifiedRecipeChat } from '@/hooks/use-unified-recipe-chat';
+import { useQuickRecipeChat } from '@/hooks/use-quick-recipe-chat';
 
 interface QuickRecipeChatDrawerProps {
   recipe: QuickRecipe;
@@ -24,11 +25,10 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
   const isMobile = useIsMobile();
   const contentRef = useRef<HTMLDivElement>(null);
   
-  // Get essential state from unified chat hook without creating full UI elements
   const {
     isSending,
     isApplying
-  } = useUnifiedRecipeChat(recipe);
+  } = useQuickRecipeChat(recipe);
   
   const isPending = isSending || isApplying;
   
@@ -51,15 +51,11 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
     }
   }, [open]);
   
-  // Use fixed height values instead of dynamic calculations for more stability
-  const drawerHeight = isMobile ? '85vh' : '80vh';
-  const contentHeight = isMobile ? 'calc(85vh - 60px)' : 'calc(80vh - 60px)';
-  
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
-        style={{ height: drawerHeight, zIndex: 50 }}
+        className={`${isMobile ? 'h-[90vh]' : 'h-[90vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col drawer-content image-view-touch`} 
+        style={{ zIndex: 50 }}
         ref={contentRef}
       >
         <DrawerHeader className="border-b flex items-center justify-between bg-white py-3 sticky top-0 z-10">
@@ -69,7 +65,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
               Recipe Chat
               {isPending && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  (Processing...)
+                  (Processing request...)
                 </span>
               )}
             </DrawerTitle>
@@ -103,8 +99,7 @@ export function QuickRecipeChatDrawer({ recipe, open, onOpenChange }: QuickRecip
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        
-        <div className="p-2 sm:p-4 flex-1 w-full overflow-hidden" style={{ height: contentHeight }}>
+        <div className={`p-4 sm:p-6 flex-1 ${isMobile ? 'h-[calc(90vh-48px)]' : 'h-[calc(90vh-60px)]'} flex`}>
           <QuickRecipeChat recipe={recipe} />
         </div>
       </DrawerContent>

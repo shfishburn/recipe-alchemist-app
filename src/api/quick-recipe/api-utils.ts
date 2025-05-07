@@ -9,23 +9,18 @@ export const getAuthToken = async (): Promise<string> => {
     .then(res => res.data.session?.access_token || '');
 };
 
-// Direct API fetch to edge function with proper AbortController handling
-export const fetchFromEdgeFunction = async (requestBody: any, timeoutMs: number = 30000): Promise<any> => {
+// Direct API fetch to edge function
+export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
   try {
     // Get auth token for request
     const token = await getAuthToken();
     
-    // Create AbortController to handle timeouts properly
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      console.log("Request timed out after", timeoutMs, "ms");
-    }, timeoutMs);
+    console.log("Testing direct fetch to edge function");
     
     // Create a proper payload with embedding model in body
     const payload = {
       ...requestBody,
-      embeddingModel: 'text-embedding-ada-002'
+      embeddingModel: 'text-embedding-ada-002' // Include model in request body
     };
     
     // Make the direct fetch request with CORS-compatible headers
@@ -36,83 +31,59 @@ export const fetchFromEdgeFunction = async (requestBody: any, timeoutMs: number 
         'Authorization': `Bearer ${token}`,
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
       },
-      body: JSON.stringify(payload),
-      signal: controller.signal
+      body: JSON.stringify(payload)
     });
     
-    // Clear the timeout since we got a response
-    clearTimeout(timeoutId);
+    console.log("Direct fetch response status:", response.status);
+    const responseText = await response.text();
+    console.log("Direct fetch response:", responseText);
     
+    // Check if the response is OK
     if (!response.ok) {
-      const errorText = await response.text();
-      let errorJson;
       try {
-        errorJson = JSON.parse(errorText);
+        const errorJson = JSON.parse(responseText);
         throw new Error(errorJson.error || `API returned status ${response.status}`);
       } catch (e) {
-        throw new Error(`API returned status ${response.status}: ${errorText.substring(0, 100)}`);
+        throw new Error(`API returned status ${response.status}: ${responseText.substring(0, 100)}`);
       }
     }
     
     // Parse and return the successful response
-    return await response.json();
-  } catch (fetchError: any) {
-    console.error("Direct fetch error:", fetchError);
-    
-    // Handle AbortController timeout specifically
-    if (fetchError.name === 'AbortError') {
-      throw new Error('Recipe generation timed out. Please try with simpler ingredients.');
+    try {
+      const data = JSON.parse(responseText);
+      console.log("Direct fetch parsed JSON:", data);
+      return data;
+    } catch (parseError) {
+      console.error("Direct fetch response is not valid JSON:", responseText);
+      throw new Error("Invalid JSON response from API");
     }
-    
+  } catch (fetchError) {
+    console.error("Direct fetch error:", fetchError);
     throw fetchError;
   }
 };
 
 // Fallback API call using Supabase functions
 export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
-  try {
-    console.log("Falling back to Supabase invoke method");
-    
-    // Create a timeout for the invoke call
-    let timeoutId: NodeJS.Timeout | null = null;
-    
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error("Supabase invoke timed out after 30 seconds"));
-      }, 30000);
-    });
-    
-    // Actual function invocation
-    const invokePromise = supabase.functions.invoke('generate-quick-recipe', {
-      body: {
-        ...requestBody,
-        embeddingModel: 'text-embedding-ada-002'
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Info': 'supabase-invoke-' + Date.now()
-      }
-    });
-    
-    // Race between the invoke call and the timeout
-    const result = await Promise.race([invokePromise, timeoutPromise]);
-    
-    // Clear timeout if we got here
-    if (timeoutId) clearTimeout(timeoutId);
-    
-    // Process the result
-    if ('error' in result && result.error) {
-      console.error('Supabase functions error:', result.error);
-      throw new Error(result.error.message || 'Supabase functions error');
+  const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+    body: {
+      ...requestBody,
+      embeddingModel: 'text-embedding-ada-002' // Include model in request body
+    },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Debug-Info': 'supabase-invoke-' + Date.now()
     }
+  });
 
-    if (!result.data) {
-      throw new Error('No data returned from recipe generation');
-    }
-
-    return result.data;
-  } catch (invokeError: any) {
-    console.error("Supabase invoke error:", invokeError);
-    throw invokeError;
+  if (error) {
+    console.error('Supabase functions error:', error);
+    throw error;
   }
+
+  if (!data) {
+    throw new Error('No data returned from recipe generation');
+  }
+
+  return data;
 };

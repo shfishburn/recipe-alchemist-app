@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
@@ -26,56 +26,50 @@ const QuickRecipePage = () => {
     toggleDebugMode
   } = useQuickRecipePage();
   
-  const loadingTriggerRef = useRef<HTMLDivElement | null>(null);
-  
-  // Force show loading indicator for navigation - optimized
+  console.log("QuickRecipePage - Current state:", { 
+    isLoading, 
+    recipe: !!recipe, 
+    error, 
+    formData: !!formData, 
+    isDirectNavigation
+  });
+
+  // Force show loading indicator for navigation
   useEffect(() => {
-    // Create the loading trigger element only once
-    if (!loadingTriggerRef.current) {
-      loadingTriggerRef.current = document.createElement('div');
-      loadingTriggerRef.current.className = 'loading-trigger';
-      // Use requestAnimationFrame for smoother insertion
-      requestAnimationFrame(() => {
-        document.body.appendChild(loadingTriggerRef.current!);
-      });
-    }
+    // This will trigger a re-render that loads the indicator
+    const loadingTrigger = document.createElement('div');
+    loadingTrigger.className = 'loading-trigger';
+    document.body.appendChild(loadingTrigger);
     
     return () => {
       // Ensure we clean up any loading states when component unmounts
       document.body.classList.remove('overflow-hidden');
-      if (loadingTriggerRef.current && loadingTriggerRef.current.parentNode) {
-        // Use requestAnimationFrame for smoother removal
-        requestAnimationFrame(() => {
-          if (loadingTriggerRef.current?.parentNode) {
-            document.body.removeChild(loadingTriggerRef.current);
-            loadingTriggerRef.current = null;
-          }
-        });
+      if (loadingTrigger && loadingTrigger.parentNode) {
+        document.body.removeChild(loadingTrigger);
       }
     };
   }, []);
 
-  // Show full-screen loading when generating a recipe
+  // Show full-screen loading when generating a recipe, within the relative container
   if (isLoading || isRetrying) {
+    console.log("Showing loading screen for recipe generation");
     return (
-      <>
+      <div className="min-h-screen relative touch-action-auto">
         <LoadingIndicator />
-        <div className="min-h-screen w-full relative touch-action-auto">
-          <FullScreenLoading 
-            onCancel={handleCancel}
-            onRetry={error ? handleRetry : undefined}
-            error={error}
-          />
-        </div>
-      </>
+        <FullScreenLoading 
+          onCancel={handleCancel}
+          onRetry={error ? handleRetry : undefined}
+          error={error}
+        />
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <LoadingIndicator />
-      <main className="flex-1 py-6 md:py-10 w-full">
+      <main className="flex-1 py-6 md:py-10 animate-fadeIn">
         <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Title Section - Always show this */}
           <QuickRecipeHero 
@@ -85,7 +79,7 @@ const QuickRecipePage = () => {
           />
 
           {isDirectNavigation ? (
-            // Show form directly when navigating from navbar
+            // Show form directly when navigating from navbar - Added wider container for desktop
             <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md mx-auto mb-10 md:max-w-xl lg:max-w-2xl">
               <QuickRecipeFormContainer />
             </div>
@@ -114,7 +108,7 @@ const QuickRecipePage = () => {
           )}
         </div>
       </main>
-    </>
+    </div>
   );
 }
 

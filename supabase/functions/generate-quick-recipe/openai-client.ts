@@ -1,7 +1,7 @@
 
 import OpenAI from "https://esm.sh/openai@4.0.0";
 
-// OpenAI API interaction function with improved error handling and timeouts
+// OpenAI API interaction function
 export async function generateRecipeWithOpenAI(
   apiKey: string,
   prompt: string,
@@ -13,31 +13,32 @@ export async function generateRecipeWithOpenAI(
     // Create OpenAI client
     const openai = new OpenAI({ apiKey });
     
-    // Log the inputs (simplified)
-    console.log("Starting quick recipe generation with main ingredient:", params.safeMain);
-    console.log("Using model: gpt-3.5-turbo"); // Using a faster model for reliability
-    
-    // Set a timeout for the OpenAI call
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    // Log the inputs and prompt for debugging
+    console.log("Starting quick recipe generation with inputs:", { 
+      cuisine: params.safeCuisine, 
+      dietary: params.safeDiet, 
+      mainIngredient: params.safeMain, 
+      servings: params.safeServings, 
+      maxCalories: params.maxCalories, 
+      flavorTags: params.safeTags 
+    });
+    console.log("Using model: gpt-4o");
     
     console.log("Sending request to OpenAI API...");
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using more reliable model for consistent speed
+      model: "gpt-4o", // Keep using the more capable model
       response_format: { type: "json_object" },
-      temperature: 0.6, // More creative results, faster response
-      max_tokens: 2000, // Reduced token limit for faster responses
+      temperature: 0.5, // Reduced from 0.7 to make output more consistent
+      max_tokens: 4000, // Increased to allow for more comprehensive steps
       messages: [
         {
           role: "system",
-          content: "You are a culinary assistant creating detailed recipes. Return your response in JSON format with title, ingredients array, and steps array."
+          content:
+            "You are Kenji López-Alt, renowned culinary scientist creating detailed, scientifically-grounded recipes. YOUR PRIMARY STRENGTH is writing EXTREMELY THOROUGH, DETAILED recipe steps that explain the science behind each technique. Each step must include exact temperatures (both °F and °C), precise timing, and scientific explanations for why this method produces superior results. NEVER REDUCE THE NUMBER OF STEPS - separate distinct actions into individual steps. ABSOLUTELY REFUSE to produce simplified or vague instructions. MANDATORY: Include AT LEAST 10-15 necessary detailed steps. If you fail to provide the required level of scientific detail in EVERY step, your response will be rejected and regenerated.",
         },
         { role: "user", content: prompt },
-      ]
+      ],
     });
-    
-    // Clear timeout since we got a response
-    clearTimeout(timeoutId);
     
     console.log("OpenAI API response received");
     
@@ -47,11 +48,10 @@ export async function generateRecipeWithOpenAI(
     }
     
     const json = response.choices[0].message.content;
+    console.log("OpenAI raw response length:", json.length);
+    console.log("OpenAI raw response preview (first 300 chars):", json.substring(0, 300));
     
-    // Simplified logging
-    console.log("OpenAI response received, length:", json.length);
-    
-    // Parse and validate the returned JSON
+    // Validate the returned JSON
     let recipe;
     try {
       recipe = JSON.parse(json);
@@ -61,43 +61,49 @@ export async function generateRecipeWithOpenAI(
     }
     
     // Simple validation
-    if (!recipe.title || !recipe.ingredients || !Array.isArray(recipe.steps) || recipe.steps.length === 0) {
-      console.error("Generated recipe is missing required fields");
+    if (!recipe.title || !recipe.ingredients || !Array.isArray(recipe.steps) || recipe.steps.length < 5) {
+      console.error("Generated recipe is missing required fields:", recipe);
       throw new Error("Generated recipe is missing required fields");
     }
     
-    // Add backward compatibility fields
-    recipe.instructions = recipe.steps;
-    recipe.tagline = recipe.description || "A delicious recipe";
-    recipe.prep_time_min = recipe.prepTime || 15;
-    recipe.cook_time_min = recipe.cookTime || 30;
-    recipe.cuisine = recipe.cuisine || params.safeCuisine || "any";
-    recipe.cuisine_category = recipe.cuisine_category || "Global";
+    // Normalize fields to ensure consistency between old and new formats
+    recipe.instructions = recipe.steps; // Add instructions alias for Build compatibility
+    recipe.tagline = recipe.description; // Add tagline alias for Build compatibility
+    recipe.prep_time_min = recipe.prepTime; // Ensure both time formats exist
+    recipe.cook_time_min = recipe.cookTime; // Ensure both time formats exist
     
-    // Log token usage for cost monitoring
+    // Log number of tokens used for debugging
     if (response.usage) {
-      console.log(`Token usage: ${response.usage.total_tokens} (prompt: ${response.usage.prompt_tokens}, completion: ${response.usage.completion_tokens})`);
+      console.log("Token usage:", {
+        prompt_tokens: response.usage.prompt_tokens,
+        completion_tokens: response.usage.completion_tokens,
+        total_tokens: response.usage.total_tokens
+      });
     }
     
     return new Response(JSON.stringify(recipe), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
     
-  } catch (openaiError: any) {
+  } catch (openaiError) {
     console.error("OpenAI API error:", openaiError);
-    
-    // Simplified error handling
+    // Improved error response with more details
     let errorMessage = "Error generating recipe from OpenAI";
     let errorDetails = openaiError.message || "Unknown OpenAI error";
     
-    if (openaiError.name === 'AbortError' || openaiError.message?.includes('timeout')) {
-      errorMessage = "Recipe generation timed out. Please try again with simpler ingredients.";
-    } else if (openaiError.message?.includes("401")) {
+    // Check for common OpenAI error patterns
+    if (errorDetails.includes("401")) {
       errorMessage = "Invalid OpenAI API key";
-    } else if (openaiError.message?.includes("429")) {
+      errorDetails = "The API key provided was rejected by OpenAI. Please check the key and try again.";
+    } else if (errorDetails.includes("429")) {
       errorMessage = "OpenAI rate limit exceeded";
-    } else if (openaiError.message?.includes("500")) {
+      errorDetails = "The OpenAI API rate limit has been exceeded. Please try again later.";
+    } else if (errorDetails.includes("500")) {
       errorMessage = "OpenAI internal server error";
+      errorDetails = "OpenAI is experiencing internal issues. Please try again later.";
+    } else if (errorDetails.includes("400")) {
+      errorMessage = "Invalid request format";
+      errorDetails = "The request to OpenAI was invalid. This could be due to an issue with the prompt or parameters.";
     }
     
     return new Response(

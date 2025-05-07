@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo, useState, useRef, useEffect } from 'react';
 import { useRecipes } from '@/hooks/use-recipes';
 import {
   Carousel,
@@ -8,125 +8,154 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { useOptimizedCarousel } from '@/hooks/use-optimized-carousel';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CarouselDots } from './carousel/CarouselDots';
 import { RecipeCard } from './carousel/RecipeCard';
 import { CookingPot } from 'lucide-react';
-import { CarouselPagination } from '@/components/ui/carousel-pagination';
-import { cn } from '@/lib/utils';
+import type { UseEmblaCarouselType } from 'embla-carousel-react';
+import type { Recipe } from '@/types/recipe';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn as classnames } from '@/lib/utils';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
-  const { 
-    api, 
-    setApi, 
-    activeIndex, 
-    touchHandlers,
-    getCarouselOptions,
-    isMobile,
-    setupAutoScroll
-  } = useOptimizedCarousel();
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [carouselApi, setCarouselApi] = React.useState<UseEmblaCarouselType[1] | null>(null);
+  const isMobile = useIsMobile();
+  
+  // Add touch state tracking
+  const [isTouching, setIsTouching] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
     return recipes?.slice(0, 5) || [];
   }, [recipes]);
-  
-  // Setup auto-scroll for the carousel
+
+  // Optimize carousel options with correct TypeScript types
+  const carouselOptions = useMemo(() => ({
+    align: "center" as const, // Specify literal type and center the items
+    loop: true,
+    dragFree: true, // Enable for all devices
+    inViewThreshold: 0.6,
+    dragThreshold: 10, // Lower threshold for touch
+    speed: 15, // Faster animation for responsiveness
+  }), []);
+
   React.useEffect(() => {
-    return setupAutoScroll(5000, true, featuredRecipes.length);
-  }, [setupAutoScroll, featuredRecipes.length]);
-  
-  if (isLoading) {
-    return (
-      <div className="w-full flex flex-col items-center">
-        <div className="flex flex-col items-center justify-center gap-2 md:gap-2 mb-4 md:mb-6">
-          <Skeleton className="h-5 w-40 rounded mb-1" />
-          <Skeleton className="h-4 w-64 rounded" />
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto">
+    if (!carouselApi) return;
+
+    const onSelect = () => {
+      setSelectedIndex(carouselApi.selectedScrollSnap());
+    };
+
+    carouselApi.on('select', onSelect);
+    onSelect();
+
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi]);
+
+  // Add touch event handling with passive listeners
+  useEffect(() => {
+    const element = carouselRef.current;
+    if (!element) return;
+    
+    const touchStartHandler = () => setIsTouching(true);
+    const touchEndHandler = () => setIsTouching(false);
+    
+    element.addEventListener('touchstart', touchStartHandler, { passive: true });
+    element.addEventListener('touchend', touchEndHandler, { passive: true });
+    element.addEventListener('touchcancel', touchEndHandler, { passive: true });
+    
+    return () => {
+      element.removeEventListener('touchstart', touchStartHandler);
+      element.removeEventListener('touchend', touchEndHandler);
+      element.removeEventListener('touchcancel', touchEndHandler);
+    };
+  }, []);
+
+  return (
+    <div className="w-full flex flex-col items-center" ref={carouselRef}>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto">
           {[1, 2, 3].map((i) => (
             <RecipeCarouselSkeleton key={i} />
           ))}
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full flex flex-col items-center">
-      <div className="flex flex-col items-center space-y-5 md:space-y-8 w-full">
-        <div className="flex flex-col items-center justify-center gap-2 md:gap-2 mb-4 md:mb-6">
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <CookingPot className="h-5 w-5 md:h-5 md:w-5 text-recipe-green" />
-            <h2 className="text-lg md:text-2xl font-semibold text-center">
-              Trending in Kitchens Like Yours
-            </h2>
+      ) : (
+        <div className="flex flex-col items-center space-y-5 md:space-y-8 w-full">
+          <div className="flex flex-col items-center justify-center gap-2 md:gap-2 mb-4 md:mb-6">
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <CookingPot className="h-5 w-5 md:h-5 md:w-5 text-recipe-green" />
+              <h2 className="text-lg md:text-2xl font-semibold text-center">
+                Trending in Kitchens Like Yours
+              </h2>
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground text-center max-w-2xl mt-1.5 md:mt-2 px-2">
+              These recipes are being shared across kitchens similar to yours — find out what makes them special
+            </p>
           </div>
-          <p className="text-sm md:text-base text-muted-foreground text-center max-w-2xl mt-1.5 md:mt-2 px-2">
-            These recipes are being shared across kitchens similar to yours — find out what makes them special
-          </p>
-        </div>
-        
-        <div className="w-full flex flex-col items-center">
-          <div 
-            className="w-full will-change-transform"
-            style={{
-              WebkitBackfaceVisibility: "hidden",
-              WebkitPerspective: "1000",
-              WebkitTransform: "translate3d(0,0,0)",
-              WebkitTransformStyle: "preserve-3d"
-            }}
-            {...touchHandlers}
-          >
+          
+          <div className="w-full flex justify-center">
             <Carousel
-              opts={getCarouselOptions()}
-              className="w-full max-w-5xl"
-              setApi={setApi}
+              opts={carouselOptions}
+              className="w-full no-touch-delay max-w-5xl"
+              setApi={setCarouselApi}
             >
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {featuredRecipes.map((recipe, index) => (
-                  <CarouselItem key={recipe.id} className={cn(
-                    isMobile ? "basis-full pl-2" : "basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
-                    "will-change-transform"
+              <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4 flex items-center">
+                {featuredRecipes.map((recipe) => (
+                  <CarouselItem key={recipe.id} className={classnames(
+                    isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
+                    "hw-accelerated touch-optimized" // Add optimizations
                   )}>
-                    <div className="flex justify-center h-full">
-                      <RecipeCard 
-                        recipe={recipe} 
-                        priority={index < 2} // Prioritize first two recipes for loading
-                      />
+                    <div className="flex justify-center">
+                      <RecipeCard recipe={recipe} />
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
               
-              <CarouselPrevious className="hidden md:flex -left-3 md:-left-4 lg:-left-6" />
-              <CarouselNext className="hidden md:flex -right-3 md:-right-4 lg:-right-6" />
+              {/* Update arrows for better touch targets */}
+              <CarouselPrevious className={classnames(
+                "hidden md:flex touch-target",
+                isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
+                "touch-feedback tap-highlight-none z-10" // Add touch feedback
+              )} />
+              <CarouselNext className={classnames(
+                "hidden md:flex touch-target",
+                isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
+                "touch-feedback tap-highlight-none z-10" // Add touch feedback
+              )} />
             </Carousel>
           </div>
           
-          {/* Better pagination for mobile */}
-          <div className="mt-4 md:mt-6 w-full flex flex-col items-center">
-            <CarouselPagination
-              totalItems={featuredRecipes.length}
-              activeIndex={activeIndex}
-              onSelect={(index) => api?.scrollTo(index)}
-              variant="dots"
-              size={isMobile ? "sm" : "md"}
-              showArrows={!isMobile}
-              showNumbers
-            />
+          {/* Pagination moved outside the carousel for better positioning */}
+          <div className="w-full flex flex-col items-center mt-4 md:mt-6">
+            {/* Only show dots on desktop */}
+            {!isMobile && (
+              <CarouselDots 
+                totalItems={featuredRecipes.length} 
+                selectedIndex={selectedIndex} 
+              />
+            )}
+            <div 
+              className="text-center text-xs md:text-sm text-muted-foreground mt-2" 
+              aria-live="polite"
+            >
+              Slide {selectedIndex + 1} of {featuredRecipes.length || 0}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
 function RecipeCarouselSkeleton() {
   return (
-    <div className="relative z-10 bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border h-full">
+    <div className="relative z-10 bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden border content-visibility-auto-card">
       <div className="aspect-[4/3] max-h-[200px] md:max-h-[300px]">
         <Skeleton className="w-full h-full" />
       </div>

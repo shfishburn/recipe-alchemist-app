@@ -2,9 +2,8 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-import { NUTRITION_COLORS } from '@/constants/nutrition';
+import { NUTRITION_COLORS } from '@/components/recipe-detail/nutrition/blocks/personal/constants';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from "@/lib/utils"; // Added the missing import
 
 interface MacroChartProps {
   chartData: Array<{
@@ -53,19 +52,15 @@ export function MacroChart({ chartData }: MacroChartProps) {
 
   // Custom legend formatter for better readability
   const customLegendFormatter = (value: string, entry: any) => {
-    return <span className={isMobile ? "text-[10px]" : "text-xs"}>{value}: <strong>{entry.payload.value}%</strong></span>;
+    return <span className="text-xs">{value}: <strong>{entry.payload.value}%</strong></span>;
   };
   
-  // Render custom labels inside the chart - responsive for mobile
+  // Render custom labels inside the chart
   const renderCustomizedLabel = ({ name, value, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
-    // Only show labels on desktop or for values ≥ 15%
-    if (isMobile && value < 15) return null;
-    
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    const fontSize = isMobile ? 10 : 12;
 
     return (
       <text 
@@ -74,7 +69,7 @@ export function MacroChart({ chartData }: MacroChartProps) {
         fill="white" 
         textAnchor="middle" 
         dominantBaseline="central"
-        fontSize={fontSize}
+        fontSize={12}
         fontWeight="bold"
       >
         {`${value}%`}
@@ -105,7 +100,7 @@ export function MacroChart({ chartData }: MacroChartProps) {
         protein: { color: NUTRITION_COLORS.protein },
         carbs: { color: NUTRITION_COLORS.carbs },
         fat: { color: NUTRITION_COLORS.fat },
-      }} className={isMobile ? "h-56 w-full" : "h-64 w-full"}>
+      }} className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie 
@@ -113,8 +108,8 @@ export function MacroChart({ chartData }: MacroChartProps) {
               cx="50%"
               cy="50%"
               labelLine={false}
-              outerRadius={isMobile ? 65 : 80}
-              innerRadius={isMobile ? 35 : 50}
+              outerRadius={isMobile ? 70 : 80}
+              innerRadius={isMobile ? 40 : 50}
               dataKey="value"
               label={renderCustomizedLabel}
               strokeWidth={1}
@@ -131,16 +126,11 @@ export function MacroChart({ chartData }: MacroChartProps) {
               layout="horizontal"
               verticalAlign="bottom"
               align="center"
-              iconSize={isMobile ? 8 : 10}
-              wrapperStyle={isMobile ? { fontSize: '10px' } : undefined}
             />
           </PieChart>
         </ResponsiveContainer>
       </ChartContainer>
-      <div className={cn(
-        "text-center text-gray-500 mt-2",
-        isMobile ? "text-[10px]" : "text-xs"
-      )}>
+      <div className="text-xs text-center text-gray-500 mt-2">
         <p className="italic">*Protein and carbs provide 4 calories per gram, fat provides 9 calories per gram</p>
       </div>
     </div>
