@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Brain, ChartPie, Timer, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Recipe } from '@/types/recipe';
-import { PlaceholderImage } from '@/components/recipe-detail/recipe-image/PlaceholderImage';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -90,21 +89,13 @@ export function RecipeCard({ recipe, priority = false }: RecipeCardProps) {
     >
       {/* Recipe Image with Aspect Ratio */}
       <div className="relative aspect-video overflow-hidden">
-        {recipe.image_url ? (
-          <ImageLoader
-            src={recipe.image_url}
-            alt={recipe.title}
-            className="object-cover w-full h-full"
-            priority={priority}
-            containerClassName="w-full h-full"
-          />
-        ) : (
-          <PlaceholderImage 
-            hasError={false} 
-            variant="card" 
-            title={recipe.title}
-          />
-        )}
+        <ImageLoader
+          src={recipe.image_url || '/placeholder.svg'}
+          alt={recipe.title}
+          className="object-cover w-full h-full"
+          priority={priority}
+          containerClassName="w-full h-full"
+        />
         
         {/* Overlay for easier readability of badges */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />

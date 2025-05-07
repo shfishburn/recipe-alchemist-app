@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -145,9 +144,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
             recipeNutrition={processedNutrition}
             userPreferences={updatedUserPreferences}
             viewMode={viewMode}
-            nutriScore={recipe.nutri_score}
-            recipeId={recipe.id}
-            ingredients={recipe.ingredients}
           />
         </CardContent>
       </Card>
@@ -241,9 +237,6 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
               recipeNutrition={processedNutrition}
               userPreferences={updatedUserPreferences}
               viewMode={viewMode}
-              nutriScore={recipe.nutri_score}
-              recipeId={recipe.id}
-              ingredients={recipe.ingredients}
             />
           </CardContent>
         </CollapsibleContent>

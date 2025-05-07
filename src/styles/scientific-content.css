@@ -1,126 +1,74 @@
 
-/* Scientific content styles */
+/* Scientific content styling */
 .scientific-content {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   line-height: 1.6;
 }
 
-.scientific-content h2 {
-  font-size: 1.5rem;
+.scientific-content h3, 
+.scientific-content h4 {
   font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  color: #1f2937;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
 }
 
-.scientific-content h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-top: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: #1f2937;
-}
-
-.scientific-content p {
-  margin-bottom: 1rem;
-}
-
-.scientific-content ul, 
+.scientific-content ul,
 .scientific-content ol {
-  margin-bottom: 1rem;
-  padding-left: 1.5rem;
+  margin-left: 1.5em;
+  margin-bottom: 1em;
 }
 
 .scientific-content li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5em;
+}
+
+.scientific-content p {
+  margin-bottom: 1em;
+}
+
+.scientific-content p:last-child {
+  margin-bottom: 0;
 }
 
 .scientific-content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.9em;
-  background-color: #f3f4f6;
+  background-color: rgba(0, 0, 0, 0.05);
   padding: 0.2em 0.4em;
-  border-radius: 0.25rem;
+  border-radius: 3px;
+  font-family: monospace;
 }
 
-.scientific-content pre {
-  background-color: #f3f4f6;
-  padding: 1rem;
-  border-radius: 0.375rem;
-  overflow-x: auto;
-  margin-bottom: 1rem;
+.scientific-content strong {
+  font-weight: 600;
 }
 
-.scientific-content pre code {
-  background-color: transparent;
-  padding: 0;
-}
-
-.scientific-content blockquote {
-  border-left: 4px solid #e5e7eb;
-  padding-left: 1rem;
-  margin-left: 0;
-  margin-right: 0;
+.scientific-content em {
   font-style: italic;
-  color: #6b7280;
 }
 
+.scientific-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+/* Tables for scientific data */
 .scientific-content table {
-  width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
+  width: 100%;
+  margin-bottom: 1em;
 }
 
 .scientific-content th,
 .scientific-content td {
-  padding: 0.5rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #ddd;
+  padding: 8px;
   text-align: left;
 }
 
 .scientific-content th {
-  background-color: #f9fafb;
+  background-color: #f5f5f5;
   font-weight: 600;
 }
 
-/* NutriScore badge styles */
-.nutriscore-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-.nutriscore-a {
-  background-color: #b3e6b3;
-  color: #166534;
-  border: 1px solid #86efac;
-}
-
-.nutriscore-b {
-  background-color: #d9f99d;
-  color: #3f6212;
-  border: 1px solid #bef264;
-}
-
-.nutriscore-c {
-  background-color: #fef08a;
-  color: #854d0e;
-  border: 1px solid #fde047;
-}
-
-.nutriscore-d {
-  background-color: #fed7aa;
-  color: #9a3412;
-  border: 1px solid #fdba74;
-}
-
-.nutriscore-e {
-  background-color: #fecaca;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
+.scientific-content tr:nth-child(even) {
+  background-color: #f9f9f9;
 }

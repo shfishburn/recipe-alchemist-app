@@ -1,59 +1,179 @@
 
-/* Enhanced touch targets for better mobile experience */
-.touch-target-base {
+/* Make tabs more touch-friendly */
+.touch-optimized .tabs-container {
+  margin-bottom: 1.5rem;
+}
+
+.touch-optimized [data-radix-tabs-trigger] {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Enhanced tap target for touch interfaces */
+.touch-target, 
+.touch-optimized button,
+.touch-optimized .select,
+.touch-optimized a {
   min-height: 44px;
   min-width: 44px;
 }
 
-.touch-target-lg {
-  min-height: 54px;
-  min-width: 54px;
+/* Touch-friendly scrolling container */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  will-change: transform;  /* Hardware acceleration */
 }
 
-/* Touch feedback pattern for cards and buttons */
-.touch-feedback-optimized {
-  transition: transform 150ms ease, opacity 150ms ease;
-  will-change: transform, opacity;
+.touch-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-.touch-feedback-optimized:active {
-  transform: scale(0.97);
-  opacity: 0.92;
+/* Scientific content styling improvements */
+.scientific-content h1,
+.scientific-content h2,
+.scientific-content h3 {
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
 }
 
-/* Stronger touch feedback for CTAs */
-.touch-feedback-strong {
-  transition: transform 100ms ease, opacity 100ms ease, background-color 150ms ease;
-  will-change: transform, opacity, background-color;
+.scientific-content h1 {
+  font-size: 1.5rem;
 }
 
+.scientific-content h2 {
+  font-size: 1.25rem;
+  color: #222;
+}
+
+.scientific-content h3 {
+  font-size: 1.1rem;
+  color: #444;
+}
+
+.scientific-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.scientific-content ul,
+.scientific-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.scientific-content li {
+  margin-bottom: 0.5rem;
+}
+
+.scientific-content strong {
+  color: #222;
+  font-weight: 600;
+}
+
+.scientific-content em {
+  font-style: italic;
+}
+
+.scientific-content code {
+  background: #f5f5f5;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+/* Expanded touch feedback */
 .touch-feedback-strong:active {
-  transform: scale(0.95);
-  opacity: 0.85;
-  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(0.96);
+  opacity: 0.9;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 /* Image placeholder enhancements */
-.image-placeholder-cta:active {
-  background-color: rgba(0, 0, 0, 0.05);
+.image-placeholder-cta {
+  position: relative;
+  overflow: hidden;
+  border: 2px dashed rgba(0, 0, 0, 0.1);
 }
 
-/* Drawer content touch optimization */
-.drawer-content.image-view-touch {
+.image-placeholder-cta:after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 30px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+/* Tab-specific touch improvements */
+.touch-friendly-tabs [data-radix-tabs-trigger] {
+  padding: 0.75rem 1rem;
+  min-height: 3rem;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.touch-friendly-tabs [data-radix-tabs-trigger]:active {
+  transform: scale(0.97);
+}
+
+/* Drawer specific optimizations */
+.drawer-content {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Card touch optimizations */
-.card-touch-optimized {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+.drawer-content img {
+  max-width: 100%;
+  height: auto;
 }
 
-/* Enhanced mobile card interaction */
-@media (max-width: 768px) {
-  .card-touch-optimized:active {
-    transform: scale(0.98);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-  }
+/* Bottom sheet specific touch improvements */
+.bottom-sheet {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* Image viewing optimizations */
+.image-view-touch {
+  touch-action: pinch-zoom;
+}
+
+/* Portal element and overlay safety */
+[data-radix-portal] {
+  pointer-events: auto !important; /* Ensure portals receive events */
+}
+
+/* Prevent active drawer/dialog conflicts */
+body:has([role="dialog"][data-state="open"]) [role="dialog"]:not([data-state="open"]),
+body:has(.drawer-content[data-state="open"]) .drawer-content:not([data-state="open"]) {
+  display: none !important;
+}
+
+/* Hardware acceleration for transitions */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Ensure ScrollArea component is touch-friendly */
+.radix-scroll-area-viewport {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain;
 }

@@ -53,7 +53,7 @@ export function NutrientStats({
         <Progress 
           value={caloriesPercentage} 
           className="h-1.5"
-          indicatorColor={colors?.calories || NUTRITION_COLORS.calories}
+          indicatorColor={NUTRITION_COLORS.calories}
         />
       </div>
       
@@ -68,7 +68,7 @@ export function NutrientStats({
         <Progress 
           value={proteinPercentage} 
           className="h-1.5" 
-          indicatorColor={colors?.protein || NUTRITION_COLORS.protein}
+          indicatorColor={NUTRITION_COLORS.protein}
         />
       </div>
       
@@ -83,7 +83,7 @@ export function NutrientStats({
         <Progress 
           value={carbsPercentage} 
           className="h-1.5" 
-          indicatorColor={colors?.carbs || NUTRITION_COLORS.carbs}
+          indicatorColor={NUTRITION_COLORS.carbs}
         />
       </div>
       
@@ -98,7 +98,7 @@ export function NutrientStats({
         <Progress 
           value={fatPercentage} 
           className="h-1.5" 
-          indicatorColor={colors?.fat || NUTRITION_COLORS.fat}
+          indicatorColor={NUTRITION_COLORS.fat}
         />
       </div>
     </div>

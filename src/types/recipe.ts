@@ -1,4 +1,21 @@
 
+export interface Ingredient {
+  // Metric measurements
+  qty_metric: number;
+  unit_metric: string;
+  // Imperial measurements
+  qty_imperial: number;
+  unit_imperial: string;
+  // Original measurement (backwards compatibility)
+  qty?: number;
+  unit?: string;
+  // Common fields
+  item: string;
+  notes?: string;
+  shop_size_qty?: number;
+  shop_size_unit?: string;
+}
+
 export interface Nutrition {
   // Basic nutrition (with both naming conventions)
   calories: number;
@@ -8,9 +25,6 @@ export interface Nutrition {
   fiber: number;
   sugar: number;
   sodium: number;
-  
-  // New property for saturated fat
-  saturated_fat?: number;
   
   // Aliases for backwards compatibility
   kcal?: number;
@@ -43,16 +57,6 @@ export interface Nutrition {
     unmatched_or_low_confidence_ingredients?: string[];
     limitations?: string[];
   };
-  
-  // Verification metadata
-  verification?: {
-    verified_at: string;
-    verified_nutrients: string[];
-    verification_source: 'fdc_api' | 'usda_sr28';
-    verification_confidence: number;
-    differences?: Record<string, {old: number, new: number, difference_percent: number}>;
-  };
-  
   per_ingredient?: Record<string, any>;
   audit_log?: Record<string, any>;
   
@@ -60,55 +64,27 @@ export interface Nutrition {
   carbohydrates?: number;
 }
 
-// Define the Ingredient interface
-export interface Ingredient {
-  // Metric measurements
-  qty_metric?: number;
-  unit_metric?: string;
-  // Imperial measurements
-  qty_imperial?: number;
-  unit_imperial?: string;
-  // Original measurement (backwards compatibility)
-  qty?: number;
-  unit?: string;
-  // Common fields
-  item: string | Record<string, any>;
-  notes?: string;
-  shop_size_qty?: number;
-  shop_size_unit?: string;
-}
-
-// Define the NutriScore interface
 export interface NutriScore {
   score: number;
-  grade: 'A' | 'B' | 'C' | 'D' | 'E';
-  components?: {
-    energy?: number;
-    sugars?: number;
-    saturated_fat?: number;
-    sodium?: number;
-    fruits_veg_nuts?: number;
-    fiber?: number;
-    protein?: number;
-  };
-  recommendation?: string;
-  // Add missing properties needed by NutriScoreDisplay
-  negative_points?: {
-    total: number;
+  grade: "A" | "B" | "C" | "D" | "E";
+  negative_points: {
     energy: number;
     saturated_fat: number;
     sugars: number;
     sodium: number;
-  };
-  positive_points?: {
     total: number;
+  };
+  positive_points: {
     fiber: number;
     protein: number;
     fruit_veg_nuts: number;
+    total: number;
   };
+  category?: string;
+  calculation_version?: string;
+  calculated_at?: string;
 }
 
-// Define the Recipe interface
 export interface Recipe {
   id: string;
   title: string;
@@ -134,9 +110,12 @@ export interface Recipe {
   dietary?: string;
   flavor_tags?: string[];
   nutrition?: Nutrition;
-  science_notes?: string[];
+  science_notes: string[];
   chef_notes?: string;
-  nutri_score?: NutriScore;
-  slug?: string;
   cooking_tip?: string;
+  slug?: string;
+  nutri_score?: NutriScore;
 }
+
+// Export the Nutrition type explicitly
+export type { Nutrition as RecipeNutrition };
