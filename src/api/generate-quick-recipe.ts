@@ -31,11 +31,11 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     const isConnected = await checkConnectivity('https://zjyfumqfrtppleftpzjd.supabase.co');
     if (!isConnected) {
       console.warn("Cannot reach Supabase domain - connectivity issue detected");
-      // Show toast warning but continue with the request
+      // Show toast warning but change the variant to 'destructive' instead of 'warning'
       toast({
         title: "Connectivity warning",
         description: "We're having trouble connecting to our recipe service. This might affect recipe generation.",
-        variant: "warning"
+        variant: "destructive" // Changed from "warning" to "destructive" as it's an allowed variant
       });
     }
     
