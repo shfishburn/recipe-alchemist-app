@@ -1,9 +1,15 @@
-name: Summarize Changes and Detect Issues
+name: Summarize Changes and Copilot Code Review
 
 on:
   push:
     branches:
       - main  # Adjust to your target branch
+
+# Add explicit permissions
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   analyze_changes:
@@ -20,8 +26,10 @@ jobs:
       run: |
         AUTHOR=$(git log -1 --pretty=format:'%an')
         COMMIT_MSG=$(git log -1 --pretty=format:'%s')
+        COMMIT_SHA=$(git log -1 --pretty=format:'%H')
         echo "author=$AUTHOR" >> $GITHUB_OUTPUT
         echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+        echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
         echo "Commit Author: $AUTHOR"
         echo "Commit Message: $COMMIT_MSG"
 
@@ -29,71 +37,167 @@ jobs:
       id: summarize_changes
       run: |
         git diff HEAD^ HEAD > changes.diff
-        echo "changes<<EOF" >> $GITHUB_OUTPUT
+        echo "diff_content<<EOF" >> $GITHUB_OUTPUT
         cat changes.diff >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '16'  # Vite works well with Node 16+
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci || npm install
+      run: |
+        if [ -e yarn.lock ]; then
+          yarn install --frozen-lockfile
+        elif [ -e package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
+        echo "Dependency installation complete"
 
     - name: Run linter
       id: run_linter
+      continue-on-error: true  # Don't fail if linting fails
       run: |
-        npx eslint . --format json > eslint_results.json || true
-        echo "linter_issues<<EOF" >> $GITHUB_OUTPUT
-        cat eslint_results.json >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        if grep -q "eslint" package.json; then
+          echo "Running ESLint..."
+          npx eslint . --format json > eslint_results.json || true
+        else
+          echo "ESLint not found in dependencies, skipping"
+          echo '{"results":[]}' > eslint_results.json
+        fi
+        echo "Linting complete"
 
-    - name: Create issue with summary
+    # Create a temporary PR for Copilot to review the changes
+    - name: Create temporary PR for code review
+      uses: peter-evans/create-pull-request@v5
+      id: cpr
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: temporary PR for code review"
+        branch: temp-pr-for-review-${{ steps.commit_info.outputs.commit_sha }}
+        delete-branch: true
+        title: "Code Review for commit ${{ steps.commit_info.outputs.commit_sha }}"
+        body: |
+          This is a temporary PR created for GitHub Copilot to review changes from commit:
+          - Author: ${{ steps.commit_info.outputs.author }}
+          - Message: ${{ steps.commit_info.outputs.commit_msg }}
+          - SHA: ${{ steps.commit_info.outputs.commit_sha }}
+
+    # Add Copilot as a reviewer (this step requires GitHub Enterprise Cloud with Copilot Enterprise)
+    - name: Request Copilot review
+      if: steps.cpr.outputs.pull-request-number
       uses: actions/github-script@v6
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const fs = require('fs');
-          
-          const changes = fs.readFileSync('changes.diff', 'utf8');
-          let lintResults = '';
           try {
-            const lintData = fs.readFileSync('eslint_results.json', 'utf8');
-            const lintJson = JSON.parse(lintData);
-            lintResults = JSON.stringify(lintJson, null, 2);
+            // Request review from Copilot
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.cpr.outputs.pull-request-number }},
+              reviewers: ['github-copilot']
+            });
+            console.log('Requested Copilot review successfully');
+            
+            // Wait for Copilot to complete the review (typically takes 20-60 seconds)
+            await new Promise(resolve => setTimeout(resolve, 60000));
+            
+            // Get the review comments
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.cpr.outputs.pull-request-number }}
+            });
+            
+            const copilotReview = reviews.data.find(review => review.user.login === 'github-copilot');
+            let reviewContent = 'No Copilot review found.';
+            
+            if (copilotReview) {
+              reviewContent = copilotReview.body || 'No review content available.';
+            }
+            
+            // Create an issue with the review content
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Copilot Code Review: ${context.sha.substring(0, 7)}`,
+              body: `
+              ## Copilot Code Review for Commit
+              
+              **Commit**: ${context.sha}
+              **Author**: ${{ steps.commit_info.outputs.author }}
+              **Message**: ${{ steps.commit_info.outputs.commit_msg }}
+              
+              ### Copilot Review
+              
+              ${reviewContent}
+              
+              ### Summary of Changes
+              
+              \`\`\`diff
+              ${require('fs').readFileSync('changes.diff', 'utf8').substring(0, 50000)}
+              \`\`\`
+              
+              ### Linting Issues
+              
+              \`\`\`json
+              ${require('fs').readFileSync('eslint_results.json', 'utf8')}
+              \`\`\`
+              
+              This issue was automatically generated by the GitHub Actions workflow.
+              `
+            });
+            
+            console.log('Issue created with Copilot review');
           } catch (error) {
-            lintResults = 'No linting results available';
+            console.error(`Error in Copilot review process: ${error.message}`);
+            console.error(error.stack);
+            
+            // Create an issue with error info and without Copilot review
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Code Review for commit ${context.sha.substring(0, 7)}`,
+              body: `
+              ## Code Review for Recent Changes
+              
+              **Note**: Unable to get Copilot review - ${error.message}
+              
+              **Commit**: ${context.sha}
+              **Author**: ${{ steps.commit_info.outputs.author }}
+              **Message**: ${{ steps.commit_info.outputs.commit_msg }}
+              
+              ### Summary of Changes
+              
+              \`\`\`diff
+              ${require('fs').readFileSync('changes.diff', 'utf8').substring(0, 50000)}
+              \`\`\`
+              
+              ### Linting Issues
+              
+              \`\`\`json
+              ${require('fs').readFileSync('eslint_results.json', 'utf8')}
+              \`\`\`
+              
+              This issue was automatically generated by the GitHub Actions workflow.
+              `
+            });
+          } finally {
+            // Close the temporary PR regardless of outcome
+            try {
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: ${{ steps.cpr.outputs.pull-request-number }},
+                state: 'closed'
+              });
+              console.log('Temporary PR closed');
+            } catch (closeError) {
+              console.error(`Error closing temporary PR: ${closeError.message}`);
+            }
           }
-          
-          const author = process.env.COMMIT_AUTHOR;
-          const commitMsg = process.env.COMMIT_MSG;
-          
-          await github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: `Code Review for commit ${context.sha.substring(0, 7)} by ${author}`,
-            body: `
-            ## Code Review for Recent Changes
-            
-            Author: ${author}
-            Commit Message: ${commitMsg}
-            
-            ### Summary of Changes
-            
-            \`\`\`diff
-            ${changes}
-            \`\`\`
-            
-            ### Linting Issues
-            
-            \`\`\`json
-            ${lintResults}
-            \`\`\`
-            
-            Commit: ${context.sha}
-            `
-          });
-        env:
-          COMMIT_AUTHOR: ${{ steps.commit_info.outputs.author }}
-          COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg }}
