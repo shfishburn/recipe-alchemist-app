@@ -22,19 +22,22 @@ export async function generateRecipeWithOpenAI(
       maxCalories: params.maxCalories, 
       flavorTags: params.safeTags 
     });
-    console.log("Using model: gpt-4o");
+    
+    // CHANGE: Use gpt-3.5-turbo instead of gpt-4o for better speed
+    const model = "gpt-3.5-turbo";
+    console.log(`Using model: ${model}`);
     
     console.log("Sending request to OpenAI API...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Keep using the more capable model
+      model: model,
       response_format: { type: "json_object" },
       temperature: 0.5, // Reduced from 0.7 to make output more consistent
-      max_tokens: 4000, // Increased to allow for more comprehensive steps
+      max_tokens: 3000, // Reduced from 4000 to improve speed while maintaining quality
       messages: [
         {
           role: "system",
           content:
-            "You are Kenji López-Alt, renowned culinary scientist creating detailed, scientifically-grounded recipes. YOUR PRIMARY STRENGTH is writing EXTREMELY THOROUGH, DETAILED recipe steps that explain the science behind each technique. Each step must include exact temperatures (both °F and °C), precise timing, and scientific explanations for why this method produces superior results. NEVER REDUCE THE NUMBER OF STEPS - separate distinct actions into individual steps. ABSOLUTELY REFUSE to produce simplified or vague instructions. MANDATORY: Include AT LEAST 10-15 necessary detailed steps. If you fail to provide the required level of scientific detail in EVERY step, your response will be rejected and regenerated.",
+            "You are a culinary expert creating detailed recipes. Write thorough recipe steps that include temperatures (both °F and °C), timing, and brief explanations for techniques. Each step should be clear and science-based. Include at least 8-10 detailed steps."
         },
         { role: "user", content: prompt },
       ],
@@ -89,7 +92,7 @@ export async function generateRecipeWithOpenAI(
     console.error("OpenAI API error:", openaiError);
     // Improved error response with more details
     let errorMessage = "Error generating recipe from OpenAI";
-    let errorDetails = openaiError.message || "Unknown OpenAI error";
+    let errorDetails = openaiError instanceof Error ? openaiError.message : String(openaiError);
     
     // Check for common OpenAI error patterns
     if (errorDetails.includes("401")) {
