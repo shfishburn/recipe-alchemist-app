@@ -2,12 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { QuickRecipeFormData, QuickRecipe } from '@/types/quick-recipe';
 import { normalizeRecipeResponse } from '@/utils/recipe-normalization';
-import { createTimeoutPromise } from './quick-recipe/timeout-utils';
 import { formatRequestBody } from './quick-recipe/format-utils';
 import { fetchFromEdgeFunction, fetchFromSupabaseFunctions } from './quick-recipe/api-utils';
 import { processErrorResponse } from './quick-recipe/error-utils';
 
-// Function to generate a quick recipe
+// Function to generate a quick recipe with optimized approach
 export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promise<QuickRecipe> => {
   try {
     console.log("Generating quick recipe with form data:", formData);
@@ -19,24 +18,18 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Format the request body
     const requestBody = formatRequestBody(formData);
     
-    console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
+    console.log("Sending request to edge function");
     
-    // Set a timeout for the request (90 seconds - increased from 60)
-    const timeoutPromise = createTimeoutPromise(90000);
-    
-    // Create a direct fetch function that we'll race against the timeout
-    const directFetchPromise = async () => {
-      return await fetchFromEdgeFunction(requestBody);
-    };
-    
-    // Race both approaches against the timeout
-    const data = await Promise.race([
-      directFetchPromise().catch(err => {
-        console.warn("Direct fetch failed, trying Supabase invoke:", err);
-        return fetchFromSupabaseFunctions(requestBody);
-      }),
-      timeoutPromise
-    ]);
+    let data;
+    try {
+      // Try the direct fetch first with a 90-second timeout
+      data = await fetchFromEdgeFunction(requestBody, 90000);
+    } catch (directFetchError) {
+      console.warn("Direct fetch failed, trying Supabase invoke:", directFetchError);
+      
+      // Only if direct fetch fails, try the Supabase invoke method as fallback
+      data = await fetchFromSupabaseFunctions(requestBody);
+    }
     
     // Check for error in data
     if (!data) {
@@ -52,7 +45,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Normalize the recipe data to ensure it matches our expected structure
     const normalizedRecipe = normalizeRecipeResponse(data);
     
-    console.log('Normalized recipe:', normalizedRecipe);
+    console.log('Recipe generation successful');
     
     return normalizedRecipe;
   } catch (error: any) {

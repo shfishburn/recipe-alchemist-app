@@ -9,22 +9,21 @@ export const getAuthToken = async (): Promise<string> => {
     .then(res => res.data.session?.access_token || '');
 };
 
-// Direct API fetch to edge function
-export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
+// Direct API fetch to edge function with AbortController instead of Promise.race
+export const fetchFromEdgeFunction = async (requestBody: any, timeoutMs: number = 60000): Promise<any> => {
   try {
     // Get auth token for request
     const token = await getAuthToken();
     
-    console.log("Starting direct fetch to edge function");
+    // Create AbortController to handle timeouts properly
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
     // Create a proper payload with embedding model in body
     const payload = {
       ...requestBody,
-      embeddingModel: 'text-embedding-ada-002' // Include model in request body
+      embeddingModel: 'text-embedding-ada-002'
     };
-    
-    // Log payload size without logging the entire payload
-    console.log(`Request payload size: ${JSON.stringify(payload).length} bytes`);
     
     // Make the direct fetch request with CORS-compatible headers
     const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
@@ -34,36 +33,34 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         'Authorization': `Bearer ${token}`,
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
     
-    console.log("Direct fetch response status:", response.status);
+    // Clear the timeout since we got a response
+    clearTimeout(timeoutId);
     
-    // Clone the response before reading it
-    const responseClone = response.clone();
-    const responseText = await responseClone.text();
-    
-    // Check if the response is OK
     if (!response.ok) {
+      const errorText = await response.text();
+      let errorJson;
       try {
-        const errorJson = JSON.parse(responseText);
+        errorJson = JSON.parse(errorText);
         throw new Error(errorJson.error || `API returned status ${response.status}`);
       } catch (e) {
-        throw new Error(`API returned status ${response.status}: ${responseText.substring(0, 100)}`);
+        throw new Error(`API returned status ${response.status}: ${errorText.substring(0, 100)}`);
       }
     }
     
     // Parse and return the successful response
-    try {
-      const data = JSON.parse(responseText);
-      console.log("Direct fetch successfully parsed JSON response");
-      return data;
-    } catch (parseError) {
-      console.error("Direct fetch response is not valid JSON:", responseText.substring(0, 100));
-      throw new Error("Invalid JSON response from API");
-    }
+    return await response.json();
   } catch (fetchError) {
     console.error("Direct fetch error:", fetchError);
+    
+    // Handle AbortController timeout specifically
+    if (fetchError.name === 'AbortError') {
+      throw new Error('Recipe generation timed out. Please try again with simpler ingredients.');
+    }
+    
     throw fetchError;
   }
 };
@@ -76,7 +73,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
     const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
       body: {
         ...requestBody,
-        embeddingModel: 'text-embedding-ada-002' // Include model in request body
+        embeddingModel: 'text-embedding-ada-002'
       },
       headers: {
         'Content-Type': 'application/json',
@@ -93,7 +90,6 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
       throw new Error('No data returned from recipe generation');
     }
 
-    console.log("Supabase invoke returned data successfully");
     return data;
   } catch (invokeError) {
     console.error("Supabase invoke error:", invokeError);
