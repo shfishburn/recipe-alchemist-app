@@ -5,16 +5,28 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 // Main entry point for the edge function
 serve(async (req) => {
+  console.log(`Edge function received request: ${req.method} ${req.url}`);
+  console.log(`Origin header: ${req.headers.get("Origin") || "no origin"}`);
+  console.log(`Host header: ${req.headers.get("Host") || "no host"}`);
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     console.log("Handling CORS preflight request");
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, origin, x-debug-info',
+        'Access-Control-Max-Age': '86400', // 24 hours caching for preflight
+      } 
+    });
   }
   
   try {
     // Get debug info from headers if present
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
-    console.log(`Request received with debug info: ${debugInfo}`);
+    const origin = req.headers.get("Origin") || "unknown-origin";
+    console.log(`Request received with debug info: ${debugInfo}, from origin: ${origin}`);
     
     // Log request details for debugging
     console.log(`Request method: ${req.method}`);
@@ -28,6 +40,7 @@ serve(async (req) => {
       if (body && body.embeddingModel) {
         embeddingModel = body.embeddingModel;
       }
+      console.log("Successfully parsed request body");
     } catch (e) {
       console.warn("Could not parse request body to extract embeddingModel", e);
     }
@@ -43,7 +56,14 @@ serve(async (req) => {
         debugInfo: "error-handler",
         timestamp: new Date().toISOString()
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*" // Ensure this header is always set
+        } 
+      },
     );
   }
 });

@@ -9,7 +9,7 @@ export const getAuthToken = async (): Promise<string> => {
     .then(res => res.data.session?.access_token || '');
 };
 
-// Direct API fetch to edge function
+// Direct API fetch to edge function with improved error handling
 export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
   try {
     // Get auth token for request
@@ -23,19 +23,25 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
       embeddingModel: 'text-embedding-ada-002' // Include model in request body
     };
     
-    // Make the direct fetch request with CORS-compatible headers
+    const origin = window.location.origin;
+    console.log(`Request origin: ${origin}`);
+    
+    // Make the direct fetch request with enhanced CORS-compatible headers
     const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
-        'Origin': window.location.origin,
-        'Accept': 'application/json'
+        'Origin': origin,
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache' // Prevent caching
       },
       body: JSON.stringify(payload),
       mode: 'cors',
-      credentials: 'omit'
+      credentials: 'omit',
+      // Add a longer timeout
+      signal: AbortSignal.timeout(60000)
     });
     
     console.log("Direct fetch response status:", response.status);
@@ -67,14 +73,20 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
   }
 };
 
-// Fallback API call using Supabase functions
+// Fallback API call using Supabase functions with better error diagnostics
 export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
   try {
     console.log("Attempting Supabase functions invoke after direct fetch failed");
     const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
       body: {
         ...requestBody,
-        embeddingModel: 'text-embedding-ada-002' // Include model in request body
+        embeddingModel: 'text-embedding-ada-002', // Include model in request body
+        clientTimestamp: new Date().toISOString(), // Add timestamp for debugging
+        clientInfo: {
+          url: window.location.href,
+          origin: window.location.origin,
+          userAgent: navigator.userAgent
+        }
       },
       headers: {
         'Content-Type': 'application/json',
@@ -98,7 +110,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
   }
 };
 
-// Try all available methods to generate a recipe with exponential backoff
+// Try multiple methods to generate recipe with exponential backoff and detailed logging
 export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2): Promise<any> => {
   let lastError: Error | null = null;
   
@@ -118,8 +130,38 @@ export const generateRecipeWithRetry = async (requestBody: any, maxRetries = 2):
   } catch (error) {
     console.warn("Supabase invoke failed", error);
     lastError = error as Error;
+  }
+  
+  // Try a different approach as a last resort - direct fetch with fetch API but no auth token
+  try {
+    console.log("Attempting last resort direct fetch without auth token");
     
-    // If both methods failed, throw the last error
+    const payload = {
+      ...requestBody,
+      embeddingModel: 'text-embedding-ada-002',
+      lastResort: true
+    };
+    
+    const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Info': 'final-resort-fetch-' + Date.now(),
+        'Origin': window.location.origin
+      },
+      body: JSON.stringify(payload),
+      mode: 'cors'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Final resort fetch failed with status ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (finalError) {
+    console.error("All recipe generation methods failed", finalError);
+    
+    // If all methods failed, throw the last error
     if (lastError) {
       throw lastError;
     } else {

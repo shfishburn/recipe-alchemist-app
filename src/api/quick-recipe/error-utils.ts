@@ -14,10 +14,11 @@ export const enhanceErrorMessage = (error: any): string => {
     });
   }
   
-  if (error.message?.includes("timeout")) {
+  // Check if this is an AbortError from timeout
+  if (error.name === "AbortError" || error.message?.includes("timeout") || error.message?.includes("timed out")) {
     errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
   } else if (error.message?.includes("fetch") || error.message?.includes("Load failed")) {
-    errorMessage = "Network error connecting to our recipe service. Please check your internet connection and try again.";
+    errorMessage = "Network error connecting to our recipe service. This could be due to network connectivity issues or a temporary service disruption. Please check your internet connection and try again.";
   } else if (error.status === 500 || error.message?.includes("500")) {
     errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
   } else if (error.status === 400 || error.message?.includes("400")) {
@@ -37,8 +38,11 @@ export const enhanceErrorMessage = (error: any): string => {
   return errorMessage;
 };
 
-// Process error responses
+// Process error responses with improved debugging
 export const processErrorResponse = async (error: any): Promise<never> => {
+  // Log detailed diagnostics about the error
+  console.error("Processing error response:", error);
+  
   // Check if the error is from Supabase Functions with response data
   if (error.context?.response) {
     try {
@@ -69,6 +73,15 @@ export const processErrorResponse = async (error: any): Promise<never> => {
   // Check for network or CORS issues
   if (error.name === "TypeError" && error.message === "Load failed") {
     console.error("Network or CORS issue detected with edge function");
+    
+    // Log additional network diagnostics
+    try {
+      console.log("Navigator online status:", navigator.onLine);
+      console.log("Current URL:", window.location.href);
+      console.log("User agent:", navigator.userAgent);
+    } catch (e) {
+      console.error("Could not log navigator diagnostics:", e);
+    }
   }
   
   // Enhance the error message and throw
