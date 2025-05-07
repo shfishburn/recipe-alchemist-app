@@ -7,8 +7,7 @@ import type { ChatMessage, OptimisticMessage } from '@/types/chat';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useOptimisticMessages } from '@/hooks/recipe-chat/use-optimistic-messages';
-import { generateQuickRecipeResponse } from '@/api/quick-recipe-chat';
-import { setChatMeta } from '@/utils/chat-meta';
+import { generateQuickRecipeResponse } from '@/api/quick-recipe-chat'; // We'll create this API function
 
 // We need to generate a unique ID for the quick recipe
 // This helps us track chat history in local storage
@@ -28,7 +27,6 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const [failedMessageIds, setFailedMessageIds] = useState<string[]>([]);
   
   // Generate a storage key for this recipe
   const recipeStorageId = getRecipeStorageId(recipe);
@@ -40,35 +38,30 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
   // Get recipe update function from store
   const updateRecipe = useQuickRecipeStore(state => state.setRecipe);
   
-  // Use the existing optimistic messages hook with enhanced functionality
-  const { optimisticMessages, addOptimisticMessage, clearOptimisticMessages, removeOptimisticMessage } = 
+  // Use the existing optimistic messages hook
+  const { optimisticMessages, addOptimisticMessage, clearOptimisticMessages } = 
     useOptimisticMessages(chatHistory);
   
-  // Send a message to the AI with retry and failure handling
+  // Send a message to the AI
   const sendMessage = useCallback(async () => {
     if (!message.trim() || isSending) return;
     
-    const messageId = `msg-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const messageId = `temp-${uuidv4()}`;
     const userMessage = message.trim();
     
     // Create optimistic message
-    const optimisticMessage: OptimisticMessage = {
+    addOptimisticMessage({
       id: messageId,
       user_message: userMessage,
       pending: true,
-      meta: { optimistic_id: messageId, sent_at: Date.now() }
-    };
-    
-    addOptimisticMessage(optimisticMessage);
+      meta: { optimistic_id: messageId }
+    });
     
     // Clear the input
     setMessage('');
     setIsSending(true);
     
     try {
-      // Remove from failed messages if retrying
-      setFailedMessageIds(prev => prev.filter(id => id !== messageId));
-      
       // Call API to get response with increased timeout handling
       const response = await generateQuickRecipeResponse(recipe, userMessage);
       
@@ -79,40 +72,23 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
         ai_response: response.textResponse,
         changes_suggested: response.changes || null,
         follow_up_questions: response.followUpQuestions || [],
-        meta: { 
-          optimistic_id: messageId,
-          sent_at: Date.now(), 
-          received_at: Date.now()
-        }
+        meta: { optimistic_id: messageId }
       };
       
       const updatedHistory = [...chatHistory, newMessage];
       setChatHistory(updatedHistory);
       
-      // Remove the optimistic version once we have the real response
-      setTimeout(() => {
-        removeOptimisticMessage(messageId);
-      }, 100);
-      
-      return true;
-      
     } catch (error) {
       console.error('Error sending chat message:', error);
-      
-      // Mark this message as failed
-      setFailedMessageIds(prev => [...prev, messageId]);
-      
       toast({
-        title: 'Failed to get a response',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to send message',
         variant: 'destructive',
       });
-      
-      return false;
     } finally {
       setIsSending(false);
     }
-  }, [message, recipe, isSending, toast, addOptimisticMessage, chatHistory, setChatHistory, removeOptimisticMessage]);
+  }, [message, recipe, isSending, toast, addOptimisticMessage, chatHistory, setChatHistory]);
   
   // Apply changes suggested by the AI to the recipe
   const applyChanges = useCallback(async (chatMessage: ChatMessage) => {
@@ -157,9 +133,7 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
       
       // Update chat message to mark as applied
       const updatedHistory = chatHistory.map(msg => 
-        msg.id === chatMessage.id 
-          ? setChatMeta(msg, 'applied', true)
-          : msg
+        msg.id === chatMessage.id ? { ...msg, applied: true } : msg
       );
       setChatHistory(updatedHistory);
       
@@ -186,12 +160,11 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
     }
   }, [recipe, isApplying, updateRecipe, chatHistory, setChatHistory, toast]);
   
-  // Clear chat history and reset states
+  // Clear chat history
   const clearChatHistory = useCallback(() => {
     setChatHistory([]);
     clearOptimisticMessages();
-    setFailedMessageIds([]);
-    return Promise.resolve();
+    return Promise.resolve(); // For compatibility with RecipeChat interface
   }, [setChatHistory, clearOptimisticMessages]);
   
   return {
@@ -205,6 +178,5 @@ export const useQuickRecipeChat = (recipe: QuickRecipe) => {
     applyChanges,
     isApplying,
     clearChatHistory,
-    failedMessageIds,
   };
 };

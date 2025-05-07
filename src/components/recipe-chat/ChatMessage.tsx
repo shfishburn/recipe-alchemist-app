@@ -3,7 +3,6 @@ import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
-import { hasChatMeta } from '@/utils/chat-meta';
 
 interface ChatMessageProps {
   chat: ChatMessageType;
@@ -12,7 +11,6 @@ interface ChatMessageProps {
   isApplying?: boolean;
   isOptimistic?: boolean;
   applied?: boolean;
-  isFailed?: boolean;
 }
 
 export function ChatMessage({
@@ -21,19 +19,12 @@ export function ChatMessage({
   applyChanges,
   isApplying = false,
   isOptimistic = false,
-  applied = false,
-  isFailed = false
+  applied = false
 }: ChatMessageProps) {
-  // Render optimistic user message without AI response
-  if (isOptimistic || (hasChatMeta(chat, 'optimistic_id') && !chat.ai_response)) {
+  // Only render optimistic message if it has no AI response yet
+  if (chat.meta?.optimistic_id && !chat.ai_response) {
     return (
-      <UserMessage 
-        message={chat.user_message} 
-        isOptimistic={isOptimistic} 
-        isFailed={isFailed}
-        showRetry={isFailed}
-        onRetry={() => setMessage(chat.user_message)}
-      />
+      <UserMessage message={chat.user_message} isOptimistic={true} />
     );
   }
 
@@ -43,10 +34,7 @@ export function ChatMessage({
 
   return (
     <div className="space-y-4">
-      <UserMessage 
-        message={chat.user_message} 
-        isOptimistic={isOptimistic} 
-      />
+      <UserMessage message={chat.user_message} isOptimistic={isOptimistic} />
       
       {chat.ai_response && (
         <ChatResponse

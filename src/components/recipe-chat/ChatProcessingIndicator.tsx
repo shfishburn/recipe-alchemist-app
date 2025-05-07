@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Loader2, Brain, ChefHat, Sparkles } from 'lucide-react';
+import { Loader2, Brain, ChefHat } from 'lucide-react';
 
-type ProcessingStage = 'sending' | 'analyzing' | 'processing' | 'completing';
+type ProcessingStage = 'sending' | 'analyzing' | 'processing';
 
 interface ChatProcessingIndicatorProps {
   stage?: ProcessingStage;
@@ -12,15 +12,13 @@ export function ChatProcessingIndicator({ stage = 'sending' }: ChatProcessingInd
   const messages = {
     sending: 'Sending to our culinary scientist...',
     analyzing: 'Analyzing your recipe...',
-    processing: 'Crafting the perfect response...',
-    completing: 'Almost done...'
+    processing: 'Crafting the perfect response...'
   };
 
   const icons = {
     sending: <Loader2 className="h-4 w-4 mr-2 animate-spin text-green-600" />,
     analyzing: <Brain className="h-4 w-4 mr-2 text-amber-500" />,
-    processing: <ChefHat className="h-4 w-4 mr-2 text-blue-500" />,
-    completing: <Sparkles className="h-4 w-4 mr-2 text-purple-500" />
+    processing: <ChefHat className="h-4 w-4 mr-2 text-blue-500" />
   };
 
   return (
