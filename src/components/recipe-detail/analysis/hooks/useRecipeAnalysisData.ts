@@ -36,7 +36,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   // Use our unified science data hook
   const { stepReactions, hasAnalysisData, scienceNotes, globalAnalysis, refetch: refetchReactions } = useRecipeScience(recipe);
   
-  // Fetch general analysis data from recipe-chat
+  // Fetch general analysis data using our new dedicated edge function
   const { data: analysis, isLoading, refetch } = useQuery({
     queryKey: ['recipe-analysis', recipe.id],
     queryFn: async () => {
@@ -55,22 +55,9 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
           }
         }, 30000);
         
-        // The actual fetch operation
-        const { data, error } = await supabase.functions.invoke('recipe-chat', {
-          body: { 
-            recipe,
-            userMessage: `As a culinary scientist specializing in food chemistry and cooking techniques, analyze this recipe through the lens of López-Alt-style precision cooking. 
-
-Please provide:
-1. A detailed breakdown of the key chemical processes occurring (Maillard reactions, protein denaturation, emulsification)
-2. An analysis of the cooking techniques with temperature-dependent explanations
-3. Scientific rationale for ingredient choices and potential substitutions with their impacts
-4. Troubleshooting guide for common issues with this recipe, explaining the underlying science
-5. Suggestions for enhancing flavors through scientifically-validated methods
-
-Include specific temperature thresholds, timing considerations, and visual/tactile indicators of doneness.`,
-            sourceType: 'analysis'
-          }
+        // Call our new dedicated edge function for scientific analysis
+        const { data, error } = await supabase.functions.invoke('analyze-recipe-science', {
+          body: { recipe }
         });
 
         clearTimeout(timeoutId);
@@ -101,7 +88,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   });
 
-  // Function to analyze reactions with OpenAI
+  // Function to analyze reactions with OpenAI (kept the same as original)
   const analyzeReactions = async () => {
     if (!recipe.instructions || recipe.instructions.length === 0) {
       toast.error('Cannot analyze: Recipe has no instructions');
