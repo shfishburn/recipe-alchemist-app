@@ -12,23 +12,21 @@ import { PlaceholderImage } from '@/components/recipe-detail/recipe-image/Placeh
 
 interface QuickRecipeCardProps {
   recipe: QuickRecipe;
-  onCook?: () => void;
+  onCook: () => void;
   onSave: () => void;
-  onChatWithAi?: () => void;
+  onPrint?: () => void;
   isSaving?: boolean;
-  showCookButton?: boolean;
 }
 
 export function QuickRecipeCard({ 
   recipe, 
   onCook, 
   onSave, 
-  onChatWithAi,
-  isSaving = false,
-  showCookButton = true
+  onPrint,
+  isSaving = false 
 }: QuickRecipeCardProps) {
   return (
-    <Card className="w-full border-2 border-recipe-green/20 card-touch-optimized">
+    <Card className="w-full border-2 border-recipe-green/20">
       <CardHeader className="pb-2">
         <div className="w-full aspect-video overflow-hidden rounded-lg mb-4">
           <PlaceholderImage
@@ -63,9 +61,8 @@ export function QuickRecipeCard({
         <RecipeActionButtons 
           onCook={onCook}
           onSave={onSave}
-          onChatWithAi={onChatWithAi}
+          onPrint={onPrint}
           isSaving={isSaving}
-          showCookButton={showCookButton}
         />
         
         {/* Debug JSON Section */}

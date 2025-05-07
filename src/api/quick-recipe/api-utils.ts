@@ -36,25 +36,21 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     
     console.log("Direct fetch response status:", response.status);
     const responseText = await response.text();
-    console.log("Direct fetch response:", responseText.substring(0, 300));
+    console.log("Direct fetch response:", responseText);
     
     // Check if the response is OK
     if (!response.ok) {
       try {
-        // Fixed type assertion for parsed JSON
-        const errorJson = JSON.parse(responseText) as { error?: string };
+        const errorJson = JSON.parse(responseText);
         throw new Error(errorJson.error || `API returned status ${response.status}`);
       } catch (e) {
-        // Properly handle potential parsing error
-        const errorMessage = e instanceof Error ? e.message : String(e);
         throw new Error(`API returned status ${response.status}: ${responseText.substring(0, 100)}`);
       }
     }
     
     // Parse and return the successful response
     try {
-      // Fixed type assertion for parsed JSON
-      const data = JSON.parse(responseText) as Record<string, any>;
+      const data = JSON.parse(responseText);
       console.log("Direct fetch parsed JSON:", data);
       return data;
     } catch (parseError) {

@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { HelpCircle } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FollowUpQuestionsProps {
   questions: string[];
@@ -9,28 +8,25 @@ interface FollowUpQuestionsProps {
   isMobile?: boolean;
 }
 
-export function FollowUpQuestions({ questions = [], onQuestionClick, isMobile = false }: FollowUpQuestionsProps) {
-  if (!questions.length) return null;
+export function FollowUpQuestions({ questions, onQuestionClick, isMobile = false }: FollowUpQuestionsProps) {
+  if (!questions?.length) return null;
   
   return (
-    <div className="mt-4 pt-4 border-t border-slate-100">
-      <div className="flex items-center mb-2">
-        <HelpCircle className="h-4 w-4 text-slate-500 mr-2" />
-        <p className="text-xs font-medium text-slate-600">Suggested questions</p>
-      </div>
-      <div className="flex flex-wrap gap-2 mt-2">
-        {questions.map((question, idx) => (
-          <Button
-            key={idx}
-            variant="outline"
-            size={isMobile ? "sm" : "default"}
-            className="bg-blue-50/50 border-blue-100 text-blue-700 hover:bg-blue-100 hover:text-blue-800 rounded-full py-1 h-auto text-xs"
-            onClick={() => onQuestionClick(question)}
-          >
-            {question}
-          </Button>
-        ))}
-      </div>
+    <div className="mt-3 sm:mt-6">
+      <h4 className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2.5 text-slate-700">Follow-up Questions</h4>
+      <ScrollArea className="max-h-[120px] pr-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {questions.map((question, index) => (
+            <button
+              key={index}
+              className="text-xs sm:text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-left text-slate-800 border border-gray-200 transition-colors max-w-full touch-target"
+              onClick={() => onQuestionClick(question)}
+            >
+              <span className="truncate block">{question}</span>
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

@@ -1,62 +1,57 @@
 
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { CookingPot, Bookmark, MessageSquare } from 'lucide-react';
+import { CookingPot, Bookmark, Printer } from 'lucide-react';
 
 interface RecipeActionButtonsProps {
-  onCook?: () => void;
+  onCook: () => void;
   onSave: () => void;
-  onChatWithAi?: () => void;
+  onPrint?: () => void;
   isSaving?: boolean;
   isSmallScreen?: boolean;
-  showCookButton?: boolean;
 }
 
 // Use memo to prevent unnecessary re-renders
 export const RecipeActionButtons = memo(function RecipeActionButtons({ 
   onCook, 
   onSave, 
-  onChatWithAi,
+  onPrint,
   isSaving = false,
-  isSmallScreen = false,
-  showCookButton = true
+  isSmallScreen = false
 }: RecipeActionButtonsProps) {
   return (
     <div className="pt-5 flex flex-col gap-2.5 w-full">
-      {/* Primary action - Start Cooking (only shown when showCookButton is true) */}
-      {showCookButton && onCook && (
-        <Button 
-          onClick={onCook} 
-          className="w-full bg-recipe-blue hover:bg-recipe-blue/90 touch-feedback-strong"
-          size="lg"
-        >
-          <CookingPot className="mr-2 h-5 w-5" />
-          Start Cooking
-        </Button>
-      )}
+      {/* Primary action - Start Cooking */}
+      <Button 
+        onClick={onCook} 
+        className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
+        size="lg"
+      >
+        <CookingPot className="mr-2 h-5 w-5" />
+        Start Cooking
+      </Button>
       
       {/* Secondary actions in a proper grid layout */}
-      <div className={`grid ${(showCookButton || !onChatWithAi) ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5 w-full`}>
+      <div className="grid grid-cols-2 gap-2.5 w-full">
         <Button 
           variant="outline" 
           onClick={onSave}
-          className="w-full touch-feedback-optimized"
+          className="w-full"
           disabled={isSaving}
         >
           <Bookmark className="mr-1 sm:mr-2 h-4 w-4" />
           <span className={isSmallScreen ? "hidden" : "inline"}>Save Recipe</span>
           <span className={isSmallScreen ? "inline" : "hidden"}>Save</span>
         </Button>
-        
-        {onChatWithAi && (
+        {onPrint && (
           <Button 
             variant="outline" 
-            onClick={onChatWithAi}
-            className="w-full touch-feedback-optimized"
+            onClick={onPrint}
+            className="w-full"
           >
-            <MessageSquare className="mr-1 sm:mr-2 h-4 w-4" />
-            <span className={isSmallScreen ? "hidden" : "inline"}>Chat with AI</span>
-            <span className={isSmallScreen ? "inline" : "hidden"}>Chat</span>
+            <Printer className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className={isSmallScreen ? "hidden" : "inline"}>Print</span>
+            <span className={isSmallScreen ? "inline" : "hidden"}>Print</span>
           </Button>
         )}
       </div>
