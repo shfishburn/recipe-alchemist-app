@@ -44,6 +44,9 @@ serve(async (req) => {
     const embeddingModel = "text-embedding-ada-002"; // Default model
     console.log(`Using embedding model: ${embeddingModel}`);
     
+    // Add function version and timestamp for deployment tracking
+    console.log(`Function version: v1.0.1, timestamp: ${new Date().toISOString()}`);
+    
     return await handleRequest(req, debugInfo, embeddingModel);
   } catch (err) {
     console.error("Quick recipe generation error:", err);
