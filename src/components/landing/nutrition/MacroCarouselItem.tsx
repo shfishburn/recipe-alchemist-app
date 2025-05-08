@@ -32,20 +32,22 @@ interface MacroCarouselItemProps {
 
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
   return (
-    <div className="w-full px-2 sm:px-4 py-4 flex flex-col items-center">
-      <h3 className="text-center text-xl font-semibold text-recipe-purple mb-4">{item.title}</h3>
+    <div className="w-full px-2 sm:px-4 py-4 flex flex-col items-center h-full">
+      <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-3 sm:mb-4">
+        {item.title}
+      </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full h-full">
         <div className="flex flex-col items-center justify-center">
           <div className="w-full max-w-[240px] mx-auto">
             <Suspense fallback={
-              <div className="h-[220px] w-[220px] mx-auto flex items-center justify-center">
-                <Skeleton className="h-[180px] w-[180px] rounded-full" />
+              <div className="h-[180px] w-full mx-auto flex items-center justify-center">
+                <Skeleton className="h-[160px] w-[160px] rounded-full" />
               </div>
             }>
               <MacroChart 
                 data={item.data}
-                height={220}
+                height={180}
                 showTooltip 
               />
               <div className="text-xs text-center text-gray-500 mt-1">
@@ -55,11 +57,11 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
           </div>
         </div>
         
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center h-full">
           {item.special ? (
             <Suspense fallback={
-              <div className="h-[220px] w-full flex items-center justify-center">
-                <Skeleton className="h-[180px] w-[180px]" />
+              <div className="h-[180px] w-full flex items-center justify-center">
+                <Skeleton className="h-[160px] w-[180px]" />
               </div>
             }>
               <MacroPieCharts carbsData={carbsData} fatsData={fatsData} />

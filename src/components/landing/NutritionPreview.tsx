@@ -9,7 +9,7 @@ import {
 } from './nutrition/nutrition-sample-data';
 import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
 import { MacroLegend } from './nutrition/MacroLegend';
-import { StandardCarousel, type CarouselItem } from '@/components/ui/carousel/StandardCarousel';
+import { Carousel, type CarouselItem } from '@/components/ui/carousel';
 
 export function NutritionPreview() {
   // Map nutrition data to carousel items format
@@ -52,13 +52,14 @@ export function NutritionPreview() {
           </div>
           
           <div className="w-full">
-            {/* Using our new standardized carousel component */}
-            <StandardCarousel 
+            {/* Using our updated Carousel component */}
+            <Carousel 
               items={carouselItems}
               renderItem={renderCarouselItem}
               autoScroll={true}
               autoScrollInterval={5000}
               showArrows={true}
+              showDots={true}
               itemWidthMobile="90%"
               itemWidthDesktop="90%"
               className="w-full"

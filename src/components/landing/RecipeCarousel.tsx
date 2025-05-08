@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { RecipeCard } from './carousel/RecipeCard';
 import { CookingPot } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
-import { StandardCarousel, type CarouselItem } from '@/components/ui/carousel/StandardCarousel';
+import { Carousel, type CarouselItem } from '@/components/ui/carousel';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
@@ -58,8 +58,8 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          {/* Using our new standardized carousel component */}
-          <StandardCarousel 
+          {/* Using our updated Carousel component */}
+          <Carousel 
             items={carouselItems}
             renderItem={renderCarouselItem}
             showDots={true}

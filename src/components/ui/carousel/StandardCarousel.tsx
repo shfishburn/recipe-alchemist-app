@@ -5,11 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useCarousel } from '@/hooks/use-carousel';
-
-export interface CarouselItem {
-  id: string | number;
-  content: any; // Change from ReactNode to any to support custom content types
-}
+import type { CarouselItem } from '@/components/ui/carousel';
 
 export interface StandardCarouselProps {
   items: CarouselItem[];
@@ -79,9 +75,10 @@ export function StandardCarousel({
         {/* Scrollable area */}
         <div 
           ref={scrollRef}
-          className={cn("carousel-scroll-area", gap)}
+          className={cn("carousel-scroll-area", gap, "hw-accelerated")}
           tabIndex={0}
           aria-live="polite"
+          aria-roledescription="carousel"
         >
           {items.map((item, index) => (
             <div 
@@ -92,6 +89,9 @@ export function StandardCarousel({
               )}
               style={{ width: isMobile ? itemWidthMobile : itemWidthDesktop }}
               aria-hidden={activeIndex !== index}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`Slide ${index + 1} of ${items.length}`}
             >
               {renderItem(item, index, activeIndex === index)}
             </div>
@@ -105,7 +105,7 @@ export function StandardCarousel({
               variant="outline" 
               size="icon" 
               onClick={handlePrevious}
-              className="carousel-nav-button absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm"
+              className="carousel-nav-button absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm"
               aria-label="Previous slide"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -114,7 +114,7 @@ export function StandardCarousel({
               variant="outline" 
               size="icon" 
               onClick={handleNext}
-              className="carousel-nav-button absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm"
+              className="carousel-nav-button absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm"
               aria-label="Next slide"
             >
               <ChevronRight className="h-4 w-4" />
@@ -125,7 +125,7 @@ export function StandardCarousel({
       
       {/* Pagination dots */}
       {showDots && items.length > 1 && (
-        <div className="carousel-pagination mt-4" role="tablist">
+        <div className="carousel-pagination mt-4" role="tablist" aria-label="Carousel pagination">
           {items.map((_, index) => (
             <button
               key={index}
@@ -152,3 +152,6 @@ export function StandardCarousel({
     </div>
   );
 }
+
+// Re-export the CarouselItem type for convenience
+export type { CarouselItem };

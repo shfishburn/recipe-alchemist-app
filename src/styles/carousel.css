@@ -18,6 +18,7 @@
 
 .carousel-item {
   @apply flex-shrink-0 snap-start h-auto align-top;
+  transition: opacity 0.3s ease;
 }
 
 /* Add class for disabling smooth scrolling during user interaction */
@@ -48,4 +49,67 @@
 /* Carousel navigation buttons */
 .carousel-nav-button {
   @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-purple hover:text-white hover:border-transparent;
+  min-height: 40px;
+  min-width: 40px;
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+
+.carousel-nav-button:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Performance optimizations */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+}
+
+/* Animation for carousel progress indicator */
+@keyframes carousel-progress {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.animate-carousel-progress {
+  animation: carousel-progress linear forwards;
+  animation-duration: var(--carousel-duration, 5000ms);
+}
+
+/* Reduce motion for low-power mode or user preference */
+@media (prefers-reduced-motion) {
+  .carousel-scroll-area {
+    scroll-behavior: auto;
+  }
+  
+  .carousel-item {
+    transition: none;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 640px) {
+  .carousel-nav-button {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  
+  .carousel-pagination-dot {
+    width: 6px !important;
+    height: 6px !important;
+    max-width: 6px !important;
+    max-height: 6px !important;
+  }
+  
+  .carousel-pagination-dot-active {
+    width: 12px !important;
+    max-width: 12px !important;
+  }
+  
+  .reduce-motion-mobile {
+    scroll-behavior: auto;
+  }
 }
