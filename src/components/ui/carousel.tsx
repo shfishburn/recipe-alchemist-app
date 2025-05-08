@@ -144,7 +144,7 @@ export type { CarouselItem, CarouselProps };
 // Re-export legacy components for backward compatibility
 export {
   CarouselContent,
-  CarouselSlide as CarouselItem,
+  CarouselSlide,
   CarouselPrevious,
   CarouselNext,
   CarouselProgress
