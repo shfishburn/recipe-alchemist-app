@@ -1,0 +1,8 @@
+
+.recipe-card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg dark:bg-gray-800;
+}
+
+.text-gradient {
+  @apply bg-gradient-to-r from-recipe-blue to-recipe-green bg-clip-text text-transparent;
+}

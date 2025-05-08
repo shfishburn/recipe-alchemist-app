@@ -8,7 +8,7 @@ import { useCarousel } from '@/hooks/use-carousel';
 
 export interface CarouselItem {
   id: string | number;
-  content: React.ReactNode;
+  content: any; // Change from ReactNode to any to support custom content types
 }
 
 export interface StandardCarouselProps {

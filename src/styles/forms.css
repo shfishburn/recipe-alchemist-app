@@ -1,0 +1,23 @@
+
+/* Form validation styles */
+.form-error {
+  @apply text-red-500 text-sm mt-1 animate-fade-in;
+}
+
+.input-error {
+  @apply border-red-500 ring-red-200 focus:ring-red-200;
+}
+
+/* Touch-friendly form elements */
+.form-touch {
+  @apply py-3 px-4 rounded-lg;
+}
+
+/* Cookie consent customizations */
+.cookie-checkbox {
+  @apply h-5 w-5 rounded border-gray-300;
+}
+
+.cookie-checkbox[data-state="checked"] {
+  @apply bg-green-600 border-green-600;
+}

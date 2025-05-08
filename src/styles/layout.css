@@ -1,0 +1,30 @@
+
+.container-page {
+  @apply container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Standardized responsive spacing */
+.spacing-y-responsive {
+  @apply space-y-3 sm:space-y-4 md:space-y-6;
+}
+
+.spacing-x-responsive {
+  @apply space-x-2 sm:space-x-3 md:space-x-4;
+}
+
+/* Fixed position footer for mobile drawer actions */
+.drawer-fixed-footer {
+  @apply fixed bottom-0 left-0 right-0 p-4 bg-white border-t;
+}
+
+/* Mobile-optimized drawer content */
+.mobile-drawer-footer {
+  @apply sticky bottom-0 left-0 right-0 bg-white border-t py-3 px-4 shadow-lg z-10;
+}
+
+/* Hardware acceleration utility */
+.hw-boost {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}

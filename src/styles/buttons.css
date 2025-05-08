@@ -1,0 +1,36 @@
+
+/* Touch feedback styles for buttons */
+.touch-feedback {
+  @apply transition-all duration-150;
+}
+
+.touch-feedback:active {
+  @apply transform scale-[0.97] opacity-80;
+}
+
+/* Performance-optimized feedback for mobile */
+.touch-feedback-optimized {
+  @apply transition-transform duration-150 will-change-transform;
+}
+
+.touch-feedback-optimized:active {
+  @apply transform scale-[0.97];
+}
+
+/* Stronger touch feedback for image buttons */
+.touch-feedback-strong {
+  @apply transition-all duration-200;
+}
+
+.touch-feedback-strong:active {
+  @apply transform scale-[0.92] opacity-70;
+}
+
+/* Mobile touch target classes */
+.touch-target-base {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+.touch-target-lg {
+  @apply min-h-[54px] min-w-[54px];
+}

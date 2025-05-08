@@ -1,0 +1,27 @@
+
+/* Touch-optimized gestures */
+.drag-none {
+  @apply touch-none select-none;
+}
+
+.drag-x {
+  @apply touch-pan-x select-none;
+}
+
+.drag-y {
+  @apply touch-pan-y select-none;
+}
+
+/* Visual gesture indicators */
+.swipe-indicator::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 20px;
+  background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.1));
+  border-radius: 4px;
+  opacity: 0.5;
+}
