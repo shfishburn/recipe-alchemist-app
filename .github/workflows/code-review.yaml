@@ -56,7 +56,7 @@ jobs:
           echo "$STATS" >> changes_summary.txt
 
       - name: Upload full diff as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: full-diff
           path: changes.diff
@@ -88,7 +88,7 @@ jobs:
           fi
 
       - name: Create issue with summary
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         env:
           AUTHOR: ${{ steps.commit_info.outputs.author || 'Unknown Author' }}
           COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg || 'No commit message available' }}
@@ -107,7 +107,7 @@ jobs:
                 ? content.substring(0, 5000) + '\n... (truncated)'
                 : content;
             }
-            const diffLink = `[Download full diff as artifact](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts)`;
+            const diffLink = `[Download full diff as artifact](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/artifacts/full-diff)`;
             const labels = [];
             const existing = await github.rest.issues.listLabelsForRepo({
               owner: context.repo.owner,
