@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 /**
@@ -124,13 +125,18 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
  * Checks if text contains scientific content
  */
 export function containsScientificContent(text: string): boolean {
+  if (!text || typeof text !== 'string') return false;
+  
   const scientificTerms = [
     'maillard', 'reaction', 'chemistry', 'temperature', 'techniques',
     'protein', 'structure', 'starch', 'gelatinization', 'degree',
     'celsius', 'fahrenheit', 'hydration', 'fat', 'emulsion', 'science',
     'methodology', 'analysis', 'nutrition', 'kcal', 'calories', 'macros',
     'standardized', 'breakdown', 'ingredient', 'carbs', 'fiber', 'sugar',
-    'sodium', 'summation', 'verification'
+    'sodium', 'summation', 'verification', 'thermal', 'enzyme', 'ph',
+    'acid', 'base', 'crystallization', 'polymerization', 'denaturation',
+    'coagulation', 'colloid', 'suspension', 'heat transfer', 'conduction',
+    'convection', 'radiation', 'caramelization'
   ];
   
   const lowerText = text.toLowerCase();

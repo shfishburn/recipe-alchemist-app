@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
+import { cn } from '@/lib/utils';
 
 interface AnalysisSectionProps {
   title: string;
@@ -21,12 +22,16 @@ export function AnalysisSection({
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+      <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center gap-2">
         {icon}
         {title}
       </h3>
-      <div className={`prose prose-sm max-w-none ${bgClass} p-4 rounded-lg border ${borderClass}`}>
-        <FormattedText text={content} preserveWhitespace={true} className="scientific-content" />
+      <div className={cn(`prose prose-sm max-w-none p-4 rounded-lg border`, bgClass, borderClass)}>
+        <FormattedText 
+          text={content} 
+          preserveWhitespace={true} 
+          forceScientific={true}
+        />
       </div>
     </div>
   );

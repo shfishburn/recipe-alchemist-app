@@ -82,7 +82,11 @@ export function AnalysisContent({
         {/* Fallback Section */}
         {hasRawResponse && (
           <div className="prose prose-sm max-w-none bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-            <FormattedText text={rawResponse} preserveWhitespace={true} className="scientific-content" />
+            <FormattedText 
+              text={rawResponse} 
+              preserveWhitespace={true}
+              forceScientific={true}
+            />
           </div>
         )}
       </div>

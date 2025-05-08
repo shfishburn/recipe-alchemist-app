@@ -11,6 +11,7 @@ interface FormattedTextProps {
   text: string;
   className?: string;
   preserveWhitespace?: boolean;
+  forceScientific?: boolean;
 }
 
 // Helper function to format nutrition values in text
@@ -25,7 +26,8 @@ const formatNutritionValues = (text: string): string => {
 export function FormattedText({ 
   text, 
   className,
-  preserveWhitespace = false 
+  preserveWhitespace = false,
+  forceScientific = false
 }: FormattedTextProps) {
   // Process the text to handle formatting with improved scientific content parsing
   const formattedBlocks = React.useMemo(() => {
@@ -87,13 +89,13 @@ export function FormattedText({
     }).filter(Boolean); // Remove null entries
   }, [text, preserveWhitespace]);
 
-  // Detect if this is scientific content
-  const isScientific = text ? containsScientificContent(text) : false;
+  // Detect if this is scientific content or force scientific styling
+  const isScientific = forceScientific || (text ? containsScientificContent(text) : false);
 
   return (
     <div className={cn(
-      "text-sm text-neutral-800 break-words overflow-hidden", 
-      isScientific ? 'scientific-content' : '',
+      "text-sm break-words overflow-hidden", 
+      isScientific ? 'scientific-content' : 'text-neutral-800',
       className
     )}>
       {formattedBlocks}

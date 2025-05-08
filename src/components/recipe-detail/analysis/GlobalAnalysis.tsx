@@ -2,6 +2,7 @@
 import React from 'react';
 import { Globe, Scale, Zap, LineChart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface GlobalAnalysisProps {
   globalAnalysis?: {
@@ -28,8 +29,8 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
   return (
     <Card className="mb-6">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-medium flex items-center">
-          <Globe className="h-5 w-5 mr-2 text-recipe-blue" />
+        <CardTitle className="text-lg font-medium flex items-center gap-2">
+          <Globe className="h-5 w-5 text-recipe-blue" />
           Global Recipe Analysis
         </CardTitle>
       </CardHeader>
@@ -37,33 +38,39 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
         {/* Cascade Effects */}
         {globalAnalysis.cascade_effects && (
           <div>
-            <h3 className="text-sm font-medium text-slate-800 mb-1 flex items-center">
-              <LineChart className="h-4 w-4 mr-1 text-recipe-blue" />
+            <h3 className="text-sm font-medium text-slate-800 mb-1 flex items-center gap-1">
+              <LineChart className="h-4 w-4 text-recipe-blue" />
               Step Interactions
             </h3>
-            <p className="text-sm text-slate-600">{globalAnalysis.cascade_effects}</p>
+            <p className={cn("text-sm text-slate-600 scientific-content")}>
+              {globalAnalysis.cascade_effects}
+            </p>
           </div>
         )}
         
         {/* Scaling Considerations */}
         {globalAnalysis.scaling_considerations && (
           <div>
-            <h3 className="text-sm font-medium text-slate-800 mb-1 flex items-center">
-              <Scale className="h-4 w-4 mr-1 text-amber-600" />
+            <h3 className="text-sm font-medium text-slate-800 mb-1 flex items-center gap-1">
+              <Scale className="h-4 w-4 text-amber-600" />
               Scaling Considerations
             </h3>
-            <p className="text-sm text-slate-600">{globalAnalysis.scaling_considerations}</p>
+            <p className={cn("text-sm text-slate-600 scientific-content")}>
+              {globalAnalysis.scaling_considerations}
+            </p>
           </div>
         )}
         
         {/* Energy Efficiency */}
         {globalAnalysis.energy_systems && (
           <div>
-            <h3 className="text-sm font-medium text-slate-800 mb-1 flex items-center">
-              <Zap className="h-4 w-4 mr-1 text-green-600" />
+            <h3 className="text-sm font-medium text-slate-800 mb-1 flex items-center gap-1">
+              <Zap className="h-4 w-4 text-green-600" />
               Energy Efficiency
             </h3>
-            <p className="text-sm text-slate-600">{globalAnalysis.energy_systems}</p>
+            <p className={cn("text-sm text-slate-600 scientific-content")}>
+              {globalAnalysis.energy_systems}
+            </p>
           </div>
         )}
         
@@ -71,7 +78,9 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
         {globalAnalysis.process_flow_optimization && (
           <div>
             <h3 className="text-sm font-medium text-slate-800 mb-1">Process Optimization</h3>
-            <p className="text-sm text-slate-600">{globalAnalysis.process_flow_optimization}</p>
+            <p className={cn("text-sm text-slate-600 scientific-content")}>
+              {globalAnalysis.process_flow_optimization}
+            </p>
           </div>
         )}
         
@@ -79,7 +88,9 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
         {globalAnalysis.equipment_integration && (
           <div>
             <h3 className="text-sm font-medium text-slate-800 mb-1">Equipment Guidance</h3>
-            <p className="text-sm text-slate-600">{globalAnalysis.equipment_integration}</p>
+            <p className={cn("text-sm text-slate-600 scientific-content")}>
+              {globalAnalysis.equipment_integration}
+            </p>
           </div>
         )}
       </CardContent>
