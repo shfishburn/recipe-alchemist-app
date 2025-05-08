@@ -17,12 +17,13 @@ export function NutritionPreview() {
   const [activeSlide, setActiveSlide] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Auto-scroll carousel with pause on hover
+  // Improved auto-scroll with user interaction detection
   const [isPaused, setIsPaused] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
   
-  // Handle auto-scrolling
+  // Handle auto-scrolling with improved interaction detection
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || userInteracted) return;
     
     const interval = setInterval(() => {
       const nextSlide = (activeSlide + 1) % macroDistributionData.length;
@@ -36,10 +37,10 @@ export function NutritionPreview() {
           behavior: 'smooth'
         });
       }
-    }, 5000); // Change slide every 5 seconds
+    }, 5000); // Slower scroll interval (5 seconds)
     
     return () => clearInterval(interval);
-  }, [activeSlide, isPaused]);
+  }, [activeSlide, isPaused, userInteracted]);
   
   // Handle scroll events to update active slide
   useEffect(() => {
@@ -58,26 +59,44 @@ export function NutritionPreview() {
       }
     };
     
+    // Detect user interaction to stop auto-scrolling
+    const stopAutoScroll = () => {
+      setUserInteracted(true);
+    };
+    
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    scrollContainer.addEventListener('touchstart', stopAutoScroll, { passive: true });
+    scrollContainer.addEventListener('mousedown', stopAutoScroll, { passive: true });
+    
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer.removeEventListener('touchstart', stopAutoScroll);
+      scrollContainer.removeEventListener('mousedown', stopAutoScroll);
     };
   }, [activeSlide]);
   
   // Scroll to selected slide when pagination is clicked
   const handleSelectSlide = (index: number) => {
     setActiveSlide(index);
+    setUserInteracted(true); // User has interacted
     
     if (scrollRef.current) {
+      // Add user-scrolling class to temporarily disable smooth scrolling if needed
+      scrollRef.current.classList.add('user-scrolling');
+      
       const slideWidth = scrollRef.current.clientWidth;
       scrollRef.current.scrollTo({
         left: slideWidth * index,
         behavior: 'smooth'
       });
+      
+      // Remove class after animation completes
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.classList.remove('user-scrolling');
+        }
+      }, 500);
     }
-    
-    setIsPaused(true); // Pause auto-scroll when user navigates
-    setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
   };
   
   return (
@@ -108,7 +127,7 @@ export function NutritionPreview() {
             role="region" 
             aria-label="Nutrition information carousel"
           >
-            {/* Updated carousel with standardized classes */}
+            {/* Updated carousel with fixed classes */}
             <div className="carousel-container">
               <div 
                 ref={scrollRef} 

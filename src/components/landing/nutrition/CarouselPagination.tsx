@@ -19,7 +19,7 @@ export function CarouselPagination({ totalItems, activeSlide, onSelectSlide }: C
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 mt-6">
+    <div className="flex flex-col items-center gap-2 mt-4">
       {/* Navigation buttons and dots */}
       <div className="flex justify-center items-center gap-3">
         <Button 
@@ -44,6 +44,12 @@ export function CarouselPagination({ totalItems, activeSlide, onSelectSlide }: C
               onClick={() => onSelectSlide(index)}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={activeSlide === index ? "true" : "false"}
+              style={{
+                width: activeSlide === index ? '16px' : '8px',
+                height: '8px',
+                maxWidth: activeSlide === index ? '16px' : '8px',
+                maxHeight: '8px'
+              }}
             />
           ))}
         </div>

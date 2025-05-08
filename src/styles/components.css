@@ -124,16 +124,17 @@
     @apply sticky bottom-0 left-0 right-0 bg-white border-t py-3 px-4 shadow-lg z-10;
   }
 
-  /* Consolidated carousel components */
+  /* Consolidated carousel components - FIXED */
   .carousel-container {
-    @apply w-full max-w-5xl mx-auto relative overflow-hidden;
+    @apply w-full max-w-5xl mx-auto relative overflow-hidden h-auto max-h-[500px];
   }
   
   .carousel-scroll-area {
-    @apply flex overflow-x-auto gap-4 pb-6 px-4 -mx-4 snap-x snap-mandatory;
+    @apply flex overflow-x-auto gap-4 pb-4 px-4 -mx-4 snap-x;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     scroll-behavior: smooth;
+    min-height: 0; /* Critical fix for flex items */
   }
 
   .carousel-scroll-area::-webkit-scrollbar {
@@ -141,7 +142,7 @@
   }
   
   .carousel-item {
-    @apply flex-shrink-0 snap-start;
+    @apply flex-shrink-0 snap-start h-auto align-top;
   }
   
   .carousel-item-mobile {
@@ -182,21 +183,34 @@
     background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
   }
   
-  /* Pagination components */
+  /* Pagination components - FIXED */
   .carousel-pagination {
-    @apply flex justify-center gap-1.5 mt-2;
+    @apply flex justify-center gap-1 mt-2;
+    font-size: 16px; /* Force standard sizing */
   }
   
   .carousel-pagination-dot {
-    @apply w-2 h-2 rounded-full bg-gray-300 transition-all duration-200;
+    width: 8px; /* Explicit pixel values */
+    height: 8px;
+    @apply rounded-full bg-gray-300 transition-all duration-200;
+    transform-origin: center;
+    max-width: 8px;
+    max-height: 8px;
   }
   
   .carousel-pagination-dot-active {
-    @apply bg-recipe-blue w-4;
+    @apply bg-recipe-blue;
+    width: 16px; /* Explicit values for active state */
+    max-width: 16px;
   }
   
   /* Carousel navigation buttons */
   .carousel-nav-button {
     @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-purple hover:text-white hover:border-transparent;
+  }
+  
+  /* Add class for disabling smooth scrolling during user interaction */
+  .carousel-scroll-area.user-scrolling {
+    scroll-behavior: auto;
   }
 }

@@ -13,6 +13,7 @@ export function RecipeCarousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [userInteracted, setUserInteracted] = useState(false);
   
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
@@ -36,16 +37,29 @@ export function RecipeCarousel() {
       }
     };
     
+    // Detect user interaction to stop auto-scrolling
+    const stopAutoScroll = () => {
+      setUserInteracted(true);
+    };
+    
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    scrollContainer.addEventListener('touchstart', stopAutoScroll, { passive: true });
+    scrollContainer.addEventListener('mousedown', stopAutoScroll, { passive: true });
+    
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer.removeEventListener('touchstart', stopAutoScroll);
+      scrollContainer.removeEventListener('mousedown', stopAutoScroll);
     };
   }, [activeIndex, featuredRecipes.length, isMobile]);
 
   // Scroll to item when user clicks on a dot
   const scrollToItem = (index: number) => {
+    setUserInteracted(true);
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
+    
+    scrollContainer.classList.add('user-scrolling');
     
     const itemWidth = scrollContainer.clientWidth * (isMobile ? 0.85 : 0.45);
     scrollContainer.scrollTo({
@@ -53,6 +67,13 @@ export function RecipeCarousel() {
       behavior: 'smooth'
     });
     setActiveIndex(index);
+    
+    // Remove class after animation completes
+    setTimeout(() => {
+      if (scrollContainer) {
+        scrollContainer.classList.remove('user-scrolling');
+      }
+    }, 500);
   };
 
   return (
@@ -77,7 +98,7 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          {/* Updated carousel with standardized classes */}
+          {/* Updated carousel with standardized classes and fixes */}
           <div 
             className="carousel-container carousel-container-with-indicators"
             role="region" 
@@ -109,7 +130,7 @@ export function RecipeCarousel() {
             </div>
           </div>
           
-          {/* Pagination dots with standardized classes */}
+          {/* Pagination dots with fixed styling */}
           <div className="carousel-pagination" role="tablist">
             {featuredRecipes.map((_, index) => (
               <button
@@ -123,6 +144,12 @@ export function RecipeCarousel() {
                 aria-selected={activeIndex === index}
                 aria-label={`Go to slide ${index + 1}`}
                 tabIndex={activeIndex === index ? 0 : -1}
+                style={{
+                  width: activeIndex === index ? '16px' : '8px',
+                  height: '8px',
+                  maxWidth: activeIndex === index ? '16px' : '8px',
+                  maxHeight: '8px'
+                }}
               />
             ))}
           </div>
