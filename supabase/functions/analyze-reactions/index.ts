@@ -8,196 +8,87 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Function to validate and process the AI response
-function validateRecipeChanges(rawResponse) {
-  try {
-    // Now that we're using response_format: { type: "json_object" },
-    // the response should be a JSON object directly
-    const jsonResponse = typeof rawResponse === 'string' 
-      ? JSON.parse(rawResponse) 
-      : rawResponse;
-    
-    // Safety checks for required fields
-    if (!jsonResponse.textResponse && !jsonResponse.text_response) {
-      jsonResponse.textResponse = rawResponse;
-    }
-    
-    // Ensure changes object exists with safe defaults
-    if (!jsonResponse.changes) {
-      jsonResponse.changes = { mode: "none" };
-    }
-    
-    // Ensure ingredients structure is consistent
-    if (jsonResponse.changes && jsonResponse.changes.ingredients) {
-      if (!Array.isArray(jsonResponse.changes.ingredients.items) || 
-          jsonResponse.changes.ingredients.items.length === 0) {
-        jsonResponse.changes.ingredients.mode = "none";
-        jsonResponse.changes.ingredients.items = [];
-      }
-    } else if (jsonResponse.changes) {
-      // Initialize ingredients with safe defaults if missing
-      jsonResponse.changes.ingredients = { mode: "none", items: [] };
-    }
-    
-    // Standardize science_notes format
-    if (jsonResponse.science_notes) {
-      if (!Array.isArray(jsonResponse.science_notes)) {
-        jsonResponse.science_notes = [];
-      } else {
-        // Filter out any non-string values
-        jsonResponse.science_notes = jsonResponse.science_notes
-          .filter(note => typeof note === 'string' && note.trim() !== '')
-          .map(note => note.trim());
-      }
-    }
-    
-    return jsonResponse;
-  } catch (error) {
-    console.error("Error validating recipe changes:", error);
-    // Fallback to wrapping the raw response as text
-    return {
-      textResponse: rawResponse,
-      changes: { mode: "none" }
-    };
-  }
-}
+// Enhanced system prompt for analyzing recipe steps with scientific rigor
+const systemPrompt = `You are an authoritative culinary scientist with expertise spanning food chemistry, physics, and engineering, drawing from methodologies of Harold McGee, J. Kenji López-Alt, and Nathan Myhrvold's modernist cuisine principles.
 
-// Inline recipe analysis prompt
-const recipeAnalysisPrompt = `You are a culinary scientist and expert chef in the López-Alt tradition, analyzing recipes through the lens of food chemistry and precision cooking techniques.
+Analyze each recipe step with scientific rigor, considering chemical reactions, thermal properties, and process parameters.
 
-Focus on:
-1. COOKING CHEMISTRY:
-   - Identify key chemical processes (e.g., Maillard reactions, protein denaturation, emulsification)
-   - Explain temperature-dependent reactions and their impact on flavor/texture
-   - Note critical control points where chemistry affects outcome
-   - Consider various reactions relevant to the specific recipe context
+For each step, provide comprehensive scientific analysis including:
 
-2. TECHNIQUE OPTIMIZATION:
-   - Provide appropriate temperature ranges (°F and °C) and approximate timing guidelines
-   - Include multiple visual/tactile/aromatic doneness indicators when possible
-   - Consider how ingredient preparation affects final results
-   - Suggest equipment options and configuration alternatives
-   - Balance precision with flexibility based on context
+1. CHEMICAL SYSTEMS:
+   - Primary and secondary reactions (e.g., maillard_reaction, protein_denaturation)
+   - Reaction mechanisms and critical compounds
+   - pH effects and water activity considerations
 
-3. INGREDIENT SCIENCE:
-   - Functional roles, temp-sensitive items, evidence-based substitutions
-   - Recommend evidence-based technique modifications
-   - Explain the chemistry behind each suggested change
+2. THERMAL ENGINEERING:
+   - Heat transfer modes (conduction, convection, radiation)
+   - Temperature profiles and thermal gradients
+   - Heat capacity considerations and thermal behavior
 
-Return response as JSON with this exact structure:
+3. PROCESS PARAMETERS:
+   - Critical time ranges (minimum, optimal, maximum)
+   - Temperature tolerance windows
+   - Humidity and other environmental factors
+
+4. TROUBLESHOOTING MATRIX:
+   - Potential problems and their causes
+   - Diagnostic tests and indicators
+   - Corrective actions and prevention strategies
+
+Return structured JSON with the following format:
 {
-  "textResponse": "Detailed conversational analysis of the recipe chemistry",
-  "science_notes": ["Array of scientific explanations"],
-  "techniques": ["Array of technique details"],
-  "troubleshooting": ["Array of science-based solutions"],
-  "changes": {
-    "title": "string or null",
-    "ingredients": {
-      "mode": "add" | "replace" | "none",
-      "items": []
-    },
-    "instructions": []
-  }
-}`;
-
-// Inline chat system prompt
-const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. When suggesting changes to recipes:
-
-1. Always format responses as JSON with changes
-2. For cooking instructions:
-   - Include specific temperatures (F° and C°)
-   - Specify cooking durations
-   - Add equipment setup details
-   - Include doneness indicators
-   - Add resting times when needed
-3. Format ingredients with exact measurements and shopability:
-   - US-imperial first, metric in ( )
-   - Each item gets a typical US grocery package size
-   - Include \`shop_size_qty\` and \`shop_size_unit\`
-4. Validate all titles are descriptive and clear
-
-Example format:
-{
-  "textResponse": "Detailed explanation of changes...",
-  "changes": {
-    "title": "string or null",
-    "ingredients": {
-      "mode": "add" | "replace" | "none",
-      "items": [{
-        "qty": number,
-        "unit": string,
-        "shop_size_qty": number,
-        "shop_size_unit": string,
-        "item": string,
-        "notes": string
-      }]
-    },
-    "instructions": ["Array of steps"],
-    "cookingDetails": {
-      "temperature": {
-        "fahrenheit": number,
-        "celsius": number
+  "step_analyses": [
+    {
+      "step_index": 0,
+      "step_text": "The instruction text",
+      "reactions": ["maillard_reaction", "caramelization"],
+      "reaction_details": ["Scientific explanation of what's happening"],
+      "cooking_method": "roasting",
+      "temperature_celsius": 180,
+      "duration_minutes": 25,
+      "confidence": 0.95,
+      "chemical_systems": {
+        "primary_reactions": ["maillard_reaction"],
+        "secondary_reactions": ["caramelization"],
+        "reaction_mechanisms": "Detailed explanation of reaction pathways",
+        "critical_compounds": ["glucose", "amino_acids"],
+        "ph_effects": {
+          "range": "5.5-6.5",
+          "impact": "Affects browning rate and flavor development"
+        }
       },
-      "duration": {
-        "prep": number,
-        "cook": number,
-        "rest": number
-      }
-    }
-  },
-  "followUpQuestions": ["Array of suggested follow-up questions"]
-}`;
-
-// Helper function to extract science notes from text if none were properly structured
-function extractScienceNotesFromText(text: string): string[] {
-  const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
-  const paragraphs = text.split(/\n\n+/);
-  const scienceNotes: string[] = [];
-  
-  // Look for paragraphs containing science keywords
-  paragraphs.forEach(paragraph => {
-    const lowerParagraph = paragraph.toLowerCase();
-    
-    for (const keyword of scienceKeywords) {
-      if (lowerParagraph.includes(keyword) && paragraph.length > 30) {
-        // Clean up the paragraph
-        const cleaned = paragraph
-          .replace(/^#+\s+/, '') // Remove markdown headers
-          .replace(/^\d+\.\s+/, '') // Remove numbered list markers
-          .replace(/^\*\s+/, '') // Remove bullet points
-          .trim();
-        
-        if (cleaned.length > 0) {
-          scienceNotes.push(cleaned);
-          break; // Break after finding first keyword match in paragraph
+      "thermal_engineering": {
+        "heat_transfer_mode": "convection",
+        "thermal_gradient": "15°C/cm"
+      },
+      "process_parameters": {
+        "critical_times": {
+          "minimum": 20,
+          "optimal": 25,
+          "maximum": 30,
+          "unit": "minutes"
         }
-      }
-    }
-  });
-  
-  // If we still don't have any science notes, look for sentences
-  if (scienceNotes.length === 0) {
-    const sentences = text.split(/[.!?]+\s+/);
-    
-    for (const sentence of sentences) {
-      const lowerSentence = sentence.toLowerCase();
-      for (const keyword of scienceKeywords) {
-        if (lowerSentence.includes(keyword) && sentence.length > 20) {
-          scienceNotes.push(sentence.trim());
-          break;
+      },
+      "troubleshooting_matrix": [
+        {
+          "problem": "undercooking",
+          "diagnostic_tests": ["Internal temperature check"],
+          "corrections": ["Extend cooking time by 5 minutes"],
+          "prevention": ["Use oven thermometer to verify temperature"]
         }
+      ],
+      "safety_protocols": {
+        "critical_limits": "Internal temperature must reach at least 74°C (165°F)"
       }
-      
-      // Limit to 3 extracted notes
-      if (scienceNotes.length >= 3) break;
     }
+  ],
+  "global_analysis": {
+    "cascade_effects": "How steps interact and influence each other"
   }
-  
-  return scienceNotes.slice(0, 5); // Return at most 5 notes
-}
+}`;
 
 // Creates a fallback analysis structure when OpenAI fails
-function createFallbackAnalysis(instructions: string[]) {
+function createFallbackAnalysis(instructions) {
   const fallbackData = {
     step_analyses: instructions.map((step, index) => ({
       step_index: index,
@@ -255,7 +146,7 @@ function createFallbackAnalysis(instructions: string[]) {
 }
 
 // Function to retry OpenAI calls with exponential backoff
-async function retryOpenAI(url: string, options: any, maxRetries = 2) {
+async function retryOpenAI(url, options, maxRetries = 2) {
   let lastError;
   let delay = 1000;
   
@@ -336,89 +227,10 @@ serve(async (req) => {
       }
     }
 
-    // Enhanced system prompt for analyzing recipe steps with scientific rigor
-    const systemPrompt = `You are an authoritative culinary scientist with expertise spanning food chemistry, physics, and engineering, drawing from methodologies of Harold McGee, J. Kenji López-Alt, and Nathan Myhrvold's modernist cuisine principles.
-
-Analyze each recipe step with scientific rigor, considering chemical reactions, thermal properties, and process parameters.
-
-For each step, provide comprehensive scientific analysis including:
-
-1. CHEMICAL SYSTEMS:
-   - Primary and secondary reactions (e.g., maillard_reaction, protein_denaturation)
-   - Reaction mechanisms and critical compounds
-   - pH effects and water activity considerations
-
-2. THERMAL ENGINEERING:
-   - Heat transfer modes (conduction, convection, radiation)
-   - Temperature profiles and thermal gradients
-   - Heat capacity considerations and thermal behavior
-
-3. PROCESS PARAMETERS:
-   - Critical time ranges (minimum, optimal, maximum)
-   - Temperature tolerance windows
-   - Humidity and other environmental factors
-
-4. TROUBLESHOOTING MATRIX:
-   - Potential problems and their causes
-   - Diagnostic tests and indicators
-   - Corrective actions and prevention strategies
-
-Return structured JSON with the following format:
-{
-  "step_analyses": [
-    {
-      "step_index": 0,
-      "step_text": "The instruction text",
-      "reactions": ["maillard_reaction", "caramelization"],
-      "reaction_details": ["Scientific explanation of what's happening"],
-      "cooking_method": "roasting",
-      "temperature_celsius": 180,
-      "duration_minutes": 25,
-      "confidence": 0.95,
-      "chemical_systems": {
-        "primary_reactions": ["maillard_reaction"],
-        "secondary_reactions": ["caramelization"],
-        "reaction_mechanisms": "Detailed explanation of reaction pathways",
-        "critical_compounds": ["glucose", "amino_acids"],
-        "ph_effects": {
-          "range": "5.5-6.5",
-          "impact": "Affects browning rate and flavor development"
-        }
-      },
-      "thermal_engineering": {
-        "heat_transfer_mode": "convection",
-        "thermal_gradient": "15°C/cm"
-      },
-      "process_parameters": {
-        "critical_times": {
-          "minimum": 20,
-          "optimal": 25,
-          "maximum": 30,
-          "unit": "minutes"
-        }
-      },
-      "troubleshooting_matrix": [
-        {
-          "problem": "undercooking",
-          "diagnostic_tests": ["Internal temperature check"],
-          "corrections": ["Extend cooking time by 5 minutes"],
-          "prevention": ["Use oven thermometer to verify temperature"]
-        }
-      ],
-      "safety_protocols": {
-        "critical_limits": "Internal temperature must reach at least 74°C (165°F)"
-      }
-    }
-  ],
-  "global_analysis": {
-    "cascade_effects": "How steps interact and influence each other"
-  }
-}`;
-
     // User message containing the recipe steps to analyze
     const userMessage = `Analyze the scientific principles in each step of this recipe titled "${title}":
 
-    ${instructions.map((step: string, index: number) => `Step ${index + 1}: ${step}`).join('\n\n')}
+    ${instructions.map((step, index) => `Step ${index + 1}: ${step}`).join('\n\n')}
     
     Give a structured response following the required JSON format with comprehensive scientific details.`;
 
