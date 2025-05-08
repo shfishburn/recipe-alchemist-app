@@ -144,12 +144,6 @@ export function RecipeCarousel() {
                 aria-selected={activeIndex === index}
                 aria-label={`Go to slide ${index + 1}`}
                 tabIndex={activeIndex === index ? 0 : -1}
-                style={{
-                  width: activeIndex === index ? '16px' : '8px',
-                  height: '8px',
-                  maxWidth: activeIndex === index ? '16px' : '8px',
-                  maxHeight: '8px'
-                }}
               />
             ))}
           </div>
