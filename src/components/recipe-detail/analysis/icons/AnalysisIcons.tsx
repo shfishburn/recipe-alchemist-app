@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Beaker } from "lucide-react";
+import { FlaskRound } from "lucide-react";
 
 export function ChemistryIcon() {
-  return <Beaker className="h-5 w-5 mr-2 text-blue-600" />;
+  return <FlaskRound className="h-5 w-5 mr-2 text-blue-600" />;
 }
 
 export function TechniquesIcon() {
@@ -28,5 +28,5 @@ export function TroubleshootingIcon() {
 }
 
 export function ReactionIcon() {
-  return <Beaker className="h-5 w-5 mr-2 text-recipe-blue" />;
+  return <FlaskRound className="h-5 w-5 mr-2 text-recipe-blue" />;
 }

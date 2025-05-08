@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Utensils, BarChart, Beaker, MessageCircle, Settings } from 'lucide-react';
+import { Utensils, BarChart, MessageCircle, Settings, FlaskRound } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -46,7 +46,7 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
   const tabItems = [
     { value: 'recipe', icon: <Utensils className="h-4 w-4 mr-2" />, label: 'Recipe' },
     { value: 'nutrition', icon: <BarChart className="h-4 w-4 mr-2" />, label: 'Nutrition' },
-    { value: 'science', icon: <Beaker className="h-4 w-4 mr-2" />, label: 'Science', highlight: hasAnalysisData },
+    { value: 'science', icon: <FlaskRound className="h-4 w-4 mr-2" />, label: 'Science', highlight: hasAnalysisData },
     { value: 'modify', icon: <MessageCircle className="h-4 w-4 mr-2" />, label: 'Modify' },
     { value: 'utilities', icon: <Settings className="h-4 w-4 mr-2" />, label: 'Utilities' }
   ];
