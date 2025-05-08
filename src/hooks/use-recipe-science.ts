@@ -79,6 +79,12 @@ export const formatReactionName = (name: string): string => {
     .trim();
 };
 
+// Helper to get step reaction for a specific step index
+export const getStepReaction = (reactions: StepReaction[], stepIndex: number): StepReaction | null => {
+  if (!reactions || !Array.isArray(reactions)) return null;
+  return reactions.find(reaction => reaction.step_index === stepIndex) || null;
+};
+
 /**
  * Centralized hook to access all scientific data for a recipe
  */

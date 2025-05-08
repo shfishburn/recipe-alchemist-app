@@ -28,17 +28,17 @@ export function StepDisplay({
 }: StepDisplayProps) {
   const [showScience, setShowScience] = useState<boolean>(false);
   
-  // Determine if this step has scientific data
+  // Determine if this step has scientific data - check both reactions AND reaction_details
   const hasScience = stepReaction && 
-                     ((Array.isArray(stepReaction.reactions) && stepReaction.reactions.length > 0) ||
+                     ((Array.isArray(stepReaction.reaction_details) && stepReaction.reaction_details.length > 0) ||
+                      (Array.isArray(stepReaction.reactions) && stepReaction.reactions.length > 0) ||
                       stepReaction.chemical_systems || 
                       stepReaction.thermal_engineering ||
-                      stepReaction.process_parameters ||
-                      (Array.isArray(stepReaction.reaction_details) && stepReaction.reaction_details.length > 0));
+                      stepReaction.process_parameters);
     
   // Styling classes based on state
   const containerClasses = cn(
-    "flex flex-col p-3 rounded-md transition-colors border",
+    "flex flex-col p-3 rounded-md transition-colors border w-full",
     isCompleted ? "bg-green-50 hover:bg-green-100 border-green-200" : "hover:bg-gray-50 border-gray-100",
     onToggleComplete ? "cursor-pointer" : "",
     variant === 'cooking' ? "shadow-sm" : ""
