@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { StepDisplay } from '../common/StepDisplay';
-import { StepReaction } from '@/hooks/use-recipe-science';
+import { StepReaction, getStepReaction } from '@/hooks/use-recipe-science';
 import type { StepCategory } from '../common/StepCategoryLabel';
 import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
 

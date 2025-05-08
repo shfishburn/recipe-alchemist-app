@@ -85,6 +85,34 @@ export const getStepReaction = (reactions: StepReaction[], stepIndex: number): S
   return reactions.find(reaction => reaction.step_index === stepIndex) || null;
 };
 
+// Helper function to create fallback reactions from recipe instructions and science notes
+const createFallbackReactions = (recipe: Recipe): StepReaction[] => {
+  if (!recipe.instructions || !recipe.science_notes || !Array.isArray(recipe.science_notes)) {
+    return [];
+  }
+  
+  // Create a basic fallback reaction for each instruction step
+  return recipe.instructions.map((step, index) => {
+    // Use science note if available, otherwise use a generic note
+    const noteIndex = index % recipe.science_notes.length;
+    const scienceNote = recipe.science_notes[noteIndex] || 
+      "No detailed scientific analysis available for this step.";
+    
+    return {
+      step_index: index,
+      step_text: step,
+      reactions: ['cooking'],
+      reaction_details: [scienceNote],
+      confidence: 0.5,
+      cooking_method: 'Basic Cooking',
+      metadata: {
+        isFallback: true,
+        originalNote: scienceNote
+      }
+    };
+  });
+};
+
 /**
  * Centralized hook to access all scientific data for a recipe
  */
@@ -109,34 +137,23 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
         
         if (error) {
           console.error('Error fetching recipe reactions:', error);
-          return [];
+          // Return fallback data in case of error
+          return createFallbackReactions(recipe);
         }
         
         console.log('Recipe step reactions data received:', data);
         
+        // If no reactions found or empty data, create fallback reactions
         if (!data || data.length === 0) {
-          console.log('No reaction data found for recipe ID:', recipe.id);
-          
-          // If no reactions found but we have science notes, create a fallback reaction
-          if (recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0) {
-            // Create a basic fallback reaction for each instruction step
-            return recipe.instructions.map((step, index) => ({
-              step_index: index,
-              step_text: step,
-              reactions: ['cooking'],
-              reaction_details: [
-                `Automatic fallback analysis: ${recipe.science_notes[index % recipe.science_notes.length]}`
-              ],
-              confidence: 0.5,
-              cooking_method: 'Basic Cooking'
-            } as StepReaction));
-          }
+          console.log('No reaction data found for recipe ID, creating fallbacks:', recipe.id);
+          return createFallbackReactions(recipe);
         }
         
-        return (data || []) as StepReaction[];
+        return data as StepReaction[];
       } catch (err) {
         console.error('Error in reaction query execution:', err);
-        return [];
+        // Return fallback data in case of error
+        return createFallbackReactions(recipe);
       }
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes

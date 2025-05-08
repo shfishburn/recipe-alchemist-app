@@ -46,7 +46,7 @@ export function StepDisplay({
   
   // Updated text classes to match ingredient sizing
   const textClasses = cn(
-    "text-sm sm:text-base leading-relaxed",
+    "text-sm sm:text-base leading-relaxed break-words",
     isCompleted ? "line-through text-muted-foreground" : "text-foreground"
   );
   

@@ -7,7 +7,7 @@ import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { InstructionStep } from './instructions/InstructionStep';
 import { useStepCompletion } from './instructions/useStepCompletion';
-import { useRecipeScience } from '@/hooks/use-recipe-science';
+import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
 
 interface RecipeInstructionsProps {
   recipe: Recipe;
@@ -44,7 +44,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
             {hasInstructions ? (
               <ol className="space-y-4 w-full">
                 {recipe.instructions.map((step, index) => {
-                  const stepReaction = stepReactions?.[index] || null;
+                  const stepReaction = getStepReaction(stepReactions, index);
                   const isLastStep = index === recipe.instructions.length - 1;
                   
                   return (
