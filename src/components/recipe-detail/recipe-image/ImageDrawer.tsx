@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, ImagePlus, Edit, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ImageDrawerProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function ImageDrawer({
 }: ImageDrawerProps) {
   const [expanded, setExpanded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const isMobile = useIsMobile();
   
   // Safe mounting/unmounting lifecycle
   useEffect(() => {
@@ -76,7 +78,7 @@ export function ImageDrawer({
                 <img
                   src={imageUrl}
                   alt={title}
-                  className="max-h-[35vh] object-contain rounded-md"
+                  className="max-h-[35vh] md:max-h-[45vh] object-contain rounded-md"
                   onError={onError}
                 />
                 <Button 
@@ -98,8 +100,12 @@ export function ImageDrawer({
             )}
           </div>
           
-          <DrawerFooter className="px-4 pb-6 pt-0">
-            <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:justify-center gap-2 w-full">
+          {/* Replace the standard DrawerFooter with mobile-optimized one */}
+          <div className={isMobile ? "mobile-drawer-footer" : "px-4 pb-6 pt-0"}>
+            <div className={isMobile 
+              ? "grid grid-cols-1 gap-2 w-full" 
+              : "grid grid-cols-1 sm:flex sm:flex-wrap sm:justify-center gap-2 w-full"
+            }>
               {imageUrl && !imageError ? (
                 <>
                   <Button
@@ -135,7 +141,7 @@ export function ImageDrawer({
                   onClick={onGenerate}
                   disabled={isGenerating}
                   variant="secondary"
-                  className="bg-recipe-blue text-white hover:bg-recipe-blue/80 touch-target-base w-full sm:w-auto"
+                  className="bg-recipe-blue text-white hover:bg-recipe-blue/80 touch-target-base w-full"
                 >
                   {isGenerating ? (
                     <>
@@ -151,7 +157,7 @@ export function ImageDrawer({
                 </Button>
               )}
             </div>
-          </DrawerFooter>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

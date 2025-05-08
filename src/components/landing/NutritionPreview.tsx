@@ -1,12 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartPie, Activity } from 'lucide-react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from '@/components/ui/carousel';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   macroDistributionData, 
@@ -20,37 +15,70 @@ import { MacroLegend } from './nutrition/MacroLegend';
 export function NutritionPreview() {
   const isMobile = useIsMobile();
   const [activeSlide, setActiveSlide] = useState(0);
-  const [api, setApi] = useState<any>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   // Auto-scroll carousel with pause on hover
   const [isPaused, setIsPaused] = useState(false);
   
+  // Handle auto-scrolling
   useEffect(() => {
     if (isPaused) return;
     
     const interval = setInterval(() => {
       const nextSlide = (activeSlide + 1) % macroDistributionData.length;
       setActiveSlide(nextSlide);
-      api?.scrollTo(nextSlide);
+      
+      // Scroll to the next slide
+      if (scrollRef.current) {
+        const slideWidth = scrollRef.current.clientWidth;
+        scrollRef.current.scrollTo({
+          left: slideWidth * nextSlide,
+          behavior: 'smooth'
+        });
+      }
     }, 5000); // Change slide every 5 seconds
     
     return () => clearInterval(interval);
-  }, [api, activeSlide, isPaused]);
+  }, [activeSlide, isPaused]);
   
-  // Handle API events
+  // Handle scroll events to update active slide
   useEffect(() => {
-    if (!api) return;
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
     
-    const onSelect = () => {
-      setActiveSlide(api.selectedScrollSnap());
+    const handleScroll = () => {
+      if (!scrollContainer) return;
+      
+      const scrollPosition = scrollContainer.scrollLeft;
+      const slideWidth = scrollContainer.clientWidth;
+      const newIndex = Math.round(scrollPosition / slideWidth);
+      
+      if (newIndex !== activeSlide && newIndex >= 0 && newIndex < macroDistributionData.length) {
+        setActiveSlide(newIndex);
+      }
     };
     
-    api.on('select', onSelect);
-    
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      api.off('select', onSelect);
+      scrollContainer.removeEventListener('scroll', handleScroll);
     };
-  }, [api]);
+  }, [activeSlide]);
+  
+  // Scroll to selected slide when pagination is clicked
+  const handleSelectSlide = (index: number) => {
+    setActiveSlide(index);
+    
+    if (scrollRef.current) {
+      const slideWidth = scrollRef.current.clientWidth;
+      scrollRef.current.scrollTo({
+        left: slideWidth * index,
+        behavior: 'smooth'
+      });
+    }
+    
+    setIsPaused(true); // Pause auto-scroll when user navigates
+    setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
+  };
   
   return (
     <div className="w-full flex flex-col items-center">
@@ -77,39 +105,39 @@ export function NutritionPreview() {
             className="w-full"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
+            role="region" 
+            aria-label="Nutrition information carousel"
           >
-            <Carousel
-              opts={{
-                align: "center",
-                loop: true,
-              }}
-              className="w-full"
-              setApi={setApi}
-            >
-              <CarouselContent>
+            {/* Replace Carousel with native scroll */}
+            <div className="w-full overflow-hidden">
+              <div 
+                ref={scrollRef} 
+                className="native-scroll-carousel"
+                style={{ scrollSnapType: 'x mandatory' }}
+              >
                 {macroDistributionData.map((item, index) => (
-                  <CarouselItem key={index} className="md:basis-full flex justify-center">
+                  <div 
+                    key={index} 
+                    className="native-scroll-carousel-item" 
+                    style={{ scrollSnapAlign: 'start' }}
+                    aria-hidden={activeSlide !== index}
+                  >
                     <MacroCarouselItem 
                       item={item} 
                       carbsData={carbsData} 
                       fatsData={fatsData} 
                     />
-                  </CarouselItem>
+                  </div>
                 ))}
-              </CarouselContent>
-            </Carousel>
+              </div>
+            </div>
           </div>
           
           <div className="flex justify-center w-full mt-2">
             <CarouselPagination 
               totalItems={macroDistributionData.length}
               activeSlide={activeSlide}
-              onSelectSlide={(index) => {
-                setActiveSlide(index);
-                api?.scrollTo(index);
-                setIsPaused(true); // Pause auto-scroll when user navigates
-                setTimeout(() => setIsPaused(false), 5000); // Resume after 5 seconds
-              }}
+              onSelectSlide={handleSelectSlide}
             />
           </div>
           

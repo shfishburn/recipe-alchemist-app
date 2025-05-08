@@ -1,83 +1,62 @@
 
 import React, { Suspense, useMemo, useState, useRef, useEffect } from 'react';
 import { useRecipes } from '@/hooks/use-recipes';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CarouselDots } from './carousel/CarouselDots';
 import { RecipeCard } from './carousel/RecipeCard';
 import { CookingPot } from 'lucide-react';
-import type { UseEmblaCarouselType } from 'embla-carousel-react';
 import type { Recipe } from '@/types/recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn as classnames } from '@/lib/utils';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
-  const [selectedIndex, setSelectedIndex] = React.useState(0);
-  const [carouselApi, setCarouselApi] = React.useState<UseEmblaCarouselType[1] | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const isMobile = useIsMobile();
+  const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Add touch state tracking
-  const [isTouching, setIsTouching] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
-
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
     return recipes?.slice(0, 5) || [];
   }, [recipes]);
 
-  // Optimize carousel options with correct TypeScript types
-  const carouselOptions = useMemo(() => ({
-    align: "center" as const, // Specify literal type and center the items
-    loop: true,
-    dragFree: true, // Enable for all devices
-    inViewThreshold: 0.6,
-    dragThreshold: 10, // Lower threshold for touch
-    speed: 15, // Faster animation for responsiveness
-  }), []);
-
-  React.useEffect(() => {
-    if (!carouselApi) return;
-
-    const onSelect = () => {
-      setSelectedIndex(carouselApi.selectedScrollSnap());
-    };
-
-    carouselApi.on('select', onSelect);
-    onSelect();
-
-    return () => {
-      carouselApi.off('select', onSelect);
-    };
-  }, [carouselApi]);
-
-  // Add touch event handling with passive listeners
+  // Handle scroll events to update active dot
   useEffect(() => {
-    const element = carouselRef.current;
-    if (!element) return;
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
     
-    const touchStartHandler = () => setIsTouching(true);
-    const touchEndHandler = () => setIsTouching(false);
-    
-    element.addEventListener('touchstart', touchStartHandler, { passive: true });
-    element.addEventListener('touchend', touchEndHandler, { passive: true });
-    element.addEventListener('touchcancel', touchEndHandler, { passive: true });
-    
-    return () => {
-      element.removeEventListener('touchstart', touchStartHandler);
-      element.removeEventListener('touchend', touchEndHandler);
-      element.removeEventListener('touchcancel', touchEndHandler);
+    const handleScroll = () => {
+      if (!scrollContainer) return;
+      
+      const scrollPosition = scrollContainer.scrollLeft;
+      const itemWidth = scrollContainer.clientWidth * (isMobile ? 0.85 : 0.45);
+      const newIndex = Math.round(scrollPosition / itemWidth);
+      
+      if (newIndex !== activeIndex && newIndex >= 0 && newIndex < featuredRecipes.length) {
+        setActiveIndex(newIndex);
+      }
     };
-  }, []);
+    
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+    };
+  }, [activeIndex, featuredRecipes.length, isMobile]);
+
+  // Scroll to item when user clicks on a dot
+  const scrollToItem = (index: number) => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+    
+    const itemWidth = scrollContainer.clientWidth * (isMobile ? 0.85 : 0.45);
+    scrollContainer.scrollTo({
+      left: itemWidth * index,
+      behavior: 'smooth'
+    });
+    setActiveIndex(index);
+  };
 
   return (
-    <div className="w-full flex flex-col items-center" ref={carouselRef}>
+    <div className="w-full flex flex-col items-center">
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto">
           {[1, 2, 3].map((i) => (
@@ -98,54 +77,62 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          <div className="w-full flex justify-center">
-            <Carousel
-              opts={carouselOptions}
-              className="w-full no-touch-delay max-w-5xl"
-              setApi={setCarouselApi}
-            >
-              <CarouselContent className="swipe-horizontal hw-accelerated -ml-2 md:-ml-4 flex items-center">
-                {featuredRecipes.map((recipe) => (
-                  <CarouselItem key={recipe.id} className={classnames(
-                    isMobile ? "basis-full pl-2" : "sm:basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4",
-                    "hw-accelerated touch-optimized" // Add optimizations
-                  )}>
-                    <div className="flex justify-center">
-                      <RecipeCard recipe={recipe} />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              
-              {/* Update arrows for better touch targets */}
-              <CarouselPrevious className={classnames(
-                "hidden md:flex touch-target",
-                isMobile ? "left-0 h-8 w-8" : "-left-3 md:-left-4 lg:-left-6",
-                "touch-feedback tap-highlight-none z-10" // Add touch feedback
-              )} />
-              <CarouselNext className={classnames(
-                "hidden md:flex touch-target",
-                isMobile ? "right-0 h-8 w-8" : "-right-3 md:-right-4 lg:-right-6",
-                "touch-feedback tap-highlight-none z-10" // Add touch feedback
-              )} />
-            </Carousel>
-          </div>
-          
-          {/* Pagination moved outside the carousel for better positioning */}
-          <div className="w-full flex flex-col items-center mt-4 md:mt-6">
-            {/* Only show dots on desktop */}
-            {!isMobile && (
-              <CarouselDots 
-                totalItems={featuredRecipes.length} 
-                selectedIndex={selectedIndex} 
-              />
-            )}
+          {/* Replace Carousel with native scroll */}
+          <div 
+            className="w-full max-w-5xl mx-auto scroll-container-with-indicators"
+            role="region" 
+            aria-label="Recipe carousel"
+          >
             <div 
-              className="text-center text-xs md:text-sm text-muted-foreground mt-2" 
+              ref={scrollRef}
+              className="scroll-container" 
+              tabIndex={0}
               aria-live="polite"
             >
-              Slide {selectedIndex + 1} of {featuredRecipes.length || 0}
+              {featuredRecipes.map((recipe, index) => (
+                <div 
+                  key={recipe.id} 
+                  className={classnames(
+                    "scroll-item",
+                    isMobile ? "w-[85%]" : "w-[45%] md:w-[30%]"
+                  )}
+                  aria-hidden={activeIndex !== index}
+                >
+                  <div className="w-full h-full">
+                    <RecipeCard 
+                      recipe={recipe} 
+                      priority={index === 0 || index === 1}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
+          </div>
+          
+          {/* Pagination dots */}
+          <div className="scroll-dots" role="tablist">
+            {featuredRecipes.map((_, index) => (
+              <button
+                key={index}
+                className={classnames(
+                  "scroll-dot touch-target-base",
+                  activeIndex === index ? "scroll-dot-active" : ""
+                )}
+                onClick={() => scrollToItem(index)}
+                role="tab"
+                aria-selected={activeIndex === index}
+                aria-label={`Go to slide ${index + 1}`}
+                tabIndex={activeIndex === index ? 0 : -1}
+              />
+            ))}
+          </div>
+          
+          {/* A11y slide counter */}
+          <div 
+            className="text-center text-xs md:text-sm text-muted-foreground mt-1" 
+            aria-live="polite"
+          >
+            Slide {activeIndex + 1} of {featuredRecipes.length || 0}
           </div>
         </div>
       )}
