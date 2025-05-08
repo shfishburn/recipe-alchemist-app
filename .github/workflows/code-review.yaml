@@ -1,62 +1,145 @@
-name: Basic Code Review
+name: Summarize Changes and Detect Issues
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths-ignore:
+      - '**/dependabot/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**/dependabot/**'
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  create_summary:
+  analyze_changes:
+    if: ${{ 
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' && !startsWith(github.head_ref, 'dependabot/')) 
+    }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Get commit info
         id: commit_info
         run: |
-          echo "author=$(git log -1 --pretty=format:'%an')" >> $GITHUB_OUTPUT
-          echo "commit_msg=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
+          AUTHOR=$(git log -1 --pretty=format:'%an')
+          COMMIT_MSG=$(git log -1 --pretty=format:'%s')
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
-      - name: Create diff
+      - name: Summarize code changes
+        id: summarize_changes
         run: |
-          git diff HEAD^ HEAD > changes.diff
-          git diff --name-status HEAD^ HEAD > changes_summary.txt
-          git diff --shortstat HEAD^ HEAD >> changes_summary.txt
+          BEFORE=${{ github.event.before }}
+          AFTER=${{ github.event.after }}
 
-      - name: Create issue
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "### Files Changed (initial commit):" > changes_summary.txt
+            git diff-tree --name-status -r $AFTER >> changes_summary.txt
+            STATS=$(git show --stat --pretty="" $AFTER)
+            git diff-tree -p $AFTER > changes.diff
+          else
+            echo "### Files Changed:" > changes_summary.txt
+            git diff $BEFORE $AFTER --name-status >> changes_summary.txt
+            STATS=$(git diff --shortstat $BEFORE $AFTER)
+            git diff $BEFORE $AFTER > changes.diff
+          fi
+
+          echo -e "\n### Change Statistics:" >> changes_summary.txt
+          echo "$STATS" >> changes_summary.txt
+
+      - name: Upload full diff as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: full-diff
+          path: changes.diff
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+        continue-on-error: true
+
+      - name: Install dependencies
+        run: npm ci || npm install
+        continue-on-error: true
+
+      - name: Lint JavaScript/TypeScript files
+        run: |
+          BEFORE=${{ github.event.before }}
+          AFTER=${{ github.event.after }}
+          CHANGED_FILES=$(git diff --name-only $BEFORE $AFTER | grep -E "\.(js|ts|jsx|tsx)$" || true)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No JS/TS files changed."
+          else
+            echo "Linting the following files:"
+            echo "$CHANGED_FILES"
+            npx eslint $CHANGED_FILES || echo "Lint issues; continuing"
+          fi
+        continue-on-error: true
+
+      - name: Create issue with summary
         uses: actions/github-script@v6
+        env:
+          AUTHOR: ${{ steps.commit_info.outputs.author }}
+          COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            
-            // Simple file reading
-            const summary = fs.existsSync('changes_summary.txt') ? 
-              fs.readFileSync('changes_summary.txt', 'utf8') : 
-              'No summary available';
-            
-            const diff = fs.existsSync('changes.diff') ? 
-              fs.readFileSync('changes.diff', 'utf8').substring(0, 5000) : 
-              'No diff available';
-            
-            // Simple issue creation
+            let summary = 'No summary available';
+            if (fs.existsSync('changes_summary.txt')) {
+              summary = fs.readFileSync('changes_summary.txt', 'utf8');
+            }
+            let diff = 'No diff available';
+            if (fs.existsSync('changes.diff')) {
+              const content = fs.readFileSync('changes.diff', 'utf8');
+              diff = content.length > 5000
+                ? content.substring(0, 5000) + '\n... (truncated)'
+                : content;
+            }
+            const labels = [];
+            const existing = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            if (existing.data.some(l => l.name === 'automated-review')) {
+              labels.push('automated-review');
+            }
+            const body = [
+              '## Code Review for Recent Changes',
+              '',
+              `**Commit**: ${context.sha}`,
+              `**Author**: ${process.env.AUTHOR}`,
+              `**Message**: ${process.env.COMMIT_MSG}`,
+              '',
+              '### Summary of Changes',
+              '',
+              summary,
+              '',
+              '### Code Diff',
+              '',
+              '```diff',
+              diff,
+              '```',
+              '',
+              'This issue was automatically generated by the workflow.'
+            ].join('\n');
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Code Review: ${context.sha.substring(0, 7)}`,
-              body: 'Commit: ' + context.sha + '\n\n' +
-                    'Author: ' + process.env.AUTHOR + '\n\n' +
-                    'Message: ' + process.env.COMMIT_MSG + '\n\n' +
-                    'Changes:\n\n' + summary + '\n\n' +
-                    'Diff:\n\n```diff\n' + diff + '\n```'
+              title: `Code Review for commit ${context.sha.substring(0,7)}`,
+              body,
+              labels
             });
-          env:
-            AUTHOR: ${{ steps.commit_info.outputs.author }}
-            COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg }}
+            console.log('Issue created.');
