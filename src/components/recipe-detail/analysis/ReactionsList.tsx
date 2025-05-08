@@ -21,7 +21,7 @@ export function ReactionsList({ stepReactions, onRegenerateClick }: ReactionsLis
           Step-by-Step Reaction Analysis
         </h3>
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
-          <p className="text-slate-600 mb-3">No reaction analysis data available for this recipe.</p>
+          <p className="scientific-content mb-3">No reaction analysis data available for this recipe.</p>
           {onRegenerateClick && (
             <Button 
               onClick={onRegenerateClick}
@@ -51,7 +51,7 @@ export function ReactionsList({ stepReactions, onRegenerateClick }: ReactionsLis
           Step-by-Step Reaction Analysis
         </h3>
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
-          <p className="text-slate-600 mb-3">Automatic fallback analysis generated. For more detailed analysis, please try regenerating.</p>
+          <p className="scientific-content mb-3">Automatic fallback analysis generated. For more detailed analysis, please try regenerating.</p>
           {onRegenerateClick && (
             <Button 
               onClick={onRegenerateClick}
@@ -147,7 +147,7 @@ export function ReactionsList({ stepReactions, onRegenerateClick }: ReactionsLis
         ))}
         
         {filter && filteredReactions.length === 0 && (
-          <p className="text-muted-foreground italic">
+          <p className="scientific-content italic">
             No steps found with the selected reaction type.
           </p>
         )}
@@ -223,11 +223,11 @@ function StepReactionItem({ reaction, index }: { reaction: StepReaction, index: 
           )}
           
           {reactionDetails && !isFallbackData && (
-            <p className="text-sm text-slate-600 mt-2">{reactionDetails}</p>
+            <p className="scientific-content mt-2">{reactionDetails}</p>
           )}
           
           {isFallbackData && (
-            <p className="text-sm text-slate-500 italic mt-2">
+            <p className="scientific-content italic mt-2">
               Automatic fallback analysis
             </p>
           )}
@@ -267,7 +267,205 @@ function StepReactionItem({ reaction, index }: { reaction: StepReaction, index: 
           {expanded && (
             <div className="mt-3 pt-3 border-t border-blue-200 text-sm space-y-4">
               {/* Enhanced data sections */}
-              {/* ... keep existing code for the enhanced data sections ... */}
+              {reaction.chemical_systems && (
+                <div>
+                  <h4 className="font-medium text-slate-700">Chemical Systems</h4>
+                  {reaction.chemical_systems.primary_reactions && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Primary Reactions</h5>
+                      <ul className="list-disc list-inside">
+                        {reaction.chemical_systems.primary_reactions.map((reaction, i) => (
+                          <li key={`primary-${i}`} className="scientific-content">{reaction}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {reaction.chemical_systems.secondary_reactions && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Secondary Reactions</h5>
+                      <ul className="list-disc list-inside">
+                        {reaction.chemical_systems.secondary_reactions.map((reaction, i) => (
+                          <li key={`secondary-${i}`} className="scientific-content">{reaction}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {reaction.chemical_systems.reaction_mechanisms && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Reaction Mechanisms</h5>
+                      <p className="scientific-content">{reaction.chemical_systems.reaction_mechanisms}</p>
+                    </div>
+                  )}
+                  {reaction.chemical_systems.critical_compounds && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Critical Compounds</h5>
+                      <ul className="list-disc list-inside">
+                        {reaction.chemical_systems.critical_compounds.map((compound, i) => (
+                          <li key={`compound-${i}`} className="scientific-content">{compound}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {reaction.chemical_systems.ph_effects && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">pH Effects</h5>
+                      {reaction.chemical_systems.ph_effects.range && (
+                        <p className="scientific-content">
+                          <strong>Range:</strong> {reaction.chemical_systems.ph_effects.range}
+                        </p>
+                      )}
+                      {reaction.chemical_systems.ph_effects.impact && (
+                        <p className="scientific-content">
+                          <strong>Impact:</strong> {reaction.chemical_systems.ph_effects.impact}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {reaction.chemical_systems.water_activity && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Water Activity</h5>
+                      {reaction.chemical_systems.water_activity.value !== undefined && (
+                        <p className="scientific-content">
+                          <strong>Value:</strong> {reaction.chemical_systems.water_activity.value}
+                        </p>
+                      )}
+                      {reaction.chemical_systems.water_activity.significance && (
+                        <p className="scientific-content">
+                          <strong>Significance:</strong> {reaction.chemical_systems.water_activity.significance}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {reaction.thermal_engineering && (
+                <div>
+                  <h4 className="font-medium text-slate-700">Thermal Engineering</h4>
+                  {reaction.thermal_engineering.heat_transfer_mode && (
+                    <p className="scientific-content">
+                      <strong>Heat Transfer Mode:</strong> {reaction.thermal_engineering.heat_transfer_mode}
+                    </p>
+                  )}
+                  {reaction.thermal_engineering.thermal_gradient && (
+                    <p className="scientific-content">
+                      <strong>Thermal Gradient:</strong> {reaction.thermal_engineering.thermal_gradient}
+                    </p>
+                  )}
+                  {reaction.thermal_engineering.temperature_profile && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Temperature Profile</h5>
+                      {reaction.thermal_engineering.temperature_profile.surface !== undefined && (
+                        <p className="scientific-content">
+                          <strong>Surface:</strong> {reaction.thermal_engineering.temperature_profile.surface}
+                          {reaction.thermal_engineering.temperature_profile.unit || '°C'}
+                        </p>
+                      )}
+                      {reaction.thermal_engineering.temperature_profile.core !== undefined && (
+                        <p className="scientific-content">
+                          <strong>Core:</strong> {reaction.thermal_engineering.temperature_profile.core}
+                          {reaction.thermal_engineering.temperature_profile.unit || '°C'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {reaction.thermal_engineering.heat_capacity_considerations && (
+                    <p className="scientific-content">
+                      <strong>Heat Capacity Considerations:</strong> {reaction.thermal_engineering.heat_capacity_considerations}
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {reaction.process_parameters && (
+                <div>
+                  <h4 className="font-medium text-slate-700">Process Parameters</h4>
+                  {reaction.process_parameters.critical_times && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Critical Times</h5>
+                      {reaction.process_parameters.critical_times.minimum !== undefined && (
+                        <p className="scientific-content">
+                          <strong>Minimum:</strong> {reaction.process_parameters.critical_times.minimum}
+                          {reaction.process_parameters.critical_times.unit || ' minutes'}
+                        </p>
+                      )}
+                      {reaction.process_parameters.critical_times.optimal !== undefined && (
+                        <p className="scientific-content">
+                          <strong>Optimal:</strong> {reaction.process_parameters.critical_times.optimal}
+                          {reaction.process_parameters.critical_times.unit || ' minutes'}
+                        </p>
+                      )}
+                      {reaction.process_parameters.critical_times.maximum !== undefined && (
+                        <p className="scientific-content">
+                          <strong>Maximum:</strong> {reaction.process_parameters.critical_times.maximum}
+                          {reaction.process_parameters.critical_times.unit || ' minutes'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {reaction.process_parameters.tolerance_windows && (
+                    <div>
+                      <h5 className="font-medium text-slate-600">Tolerance Windows</h5>
+                      {reaction.process_parameters.tolerance_windows.temperature && (
+                        <p className="scientific-content">
+                          <strong>Temperature:</strong> {reaction.process_parameters.tolerance_windows.temperature}
+                        </p>
+                      )}
+                      {reaction.process_parameters.tolerance_windows.time && (
+                        <p className="scientific-content">
+                          <strong>Time:</strong> {reaction.process_parameters.tolerance_windows.time}
+                        </p>
+                      )}
+                      {reaction.process_parameters.tolerance_windows.humidity && (
+                        <p className="scientific-content">
+                          <strong>Humidity:</strong> {reaction.process_parameters.tolerance_windows.humidity}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {reaction.troubleshooting_matrix && reaction.troubleshooting_matrix.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-slate-700">Troubleshooting Matrix</h4>
+                  {reaction.troubleshooting_matrix.map((issue, i) => (
+                    <div key={`issue-${i}`} className="mb-3">
+                      <h5 className="font-medium text-slate-600">Problem: {issue.problem || 'N/A'}</h5>
+                      {issue.diagnostic_tests && (
+                        <div>
+                          <h6 className="font-medium text-slate-500">Diagnostic Tests</h6>
+                          <ul className="list-disc list-inside">
+                            {issue.diagnostic_tests.map((test, j) => (
+                              <li key={`test-${j}`} className="scientific-content">{test}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {issue.corrections && (
+                        <div>
+                          <h6 className="font-medium text-slate-500">Corrections</h6>
+                          <ul className="list-disc list-inside">
+                            {issue.corrections.map((correction, k) => (
+                              <li key={`correction-${k}`} className="scientific-content">{correction}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {issue.prevention && (
+                        <div>
+                          <h6 className="font-medium text-slate-500">Prevention</h6>
+                          <ul className="list-disc list-inside">
+                            {issue.prevention.map((prevention, l) => (
+                              <li key={`prevention-${l}`} className="scientific-content">{prevention}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </>

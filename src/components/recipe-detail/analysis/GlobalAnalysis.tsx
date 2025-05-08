@@ -42,7 +42,7 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
               <LineChart className="h-4 w-4 text-recipe-blue" />
               Step Interactions
             </h3>
-            <p className={cn("text-sm text-slate-600 scientific-content")}>
+            <p className="scientific-content text-sm">
               {globalAnalysis.cascade_effects}
             </p>
           </div>
@@ -55,7 +55,7 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
               <Scale className="h-4 w-4 text-amber-600" />
               Scaling Considerations
             </h3>
-            <p className={cn("text-sm text-slate-600 scientific-content")}>
+            <p className="scientific-content text-sm">
               {globalAnalysis.scaling_considerations}
             </p>
           </div>
@@ -68,7 +68,7 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
               <Zap className="h-4 w-4 text-green-600" />
               Energy Efficiency
             </h3>
-            <p className={cn("text-sm text-slate-600 scientific-content")}>
+            <p className="scientific-content text-sm">
               {globalAnalysis.energy_systems}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
         {globalAnalysis.process_flow_optimization && (
           <div>
             <h3 className="text-sm font-medium text-slate-800 mb-1">Process Optimization</h3>
-            <p className={cn("text-sm text-slate-600 scientific-content")}>
+            <p className="scientific-content text-sm">
               {globalAnalysis.process_flow_optimization}
             </p>
           </div>
@@ -88,7 +88,7 @@ export function GlobalAnalysis({ globalAnalysis }: GlobalAnalysisProps) {
         {globalAnalysis.equipment_integration && (
           <div>
             <h3 className="text-sm font-medium text-slate-800 mb-1">Equipment Guidance</h3>
-            <p className={cn("text-sm text-slate-600 scientific-content")}>
+            <p className="scientific-content text-sm">
               {globalAnalysis.equipment_integration}
             </p>
           </div>

@@ -32,7 +32,7 @@ export function FormattedText({
   // Process the text to handle formatting with improved scientific content parsing
   const formattedBlocks = React.useMemo(() => {
     if (!text || typeof text !== 'string') {
-      return [<p key="empty">No content available</p>];
+      return [<p key="empty" className="text-gray-600">No content available</p>];
     }
     
     // Format nutrition values to whole numbers before processing blocks
@@ -52,27 +52,27 @@ export function FormattedText({
       if (block.match(/^[\w\s-]+\s*Methodology$/im) || 
           block.match(/^[\w\s-]+\s*Analysis$/im) ||
           block.match(/^Summary of Key Principles$/im)) {
-        return <MethodologyHeading block={block} blockIndex={blockIndex} />;
+        return <MethodologyHeading block={block} blockIndex={blockIndex} key={blockIndex} />;
       }
       
       // Dedicated handling for numbered sections with numeric or dash prefixes
       if (block.match(/^\d+\.\s+[\w\s]/m)) {
-        return <SectionBlock block={block} blockIndex={blockIndex} />;
+        return <SectionBlock block={block} blockIndex={blockIndex} key={blockIndex} />;
       }
       
       // Enhanced detection of bullet point lists with better pattern matching
       if (block.match(/^[\s\t]*[•\-*]\s+\S/m)) {
-        return <ListBlock block={block} blockIndex={blockIndex} type="bullet" />;
+        return <ListBlock block={block} blockIndex={blockIndex} type="bullet" key={blockIndex} />;
       }
       
       // Enhanced handling for numeric lists with better numbering preservation
       if (block.match(/^[\s\t]*\d+\.\s+\S/m)) {
-        return <ListBlock block={block} blockIndex={blockIndex} type="numbered" />;
+        return <ListBlock block={block} blockIndex={blockIndex} type="numbered" key={blockIndex} />;
       }
       
       // Enhanced heading pattern matching with scientific headers
       if (block.match(/^#{1,3}\s+[\w\s]/)) {
-        return <HeadingBlock block={block} blockIndex={blockIndex} />;
+        return <HeadingBlock block={block} blockIndex={blockIndex} key={blockIndex} />;
       }
       
       // Enhanced section divider handling (common in scientific content)

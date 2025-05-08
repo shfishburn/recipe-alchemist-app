@@ -6,6 +6,13 @@
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* Remove prose class conflict by being more specific */
+.scientific-content.prose,
+.scientific-content .prose {
+  color: #1f2937; /* Override prose default color */
+  max-width: none;
+}
+
 .scientific-content h3, 
 .scientific-content h4 {
   font-weight: 600;
@@ -18,10 +25,12 @@
 .scientific-content ol {
   margin-left: 1.5em;
   margin-bottom: 1em;
+  color: inherit; /* Ensure list items inherit text color */
 }
 
 .scientific-content li {
   margin-bottom: 0.5em;
+  color: inherit; /* Ensure list items inherit text color */
 }
 
 .scientific-content p {
@@ -42,7 +51,7 @@
 
 .scientific-content strong {
   font-weight: 600;
-  color: #04a118; /* Use recipe-blue for emphasis */
+  color: #166534; /* Use green for emphasis */
 }
 
 .scientific-content em {
@@ -67,6 +76,7 @@
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
+  color: inherit; /* Ensure table cells inherit color */
 }
 
 .scientific-content th {
@@ -84,19 +94,15 @@
   background-color: #f0f9ff; /* Consistent light blue background */
   border: 1px solid #bfdbfe;
   border-radius: 0.5rem;
+  color: inherit; /* Inherit text color from parent */
 }
 
-/* React to parent container color schemes */
-.bg-blue-50 .scientific-content {
-  color: #1e40af; /* Darker blue text in blue containers */
-}
-
-.bg-amber-50 .scientific-content {
-  color: #92400e; /* Amber text in amber containers */
-}
-
-.bg-green-50 .scientific-content {
-  color: #166534; /* Green text in green containers */
+/* Override text color for fallback messages */
+.scientific-content .text-slate-500,
+.scientific-content .text-slate-600,
+.scientific-content .text-slate-700,
+.scientific-content .text-slate-800 {
+  color: inherit !important;
 }
 
 /* Mobile optimizations for scientific content */

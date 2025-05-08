@@ -26,11 +26,12 @@ export function AnalysisSection({
         {icon}
         {title}
       </h3>
-      <div className={cn(`prose prose-sm max-w-none p-4 rounded-lg border`, bgClass, borderClass)}>
+      <div className={cn(`rounded-lg border p-4`, bgClass, borderClass)}>
         <FormattedText 
           text={content} 
           preserveWhitespace={true} 
           forceScientific={true}
+          className="scientific-content"
         />
       </div>
     </div>

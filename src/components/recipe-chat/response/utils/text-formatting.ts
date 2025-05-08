@@ -98,10 +98,9 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     if (i === text.length - 1 && currentText) {
       if (boldActive) {
         parts.push(
-          React.createElement('span', { 
-            key: `bold-${i}`, 
-            className: "font-semibold text-recipe-blue bg-recipe-blue/5 px-1.5 py-0.5 rounded-md border border-recipe-blue/10"
-          },
+          React.createElement('strong', { 
+            key: `bold-${i}`
+          }, 
             italicActive ? React.createElement('em', null, currentText) : currentText
           )
         );
@@ -136,7 +135,7 @@ export function containsScientificContent(text: string): boolean {
     'sodium', 'summation', 'verification', 'thermal', 'enzyme', 'ph',
     'acid', 'base', 'crystallization', 'polymerization', 'denaturation',
     'coagulation', 'colloid', 'suspension', 'heat transfer', 'conduction',
-    'convection', 'radiation', 'caramelization'
+    'convection', 'radiation', 'caramelization', 'hydrocolloids'
   ];
   
   const lowerText = text.toLowerCase();
