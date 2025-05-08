@@ -110,7 +110,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     },
     enabled: false, // Don't auto-fetch on mount
     staleTime: 1000 * 60 * 15, // Cache for 15 minutes
-    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes (previously cacheTime)
     retry: 1,
     meta: {
       onError: (error: any) => setError(error) // Use the meta option for error handling
