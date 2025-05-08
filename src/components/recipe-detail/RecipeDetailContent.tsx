@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 import { RecipeHeader } from '@/components/recipe-detail/RecipeHeader';
 import { RecipeImage } from '@/components/recipe-detail/RecipeImage';
@@ -29,7 +30,39 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   
   const [localRecipe, setLocalRecipe] = useState<Recipe>(recipe);
   const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id.split('-').pop() || id) ? id : '');
-  const { hasAnalysisData } = useRecipeScience(recipe);
+  const { hasAnalysisData, scienceNotes, refetch: refetchScience } = useRecipeScience(recipe);
+
+  // Add effect to sync recipe data
+  useEffect(() => {
+    setLocalRecipe(recipe);
+  }, [recipe]);
+
+  // Add effect to ensure science notes are persisted
+  useEffect(() => {
+    // Only update if we have analysis data and it's not already in the recipe
+    const hasNewScienceNotes = hasAnalysisData && 
+      scienceNotes.length > 0 && 
+      (!recipe.science_notes || 
+        JSON.stringify(recipe.science_notes) !== JSON.stringify(scienceNotes));
+    
+    if (hasNewScienceNotes) {
+      console.log('Persisting science notes to recipe:', scienceNotes);
+      
+      // Update recipe with science notes
+      updateRecipe.mutate(
+        { science_notes: scienceNotes },
+        {
+          onSuccess: () => {
+            console.log('Science notes successfully persisted');
+            refetch();
+          },
+          onError: (error) => {
+            console.error('Failed to persist science notes:', error);
+          }
+        }
+      );
+    }
+  }, [hasAnalysisData, scienceNotes, recipe.science_notes, updateRecipe, refetch]);
 
   // Unified recipe update handler
   const handleRecipeUpdate = (updatedRecipe: Recipe) => {
@@ -56,14 +89,13 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     // Only update if there are changes
     if (Object.keys(changedFields).length > 0) {
       updateRecipe.mutate(changedFields, {
-        onSuccess: () => refetch()
+        onSuccess: () => {
+          refetch();
+          // Also refresh science data to ensure it's up to date
+          refetchScience();
+        }
       });
     }
-  };
-
-  // Handle opening the chat in modify tab - keeping this function for now in case we need it later
-  const handleOpenChat = () => {
-    window.location.hash = 'modify';
   };
   
   return (

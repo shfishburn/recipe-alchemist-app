@@ -86,28 +86,64 @@ export const getStepReaction = (reactions: StepReaction[], stepIndex: number): S
 };
 
 // Helper function to create fallback reactions from recipe instructions and science notes
+// Updated to create more unique and useful fallbacks that don't appear duplicated
 const createFallbackReactions = (recipe: Recipe): StepReaction[] => {
-  if (!recipe.instructions || !recipe.science_notes || !Array.isArray(recipe.science_notes)) {
+  if (!recipe.instructions || !Array.isArray(recipe.instructions)) {
     return [];
   }
   
-  // Create a basic fallback reaction for each instruction step
+  // Use science notes if available, otherwise create generic notes
+  const scienceNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0
+    ? recipe.science_notes
+    : ["Scientific analysis is being processed.", "Check back later for detailed analysis."];
+
+  // Include timestamp to make each fallback unique
+  const timestamp = new Date().toISOString();
+  const fallbackId = Math.random().toString(36).substring(2, 10);
+  
+  // Create a basic fallback reaction for each instruction step with more variety
   return recipe.instructions.map((step, index) => {
-    // Use science note if available, otherwise use a generic note
-    const noteIndex = index % recipe.science_notes.length;
-    const scienceNote = recipe.science_notes[noteIndex] || 
-      "No detailed scientific analysis available for this step.";
+    // Use different science notes for variety
+    const noteIndex = index % scienceNotes.length;
+    const scienceNote = scienceNotes[noteIndex];
+    
+    // Extract potential cooking method from step
+    const lowerStep = step.toLowerCase();
+    let cookingMethod = "Basic Cooking";
+    let reactions = ["cooking"];
+    
+    if (lowerStep.includes("bake") || lowerStep.includes("oven")) {
+      cookingMethod = "Baking";
+      reactions = ["thermal_processing", "maillard_reaction"];
+    } else if (lowerStep.includes("boil") || lowerStep.includes("simmer")) {
+      cookingMethod = "Boiling";
+      reactions = ["hydration", "protein_denaturation"];
+    } else if (lowerStep.includes("fry") || lowerStep.includes("sauté")) {
+      cookingMethod = "Sautéing";
+      reactions = ["maillard_reaction", "caramelization"];
+    } else if (lowerStep.includes("grill") || lowerStep.includes("broil")) {
+      cookingMethod = "Grilling";
+      reactions = ["maillard_reaction", "fat_rendering"];
+    } else if (lowerStep.includes("mix") || lowerStep.includes("stir")) {
+      cookingMethod = "Mixing";
+      reactions = ["hydration", "emulsification"];
+    }
     
     return {
       step_index: index,
       step_text: step,
-      reactions: ['cooking'],
-      reaction_details: [scienceNote],
-      confidence: 0.5,
-      cooking_method: 'Basic Cooking',
+      reactions: reactions,
+      reaction_details: [
+        `${scienceNote} Analysis temporarily using fallback data.`,
+        `Detailed scientific data will be available on next analysis.`
+      ],
+      confidence: 0.4,
+      cooking_method: cookingMethod,
       metadata: {
-        isFallback: true,
-        originalNote: scienceNote
+        isTempFallback: true,
+        fallbackId: `${fallbackId}-${index}`,
+        timestamp: timestamp,
+        recipeId: recipe.id
       }
     };
   });
@@ -117,7 +153,7 @@ const createFallbackReactions = (recipe: Recipe): StepReaction[] => {
  * Centralized hook to access all scientific data for a recipe
  */
 export function useRecipeScience(recipe: Recipe): RecipeScienceData {
-  // Fetch reaction data for this recipe
+  // Fetch reaction data for this recipe with improved caching and stale-while-revalidate strategy
   const {
     data: stepReactions,
     isLoading,
@@ -141,7 +177,7 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
           return createFallbackReactions(recipe);
         }
         
-        console.log('Recipe step reactions data received:', data);
+        console.log('Recipe step reactions data received:', data?.length || 0, 'reactions');
         
         // If no reactions found or empty data, create fallback reactions
         if (!data || data.length === 0) {
@@ -149,19 +185,43 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
           return createFallbackReactions(recipe);
         }
         
-        return data as StepReaction[];
+        // Validate that each step has the required data
+        // And make sure no duplicates exist (by step_index)
+        const uniqueSteps = new Map();
+        data.forEach(reaction => {
+          if (!uniqueSteps.has(reaction.step_index)) {
+            uniqueSteps.set(reaction.step_index, reaction);
+          }
+        });
+        
+        // Convert Map back to array
+        const validatedReactions = Array.from(uniqueSteps.values());
+        
+        // If we have fewer reactions than instructions, create fallbacks for missing steps
+        if (validatedReactions.length < recipe.instructions?.length) {
+          console.log('Missing reactions for some steps, creating fallbacks for missing steps');
+          const existingStepIndices = validatedReactions.map(r => r.step_index);
+          const fallbackReactions = createFallbackReactions(recipe)
+            .filter(r => !existingStepIndices.includes(r.step_index));
+          
+          return [...validatedReactions, ...fallbackReactions];
+        }
+        
+        return validatedReactions as StepReaction[];
       } catch (err) {
         console.error('Error in reaction query execution:', err);
         // Return fallback data in case of error
         return createFallbackReactions(recipe);
       }
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 10, // Cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus to reduce API calls
+    refetchOnMount: false, // Don't refetch on mount to reduce API calls
   });
   
   // Determine if we have any science data
   const hasAnalysisData = 
-    (stepReactions && stepReactions.length > 0) || 
+    (stepReactions && stepReactions.length > 0 && !stepReactions[0]?.metadata?.isTempFallback) || 
     (recipe?.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0);
   
   // Extract science notes from recipe

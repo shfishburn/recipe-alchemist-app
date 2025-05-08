@@ -26,6 +26,18 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const analysisRequestRef = useRef<AbortController | null>(null);
+  const recipeIdRef = useRef<string>(recipe.id);
+  const lastAnalysisTimeRef = useRef<number>(0);
+  
+  // Track if we've seen this recipe before
+  useEffect(() => {
+    // If recipe ID changes, reset state
+    if (recipeIdRef.current !== recipe.id) {
+      recipeIdRef.current = recipe.id;
+      initialAnalysisRef.current = false;
+      setHasAppliedUpdates(false);
+    }
+  }, [recipe.id]);
   
   // Use error handler for standardized error handling
   const { error, setError, clearError } = useErrorHandler({
@@ -53,7 +65,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
           if (analysisRequestRef.current) {
             analysisRequestRef.current.abort();
           }
-        }, 30000);
+        }, 45000); // Increased timeout for larger recipes
         
         // The actual fetch operation
         const { data, error } = await supabase.functions.invoke('recipe-chat', {
@@ -76,11 +88,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         clearTimeout(timeoutId);
         analysisRequestRef.current = null;
         
-        console.log('Analysis data received:', data);
+        console.log('Analysis data received:', data ? 'success' : 'failed');
 
         if (error) {
           throw new Error(error.message || 'Failed to get analysis');
         }
+        
+        // Cache the last successful analysis time
+        lastAnalysisTimeRef.current = Date.now();
         
         // Return properly typed response
         return data as AnalysisResponse;
@@ -94,7 +109,8 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       }
     },
     enabled: false, // Don't auto-fetch on mount
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 15, // Cache for 15 minutes
+    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
     retry: 1,
     meta: {
       onError: (error: any) => setError(error) // Use the meta option for error handling
@@ -109,12 +125,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
     
     try {
-      toast.info('Analyzing recipe reactions...');
+      toast.info('Analyzing recipe reactions...', { duration: 3000 });
       
       console.log('Starting analysis of recipe reactions for recipe ID:', recipe.id);
       
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 30000);
+      const timeoutId = setTimeout(() => abortController.abort(), 45000); // Increased timeout
       
       try {
         const response = await supabase.functions.invoke('analyze-reactions', {
@@ -127,11 +143,14 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         
         clearTimeout(timeoutId);
         
-        console.log('Reaction analysis response:', response);
+        console.log('Reaction analysis response:', response ? 'success' : 'failed');
         
         if (response.error) {
           throw new Error(response.error as string || 'Failed to analyze reactions');
         }
+        
+        // Cache the last successful analysis time
+        lastAnalysisTimeRef.current = Date.now();
         
         toast.success('Reaction analysis complete');
         await refetchReactions();
@@ -156,6 +175,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   // Function to manually trigger analysis
   const handleAnalyze = useCallback(() => {
     if (!isLoading && !isAnalyzing) {
+      // Rate limit analysis - prevent triggering too frequently
+      const now = Date.now();
+      const analysisCooldown = 10000; // 10 seconds between analysis attempts
+      
+      if ((now - lastAnalysisTimeRef.current) < analysisCooldown) {
+        toast.info("Please wait before analyzing again", { duration: 3000 });
+        return;
+      }
+      
       setIsAnalyzing(true);
       clearError(); // Clear any previous errors
       toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
@@ -170,6 +198,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         analyzeReactions()
       ]).finally(() => {
         setIsAnalyzing(false);
+        setHasAppliedUpdates(false); // Reset this flag to allow new updates
       });
     }
   }, [refetch, isLoading, isAnalyzing, clearError]);
@@ -178,7 +207,13 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   useEffect(() => {
     if (!initialAnalysisRef.current && !isAnalyzing && !hasAnalysisData) {
       initialAnalysisRef.current = true;
-      handleAnalyze();
+      
+      // Small delay to prevent immediate analysis on mount
+      const timer = setTimeout(() => {
+        handleAnalyze();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
   }, [handleAnalyze, isAnalyzing, hasAnalysisData]);
 
@@ -194,20 +229,20 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       
       // Only proceed if we have meaningful science notes to update
       if (Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0) {
+        console.log('Applying science notes from analysis:', analysis.science_notes.length);
         setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
         
         // Update with safely constructed data - pass only the updated recipe to the callback
         if (onRecipeUpdate) {
           const updatedRecipe = { ...recipe, science_notes: analysis.science_notes };
           onRecipeUpdate(updatedRecipe);
-          toast.success('Recipe analysis complete');
+          toast.success('Recipe analysis data saved');
         }
-        
-        setIsAnalyzing(false);
       } else {
         toast.info('Analysis complete, but no changes needed.');
-        setIsAnalyzing(false);
       }
+      
+      setIsAnalyzing(false);
     }
   }, [analysis, hasAppliedUpdates, onRecipeUpdate, recipe, isAnalyzing]);
 

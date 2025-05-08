@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CardWrapper } from "@/components/ui/card-wrapper";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useAnalysisContent } from '@/hooks/use-analysis-content';
@@ -10,6 +10,7 @@ import { EmptyAnalysis } from './EmptyAnalysis';
 import { AnalysisContent } from './AnalysisContent';
 import { useRecipeAnalysisData } from './hooks/useRecipeAnalysisData';
 import { ErrorDisplay } from '@/components/ui/error-display';
+import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeAnalysisProps {
@@ -20,6 +21,7 @@ interface RecipeAnalysisProps {
 
 export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: RecipeAnalysisProps) {
   const { updateRecipe } = useRecipeUpdates(recipe.id);
+  const { toast } = useToast();
   
   // Use our custom hook for analysis data
   const {
@@ -45,6 +47,11 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
         },
         onError: (error) => {
           console.error('Failed to update recipe with analysis data:', error);
+          toast({
+            title: "Update Failed",
+            description: "Failed to save analysis data. Please try again.",
+            variant: "destructive"
+          });
         }
       }
     );
@@ -58,8 +65,43 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
   );
 
   // Check if we should show the analysis prompt
-  const showAnalysisPrompt = (!analysis && !isLoading && (!stepReactions || stepReactions.length === 0) && !isAnalyzing) || 
+  const showAnalysisPrompt = (!analysis && !isLoading && (!stepReactions || stepReactions.length === 0 || 
+    (stepReactions.length > 0 && stepReactions[0].metadata?.isTempFallback)) && !isAnalyzing) || 
     (!hasAnyContent && !isAnalyzing && !isLoading);
+
+  // Effect to check for duplicate fallback messages and trigger a refresh if needed
+  useEffect(() => {
+    if (stepReactions && stepReactions.length > 0) {
+      // Check if we have fallbacks that look like duplicates
+      const hasFallbacks = stepReactions.some(r => r.metadata?.isTempFallback);
+      const hasDuplicateMessages = stepReactions.some(r => 
+        r.reaction_details && 
+        Array.isArray(r.reaction_details) && 
+        r.reaction_details.some(detail => 
+          detail.includes("Automatic fallback analysis") || 
+          detail.includes("fallback data")
+        )
+      );
+      
+      // If we detect suspicious fallbacks and we're not already analyzing
+      if ((hasFallbacks || hasDuplicateMessages) && !isAnalyzing && !isLoading) {
+        console.log("Detected fallbacks or duplicate messages, will refresh analysis");
+        // Don't immediately trigger to avoid loops, wait a moment
+        const timer = setTimeout(() => {
+          if (onRecipeUpdate) {
+            toast({
+              title: "Refreshing Analysis",
+              description: "Improving recipe analysis data...",
+              duration: 3000
+            });
+            handleAnalyze();
+          }
+        }, 2000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [stepReactions, isAnalyzing, isLoading, handleAnalyze, onRecipeUpdate, toast]);
 
   // If there's an error, show the error display
   if (error) {
