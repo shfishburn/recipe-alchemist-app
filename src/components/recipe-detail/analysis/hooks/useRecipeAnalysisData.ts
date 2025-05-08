@@ -203,9 +203,35 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   }, [refetch, isLoading, isAnalyzing, clearError]);
 
-  // Auto-analyze when opened for the first time
+  // Improved logic to check if we already have valid analysis data
+  const hasValidAnalysisData = useCallback(() => {
+    // Check for complete analysis data
+    const hasCompleteAnalysis = hasAnalysisData && 
+      stepReactions && 
+      stepReactions.length > 0 && 
+      !stepReactions.some(r => r.metadata?.isTempFallback) &&
+      scienceNotes && 
+      scienceNotes.length > 0;
+    
+    console.log('Analysis data check:', { 
+      hasAnalysisData, 
+      stepReactionsCount: stepReactions?.length, 
+      hasFallbacks: stepReactions?.some(r => r.metadata?.isTempFallback),
+      scienceNotesCount: scienceNotes?.length,
+      hasCompleteAnalysis
+    });
+    
+    return hasCompleteAnalysis;
+  }, [hasAnalysisData, stepReactions, scienceNotes]);
+
+  // Auto-analyze when opened for the first time, but only if needed
   useEffect(() => {
-    if (!initialAnalysisRef.current && !isAnalyzing && !hasAnalysisData) {
+    // Only trigger analysis if:
+    // 1. We haven't analyzed this recipe before
+    // 2. We're not currently analyzing
+    // 3. We don't already have valid analysis data
+    if (!initialAnalysisRef.current && !isAnalyzing && !hasValidAnalysisData()) {
+      console.log('Auto-triggering analysis for recipe:', recipe.title);
       initialAnalysisRef.current = true;
       
       // Small delay to prevent immediate analysis on mount
@@ -214,8 +240,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       }, 500);
       
       return () => clearTimeout(timer);
+    } else if (!initialAnalysisRef.current) {
+      console.log('Skipping auto-analysis - data already present for:', recipe.title);
+      initialAnalysisRef.current = true;
     }
-  }, [handleAnalyze, isAnalyzing, hasAnalysisData]);
+  }, [handleAnalyze, isAnalyzing, hasValidAnalysisData, recipe.title]);
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {

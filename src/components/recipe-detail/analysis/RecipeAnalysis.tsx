@@ -64,38 +64,42 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     stepReactions
   );
 
-  // Check if we should show the analysis prompt
+  // Check if we should show the analysis prompt - improved logic to prevent unnecessary re-analysis
   const showAnalysisPrompt = (!analysis && !isLoading && (!stepReactions || stepReactions.length === 0 || 
-    (stepReactions.length > 0 && stepReactions[0].metadata?.isTempFallback)) && !isAnalyzing) || 
+    (stepReactions.length > 0 && stepReactions.every(reaction => reaction.metadata?.isTempFallback))) && !isAnalyzing) || 
     (!hasAnyContent && !isAnalyzing && !isLoading);
 
   // Effect to check for duplicate fallback messages and trigger a refresh if needed
   useEffect(() => {
-    if (stepReactions && stepReactions.length > 0) {
-      // Check if we have fallbacks that look like duplicates
-      const hasFallbacks = stepReactions.some(r => r.metadata?.isTempFallback);
-      const hasDuplicateMessages = stepReactions.some(r => 
-        r.reaction_details && 
-        Array.isArray(r.reaction_details) && 
-        r.reaction_details.some(detail => 
-          detail.includes("Automatic fallback analysis") || 
-          detail.includes("fallback data")
-        )
-      );
+    // Only check for problematic fallbacks if we have step reactions and aren't currently analyzing
+    if (stepReactions && stepReactions.length > 0 && !isAnalyzing && !isLoading) {
+      // Check for obvious fallback patterns that need refreshing
+      const needsRefresh = stepReactions.some(r => {
+        // Check for fallbacks that are temporary
+        if (!r.metadata?.isTempFallback) return false;
+        
+        // Check for duplicate fallback messages across steps
+        if (r.reaction_details && Array.isArray(r.reaction_details)) {
+          const containsDuplicatePattern = r.reaction_details.some(detail => 
+            detail.includes("Automatic fallback analysis") || 
+            detail.includes("temporarily using fallback data")
+          );
+          return containsDuplicatePattern;
+        }
+        return false;
+      });
       
-      // If we detect suspicious fallbacks and we're not already analyzing
-      if ((hasFallbacks || hasDuplicateMessages) && !isAnalyzing && !isLoading) {
-        console.log("Detected fallbacks or duplicate messages, will refresh analysis");
+      // If we have problematic fallbacks and we're in a state where we could refresh
+      if (needsRefresh && !isAnalyzing && !isLoading && onRecipeUpdate) {
+        console.log("Detected problematic fallbacks, will refresh analysis");
         // Don't immediately trigger to avoid loops, wait a moment
         const timer = setTimeout(() => {
-          if (onRecipeUpdate) {
-            toast({
-              title: "Refreshing Analysis",
-              description: "Improving recipe analysis data...",
-              duration: 3000
-            });
-            handleAnalyze();
-          }
+          toast({
+            title: "Refreshing Analysis",
+            description: "Improving recipe analysis data...",
+            duration: 3000
+          });
+          handleAnalyze();
         }, 2000);
         
         return () => clearTimeout(timer);

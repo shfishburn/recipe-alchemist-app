@@ -129,13 +129,16 @@ const createFallbackReactions = (recipe: Recipe): StepReaction[] => {
       reactions = ["hydration", "emulsification"];
     }
     
+    // Create more helpful fallback messages that don't just appear as duplicates
+    const stepNum = index + 1;
+    
     return {
       step_index: index,
       step_text: step,
       reactions: reactions,
       reaction_details: [
-        `${scienceNote} Analysis temporarily using fallback data.`,
-        `Detailed scientific data will be available on next analysis.`
+        `Step ${stepNum}: ${scienceNote}`,
+        `Waiting for complete scientific analysis of this step. This is temporary fallback data.`
       ],
       confidence: 0.4,
       cooking_method: cookingMethod,
@@ -219,10 +222,31 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
     refetchOnMount: false, // Don't refetch on mount to reduce API calls
   });
   
-  // Determine if we have any science data
-  const hasAnalysisData = 
-    (stepReactions && stepReactions.length > 0 && !stepReactions[0]?.metadata?.isTempFallback) || 
-    (recipe?.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0);
+  // Improved logic to determine if we have real analysis data (not just fallbacks)
+  const hasAnalysisData = (() => {
+    // Check for science notes in recipe
+    const hasRealScienceNotes = recipe?.science_notes && 
+                                Array.isArray(recipe.science_notes) && 
+                                recipe.science_notes.length > 0;
+    
+    // Check for real step reactions (not fallbacks)
+    const hasRealStepReactions = stepReactions && 
+                                Array.isArray(stepReactions) && 
+                                stepReactions.length > 0 && 
+                                !stepReactions.some(r => r.metadata?.isTempFallback);
+    
+    // Log what we found for debugging
+    console.log('Analysis data check:', {
+      recipeId: recipe.id,
+      hasRealScienceNotes,
+      hasRealStepReactions,
+      scienceNotesCount: recipe?.science_notes?.length || 0,
+      stepReactionsCount: stepReactions?.length || 0,
+      hasFallbacks: stepReactions?.some(r => r.metadata?.isTempFallback) || false
+    });
+    
+    return hasRealScienceNotes || hasRealStepReactions;
+  })();
   
   // Extract science notes from recipe
   const scienceNotes = recipe?.science_notes && Array.isArray(recipe.science_notes) 
