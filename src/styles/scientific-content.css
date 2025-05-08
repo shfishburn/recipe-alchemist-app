@@ -2,17 +2,18 @@
 /* Scientific content styling */
 .scientific-content {
   line-height: 1.6;
-  color: #1f2937; /* Consistent text color */
+  color: #1f2937; /* Base text color */
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Remove prose class conflict by being more specific */
 .scientific-content.prose,
 .scientific-content .prose {
-  color: #1f2937; /* Override prose default color */
+  color: inherit; /* Use inherited color instead of hardcoded */
   max-width: none;
 }
 
+/* Headings */
 .scientific-content h3, 
 .scientific-content h4 {
   font-weight: 600;
@@ -21,27 +22,30 @@
   color: #111827; /* Slightly darker for headings */
 }
 
+/* Lists */
 .scientific-content ul,
 .scientific-content ol {
   margin-left: 1.5em;
   margin-bottom: 1em;
-  color: inherit; /* Ensure list items inherit text color */
+  color: inherit; /* Use inherited color */
 }
 
 .scientific-content li {
   margin-bottom: 0.5em;
-  color: inherit; /* Ensure list items inherit text color */
+  color: inherit; /* Use inherited color */
 }
 
+/* Paragraphs */
 .scientific-content p {
   margin-bottom: 1em;
-  color: inherit; /* Inherit text color from parent */
+  color: inherit; /* Use inherited color */
 }
 
 .scientific-content p:last-child {
   margin-bottom: 0;
 }
 
+/* Code formatting */
 .scientific-content code {
   background-color: rgba(0, 0, 0, 0.05);
   padding: 0.2em 0.4em;
@@ -49,6 +53,7 @@
   font-family: monospace;
 }
 
+/* Text emphasis */
 .scientific-content strong {
   font-weight: 600;
   color: #166534; /* Use green for emphasis */
@@ -58,6 +63,7 @@
   font-style: italic;
 }
 
+/* Images */
 .scientific-content img {
   max-width: 100%;
   height: auto;
@@ -76,7 +82,7 @@
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
-  color: inherit; /* Ensure table cells inherit color */
+  color: inherit; /* Use inherited color */
 }
 
 .scientific-content th {
@@ -94,7 +100,7 @@
   background-color: #f0f9ff; /* Consistent light blue background */
   border: 1px solid #bfdbfe;
   border-radius: 0.5rem;
-  color: inherit; /* Inherit text color from parent */
+  color: inherit; /* Use inherited color */
 }
 
 /* Override text color for fallback messages */

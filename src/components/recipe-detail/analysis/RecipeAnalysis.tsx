@@ -64,10 +64,9 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     stepReactions
   );
 
-  // Check if we should show the analysis prompt - improved logic to prevent unnecessary re-analysis
-  const showAnalysisPrompt = (!analysis && !isLoading && (!stepReactions || stepReactions.length === 0 || 
-    (stepReactions.length > 0 && stepReactions.every(reaction => reaction.metadata?.isTempFallback))) && !isAnalyzing) || 
-    (!hasAnyContent && !isAnalyzing && !isLoading);
+  // Check if we should show the analysis prompt
+  // Only show the prompt when there is no content and we're not currently loading
+  const showAnalysisPrompt = !hasAnyContent && !isAnalyzing && !isLoading;
 
   // Effect to check for duplicate fallback messages and trigger a refresh if needed
   useEffect(() => {

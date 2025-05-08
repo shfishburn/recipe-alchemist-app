@@ -33,12 +33,15 @@ export function AnalysisContent({
   globalAnalysis,
   onRegenerate
 }: AnalysisContentProps) {
-  // Check if there's any content to display
+  // Check if there's any content to display - only show the raw fallback if none of the structured data exists
   const hasChemistry = chemistry !== null && chemistry.length > 0;
   const hasTechniques = techniques !== null && techniques.length > 0;
   const hasTroubleshooting = troubleshooting !== null && troubleshooting.length > 0;
-  const hasRawResponse = rawResponse && rawResponse.length > 50 &&
-    !hasChemistry && !hasTechniques && !hasTroubleshooting;
+  const hasStepReactions = stepReactions && stepReactions.length > 0;
+  
+  // Only show raw response if we have NO structured data
+  const shouldShowRawResponse = rawResponse && rawResponse.length > 50 &&
+    !hasChemistry && !hasTechniques && !hasTroubleshooting && !hasStepReactions;
     
   return (
     <ScrollArea className="h-[60vh] sm:h-[70vh] pr-4">
@@ -74,13 +77,15 @@ export function AnalysisContent({
         />
         
         {/* Reaction Analysis Section */}
-        <ReactionsList 
-          stepReactions={stepReactions} 
-          onRegenerateClick={onRegenerate}
-        />
+        {hasStepReactions && (
+          <ReactionsList 
+            stepReactions={stepReactions} 
+            onRegenerateClick={onRegenerate}
+          />
+        )}
         
-        {/* Fallback Section */}
-        {hasRawResponse && (
+        {/* Fallback Section - Only render if no structured content exists */}
+        {shouldShowRawResponse && (
           <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4">
             <FormattedText 
               text={rawResponse} 
