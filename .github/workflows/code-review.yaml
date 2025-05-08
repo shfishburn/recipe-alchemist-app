@@ -37,6 +37,17 @@ jobs:
           echo "author=$AUTHOR" >> $GITHUB_OUTPUT
           echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          # Install required npm packages for analysis
+          npm install -g diff2html-cli
+          npm install @octokit/rest axios
+
       - name: Summarize code changes
         id: summarize_changes
         run: |
@@ -51,8 +62,20 @@ jobs:
             git diff $BEFORE $AFTER > changes.diff
           fi
 
+          # Check if diff file was created successfully
+          if [ ! -s changes.diff ]; then
+            echo "Warning: changes.diff file is empty or not created" 
+            echo "Creating an empty diff file to prevent errors"
+            echo "No changes detected" > changes.diff
+          fi
+
           # Generate detailed highlights of added, removed, or modified lines
-          npx diff2html --summary --input-file changes.diff --output-format line-by-line > detailed_summary.html || echo "diff2html failed"
+          if command -v diff2html >/dev/null 2>&1; then
+            diff2html --summary --input-file changes.diff --output-format line-by-line > detailed_summary.html || echo "diff2html generation failed"
+          else
+            echo "diff2html command not found, skipping HTML generation"
+            echo "<p>HTML diff view not available</p>" > detailed_summary.html
+          fi
       
       - name: Upload full diff as artifact
         uses: actions/upload-artifact@v4
@@ -60,55 +83,65 @@ jobs:
           name: full-diff
           path: changes.diff
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-          npm install @octokit/rest axios
-
       - name: Generate OpenAI code analysis
         id: openai_analysis
         run: |
           if [ -z "$OPENAI_API_KEY" ]; then
             echo "OPENAI_API_KEY is not set. Skipping OpenAI analysis."
+            echo "No OpenAI analysis available - API key not configured" > openai_analysis.txt
           else
             echo "Generating AI code analysis..."
-            node ./.github/workflows/scripts/analyze-with-openai.js
+            node ./.github/workflows/scripts/analyze-with-openai.js || echo "OpenAI analysis failed, continuing workflow"
+            
+            # Create fallback file if analysis failed
+            if [ ! -f openai_analysis.txt ]; then
+              echo "OpenAI analysis did not generate output file" > openai_analysis.txt
+            fi
           fi
         env:
           CHANGES_DIFF: ${{ github.workspace }}/changes.diff
+          NODE_OPTIONS: --no-warnings
 
       - name: Analyze changes for suggestions
         run: |
+          BEFORE=${{ github.event.before || '0000000000000000000000000000000000000000' }}
+          AFTER=${{ github.event.after }}
+          
           CHANGED_FILES=$(git diff --name-only $BEFORE $AFTER | grep -E "\.(js|ts|jsx|tsx)$" || true)
           if [ -z "$CHANGED_FILES" ]; then
             echo "No JS/TS files changed."
+            echo "{}" > suggestions.json
           else
             echo "Analyzing the following files for suggestions:"
             echo "$CHANGED_FILES"
-            npx eslint $CHANGED_FILES --format json > eslint_report.json || echo "ESLint failed"
-            cat eslint_report.json | jq '.[] | {filePath, messages}' > suggestions.json || echo "JQ failed"
+            if command -v npx eslint >/dev/null 2>&1; then
+              npx eslint $CHANGED_FILES --format json > eslint_report.json || echo "ESLint failed, continuing workflow"
+              cat eslint_report.json | jq '.[] | {filePath, messages}' > suggestions.json || echo "JQ processing failed"
+            else
+              echo "ESLint not available, skipping linting"
+              echo "{}" > suggestions.json
+            fi
           fi
 
       - name: Lint JavaScript/TypeScript files
         id: linting
         run: |
+          BEFORE=${{ github.event.before || '0000000000000000000000000000000000000000' }}
+          AFTER=${{ github.event.after }}
+          
           CHANGED_FILES=$(git diff --name-only $BEFORE $AFTER | grep -E "\.(js|ts|jsx|tsx)$" || true)
           if [ -z "$CHANGED_FILES" ]; then
             echo "No JS/TS files changed."
+            echo "{}" > eslint_issues.json
           else
             echo "Linting the following files:"
             echo "$CHANGED_FILES"
-            npx eslint $CHANGED_FILES --format json > eslint_issues.json || echo "ESLint failed"
-            echo "Linting results saved to eslint_issues.json"
+            if command -v npx eslint >/dev/null 2>&1; then
+              npx eslint $CHANGED_FILES --format json > eslint_issues.json || echo "ESLint failed, continuing workflow"
+            else
+              echo "ESLint not available, skipping linting"
+              echo "{}" > eslint_issues.json
+            fi
           fi
 
       - name: Create issue with summary
@@ -116,7 +149,6 @@ jobs:
         env:
           AUTHOR: ${{ steps.commit_info.outputs.author || 'Unknown Author' }}
           COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg || 'No commit message available' }}
-          OPENAI_ANALYSIS: ${{ steps.openai_analysis.outputs.analysis || 'No AI analysis available' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -133,14 +165,20 @@ jobs:
             }
 
             let eslintIssues = 'No linting issues found';
-            if (fs.existsSync('eslint_issues.json')) {
-              eslintIssues = JSON.parse(fs.readFileSync('eslint_issues.json', 'utf8'));
+            try {
+              if (fs.existsSync('eslint_issues.json')) {
+                const issuesContent = fs.readFileSync('eslint_issues.json', 'utf8');
+                if (issuesContent && issuesContent.trim() !== '{}') {
+                  eslintIssues = JSON.parse(issuesContent);
+                }
+              }
+            } catch (err) {
+              console.error('Error parsing ESLint issues:', err);
+              eslintIssues = 'Error parsing ESLint results';
             }
             
-            let aiAnalysis = process.env.OPENAI_ANALYSIS || 'AI analysis not available';
-            
+            let aiAnalysis = 'AI analysis not available';
             try {
-              // Try to read from file if available
               if (fs.existsSync('openai_analysis.txt')) {
                 aiAnalysis = fs.readFileSync('openai_analysis.txt', 'utf8');
               }
