@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
@@ -8,58 +7,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Enhanced system prompt for analyzing recipe steps with scientific rigor
-const systemPrompt = `You are an authoritative culinary scientist with expertise spanning food chemistry, physics, and engineering, drawing from methodologies of Harold McGee, J. Kenji López-Alt, and Nathan Myhrvold's modernist cuisine principles.
+// Refined and minified system prompt for analyzing recipe steps
+const systemPrompt = `You are a culinary scientist analyzing recipes with scientific rigor.
 
-Analyze each recipe step with scientific rigor, considering chemical reactions, thermal properties, and process parameters.
+For each step provide:
+1. REACTIONS: [maillard_reaction, caramelization, protein_denaturation, emulsification, gelatinization, coagulation, enzymatic_browning, fermentation, hydration, acid_base_reaction, fat_rendering, crystallization, starch_gelatinization]
+2. METHODS: [roasting, baking, sautéing, frying, boiling, simmering, steaming, braising, poaching, grilling, broiling, sous_vide, pressure_cooking, blanching, stir_frying, microwaving]
+3. MEASUREMENTS: Always specify exact temperatures in °C and durations in minutes
+4. EXPLANATIONS: Focus on practical insights using accessible scientific language
 
-For each step, provide comprehensive scientific analysis including:
-
-1. CHEMICAL SYSTEMS:
-   - Primary and secondary reactions (e.g., maillard_reaction, protein_denaturation)
-   - Reaction mechanisms and critical compounds
-   - pH effects and water activity considerations
-
-2. THERMAL ENGINEERING:
-   - Heat transfer modes (conduction, convection, radiation)
-   - Temperature profiles and thermal gradients
-   - Heat capacity considerations and thermal behavior
-
-3. PROCESS PARAMETERS:
-   - Critical time ranges (minimum, optimal, maximum)
-   - Temperature tolerance windows
-   - Humidity and other environmental factors
-
-4. TROUBLESHOOTING MATRIX:
-   - Potential problems and their causes
-   - Diagnostic tests and indicators
-   - Corrective actions and prevention strategies
-
-Return structured JSON with the following format:
+Return JSON format:
 {
   "step_analyses": [
     {
       "step_index": 0,
-      "step_text": "The instruction text",
-      "reactions": ["maillard_reaction", "caramelization"],
-      "reaction_details": ["Scientific explanation of what's happening"],
-      "cooking_method": "roasting",
+      "step_text": "The step text",
+      "reactions": ["reaction1", "reaction2"],
+      "reaction_details": ["Scientific explanation of reactions"],
+      "cooking_method": "method",
       "temperature_celsius": 180,
       "duration_minutes": 25,
       "confidence": 0.95,
       "chemical_systems": {
-        "primary_reactions": ["maillard_reaction"],
-        "secondary_reactions": ["caramelization"],
-        "reaction_mechanisms": "Detailed explanation of reaction pathways",
-        "critical_compounds": ["glucose", "amino_acids"],
-        "ph_effects": {
-          "range": "5.5-6.5",
-          "impact": "Affects browning rate and flavor development"
-        }
+        "primary_reactions": ["reaction1"],
+        "secondary_reactions": ["reaction2"],
+        "reaction_mechanisms": "Mechanism explanation"
       },
       "thermal_engineering": {
         "heat_transfer_mode": "convection",
-        "thermal_gradient": "15°C/cm"
+        "thermal_gradient": "15°C/cm",
+        "temperature_profile": {"surface": 190, "core": 165, "unit": "celsius"}
       },
       "process_parameters": {
         "critical_times": {
@@ -72,20 +49,23 @@ Return structured JSON with the following format:
       "troubleshooting_matrix": [
         {
           "problem": "undercooking",
-          "diagnostic_tests": ["Internal temperature check"],
-          "corrections": ["Extend cooking time by 5 minutes"],
-          "prevention": ["Use oven thermometer to verify temperature"]
+          "diagnostic_tests": ["Test description"],
+          "corrections": ["Correction step"],
+          "prevention": ["Prevention tip"]
         }
-      ],
-      "safety_protocols": {
-        "critical_limits": "Internal temperature must reach at least 74°C (165°F)"
-      }
+      ]
     }
   ],
   "global_analysis": {
-    "cascade_effects": "How steps interact and influence each other"
+    "cascade_effects": "Effect description"
   }
-}`;
+}
+
+RULES:
+- EVERY step MUST have reactions, reaction_details, and cooking_method
+- Temperature and duration MUST be provided when applicable
+- Use CONSISTENT reaction types as listed above
+- Focus on PRACTICAL insights that enhance cooking technique`;
 
 // Creates a fallback analysis structure when OpenAI fails
 function createFallbackAnalysis(instructions) {
@@ -232,7 +212,7 @@ serve(async (req) => {
 
     ${instructions.map((step, index) => `Step ${index + 1}: ${step}`).join('\n\n')}
     
-    Give a structured response following the required JSON format with comprehensive scientific details.`;
+    Give a structured response following the required JSON format with practical scientific details.`;
 
     // Call OpenAI with retry mechanism
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -254,14 +234,14 @@ serve(async (req) => {
           'Authorization': `Bearer ${openaiApiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini', // Changed from gpt-4o to improve performance
+          model: 'gpt-4o-mini', // Using the more efficient model
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
           ],
           temperature: 0.7,
           response_format: { type: "json_object" }, // Enforce JSON output
-          max_tokens: 3000, // Increased token limit for more detailed analysis
+          max_tokens: 3000, // Adequate tokens for detailed analysis
         }),
       });
       
