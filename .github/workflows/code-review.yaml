@@ -1,0 +1,246 @@
+name: Summarize Changes and Detect Issues
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your target branch
+
+# Explicitly define permissions
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  analyze_changes:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2  # Need at least 2 commits for diff
+
+    - name: Get commit info
+      id: commit_info
+      run: |
+        AUTHOR=$(git log -1 --pretty=format:'%an')
+        COMMIT_MSG=$(git log -1 --pretty=format:'%s')
+        echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+        echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+        echo "Commit Author: $AUTHOR"
+        echo "Commit Message: $COMMIT_MSG"
+
+    - name: Summarize code changes
+      id: summarize_changes
+      run: |
+        git diff HEAD^ HEAD > changes.diff
+        echo "Diff file created with size: $(du -h changes.diff | cut -f1)"
+        
+        # Create a summary of file changes
+        echo "### Files Changed:" > changes_summary.txt
+        git diff --name-status HEAD^ HEAD >> changes_summary.txt
+        
+        # Count lines added/removed
+        STATS=$(git diff --shortstat HEAD^ HEAD)
+        echo -e "\n### Change Statistics:" >> changes_summary.txt
+        echo "$STATS" >> changes_summary.txt
+
+    # Perform static analysis without installing dependencies
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    # Run ESLint on changed files only without installing dependencies
+    - name: Basic syntax check
+      id: syntax_check
+      continue-on-error: true
+      run: |
+        # Create a simple script to check basic TypeScript syntax
+        echo "const fs = require('fs');
+        const { execSync } = require('child_process');
+        
+        try {
+          // Get list of changed TypeScript/JavaScript files
+          const changedFiles = execSync('git diff --name-only HEAD^ HEAD | grep -E \"\\.(ts|tsx|js|jsx)$\"', { encoding: 'utf8' }).trim().split('\\n');
+          
+          if (!changedFiles || changedFiles[0] === '') {
+            console.log('No TS/JS files changed.');
+            process.exit(0);
+          }
+          
+          console.log('Changed files:', changedFiles);
+          
+          // Basic syntax check
+          let errorFound = false;
+          let errorLog = [];
+          
+          for (const file of changedFiles) {
+            try {
+              // Read file content
+              const content = fs.readFileSync(file, 'utf8');
+              // Check for common syntax errors
+              const issues = [];
+              
+              // Check for unbalanced brackets
+              let brackets = 0;
+              let curlyBraces = 0;
+              let squareBrackets = 0;
+              
+              for (const char of content) {
+                if (char === '(') brackets++;
+                if (char === ')') brackets--;
+                if (char === '{') curlyBraces++;
+                if (char === '}') curlyBraces--;
+                if (char === '[') squareBrackets++;
+                if (char === ']') squareBrackets--;
+              }
+              
+              if (brackets !== 0) issues.push('Unbalanced parentheses');
+              if (curlyBraces !== 0) issues.push('Unbalanced curly braces');
+              if (squareBrackets !== 0) issues.push('Unbalanced square brackets');
+              
+              // Check for missing semicolons at end of lines (optional in modern JS)
+              const lines = content.split('\\n');
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line && !line.endsWith(';') && 
+                    !line.endsWith('{') && !line.endsWith('}') && 
+                    !line.endsWith('(') && !line.endsWith(')') &&
+                    !line.endsWith('[') && !line.endsWith(']') &&
+                    !line.startsWith('import') && !line.startsWith('export') &&
+                    !line.startsWith('//') && !line.startsWith('/*') &&
+                    !line.endsWith('*/') && !line.endsWith(',') &&
+                    !line.match(/^\\s*\\w+:/) && // Don't flag object properties
+                    line.length > 0) {
+                  // This is a very basic check and will have false positives
+                  issues.push(\`Line \${i+1} may be missing a semicolon: \${line}\`);
+                }
+              }
+              
+              if (issues.length > 0) {
+                errorFound = true;
+                errorLog.push(\`File: \${file}\`);
+                errorLog.push(\`Issues:\`);
+                issues.forEach(issue => errorLog.push(\`  - \${issue}\`));
+              }
+            } catch (err) {
+              errorFound = true;
+              errorLog.push(\`Error processing file \${file}: \${err.message}\`);
+            }
+          }
+          
+          if (errorFound) {
+            console.log('===== SYNTAX ISSUES FOUND =====');
+            console.log(errorLog.join('\\n'));
+            fs.writeFileSync('syntax_issues.txt', errorLog.join('\\n'));
+            process.exit(1);
+          } else {
+            console.log('No basic syntax issues found.');
+            fs.writeFileSync('syntax_issues.txt', 'No basic syntax issues found.');
+          }
+        } catch (err) {
+          console.error('Error during syntax check:', err);
+          fs.writeFileSync('syntax_issues.txt', \`Error during check: \${err.message}\`);
+          process.exit(1);
+        }" > syntax_check.js
+        
+        node syntax_check.js || echo "Syntax issues found but continuing workflow"
+
+    - name: Create issue with summary
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          try {
+            console.log('Starting issue creation process...');
+            
+            const fs = require('fs');
+            
+            // Read diff file
+            let changes = '';
+            try {
+              if (fs.existsSync('changes.diff')) {
+                const stats = fs.statSync('changes.diff');
+                console.log(`changes.diff exists, size: ${stats.size} bytes`);
+                if (stats.size > 0) {
+                  // For large diffs, just include a summary
+                  if (stats.size > 20000) {
+                    changes = fs.readFileSync('changes_summary.txt', 'utf8');
+                    changes += "\n\n(Full diff too large to include)";
+                  } else {
+                    changes = fs.readFileSync('changes.diff', 'utf8');
+                  }
+                } else {
+                  changes = 'No changes detected';
+                }
+              } else {
+                changes = 'Diff file not found';
+              }
+            } catch (error) {
+              console.error(`Error reading changes: ${error.message}`);
+              changes = `Error reading diff: ${error.message}`;
+            }
+            
+            // Read syntax check results
+            let syntaxIssues = 'No syntax check performed';
+            try {
+              if (fs.existsSync('syntax_issues.txt')) {
+                syntaxIssues = fs.readFileSync('syntax_issues.txt', 'utf8');
+              }
+            } catch (error) {
+              console.error(`Error reading syntax issues: ${error.message}`);
+              syntaxIssues = `Error reading syntax issues: ${error.message}`;
+            }
+            
+            // Read summary
+            let changesSummary = '';
+            try {
+              if (fs.existsSync('changes_summary.txt')) {
+                changesSummary = fs.readFileSync('changes_summary.txt', 'utf8');
+              }
+            } catch (error) {
+              console.error(`Error reading changes summary: ${error.message}`);
+            }
+            
+            console.log('Creating GitHub issue...');
+            const issueResponse = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Code Review for commit ${context.sha.substring(0, 7)}`,
+              body: `
+              ## Code Review for Recent Changes
+              
+              **Commit**: ${context.sha}
+              **Author**: ${process.env.COMMIT_AUTHOR || 'Unknown'}
+              **Message**: ${process.env.COMMIT_MSG || 'No commit message'}
+              
+              ### Summary of Changes
+              
+              ${changesSummary || 'No summary available'}
+              
+              ### Basic Syntax Check
+              
+              \`\`\`
+              ${syntaxIssues}
+              \`\`\`
+              
+              ### Code Diff
+              
+              \`\`\`diff
+              ${changes}
+              \`\`\`
+              
+              This issue was automatically generated by the GitHub Actions workflow.
+              `
+            });
+            
+            console.log(`Issue created successfully: ${issueResponse.data.html_url}`);
+          } catch (error) {
+            console.error(`Failed to create issue: ${error.message}`);
+            console.error(`Error stack: ${error.stack}`);
+            core.setFailed(`Issue creation failed: ${error.message}`);
+          }
+        env:
+          COMMIT_AUTHOR: ${{ steps.commit_info.outputs.author }}
+          COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg }}
