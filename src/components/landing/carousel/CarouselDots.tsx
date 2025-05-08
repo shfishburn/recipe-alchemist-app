@@ -6,44 +6,41 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface CarouselDotsProps {
   totalItems: number;
   selectedIndex: number;
+  onClick?: (index: number) => void;
+  className?: string;
 }
 
 export const CarouselDots: React.FC<CarouselDotsProps> = ({ 
   totalItems, 
-  selectedIndex 
+  selectedIndex,
+  onClick,
+  className
 }) => {
   const isMobile = useIsMobile();
   
-  // Optimize rendering for many dots
-  const dots = React.useMemo(() => {
-    return Array.from({ length: totalItems }).map((_, i) => {
-      const isActive = i === selectedIndex;
-      return (
-        <span
-          key={i}
-          className={cn(
-            "inline-block rounded-full transition-all hw-accelerated",
-            isActive 
-              ? "w-2 h-2 bg-recipe-blue"
-              : "w-1.5 h-1.5 bg-gray-300 opacity-70",
-            isMobile && "touch-target-base",
-          )}
-          aria-hidden="true"
-        />
-      );
-    });
-  }, [totalItems, selectedIndex, isMobile]);
-
   // Don't render if there's only one item
   if (totalItems <= 1) return null;
 
   return (
     <div 
-      className="flex items-center justify-center space-x-2 hw-accelerated"
+      className={cn("carousel-pagination", className)}
       role="tablist"
       aria-label="Carousel pagination"
     >
-      {dots}
+      {Array.from({ length: totalItems }).map((_, i) => (
+        <button
+          key={i}
+          className={cn(
+            "carousel-pagination-dot",
+            selectedIndex === i ? "carousel-pagination-dot-active" : ""
+          )}
+          onClick={() => onClick?.(i)}
+          role="tab"
+          aria-selected={selectedIndex === i}
+          aria-label={`Go to slide ${i + 1}`}
+          tabIndex={selectedIndex === i ? 0 : -1}
+        />
+      ))}
     </div>
   );
 };

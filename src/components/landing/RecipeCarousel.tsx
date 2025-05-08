@@ -1,79 +1,39 @@
 
-import React, { Suspense, useMemo, useState, useRef, useEffect } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RecipeCard } from './carousel/RecipeCard';
 import { CookingPot } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { cn as classnames } from '@/lib/utils';
+import { StandardCarousel, type CarouselItem } from '@/components/ui/carousel/StandardCarousel';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const isMobile = useIsMobile();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [userInteracted, setUserInteracted] = useState(false);
   
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
     return recipes?.slice(0, 5) || [];
   }, [recipes]);
 
-  // Handle scroll events to update active dot
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-    
-    const handleScroll = () => {
-      if (!scrollContainer) return;
-      
-      const scrollPosition = scrollContainer.scrollLeft;
-      const itemWidth = scrollContainer.clientWidth * (isMobile ? 0.85 : 0.45);
-      const newIndex = Math.round(scrollPosition / itemWidth);
-      
-      if (newIndex !== activeIndex && newIndex >= 0 && newIndex < featuredRecipes.length) {
-        setActiveIndex(newIndex);
-      }
-    };
-    
-    // Detect user interaction to stop auto-scrolling
-    const stopAutoScroll = () => {
-      setUserInteracted(true);
-    };
-    
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    scrollContainer.addEventListener('touchstart', stopAutoScroll, { passive: true });
-    scrollContainer.addEventListener('mousedown', stopAutoScroll, { passive: true });
-    
-    return () => {
-      scrollContainer.removeEventListener('scroll', handleScroll);
-      scrollContainer.removeEventListener('touchstart', stopAutoScroll);
-      scrollContainer.removeEventListener('mousedown', stopAutoScroll);
-    };
-  }, [activeIndex, featuredRecipes.length, isMobile]);
+  // Map recipes to carousel items format
+  const carouselItems: CarouselItem[] = useMemo(() => {
+    return featuredRecipes.map((recipe) => ({
+      id: recipe.id,
+      content: recipe,
+    }));
+  }, [featuredRecipes]);
 
-  // Scroll to item when user clicks on a dot
-  const scrollToItem = (index: number) => {
-    setUserInteracted(true);
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-    
-    scrollContainer.classList.add('user-scrolling');
-    
-    const itemWidth = scrollContainer.clientWidth * (isMobile ? 0.85 : 0.45);
-    scrollContainer.scrollTo({
-      left: itemWidth * index,
-      behavior: 'smooth'
-    });
-    setActiveIndex(index);
-    
-    // Remove class after animation completes
-    setTimeout(() => {
-      if (scrollContainer) {
-        scrollContainer.classList.remove('user-scrolling');
-      }
-    }, 500);
+  // Render function for carousel items
+  const renderCarouselItem = (item: CarouselItem, index: number, isActive: boolean) => {
+    const recipe = item.content as Recipe;
+    return (
+      <div className="w-full h-full">
+        <RecipeCard 
+          recipe={recipe} 
+          priority={index === 0 || index === 1}
+        />
+      </div>
+    );
   };
 
   return (
@@ -98,63 +58,16 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          {/* Updated carousel with standardized classes and fixes */}
-          <div 
-            className="carousel-container carousel-container-with-indicators"
-            role="region" 
-            aria-label="Recipe carousel"
-          >
-            <div 
-              ref={scrollRef}
-              className="carousel-scroll-area" 
-              tabIndex={0}
-              aria-live="polite"
-            >
-              {featuredRecipes.map((recipe, index) => (
-                <div 
-                  key={recipe.id} 
-                  className={classnames(
-                    "carousel-item",
-                    isMobile ? "carousel-item-mobile" : "carousel-item-desktop"
-                  )}
-                  aria-hidden={activeIndex !== index}
-                >
-                  <div className="w-full h-full">
-                    <RecipeCard 
-                      recipe={recipe} 
-                      priority={index === 0 || index === 1}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Pagination dots with fixed styling */}
-          <div className="carousel-pagination" role="tablist">
-            {featuredRecipes.map((_, index) => (
-              <button
-                key={index}
-                className={classnames(
-                  "carousel-pagination-dot touch-target-base",
-                  activeIndex === index ? "carousel-pagination-dot-active" : ""
-                )}
-                onClick={() => scrollToItem(index)}
-                role="tab"
-                aria-selected={activeIndex === index}
-                aria-label={`Go to slide ${index + 1}`}
-                tabIndex={activeIndex === index ? 0 : -1}
-              />
-            ))}
-          </div>
-          
-          {/* A11y slide counter */}
-          <div 
-            className="text-center text-xs md:text-sm text-muted-foreground mt-1" 
-            aria-live="polite"
-          >
-            Slide {activeIndex + 1} of {featuredRecipes.length || 0}
-          </div>
+          {/* Using our new standardized carousel component */}
+          <StandardCarousel 
+            items={carouselItems}
+            renderItem={renderCarouselItem}
+            showDots={true}
+            showCounter={true}
+            itemWidthMobile="85%"
+            itemWidthDesktop="45%"
+            className="w-full max-w-5xl"
+          />
         </div>
       )}
     </div>

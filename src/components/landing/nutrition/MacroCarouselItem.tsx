@@ -32,15 +32,15 @@ interface MacroCarouselItemProps {
 
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
   return (
-    <div className="space-y-4 px-4 md:px-8 py-4 flex flex-col items-center w-full">
-      <h3 className="text-center text-xl font-semibold text-recipe-purple">{item.title}</h3>
+    <div className="w-full px-2 sm:px-4 py-4 flex flex-col items-center">
+      <h3 className="text-center text-xl font-semibold text-recipe-purple mb-4">{item.title}</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mx-auto">
-        <div className="flex flex-col items-center">
-          <div className="w-full max-w-[280px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+        <div className="flex flex-col items-center justify-center">
+          <div className="w-full max-w-[240px] mx-auto">
             <Suspense fallback={
-              <div className="h-52 flex items-center justify-center">
-                <Skeleton className="h-40 w-40 rounded-full" />
+              <div className="h-[220px] w-[220px] mx-auto flex items-center justify-center">
+                <Skeleton className="h-[180px] w-[180px] rounded-full" />
               </div>
             }>
               <MacroChart 
@@ -55,25 +55,23 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
           </div>
         </div>
         
-        {item.special ? (
-          <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center justify-center">
+          {item.special ? (
             <Suspense fallback={
-              <div className="h-52 flex items-center justify-center">
-                <Skeleton className="h-40 w-40" />
+              <div className="h-[220px] w-full flex items-center justify-center">
+                <Skeleton className="h-[180px] w-[180px]" />
               </div>
             }>
               <MacroPieCharts carbsData={carbsData} fatsData={fatsData} />
             </Suspense>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center">
+          ) : (
             <MacroDetailsPanel 
               title={item.title}
               description={item.description}
               data={item.data}
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

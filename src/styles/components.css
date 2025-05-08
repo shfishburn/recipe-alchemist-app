@@ -124,13 +124,13 @@
     @apply sticky bottom-0 left-0 right-0 bg-white border-t py-3 px-4 shadow-lg z-10;
   }
 
-  /* Consolidated carousel components - FIXED */
+  /* Standardized Carousel Components */
   .carousel-container {
-    @apply w-full max-w-5xl mx-auto relative overflow-hidden h-auto max-h-[500px];
+    @apply relative overflow-hidden h-auto max-h-[500px];
   }
   
   .carousel-scroll-area {
-    @apply flex overflow-x-auto gap-4 pb-4 px-4 -mx-4 snap-x;
+    @apply flex overflow-x-auto pb-4 snap-x;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     scroll-behavior: smooth;
@@ -145,52 +145,18 @@
     @apply flex-shrink-0 snap-start h-auto align-top;
   }
   
-  .carousel-item-mobile {
-    @apply w-[85%];
+  /* Add class for disabling smooth scrolling during user interaction */
+  .carousel-scroll-area.user-scrolling {
+    scroll-behavior: auto;
   }
   
-  .carousel-item-desktop {
-    @apply w-[45%] md:w-[30%];
-  }
-  
-  .carousel-item-nutrition {
-    @apply w-[90%] md:w-[45%] lg:w-[30%];
-  }
-  
-  /* Carousel indicators */
-  .carousel-container-with-indicators {
-    @apply relative;
-  }
-  
-  .carousel-container-with-indicators::before,
-  .carousel-container-with-indicators::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 20px;
-    z-index: 1;
-    pointer-events: none;
-  }
-  
-  .carousel-container-with-indicators::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(255,255,255,0.8), transparent);
-  }
-  
-  .carousel-container-with-indicators::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
-  }
-  
-  /* Pagination components - FIXED */
+  /* Pagination dots */
   .carousel-pagination {
-    @apply flex justify-center gap-1 mt-2;
-    font-size: 16px; /* Force standard sizing */
+    @apply flex justify-center gap-1.5 mt-2;
   }
   
   .carousel-pagination-dot {
-    width: 8px !important; /* Force explicit pixel values with !important */
+    width: 8px !important;
     height: 8px !important;
     @apply rounded-full bg-gray-300 transition-all duration-200;
     transform-origin: center;
@@ -200,17 +166,12 @@
   
   .carousel-pagination-dot-active {
     @apply bg-recipe-blue;
-    width: 16px !important; /* Explicit values for active state with !important */
+    width: 16px !important;
     max-width: 16px !important;
   }
   
   /* Carousel navigation buttons */
   .carousel-nav-button {
     @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-purple hover:text-white hover:border-transparent;
-  }
-  
-  /* Add class for disabling smooth scrolling during user interaction */
-  .carousel-scroll-area.user-scrolling {
-    scroll-behavior: auto;
   }
 }

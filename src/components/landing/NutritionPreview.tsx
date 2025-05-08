@@ -1,104 +1,35 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartPie, Activity } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   macroDistributionData, 
   carbsData, 
   fatsData 
 } from './nutrition/nutrition-sample-data';
 import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
-import { CarouselPagination } from './nutrition/CarouselPagination';
 import { MacroLegend } from './nutrition/MacroLegend';
+import { StandardCarousel, type CarouselItem } from '@/components/ui/carousel/StandardCarousel';
 
 export function NutritionPreview() {
-  const isMobile = useIsMobile();
-  const [activeSlide, setActiveSlide] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Improved auto-scroll with user interaction detection
-  const [isPaused, setIsPaused] = useState(false);
-  const [userInteracted, setUserInteracted] = useState(false);
-  
-  // Handle auto-scrolling with improved interaction detection
-  useEffect(() => {
-    if (isPaused || userInteracted) return;
-    
-    const interval = setInterval(() => {
-      const nextSlide = (activeSlide + 1) % macroDistributionData.length;
-      setActiveSlide(nextSlide);
-      
-      // Scroll to the next slide
-      if (scrollRef.current) {
-        const slideWidth = scrollRef.current.clientWidth;
-        scrollRef.current.scrollTo({
-          left: slideWidth * nextSlide,
-          behavior: 'smooth'
-        });
-      }
-    }, 5000); // Slower scroll interval (5 seconds)
-    
-    return () => clearInterval(interval);
-  }, [activeSlide, isPaused, userInteracted]);
-  
-  // Handle scroll events to update active slide
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-    
-    const handleScroll = () => {
-      if (!scrollContainer) return;
-      
-      const scrollPosition = scrollContainer.scrollLeft;
-      const slideWidth = scrollContainer.clientWidth;
-      const newIndex = Math.round(scrollPosition / slideWidth);
-      
-      if (newIndex !== activeSlide && newIndex >= 0 && newIndex < macroDistributionData.length) {
-        setActiveSlide(newIndex);
-      }
-    };
-    
-    // Detect user interaction to stop auto-scrolling
-    const stopAutoScroll = () => {
-      setUserInteracted(true);
-    };
-    
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    scrollContainer.addEventListener('touchstart', stopAutoScroll, { passive: true });
-    scrollContainer.addEventListener('mousedown', stopAutoScroll, { passive: true });
-    
-    return () => {
-      scrollContainer.removeEventListener('scroll', handleScroll);
-      scrollContainer.removeEventListener('touchstart', stopAutoScroll);
-      scrollContainer.removeEventListener('mousedown', stopAutoScroll);
-    };
-  }, [activeSlide]);
-  
-  // Scroll to selected slide when pagination is clicked
-  const handleSelectSlide = (index: number) => {
-    setActiveSlide(index);
-    setUserInteracted(true); // User has interacted
-    
-    if (scrollRef.current) {
-      // Add user-scrolling class to temporarily disable smooth scrolling if needed
-      scrollRef.current.classList.add('user-scrolling');
-      
-      const slideWidth = scrollRef.current.clientWidth;
-      scrollRef.current.scrollTo({
-        left: slideWidth * index,
-        behavior: 'smooth'
-      });
-      
-      // Remove class after animation completes
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.classList.remove('user-scrolling');
-        }
-      }, 500);
-    }
+  // Map nutrition data to carousel items format
+  const carouselItems: CarouselItem[] = macroDistributionData.map((item, index) => ({
+    id: index,
+    content: item,
+  }));
+
+  // Render function for carousel items
+  const renderCarouselItem = (item: CarouselItem) => {
+    const macroItem = item.content as typeof macroDistributionData[0];
+    return (
+      <MacroCarouselItem 
+        item={macroItem} 
+        carbsData={carbsData} 
+        fatsData={fatsData}
+      />
+    );
   };
-  
+
   return (
     <div className="w-full flex flex-col items-center">
       <div className="text-center mb-6 md:mb-8 w-full">
@@ -120,41 +51,17 @@ export function NutritionPreview() {
             Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
           </div>
           
-          <div 
-            className="w-full"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            role="region" 
-            aria-label="Nutrition information carousel"
-          >
-            {/* Updated carousel with fixed classes */}
-            <div className="carousel-container">
-              <div 
-                ref={scrollRef} 
-                className="carousel-scroll-area"
-              >
-                {macroDistributionData.map((item, index) => (
-                  <div 
-                    key={index} 
-                    className="carousel-item carousel-item-nutrition" 
-                    aria-hidden={activeSlide !== index}
-                  >
-                    <MacroCarouselItem 
-                      item={item} 
-                      carbsData={carbsData} 
-                      fatsData={fatsData} 
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex justify-center w-full mt-2">
-            <CarouselPagination 
-              totalItems={macroDistributionData.length}
-              activeSlide={activeSlide}
-              onSelectSlide={handleSelectSlide}
+          <div className="w-full">
+            {/* Using our new standardized carousel component */}
+            <StandardCarousel 
+              items={carouselItems}
+              renderItem={renderCarouselItem}
+              autoScroll={true}
+              autoScrollInterval={5000}
+              showArrows={true}
+              itemWidthMobile="90%"
+              itemWidthDesktop="90%"
+              className="w-full"
             />
           </div>
           
