@@ -36,20 +36,12 @@ export function CarouselPagination({ totalItems, activeSlide, onSelectSlide }: C
           {Array.from({ length: totalItems }).map((_, index) => (
             <button
               key={index}
-              className={`transition-all focus:outline-none ${
-                activeSlide === index 
-                  ? "carousel-pagination-dot carousel-pagination-dot-active" 
-                  : "carousel-pagination-dot hover:bg-recipe-purple/50"
+              className={`carousel-pagination-dot ${
+                activeSlide === index ? "carousel-pagination-dot-active" : ""
               }`}
               onClick={() => onSelectSlide(index)}
               aria-label={`Go to slide ${index + 1}`}
               aria-current={activeSlide === index ? "true" : "false"}
-              style={{
-                width: activeSlide === index ? '16px' : '8px',
-                height: '8px',
-                maxWidth: activeSlide === index ? '16px' : '8px',
-                maxHeight: '8px'
-              }}
             />
           ))}
         </div>
