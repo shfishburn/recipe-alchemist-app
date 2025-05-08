@@ -49,7 +49,7 @@ jobs:
           fi
 
           # Generate detailed highlights of added, removed, or modified lines
-          npx diff2html --summary --input-file changes.diff --output-format line-by-line > detailed_summary.html
+          npx diff2html --summary --input-file changes.diff --output-format line-by-line > detailed_summary.html || echo "diff2html failed"
 
       - name: Upload full diff as artifact
         uses: actions/upload-artifact@v4
@@ -78,8 +78,8 @@ jobs:
           else
             echo "Analyzing the following files for suggestions:"
             echo "$CHANGED_FILES"
-            npx eslint $CHANGED_FILES --format json > eslint_report.json
-            cat eslint_report.json | jq '.[] | {filePath, messages}' > suggestions.json
+            npx eslint $CHANGED_FILES --format json > eslint_report.json || echo "ESLint failed"
+            cat eslint_report.json | jq '.[] | {filePath, messages}' > suggestions.json || echo "JQ failed"
           fi
 
       - name: Lint JavaScript/TypeScript files
@@ -91,7 +91,7 @@ jobs:
           else
             echo "Linting the following files:"
             echo "$CHANGED_FILES"
-            npx eslint $CHANGED_FILES --format json > eslint_issues.json
+            npx eslint $CHANGED_FILES --format json > eslint_issues.json || echo "ESLint failed"
             echo "Linting results saved to eslint_issues.json"
           fi
 
