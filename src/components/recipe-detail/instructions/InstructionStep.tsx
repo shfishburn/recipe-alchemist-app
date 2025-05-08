@@ -27,7 +27,7 @@ export const InstructionStep = memo(function InstructionStep({
   const handleToggle = () => toggleStep(index);
   
   return (
-    <li className="group">
+    <li className="group w-full">
       <StepDisplay
         stepNumber={index + 1}
         stepText={<FormattedIngredientText text={step} />}

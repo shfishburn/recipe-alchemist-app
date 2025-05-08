@@ -22,7 +22,7 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
   const hasInstructions = recipe.instructions && recipe.instructions.length > 0;
   
   return (
-    <Card>
+    <Card className="w-full">
       <Collapsible open={isOpen} onOpenChange={onToggle}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -40,9 +40,9 @@ export function RecipeInstructions({ recipe, isOpen, onToggle }: RecipeInstructi
         </CardHeader>
         
         <CollapsibleContent>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 px-4">
             {hasInstructions ? (
-              <ol className="space-y-4">
+              <ol className="space-y-4 w-full">
                 {recipe.instructions.map((step, index) => {
                   const stepReaction = stepReactions?.[index] || null;
                   const isLastStep = index === recipe.instructions.length - 1;

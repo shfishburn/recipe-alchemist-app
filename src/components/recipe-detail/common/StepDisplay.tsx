@@ -33,7 +33,8 @@ export function StepDisplay({
                      ((Array.isArray(stepReaction.reactions) && stepReaction.reactions.length > 0) ||
                       stepReaction.chemical_systems || 
                       stepReaction.thermal_engineering ||
-                      stepReaction.process_parameters);
+                      stepReaction.process_parameters ||
+                      (Array.isArray(stepReaction.reaction_details) && stepReaction.reaction_details.length > 0));
     
   // Styling classes based on state
   const containerClasses = cn(
@@ -78,7 +79,7 @@ export function StepDisplay({
             {stepCategory && <StepCategoryLabel category={stepCategory} />}
           </div>
           
-          {/* Science button */}
+          {/* Science button - Only show if hasScience is true */}
           {hasScience && (
             <Button
               variant="outline"
@@ -99,7 +100,7 @@ export function StepDisplay({
       
       {/* Science info panel */}
       {hasScience && showScience && stepReaction && (
-        <div className="ml-6 mt-2 p-3 bg-blue-50 rounded-md border border-blue-100 shadow-sm">
+        <div className="ml-0 mt-2 p-3 bg-blue-50 rounded-md border border-blue-100 shadow-sm w-full">
           <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
             <Atom className="h-4 w-4 mr-1.5" />
             <span>Scientific Explanation</span>
