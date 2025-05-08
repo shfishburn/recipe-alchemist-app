@@ -30,6 +30,15 @@
     @apply transform scale-[0.97];
   }
   
+  /* Stronger touch feedback for image buttons */
+  .touch-feedback-strong {
+    @apply transition-all duration-200;
+  }
+  
+  .touch-feedback-strong:active {
+    @apply transform scale-[0.92] opacity-70;
+  }
+  
   /* Standardized responsive spacing */
   .spacing-y-responsive {
     @apply space-y-3 sm:space-y-4 md:space-y-6;
@@ -95,6 +104,11 @@
   .touch-target-lg {
     @apply min-h-[54px] min-w-[54px];
   }
+
+  /* Fixed position footer for mobile drawer actions */
+  .drawer-fixed-footer {
+    @apply fixed bottom-0 left-0 right-0 p-4 bg-white border-t;
+  }
   
   /* Cookie consent customizations */
   .cookie-checkbox {
@@ -103,5 +117,10 @@
   
   .cookie-checkbox[data-state="checked"] {
     @apply bg-green-600 border-green-600;
+  }
+
+  /* Mobile-optimized drawer content */
+  .mobile-drawer-footer {
+    @apply sticky bottom-0 left-0 right-0 bg-white border-t py-3 px-4 shadow-lg z-10;
   }
 }

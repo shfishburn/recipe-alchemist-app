@@ -72,3 +72,18 @@
 .scientific-content tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+
+/* Mobile optimizations for image drawer */
+@media (max-width: 640px) {
+  .drawer-content {
+    padding-bottom: 80px; /* Ensure enough space for buttons */
+  }
+  
+  .image-view-touch {
+    min-height: 70vh;
+  }
+  
+  .image-placeholder-cta {
+    min-height: 160px;
+  }
+}

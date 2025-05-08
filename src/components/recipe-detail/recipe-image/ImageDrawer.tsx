@@ -57,10 +57,10 @@ export function ImageDrawer({
         }
       }}
     >
-      <DrawerContent className={expanded ? "h-[95vh]" : "h-[70vh] drawer-content image-view-touch"}>
+      <DrawerContent className={expanded ? "h-[95vh]" : "h-[85vh] drawer-content image-view-touch"}>
         <div className="mx-auto w-full max-w-md">
-          <DrawerHeader className="text-center">
-            <DrawerTitle>{title}</DrawerTitle>
+          <DrawerHeader className="text-center relative">
+            <DrawerTitle className="pr-8">{title}</DrawerTitle>
             <DrawerDescription>
               {imageUrl && !imageError ? "Recipe Image" : "Generate Recipe Image"}
             </DrawerDescription>
@@ -70,13 +70,13 @@ export function ImageDrawer({
             </DrawerClose>
           </DrawerHeader>
           
-          <div className="flex flex-col items-center justify-center px-4 pb-6 pt-0">
+          <div className="flex flex-col items-center justify-center px-4 pb-4 pt-0">
             {imageUrl && !imageError ? (
               <>
                 <img
                   src={imageUrl}
                   alt={title}
-                  className="max-h-[40vh] object-contain rounded-md"
+                  className="max-h-[35vh] object-contain rounded-md"
                   onError={onError}
                 />
                 <Button 
@@ -88,24 +88,24 @@ export function ImageDrawer({
                 </Button>
               </>
             ) : (
-              <div className="text-center py-8">
+              <div className="text-center py-4 sm:py-8">
                 <ImagePlus className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-medium mb-2">Generate Recipe Image</h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-muted-foreground mb-4 sm:mb-6 px-2">
                   Create a beautiful AI-generated image for your recipe
                 </p>
               </div>
             )}
           </div>
           
-          <DrawerFooter className="px-4 pb-8">
-            <div className="flex flex-wrap justify-center gap-2">
+          <DrawerFooter className="px-4 pb-6 pt-0">
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:justify-center gap-2 w-full">
               {imageUrl && !imageError ? (
                 <>
                   <Button
                     onClick={onCustomize}
                     variant="outline"
-                    className="text-muted-foreground hover:text-foreground hover:bg-muted touch-target-base"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted touch-target-base w-full sm:w-auto"
                     disabled={isGenerating}
                   >
                     <Edit className="mr-2 h-4 w-4" />
@@ -115,7 +115,7 @@ export function ImageDrawer({
                     onClick={onGenerate}
                     disabled={isGenerating}
                     variant="secondary"
-                    className="bg-recipe-blue text-white hover:bg-recipe-blue/80 touch-target-base"
+                    className="bg-recipe-blue text-white hover:bg-recipe-blue/80 touch-target-base w-full sm:w-auto"
                   >
                     {isGenerating ? (
                       <>
@@ -135,7 +135,7 @@ export function ImageDrawer({
                   onClick={onGenerate}
                   disabled={isGenerating}
                   variant="secondary"
-                  className="bg-recipe-blue text-white hover:bg-recipe-blue/80 touch-target-base w-full"
+                  className="bg-recipe-blue text-white hover:bg-recipe-blue/80 touch-target-base w-full sm:w-auto"
                 >
                   {isGenerating ? (
                     <>
