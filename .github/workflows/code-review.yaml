@@ -2,10 +2,10 @@ name: Summarize Changes and Detect Issues
 
 on:
   push:
-    branches-ignore:
-      - 'dependabot/**' # Ignore Dependabot branches
     branches:
       - main # Adjust to your target branch
+    paths-ignore:
+      - '**/dependabot/**' # Ignore Dependabot paths instead
 
 # Explicitly define permissions
 permissions:
