@@ -108,18 +108,16 @@ export function NutritionPreview() {
             role="region" 
             aria-label="Nutrition information carousel"
           >
-            {/* Replace Carousel with native scroll */}
-            <div className="w-full overflow-hidden">
+            {/* Updated carousel with standardized classes */}
+            <div className="carousel-container">
               <div 
                 ref={scrollRef} 
-                className="native-scroll-carousel"
-                style={{ scrollSnapType: 'x mandatory' }}
+                className="carousel-scroll-area"
               >
                 {macroDistributionData.map((item, index) => (
                   <div 
                     key={index} 
-                    className="native-scroll-carousel-item" 
-                    style={{ scrollSnapAlign: 'start' }}
+                    className="carousel-item carousel-item-nutrition" 
                     aria-hidden={activeSlide !== index}
                   >
                     <MacroCarouselItem 

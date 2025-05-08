@@ -25,21 +25,21 @@ export function CarouselPagination({ totalItems, activeSlide, onSelectSlide }: C
         <Button 
           variant="outline" 
           size="icon" 
-          className="rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-purple hover:text-white hover:border-transparent"
+          className="carousel-nav-button"
           onClick={handlePrevious}
         >
           <ChevronLeft className="h-4 w-4" />
           <span className="sr-only">Previous slide</span>
         </Button>
         
-        <div className="flex gap-2 items-center">
+        <div className="carousel-pagination">
           {Array.from({ length: totalItems }).map((_, index) => (
             <button
               key={index}
               className={`transition-all focus:outline-none ${
                 activeSlide === index 
-                  ? "w-6 h-2.5 bg-recipe-purple rounded-full" 
-                  : "w-2.5 h-2.5 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-recipe-purple/50"
+                  ? "carousel-pagination-dot carousel-pagination-dot-active" 
+                  : "carousel-pagination-dot hover:bg-recipe-purple/50"
               }`}
               onClick={() => onSelectSlide(index)}
               aria-label={`Go to slide ${index + 1}`}
@@ -51,7 +51,7 @@ export function CarouselPagination({ totalItems, activeSlide, onSelectSlide }: C
         <Button 
           variant="outline" 
           size="icon" 
-          className="rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-purple hover:text-white hover:border-transparent"
+          className="carousel-nav-button"
           onClick={handleNext}
         >
           <ChevronRight className="h-4 w-4" />

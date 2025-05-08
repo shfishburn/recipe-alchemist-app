@@ -88,35 +88,4 @@
   }
 }
 
-/* Native scroll-based content carousel - NEW */
-.native-scroll-carousel {
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-  display: flex;
-  overflow-x: auto;
-  padding: 0.5rem 0;
-  gap: 1rem;
-  scrollbar-width: none; /* Hide scrollbar for Firefox */
-}
-
-.native-scroll-carousel::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for Chrome/Safari */
-}
-
-.native-scroll-carousel-item {
-  scroll-snap-align: start;
-  flex: 0 0 auto;
-  width: 90%;
-}
-
-@media (min-width: 640px) {
-  .native-scroll-carousel-item {
-    width: 45%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .native-scroll-carousel-item {
-    width: 30%;
-  }
-}
+/* Removed duplicate native scroll carousel classes since they're now in components.css */

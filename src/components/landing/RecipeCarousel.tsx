@@ -77,15 +77,15 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          {/* Replace Carousel with native scroll */}
+          {/* Updated carousel with standardized classes */}
           <div 
-            className="w-full max-w-5xl mx-auto scroll-container-with-indicators"
+            className="carousel-container carousel-container-with-indicators"
             role="region" 
             aria-label="Recipe carousel"
           >
             <div 
               ref={scrollRef}
-              className="scroll-container" 
+              className="carousel-scroll-area" 
               tabIndex={0}
               aria-live="polite"
             >
@@ -93,8 +93,8 @@ export function RecipeCarousel() {
                 <div 
                   key={recipe.id} 
                   className={classnames(
-                    "scroll-item",
-                    isMobile ? "w-[85%]" : "w-[45%] md:w-[30%]"
+                    "carousel-item",
+                    isMobile ? "carousel-item-mobile" : "carousel-item-desktop"
                   )}
                   aria-hidden={activeIndex !== index}
                 >
@@ -109,14 +109,14 @@ export function RecipeCarousel() {
             </div>
           </div>
           
-          {/* Pagination dots */}
-          <div className="scroll-dots" role="tablist">
+          {/* Pagination dots with standardized classes */}
+          <div className="carousel-pagination" role="tablist">
             {featuredRecipes.map((_, index) => (
               <button
                 key={index}
                 className={classnames(
-                  "scroll-dot touch-target-base",
-                  activeIndex === index ? "scroll-dot-active" : ""
+                  "carousel-pagination-dot touch-target-base",
+                  activeIndex === index ? "carousel-pagination-dot-active" : ""
                 )}
                 onClick={() => scrollToItem(index)}
                 role="tab"
