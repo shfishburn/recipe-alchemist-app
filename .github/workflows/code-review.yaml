@@ -20,6 +20,8 @@ jobs:
   analyze_changes:
     if: ${{ (github.event_name == 'push' && github.actor != 'dependabot[bot]') || (github.event_name == 'pull_request' && !startsWith(github.head_ref, 'dependabot/')) }}
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
       - name: Checkout code
@@ -51,7 +53,7 @@ jobs:
 
           # Generate detailed highlights of added, removed, or modified lines
           npx diff2html --summary --input-file changes.diff --output-format line-by-line > detailed_summary.html || echo "diff2html failed"
-
+      
       - name: Upload full diff as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -70,6 +72,19 @@ jobs:
           else
             npm install
           fi
+          npm install @octokit/rest axios
+
+      - name: Generate OpenAI code analysis
+        id: openai_analysis
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY is not set. Skipping OpenAI analysis."
+          else
+            echo "Generating AI code analysis..."
+            node ./.github/workflows/scripts/analyze-with-openai.js
+          fi
+        env:
+          CHANGES_DIFF: ${{ github.workspace }}/changes.diff
 
       - name: Analyze changes for suggestions
         run: |
@@ -101,6 +116,7 @@ jobs:
         env:
           AUTHOR: ${{ steps.commit_info.outputs.author || 'Unknown Author' }}
           COMMIT_MSG: ${{ steps.commit_info.outputs.commit_msg || 'No commit message available' }}
+          OPENAI_ANALYSIS: ${{ steps.openai_analysis.outputs.analysis || 'No AI analysis available' }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -120,6 +136,17 @@ jobs:
             if (fs.existsSync('eslint_issues.json')) {
               eslintIssues = JSON.parse(fs.readFileSync('eslint_issues.json', 'utf8'));
             }
+            
+            let aiAnalysis = process.env.OPENAI_ANALYSIS || 'AI analysis not available';
+            
+            try {
+              // Try to read from file if available
+              if (fs.existsSync('openai_analysis.txt')) {
+                aiAnalysis = fs.readFileSync('openai_analysis.txt', 'utf8');
+              }
+            } catch (err) {
+              console.error('Error reading AI analysis file:', err);
+            }
 
             const issueBody = `
               ## Code Review for Recent Changes
@@ -127,6 +154,9 @@ jobs:
               **Commit**: ${context.sha}  
               **Author**: ${process.env.AUTHOR}  
               **Message**: ${process.env.COMMIT_MSG}  
+
+              ### AI Code Analysis
+              ${aiAnalysis}
 
               ### Summary of Changes
               \`\`\`
@@ -149,3 +179,4 @@ jobs:
               body: issueBody,
               labels: ['automated-review']
             });
+
