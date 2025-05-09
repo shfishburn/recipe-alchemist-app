@@ -32,4 +32,9 @@ module.exports = {
     '/node_modules/',
     '/dist/',
   ],
+  globals: {
+    'ts-jest': {
+      isolatedModules: true
+    }
+  }
 };

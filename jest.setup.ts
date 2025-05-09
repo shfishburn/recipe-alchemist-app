@@ -2,6 +2,16 @@
 // Configure testing library
 import '@testing-library/jest-dom';
 
+// Add the missing type declarations
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeInTheDocument(): R;
+      toBeDisabled(): R;
+    }
+  }
+}
+
 // Mock IntersectionObserver
 class MockIntersectionObserver {
   constructor(callback: IntersectionObserverCallback) {

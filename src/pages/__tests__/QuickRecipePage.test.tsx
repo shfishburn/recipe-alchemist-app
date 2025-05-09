@@ -33,6 +33,7 @@ jest.mock('@/hooks/use-quick-recipe', () => ({
   }))
 }));
 
+// Mock the store
 jest.mock('@/store/use-quick-recipe-store');
 
 // Create test renderer wrapper
@@ -47,6 +48,12 @@ const renderWithRouter = (component: React.ReactNode) => {
 describe('QuickRecipePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Cast the mock to the correct type
+    (useQuickRecipeStore as jest.Mock).mockReturnValue({
+      recipe: null,
+      isLoading: false,
+      error: null
+    });
   });
 
   it('should render the form container when in direct navigation mode', () => {
@@ -64,7 +71,7 @@ describe('QuickRecipePage', () => {
       handleCancel: jest.fn(),
       toggleDebugMode: jest.fn()
     });
-
+    
     // Mock the store
     (useQuickRecipeStore as jest.Mock).mockReturnValue({
       recipe: null,
