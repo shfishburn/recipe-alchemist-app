@@ -22,7 +22,7 @@ export function CarouselNavigation({
         onClick={onPrevious}
         className={cn(
           "carousel-nav-button absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
-          arrowPosition === "outside" ? "-left-10" : "left-2"
+          arrowPosition === "outside" ? "-left-12 md:-left-16" : "left-2"
         )}
         aria-label="Previous slide"
       >
@@ -34,7 +34,7 @@ export function CarouselNavigation({
         onClick={onNext}
         className={cn(
           "carousel-nav-button absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
-          arrowPosition === "outside" ? "-right-10" : "right-2"
+          arrowPosition === "outside" ? "-right-12 md:-right-16" : "right-2"
         )}
         aria-label="Next slide"
       >

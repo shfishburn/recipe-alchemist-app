@@ -31,10 +31,8 @@ export function UserDashboard() {
         </section>
 
         {/* Trending Recipes Carousel */}
-        <section className="flex justify-center">
-          <div className="w-full max-w-6xl mx-auto">
-            <RecipeCarousel />
-          </div>
+        <section className="w-full py-4">
+          <RecipeCarousel />
         </section>
 
       </div>
