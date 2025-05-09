@@ -64,10 +64,24 @@ const Auth = () => {
         }
         
         // Check if we need to resume recipe generation
-        if (locationData.recipeGenerationData) {
-          // Store recipe data to be picked up after navigation
-          sessionStorage.setItem('recipeGenerationSource', 
-            JSON.stringify(locationData.recipeGenerationData));
+        const recipeGenerationData = sessionStorage.getItem('recipeGenerationSource');
+        if (recipeGenerationData) {
+          try {
+            // Parse the recipe generation data
+            const parsedData = JSON.parse(recipeGenerationData);
+            
+            // If we're returning to the quick recipe page with data, store it in state
+            if (locationData.pathname === '/quick-recipe' && parsedData) {
+              redirectState = {
+                ...redirectState,
+                recipeData: parsedData
+              };
+            }
+            
+            console.log("Found recipe generation data to resume:", parsedData);
+          } catch (error) {
+            console.error("Error parsing recipe generation data:", error);
+          }
         }
         
         console.log("Redirecting to:", redirectTo, "with state:", redirectState);

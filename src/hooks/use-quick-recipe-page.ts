@@ -16,10 +16,36 @@ export function useQuickRecipePage() {
   const [debugMode, setDebugMode] = useState(false);
   
   // Check if we're navigating from navbar (no state)
-  const isDirectNavigation = !location.state;
+  const isDirectNavigation = !location.state && !location.state?.recipeData;
 
   // Check if we need to resume recipe generation after login
   useEffect(() => {
+    // Check for recipe data in location state (coming from Auth redirect)
+    if (location.state?.recipeData && !isLoading && !recipe) {
+      const recipeData = location.state.recipeData;
+      
+      console.log("Resuming recipe generation from location state:", recipeData);
+      
+      if (recipeData.formData) {
+        // Start the generation process
+        setLoading(true);
+        setFormData(recipeData.formData);
+        
+        // Start an async generation
+        generateQuickRecipe(recipeData.formData).catch(err => {
+          console.error("Error resuming recipe generation:", err);
+          toast({
+            title: "Recipe generation failed",
+            description: err.message || "Please try again later.",
+            variant: "destructive",
+          });
+        });
+      }
+      
+      return;
+    }
+    
+    // Check for recipe data in session storage (after login)
     if (session) {
       const storedGenerationData = sessionStorage.getItem('recipeGenerationSource');
       if (storedGenerationData && !isLoading && !recipe) {
@@ -49,7 +75,7 @@ export function useQuickRecipePage() {
         }
       }
     }
-  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData]);
+  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, location.state]);
 
   // Reset loading state if navigating directly from navbar
   useEffect(() => {

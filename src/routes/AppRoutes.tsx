@@ -29,6 +29,11 @@ export const AppRoutes = () => {
           <LazyRoutes.QuickRecipePage />
         </Suspense>
       } />
+      <Route path="/auth" element={
+        <Suspense fallback={<PageLoadingFallback />}>
+          <LazyRoutes.Auth />
+        </Suspense>
+      } />
       <Route path="/how-it-works" element={
         <Suspense fallback={<PageLoadingFallback />}>
           <LazyRoutes.HowItWorks />

@@ -19,3 +19,4 @@ export const Terms = lazy(() => import("@/pages/Terms"));
 export const Cookies = lazy(() => import("@/pages/Cookies"));
 export const QuickRecipePage = lazy(() => import("@/pages/QuickRecipePage"));
 export const DataImport = lazy(() => import("@/pages/DataImport"));
+export const Auth = lazy(() => import("@/pages/Auth"));

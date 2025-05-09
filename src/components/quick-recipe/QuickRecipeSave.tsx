@@ -10,12 +10,13 @@ import { estimateNutrition } from './nutrition-estimation';
 import { useQueryClient } from '@tanstack/react-query';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
 import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
+import { toast } from 'sonner';
 
 export const useQuickRecipeSave = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const queryClient = useQueryClient();
 
   const saveRecipe = async (recipe: QuickRecipe) => {
@@ -28,8 +29,27 @@ export const useQuickRecipeSave = () => {
 
       console.log("Saving recipe:", recipe);
       
-      if (!user?.id) {
-        throw new Error("You must be logged in to save recipes");
+      // Check if user is authenticated
+      if (!session || !user?.id) {
+        console.log("User not authenticated, redirecting to login");
+        
+        // Store the current recipe data in session storage
+        sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
+          formData: recipe,
+          returnToRecipe: true
+        }));
+        
+        // Redirect to auth page with current location
+        navigate('/auth', { 
+          state: { 
+            from: { 
+              pathname: '/quick-recipe',
+              state: { returningUser: true }
+            } 
+          } 
+        });
+        
+        return false;
       }
       
       // Ensure nutrition data is available or estimate it
@@ -113,7 +133,8 @@ export const useQuickRecipeSave = () => {
         nutrition: nutritionData ? "present" : "missing",
         nutrition_type: nutritionData ? typeof nutritionData : "N/A",
         cuisine: cuisineString,
-        cuisine_category: cuisineCategory
+        cuisine_category: cuisineCategory,
+        user_id: user.id
       });
 
       // Insert the recipe into the database - using a cleaner insert approach
@@ -152,7 +173,7 @@ export const useQuickRecipeSave = () => {
       setTimeout(() => {
         if (data?.id) {
           // Navigate to the specific recipe detail page instead of the recipes list
-          navigate(`/recipe/${data.id}`);
+          navigate(`/recipes/${data.id}`);
         } else {
           // Fallback to recipes list if ID is not available
           navigate('/recipes');
