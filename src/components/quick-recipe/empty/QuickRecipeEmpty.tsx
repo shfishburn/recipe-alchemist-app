@@ -1,22 +1,23 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { QuickRecipeFormContainer } from '../QuickRecipeFormContainer';
 
 export function QuickRecipeEmpty() {
-  const navigate = useNavigate();
-  
   return (
-    <div className="text-center">
-      <p className="text-muted-foreground">No recipe found. 
-        <Button 
-          variant="link" 
-          onClick={() => navigate('/')}
-          className="p-0 h-auto text-primary underline"
-        >
-          &nbsp;Return to home
-        </Button>
-      </p>
+    <div className="animate-fadeIn" data-testid="quick-recipe-empty">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <p className="text-muted-foreground">
+            Start by entering your ingredients and preferences below
+          </p>
+        </div>
+        
+        <div className="mx-auto mb-8 max-w-xl lg:max-w-2xl">
+          <QuickRecipeFormContainer />
+        </div>
+      </div>
     </div>
   );
 }
+
+export default QuickRecipeEmpty;

@@ -39,7 +39,9 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying }: Full
           />
         ) : (
           // Show loading animation
-          <QuickRecipeLoading />
+          <div data-testid="loading-animation">
+            <QuickRecipeLoading />
+          </div>
         )}
       </div>
     </div>
