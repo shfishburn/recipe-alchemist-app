@@ -126,7 +126,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setLoading(false);
       }
-    }).catch(err => {
+    }).catch((err) => {
+      // Fixed TypeScript error by using a regular function parameter
       console.error('Error in getSession:', err);
       handleTokenRefreshError();
     });
