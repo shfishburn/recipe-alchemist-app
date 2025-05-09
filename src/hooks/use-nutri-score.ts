@@ -27,7 +27,7 @@ export function useNutriScore(recipe: Recipe) {
       const { data, error } = await supabase.rpc(
         'calculate_nutri_score',
         { 
-          nutrition: recipe.nutrition,
+          nutrition: recipe.nutrition as any, // Type assertion to treat nutrition as JSON
           category: recipe.cuisine_category?.toLowerCase() || 'food',
           fruit_veg_nuts_percent: 0 // Default value, could be made dynamic
         }
