@@ -19,7 +19,7 @@
 
 /* Content padding below navbar */
 .content-padding-top {
-  @apply pt-24;
+  @apply pt-28 md:pt-32;
 }
 
 /* Fixed position footer for mobile drawer actions */

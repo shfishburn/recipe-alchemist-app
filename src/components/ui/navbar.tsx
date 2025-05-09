@@ -47,12 +47,12 @@ export function Navbar({ className = '' }: { className?: string }) {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 bg-white/80 border-b shadow-sm transition-transform duration-300',
+        'sticky inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-4 md:py-5',
         hidden ? '-translate-y-full' : 'translate-y-0',
         className
       )}
     >
-      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto flex items-center justify-between h-16">
+      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto flex items-center justify-between">
         {/* Left side: Mobile menu and logo */}
         <div className="flex items-center gap-4">
           <MobileMenu />
@@ -66,7 +66,7 @@ export function Navbar({ className = '' }: { className?: string }) {
         </div>
 
         {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center justify-center space-x-8">
+        <nav className="hidden md:flex items-center justify-center space-x-10">
           {displayedLinks.map(link => {
             const active = location.pathname === link.path;
             return (

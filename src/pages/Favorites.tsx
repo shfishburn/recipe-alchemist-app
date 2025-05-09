@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import { PageSeo } from '@/components/seo/PageSeo';
@@ -26,7 +27,7 @@ const Favorites = () => {
           <BreadcrumbNav items={breadcrumbItems} />
           
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">Favorite Recipes</h1>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Favorite Recipes</h1>
             <p className="text-base text-muted-foreground mb-8">
               Access your saved favorite recipes for quick reference and meal planning.
             </p>

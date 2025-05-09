@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
@@ -72,7 +71,7 @@ const HowItWorks = () => {
           <BreadcrumbNav items={breadcrumbItems} />
           
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">Our Science</h1>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Our Science</h1>
             <p className="text-base text-muted-foreground mb-8">
               Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
             </p>
