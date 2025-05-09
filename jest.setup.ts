@@ -15,7 +15,7 @@ import '@testing-library/jest-dom';
 // Explicitly extend Jest's matchers
 declare global {
   namespace jest {
-    interface Matchers<R, T = any> {
+    interface Matchers<R> {
       toBeInTheDocument(): R;
       toBeDisabled(): R;
       toBeEnabled(): R;
