@@ -22,4 +22,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  css: {
+    // Enable CSS modules for all CSS files
+    modules: {
+      localsConvention: 'camelCase',
+    },
+    // Apply PostCSS to all CSS files
+    postcss: './postcss.config.cjs'
+  },
 }));
