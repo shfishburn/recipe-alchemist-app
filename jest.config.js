@@ -53,7 +53,11 @@ module.exports = {
   globals: {
     'ts-jest': {
       // Improves performance by avoiding type checking during tests
-      isolatedModules: true
+      isolatedModules: true,
+      // Tell ts-jest to use the setup file for typing
+      tsconfig: {
+        jsx: "react-jsx"
+      }
     }
   }
 };
