@@ -11,6 +11,7 @@
 
 // Import Testing Library DOM matchers
 import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/extend-expect';
 
 /**
  * Type Declarations for Testing Library matchers
@@ -45,7 +46,6 @@ declare global {
       toBeChecked(): R;
       toBePartiallyChecked(): R;
       toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): R;
-      toBeRequired(): R;
       toHaveErrorMessage(text: string | RegExp): R;
     }
   }
