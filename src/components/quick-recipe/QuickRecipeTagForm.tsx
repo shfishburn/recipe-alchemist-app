@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -66,7 +65,7 @@ const QuickRecipeTagForm = ({
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="ingredients" className="text-sm font-medium">Ingredients</Label>
-        <div className="w-full">
+        <div className="w-full text-center">
           <input
             type="text"
             id="ingredients"
@@ -74,9 +73,17 @@ const QuickRecipeTagForm = ({
             value={localIngredients}
             onChange={handleInputChange}
             aria-label="Enter your ingredients"
-            className="w-full flex-1 border-0 bg-transparent p-0 outline-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className="
+              w-full flex-1
+              border border-slate-300 rounded-md
+              bg-white p-2
+              outline-none focus:outline-none
+              focus:ring-2 focus:ring-slate-400
+              placeholder:text-center placeholder:text-muted-foreground
+              disabled:cursor-not-allowed disabled:opacity-50
+            "
           />
-          <p className="mt-1 text-sm text-muted-foreground text-center">
+          <p className="mt-1 block w-full text-sm text-muted-foreground">
             e.g., chicken, rice, vegetables
           </p>
         </div>
@@ -92,7 +99,7 @@ const QuickRecipeTagForm = ({
           />
         </div>
 
-        {/* Cuisine Selector - Consistent ordering */}
+        {/* Cuisine Selector */}
         <div className="space-y-2">
           <Label htmlFor="cuisine" className="text-sm font-medium">Cuisine</Label>
           <CuisineSelector 
@@ -101,7 +108,7 @@ const QuickRecipeTagForm = ({
           />
         </div>
 
-        {/* Dietary Selector - Consistent ordering */}
+        {/* Dietary Selector */}
         <div className="space-y-2">
           <Label htmlFor="dietary" className="text-sm font-medium">Dietary</Label>
           <DietarySelector
