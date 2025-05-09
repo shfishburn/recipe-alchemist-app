@@ -5,6 +5,7 @@ import App from './App.tsx';
 import './index.css';
 import './styles/main.css';
 import { HelmetProvider } from 'react-helmet-async';
+import { BrowserRouter } from 'react-router-dom';
 
 // Function to safely initialize the app
 const initializeApp = () => {
@@ -21,9 +22,11 @@ const initializeApp = () => {
     const root = createRoot(rootElement);
     
     root.render(
-      <HelmetProvider>
-        <App />
-      </HelmetProvider>
+      <BrowserRouter>
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
+      </BrowserRouter>
     );
   } catch (error) {
     console.error('Failed to render application:', error);

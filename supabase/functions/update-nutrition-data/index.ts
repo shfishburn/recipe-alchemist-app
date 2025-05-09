@@ -1,8 +1,13 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { corsHeaders } from "./constants.ts";
-import { processRecipeBatch } from "./batch-processor.ts";
-import { createSupabaseAdmin } from "./utils.ts";
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { corsHeaders } from './constants.ts';
+import { processRecipeBatch } from './batch-processor.ts';
+
+// Initialize Supabase client with environment variables
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   // Handle CORS
@@ -11,20 +16,12 @@ serve(async (req) => {
   }
   
   try {
-    console.log('Starting recipe data update process');
+    console.log('Starting nutrition data update process');
     
-    // Parse request body
-    let params;
-    try {
-      params = await req.json();
-    } catch (e) {
-      params = {};
-    }
-    
-    // Get parameters from request or use defaults
-    const batchSize = params.batchSize || 50;
-    const dryRun = params.dryRun === true;
-    const updateType = params.updateType || 'nutrition'; // 'nutrition' or 'science'
+    // Get batch size from request or use default
+    const url = new URL(req.url);
+    const batchSize = parseInt(url.searchParams.get('batchSize') || '50');
+    const dryRun = url.searchParams.get('dryRun') === 'true';
     
     // Only allow authorized requests 
     const authHeader = req.headers.get('Authorization');
@@ -35,13 +32,10 @@ serve(async (req) => {
       });
     }
     
-    // Initialize Supabase client
-    const supabase = createSupabaseAdmin();
-    
     // Fetch all recipes from the database
     const { data: recipes, error } = await supabase
       .from('recipes')
-      .select('id, nutrition, science_notes')
+      .select('id, nutrition')
       .order('created_at', { ascending: false })
       .is('deleted_at', null);
     
@@ -49,7 +43,7 @@ serve(async (req) => {
       throw new Error(`Error fetching recipes: ${error.message}`);
     }
     
-    console.log(`Found ${recipes.length} recipes to process for ${updateType} updates`);
+    console.log(`Found ${recipes.length} recipes to process`);
     
     // Process the recipes in batches
     let totalUpdated = 0;
@@ -59,7 +53,7 @@ serve(async (req) => {
       // Process in batches to avoid timeouts
       for (let i = 0; i < recipes.length; i += batchSize) {
         const batch = recipes.slice(i, i + batchSize);
-        const { updatedCount, errorCount } = await processRecipeBatch(batch, supabase, { updateType });
+        const { updatedCount, errorCount } = await processRecipeBatch(batch, supabase);
         totalUpdated += updatedCount;
         totalErrors += errorCount;
       }
@@ -72,8 +66,7 @@ serve(async (req) => {
         totalRecipes: recipes.length,
         updatedRecipes: totalUpdated,
         errorCount: totalErrors,
-        dryRun: dryRun,
-        updateType: updateType
+        dryRun: dryRun
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -82,7 +75,7 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    console.error('Error in update function:', error);
+    console.error('Error in update-nutrition-data function:', error);
     
     return new Response(
       JSON.stringify({ error: error.message }),

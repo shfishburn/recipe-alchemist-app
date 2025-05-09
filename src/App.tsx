@@ -1,123 +1,71 @@
 
-import React, { Suspense } from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Route,
-  createRoutesFromElements,
-} from "react-router-dom";
+import React, { Suspense, lazy, StrictMode } from "react";
+import "./styles/loading.css";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProfileProvider } from "@/contexts/ProfileContext";
+import { CookieConsentProvider } from "@/hooks/use-cookie-consent";
+import { queryClient } from "@/lib/query-client";
+import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
 
-import { Shell } from "@/components/shell";
-import { HomePage } from "@/pages/HomePage";
-import { RecipeDetailPage } from "@/pages/RecipeDetailPage";
-import { NotFoundPage } from "@/pages/NotFoundPage";
-import { LoadingIndicator } from "@/components/ui/loading-indicator";
-import { RecipeChatPage } from '@/pages/RecipeChatPage';
-import AdminPage from '@/pages/AdminPage';
+// Import AppLayout with lazy loading
+const AppLayout = lazy(() => import("@/components/layout/AppLayout").then(module => ({
+  default: module.AppLayout
+})));
 
-// Import lazy components from LazyRoutes
-import * as LazyRoutes from "@/routes/LazyRoutes";
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<Shell />}>
-      <Route index element={<HomePage />} />
-      <Route path="recipe/:idOrSlug" element={<RecipeDetailPage />} />
-      <Route path="chat/:recipeId" element={<RecipeChatPage />} />
-      <Route path="admin" element={<AdminPage />} />
-      
-      {/* Add routes from AppRoutes.tsx */}
-      <Route path="/recipes" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Recipes />
-        </Suspense>
-      } />
-      <Route path="/recipes/:id" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.RecipeDetail />
-        </Suspense>
-      } />
-      <Route path="/quick-recipe" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.QuickRecipePage />
-        </Suspense>
-      } />
-      <Route path="/how-it-works" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.HowItWorks />
-        </Suspense>
-      } />
-      <Route path="/how-it-works/:slug" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.ArticleDetail />
-        </Suspense>
-      } />
-      <Route path="/faq" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.FAQ />
-        </Suspense>
-      } />
-      <Route path="/about" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.About />
-        </Suspense>
-      } />
-      <Route path="/contact" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Contact />
-        </Suspense>
-      } />
-      <Route path="/privacy" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Privacy />
-        </Suspense>
-      } />
-      <Route path="/terms" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Terms />
-        </Suspense>
-      } />
-      <Route path="/cookies" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Cookies />
-        </Suspense>
-      } />
-      <Route path="/profile" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Profile />
-        </Suspense>
-      } />
-      <Route path="/shopping-lists" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.ShoppingLists />
-        </Suspense>
-      } />
-      <Route path="/shopping-lists/:id" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.ShoppingLists />
-        </Suspense>
-      } />
-      <Route path="/favorites" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.Favorites />
-        </Suspense>
-      } />
-      <Route path="/data-import" element={
-        <Suspense fallback={<LoadingIndicator />}>
-          <LazyRoutes.DataImport />
-        </Suspense>
-      } />
-      <Route path="*" element={<NotFoundPage />} />
-    </Route>
-  )
+const App = () => (
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <Suspense fallback={<PageLoadingFallback />}>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ProfileProvider>
+              <CookieConsentProvider>
+                <AppLayout />
+              </CookieConsentProvider>
+            </ProfileProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </Suspense>
+    </QueryClientProvider>
+  </StrictMode>
 );
 
-function App() {
-  return (
-    <Suspense fallback={<LoadingIndicator />}>
-      <RouterProvider router={router} />
-    </Suspense>
-  );
+// Simple error boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("App error:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen flex-col p-4 text-center">
+          <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
+          <p className="mb-4">The application encountered an unexpected error.</p>
+          <button
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={() => window.location.reload()}
+          >
+            Reload App
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export default App;
