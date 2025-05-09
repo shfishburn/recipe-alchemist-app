@@ -28,31 +28,54 @@
 
 /* Pagination dots */
 .carousel-pagination {
-  @apply flex justify-center gap-1.5 mt-2;
+  @apply flex justify-center gap-1 sm:gap-1.5 mt-1 sm:mt-2;
 }
 
 .carousel-pagination-dot {
-  width: 8px !important;
-  height: 8px !important;
+  width: 6px !important;
+  height: 6px !important;
   @apply rounded-full bg-gray-300 transition-all duration-200;
   transform-origin: center;
-  max-width: 8px !important;
-  max-height: 8px !important;
+  max-width: 6px !important;
+  max-height: 6px !important;
+}
+
+@media (min-width: 640px) {
+  .carousel-pagination-dot {
+    width: 8px !important;
+    height: 8px !important;
+    max-width: 8px !important;
+    max-height: 8px !important;
+  }
 }
 
 .carousel-pagination-dot-active {
   @apply bg-recipe-blue;
-  width: 16px !important;
-  max-width: 16px !important;
+  width: 12px !important;
+  max-width: 12px !important;
+}
+
+@media (min-width: 640px) {
+  .carousel-pagination-dot-active {
+    width: 16px !important;
+    max-width: 16px !important;
+  }
 }
 
 /* Carousel navigation buttons */
 .carousel-nav-button {
-  @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-purple hover:text-white hover:border-transparent;
-  min-height: 40px;
-  min-width: 40px;
+  @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-blue hover:text-white hover:border-transparent;
+  min-height: 32px;
+  min-width: 32px;
   opacity: 0.9;
   transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .carousel-nav-button {
+    min-height: 40px;
+    min-width: 40px;
+  }
 }
 
 .carousel-nav-button:hover {
@@ -92,21 +115,8 @@
 
 /* Additional mobile optimizations */
 @media (max-width: 640px) {
-  .carousel-nav-button {
-    min-height: 36px;
-    min-width: 36px;
-  }
-  
-  .carousel-pagination-dot {
-    width: 6px !important;
-    height: 6px !important;
-    max-width: 6px !important;
-    max-height: 6px !important;
-  }
-  
-  .carousel-pagination-dot-active {
-    width: 12px !important;
-    max-width: 12px !important;
+  .carousel-pagination {
+    gap: 0.75rem;
   }
   
   .reduce-motion-mobile {

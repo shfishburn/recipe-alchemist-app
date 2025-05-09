@@ -7,9 +7,11 @@ import { CookingPot } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { Carousel, type CarouselItem } from '@/components/ui/carousel';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
+  const isMobile = useIsMobile();
   
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
@@ -28,7 +30,7 @@ export function RecipeCarousel() {
   const renderCarouselItem = (item: CarouselItem, index: number, isActive: boolean) => {
     const recipe = item.content as Recipe;
     return (
-      <div className="w-full h-full px-2">
+      <div className="w-full h-full px-1 sm:px-2">
         <RecipeCard 
           recipe={recipe} 
           priority={index === 0 || index === 1}
@@ -46,30 +48,30 @@ export function RecipeCarousel() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center space-y-5 md:space-y-8 w-full">
-          <div className="flex flex-col items-center justify-center gap-2 md:gap-2 mb-4 md:mb-6">
+        <div className="flex flex-col items-center space-y-3 md:space-y-8 w-full">
+          <div className="flex flex-col items-center justify-center gap-1 md:gap-2 mb-2 md:mb-6">
             <div className="flex items-center gap-1.5 md:gap-2">
-              <CookingPot className="h-5 w-5 md:h-5 md:w-5 text-recipe-green" />
-              <h2 className="text-lg md:text-2xl font-semibold text-center">
+              <CookingPot className="h-4 w-4 md:h-5 md:w-5 text-recipe-green" />
+              <h2 className="text-base md:text-2xl font-semibold text-center">
                 Trending in Kitchens Like Yours
               </h2>
             </div>
-            <p className="text-sm md:text-base text-muted-foreground text-center max-w-2xl mt-1.5 md:mt-2 px-2">
-              These recipes are being shared across kitchens similar to yours — find out what makes them special
+            <p className="text-xs md:text-base text-muted-foreground text-center max-w-2xl mt-1 md:mt-2 px-2">
+              These recipes are being shared across kitchens similar to yours
             </p>
           </div>
           
-          {/* Using our updated Carousel component with appropriate settings */}
+          {/* Using our updated Carousel component with optimized mobile settings */}
           <Carousel 
             items={carouselItems}
             renderItem={renderCarouselItem}
             showArrows={true}
             showDots={true}
             showCounter={false}
-            itemWidthMobile="80%"
+            itemWidthMobile="85%"
             itemWidthDesktop="33%"
-            gap="gap-3"
-            arrowPosition="outside"
+            gap="gap-2 md:gap-3"
+            arrowPosition="inside"
             className="w-full max-w-5xl"
             autoScroll={false}
           />

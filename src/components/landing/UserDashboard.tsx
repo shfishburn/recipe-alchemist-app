@@ -1,7 +1,6 @@
 
 // path: src/components/landing/UserDashboard.tsx
 // file: UserDashboard.tsx
-// updated: 2025-05-09 14:30 PM
 
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
@@ -13,8 +12,8 @@ export function UserDashboard() {
   const { profile } = useAuth();
 
   return (
-    <PageContainer className="py-6 md:py-12">
-      <div className="space-y-10">
+    <PageContainer className="py-4 md:py-12">
+      <div className="space-y-8 md:space-y-10">
 
         {/* Personalized Welcome */}
         <div>
@@ -25,13 +24,13 @@ export function UserDashboard() {
 
         {/* Quick Actions Section */}
         <section>
-          <div className="w-full max-w-3xl mx-auto bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100 transition-shadow hover:shadow-xl">
+          <div className="w-full max-w-3xl mx-auto bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 transition-shadow hover:shadow-xl">
             <QuickRecipeGenerator />
           </div>
         </section>
 
-        {/* Trending Recipes Carousel */}
-        <section className="w-full py-4">
+        {/* Trending Recipes Carousel - Full width on mobile */}
+        <section className="w-full py-2 sm:py-4 -mx-4 sm:mx-0 px-0 sm:px-4">
           <RecipeCarousel />
         </section>
 

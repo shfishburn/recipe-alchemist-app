@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CarouselNavProps } from "./types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function CarouselNavigation({ 
   onPrevious, 
@@ -12,7 +13,12 @@ export function CarouselNavigation({
   showArrows,
   itemsCount 
 }: CarouselNavProps) {
+  const isMobile = useIsMobile();
+  
   if (!showArrows || itemsCount <= 1) return null;
+  
+  // Always use "inside" position on mobile
+  const effectivePosition = isMobile ? "inside" : arrowPosition;
   
   return (
     <>
@@ -22,11 +28,12 @@ export function CarouselNavigation({
         onClick={onPrevious}
         className={cn(
           "carousel-nav-button absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
-          arrowPosition === "outside" ? "-left-12 md:-left-16" : "left-2"
+          effectivePosition === "outside" ? "-left-12 md:-left-16" : "left-1 sm:left-2",
+          "w-8 h-8 sm:w-10 sm:h-10"
         )}
         aria-label="Previous slide"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
       <Button 
         variant="outline" 
@@ -34,11 +41,12 @@ export function CarouselNavigation({
         onClick={onNext}
         className={cn(
           "carousel-nav-button absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
-          arrowPosition === "outside" ? "-right-12 md:-right-16" : "right-2"
+          effectivePosition === "outside" ? "-right-12 md:-right-16" : "right-1 sm:right-2",
+          "w-8 h-8 sm:w-10 sm:h-10"
         )}
         aria-label="Next slide"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
     </>
   );
