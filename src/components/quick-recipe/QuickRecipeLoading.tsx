@@ -6,7 +6,7 @@ import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import { useAudioInteraction } from '@/hooks/use-audio-interaction';
 import { useUserMessage } from './loading/utils';
 import { LoadingAnimation } from './loading/LoadingAnimation';
-import { ClockProgress } from './loading/ClockProgress';
+import { TopLoadingBar } from './loading/TopLoadingBar';
 import { AlertCircle } from 'lucide-react';
 
 export function QuickRecipeLoading() {
@@ -19,6 +19,12 @@ export function QuickRecipeLoading() {
   
   return (
     <div className="flex flex-col items-center justify-center py-5 sm:py-8 w-full animate-fadeIn">
+      {/* Top loading bar that shows progress */}
+      <TopLoadingBar 
+        color="#4CAF50" 
+        showFinalAnimation={showFinalAnimation} 
+      />
+      
       <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-md mx-auto">
         {/* Animated cooking pot icon or completion animation */}
         <LoadingAnimation showFinalAnimation={showFinalAnimation} />
@@ -33,11 +39,11 @@ export function QuickRecipeLoading() {
           {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
         </p>
         
-        {/* Replace progress indicator with clock */}
-        <div className="w-full flex justify-center my-4">
-          <ClockProgress
-            percentComplete={loadingState.percentComplete}
-            showTimeout={showTimeout && !showFinalAnimation}
+        {/* Simple progress indicator */}
+        <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-recipe-green transition-all duration-300 ease-out rounded-full"
+            style={{ width: `${loadingState.percentComplete}%` }}
           />
         </div>
         

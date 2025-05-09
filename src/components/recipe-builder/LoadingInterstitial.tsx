@@ -1,8 +1,8 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import LoadingBar from 'react-top-loading-bar';
 
 interface LoadingInterstitialProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showCriticalError, setShowCriticalError] = useState(false);
+  const loadingRef = useRef<any>(null);
   
   useEffect(() => {
     let timeoutWarningId: NodeJS.Timeout;
@@ -22,6 +23,9 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
     let criticalErrorId: NodeJS.Timeout;
     
     if (isOpen && !error) {
+      // Start the loading bar
+      loadingRef.current?.continuousStart();
+      
       // Show timeout warning after 20 seconds
       timeoutWarningId = setTimeout(() => {
         setShowTimeoutMessage(true);
@@ -37,6 +41,8 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
         setShowCriticalError(true);
       }, 50000); // 50 seconds
     } else {
+      // Complete the loading bar when closing or error
+      loadingRef.current?.complete();
       setShowTimeoutMessage(false);
       setShowErrorMessage(false);
       setShowCriticalError(false);
@@ -46,6 +52,7 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
       clearTimeout(timeoutWarningId);
       clearTimeout(timeoutErrorId);
       clearTimeout(criticalErrorId);
+      loadingRef.current?.complete();
     };
   }, [isOpen, error]);
 
@@ -55,6 +62,8 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   return (
     <Dialog open={isOpen} modal={true}>
       <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-10 gap-6">
+        <LoadingBar color="#4CAF50" height={3} ref={loadingRef} shadow={true} className="absolute top-0 left-0 right-0" />
+        
         <div className="relative">
           {hasExplicitError || showCriticalError ? (
             <XCircle className="h-12 w-12 text-destructive" />
