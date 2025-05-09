@@ -35,6 +35,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       initialSlide = 0,
       gap = "gap-4",
       arrowPosition = "inside",
+      pauseOnHover = true,
       ...props
     },
     ref
@@ -46,7 +47,9 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     const {
       activeIndex,
       scrollRef,
-      scrollToItem
+      scrollToItem,
+      handleMouseEnter,
+      handleMouseLeave
     } = useCarousel({
       itemCount: items.length,
       autoScroll: lowPowerMode ? false : autoScroll, // Disable auto-scroll in low power mode
@@ -54,7 +57,8 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       itemWidthMobile,
       itemWidthDesktop,
       initialIndex: initialSlide,
-      onSlideChange
+      onSlideChange,
+      pauseOnHover
     });
 
     // Navigation buttons
@@ -78,7 +82,11 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
         {...props}
       >
         {/* Main carousel container */}
-        <div className="carousel-container relative w-full">
+        <div 
+          className="carousel-container relative w-full"
+          onMouseEnter={pauseOnHover ? handleMouseEnter : undefined}
+          onMouseLeave={pauseOnHover ? handleMouseLeave : undefined}
+        >
           {/* Scrollable area */}
           <div 
             ref={scrollRef}
@@ -113,6 +121,18 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
             showArrows={showArrows}
             itemsCount={items.length}
           />
+          
+          {/* Progress indicator for auto-scrolling */}
+          {autoScroll && !isMobile && !lowPowerMode && (
+            <div 
+              className={cn("carousel-progress-indicator", 
+                autoScroll ? "animate" : ""
+              )}
+              style={{ 
+                '--carousel-duration': `${autoScrollInterval}ms` 
+              } as React.CSSProperties}
+            />
+          )}
         </div>
         
         {/* Pagination dots */}

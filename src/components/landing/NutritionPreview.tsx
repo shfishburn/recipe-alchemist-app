@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartPie, Activity } from 'lucide-react';
 import { 
@@ -10,13 +10,23 @@ import {
 import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
 import { MacroLegend } from './nutrition/MacroLegend';
 import { Carousel, type CarouselItem } from '@/components/ui/carousel';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export function NutritionPreview() {
-  // Map nutrition data to carousel items format
-  const carouselItems: CarouselItem[] = macroDistributionData.map((item, index) => ({
-    id: index,
-    content: item,
-  }));
+interface NutritionPreviewProps {
+  isLoading?: boolean;
+}
+
+export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
+  const isMobile = useIsMobile();
+  
+  // Memoize carousel items to prevent unnecessary re-renders
+  const carouselItems: CarouselItem[] = useMemo(() => 
+    macroDistributionData.map((item, index) => ({
+      id: index,
+      content: item,
+    })), []);
 
   // Render function for carousel items
   const renderCarouselItem = (item: CarouselItem) => {
@@ -29,6 +39,23 @@ export function NutritionPreview() {
       />
     );
   };
+
+  // Empty state content when no data is available
+  const renderEmptyState = () => (
+    <div className="carousel-empty-state" role="status">
+      <p className="text-muted-foreground">No nutrition data available yet.</p>
+      <p className="text-sm mt-2">Complete your profile to see personalized nutrition insights.</p>
+    </div>
+  );
+
+  // Loading state with skeletons
+  const renderLoadingState = () => (
+    <div className="w-full py-8">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 w-full">
+        <Skeleton className="h-[180px] md:h-[220px] w-full rounded-lg" />
+      </div>
+    </div>
+  );
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -51,17 +78,26 @@ export function NutritionPreview() {
             Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
           </div>
           
-          {/* Using our updated Carousel component */}
-          <Carousel 
-            items={carouselItems}
-            renderItem={renderCarouselItem}
-            autoScroll={false}
-            showArrows={true}
-            showDots={true}
-            itemWidthMobile="100%"
-            itemWidthDesktop="100%"
-            className="w-full"
-          />
+          {isLoading ? (
+            renderLoadingState()
+          ) : carouselItems.length === 0 ? (
+            renderEmptyState()
+          ) : (
+            <ScrollArea className="w-full touch-scroll" aria-label="Nutrition charts carousel">
+              <Carousel 
+                items={carouselItems}
+                renderItem={renderCarouselItem}
+                autoScroll={!isMobile}
+                autoScrollInterval={8000}
+                showArrows={true}
+                showDots={true}
+                itemWidthMobile="100%"
+                itemWidthDesktop="100%"
+                className="w-full"
+                aria-live="polite"
+              />
+            </ScrollArea>
+          )}
           
           <div className="flex justify-center w-full mt-4">
             <MacroLegend />

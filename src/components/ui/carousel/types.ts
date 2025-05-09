@@ -18,6 +18,7 @@ export interface CarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   initialSlide?: number;
   gap?: string;
   arrowPosition?: "inside" | "outside";
+  pauseOnHover?: boolean;
 }
 
 export interface CarouselNavProps {

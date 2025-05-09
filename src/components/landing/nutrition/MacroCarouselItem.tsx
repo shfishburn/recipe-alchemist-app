@@ -31,9 +31,12 @@ interface MacroCarouselItemProps {
 }
 
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
+  // Create an accessible summary of the chart data for screen readers
+  const accessibleSummary = item.data.map(d => `${d.name}: ${d.value}%`).join(', ');
+  
   return (
     <div className="w-full px-2 sm:px-4 py-4 flex flex-col items-center">
-      <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-3 sm:mb-4">
+      <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-3 sm:mb-4" id={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}>
         {item.title}
       </h3>
       
@@ -45,14 +48,20 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
                 <Skeleton className="h-[160px] w-[160px] rounded-full" />
               </div>
             }>
-              <MacroChart 
-                data={item.data}
-                height={180}
-                showTooltip 
-              />
-              <div className="text-xs text-center text-gray-500 mt-1">
-                <p className="italic">*Protein and carbs: 4 cal/g, fat: 9 cal/g</p>
-              </div>
+              <figure>
+                <MacroChart 
+                  data={item.data}
+                  height={180}
+                  showTooltip 
+                  titleId={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}
+                />
+                <figcaption className="sr-only">
+                  {item.title} - {accessibleSummary}
+                </figcaption>
+                <div className="text-xs text-center text-gray-500 mt-1">
+                  <p className="italic">*Protein and carbs: 4 cal/g, fat: 9 cal/g</p>
+                </div>
+              </figure>
             </Suspense>
           </div>
         </div>

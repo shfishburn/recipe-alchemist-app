@@ -10,6 +10,7 @@ interface UseCarouselProps {
   itemWidthDesktop?: string;
   initialIndex?: number;
   onSlideChange?: (index: number) => void;
+  pauseOnHover?: boolean;
 }
 
 export function useCarousel({
@@ -19,10 +20,12 @@ export function useCarousel({
   itemWidthMobile = '85%',
   itemWidthDesktop = '45%',
   initialIndex = 0,
-  onSlideChange
+  onSlideChange,
+  pauseOnHover = true
 }: UseCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [userInteracted, setUserInteracted] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
@@ -50,6 +53,17 @@ export function useCarousel({
     setUserInteracted(true);
   }, []);
 
+  // Handle mouse enter/leave for pause on hover
+  const handleMouseEnter = useCallback(() => {
+    if (pauseOnHover) {
+      setIsHovering(true);
+    }
+  }, [pauseOnHover]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovering(false);
+  }, []);
+
   // Attach scroll and interaction event listeners
   useEffect(() => {
     const scrollContainer = scrollRef.current;
@@ -59,23 +73,33 @@ export function useCarousel({
     scrollContainer.addEventListener('touchstart', handleUserInteraction, { passive: true });
     scrollContainer.addEventListener('mousedown', handleUserInteraction, { passive: true });
     
+    if (pauseOnHover) {
+      scrollContainer.addEventListener('mouseenter', handleMouseEnter, { passive: true });
+      scrollContainer.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+    }
+    
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
       scrollContainer.removeEventListener('touchstart', handleUserInteraction);
       scrollContainer.removeEventListener('mousedown', handleUserInteraction);
+      
+      if (pauseOnHover) {
+        scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
+        scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+      }
     };
-  }, [handleScroll, handleUserInteraction]);
+  }, [handleScroll, handleUserInteraction, handleMouseEnter, handleMouseLeave, pauseOnHover]);
 
   // Auto-scrolling functionality
   useEffect(() => {
-    if (!autoScroll || userInteracted || itemCount <= 1) return;
+    if (!autoScroll || userInteracted || itemCount <= 1 || (pauseOnHover && isHovering)) return;
     
     const interval = setInterval(() => {
       scrollToItem((activeIndex + 1) % itemCount);
     }, autoScrollInterval);
     
     return () => clearInterval(interval);
-  }, [autoScroll, userInteracted, activeIndex, itemCount, autoScrollInterval]);
+  }, [autoScroll, userInteracted, activeIndex, itemCount, autoScrollInterval, pauseOnHover, isHovering]);
 
   // Scroll to specified index
   const scrollToItem = useCallback((index: number) => {
@@ -108,7 +132,10 @@ export function useCarousel({
     activeIndex,
     scrollRef,
     userInteracted,
+    isHovering,
     scrollToItem,
-    handleUserInteraction
+    handleUserInteraction,
+    handleMouseEnter,
+    handleMouseLeave
   };
 }

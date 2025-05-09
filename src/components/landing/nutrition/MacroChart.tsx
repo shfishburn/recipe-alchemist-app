@@ -13,9 +13,16 @@ interface MacroChartProps {
   height?: number;
   showLegend?: boolean;
   showTooltip?: boolean;
+  titleId?: string; // ID of heading element for aria-labelledby
 }
 
-export function MacroChart({ data, height = 220, showLegend = true, showTooltip = true }: MacroChartProps) {
+export function MacroChart({ 
+  data, 
+  height = 220, 
+  showLegend = true, 
+  showTooltip = true, 
+  titleId 
+}: MacroChartProps) {
   const isMobile = useIsMobile();
   
   // Calculate responsive dimensions
@@ -68,10 +75,20 @@ export function MacroChart({ data, height = 220, showLegend = true, showTooltip 
     return <span className="text-xs">{value}: <strong>{entry.payload.value}%</strong></span>;
   };
 
+  // Create a descriptive title for the chart for screen readers
+  const chartDescription = data.map(d => `${d.name}: ${d.value}%`).join(', ');
+
   return (
     <div className="w-full" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart 
+          role="img" 
+          aria-labelledby={titleId} 
+          aria-description={chartDescription}
+        >
+          {titleId && (
+            <title id={`${titleId}-desc`}>{chartDescription}</title>
+          )}
           <Pie
             data={data}
             cx="50%"
