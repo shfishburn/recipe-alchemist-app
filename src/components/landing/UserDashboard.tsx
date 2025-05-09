@@ -1,14 +1,15 @@
 // path: src/components/landing/UserDashboard.tsx
 // file: UserDashboard.tsx
-// updated: 2025-05-09 14:20 PM
+// updated: 2025-05-09 14:30 PM
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { QuickRecipeGenerator } from '@/components/quick-recipe/QuickRecipeGenerator';
 import { RecipeCarousel } from '@/components/landing/RecipeCarousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CookingPot, Clock, History, PlusCircle } from 'lucide-react';
+import { CookingPot, Clock, History, PlusCircle, ChefHat } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRecipes } from '@/hooks/use-recipes';
 import { PageContainer } from '@/components/ui/containers';
@@ -34,9 +35,20 @@ export function UserDashboard() {
             Welcome{profile?.username ? `, ${profile.username}` : ''}!
           </h1>
           <p className="mt-1 text-muted-foreground">
-            What would you like to create in your kitchen today?
+            What would you like to make in your kitchen today?
           </p>
         </div>
+
+        {/* Quick Actions Section */}
+        <section>
+          <div className="w-full max-w-3xl mx-auto bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100 transition-shadow hover:shadow-xl">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <ChefHat className="h-5 w-5 text-recipe-green" />
+              Create New Recipe
+            </h2>
+            <QuickRecipeGenerator />
+          </div>
+        </section>
 
         {/* Recent Activity */}
         <section>
