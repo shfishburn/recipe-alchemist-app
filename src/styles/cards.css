@@ -1,8 +1,14 @@
-
 .recipe-card {
-  @apply bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg dark:bg-gray-800;
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: all 0.2s;
 }
 
 .text-gradient {
-  @apply bg-gradient-to-r from-recipe-blue to-recipe-green bg-clip-text text-transparent;
+  background: linear-gradient(to right, var(--recipe-blue, #2563eb), var(--primary, #04a118));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

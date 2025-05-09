@@ -1,54 +1,53 @@
-
 /* Recipe Instructions Card - Core Styling */
 .recipe-card {
-  background-color: #ffffff;
-  border-radius: 0.625rem; /* Slightly increased for modern look */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Enhanced shadow for better depth */
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
-  max-width: 100%; /* Ensures responsiveness */
-  margin: 0 auto; /* Centers the card if needed */
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; /* System font stack for better performance */
+  max-width: 100%;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Step Container - Recipe Instruction Block */
 .step-container {
   display: flex;
   flex-direction: column;
-  padding: 1rem; /* Increased padding for better readability */
-  border-radius: 0.5rem;
-  border: 1px solid #f3f4f6;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-100);
   width: 100%;
-  transition: all 0.2s ease; /* Smoother transition with all properties */
-  margin-bottom: 0.75rem; /* Space between steps */
+  transition: all 0.2s ease;
+  margin-bottom: 0.75rem;
 }
 
 .step-container:hover {
-  background-color: #f9fafb;
-  transform: translateY(-1px); /* Subtle lift effect on hover */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04); /* Shadow on hover for depth */
+  background-color: var(--gray-50);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
 
 .step-container.completed {
-  background-color: #f0fdf4;
-  border-color: #bbf7d0;
+  background-color: var(--green-50);
+  border-color: var(--green-200);
 }
 
 .step-container.completed:hover {
-  background-color: #dcfce7;
+  background-color: var(--green-100);
 }
 
 /* Step Text Content */
 .step-text {
-  font-size: 0.9375rem; /* Slightly larger for better readability */
-  line-height: 1.7; /* Improved line height for readability */
+  font-size: 0.9375rem;
+  line-height: 1.7;
   overflow-wrap: break-word;
-  word-break: break-word; /* Added for better overflow handling */
-  color: #1f2937; /* Darker text for better contrast */
+  word-break: break-word;
+  color: var(--gray-600);
 }
 
 .step-text.completed {
   text-decoration: line-through;
-  color: #6b7280;
+  color: var(--gray-500);
 }
 
 /* Step Header - Number and Category */
@@ -62,45 +61,44 @@
 .step-number {
   font-weight: 600;
   padding: 0.25rem 0.625rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   background-color: rgba(29, 78, 216, 0.1);
-  color: rgb(29, 78, 216);
+  color: var(--blue-600);
 }
 
 .step-number.completed {
-  background-color: #dcfce7;
-  color: #15803d;
+  background-color: var(--green-100);
+  color: var(--green-700);
 }
 
 /* Science Notes Panel - Information Container */
 .science-panel {
-  margin: 0.75rem 0 0 0; /* Consistent vertical spacing */
-  padding: 1rem; /* Increased padding for better spacing */
-  background-color: #eff6ff;
-  border-radius: 0.5rem;
-  border: 1px solid #dbeafe;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  margin: 0.75rem 0 0 0;
+  padding: 1rem;
+  background-color: var(--blue-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--blue-100);
+  box-shadow: var(--shadow-hover);
   width: 100%;
-  transition: box-shadow 0.2s ease; /* Subtle animation for interactions */
+  transition: box-shadow 0.2s ease;
 }
 
 .science-panel:hover {
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08); /* Enhanced shadow on hover */
+  box-shadow: var(--shadow-panel);
 }
 
 /* Science Header with Icon Alignment */
 .science-header {
   font-weight: 600;
-  color: #1e40af; /* Ensured consistent color scheme */
+  color: var(--blue-700);
   margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
-  font-size: 1rem; /* Explicit size for consistency */
-  letter-spacing: 0.01em; /* Slight letter spacing for readability */
+  font-size: 1rem;
+  letter-spacing: 0.01em;
 }
 
-/* Icon spacing if used in header */
 .science-header svg, 
 .science-header img {
   margin-right: 0.5rem;
@@ -110,26 +108,25 @@
 
 /* Science Explanation Text */
 .science-explanation {
-  font-size: 0.9375rem; /* Consistent with step text */
-  color: #1d4ed8;
-  line-height: 1.7; /* Improved line height */
+  font-size: 0.9375rem;
+  color: var(--blue-600);
+  line-height: 1.7;
   margin-bottom: 0.75rem;
   overflow-wrap: break-word;
-  word-break: break-word; /* Added for better overflow handling */
+  word-break: break-word;
   max-width: 100%;
 }
 
 /* Parameter Value - With Proper Display Logic */
 .parameter-value {
   margin-top: 0.75rem;
-  font-size: 0.8125rem; /* Slightly larger than original */
-  color: #1d4ed8;
+  font-size: 0.8125rem;
+  color: var(--blue-600);
   padding: 0.375rem 0;
   display: flex;
   align-items: center;
 }
 
-/* Hide empty values */
 .parameter-value:empty,
 .parameter-value.empty,
 .parameter-value[data-value="0"],
@@ -141,100 +138,95 @@
 .science-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.625rem; /* Slightly increased gap */
+  gap: 0.625rem;
   padding-top: 0.5rem;
   margin-top: 0.75rem;
-  border-top: 1px solid #bfdbfe;
+  border-top: 1px solid var(--blue-200);
 }
 
 /* Science Tag with Enhanced Styling */
 .science-tag {
-  font-size: 0.8125rem; /* Slightly larger */
-  padding: 0.25rem 0.625rem; /* More balanced padding */
-  background-color: #dbeafe;
-  color: #1d4ed8;
-  border-radius: 9999px;
-  transition: background-color 0.15s ease; /* Smooth hover effect */
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  background-color: var(--blue-100);
+  color: var(--blue-600);
+  border-radius: var(--radius-full);
+  transition: background-color 0.15s ease;
   display: inline-flex;
   align-items: center;
 }
 
 .science-tag:hover {
-  background-color: #bfdbfe; /* Darker on hover for interaction feedback */
+  background-color: var(--blue-200);
 }
 
 /* Button with Improved Interaction */
 .science-button {
   background-color: transparent;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem; /* Slightly larger radius */
-  padding: 0.375rem 0.75rem; /* More comfortable padding */
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #1d4ed8;
-  transition: all 0.2s ease; /* Smooth transition */
-  cursor: pointer; /* Explicit cursor */
+  color: var(--blue-600);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .science-button:hover {
-  background-color: #eff6ff;
-  border-color: #bfdbfe; /* Border color change on hover */
+  background-color: var(--blue-50);
+  border-color: var(--blue-200);
 }
 
 .science-button:focus {
-  outline: 2px solid #93c5fd; /* Accessible focus state */
+  outline: 2px solid var(--blue-300);
   outline-offset: 1px;
 }
 
 /* Link to Science Tab with Improved Accessibility */
 .science-tab-link {
   font-size: 0.8125rem;
-  color: #2563eb;
+  color: var(--blue-500);
   display: flex;
   align-items: center;
-  padding: 0.25rem 0; /* Small padding for better clickable area */
+  padding: 0.25rem 0;
   height: auto;
-  text-decoration: none; /* Explicit style */
+  text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .science-tab-link:hover {
-  color: #1e40af;
-  text-decoration: underline; /* Underline on hover for better UX */
+  color: var(--blue-700);
+  text-decoration: underline;
 }
 
 .science-tab-link:focus {
-  outline: 2px solid #93c5fd;
+  outline: 2px solid var(--blue-300);
   outline-offset: 1px;
 }
 
-/* Media Queries for Responsiveness */
 @media (max-width: 640px) {
   .step-container, .science-panel {
     padding: 0.75rem;
   }
-  
   .science-tags {
     gap: 0.375rem;
   }
 }
 
-/* Print Styling for Recipe Cards */
 @media print {
   .recipe-card {
     box-shadow: none;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--gray-200);
   }
-  
   .step-container:hover {
     transform: none;
     box-shadow: none;
   }
-  
   .science-panel {
-    background-color: #f9fafb;
-    border: 1px dashed #d1d5db;
+    background-color: var(--gray-50);
+    border: 1px dashed var(--gray-400);
   }
 }

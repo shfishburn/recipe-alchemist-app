@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -56,12 +55,12 @@ export function Navbar({ className }: { className?: string }) {
         {/* Auth Button - Hidden on Mobile */}
         <div className="hidden md:flex items-center space-x-3 ml-6">
           {session ? (
-            <Link to="/profile" className="flex items-center gap-1.5 h-9 py-2 px-4">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 h-9 py-2 px-4">
+            <Button variant="outline" size="sm" asChild className="flex items-center gap-1.5 h-9 py-2 px-4">
+              <Link to="/profile">
                 <User className="h-4 w-4" />
                 <span>Profile</span>
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           ) : (
             <>
               <Button variant="outline" size="sm" onClick={open} className="h-9 py-2 px-4">
