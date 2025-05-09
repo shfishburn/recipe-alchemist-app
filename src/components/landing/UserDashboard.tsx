@@ -1,4 +1,8 @@
 
+// path: src/components/landing/UserDashboard.tsx
+// file: UserDashboard.tsx
+// updated: 2025-05-09 14:30 PM
+
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { QuickRecipeGenerator } from '@/components/quick-recipe/QuickRecipeGenerator';
@@ -26,8 +30,8 @@ export function UserDashboard() {
           </div>
         </section>
 
-        {/* Trending Recipes Carousel - Provide more horizontal space */}
-        <section className="w-full -mx-4 md:-mx-8 lg:-mx-12 px-4 md:px-8 lg:px-12 py-6 bg-gray-50">
+        {/* Trending Recipes Carousel */}
+        <section className="w-full py-4">
           <RecipeCarousel />
         </section>
 

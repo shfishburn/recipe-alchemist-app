@@ -6,13 +6,14 @@ import { RecipeCard } from './carousel/RecipeCard';
 import { CookingPot } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { Carousel, type CarouselItem } from '@/components/ui/carousel';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
   
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
-    return recipes?.slice(0, 8) || [];
+    return recipes?.slice(0, 5) || [];
   }, [recipes]);
 
   // Map recipes to carousel items format
@@ -27,7 +28,7 @@ export function RecipeCarousel() {
   const renderCarouselItem = (item: CarouselItem, index: number, isActive: boolean) => {
     const recipe = item.content as Recipe;
     return (
-      <div className="w-full h-full px-3">
+      <div className="w-full h-full px-2">
         <RecipeCard 
           recipe={recipe} 
           priority={index === 0 || index === 1}
@@ -59,25 +60,19 @@ export function RecipeCarousel() {
           </div>
           
           {/* Using our updated Carousel component with appropriate settings */}
-          {carouselItems.length > 0 ? (
-            <Carousel 
-              items={carouselItems}
-              renderItem={renderCarouselItem}
-              showArrows={true}
-              showDots={true}
-              showCounter={false}
-              itemWidthMobile="80%"
-              itemWidthDesktop="33%"
-              gap="gap-4"
-              arrowPosition="outside"
-              className="w-full max-w-5xl"
-              autoScroll={false}
-            />
-          ) : (
-            <div className="text-center p-8 bg-gray-50 rounded-lg w-full max-w-5xl">
-              <p>No trending recipes available right now</p>
-            </div>
-          )}
+          <Carousel 
+            items={carouselItems}
+            renderItem={renderCarouselItem}
+            showArrows={true}
+            showDots={true}
+            showCounter={false}
+            itemWidthMobile="80%"
+            itemWidthDesktop="33%"
+            gap="gap-3"
+            arrowPosition="outside"
+            className="w-full max-w-5xl"
+            autoScroll={false}
+          />
         </div>
       )}
     </div>

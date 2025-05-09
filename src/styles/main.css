@@ -1,17 +1,14 @@
+
 @import './components.css';
 @import './theme.css';
 @import './transitions.css';
 @import './loading.css';
 @import './touch-optimizations.css';
 @import './scientific-content.css';
-@import './carousel.css';  /* Explicitly import carousel styles */
 
 :root {
   --recipe-blue: rgb(29, 78, 216);
   --recipe-blue-hover: rgb(37, 99, 235);
-  --recipe-green: rgb(34, 197, 94);
-  --recipe-green-hover: rgb(22, 163, 74);
-  --recipe-purple: rgb(139, 92, 246);
 }
 
 /* Global focus styles */
