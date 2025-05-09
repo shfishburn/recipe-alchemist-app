@@ -1,3 +1,6 @@
+// path: src/components/quick-recipe/hero/QuickRecipeHero.tsx
+// file: QuickRecipeHero.tsx
+// updated: 2025-05-09 11:05 AM
 
 import React from 'react';
 import { Bug, ChefHat } from 'lucide-react';
@@ -15,19 +18,16 @@ export function QuickRecipeHero({
   debugMode
 }: QuickRecipeHeroProps) {
   return (
-    <div className="text-center mb-8 md:mb-10 relative">
+    <div className="relative text-center">
       <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl flex items-center justify-center gap-2">
         <ChefHat className="h-8 w-8 md:h-10 md:w-10 text-recipe-green" />
-        {hasRecipe ? "Your Recipe Preview" : "Quick Recipe Generator"}
+        {hasRecipe && 'Your Recipe Preview'}
       </h1>
-      
       {hasRecipe && (
-        <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mt-3 md:mt-4">
-          This is a preview of your recipe. You can save it as is, or chat with your AI Cooking Coach to tweak it before saving.
+        <p className="text-base sm:text-lg text-muted-foreground">
+          This is a preview of your recipe—save it as is, or chat with your AI Cooking Coach to tweak it before saving.
         </p>
       )}
-
-      {/* Debug mode toggle - hidden in UI but can be triggered with keyboard shortcut */}
       <div className="absolute top-2 right-2">
         <Button
           variant="ghost"
