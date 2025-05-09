@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setProfile(profileData);
               setLoading(false);
             })
-            .catch(err => {
+            .catch((err) => {
               console.error('Error fetching profile:', err);
               setLoading(false);
             });
@@ -126,8 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setLoading(false);
       }
-    }).catch((err) => {
-      // Fixed TypeScript error by using a regular function parameter
+    }).catch((err: any) => { // Fixed TypeScript error by using a properly typed function parameter
       console.error('Error in getSession:', err);
       handleTokenRefreshError();
     });
