@@ -24,8 +24,31 @@ export function useLoadingProgress() {
   const [showTimeout, setShowTimeout] = useState(false);
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
 
+  // Clean up all timers on unmount
+  const cleanupAllTimers = () => {
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+    if (stepTimerRef.current) {
+      clearInterval(stepTimerRef.current);
+      stepTimerRef.current = null;
+    }
+    if (timeoutTimerRef.current) {
+      clearTimeout(timeoutTimerRef.current);
+      timeoutTimerRef.current = null;
+    }
+    if (timeoutWarningRef.current) {
+      clearTimeout(timeoutWarningRef.current);
+      timeoutWarningRef.current = null;
+    }
+  };
+
   // Update progress every second
   useEffect(() => {
+    // Clear any existing timers first
+    cleanupAllTimers();
+    
     if (!loadingState.estimatedTimeRemaining) return;
     
     const startTime = Date.now();
@@ -55,16 +78,16 @@ export function useLoadingProgress() {
       }
     }, 100);
     
-    return () => {
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-        progressTimerRef.current = null;
-      }
-    };
+    return cleanupAllTimers;
   }, [loadingState.estimatedTimeRemaining, updateLoadingState, completedLoading, setCompletedLoading]);
   
   // Cycle through loading steps
   useEffect(() => {
+    // Clear any existing step timer
+    if (stepTimerRef.current) {
+      clearInterval(stepTimerRef.current);
+    }
+    
     stepTimerRef.current = setInterval(() => {
       updateLoadingState({
         step: (loadingState.step + 1) % LOADING_STEPS.length,
@@ -82,6 +105,10 @@ export function useLoadingProgress() {
 
   // Set a timeout to prevent infinite loading
   useEffect(() => {
+    // Clear any existing timers
+    if (timeoutWarningRef.current) clearTimeout(timeoutWarningRef.current);
+    if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
+    
     // Show a timeout warning after 75% of the maximum time
     timeoutWarningRef.current = setTimeout(() => {
       if (!completedLoading) {
@@ -100,9 +127,11 @@ export function useLoadingProgress() {
     return () => {
       if (timeoutWarningRef.current) {
         clearTimeout(timeoutWarningRef.current);
+        timeoutWarningRef.current = null;
       }
       if (timeoutTimerRef.current) {
         clearTimeout(timeoutTimerRef.current);
+        timeoutTimerRef.current = null;
       }
     };
   }, [completedLoading, setError]);
@@ -111,5 +140,6 @@ export function useLoadingProgress() {
     loadingState,
     showTimeout,
     showFinalAnimation,
+    cleanup: cleanupAllTimers
   };
 }

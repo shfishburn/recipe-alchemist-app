@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
@@ -9,89 +9,132 @@ import { toast } from '@/hooks/use-toast';
 export function useQuickRecipePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { recipe, isLoading, formData, error, reset, setFormData, setLoading, hasTimeoutError, setError } = useQuickRecipeStore();
+  const { 
+    recipe, 
+    isLoading, 
+    formData, 
+    error, 
+    reset, 
+    setFormData, 
+    setLoading, 
+    hasTimeoutError, 
+    setError, 
+    setRecipe 
+  } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
   const { session } = useAuth();
   const [isRetrying, setIsRetrying] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   
   // Check if we're navigating from navbar (no state)
-  const isDirectNavigation = !location.state && !location.state?.recipeData;
-
+  const isDirectNavigation = !location.state;
+  
+  // Check if we're resuming a recipe generation after login
+  const isResumingGeneration = location.state?.resumingGeneration || false;
+  
   // Check if we need to resume recipe generation after login
   useEffect(() => {
-    // Check for recipe data in location state (coming from Auth redirect)
-    if (location.state?.recipeData && !isLoading && !recipe) {
-      const recipeData = location.state.recipeData;
-      
-      console.log("Resuming recipe generation from location state:", recipeData);
-      
-      if (recipeData.formData) {
-        // Start the generation process
-        setLoading(true);
-        setFormData(recipeData.formData);
+    const handleRecipeResumption = async () => {
+      // Case 1: Check for recipe data in location state (coming from Auth redirect)
+      if (location.state?.recipeData && !isLoading && !recipe) {
+        const recipeData = location.state.recipeData;
         
-        // Start an async generation
-        generateQuickRecipe(recipeData.formData).catch(err => {
-          console.error("Error resuming recipe generation:", err);
-          toast({
-            title: "Recipe generation failed",
-            description: err.message || "Please try again later.",
-            variant: "destructive",
-          });
-        });
-      }
-      
-      return;
-    }
-    
-    // Check for recipe data in session storage (after login)
-    if (session) {
-      const storedGenerationData = sessionStorage.getItem('recipeGenerationSource');
-      if (storedGenerationData && !isLoading && !recipe) {
+        console.log("Resuming recipe generation from location state:", recipeData);
+        
         try {
-          const parsedData = JSON.parse(storedGenerationData);
-          if (parsedData.formData) {
-            console.log("Resuming recipe generation after login:", parsedData);
-            // Clear the stored data
-            sessionStorage.removeItem('recipeGenerationSource');
-            
+          if (recipeData.formData) {
             // Start the generation process
             setLoading(true);
-            setFormData(parsedData.formData);
+            setFormData(recipeData.formData);
+            setError(null); // Clear any previous errors
             
             // Start an async generation
-            generateQuickRecipe(parsedData.formData).catch(err => {
-              console.error("Error resuming recipe generation:", err);
-              toast({
-                title: "Recipe generation failed",
-                description: err.message || "Please try again later.",
-                variant: "destructive",
-              });
-            });
+            await generateQuickRecipe(recipeData.formData);
+          } else if (recipeData.recipe) {
+            // We already have a generated recipe, just display it
+            console.log("Using already generated recipe from location state");
+            setRecipe(recipeData.recipe);
           }
         } catch (err) {
-          console.error("Error parsing stored recipe data:", err);
+          console.error("Error resuming recipe generation from location state:", err);
+          setError(err.message || "Failed to resume recipe generation. Please try again.");
+          setLoading(false);
+        }
+        
+        return;
+      }
+      
+      // Case 2: Check for recipe data in session storage (after login)
+      if (session) {
+        const storedGenerationData = sessionStorage.getItem('recipeGenerationSource');
+        if (storedGenerationData && !isLoading && !recipe) {
+          try {
+            const parsedData = JSON.parse(storedGenerationData);
+            if (parsedData.formData) {
+              console.log("Resuming recipe generation after login from session storage:", parsedData);
+              
+              // Clear the stored data after retrieving it
+              sessionStorage.removeItem('recipeGenerationSource');
+              
+              // Set loading state and form data
+              setLoading(true);
+              setFormData(parsedData.formData);
+              setError(null); // Clear any previous errors
+              
+              try {
+                // Start an async generation
+                await generateQuickRecipe(parsedData.formData);
+              } catch (err) {
+                console.error("Error resuming recipe generation from session storage:", err);
+                setError(err.message || "Failed to resume recipe generation. Please try again.");
+                setLoading(false);
+              }
+            }
+          } catch (err) {
+            console.error("Error parsing stored recipe data:", err);
+            sessionStorage.removeItem('recipeGenerationSource');
+          }
         }
       }
+    };
+    
+    // Only attempt to resume if we're not already loading and either:
+    // 1. We have location state with recipeData, or
+    // 2. We're authenticated and have stored recipe data
+    if (!isLoading && (location.state?.recipeData || (session && sessionStorage.getItem('recipeGenerationSource')))) {
+      handleRecipeResumption();
     }
-  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, location.state]);
+  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, setRecipe, setError, location.state]);
 
   // Reset loading state if navigating directly from navbar
   useEffect(() => {
-    if (isDirectNavigation && isLoading) {
+    if (isDirectNavigation && isLoading && !isResumingGeneration) {
       console.log("Direct navigation detected while loading, resetting state");
       reset();
     }
-  }, [isDirectNavigation, isLoading, reset]);
+  }, [isDirectNavigation, isLoading, reset, isResumingGeneration]);
 
-  // Only redirect if not loading AND no recipe data AND no error AND no formData
+  // Only redirect if not loading AND no recipe data AND no error AND no formData AND not direct navigation
   useEffect(() => {
-    if (!isLoading && !recipe && !error && !formData && !isDirectNavigation) {
+    // Don't redirect if:
+    // - We're currently loading
+    // - We're in the middle of resuming generation
+    // - We have a recipe to display
+    // - We have form data that might be used soon
+    // - We have an error to show
+    // - This is a direct navigation from navbar
+    const shouldRedirect = !isLoading && 
+                           !isResumingGeneration && 
+                           !recipe && 
+                           !formData && 
+                           !error && 
+                           !isDirectNavigation;
+    
+    if (shouldRedirect) {
       console.log("No recipe data available, redirecting to home");
       navigate('/');
     }
-  }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
+  }, [isLoading, recipe, error, formData, navigate, isDirectNavigation, isResumingGeneration]);
 
   const handleRetry = async () => {
     if (formData) {
@@ -114,9 +157,10 @@ export function useQuickRecipePage() {
         await generateQuickRecipe(formData);
         
         setIsRetrying(false);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error retrying recipe generation:", err);
         setIsRetrying(false);
+        setLoading(false);
         toast({
           title: "Recipe generation failed",
           description: err.message || "Please try again later.",
@@ -145,6 +189,7 @@ export function useQuickRecipePage() {
     isRetrying,
     debugMode,
     isDirectNavigation,
+    isResumingGeneration,
     handleRetry,
     handleCancel,
     toggleDebugMode

@@ -72,26 +72,34 @@ const Auth = () => {
             
             // If we're returning to the quick recipe page with data, store it in state
             if (locationData.pathname === '/quick-recipe' && parsedData) {
+              // Merge with any existing state and ensure formData is available
               redirectState = {
                 ...redirectState,
-                recipeData: parsedData
+                recipeData: parsedData,
+                resumingGeneration: true, // Flag to indicate we're resuming
               };
+              
+              console.log("Found recipe generation data to resume:", {
+                formData: parsedData.formData ? "present" : "missing",
+                path: parsedData.path || "not set"
+              });
             }
-            
-            console.log("Found recipe generation data to resume:", parsedData);
           } catch (error) {
             console.error("Error parsing recipe generation data:", error);
           }
         }
         
-        console.log("Redirecting to:", redirectTo, "with state:", redirectState);
+        console.log("Redirecting after auth to:", redirectTo, "with state:", redirectState);
       } catch (error) {
         console.error("Error parsing stored location:", error);
       }
     }
     
-    // Clear the stored path after using it
-    sessionStorage.removeItem('redirectAfterAuth');
+    // Don't immediately clear the stored path in case the redirect fails
+    // We'll clean it up after successful navigation
+    setTimeout(() => {
+      sessionStorage.removeItem('redirectAfterAuth');
+    }, 1000);
     
     return <Navigate to={redirectTo} state={redirectState} replace />;
   }

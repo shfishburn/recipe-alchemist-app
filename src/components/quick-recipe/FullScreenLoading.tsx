@@ -1,7 +1,8 @@
 
-import React, { useEffect, useState, useCallback, useRef, memo } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { LoadingTipCard } from './loading/LoadingTipCard';
+import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import { AlertCircle, ArrowLeft, RefreshCw, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -18,84 +19,24 @@ export const FullScreenLoading = memo(function FullScreenLoading({
   onRetry, 
   error 
 }: FullScreenLoadingProps) {
-  const { loadingState, updateLoadingState } = useQuickRecipeStore();
+  const { loadingState } = useQuickRecipeStore();
   const isErrorState = !!error;
-  const [completedLoading, setCompletedLoading] = useState(false);
+  const { showTimeout, showFinalAnimation } = useLoadingProgress();
   
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Clean up on unmount
+  // Clean up on mount/unmount
   useEffect(() => {
-    return () => {
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
-      document.body.classList.remove('overflow-hidden');
-    };
-  }, []);
-  
-  // Simulate loading progress with memoized function
-  const simulateProgress = useCallback(() => {
-    if (!isErrorState) {
-      const steps = [
-        "Analyzing your ingredients...",
-        "Crafting the perfect recipe...",
-        "Adding scientific details...",
-        "Calculating nutrition information...",
-        "Finalizing your recipe..."
-      ];
-      
-      let currentStep = 0;
-      let progress = 0;
-      
-      // Clean previous timer if exists
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-      }
-      
-      progressTimerRef.current = setInterval(() => {
-        progress += 1;
-        
-        // Change step description at certain progress points
-        if (progress === 20 || progress === 40 || progress === 60 || progress === 80) {
-          currentStep = Math.min(currentStep + 1, steps.length - 1);
-        }
-        
-        updateLoadingState({
-          step: currentStep,
-          stepDescription: steps[currentStep],
-          percentComplete: progress,
-          estimatedTimeRemaining: Math.max(30 - progress/3, 0)
-        });
-        
-        if (progress >= 100) {
-          if (progressTimerRef.current) {
-            clearInterval(progressTimerRef.current);
-            progressTimerRef.current = null;
-          }
-          // Mark loading as completed to enable pointer events
-          setCompletedLoading(true);
-        }
-      }, 300); // Update every 300ms
-    }
-  }, [isErrorState, updateLoadingState]);
-  
-  // Start progress simulation on mount
-  useEffect(() => {
-    simulateProgress();
-    
     // Add overflow-hidden only if loading
-    if (!completedLoading && !isErrorState) {
+    if (!isErrorState) {
       document.body.classList.add('overflow-hidden');
     }
     
     return () => {
       document.body.classList.remove('overflow-hidden');
     };
-  }, [completedLoading, isErrorState, simulateProgress]);
+  }, [isErrorState]);
 
   // Set appropriate pointer events based on loading state
-  const pointerEventsClass = completedLoading && !isErrorState ? 'pointer-events-none' : '';
+  const pointerEventsClass = showFinalAnimation && !isErrorState ? 'pointer-events-none' : '';
   
   return (
     <div className={`absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
@@ -168,7 +109,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               </div>
             </div>
             
-            {/* Enhanced loading progress */}
+            {/* Enhanced loading progress - now using the store directly */}
             <div className="mb-8 animate-fade-in">
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-medium">
@@ -185,6 +126,14 @@ export const FullScreenLoading = memo(function FullScreenLoading({
                 indicatorClassName="bg-recipe-green"
                 aria-label="Recipe generation progress"
               />
+              
+              {/* Timeout warning */}
+              {showTimeout && !showFinalAnimation && (
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>This is taking longer than usual. Please be patient...</span>
+                </div>
+              )}
             </div>
             
             {/* Cooking tip card */}
