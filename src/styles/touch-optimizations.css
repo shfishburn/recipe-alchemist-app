@@ -28,6 +28,12 @@
   min-width: 44px;
 }
 
+/* Explicitly exempt carousel pagination dots from touch target sizing */
+.touch-device .carousel-pagination-dot {
+  min-height: initial;
+  min-width: initial;
+}
+
 /* Improve carousel touch experience */
 .touch-device .carousel-scroll-area {
   overscroll-behavior-x: contain;
