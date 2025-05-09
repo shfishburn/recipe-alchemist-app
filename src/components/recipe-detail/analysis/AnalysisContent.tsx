@@ -4,7 +4,7 @@ import { AnalysisSection } from './AnalysisSection';
 import { StepReactionItem } from './StepReactionItem';
 import { ReactionsList } from './ReactionsList';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw } from 'lucide-react';
+import { RefreshCcw, Flask, Beaker, Wrench } from 'lucide-react';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
@@ -50,17 +50,29 @@ export function AnalysisContent({
     <div className="space-y-6">
       {/* Chemistry Content */}
       {chemistry && (
-        <AnalysisSection title="Chemistry" content={chemistry} />
+        <AnalysisSection 
+          title="Chemistry" 
+          content={chemistry} 
+          icon={<Flask className="h-5 w-5 text-blue-600" />}
+        />
       )}
       
       {/* Techniques Content */}
       {techniques && (
-        <AnalysisSection title="Techniques" content={techniques} />
+        <AnalysisSection 
+          title="Techniques" 
+          content={techniques} 
+          icon={<Beaker className="h-5 w-5 text-indigo-600" />}
+        />
       )}
       
       {/* Troubleshooting Content */}
       {troubleshooting && (
-        <AnalysisSection title="Common Issues & Solutions" content={troubleshooting} />
+        <AnalysisSection 
+          title="Common Issues & Solutions" 
+          content={troubleshooting} 
+          icon={<Wrench className="h-5 w-5 text-amber-600" />}
+        />
       )}
       
       {/* Raw Response Fallback */}
@@ -76,7 +88,7 @@ export function AnalysisContent({
           <h3 className="text-lg font-medium">Step-by-Step Reactions</h3>
           <div className="space-y-3">
             {stepReactions.map((reaction, idx) => (
-              <StepReactionItem key={idx} reaction={reaction} />
+              <StepReactionItem key={idx} reaction={reaction} index={idx} />
             ))}
           </div>
         </div>
@@ -90,7 +102,7 @@ export function AnalysisContent({
             {Object.entries(groupedReactions).map(([method, reactions]) => (
               <div key={method} className="space-y-2">
                 <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">{method}</h4>
-                <ReactionsList reactions={reactions} />
+                <ReactionsList stepReactions={reactions} />
               </div>
             ))}
           </div>

@@ -20,6 +20,7 @@ interface AnalysisResponse {
 
 /**
  * Hook to manage recipe analysis data fetching and state
+ * with auto-analysis in the background
  */
 export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedRecipe: Recipe) => void) {
   const initialAnalysisRef = useRef(false);
@@ -46,7 +47,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   });
 
   // Use our unified science data hook
-  const { stepReactions, hasAnalysisData, scienceNotes, globalAnalysis, refetch: refetchReactions } = useRecipeScience(recipe);
+  const { stepReactions, hasAnalysisData, scienceNotes, refetch: refetchReactions } = useRecipeScience(recipe);
   
   // Fetch general analysis data from recipe-chat
   const { data: analysis, isLoading, refetch } = useQuery({
@@ -108,16 +109,16 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         throw error;
       }
     },
-    enabled: false, // Don't auto-fetch on mount
+    enabled: false, // Don't auto-fetch on mount, we'll control this
     staleTime: 1000 * 60 * 15, // Cache for 15 minutes
-    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes (previously cacheTime)
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
     retry: 1,
     meta: {
       onError: (error: any) => setError(error) // Use the meta option for error handling
     }
   });
 
-  // Function to analyze reactions with OpenAI
+  // Function to analyze reactions with OpenAI - now with better fallbacks
   const analyzeReactions = async () => {
     if (!recipe.instructions || recipe.instructions.length === 0) {
       toast.error('Cannot analyze: Recipe has no instructions');
@@ -125,7 +126,12 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
     
     try {
-      toast.info('Analyzing recipe reactions...', { duration: 3000 });
+      // Use a subtle toast for background analysis
+      if (hasAnalysisData) {
+        toast.info('Enhancing analysis data...', { duration: 2000 });
+      } else {
+        toast.info('Analyzing recipe reactions...', { duration: 3000 });
+      }
       
       console.log('Starting analysis of recipe reactions for recipe ID:', recipe.id);
       
@@ -152,7 +158,10 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         // Cache the last successful analysis time
         lastAnalysisTimeRef.current = Date.now();
         
-        toast.success('Reaction analysis complete');
+        // Only show success toast if this wasn't a background operation
+        if (!hasAnalysisData) {
+          toast.success('Analysis complete');
+        }
         await refetchReactions();
       } catch (error: any) {
         if (error.name === 'AbortError' || error.message?.includes('timed out')) {
@@ -172,7 +181,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   };
 
-  // Function to manually trigger analysis
+  // Function to manually trigger analysis - now with automatic background refresh
   const handleAnalyze = useCallback(() => {
     if (!isLoading && !isAnalyzing) {
       // Rate limit analysis - prevent triggering too frequently
@@ -186,7 +195,13 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       
       setIsAnalyzing(true);
       clearError(); // Clear any previous errors
-      toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
+      
+      // Use a less intrusive message if we already have content
+      if (hasAnalysisData) {
+        toast.info("Enhancing analysis in the background...", { duration: 3000 });
+      } else {
+        toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
+      }
       
       // Start both analyses in parallel
       Promise.all([
@@ -201,7 +216,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         setHasAppliedUpdates(false); // Reset this flag to allow new updates
       });
     }
-  }, [refetch, isLoading, isAnalyzing, clearError]);
+  }, [refetch, isLoading, isAnalyzing, clearError, hasAnalysisData]);
 
   // Improved logic to check if we already have valid analysis data
   const hasValidAnalysisData = useCallback(() => {
@@ -224,13 +239,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     return hasCompleteAnalysis;
   }, [hasAnalysisData, stepReactions, scienceNotes]);
 
-  // Auto-analyze when opened for the first time, but only if needed
+  // Auto-analyze when opened for the first time
+  // Modified to ALWAYS run analysis in the background when recipe loads
   useEffect(() => {
-    // Only trigger analysis if:
-    // 1. We haven't analyzed this recipe before
-    // 2. We're not currently analyzing
-    // 3. We don't already have valid analysis data
-    if (!initialAnalysisRef.current && !isAnalyzing && !hasValidAnalysisData()) {
+    // Only trigger analysis if we're not currently analyzing
+    if (!isAnalyzing && !initialAnalysisRef.current) {
       console.log('Auto-triggering analysis for recipe:', recipe.title);
       initialAnalysisRef.current = true;
       
@@ -241,10 +254,10 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       
       return () => clearTimeout(timer);
     } else if (!initialAnalysisRef.current) {
-      console.log('Skipping auto-analysis - data already present for:', recipe.title);
+      console.log('Skipping auto-analysis - analysis already running for:', recipe.title);
       initialAnalysisRef.current = true;
     }
-  }, [handleAnalyze, isAnalyzing, hasValidAnalysisData, recipe.title]);
+  }, [handleAnalyze, isAnalyzing, recipe.title]);
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {
@@ -281,7 +294,6 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     isAnalyzing,
     stepReactions,
     scienceNotes,
-    globalAnalysis,
     hasAnalysisData,
     handleAnalyze,
     error

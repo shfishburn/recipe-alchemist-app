@@ -1,6 +1,8 @@
+
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 @import './styles/loading.css';
 @import './styles/clock.css';
+@import './styles/scientific-content.css';
 @import 'react-clock/dist/Clock.css';

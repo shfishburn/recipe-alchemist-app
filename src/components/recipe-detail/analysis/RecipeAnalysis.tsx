@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { CardWrapper } from "@/components/ui/card-wrapper";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -22,7 +23,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const { toast } = useToast();
   
-  // Use our custom hook for analysis data
+  // Use our custom hook for analysis data with automatic analysis enabled
   const {
     analysis,
     isLoading,
@@ -62,47 +63,19 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     stepReactions
   );
 
-  // Check if we should show the analysis prompt
-  // Only show the prompt when there is no content and we're not currently loading
-  const showAnalysisPrompt = !hasAnyContent && !isAnalyzing && !isLoading;
+  // Show analysis prompt only when there is absolutely no data and we're not analyzing
+  const showAnalysisPrompt = !hasAnyContent && !isAnalyzing && !isLoading && !hasAnalysisData;
 
-  // Effect to check for duplicate fallback messages and trigger a refresh if needed
+  // Show a subtle background refresh message when we're analyzing
   useEffect(() => {
-    // Only check for problematic fallbacks if we have step reactions and aren't currently analyzing
-    if (stepReactions && stepReactions.length > 0 && !isAnalyzing && !isLoading) {
-      // Check for obvious fallback patterns that need refreshing
-      const needsRefresh = stepReactions.some(r => {
-        // Check for fallbacks that are temporary
-        if (!r.metadata?.isTempFallback) return false;
-        
-        // Check for duplicate fallback messages across steps
-        if (r.reaction_details && Array.isArray(r.reaction_details)) {
-          const containsDuplicatePattern = r.reaction_details.some(detail => 
-            detail.includes("Automatic fallback analysis") || 
-            detail.includes("temporarily using fallback data")
-          );
-          return containsDuplicatePattern;
-        }
-        return false;
+    if (isAnalyzing && hasAnyContent) {
+      toast({
+        title: "Refreshing Analysis",
+        description: "Enhancing analysis data in the background...",
+        duration: 3000
       });
-      
-      // If we have problematic fallbacks and we're in a state where we could refresh
-      if (needsRefresh && !isAnalyzing && !isLoading && onRecipeUpdate) {
-        console.log("Detected problematic fallbacks, will refresh analysis");
-        // Don't immediately trigger to avoid loops, wait a moment
-        const timer = setTimeout(() => {
-          toast({
-            title: "Refreshing Analysis",
-            description: "Improving recipe analysis data...",
-            duration: 3000
-          });
-          handleAnalyze();
-        }, 2000);
-        
-        return () => clearTimeout(timer);
-      }
     }
-  }, [stepReactions, isAnalyzing, isLoading, handleAnalyze, onRecipeUpdate, toast]);
+  }, [isAnalyzing, toast, hasAnyContent]);
 
   // If there's an error, show the error display
   if (error) {
@@ -126,11 +99,11 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
         <AnalysisHeader 
           hasContent={hasAnyContent}
           isAnalyzing={isAnalyzing}
-          onRegenerate={handleAnalyze}
+          onRegenerate={hasAnyContent ? handleAnalyze : undefined}
         />
       }
     >
-      {isLoading || isAnalyzing ? (
+      {isLoading ? (
         <AnalysisLoading />
       ) : showAnalysisPrompt ? (
         <AnalysisPrompt onAnalyze={handleAnalyze} />
@@ -141,6 +114,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           troubleshooting={troubleshooting}
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
+          onRegenerate={isAnalyzing ? undefined : handleAnalyze}
         />
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />
