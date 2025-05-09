@@ -1,6 +1,6 @@
 // path: src/components/ui/navbar.tsx
 // file: Navbar.tsx
-// updated: 2025-05-09 15:00 PM
+// updated: 2025-05-09 15:10 PM
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -13,8 +13,7 @@ import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Global Navbar with frosted backdrop, hide-on-scroll, active link indicator,
- * and evenly distributed sections.
+ * Global Navbar with stacked logo and centered nav items.
  */
 export function Navbar({ className = '' }: { className?: string }) {
   const { session } = useAuth();
@@ -34,7 +33,6 @@ export function Navbar({ className = '' }: { className?: string }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastY]);
 
-  // Navigation links
   const navigationLinks = [
     { name: 'Kitchen', path: '/' },
     { name: 'Recipes', path: '/recipes' },
@@ -48,13 +46,13 @@ export function Navbar({ className = '' }: { className?: string }) {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 bg-white/70 backdrop-blur-md border-b shadow-sm transition-transform duration-300',
+        'fixed inset-x-0 top-0 z-50 bg-white/80 border-b shadow-sm transition-transform duration-300',
         hidden ? '-translate-y-full' : 'translate-y-0',
         className
       )}
     >
-      <div className="px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex h-12 items-center justify-between">
-        {/* Left: Logo & Mobile Menu */}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex flex-col items-center py-3">
+        {/* Top row: Mobile menu and logo */}
         <div className="flex items-center gap-4">
           <MobileMenu className="p-1 rounded-md bg-white/50 hover:bg-white/60 transition" />
           <Link to="/" className="flex-shrink-0">
@@ -66,8 +64,8 @@ export function Navbar({ className = '' }: { className?: string }) {
           </Link>
         </div>
 
-        {/* Center: Navigation Links */}
-        <nav className="hidden md:flex space-x-6">
+        {/* Center row: Navigation Links */}
+        <nav className="mt-2 flex flex-wrap justify-center space-x-4">
           {displayedLinks.map(link => {
             const active = location.pathname === link.path;
             return (
@@ -87,8 +85,8 @@ export function Navbar({ className = '' }: { className?: string }) {
           })}
         </nav>
 
-        {/* Right: Auth Buttons */}
-        <div className="flex items-center space-x-3">
+        {/* Bottom row: Auth Buttons */}
+        <div className="mt-2 flex space-x-3">
           {session ? (
             <Button variant="outline" size="sm" asChild className="h-8 px-3">
               <Link to="/profile" className="flex items-center gap-1">
@@ -113,7 +111,6 @@ export function Navbar({ className = '' }: { className?: string }) {
         </div>
       </div>
 
-      {/* Auth Drawer */}
       <AuthDrawer open={isOpen} setOpen={state => (state ? open() : close())} />
     </header>
   );
