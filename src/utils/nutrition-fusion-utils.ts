@@ -91,9 +91,9 @@ export async function searchUsdaFoods(query: string, pageSize = 10, pageNumber =
       body: {
         query,
         pageSize,
-        pageNumber
-      },
-      path: 'search'
+        pageNumber,
+        method: 'search'
+      }
     });
     
     if (error) {
@@ -114,8 +114,10 @@ export async function searchUsdaFoods(query: string, pageSize = 10, pageNumber =
 export async function importUsdaFood(fdcId: string) {
   try {
     const { data, error } = await supabase.functions.invoke('usda-food-api', {
-      body: { fdcId },
-      path: 'import-food'
+      body: { 
+        fdcId,
+        method: 'import-food'
+      }
     });
     
     if (error) {
@@ -238,19 +240,22 @@ export async function fuseRecipeNutrition(recipe: Recipe): Promise<Nutrition | n
 export async function updateRecipeWithFusedNutrition(recipeId: string) {
   try {
     // First get the current recipe
-    const { data: recipe, error: recipeError } = await supabase
+    const { data: recipeData, error: recipeError } = await supabase
       .from('recipes')
       .select('*')
       .eq('id', recipeId)
       .single();
       
-    if (recipeError || !recipe) {
+    if (recipeError || !recipeData) {
       console.error('Error fetching recipe:', recipeError);
       return false;
     }
     
+    // Convert the recipe data to a proper Recipe type
+    const recipe = recipeData as unknown as Recipe;
+    
     // Fuse the nutrition data
-    const fusedNutrition = await fuseRecipeNutrition(recipe as Recipe);
+    const fusedNutrition = await fuseRecipeNutrition(recipe);
     
     if (!fusedNutrition) {
       console.error('Failed to fuse nutrition data');
