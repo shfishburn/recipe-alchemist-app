@@ -35,7 +35,7 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
   const accessibleSummary = item.data.map(d => `${d.name}: ${d.value}%`).join(', ');
   
   return (
-    <div className="w-full px-2 sm:px-4 py-4 flex flex-col items-center">
+    <div className="w-full px-2 sm:px-4 py-4 flex flex-col items-center" aria-label={`Nutrition chart for ${item.title}`}>
       <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-3 sm:mb-4" id={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}>
         {item.title}
       </h3>
