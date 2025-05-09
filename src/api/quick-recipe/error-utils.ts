@@ -18,6 +18,8 @@ export const enhanceErrorMessage = (error: any): string => {
     errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
   } else if (error.message?.includes("fetch")) {
     errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
+  } else if (error.status === 401 || error.message?.includes("401")) {
+    errorMessage = "Authentication required. Please sign in to generate recipes.";
   } else if (error.status === 500 || error.message?.includes("500")) {
     errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
   } else if (error.status === 400 || error.message?.includes("400")) {
@@ -41,9 +43,17 @@ export const processErrorResponse = async (error: any): Promise<never> => {
       // Log full response information
       console.error('Error response status:', error.context.response.status);
       
+      // Clone the response to read it multiple times if needed
       const responseClone = error.context.response.clone();
-      const errorResponseText = await responseClone.text();
-      console.error('Full error response:', errorResponseText);
+      let errorResponseText: string;
+      
+      try {
+        errorResponseText = await responseClone.text();
+        console.error('Full error response:', errorResponseText);
+      } catch (textError) {
+        console.error('Could not read response text:', textError);
+        errorResponseText = 'Could not read error response body';
+      }
       
       try {
         // Try to parse the response text as JSON
@@ -56,10 +66,25 @@ export const processErrorResponse = async (error: any): Promise<never> => {
         }
       } catch (parseError) {
         console.error("Could not parse error response:", parseError);
+        
+        // If we couldn't parse as JSON but have text, use the text
+        if (errorResponseText && errorResponseText.length < 500) {
+          throw new Error(`Server error: ${errorResponseText}`);
+        }
       }
     } catch (e) {
-      console.error("Could not read response body:", e);
+      console.error("Could not process response body:", e);
+      
+      // If the error has a status code, include it in the message
+      if (error.context.response.status) {
+        throw new Error(`Server error with status code: ${error.context.response.status}`);
+      }
     }
+  }
+  
+  // Special handling for authentication errors
+  if (error.status === 401 || (error.message && error.message.includes('401'))) {
+    throw new Error("Authentication required. Please sign in or check your session.");
   }
   
   // Enhance the error message and throw

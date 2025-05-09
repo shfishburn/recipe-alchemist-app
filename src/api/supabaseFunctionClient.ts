@@ -45,20 +45,42 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
   const baseUrl = `${supabaseUrl}/functions/v1`;
   const url = `${baseUrl}/${functionName}`;
 
+  // Validate authentication token if present
+  if (token === '') {
+    console.warn('Empty authentication token provided to callSupabaseFunction');
+    return {
+      data: null,
+      error: 'Authentication required. Please sign in to continue.',
+      status: 401
+    };
+  }
+
   const requestOptions: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'X-Debug-Info': `${debugTag}-${Date.now()}`,
       ...headers
     },
     ...(payload && { body: JSON.stringify(payload) })
   };
 
+  // Log request details for debugging
+  console.log(`Calling Supabase function "${functionName}" with:`, {
+    url,
+    method,
+    hasToken: !!token,
+    debugTag,
+    payloadKeys: payload ? Object.keys(payload) : 'no payload'
+  });
+
   try {
     const response = await fetch(url, requestOptions);
     const contentType = response.headers.get('content-type');
+
+    // Log response status for debugging
+    console.log(`Supabase function "${functionName}" responded with status:`, response.status);
 
     let json: any = null;
     if (contentType?.includes('application/json')) {
@@ -78,6 +100,15 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
     }
 
     if (!response.ok) {
+      // For authentication errors, provide a clear message
+      if (response.status === 401) {
+        return {
+          data: null,
+          error: 'Authentication required. Please sign in to continue.',
+          status: 401
+        };
+      }
+
       return {
         data: null,
         error: typeof json === 'string' ? json : json?.error || `Error: ${response.status} ${response.statusText}`,
@@ -90,7 +121,7 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
       error: null,
       status: response.status
     };
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Error calling Supabase function "${functionName}"`, err);
     return {
       data: null,

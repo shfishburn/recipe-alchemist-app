@@ -32,8 +32,14 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     // This includes pathname, search params, hash, and state
     console.log("Not authenticated, redirecting to login from:", location.pathname);
     
-    // Show a user-friendly notification
-    toast.error("Please sign in to access this page");
+    // Check if we're on a protected resource page that requires auth
+    const isProtectedResource = location.pathname.startsWith('/quick-recipe') || 
+                              location.pathname.startsWith('/recipes');
+    
+    // Only show the auth toast for protected resources
+    if (isProtectedResource) {
+      toast.error("Please sign in to access this page");
+    }
     
     // Store any form data that was being processed
     const recipeGenerationData = sessionStorage.getItem('recipeGenerationSource');

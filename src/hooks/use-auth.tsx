@@ -115,8 +115,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setProfile(profileData);
               setLoading(false);
             })
-            .catch((err) => {
-              console.error('Error fetching profile:', err);
+            .catch((error: any) => { // Fix: Use explicitly typed parameter
+              console.error('Error fetching profile:', error);
               setLoading(false);
             });
         } catch (error) {
