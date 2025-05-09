@@ -12,63 +12,23 @@
 // Import Testing Library DOM matchers
 import '@testing-library/jest-dom';
 
-// Extend Jest's expect with Testing Library matchers
+/**
+ * Type Declarations for Testing Library matchers
+ * 
+ * These declarations extend Jest's matcher types to include the custom
+ * matchers provided by Testing Library, which are used to assert against
+ * DOM elements. Without these declarations, TypeScript would show errors
+ * when using matchers like toBeInTheDocument(), toBeDisabled(), etc.
+ */
 declare global {
   namespace jest {
-    // This interface defines the matchers added by @testing-library/jest-dom
-    interface Matchers<R, T> {
+    interface Matchers<R> {
       toBeInTheDocument(): R;
       toBeDisabled(): R;
-      toBeEnabled(): R;
-      toBeEmpty(): R;
-      toBeEmptyDOMElement(): R;
-      toBeInvalid(): R;
-      toBeRequired(): R;
-      toBeValid(): R;
-      toBeVisible(): R;
-      toContainElement(element: Element | null): R;
-      toContainHTML(html: string): R;
-      toHaveAccessibleDescription(description?: string | RegExp): R;
-      toHaveAccessibleName(name?: string | RegExp): R;
-      toHaveAttribute(attr: string, value?: string | RegExp): R;
-      toHaveClass(...classNames: string[]): R;
-      toHaveFocus(): R;
-      toHaveFormValues(values: Record<string, any>): R;
+      toHaveAttribute(attr: string, value?: string): R;
+      toHaveClass(className: string): R;
       toHaveStyle(css: Record<string, any>): R;
-      toHaveTextContent(content: string | RegExp, options?: { normalizeWhitespace: boolean }): R;
-      toHaveValue(value?: string | string[] | number): R;
-      toBeChecked(): R;
-      toBePartiallyChecked(): R;
-      toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): R;
-      toHaveErrorMessage(text: string | RegExp): R;
-    }
-    
-    // Additionally extend the async matchers for when using waitFor and similar async utilities
-    interface AsymmetricMatchers {
-      toBeInTheDocument(): void;
-      toBeDisabled(): void;
-      toBeEnabled(): void;
-      toBeEmpty(): void;
-      toBeEmptyDOMElement(): void;
-      toBeInvalid(): void;
-      toBeRequired(): void;
-      toBeValid(): void;
-      toBeVisible(): void;
-      toContainElement(element: Element | null): void;
-      toContainHTML(html: string): void;
-      toHaveAccessibleDescription(description?: string | RegExp): void;
-      toHaveAccessibleName(name?: string | RegExp): void;
-      toHaveAttribute(attr: string, value?: string | RegExp): void;
-      toHaveClass(...classNames: string[]): void;
-      toHaveFocus(): void;
-      toHaveFormValues(values: Record<string, any>): void;
-      toHaveStyle(css: Record<string, any>): void;
-      toHaveTextContent(content: string | RegExp, options?: { normalizeWhitespace: boolean }): void;
-      toHaveValue(value?: string | string[] | number): void;
-      toBeChecked(): void;
-      toBePartiallyChecked(): void;
-      toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): void;
-      toHaveErrorMessage(text: string | RegExp): void;
+      toHaveTextContent(text: string | RegExp): R;
     }
   }
 }
@@ -153,42 +113,6 @@ class LocalStorageMock {
 
 // Assign the mock localStorage to the window object
 Object.defineProperty(window, 'localStorage', { value: new LocalStorageMock() });
-
-/**
- * Mock SessionStorage
- * 
- * Similar to localStorage, we need an implementation for sessionStorage
- */
-class SessionStorageMock {
-  private store: Record<string, string> = {};
-
-  clear() {
-    this.store = {};
-  }
-
-  getItem(key: string) {
-    return this.store[key] || null;
-  }
-
-  setItem(key: string, value: string) {
-    this.store[key] = String(value);
-  }
-
-  removeItem(key: string) {
-    delete this.store[key];
-  }
-
-  get length(): number {
-    return Object.keys(this.store).length;
-  }
-
-  key(index: number): string | null {
-    return Object.keys(this.store)[index] || null;
-  }
-}
-
-// Assign the mock sessionStorage to the window object
-Object.defineProperty(window, 'sessionStorage', { value: new SessionStorageMock() });
 
 /**
  * Mock matchMedia
