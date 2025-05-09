@@ -30,10 +30,9 @@ serve(async (req) => {
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
     console.log(`Request received with debug info: ${debugInfo}`);
     
-    // Check if request has a body
+    // Read the request body ONCE and parse it
     let requestBody;
     try {
-      // Try to read the request body
       const bodyText = await req.text();
       
       if (!bodyText || bodyText.trim() === '') {
@@ -53,6 +52,7 @@ serve(async (req) => {
       
       try {
         requestBody = JSON.parse(bodyText);
+        console.log("Parsed request body:", JSON.stringify(requestBody).substring(0, 100) + "...");
       } catch (parseError) {
         console.error("Error parsing request body:", parseError);
         return new Response(
@@ -84,7 +84,8 @@ serve(async (req) => {
     const embeddingModel = requestBody?.embeddingModel || "text-embedding-ada-002"; // Default model
     console.log(`Using embedding model: ${embeddingModel}`);
     
-    return await handleRequest(req, debugInfo, embeddingModel);
+    // Pass the parsed body to handleRequest instead of the original request
+    return await handleRequest(req, requestBody, debugInfo, embeddingModel);
   } catch (err) {
     console.error("Quick recipe generation error:", err);
     
