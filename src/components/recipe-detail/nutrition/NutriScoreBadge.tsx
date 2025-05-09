@@ -27,7 +27,7 @@ export function NutriScoreBadge({
   className = '' 
 }: NutriScoreBadgeProps) {
   // If no valid nutri-score is provided, don't render anything
-  if (!nutriScore || !nutriScore.grade) {
+  if (!nutriScore || !nutriScore.grade || !['A', 'B', 'C', 'D', 'E'].includes(nutriScore.grade)) {
     return null;
   }
   

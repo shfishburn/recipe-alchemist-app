@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,23 +13,30 @@ interface RecipeCardProps {
 }
 
 function RecipeCard({ recipe, className }: RecipeCardProps) {
+  // Safe URL generation - use slug if available, otherwise use ID
   const url = recipe.slug ? `/recipes/${recipe.slug}` : `/recipes/${recipe.id}`;
-  const totalTime = (recipe.prep_time_min || 0) + (recipe.cook_time_min || 0);
+  
+  // Calculate total time safely
+  const prepTime = recipe.prep_time_min || 0;
+  const cookTime = recipe.cook_time_min || 0;
+  const totalTime = prepTime + cookTime;
   const timeText = totalTime > 0 ? `${totalTime} min` : '';
   
+  // Collect tags safely
   const tags = [];
   if (recipe.cuisine) tags.push(recipe.cuisine);
   if (recipe.dietary) tags.push(recipe.dietary);
   
   return (
-    <Card className={cn("overflow-hidden transition-all hover:shadow-md", className)}>
+    <Card className={cn("recipe-card overflow-hidden transition-all hover:shadow-md", className)}>
       <Link to={url} className="block h-full">
         <div className="aspect-video relative overflow-hidden">
           {recipe.image_url ? (
             <img
               src={recipe.image_url}
-              alt={recipe.title}
+              alt={recipe.title || 'Recipe'}
               className="object-cover w-full h-full"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-muted">
@@ -52,10 +60,20 @@ function RecipeCard({ recipe, className }: RecipeCardProps) {
                 </Badge>
               ))}
             </div>
-            <NutriScoreBadge nutriScore={recipe.nutri_score} size="sm" showTooltip={false} />
+            
+            {/* Only render NutriScoreBadge when recipe.nutri_score exists and has a grade */}
+            {recipe.nutri_score && recipe.nutri_score.grade && (
+              <NutriScoreBadge 
+                nutriScore={recipe.nutri_score} 
+                size="sm" 
+                showTooltip={false} 
+              />
+            )}
           </div>
           
-          <h3 className="font-medium text-base line-clamp-2">{recipe.title}</h3>
+          <h3 className="font-medium text-base line-clamp-2">
+            {recipe.title || 'Untitled Recipe'}
+          </h3>
           
           {recipe.tagline && (
             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">

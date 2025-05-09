@@ -25,8 +25,14 @@ const Recipes = () => {
       status,
       isLoading,
       isFetching,
-      recipesCount: recipes?.length,
-      error: error ? `${error}` : 'none'
+      recipesCount: recipes?.length || 0,
+      error: error ? `${error}` : 'none',
+      firstRecipe: recipes && recipes.length > 0 ? {
+        id: recipes[0].id,
+        title: recipes[0].title,
+        hasNutriScore: !!recipes[0].nutri_score,
+        nutriScoreGrade: recipes[0].nutri_score?.grade,
+      } : 'no recipes'
     });
     
     if (error) {
@@ -39,6 +45,9 @@ const Recipes = () => {
     { label: 'Home', href: '/' },
     { label: 'My Kitchen', current: true }
   ];
+
+  // Ensure recipes is always an array
+  const safeRecipes = Array.isArray(recipes) ? recipes : [];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -90,7 +99,7 @@ const Recipes = () => {
             </div>
           )}
           
-          {!isLoading && !error && recipes && recipes.length === 0 && (
+          {!isLoading && !error && safeRecipes.length === 0 && (
             <div className="text-center text-muted-foreground p-8 border border-dashed rounded-lg">
               {searchTerm 
                 ? <p>No recipes found matching "<span className="font-medium">{searchTerm}</span>"</p>
@@ -99,9 +108,9 @@ const Recipes = () => {
             </div>
           )}
           
-          {!isLoading && !error && recipes && recipes.length > 0 && (
+          {!isLoading && !error && safeRecipes.length > 0 && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {recipes.map((recipe) => (
+              {safeRecipes.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />
               ))}
             </div>
