@@ -30,8 +30,10 @@ export function RecipeBatchUpdatePanel() {
       setResult(null);
       setProgress(10); // Show initial progress
 
-      // Run the update function and properly type the result
-      const updateResult = await updateAllRecipeNutritionData(dryRun) as BatchUpdateResult;
+      // Use the Promise-based API to get the result 
+      const response = await updateAllRecipeNutritionData(dryRun);
+      const updateResult = response as unknown as BatchUpdateResult;
+      
       setProgress(100);
       setResult(updateResult);
       
@@ -56,8 +58,10 @@ export function RecipeBatchUpdatePanel() {
       setResult(null);
       setProgress(10); // Show initial progress
 
-      // Run the science update function and properly type the result
-      const updateResult = await updateRecipeScienceData(dryRun) as BatchUpdateResult;
+      // Use the Promise-based API to get the result
+      const response = await updateRecipeScienceData(dryRun);
+      const updateResult = response as unknown as BatchUpdateResult;
+      
       setProgress(100);
       setResult(updateResult);
       
