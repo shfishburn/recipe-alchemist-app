@@ -107,20 +107,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (currentSession?.user) {
           try {
-            // Use a Promise properly here to handle errors
-            supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', currentSession.user.id)
-              .single()
-              .then(({ data: profileData }) => {
+            // Fixed: Use async/await properly instead of Promise.catch
+            (async () => {
+              try {
+                const { data: profileData } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', currentSession.user.id)
+                  .single();
+                
                 setProfile(profileData);
-                setLoading(false);
-              })
-              .catch((error: any) => {
+              } catch (error) {
                 console.error('Error fetching profile:', error);
+              } finally {
                 setLoading(false);
-              });
+              }
+            })();
           } catch (error) {
             console.error('Error setting up profile fetch:', error);
             setLoading(false);

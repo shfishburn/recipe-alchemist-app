@@ -11,6 +11,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     // Add historyApiFallback to handle client-side routing
     historyApiFallback: true,
+    // Allow requests from Lovable sandbox host
+    allowedHosts: "all",
   },
   plugins: [
     react(),
