@@ -19,23 +19,29 @@ export function TopLoadingBar({
   
   // Start loading bar on component mount
   useEffect(() => {
-    loadingRef.current?.continuousStart();
+    if (loadingRef.current) {
+      loadingRef.current.continuousStart();
+    }
     
     // Complete the loading bar when recipe generation is done
     if (completedLoading || showFinalAnimation) {
-      loadingRef.current?.complete();
+      if (loadingRef.current) {
+        loadingRef.current.complete();
+      }
     }
     
     return () => {
       // Ensure loading bar is completed when component unmounts
-      loadingRef.current?.complete();
+      if (loadingRef.current) {
+        loadingRef.current.complete();
+      }
     };
   }, [completedLoading, showFinalAnimation]);
   
   // Update progress based on percentComplete when available
   useEffect(() => {
-    if (loadingState.percentComplete > 0 && loadingState.percentComplete < 100) {
-      loadingRef.current?.setProgress(loadingState.percentComplete);
+    if (loadingState.percentComplete > 0 && loadingState.percentComplete < 100 && loadingRef.current) {
+      loadingRef.current.setProgress(loadingState.percentComplete);
     }
   }, [loadingState.percentComplete]);
 

@@ -16,7 +16,7 @@ export function LoadingAnimation({ showFinalAnimation }: LoadingAnimationProps) 
         </div>
       ) : (
         <>
-          <CookingPot className="h-12 w-12 text-primary animate-bounce" />
+          <CookingPot className="h-12 w-12 text-primary animate-cooking-pot" />
           <div className="absolute -top-2 -right-2 h-3 w-3 bg-recipe-orange rounded-full animate-ping" />
         </>
       )}
