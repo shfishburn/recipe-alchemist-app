@@ -125,7 +125,7 @@ export function QuickRecipeFormContainer() {
             Create Your Perfect Recipe
           </h2>
           <p className="text-sm md:text-base text-muted-foreground mt-2">
-            Tell us what ingredients you have and we'll do the rest!
+            Tell us what you want to make or what ingredients you have. Our AI Cooking Coach will do the rest!
           </p>
         </div>
       
