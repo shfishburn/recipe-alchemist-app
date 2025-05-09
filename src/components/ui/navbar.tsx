@@ -1,7 +1,7 @@
 
 // path: src/components/ui/navbar.tsx
 // file: Navbar.tsx
-// updated: 2025-05-09 15:10 PM
+// updated: 2025-05-09 15:20 PM
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -14,7 +14,7 @@ import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Global Navbar with horizontal layout and properly separated components.
+ * Navbar with a stacked layout: logo above the navigation links, centered and airy.
  */
 export function Navbar({ className = '' }: { className?: string }) {
   const { session } = useAuth();
@@ -52,63 +52,67 @@ export function Navbar({ className = '' }: { className?: string }) {
         className
       )}
     >
-      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto flex items-center justify-between">
-        {/* Left side: Mobile menu and logo */}
-        <div className="flex items-center gap-4">
-          <MobileMenu />
-          <Link to="/" className="flex-shrink-0">
-            <img
-              src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
-              alt="Recipe Alchemy Logo"
-              className="h-10 w-auto"
-            />
-          </Link>
-        </div>
+      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto flex flex-col items-center space-y-4">
+        {/* Logo centered at top */}
+        <Link to="/" className="flex-shrink-0">
+          <img
+            src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
+            alt="Recipe Alchemy Logo"
+            className="h-12 w-auto"
+          />
+        </Link>
 
-        {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center justify-center space-x-10">
-          {displayedLinks.map(link => {
-            const active = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  'text-sm font-medium px-2 py-1 transition-colors',
-                  active
-                    ? 'text-recipe-green border-b-2 border-recipe-green'
-                    : 'text-gray-700 hover:text-primary'
-                )}
-              >
-                {link.name}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex items-center w-full justify-between">
+          {/* Mobile menu icon (left) appears above links on small screens */}
+          <div className="md:hidden">
+            <MobileMenu />
+          </div>
 
-        {/* Right side: Auth Buttons */}
-        <div className="flex items-center space-x-4">
-          {session ? (
-            <Button variant="outline" size="sm" asChild className="h-9 px-4">
-              <Link to="/profile" className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                <span>Profile</span>
-              </Link>
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={open} className="h-9 px-4">
-                Log in
+          {/* Navigation Links centered */}
+          <nav className="hidden md:flex items-center justify-center space-x-10">
+            {displayedLinks.map(link => {
+              const active = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    'text-sm font-medium px-2 py-1 transition-colors',
+                    active
+                      ? 'text-recipe-green border-b-2 border-recipe-green'
+                      : 'text-gray-700 hover:text-primary'
+                  )}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Auth Buttons on the right */}
+          <div className="hidden md:flex items-center space-x-4">
+            {session ? (
+              <Button variant="outline" size="sm" asChild className="h-9 px-4">
+                <Link to="/profile" className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
               </Button>
-              <Button
-                size="sm"
-                onClick={open}
-                className="h-9 px-4 bg-recipe-green text-white hover:bg-recipe-green/90"
-              >
-                Sign up
-              </Button>
-            </>
-          )}
+            ) : (
+              <>  
+                <Button variant="outline" size="sm" onClick={open} className="h-9 px-4">
+                  Log in
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={open}
+                  className="h-9 px-4 bg-recipe-green text-white hover:bg-recipe-green/90"
+                >
+                  Sign up
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

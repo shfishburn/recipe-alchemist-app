@@ -14,7 +14,7 @@ import React, { PropsWithChildren } from 'react';
 export function PageContainer({ children, className = '' }: PropsWithChildren<{ className?: string }>) {
   return (
     <div className={`min-h-screen flex flex-col ${className}`}>
-      <main className="flex-1 px-6 sm:px-8 lg:px-12 max-w-4xl mx-auto pt-28 md:pt-32 pb-12">
+      <main className="flex-1 px-6 sm:px-8 lg:px-12 max-w-4xl mx-auto pt-32 md:pt-36 pb-12">
         {children}
       </main>
     </div>
