@@ -1,28 +1,36 @@
-// path: src/components/quick-recipe/QuickRecipeRegeneration.tsx
-// file: QuickRecipeRegeneration.tsx
-// updated: 2025-05-09 11:05 AM
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { RefreshCcw } from 'lucide-react';
+import { QuickRecipeFormData } from '@/types/quick-recipe';
 
 export interface QuickRecipeRegenerationProps {
-  formData: any;
+  formData: QuickRecipeFormData;
   isLoading: boolean;
-  onRetry: () => void;
+  onRetry?: () => void;
 }
 
-export function QuickRecipeRegeneration({
-  formData,
-  isLoading,
-  onRetry
+export function QuickRecipeRegeneration({ 
+  formData, 
+  isLoading, 
+  onRetry 
 }: QuickRecipeRegenerationProps) {
+  // Don't show regeneration if there's no form data
+  if (!formData) return null;
+  
   return (
-    <div className="flex justify-center">
-      <Button
-        onClick={() => onRetry(formData)}
+    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100">
+      <h3 className="text-xl font-semibold mb-4">Not quite what you wanted?</h3>
+      <p className="mb-4 text-muted-foreground">
+        You can regenerate this recipe with the same ingredients and preferences.
+      </p>
+      <Button 
+        onClick={onRetry} 
         disabled={isLoading}
+        className="flex items-center gap-2"
       >
-        {isLoading ? 'Regenerating…' : 'Regenerate Recipe'}
+        <RefreshCcw className="h-4 w-4" />
+        Regenerate Recipe
       </Button>
     </div>
   );

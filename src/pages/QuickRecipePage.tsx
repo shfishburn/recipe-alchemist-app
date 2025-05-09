@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
@@ -81,7 +82,11 @@ const QuickRecipePage: React.FC = () => {
         ) : recipe ? (
           <div className="space-y-8">
             <QuickRecipeDisplay recipe={recipe} />
-            <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
+            <QuickRecipeRegeneration 
+              formData={formData} 
+              isLoading={isLoading} 
+              onRetry={handleRetry} 
+            />
           </div>
         ) : (
           <QuickRecipeEmpty />
