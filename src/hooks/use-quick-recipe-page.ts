@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
@@ -14,9 +14,37 @@ export function useQuickRecipePage() {
   const { session } = useAuth();
   const [isRetrying, setIsRetrying] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Check if we're navigating from navbar (no state)
   const isDirectNavigation = !location.state;
+  
+  // Function to create a new abort controller
+  const createAbortController = useCallback(() => {
+    // Clean up any existing controller
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // Create a new controller
+    abortControllerRef.current = new AbortController();
+    return abortControllerRef.current;
+  }, []);
+
+  // Cleanup function
+  const cleanupRequestState = useCallback(() => {
+    // Abort any pending requests on unmount
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
+  
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      cleanupRequestState();
+    };
+  }, [cleanupRequestState]);
 
   // Check if we need to resume recipe generation after login
   useEffect(() => {
@@ -34,30 +62,40 @@ export function useQuickRecipePage() {
             setLoading(true);
             setFormData(parsedData.formData);
             
-            // Start an async generation
-            generateQuickRecipe(parsedData.formData).catch(err => {
-              console.error("Error resuming recipe generation:", err);
-              toast({
-                title: "Recipe generation failed",
-                description: err.message || "Please try again later.",
-                variant: "destructive",
+            // Create a new abort controller
+            const controller = createAbortController();
+            
+            // Start an async generation with abort signal
+            generateQuickRecipe(parsedData.formData, { signal: controller.signal })
+              .catch(err => {
+                // Don't show error if aborted
+                if (err.name === 'AbortError') {
+                  console.log("Recipe generation aborted");
+                  return;
+                }
+                
+                console.error("Error resuming recipe generation:", err);
+                toast({
+                  title: "Recipe generation failed",
+                  description: err.message || "Please try again later.",
+                  variant: "destructive",
+                });
               });
-            });
           }
         } catch (err) {
           console.error("Error parsing stored recipe data:", err);
         }
       }
     }
-  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData]);
+  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, createAbortController]);
 
   // Reset loading state if navigating directly from navbar
   useEffect(() => {
     if (isDirectNavigation && isLoading) {
       console.log("Direct navigation detected while loading, resetting state");
-      reset();
+      handleCancel();
     }
-  }, [isDirectNavigation, isLoading, reset]);
+  }, [isDirectNavigation, isLoading]);
 
   // Only redirect if not loading AND no recipe data AND no error AND no formData
   useEffect(() => {
@@ -67,7 +105,7 @@ export function useQuickRecipePage() {
     }
   }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
 
-  const handleRetry = async () => {
+  const handleRetry = useCallback(async () => {
     if (formData) {
       try {
         setIsRetrying(true);
@@ -84,11 +122,21 @@ export function useQuickRecipePage() {
           description: "We're attempting to generate your recipe again...",
         });
         
-        // Start the recipe generation immediately
-        await generateQuickRecipe(formData);
+        // Create a new abort controller for this request
+        const controller = createAbortController();
+        
+        // Start the recipe generation immediately with abort signal
+        await generateQuickRecipe(formData, { signal: controller.signal });
         
         setIsRetrying(false);
       } catch (err: any) {
+        // Don't show error if aborted
+        if (err.name === 'AbortError') {
+          console.log("Recipe generation retry aborted");
+          setIsRetrying(false);
+          return;
+        }
+        
         console.error("Error retrying recipe generation:", err);
         setIsRetrying(false);
         toast({
@@ -98,17 +146,34 @@ export function useQuickRecipePage() {
         });
       }
     }
-  };
+  }, [formData, setError, setLoading, createAbortController, generateQuickRecipe]);
 
-  const handleCancel = () => {
-    // Reset and navigate back to home
+  const handleCancel = useCallback(() => {
+    // Abort any pending requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    // Reset the store state
     reset();
+    
+    // Stop retrying if in progress
+    setIsRetrying(false);
+    
+    // Navigate back to home
     navigate('/');
-  };
+    
+    // Show toast informing the user
+    toast({
+      title: "Recipe generation cancelled",
+      description: "You can try again with new ingredients anytime.",
+    });
+  }, [reset, navigate]);
 
-  const toggleDebugMode = () => {
+  const toggleDebugMode = useCallback(() => {
     setDebugMode(!debugMode);
-  };
+  }, [debugMode]);
 
   return {
     recipe,

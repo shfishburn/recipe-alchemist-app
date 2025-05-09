@@ -28,15 +28,15 @@ export function NutrientStats({ nutrition, dailyCalories, unitSystem }: Nutrient
     },
     {
       name: 'Vitamin A',
-      value: nutrition.vitaminA || 0, // Fixed - using standardized property name
+      value: nutrition.vitaminA || 0,
       unit: 'μg',
-      percentage: Math.round(((nutrition.vitaminA || 0) / DAILY_REFERENCE_VALUES.vitamin_a) * 100)
+      percentage: Math.round(((nutrition.vitaminA || 0) / DAILY_REFERENCE_VALUES.vitaminA) * 100)
     },
     {
       name: 'Vitamin C',
-      value: nutrition.vitaminC || 0, // Fixed - using standardized property name
+      value: nutrition.vitaminC || 0,
       unit: 'mg',
-      percentage: Math.round(((nutrition.vitaminC || 0) / DAILY_REFERENCE_VALUES.vitamin_c) * 100)
+      percentage: Math.round(((nutrition.vitaminC || 0) / DAILY_REFERENCE_VALUES.vitaminC) * 100)
     },
     {
       name: 'Calcium',

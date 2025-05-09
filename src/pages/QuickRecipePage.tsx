@@ -10,6 +10,7 @@ import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeErr
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
+import { cn } from '@/lib/utils';
 
 const QuickRecipePage = () => {
   const {
@@ -54,12 +55,16 @@ const QuickRecipePage = () => {
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
     return (
-      <div className="min-h-screen relative touch-action-auto">
+      <div className={cn(
+        "min-h-screen relative touch-action-auto",
+        (isLoading || isRetrying) ? "overflow-hidden" : ""
+      )}>
         <LoadingIndicator />
         <FullScreenLoading 
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
+          isRetrying={isRetrying}
         />
       </div>
     );

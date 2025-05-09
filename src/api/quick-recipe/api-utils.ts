@@ -10,7 +10,7 @@ export const getAuthToken = async (): Promise<string> => {
 };
 
 // Direct API fetch to edge function
-export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
+export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
   try {
     // Get auth token for request
     const token = await getAuthToken();
@@ -31,8 +31,14 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         'Authorization': `Bearer ${token}`,
         'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal // Pass the abort signal to the fetch request
     });
+    
+    // Check if request was aborted
+    if (signal?.aborted) {
+      throw new DOMException("Request aborted by user", "AbortError");
+    }
     
     console.log("Direct fetch response status:", response.status);
     const responseText = await response.text();
@@ -64,26 +70,54 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
 };
 
 // Fallback API call using Supabase functions
-export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
-  const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
-    body: {
-      ...requestBody,
-      embeddingModel: 'text-embedding-ada-002' // Include model in request body
-    },
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Debug-Info': 'supabase-invoke-' + Date.now()
+export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
+  // Create an AbortController that wraps the signal
+  const controller = new AbortController();
+  
+  // If signal is provided, listen for abort events
+  if (signal) {
+    if (signal.aborted) {
+      throw new DOMException("Request aborted by user", "AbortError");
     }
-  });
+    
+    signal.addEventListener('abort', () => {
+      controller.abort();
+    });
+  }
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+      body: {
+        ...requestBody,
+        embeddingModel: 'text-embedding-ada-002' // Include model in request body
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Info': 'supabase-invoke-' + Date.now()
+      },
+      signal: controller.signal
+    });
 
-  if (error) {
-    console.error('Supabase functions error:', error);
+    // Check for abort
+    if (signal?.aborted) {
+      throw new DOMException("Request aborted by user", "AbortError");
+    }
+    
+    if (error) {
+      console.error('Supabase functions error:', error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('No data returned from recipe generation');
+    }
+
+    return data;
+  } catch (error) {
+    // Check if this is an abort error
+    if (error.name === 'AbortError' || signal?.aborted) {
+      throw new DOMException("Request aborted by user", "AbortError");
+    }
     throw error;
   }
-
-  if (!data) {
-    throw new Error('No data returned from recipe generation');
-  }
-
-  return data;
 };
