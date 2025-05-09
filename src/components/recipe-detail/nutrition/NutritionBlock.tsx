@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
@@ -27,7 +28,8 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
     // Only process fields that will be displayed
     const fieldsToProcess = [
       'calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium',
-      'vitaminA', 'vitaminC', 'vitaminD', 'calcium', 'iron', 'potassium'
+      'vitaminA', 'vitaminC', 'vitaminD', 'calcium', 'iron', 'potassium',
+      'saturated_fat', 'saturatedFat' // Make sure to include both forms of saturated fat
     ];
     
     // Create a new object with only the processed fields
@@ -68,6 +70,7 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
       calcium: processed.calcium || 0,
       iron: processed.iron || 0,
       potassium: processed.potassium || 0,
+      saturated_fat: processed.saturated_fat || processed.saturatedFat || 0, // Support both naming conventions
       data_quality: processed.data_quality
     };
     
@@ -94,7 +97,6 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
         <PersonalBlock
           recipeNutrition={processedNutrition}
           userPreferences={userPreferences!}
-          unitSystem={unitSystem}
         />
       )}
     </div>

@@ -115,7 +115,7 @@ export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBloc
         <Separator className="my-6" />
         
         <NutrientStats 
-          recipeNutrition={recipeNutrition} 
+          nutrition={recipeNutrition} 
           dailyCalories={dailyCalories}
           unitSystem={unitSystem}
         />
