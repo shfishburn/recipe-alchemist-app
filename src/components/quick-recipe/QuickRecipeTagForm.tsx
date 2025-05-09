@@ -64,8 +64,8 @@ const QuickRecipeTagForm = ({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="ingredients" className="text-sm font-medium">Ingredients</Label>
-        <div className="w-full text-center">
+        <Label htmlFor="ingredients" className="text-sm font-bold text-left">Your Ingredients or Recipe</Label>
+        <div className="w-full text-left">
           <input
             type="text"
             id="ingredients"
@@ -79,11 +79,11 @@ const QuickRecipeTagForm = ({
               bg-white p-2
               outline-none focus:outline-none
               focus:ring-2 focus:ring-slate-400
-              placeholder:text-center placeholder:text-muted-foreground
+              placeholder:text-left placeholder:text-muted-foreground
               disabled:cursor-not-allowed disabled:opacity-50
             "
           />
-          <p className="mt-1 block w-full text-sm text-muted-foreground">
+          <p className="mt-1 block w-full text-sm text-muted-foreground text-left">
             e.g., chicken curry: chicken, curry paste, coconut milk
           </p>
         </div>
@@ -92,7 +92,7 @@ const QuickRecipeTagForm = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Servings Selector */}
         <div className="space-y-2">
-          <Label htmlFor="servings" className="text-sm font-medium"># Servings</Label>
+          <Label htmlFor="servings" className="text font-bold"># Servings</Label>
           <ServingsSelector 
             selectedServings={selectedServings} 
             onServingsChange={onServingsSelect} 
@@ -101,7 +101,7 @@ const QuickRecipeTagForm = ({
 
         {/* Cuisine Selector */}
         <div className="space-y-2">
-          <Label htmlFor="cuisine" className="text-sm font-medium">Cuisine Preference</Label>
+          <Label htmlFor="cuisine" className="text font-bold">Cuisine Preference</Label>
           <CuisineSelector 
             value={selectedCuisine} 
             onChange={onCuisineSelect}
@@ -110,7 +110,7 @@ const QuickRecipeTagForm = ({
 
         {/* Dietary Selector */}
         <div className="space-y-2">
-          <Label htmlFor="dietary" className="text-sm font-medium">Dietary Choices</Label>
+          <Label htmlFor="dietary" className="text font-bold">Dietary Choices</Label>
           <DietarySelector
             value={selectedDietary}
             onChange={onDietarySelect}
