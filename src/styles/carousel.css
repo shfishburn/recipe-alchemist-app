@@ -52,13 +52,17 @@
 .carousel-pagination-dot-active {
   @apply bg-recipe-blue;
   width: 12px !important;
+  height: 6px !important; /* Match the height to base dot height */
   max-width: 12px !important;
+  max-height: 6px !important; /* Match the max-height to base dot max-height */
 }
 
 @media (min-width: 640px) {
   .carousel-pagination-dot-active {
     width: 16px !important;
+    height: 8px !important; /* Match the height to base dot height for desktop */
     max-width: 16px !important;
+    max-height: 8px !important; /* Match the max-height to base dot max-height for desktop */
   }
 }
 
@@ -138,3 +142,4 @@
 .carousel-progress-indicator.animate {
   animation: carousel-progress linear forwards;
 }
+
