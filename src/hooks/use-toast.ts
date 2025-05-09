@@ -27,14 +27,14 @@ export function toast(props: ToastProps) {
   
   // For title+description format
   if (props.title && props.description) {
-    return sonnerToast(props.title, {
+    return sonnerToast(props.title as string, {
       ...enhancedProps,
       description: props.description
     })
   }
   
   // For backward compatibility and simpler calls with just a message
-  return sonnerToast(enhancedProps)
+  return sonnerToast(props.title as string || props as any)
 }
 
 // Enhanced hook with convenience methods

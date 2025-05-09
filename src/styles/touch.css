@@ -1,4 +1,5 @@
 
+
 /* Touch-optimized elements */
 .touch-optimized {
   touch-action: manipulation;
@@ -35,3 +36,38 @@
     @apply bg-secondary text-secondary-foreground;
   }
 }
+
+/* Auth UI specific touch optimizations */
+.auth-button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Ensure auth drawer buttons are touch-friendly */
+.auth-drawer button {
+  min-height: 44px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  touch-action: manipulation;
+}
+
+/* Ensure touch events propagate correctly in dialogs */
+[role="dialog"] {
+  touch-action: none;
+}
+
+[role="dialog"] .content {
+  touch-action: auto;
+}
+
+/* Fix iOS touch issues */
+button, 
+[role="button"],
+a.button,
+input[type="button"], 
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+}
+

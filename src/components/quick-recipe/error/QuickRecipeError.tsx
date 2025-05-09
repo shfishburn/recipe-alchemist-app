@@ -3,6 +3,7 @@ import React from 'react';
 import { AlertCircle, ArrowLeft, RefreshCw, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 
 interface QuickRecipeErrorProps {
   error: string;
@@ -24,6 +25,7 @@ export function QuickRecipeError({
   isRetrying
 }: QuickRecipeErrorProps) {
   const auth = useAuth();
+  const { open: openAuthDrawer } = useAuthDrawer();
   
   // Check if this is an authentication error
   const isAuthError = error?.toLowerCase().includes('auth') || 
@@ -79,7 +81,7 @@ export function QuickRecipeError({
         
         {isAuthError ? (
           <Button 
-            onClick={() => auth.signIn()}
+            onClick={openAuthDrawer}
             className="flex items-center gap-2"
           >
             <LogIn className="h-4 w-4" />
@@ -99,3 +101,4 @@ export function QuickRecipeError({
     </div>
   );
 }
+
