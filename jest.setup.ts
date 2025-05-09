@@ -12,10 +12,11 @@
 // Import Testing Library DOM matchers
 import '@testing-library/jest-dom';
 
-// Explicitly extend Jest's matchers
+// Extend Jest's expect with Testing Library matchers
 declare global {
   namespace jest {
-    interface Matchers<R, T = any> {
+    // This interface defines the matchers added by @testing-library/jest-dom
+    interface Matchers<R, T> {
       toBeInTheDocument(): R;
       toBeDisabled(): R;
       toBeEnabled(): R;
@@ -40,6 +41,34 @@ declare global {
       toBePartiallyChecked(): R;
       toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): R;
       toHaveErrorMessage(text: string | RegExp): R;
+    }
+    
+    // Additionally extend the async matchers for when using waitFor and similar async utilities
+    interface AsymmetricMatchers {
+      toBeInTheDocument(): void;
+      toBeDisabled(): void;
+      toBeEnabled(): void;
+      toBeEmpty(): void;
+      toBeEmptyDOMElement(): void;
+      toBeInvalid(): void;
+      toBeRequired(): void;
+      toBeValid(): void;
+      toBeVisible(): void;
+      toContainElement(element: Element | null): void;
+      toContainHTML(html: string): void;
+      toHaveAccessibleDescription(description?: string | RegExp): void;
+      toHaveAccessibleName(name?: string | RegExp): void;
+      toHaveAttribute(attr: string, value?: string | RegExp): void;
+      toHaveClass(...classNames: string[]): void;
+      toHaveFocus(): void;
+      toHaveFormValues(values: Record<string, any>): void;
+      toHaveStyle(css: Record<string, any>): void;
+      toHaveTextContent(content: string | RegExp, options?: { normalizeWhitespace: boolean }): void;
+      toHaveValue(value?: string | string[] | number): void;
+      toBeChecked(): void;
+      toBePartiallyChecked(): void;
+      toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): void;
+      toHaveErrorMessage(text: string | RegExp): void;
     }
   }
 }
