@@ -11,7 +11,6 @@
 
 // Import Testing Library DOM matchers
 import '@testing-library/jest-dom';
-import '@testing-library/jest-dom/extend-expect';
 
 /**
  * Type Declarations for Testing Library matchers
@@ -203,3 +202,4 @@ global.requestAnimationFrame = (callback) => {
 global.cancelAnimationFrame = (id) => {
   clearTimeout(id);
 };
+
