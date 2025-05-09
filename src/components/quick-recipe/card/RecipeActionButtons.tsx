@@ -1,60 +1,28 @@
-
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { CookingPot, Bookmark, Printer } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
 
 interface RecipeActionButtonsProps {
-  onCook: () => void;
   onSave: () => void;
-  onPrint?: () => void;
   isSaving?: boolean;
-  isSmallScreen?: boolean;
 }
 
 // Use memo to prevent unnecessary re-renders
-export const RecipeActionButtons = memo(function RecipeActionButtons({ 
-  onCook, 
-  onSave, 
-  onPrint,
-  isSaving = false,
-  isSmallScreen = false
+export const RecipeActionButtons = memo(function RecipeActionButtons({
+  onSave,
+  isSaving = false
 }: RecipeActionButtonsProps) {
   return (
-    <div className="pt-5 flex flex-col gap-2.5 w-full">
-      {/* Primary action - Start Cooking */}
-      <Button 
-        onClick={onCook} 
-        className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
-        size="lg"
+    <div className="pt-5 w-full">
+      <Button
+        variant="outline"
+        onClick={onSave}
+        disabled={isSaving}
+        className="w-full"
       >
-        <CookingPot className="mr-2 h-5 w-5" />
-        Start Cooking
+        <Bookmark className="mr-2 h-5 w-5" />
+        Save Recipe
       </Button>
-      
-      {/* Secondary actions in a proper grid layout */}
-      <div className="grid grid-cols-2 gap-2.5 w-full">
-        <Button 
-          variant="outline" 
-          onClick={onSave}
-          className="w-full"
-          disabled={isSaving}
-        >
-          <Bookmark className="mr-1 sm:mr-2 h-4 w-4" />
-          <span className={isSmallScreen ? "hidden" : "inline"}>Save Recipe</span>
-          <span className={isSmallScreen ? "inline" : "hidden"}>Save</span>
-        </Button>
-        {onPrint && (
-          <Button 
-            variant="outline" 
-            onClick={onPrint}
-            className="w-full"
-          >
-            <Printer className="mr-1 sm:mr-2 h-4 w-4" />
-            <span className={isSmallScreen ? "hidden" : "inline"}>Print</span>
-            <span className={isSmallScreen ? "inline" : "hidden"}>Print</span>
-          </Button>
-        )}
-      </div>
     </div>
   );
 });
