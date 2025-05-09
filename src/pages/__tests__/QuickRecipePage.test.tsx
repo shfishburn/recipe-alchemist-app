@@ -48,7 +48,7 @@ const renderWithRouter = (component: React.ReactNode) => {
 describe('QuickRecipePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Cast the mock to the correct type with 'as any' to avoid TS errors
+    // Cast the mock to the correct type with 'as unknown as jest.Mock' to avoid TS errors
     (useQuickRecipeStore as unknown as jest.Mock).mockReturnValue({
       recipe: null,
       isLoading: false,
