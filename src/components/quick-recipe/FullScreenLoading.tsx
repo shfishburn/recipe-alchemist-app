@@ -6,7 +6,7 @@ import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import { AlertCircle, ArrowLeft, RefreshCw, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { ClockProgress } from './loading/ClockProgress';
+import { TopLoadingBar } from './loading/TopLoadingBar';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -40,6 +40,8 @@ export const FullScreenLoading = memo(function FullScreenLoading({
   
   return (
     <div className={`absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
+      <TopLoadingBar showFinalAnimation={showFinalAnimation} />
+      
       {/* Accessible title for screen readers */}
       <VisuallyHidden asChild>
         <h1>
@@ -109,7 +111,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               </div>
             </div>
             
-            {/* Replace progress bar with analog clock */}
+            {/* Progress indicator section */}
             <div className="mb-8 animate-fade-in">
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-medium">
@@ -117,11 +119,11 @@ export const FullScreenLoading = memo(function FullScreenLoading({
                 </span>
               </div>
               
-              {/* Clock Progress Component */}
-              <div className="flex justify-center my-4">
-                <ClockProgress 
-                  percentComplete={loadingState?.percentComplete || 0} 
-                  showTimeout={showTimeout && !showFinalAnimation}
+              {/* Simple progress bar */}
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-recipe-green transition-all duration-300 ease-out rounded-full"
+                  style={{ width: `${loadingState.percentComplete}%` }}
                 />
               </div>
               

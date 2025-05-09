@@ -1,3 +1,4 @@
+
 // path: src/components/ui/navbar.tsx
 // file: Navbar.tsx
 // updated: 2025-05-09 15:10 PM
@@ -54,7 +55,7 @@ export function Navbar({ className = '' }: { className?: string }) {
       <div className="px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex flex-col items-center py-3">
         {/* Top row: Mobile menu and logo */}
         <div className="flex items-center gap-4">
-          <MobileMenu className="p-1 rounded-md bg-white/50 hover:bg-white/60 transition" />
+          <MobileMenu />
           <Link to="/" className="flex-shrink-0">
             <img
               src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
