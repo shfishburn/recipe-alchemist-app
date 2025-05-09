@@ -1,4 +1,3 @@
-
 /**
  * Color constants for nutrition visualization
  */
@@ -9,6 +8,7 @@ export const NUTRITION_COLORS = {
   fat: '#22c55e',     // Green
   fiber: '#fb923c',   // Orange
   calories: '#ef4444', // Red
+  saturated_fat: '#f43f5e', // Pink for saturated fat
 
   // Background colors for progress bars (with opacity)
   proteinBg: 'rgba(155, 135, 245, 0.9)',
@@ -16,6 +16,7 @@ export const NUTRITION_COLORS = {
   fatBg: 'rgba(34, 197, 94, 0.9)',
   fiberBg: 'rgba(251, 146, 60, 0.9)',
   caloriesBg: 'rgba(239, 68, 68, 0.9)',
+  saturated_fatBg: 'rgba(244, 63, 94, 0.9)',
 
   // Supporting colors for micro-nutrients
   vitaminA: '#f59e0b',
@@ -37,6 +38,7 @@ export const DAILY_REFERENCE_VALUES = {
   protein: 50,    // g
   carbs: 275,     // g
   fat: 78,        // g
+  saturated_fat: 20, // g (added saturated fat daily value)
   fiber: 28,      // g
   sugar: 50,      // g
   sodium: 2300,   // mg
@@ -64,6 +66,7 @@ export const NUTRIENT_DESCRIPTIONS = {
   protein: 'Essential for building and repairing muscle tissue and supporting immune function',
   carbs: 'Primary source of energy for the body and brain',
   fat: 'Necessary for hormone production, vitamin absorption, and cell membrane integrity',
+  saturated_fat: 'Type of fat found in animal products that should be limited for heart health',
   fiber: 'Supports digestive health and helps regulate blood sugar and cholesterol levels',
   calories: 'Unit of energy - daily needs vary based on age, gender, weight, and activity level',
   sodium: 'Electrolyte that helps maintain fluid balance and supports muscle and nerve function',
@@ -83,6 +86,7 @@ export const NUTRIENT_DISPLAY_NAMES = {
   protein: 'Protein',
   carbs: 'Carbohydrates',
   fat: 'Fat',
+  saturated_fat: 'Saturated Fat',
   fiber: 'Dietary Fiber',
   calories: 'Calories',
   sodium: 'Sodium',
@@ -102,6 +106,7 @@ export const NUTRIENT_UNITS = {
   protein: 'g',
   carbs: 'g',
   fat: 'g',
+  saturated_fat: 'g',
   fiber: 'g',
   calories: 'kcal',
   sodium: 'mg',

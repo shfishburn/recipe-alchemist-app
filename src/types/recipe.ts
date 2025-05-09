@@ -43,11 +43,13 @@ export interface Nutrition {
   iron?: number;
   potassium?: number;
   cholesterol?: number;
+  saturated_fat?: number; // Added saturated fat
   
   // Alternative naming for micronutrients (aliases)
   vitaminA?: number;
   vitaminC?: number;
   vitaminD?: number;
+  saturatedFat?: number; // Added alternative naming for saturated fat
   
   // Enhanced nutrition data properties
   data_quality?: {

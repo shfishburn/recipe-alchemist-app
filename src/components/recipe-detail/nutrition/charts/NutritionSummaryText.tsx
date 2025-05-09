@@ -10,11 +10,13 @@ interface NutritionSummaryTextProps {
   carbs: number;
   fat: number;
   fiber: number;
+  saturatedFat?: number; // Added saturated fat
   caloriesPercentage: number;
   proteinPercentage: number;
   carbsPercentage: number;
   fatPercentage: number;
   fiberPercentage: number;
+  saturatedFatPercentage?: number; // Added percentage for saturated fat
   unitSystem?: 'metric' | 'imperial';
 }
 
@@ -24,11 +26,13 @@ export function NutritionSummaryText({
   carbs,
   fat,
   fiber,
+  saturatedFat = 0, // Default to 0
   caloriesPercentage,
   proteinPercentage,
   carbsPercentage,
   fatPercentage,
   fiberPercentage,
+  saturatedFatPercentage = 0, // Default to 0
   unitSystem = 'metric',
 }: NutritionSummaryTextProps) {
   const isMobile = useIsMobile();
@@ -97,6 +101,19 @@ export function NutritionSummaryText({
           </span>
         </p>
         
+        {/* Add saturated fat row */}
+        {saturatedFat > 0 && (
+          <p className="flex justify-between py-1">
+            <span className="font-medium">Saturated Fat:</span>
+            <span>
+              {saturatedFat}g 
+              <span className={`ml-2 font-medium ${getPercentageColor(saturatedFatPercentage)}`}>
+                ({saturatedFatPercentage}% of daily target)
+              </span>
+            </span>
+          </p>
+        )}
+        
         <p className="flex justify-between py-1">
           <span className="font-medium">Fiber:</span>
           <span>
@@ -123,6 +140,12 @@ export function NutritionSummaryText({
             "Contains a moderate amount of fiber, supporting digestive health." : 
             "Low in fiber. Consider adding fiber-rich side dishes to complete your meal."}
         </p>
+        {/* Add warning about saturated fat if it's high */}
+        {saturatedFat > 0 && saturatedFatPercentage > 30 && (
+          <p className="mt-1 text-amber-600">
+            This recipe is relatively high in saturated fat. Consider balancing with foods lower in saturated fat for other meals.
+          </p>
+        )}
         <p className="mt-2 pt-1 border-t border-gray-100 font-medium text-slate-600">
           *Protein and carbs provide 4 calories per gram, while fat provides 9 calories per gram.
         </p>
