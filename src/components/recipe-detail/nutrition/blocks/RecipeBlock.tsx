@@ -11,6 +11,7 @@ import { EnhancedNutrition } from '@/components/recipe-detail/nutrition/useNutri
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { NUTRITION_COLORS, DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 import { UnitSystem } from '@/stores/unitSystem';
+import { NutritionConfidenceIndicator } from '@/components/recipe-detail/nutrition/NutritionConfidenceIndicator';
 
 interface RecipeBlockProps {
   recipeNutrition: EnhancedNutrition;
@@ -94,7 +95,10 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   return (
     <Card>
       <CardHeader className={isMobile ? "px-3 py-3" : "px-6 py-4"}>
-        <CardTitle>Nutrition Facts</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Nutrition Facts</CardTitle>
+          <NutritionConfidenceIndicator nutrition={recipeNutrition} showTooltip={true} />
+        </div>
       </CardHeader>
       <CardContent className="px-0">
         <div className={isMobile ? "px-3" : "px-6"}>

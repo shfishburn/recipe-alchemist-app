@@ -80,7 +80,7 @@ export function NutritionConfidenceIndicator({
   };
   
   const getHowItWorksText = () => {
-    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence score (70%) indicates moderate reliability in these values based on ingredient data quality.";
+    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence score indicates the reliability of these values based on ingredient data quality.";
   };
   
   const getQualityExplanation = () => {
