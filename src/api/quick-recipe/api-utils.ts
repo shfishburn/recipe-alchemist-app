@@ -86,6 +86,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
   }
   
   try {
+    // Remove signal from options since it's not supported in FunctionInvokeOptions
     const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
       body: {
         ...requestBody,
@@ -94,8 +95,8 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
       headers: {
         'Content-Type': 'application/json',
         'X-Debug-Info': 'supabase-invoke-' + Date.now()
-      },
-      signal: controller.signal
+      }
+      // signal is not supported in FunctionInvokeOptions, so we removed it
     });
 
     // Check for abort

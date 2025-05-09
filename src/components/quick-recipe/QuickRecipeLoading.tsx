@@ -7,6 +7,7 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useSoundEffect } from '@/hooks/use-sound-effect';
 import { useAuth } from '@/hooks/use-auth';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils'; // Import the cn utility
 
 // Array of loading step descriptions
 const LOADING_STEPS = [

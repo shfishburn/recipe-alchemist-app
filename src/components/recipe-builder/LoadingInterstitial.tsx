@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils'; // Import the cn utility
 
 interface LoadingInterstitialProps {
   isOpen: boolean;

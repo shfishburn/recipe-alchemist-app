@@ -189,13 +189,11 @@ export function NutritionBlock({
         <RecipeBlock 
           recipeNutrition={processedNutrition} 
           unitSystem={unitSystem}
-          onRefresh={recipeId ? handleRefreshNutrition : undefined}
         />
       ) : (
         <PersonalBlock
           recipeNutrition={processedNutrition}
           userPreferences={userPreferences!}
-          onRefresh={recipeId ? handleRefreshNutrition : undefined}
         />
       )}
     </div>
