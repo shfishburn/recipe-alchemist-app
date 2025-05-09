@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search, Loader } from 'lucide-react';
-import Navbar from '@/components/ui/navbar';
 import RecipeCard from '@/components/recipes/RecipeCard';
 import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -52,8 +51,7 @@ const Recipes = () => {
 
   return (
     <PageContainer>
-      <Navbar />
-      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
+      <div className="space-y-10">
         {/* Breadcrumb Navigation */}
         <div>
           <BreadcrumbNav items={breadcrumbItems} />
@@ -117,7 +115,7 @@ const Recipes = () => {
             ))}
           </div>
         )}
-      </main>
+      </div>
     </PageContainer>
   );
 };

@@ -10,6 +10,7 @@ import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { setupRouteChangeCleanup, cleanupUIState } from "@/utils/dom-cleanup";
+import { Navbar } from "@/components/ui/navbar";
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
@@ -34,6 +35,7 @@ export const AppLayout = () => {
       <div className="min-h-screen flex flex-col">
         <DefaultSeo />
         <LoadingIndicator />
+        <Navbar />
         <PageTransition>
           <AppRoutes />
         </PageTransition>

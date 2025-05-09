@@ -1,6 +1,5 @@
 
 import React, { useEffect } from 'react';
-import Navbar from '@/components/ui/navbar';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -56,9 +55,7 @@ const QuickRecipePage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Navbar />
-      <LoadingIndicator />
-      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
+      <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
         <QuickRecipeHero
           hasRecipe={!!recipe}
           toggleDebugMode={toggleDebugMode}
@@ -91,7 +88,7 @@ const QuickRecipePage: React.FC = () => {
         ) : (
           <QuickRecipeEmpty />
         )}
-      </main>
+      </div>
     </PageContainer>
   );
 };

@@ -1,8 +1,4 @@
 
-// path: src/components/ui/navbar.tsx
-// file: Navbar.tsx
-// updated: 2025-05-09 15:20 PM
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,7 +10,7 @@ import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Navbar with a stacked layout: logo above the navigation links, centered and airy.
+ * Global navigation bar with stacked layout: logo above navigation links
  */
 export function Navbar({ className = '' }: { className?: string }) {
   const { session } = useAuth();
@@ -47,7 +43,7 @@ export function Navbar({ className = '' }: { className?: string }) {
   return (
     <header
       className={cn(
-        'sticky inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-4 md:py-5',
+        'fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-4 md:py-5',
         hidden ? '-translate-y-full' : 'translate-y-0',
         className
       )}
@@ -63,7 +59,7 @@ export function Navbar({ className = '' }: { className?: string }) {
         </Link>
 
         <div className="flex items-center w-full justify-between">
-          {/* Mobile menu icon (left) appears above links on small screens */}
+          {/* Mobile menu icon (left) visible only on small screens */}
           <div className="md:hidden">
             <MobileMenu />
           </div>

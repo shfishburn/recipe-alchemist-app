@@ -1,5 +1,4 @@
 import React from 'react';
-import Navbar from '@/components/ui/navbar';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
 import { PageSeo } from '@/components/seo/PageSeo';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
@@ -53,34 +52,31 @@ const HowItWorks = () => {
   ];
 
   return (
-    <>
-      <Navbar />
-      <PageContainer>
-        <PageSeo 
-          title="Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist"
-          description="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights."
-          keywords="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals"
-          canonicalUrl="https://recipealchemist.com/how-it-works"
-          ogType="website"
-          ogImage="https://recipealchemist.com/images/how-it-works-banner.jpg"
-          structuredData={schemaData}
-        />
+    <PageContainer>
+      <PageSeo 
+        title="Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist"
+        description="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights."
+        keywords="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals"
+        canonicalUrl="https://recipealchemist.com/how-it-works"
+        ogType="website"
+        ogImage="https://recipealchemist.com/images/how-it-works-banner.jpg"
+        structuredData={schemaData}
+      />
+      
+      <div className="spacing-y-responsive">
+        {/* Breadcrumb Navigation */}
+        <BreadcrumbNav items={breadcrumbItems} />
         
-        <div className="spacing-y-responsive">
-          {/* Breadcrumb Navigation */}
-          <BreadcrumbNav items={breadcrumbItems} />
-          
-          <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Our Science</h1>
-            <p className="text-base text-muted-foreground mb-8">
-              Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
-            </p>
-          </div>
-          
-          <ArticlesList />
+        <div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Our Science</h1>
+          <p className="text-base text-muted-foreground mb-8">
+            Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
+          </p>
         </div>
-      </PageContainer>
-    </>
+        
+        <ArticlesList />
+      </div>
+    </PageContainer>
   );
 };
 

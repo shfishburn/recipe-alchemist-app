@@ -4,7 +4,6 @@
 // updated: 2025-05-09 14:10 PM
 
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import Navbar from '@/components/ui/navbar';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
 import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import '@/styles/touch-optimizations.css';
@@ -35,20 +34,17 @@ const Index: React.FC = () => {
   }, []);
 
   return (
-    <>
-      <Navbar />
-      <PageContainer className={isTouch ? 'touch-optimized' : ''}>
-        <main className="space-y-10">
-          {loading ? (
-            <PageLoadingFallback />
-          ) : (
-            <Suspense fallback={<PageLoadingFallback />}>
-              {session ? <UserDashboard /> : <MarketingHomepage />}
-            </Suspense>
-          )}
-        </main>
-      </PageContainer>
-    </>
+    <PageContainer className={isTouch ? 'touch-optimized' : ''} variant="default">
+      <div className="space-y-10">
+        {loading ? (
+          <PageLoadingFallback />
+        ) : (
+          <Suspense fallback={<PageLoadingFallback />}>
+            {session ? <UserDashboard /> : <MarketingHomepage />}
+          </Suspense>
+        )}
+      </div>
+    </PageContainer>
   );
 };
 

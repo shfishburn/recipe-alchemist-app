@@ -19,7 +19,20 @@
 
 /* Content padding below navbar */
 .content-padding-top {
-  @apply pt-28 md:pt-32;
+  @apply pt-32 md:pt-36;
+}
+
+/* Standard content width classes */
+.content-width-default {
+  @apply max-w-4xl mx-auto;
+}
+
+.content-width-narrow {
+  @apply max-w-2xl mx-auto;
+}
+
+.content-width-full {
+  @apply max-w-7xl mx-auto;
 }
 
 /* Fixed position footer for mobile drawer actions */

@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/ui/navbar';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { RecipeDetailLoading } from '@/components/recipe-detail/loading/RecipeDetailLoading';
 import { RecipeNotFound } from '@/components/recipe-detail/error/RecipeNotFound';
@@ -9,6 +8,7 @@ import { RecipeDetailContent } from '@/components/recipe-detail/RecipeDetailCont
 import { isValidUUID } from '@/utils/slug-utils';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { BreadcrumbNav, type BreadcrumbItem } from '@/components/ui/breadcrumb-nav';
+import { PageContainer } from '@/components/ui/containers';
 
 const RecipeDetail = () => {
   const { id: recipeIdOrSlug } = useParams();
@@ -51,16 +51,13 @@ const RecipeDetail = () => {
     // Handle React.Children.only errors specifically
     if (error instanceof Error && error.message.includes('React.Children.only')) {
       return (
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1 flex items-center justify-center p-4">
-            <ErrorDisplay 
-              error={error} 
-              title="There was an issue rendering this recipe" 
-              onRetry={refetch}
-            />
-          </main>
-        </div>
+        <PageContainer>
+          <ErrorDisplay 
+            error={error} 
+            title="There was an issue rendering this recipe" 
+            onRetry={refetch}
+          />
+        </PageContainer>
       );
     }
     
@@ -92,17 +89,12 @@ const RecipeDetail = () => {
   
   // If we have a recipe, show the content
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <div className="container-page py-4 sm:py-8">
-          {/* Breadcrumb Navigation */}
-          <BreadcrumbNav items={breadcrumbItems} />
-          
-          <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />
-        </div>
-      </main>
-    </div>
+    <PageContainer variant="full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav items={breadcrumbItems} />
+      
+      <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />
+    </PageContainer>
   );
 }
 

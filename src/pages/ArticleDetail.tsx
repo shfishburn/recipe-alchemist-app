@@ -1,7 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/ui/navbar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { ArticleIntelligentCooking } from '@/components/how-it-works/ArticleIntelligentCooking';
@@ -22,6 +20,7 @@ import { ArticleNutritionTracking } from '@/components/how-it-works/articles/Art
 import { ArticlePersonalizedNutrition } from '@/components/how-it-works/articles/ArticlePersonalizedNutrition';
 import { ArticleSubstitutions } from '@/components/how-it-works/articles/ArticleSubstitutions';
 import { articlesContent } from '@/components/how-it-works/ArticleContent';
+import { PageContainer } from '@/components/ui/containers';
 
 const ArticleDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -135,7 +134,7 @@ const ArticleDetail = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <PageContainer variant="default">
       {slug && (
         <ArticleSeo 
           title={articleTitle} 
@@ -147,60 +146,57 @@ const ArticleDetail = () => {
         />
       )}
 
-      <Navbar />
-      <main className="flex-1 animate-fadeIn">
-        <div className="container-page py-12">
-          <nav className="mb-6" aria-label="Breadcrumb">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/">Home</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/how-it-works">How It Works</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{articleTitle}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </nav>
+      <div className="animate-fadeIn">
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/how-it-works">How It Works</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{articleTitle}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </nav>
 
-          <div className="mb-8">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/how-it-works')}
-              className="flex items-center"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Articles
-            </Button>
-          </div>
-
-          {slug && (
-            <ArticleImage
-              slug={slug}
-              articleTitle={articleTitle}
-              generatedImage={generatedImage}
-              setGeneratedImage={setGeneratedImage}
-              isGenerating={isGenerating}
-              setIsGenerating={setIsGenerating}
-              isImageLoading={isImageLoading}
-            />
-          )}
-          
-          {renderArticle()}
-          
-          {slug && <RelatedArticles currentSlug={slug} />}
+        <div className="mb-8">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/how-it-works')}
+            className="flex items-center"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Articles
+          </Button>
         </div>
-      </main>
-    </div>
+
+        {slug && (
+          <ArticleImage
+            slug={slug}
+            articleTitle={articleTitle}
+            generatedImage={generatedImage}
+            setGeneratedImage={setGeneratedImage}
+            isGenerating={isGenerating}
+            setIsGenerating={setIsGenerating}
+            isImageLoading={isImageLoading}
+          />
+        )}
+        
+        {renderArticle()}
+        
+        {slug && <RelatedArticles currentSlug={slug} />}
+      </div>
+    </PageContainer>
   );
 };
 
