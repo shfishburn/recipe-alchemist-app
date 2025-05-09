@@ -35,18 +35,20 @@ const Index: React.FC = () => {
   }, []);
 
   return (
-    <PageContainer className={isTouch ? 'touch-optimized' : ''}>
+    <>
       <Navbar />
-      <main className="flex-1 space-y-10 py-6 md:py-10 touch-scroll">
-        {loading ? (
-          <PageLoadingFallback />
-        ) : (
-          <Suspense fallback={<PageLoadingFallback />}>
-            {session ? <UserDashboard /> : <MarketingHomepage />}
-          </Suspense>
-        )}
-      </main>
-    </PageContainer>
+      <PageContainer className={isTouch ? 'touch-optimized' : ''}>
+        <main className="space-y-10">
+          {loading ? (
+            <PageLoadingFallback />
+          ) : (
+            <Suspense fallback={<PageLoadingFallback />}>
+              {session ? <UserDashboard /> : <MarketingHomepage />}
+            </Suspense>
+          )}
+        </main>
+      </PageContainer>
+    </>
   );
 };
 

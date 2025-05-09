@@ -1,15 +1,25 @@
 
 .container-page {
-  @apply container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  @apply container max-w-7xl mx-auto px-6 sm:px-8 lg:px-12;
 }
 
 /* Standardized responsive spacing */
 .spacing-y-responsive {
-  @apply space-y-3 sm:space-y-4 md:space-y-6;
+  @apply space-y-4 sm:space-y-6 md:space-y-8;
 }
 
 .spacing-x-responsive {
-  @apply space-x-2 sm:space-x-3 md:space-x-4;
+  @apply space-x-3 sm:space-x-4 md:space-x-5;
+}
+
+/* Page section spacing */
+.section-spacing {
+  @apply py-6 sm:py-8 md:py-10;
+}
+
+/* Content padding below navbar */
+.content-padding-top {
+  @apply pt-24;
 }
 
 /* Fixed position footer for mobile drawer actions */

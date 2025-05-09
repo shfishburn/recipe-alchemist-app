@@ -20,7 +20,7 @@ export function ShoppingListsHeader({ showBreadcrumb, onBackClick, listTitle }: 
     ];
     
     return (
-      <>
+      <div className="mb-6">
         <BreadcrumbNav items={breadcrumbItems} />
         <Button 
           variant="ghost" 
@@ -29,7 +29,7 @@ export function ShoppingListsHeader({ showBreadcrumb, onBackClick, listTitle }: 
         >
           ← Back to lists
         </Button>
-      </>
+      </div>
     );
   }
 
@@ -41,23 +41,23 @@ export function ShoppingListsHeader({ showBreadcrumb, onBackClick, listTitle }: 
     ];
     
     return (
-      <>
+      <div className="mb-6">
         <BreadcrumbNav items={breadcrumbItems} />
         <h1 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">My Market</h1>
         <p className="text-base text-muted-foreground mb-6 md:mb-8">
           Create and manage shopping lists for your recipes.
         </p>
-      </>
+      </div>
     );
   }
 
   // Standard header without breadcrumbs
   return (
-    <>
+    <div className="mb-6">
       <h1 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">My Market</h1>
       <p className="text-base text-muted-foreground mb-6 md:mb-8">
         Create and manage shopping lists for your recipes.
       </p>
-    </>
+    </div>
   );
 }

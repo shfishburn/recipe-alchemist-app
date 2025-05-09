@@ -52,7 +52,7 @@ export function Navbar({ className = '' }: { className?: string }) {
         className
       )}
     >
-      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between h-16">
+      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto flex items-center justify-between h-16">
         {/* Left side: Mobile menu and logo */}
         <div className="flex items-center gap-4">
           <MobileMenu />
@@ -60,13 +60,13 @@ export function Navbar({ className = '' }: { className?: string }) {
             <img
               src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
               alt="Recipe Alchemy Logo"
-              className="h-12 w-auto"
+              className="h-10 w-auto"
             />
           </Link>
         </div>
 
         {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center justify-center space-x-6">
+        <nav className="hidden md:flex items-center justify-center space-x-8">
           {displayedLinks.map(link => {
             const active = location.pathname === link.path;
             return (
@@ -87,9 +87,9 @@ export function Navbar({ className = '' }: { className?: string }) {
         </nav>
 
         {/* Right side: Auth Buttons */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           {session ? (
-            <Button variant="outline" size="sm" asChild className="h-8 px-3">
+            <Button variant="outline" size="sm" asChild className="h-9 px-4">
               <Link to="/profile" className="flex items-center gap-1">
                 <User className="h-4 w-4" />
                 <span>Profile</span>
@@ -97,13 +97,13 @@ export function Navbar({ className = '' }: { className?: string }) {
             </Button>
           ) : (
             <>
-              <Button variant="outline" size="sm" onClick={open} className="h-8 px-3">
+              <Button variant="outline" size="sm" onClick={open} className="h-9 px-4">
                 Log in
               </Button>
               <Button
                 size="sm"
                 onClick={open}
-                className="h-8 px-3 bg-recipe-green text-white hover:bg-recipe-green/90"
+                className="h-9 px-4 bg-recipe-green text-white hover:bg-recipe-green/90"
               >
                 Sign up
               </Button>

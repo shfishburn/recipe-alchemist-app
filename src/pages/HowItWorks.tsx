@@ -1,16 +1,9 @@
+
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
 import { PageSeo } from '@/components/seo/PageSeo';
-import { 
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbSeparator,
-  BreadcrumbPage
-} from "@/components/ui/breadcrumb";
-import { Link } from 'react-router-dom';
+import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { PageContainer } from '@/components/ui/containers';
 
 const HowItWorks = () => {
@@ -54,45 +47,41 @@ const HowItWorks = () => {
     ]
   };
 
-  return (
-    <PageContainer>
-      <PageSeo 
-        title="Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist"
-        description="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights."
-        keywords="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals"
-        canonicalUrl="https://recipealchemist.com/how-it-works"
-        ogType="website"
-        ogImage="https://recipealchemist.com/images/how-it-works-banner.jpg"
-        structuredData={schemaData}
-      />
-      
-      <Navbar />
-      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
-        {/* Breadcrumb Navigation */}
-        <div>
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/">Home</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Our Science</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Our Science', current: true }
+  ];
 
-          <h1 className="text-2xl md:text-3xl font-bold mb-4">Our Science</h1>
-          <p className="text-base text-muted-foreground mb-8">
-            Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
-          </p>
-        </div>
+  return (
+    <>
+      <Navbar />
+      <PageContainer>
+        <PageSeo 
+          title="Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist"
+          description="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights."
+          keywords="AI cooking, smart recipes, nutrition tracking, USDA FoodData, recipe substitutions, nutrient absorption, healthy cooking, intelligent cooking, meal planning, diet tracking, personalized nutrition, health goals"
+          canonicalUrl="https://recipealchemist.com/how-it-works"
+          ogType="website"
+          ogImage="https://recipealchemist.com/images/how-it-works-banner.jpg"
+          structuredData={schemaData}
+        />
         
-        <ArticlesList />
-      </main>
-    </PageContainer>
+        <div className="spacing-y-responsive">
+          {/* Breadcrumb Navigation */}
+          <BreadcrumbNav items={breadcrumbItems} />
+          
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">Our Science</h1>
+            <p className="text-base text-muted-foreground mb-8">
+              Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
+            </p>
+          </div>
+          
+          <ArticlesList />
+        </div>
+      </PageContainer>
+    </>
   );
 };
 

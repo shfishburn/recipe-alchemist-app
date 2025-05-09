@@ -21,9 +21,9 @@ interface BreadcrumbNavProps {
   className?: string;
 }
 
-export function BreadcrumbNav({ items, className = "mb-4" }: BreadcrumbNavProps) {
+export function BreadcrumbNav({ items, className = "" }: BreadcrumbNavProps) {
   return (
-    <nav className={className} aria-label="Breadcrumb">
+    <nav className={`mb-6 ${className}`} aria-label="Breadcrumb">
       <Breadcrumb>
         <BreadcrumbList>
           {items.map((item, index) => (
