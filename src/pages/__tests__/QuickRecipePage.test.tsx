@@ -48,8 +48,8 @@ const renderWithRouter = (component: React.ReactNode) => {
 describe('QuickRecipePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Cast the mock to the correct type
-    (useQuickRecipeStore as jest.Mock).mockReturnValue({
+    // Cast the mock to the correct type with 'as any' to avoid TS errors
+    (useQuickRecipeStore as unknown as jest.Mock).mockReturnValue({
       recipe: null,
       isLoading: false,
       error: null
@@ -72,8 +72,8 @@ describe('QuickRecipePage', () => {
       toggleDebugMode: jest.fn()
     });
     
-    // Mock the store
-    (useQuickRecipeStore as jest.Mock).mockReturnValue({
+    // Mock the store with proper type casting
+    (useQuickRecipeStore as unknown as jest.Mock).mockReturnValue({
       recipe: null,
       isLoading: false,
       error: null
