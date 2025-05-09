@@ -29,6 +29,7 @@ declare global {
       toHaveClass(className: string): R;
       toHaveStyle(css: Record<string, any>): R;
       toHaveTextContent(text: string | RegExp): R;
+      // Add any other custom matchers used in your tests
     }
     
     // Add support for async matchers
@@ -39,6 +40,7 @@ declare global {
       toHaveClass(className: string): void;
       toHaveStyle(css: Record<string, any>): void;
       toHaveTextContent(text: string | RegExp): void;
+      // Add any other custom matchers used in your tests
     }
   }
 }
@@ -159,3 +161,6 @@ global.requestAnimationFrame = (callback) => {
 global.cancelAnimationFrame = (id) => {
   clearTimeout(id);
 };
+
+// Export type references to ensure TypeScript recognizes them
+export {};

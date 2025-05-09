@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to get authentication token
@@ -7,7 +6,10 @@ export const getAuthToken = async (): Promise<string> => {
     .then(res => res.data.session?.access_token || '');
 };
 
-// Direct API fetch to edge function
+// Helper function to add delay with exponential backoff
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Direct API fetch to edge function with improved resilience
 export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
   try {
     // Check if the request has been aborted already
@@ -29,11 +31,18 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
     
     // IMPROVED ERROR HANDLING: Add retries and better error messages
     let retryCount = 0;
-    const maxRetries = 2;
+    const maxRetries = 3;
     let lastError = null;
     
     while (retryCount <= maxRetries) {
       try {
+        // Add delay with exponential backoff for retries
+        if (retryCount > 0) {
+          const backoffMs = 500 * Math.pow(2, retryCount);
+          console.log(`Retry ${retryCount}/${maxRetries} after ${backoffMs}ms backoff...`);
+          await delay(backoffMs);
+        }
+        
         // Make the direct fetch request with CORS-compatible headers
         const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
           method: 'POST',
@@ -46,6 +55,7 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
           signal, // Pass the abort signal to the fetch request
           // Add explicit timeout
           cache: 'no-cache',
+          keepalive: true, // Keep connection alive
         });
         
         // Check if request was aborted during the fetch
@@ -77,26 +87,28 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
           console.error("Direct fetch response is not valid JSON:", responseText);
           throw new Error("Invalid JSON response from API");
         }
-      } catch (fetchError) {
-        // Only retry network errors, not other types
-        if (retryCount < maxRetries && 
-            (fetchError.message?.includes('Load failed') || 
-             fetchError.message?.includes('network') ||
-             fetchError.message?.includes('NetworkError') ||
-             fetchError.name === 'TypeError')) {
+      } catch (fetchError: any) {
+        // Check if this is an abort error
+        if (fetchError.name === 'AbortError' || signal?.aborted) {
+          console.log("Direct fetch aborted by user");
+          throw new DOMException("Request aborted by user", "AbortError");
+        }
+        
+        // Check if this is a network error or timeout that we should retry
+        const isNetworkError = 
+          fetchError.message?.includes('Load failed') || 
+          fetchError.message?.includes('network') ||
+          fetchError.message?.includes('NetworkError') ||
+          fetchError.message?.includes('timeout') ||
+          fetchError.name === 'TypeError';
+          
+        if (retryCount < maxRetries && isNetworkError) {
           console.warn(`Fetch attempt ${retryCount + 1}/${maxRetries + 1} failed, retrying...`, fetchError);
           lastError = fetchError;
           retryCount++;
-          // Add exponential backoff
-          await new Promise(resolve => setTimeout(resolve, 200 * Math.pow(2, retryCount)));
           continue;
         }
         
-        // Properly handle AbortError to avoid showing error messages when the user cancels
-        if (fetchError.name === 'AbortError' || signal?.aborted) {
-          console.log("Fetch aborted by user, no error needed");
-          throw new DOMException("Request aborted by user", "AbortError");
-        }
         console.error("Direct fetch error:", fetchError);
         throw fetchError;
       }
@@ -104,7 +116,7 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
     
     // If we've exhausted retries, throw the last error
     throw lastError || new Error('Failed to connect to recipe service after multiple attempts');
-  } catch (fetchError) {
+  } catch (fetchError: any) {
     // Properly handle AbortError to avoid showing error messages when the user cancels
     if (fetchError.name === 'AbortError' || signal?.aborted) {
       console.log("Fetch aborted by user, no error needed");
@@ -115,7 +127,7 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
   }
 };
 
-// Fallback API call using Supabase functions
+// Fallback API call using Supabase functions with improved resilience
 export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
   // Check if request already aborted
   if (signal?.aborted) {
@@ -133,7 +145,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(new Error("Recipe generation timed out. Please try again."));
-      }, 40000); // 40 second timeout (reduced from 60)
+      }, 60000); // 60 second timeout
       
       // If signal is provided, cancel the timeout on abort
       if (signal) {
@@ -146,24 +158,34 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
     
     // IMPROVED ERROR HANDLING: Add retries for supabase invoke
     let retryCount = 0;
-    const maxRetries = 2;
+    const maxRetries = 3;
     let lastError = null;
     
     while (retryCount <= maxRetries) {
       try {
-        // Remove signal from options since it's not supported in FunctionInvokeOptions
-        const invocationPromise = supabase.functions.invoke('generate-quick-recipe', {
+        // Add delay with exponential backoff for retries
+        if (retryCount > 0) {
+          const backoffMs = 800 * Math.pow(2, retryCount);
+          console.log(`Supabase invoke retry ${retryCount}/${maxRetries} after ${backoffMs}ms backoff...`);
+          await delay(backoffMs);
+        }
+        
+        // Create a special options object that enables keepalive
+        const invokeOptions = {
           body: {
             ...requestBody,
             embeddingModel: 'text-embedding-ada-002' // Include model in request body
           },
           headers: {
             'Content-Type': 'application/json',
-            'X-Debug-Info': 'supabase-invoke-' + Date.now()
+            'X-Debug-Info': 'supabase-invoke-' + Date.now(),
+            'Connection': 'keep-alive'
           }
-        });
+        };
 
         // Race invocation against timeout
+        const invocationPromise = supabase.functions.invoke('generate-quick-recipe', invokeOptions);
+        
         const { data, error } = await Promise.race([
           invocationPromise,
           timeoutPromise.then(() => {
@@ -190,25 +212,28 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
         }
 
         return data;
-      } catch (error) {
-        // Only retry network errors, not other types
-        if (retryCount < maxRetries && 
-            (error.message?.includes('Failed to send') || 
-             error.message?.includes('network') ||
-             error.name === 'FunctionsFetchError')) {
-          console.warn(`Supabase invoke attempt ${retryCount + 1}/${maxRetries + 1} failed, retrying...`, error);
-          lastError = error;
-          retryCount++;
-          // Add exponential backoff
-          await new Promise(resolve => setTimeout(resolve, 300 * Math.pow(2, retryCount)));
-          continue;
-        }
-        
+      } catch (error: any) {
         // Check if this is an abort error or if signal is aborted
         if (error.name === 'AbortError' || signal?.aborted) {
           console.log("Supabase function call aborted by user");
           throw new DOMException("Request aborted by user", "AbortError");
         }
+        
+        // Check if this is a network error that we should retry
+        const isNetworkError = 
+          error.message?.includes('Failed to send') || 
+          error.message?.includes('network') ||
+          error.message?.includes('Load failed') || 
+          error.name === 'FunctionsFetchError' ||
+          error.name === 'TypeError';
+          
+        if (retryCount < maxRetries && isNetworkError) {
+          console.warn(`Supabase invoke attempt ${retryCount + 1}/${maxRetries + 1} failed, retrying...`, error);
+          lastError = error;
+          retryCount++;
+          continue;
+        }
+        
         console.error("Supabase function error:", error);
         throw error;
       }
@@ -216,7 +241,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
     
     // If we've exhausted retries, throw the last error
     throw lastError || new Error('Failed to connect to recipe service after multiple attempts');
-  } catch (error) {
+  } catch (error: any) {
     // Check if this is an abort error or if signal is aborted
     if (error.name === 'AbortError' || signal?.aborted) {
       console.log("Supabase function call aborted by user");
