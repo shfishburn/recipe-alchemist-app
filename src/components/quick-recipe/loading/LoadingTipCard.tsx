@@ -11,7 +11,6 @@ import {
   FileText,
   Zap,
   Leaf,
-  Cheese,
   Puzzle,
   Target,
   Sliders
@@ -81,7 +80,7 @@ export function LoadingTipCard() {
       description: 'Carrot on—fiber counts and glycemic details will be revealed soon.'
     },
     {
-      icon: <Cheese className="h-5 w-5 text-recipe-yellow" />,
+      icon: <Sliders className="h-5 w-5 text-recipe-yellow" />,
       title: 'Cream of the Crop',
       description: 'From curd to count—calcium and fat content analytics loading.'
     },

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -10,6 +9,7 @@ import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeErr
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
+import { PageContainer, ContentContainer } from '@/components/ui/containers';
 
 const QuickRecipePage = () => {
   const {
@@ -54,23 +54,23 @@ const QuickRecipePage = () => {
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
     return (
-      <div className="min-h-screen relative touch-action-auto">
+      <PageContainer className="relative touch-action-auto">
         <LoadingIndicator />
         <FullScreenLoading 
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
         />
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <PageContainer>
       <Navbar />
       <LoadingIndicator />
       <main className="flex-1 py-6 md:py-10 animate-fadeIn">
-        <div className="container-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ContentContainer>
           {/* Hero Title Section - Always show this */}
           <QuickRecipeHero 
             hasRecipe={!!recipe} 
@@ -79,8 +79,8 @@ const QuickRecipePage = () => {
           />
 
           {isDirectNavigation ? (
-            // Show form directly when navigating from navbar - Added wider container for desktop
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md mx-auto mb-10 md:max-w-xl lg:max-w-2xl">
+            // Show form directly when navigating from navbar
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md mb-10">
               <QuickRecipeFormContainer />
             </div>
           ) : error ? (
@@ -96,19 +96,17 @@ const QuickRecipePage = () => {
             />
           ) : recipe ? (
             // Show recipe
-            <>
+            <div className="space-y-8">
               <QuickRecipeDisplay recipe={recipe} />
-              <div className="mt-6 mb-10">
-                <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
-              </div>
-            </>
+              <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
+            </div>
           ) : (
             // Show empty state
             <QuickRecipeEmpty />
           )}
-        </div>
+        </ContentContainer>
       </main>
-    </div>
+    </PageContainer>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
@@ -49,7 +48,7 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto mb-16">
+    <div className="mx-auto max-w-xl">
       <QuickRecipeCard 
         recipe={recipe} 
         onCook={() => setCookModeOpen(true)}

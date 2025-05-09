@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CookingPot, CircleCheck, PartyPopper, AlarmClock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -230,7 +231,7 @@ export function QuickRecipeLoading() {
           </div>
         )}
         
-        {/* Smart tip card - Now uses full width of parent container */}
+        {/* Smart tip card - Uses full width of parent container */}
         <div className="w-full animate-fade-in">
           <LoadingTipCard />
         </div>
