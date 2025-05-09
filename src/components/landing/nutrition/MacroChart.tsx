@@ -79,9 +79,10 @@ export function MacroChart({
   const chartDescription = data.map(d => `${d.name}: ${d.value}%`).join(', ');
 
   return (
-    <div className="w-full" style={{ height: `${height}px` }}>
+    <div className="w-full overflow-visible" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart 
+          margin={{ top: 10, right: 0, bottom: 0, left: 0 }}
           role="img" 
           aria-labelledby={titleId} 
           aria-description={chartDescription}

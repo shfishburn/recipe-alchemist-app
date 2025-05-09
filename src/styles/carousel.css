@@ -1,7 +1,10 @@
 
 /* Standardized Carousel Components */
 .carousel-container {
-  @apply relative overflow-hidden h-auto max-h-[500px];
+  @apply relative h-auto;
+  /* Removed overflow-hidden and max-height that were causing clipping */
+  overflow: visible;
+  -webkit-overflow-scrolling: touch;
 }
 
 .carousel-scroll-area {

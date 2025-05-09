@@ -83,7 +83,7 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
           ) : carouselItems.length === 0 ? (
             renderEmptyState()
           ) : (
-            <ScrollArea className="w-full touch-scroll" aria-label="Nutrition charts carousel">
+            <ScrollArea className="w-full touch-scroll overflow-visible" aria-label="Nutrition charts carousel">
               <Carousel 
                 items={carouselItems}
                 renderItem={renderCarouselItem}
@@ -93,7 +93,7 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
                 showDots={true}
                 itemWidthMobile="100%"
                 itemWidthDesktop="100%"
-                className="w-full"
+                className="w-full overflow-visible"
                 aria-live="polite"
               />
             </ScrollArea>
