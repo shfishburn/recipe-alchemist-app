@@ -126,7 +126,7 @@ const QuickRecipeTagForm = ({
             className="w-full bg-recipe-blue hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating Recipe...' : 'Create Recipe'}
+            {isLoading ? 'Creating Your Recipe...' : 'Create My Recipe'}
           </button>
         </div>
       )}
