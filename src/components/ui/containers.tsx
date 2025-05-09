@@ -1,30 +1,21 @@
-
 // path: src/components/ui/containers.tsx
 // file: containers.tsx
-// updated: 2025-05-09 15:20 PM
+// updated: 2025-05-09 14:30 PM
 
 import React, { PropsWithChildren } from 'react';
-import { cn } from '@/lib/utils';
 
 /**
- * PageContainer handles page-level layout: full height, Navbar positioning,
- * and consistent horizontal gutters & max-width for content.
+ * PageContainer handles page-level layout:
+ * - Full-height flex structure
+ * - Global horizontal gutters and centering
+ * - Consistent max-width for content
  */
 export function PageContainer({ children, className = '' }: PropsWithChildren<{ className?: string }>) {
   return (
-    <div className={cn("min-h-screen flex flex-col", className)}>       
-      {children}
-    </div>
-  );
-}
-
-/**
- * Card container with frosted glass styling used across the application
- */
-export function GlassCard({ children, className = '' }: PropsWithChildren<{ className?: string }>) {
-  return (
-    <div className={cn("w-full bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100", className)}>
-      {children}
+    <div className={`min-h-screen flex flex-col ${className}`}>
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
+        {children}
+      </main>
     </div>
   );
 }
