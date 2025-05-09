@@ -37,9 +37,9 @@ export function RecipeBatchUpdatePanel() {
       
       // Show toast notification based on result
       if (dryRun) {
-        toast.info(`Dry run completed: ${updateResult.totalRecipes} recipes analyzed`);
+        toast.info(`Dry run completed: ${updateResult?.totalRecipes || 0} recipes analyzed`);
       } else {
-        toast.success(`Update completed: ${updateResult.updatedRecipes} recipes updated`);
+        toast.success(`Update completed: ${updateResult?.updatedRecipes || 0} recipes updated`);
       }
     } catch (error) {
       console.error('Error updating recipes:', error);
@@ -63,9 +63,9 @@ export function RecipeBatchUpdatePanel() {
       
       // Show toast notification based on result
       if (dryRun) {
-        toast.info(`Science dry run completed: ${updateResult.totalRecipes} recipes analyzed`);
+        toast.info(`Science dry run completed: ${updateResult?.totalRecipes || 0} recipes analyzed`);
       } else {
-        toast.success(`Science update completed: ${updateResult.updatedRecipes} recipes updated`);
+        toast.success(`Science update completed: ${updateResult?.updatedRecipes || 0} recipes updated`);
       }
     } catch (error) {
       console.error('Error updating recipe science data:', error);
