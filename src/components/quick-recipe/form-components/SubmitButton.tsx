@@ -31,8 +31,8 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
       {isLoading ? (
         <div className="flex items-center justify-center">
           <CookingPot className={cn(
-            "mr-2 animate-spin",
-            isMobile ? "h-6 w-6" : "h-6 w-6" // Changed from bounce to spin for better indicator
+            "mr-2 animate-bounce",
+            isMobile ? "h-6 w-6" : "h-6 w-6" // Increased icon size for desktop
           )} />
           <span className={isMobile ? "font-medium" : "font-medium"}>
             Creating Your Recipe...

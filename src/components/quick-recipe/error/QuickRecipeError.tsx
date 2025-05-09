@@ -22,18 +22,6 @@ export function QuickRecipeError({
   onRetry,
   isRetrying
 }: QuickRecipeErrorProps) {
-  // Function to handle retry with error tracking
-  const handleRetry = () => {
-    console.log("Retry button clicked in QuickRecipeError");
-    if (onRetry) onRetry();
-  };
-  
-  // Function to handle cancel with error tracking
-  const handleCancel = () => {
-    console.log("Cancel button clicked in QuickRecipeError");
-    if (onCancel) onCancel();
-  };
-  
   return (
     <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 border rounded-xl bg-red-50 dark:bg-red-900/10">
       <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
@@ -66,19 +54,17 @@ export function QuickRecipeError({
       <div className="flex flex-col sm:flex-row gap-3">
         <Button 
           variant="outline" 
-          onClick={handleCancel}
+          onClick={onCancel}
           className="flex items-center gap-2"
-          type="button"
         >
           <ArrowLeft className="h-4 w-4" />
           Start Over
         </Button>
         {formData && (
           <Button 
-            onClick={handleRetry}
+            onClick={onRetry}
             className="flex items-center gap-2"
             disabled={isRetrying}
-            type="button"
           >
             <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
             {isRetrying ? 'Retrying...' : 'Try Again'}

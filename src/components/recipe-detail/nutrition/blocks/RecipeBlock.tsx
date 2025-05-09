@@ -11,7 +11,6 @@ import { EnhancedNutrition } from '@/components/recipe-detail/nutrition/useNutri
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { NUTRITION_COLORS, DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
 import { UnitSystem } from '@/stores/unitSystem';
-import { NutritionConfidenceIndicator } from '@/components/recipe-detail/nutrition/NutritionConfidenceIndicator';
 
 interface RecipeBlockProps {
   recipeNutrition: EnhancedNutrition;
@@ -57,20 +56,12 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const fat = Math.min(Math.round(recipeNutrition.fat || 0), 300);            // Cap at 300g fat
   const fiber = Math.min(Math.round(recipeNutrition.fiber || 0), 100);        // Cap at 100g fiber
   
-  // Get saturated fat (from either property name)
-  const saturatedFat = Math.min(
-    Math.round(recipeNutrition.saturated_fat || recipeNutrition.saturatedFat || 0), 
-    100
-  ); // Cap at 100g saturated fat
-  
   // Calculate daily value percentages based on standard reference values
   // Make sure we cap the values at reasonable percentages
   const proteinDailyValue = Math.min(Math.round((protein / DAILY_REFERENCE_VALUES.protein) * 100), 200);
   const carbsDailyValue = Math.min(Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100), 200);
   const fatDailyValue = Math.min(Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100), 200);
   const fiberDailyValue = fiber ? Math.min(Math.round((fiber / DAILY_REFERENCE_VALUES.fiber) * 100), 200) : 0;
-  const saturatedFatDailyValue = saturatedFat ? 
-    Math.min(Math.round((saturatedFat / DAILY_REFERENCE_VALUES.saturated_fat) * 100), 200) : 0;
   
   // Default macros distribution
   let proteinPercentage = 30;
@@ -90,15 +81,11 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
   const formattedProtein = formatNutrientWithUnit(protein, 'g', unitSystem);
   const formattedCarbs = formatNutrientWithUnit(carbs, 'g', unitSystem);
   const formattedFat = formatNutrientWithUnit(fat, 'g', unitSystem);
-  const formattedSaturatedFat = formatNutrientWithUnit(saturatedFat, 'g', unitSystem);
   
   return (
     <Card>
       <CardHeader className={isMobile ? "px-3 py-3" : "px-6 py-4"}>
-        <div className="flex items-center justify-between">
-          <CardTitle>Nutrition Facts</CardTitle>
-          <NutritionConfidenceIndicator nutrition={recipeNutrition} showTooltip={true} />
-        </div>
+        <CardTitle>Nutrition Facts</CardTitle>
       </CardHeader>
       <CardContent className="px-0">
         <div className={isMobile ? "px-3" : "px-6"}>
@@ -166,22 +153,6 @@ export function RecipeBlock({ recipeNutrition, unitSystem }: RecipeBlockProps) {
               indicatorColor={NUTRITION_COLORS.fatBg}
             />
           </div>
-          
-          {/* Added saturated fat display */}
-          {saturatedFat > 0 && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-medium" id="saturated-fat-label">Saturated Fat</p>
-                <p className="text-xs text-muted-foreground">{saturatedFatDailyValue}% DV</p>
-              </div>
-              <Progress 
-                value={saturatedFatDailyValue} 
-                className="h-2" 
-                aria-labelledby="saturated-fat-label"
-                indicatorColor={NUTRITION_COLORS.saturated_fatBg}
-              />
-            </div>
-          )}
           
           {fiber && fiberDailyValue ? (
             <div className="mb-4">

@@ -41,7 +41,6 @@ export function standardizeNutrition(nutrition: any): Nutrition {
     vitaminA: getNumericValue(nutrition, ['vitaminA', 'vitamin_a', 'vitamin_a_iu']),
     vitaminC: getNumericValue(nutrition, ['vitaminC', 'vitamin_c', 'vitamin_c_mg']),
     vitaminD: getNumericValue(nutrition, ['vitaminD', 'vitamin_d', 'vitamin_d_iu']),
-    saturatedFat: getNumericValue(nutrition, ['saturatedFat', 'saturated_fat']),
   };
 
   // Copy over data quality information if it exists

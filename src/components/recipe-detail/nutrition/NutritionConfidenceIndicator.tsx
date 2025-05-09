@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CirclePercent, RefreshCw } from 'lucide-react';
+import { CirclePercent } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -9,20 +9,17 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { Button } from '@/components/ui/button';
 
 interface NutritionConfidenceIndicatorProps {
   nutrition: EnhancedNutrition;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
-  onRefresh?: () => void;
 }
 
 export function NutritionConfidenceIndicator({ 
   nutrition, 
   size = 'md',
-  showTooltip = true,
-  onRefresh
+  showTooltip = true 
 }: NutritionConfidenceIndicatorProps) {
   if (!nutrition?.data_quality) {
     return null;
@@ -83,7 +80,7 @@ export function NutritionConfidenceIndicator({
   };
   
   const getHowItWorksText = () => {
-    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence score indicates the reliability of these values based on ingredient data quality.";
+    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence score (70%) indicates moderate reliability in these values based on ingredient data quality.";
   };
   
   const getQualityExplanation = () => {
@@ -97,36 +94,6 @@ export function NutritionConfidenceIndicator({
       default:
         return "";
     }
-  };
-
-  const getImprovementTips = () => {
-    const tips = [
-      "Use specific ingredient names (e.g. 'yellow onion' instead of just 'onion')",
-      "Include precise quantities and standard units for all ingredients",
-      "Avoid abbreviations in ingredient names",
-      "Break down complex ingredients into their components"
-    ];
-
-    return (
-      <div className="mt-2 text-xs border-t pt-2 border-gray-200">
-        <p className="font-semibold">To improve confidence score:</p>
-        <ul className="list-disc pl-4 mt-1 space-y-1">
-          {tips.map((tip, i) => (
-            <li key={i}>{tip}</li>
-          ))}
-        </ul>
-        {onRefresh && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full mt-2 text-xs"
-            onClick={onRefresh}
-          >
-            <RefreshCw className="w-3 h-3 mr-1" /> Refresh Nutrition Data
-          </Button>
-        )}
-      </div>
-    );
   };
   
   const badge = (
@@ -165,7 +132,6 @@ export function NutritionConfidenceIndicator({
                 </p>
               </div>
             )}
-            {getImprovementTips()}
           </div>
         </TooltipContent>
       </Tooltip>

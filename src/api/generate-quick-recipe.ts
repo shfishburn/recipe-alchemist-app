@@ -7,25 +7,10 @@ import { formatRequestBody } from './quick-recipe/format-utils';
 import { fetchFromEdgeFunction, fetchFromSupabaseFunctions } from './quick-recipe/api-utils';
 import { processErrorResponse } from './quick-recipe/error-utils';
 
-// Type for request options
-interface RequestOptions {
-  signal?: AbortSignal;
-  timeout?: number;
-}
-
 // Function to generate a quick recipe
-export const generateQuickRecipe = async (
-  formData: QuickRecipeFormData, 
-  options: RequestOptions = {}
-): Promise<QuickRecipe> => {
+export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promise<QuickRecipe> => {
   try {
     console.log("Generating quick recipe with form data:", formData);
-    
-    // Check if request already aborted
-    if (options?.signal?.aborted) {
-      console.log("Request aborted before starting");
-      throw new DOMException("Recipe generation aborted by user", "AbortError");
-    }
     
     if (!formData.mainIngredient) {
       throw new Error("Please provide a main ingredient");
@@ -36,43 +21,22 @@ export const generateQuickRecipe = async (
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Set a reduced timeout for the request (40 seconds - reduced from 90)
-    const timeoutPromise = createTimeoutPromise(options?.timeout || 40000);
+    // Set a timeout for the request (90 seconds - increased from 60)
+    const timeoutPromise = createTimeoutPromise(90000);
     
     // Create a direct fetch function that we'll race against the timeout
     const directFetchPromise = async () => {
-      // Pass the abort signal to fetchFromEdgeFunction
-      return await fetchFromEdgeFunction(requestBody, options?.signal);
+      return await fetchFromEdgeFunction(requestBody);
     };
-    
-    // Add abort signal listener to log when aborted
-    if (options?.signal) {
-      options.signal.addEventListener('abort', () => {
-        console.log("AbortSignal detected in generateQuickRecipe");
-      });
-    }
     
     // Race both approaches against the timeout
     const data = await Promise.race([
       directFetchPromise().catch(err => {
-        // Check if this is an abort error
-        if (err.name === 'AbortError') {
-          console.log("Direct fetch aborted by user");
-          throw err; // Re-throw abort errors
-        }
-        
         console.warn("Direct fetch failed, trying Supabase invoke:", err);
-        // Pass the abort signal to fetchFromSupabaseFunctions
-        return fetchFromSupabaseFunctions(requestBody, options?.signal);
+        return fetchFromSupabaseFunctions(requestBody);
       }),
       timeoutPromise
     ]);
-    
-    // Check for abort signal before continuing
-    if (options?.signal?.aborted) {
-      console.log("Recipe generation aborted after data received");
-      throw new DOMException("Recipe generation aborted by user", "AbortError");
-    }
     
     // Check for error in data
     if (!data) {
@@ -92,20 +56,7 @@ export const generateQuickRecipe = async (
     
     return normalizedRecipe;
   } catch (error: any) {
-    // Check if this is an abort error
-    if (error.name === 'AbortError') {
-      console.log("Recipe generation aborted in catch block");
-      throw error; // Re-throw abort errors
-    }
-    
-    // Log the error for debugging
     console.error('Error in generateQuickRecipe:', error);
-    
-    // If it's a timeout error, provide a clearer message
-    if (error.message && error.message.includes('timed out')) {
-      throw new Error("Recipe generation timed out. Please try again.");
-    }
-    
     return processErrorResponse(error);
   }
 };

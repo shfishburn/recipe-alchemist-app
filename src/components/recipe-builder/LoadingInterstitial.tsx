@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils'; // Import the cn utility
 
 interface LoadingInterstitialProps {
   isOpen: boolean;
@@ -16,14 +15,6 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showCriticalError, setShowCriticalError] = useState(false);
-  const [retryAttempted, setRetryAttempted] = useState(false);
-  
-  // Reset the retry state when the dialog closes or reopens
-  useEffect(() => {
-    if (!isOpen) {
-      setRetryAttempted(false);
-    }
-  }, [isOpen]);
   
   useEffect(() => {
     let timeoutWarningId: NodeJS.Timeout;
@@ -31,11 +22,6 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
     let criticalErrorId: NodeJS.Timeout;
     
     if (isOpen && !error) {
-      // Reset state when opening
-      setShowTimeoutMessage(false);
-      setShowErrorMessage(false);
-      setShowCriticalError(false);
-      
       // Show timeout warning after 20 seconds
       timeoutWarningId = setTimeout(() => {
         setShowTimeoutMessage(true);
@@ -66,19 +52,8 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   // If there's an explicit error, show the critical error state immediately
   const hasExplicitError = !!error;
   
-  // Handle the retry button click with additional state tracking
-  const handleRetry = () => {
-    setRetryAttempted(true);
-    if (onRetry) onRetry();
-  };
-  
-  // Handle the cancel button click with improved cleanup
-  const handleCancel = () => {
-    if (onCancel) onCancel();
-  };
-  
   return (
-    <Dialog open={isOpen} modal={true} onOpenChange={(open) => !open && handleCancel()}>
+    <Dialog open={isOpen} modal={true}>
       <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-10 gap-6">
         <div className="relative">
           {hasExplicitError || showCriticalError ? (
@@ -153,23 +128,22 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
               <Button 
                 variant={hasExplicitError || showCriticalError ? "outline" : showErrorMessage ? "destructive" : "outline"} 
                 size="sm" 
-                onClick={handleCancel} 
+                onClick={onCancel} 
                 className="w-full sm:w-auto"
               >
-                {hasExplicitError || showCriticalError ? "Close" : "Cancel"}
+                {hasExplicitError || showCriticalError ? "Close" : showErrorMessage ? "Cancel" : "Cancel"}
               </Button>
             )}
             
-            {onRetry && (hasExplicitError || showCriticalError || showErrorMessage) && (
+            {onRetry && (hasExplicitError || showCriticalError) && (
               <Button 
                 variant="default"
                 size="sm" 
-                onClick={handleRetry} 
-                disabled={retryAttempted && isOpen}
+                onClick={onRetry} 
                 className="w-full sm:w-auto flex items-center gap-2"
               >
-                <RefreshCw className={cn("h-4 w-4", retryAttempted ? "animate-spin" : "")} />
-                {retryAttempted ? "Retrying..." : "Try Again"}
+                <RefreshCw className="h-4 w-4" />
+                Try Again
               </Button>
             )}
           </div>

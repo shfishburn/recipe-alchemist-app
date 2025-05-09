@@ -1,125 +1,205 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { MacroCaloriesBreakdown } from './personal/MacroCaloriesBreakdown';
-import { NutrientStats } from './personal/NutrientStats';
-import { formatNutrientWithUnit } from '@/components/ui/unit-display';
-import { NutritionSummaryText } from '../charts/NutritionSummaryText';
-import { EnhancedNutrition } from '@/components/recipe-detail/nutrition/useNutritionData';
+import { Card, CardContent } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { DAILY_REFERENCE_VALUES } from '@/constants/nutrition';
-import { NutritionConfidenceIndicator } from '../NutritionConfidenceIndicator';
+import { ComparisonChart } from '../charts/ComparisonChart';
+import { HorizontalBarChart } from '../charts/HorizontalBarChart';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoIcon } from 'lucide-react';
+import { NutrientStats } from './personal/NutrientStats';
+import { MacroCaloriesBreakdown } from './personal/MacroCaloriesBreakdown';
+import { NUTRITION_COLORS, NUTRIENT_INFO } from './personal/constants';
+import { WeightDisplay } from '@/components/ui/unit-display';
+import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 
-interface PersonalBlockProps {
-  recipeNutrition: EnhancedNutrition;
-  userPreferences: {
-    dailyCalories: number;
-    macroSplit: {
-      protein: number;
-      carbs: number;
-      fat: number;
-    };
-    unitSystem?: 'metric' | 'imperial';
+interface RecipeNutrition {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface UserPreferences {
+  dailyCalories: number;
+  macroSplit: {
+    protein: number;
+    carbs: number;
+    fat: number;
   };
 }
 
-export function PersonalBlock({ recipeNutrition, userPreferences }: PersonalBlockProps) {
-  const isMobile = useIsMobile();
-  const unitSystem = userPreferences?.unitSystem || 'metric';
+interface PersonalBlockProps {
+  recipeNutrition: RecipeNutrition;
+  userPreferences: UserPreferences;
+  unitSystem: 'metric' | 'imperial';
+}
 
-  if (!recipeNutrition || !userPreferences) {
-    return (
+export function PersonalBlock({ recipeNutrition, userPreferences, unitSystem }: PersonalBlockProps) {
+  const isMobile = useIsMobile();
+  
+  // Calculate user's target macros in grams
+  const proteinTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.protein / 100)) / 4);
+  const carbsTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.carbs / 100)) / 4);
+  const fatTarget = Math.round((userPreferences.dailyCalories * (userPreferences.macroSplit.fat / 100)) / 9);
+  
+  // Calculate percentage of daily target
+  const caloriesPercentage = Math.round((recipeNutrition.calories / userPreferences.dailyCalories) * 100);
+  const proteinPercentage = Math.round((recipeNutrition.protein / proteinTarget) * 100);
+  const carbsPercentage = Math.round((recipeNutrition.carbs / carbsTarget) * 100);
+  const fatPercentage = Math.round((recipeNutrition.fat / fatTarget) * 100);
+  
+  // Format nutrition values with appropriate units
+  const formattedProtein = formatNutrientWithUnit(recipeNutrition.protein, 'g', unitSystem);
+  const formattedCarbs = formatNutrientWithUnit(recipeNutrition.carbs, 'g', unitSystem);
+  const formattedFat = formatNutrientWithUnit(recipeNutrition.fat, 'g', unitSystem);
+  
+  const formattedProteinTarget = formatNutrientWithUnit(proteinTarget, 'g', unitSystem);
+  const formattedCarbsTarget = formatNutrientWithUnit(carbsTarget, 'g', unitSystem);
+  const formattedFatTarget = formatNutrientWithUnit(fatTarget, 'g', unitSystem);
+  
+  const compareData = [
+    {
+      name: 'Protein',
+      Recipe: recipeNutrition.protein,
+      Target: proteinTarget,
+      percentage: proteinPercentage,
+      fill: NUTRITION_COLORS.protein,
+      value: `${proteinPercentage}% (${formattedProtein} of ${formattedProteinTarget})`
+    },
+    {
+      name: 'Carbs',
+      Recipe: recipeNutrition.carbs,
+      Target: carbsTarget,
+      percentage: carbsPercentage,
+      fill: NUTRITION_COLORS.carbs,
+      value: `${carbsPercentage}% (${formattedCarbs} of ${formattedCarbsTarget})`
+    },
+    {
+      name: 'Fat',
+      Recipe: recipeNutrition.fat,
+      Target: fatTarget,
+      percentage: fatPercentage,
+      fill: NUTRITION_COLORS.fat,
+      value: `${fatPercentage}% (${formattedFat} of ${formattedFatTarget})`
+    }
+  ];
+  
+  const calorieData = [
+    {
+      name: 'Calories',
+      Recipe: recipeNutrition.calories,
+      Target: userPreferences.dailyCalories,
+      percentage: caloriesPercentage,
+      fill: NUTRITION_COLORS.calories,
+      value: `${caloriesPercentage}% (${Math.round(recipeNutrition.calories)} of ${userPreferences.dailyCalories} kcal)`
+    }
+  ];
+  
+  // Calculate calories from macros
+  const proteinCalories = recipeNutrition.protein * 4;
+  const carbCalories = recipeNutrition.carbs * 4;
+  const fatCalories = recipeNutrition.fat * 9;
+  const totalCalories = proteinCalories + carbCalories + fatCalories;
+  
+  const proteinCaloriePercent = Math.round((proteinCalories / totalCalories) * 100);
+  const carbCaloriePercent = Math.round((carbCalories / totalCalories) * 100);
+  const fatCaloriePercent = Math.round((fatCalories / totalCalories) * 100);
+  
+  return (
+    <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Personalized Nutrition</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            No personalized nutrition information available. Please check your nutrition preferences.
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium">Daily Nutrient Goals Coverage</h4>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">Shows what percentage of your daily nutrient targets this recipe provides based on your nutritional preferences.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Percentage of your daily targets this recipe provides <span className="italic">(per serving)</span>
+          </p>
+          <HorizontalBarChart 
+            data={[...compareData, ...calorieData]} 
+            showPercentage={true}
+            showValue={true}
+            height={isMobile ? 200 : 240}
+          />
+          <p className="text-xs text-gray-500 mt-2 italic">
+            * Values above 100% exceed your daily target for that nutrient
           </p>
         </CardContent>
       </Card>
-    );
-  }
-
-  // Extract values
-  const calories = Math.round(recipeNutrition.calories || 0);
-  const protein = Math.round(recipeNutrition.protein || 0);
-  const carbs = Math.round(recipeNutrition.carbs || 0);
-  const fat = Math.round(recipeNutrition.fat || 0);
-  const fiber = Math.round(recipeNutrition.fiber || 0);
-  
-  // Get saturated fat (from either property name)
-  const saturatedFat = Math.round(
-    recipeNutrition.saturated_fat || recipeNutrition.saturatedFat || 0
-  );
-
-  // Calculate percentage of daily values
-  const { dailyCalories } = userPreferences;
-  const caloriesPercentage = Math.round((calories / dailyCalories) * 100);
-  
-  // Use either personalized values from profile or default values
-  const proteinPercentage = Math.round((protein / DAILY_REFERENCE_VALUES.protein) * 100);
-  const carbsPercentage = Math.round((carbs / DAILY_REFERENCE_VALUES.carbs) * 100);
-  const fatPercentage = Math.round((fat / DAILY_REFERENCE_VALUES.fat) * 100);
-  const fiberPercentage = Math.round((fiber / DAILY_REFERENCE_VALUES.fiber) * 100);
-  const saturatedFatPercentage = Math.round((saturatedFat / DAILY_REFERENCE_VALUES.saturated_fat) * 100);
-
-  return (
-    <Card>
-      <CardHeader className={isMobile ? "px-3 py-3" : "px-6 py-4"}>
-        <div className="flex items-center justify-between">
-          <CardTitle>Personalized Nutrition</CardTitle>
-          <div className="flex items-center gap-2">
-            <NutritionConfidenceIndicator nutrition={recipeNutrition} size="sm" />
-            <Badge variant="secondary">
-              {unitSystem === 'imperial' ? 'US' : 'Metric'}
-            </Badge>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium">Nutrient Comparison: Recipe vs. Daily Targets</h4>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">Compares the actual amount of nutrients in this recipe to your daily targets in grams. Dotted lines represent recommended range (±20% of target).</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className={isMobile ? "p-3" : "p-6"}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <div className="order-2 md:order-1">
-            <MacroCaloriesBreakdown
-              calories={calories}
-              protein={protein}
-              carbs={carbs}
-              fat={fat}
-              dailyCalories={dailyCalories}
-              macroSplit={userPreferences.macroSplit}
-            />
-          </div>
-          
-          <div className="order-1 md:order-2">
-            <NutritionSummaryText
-              calories={calories}
-              protein={protein}
-              carbs={carbs}
-              fat={fat}
-              fiber={fiber}
-              saturatedFat={saturatedFat}
-              caloriesPercentage={caloriesPercentage}
-              proteinPercentage={proteinPercentage}
-              carbsPercentage={carbsPercentage}
-              fatPercentage={fatPercentage}
-              fiberPercentage={fiberPercentage}
-              saturatedFatPercentage={saturatedFatPercentage}
-              unitSystem={unitSystem}
-            />
-          </div>
-        </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Side by side comparison in {unitSystem === 'metric' ? 'grams' : 'US units'} <span className="italic">(per serving)</span>
+          </p>
+          <ComparisonChart compareData={compareData} unitSystem={unitSystem} />
+          <p className="text-xs text-gray-500 mt-2 italic">
+            * Dotted lines show recommended range (±20% of your target)
+          </p>
+        </CardContent>
+      </Card>
+      
+      <div className="bg-slate-50 p-4 rounded-md">
+        <h4 className="text-sm font-medium mb-3">Nutritional Insights</h4>
         
-        <Separator className="my-6" />
-        
-        <NutrientStats 
-          nutrition={recipeNutrition} 
-          dailyCalories={dailyCalories}
+        <NutrientStats
+          calories={recipeNutrition.calories}
+          protein={recipeNutrition.protein}
+          carbs={recipeNutrition.carbs}
+          fat={recipeNutrition.fat}
+          caloriesPercentage={caloriesPercentage}
+          proteinPercentage={proteinPercentage}
+          carbsPercentage={carbsPercentage}
+          fatPercentage={fatPercentage}
+          colors={NUTRITION_COLORS}
           unitSystem={unitSystem}
         />
-      </CardContent>
-    </Card>
+        
+        <MacroCaloriesBreakdown
+          proteinCalories={proteinCalories}
+          carbCalories={carbCalories}
+          fatCalories={fatCalories}
+          proteinCaloriePercent={proteinCaloriePercent}
+          carbCaloriePercent={carbCaloriePercent}
+          fatCaloriePercent={fatCaloriePercent}
+          colors={NUTRITION_COLORS}
+        />
+        
+        <div className="mt-4 pt-3 border-t border-gray-200">
+          <h5 className="text-xs font-semibold mb-2">Nutritional Information</h5>
+          <ul className="text-xs text-gray-600 space-y-1">
+            <li>• Protein provides 4 calories per gram - vital for muscle repair and growth</li>
+            <li>• Carbohydrates provide 4 calories per gram - your body's preferred energy source</li>
+            <li>• Fat provides 9 calories per gram - necessary for hormone production and nutrient absorption</li>
+          </ul>
+          <p className="text-xs text-muted-foreground mt-2 italic">
+            Values are calculated per serving based on your selected nutritional preferences.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

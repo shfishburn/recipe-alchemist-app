@@ -10,7 +10,6 @@ import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeErr
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
-import { cn } from '@/lib/utils';
 
 const QuickRecipePage = () => {
   const {
@@ -32,21 +31,18 @@ const QuickRecipePage = () => {
     recipe: !!recipe, 
     error, 
     formData: !!formData, 
-    isDirectNavigation,
-    isRetrying
+    isDirectNavigation
   });
 
   // Force show loading indicator for navigation
   useEffect(() => {
     // This will trigger a re-render that loads the indicator
-    console.log("Setting up loading trigger");
     const loadingTrigger = document.createElement('div');
     loadingTrigger.className = 'loading-trigger';
     document.body.appendChild(loadingTrigger);
     
     return () => {
       // Ensure we clean up any loading states when component unmounts
-      console.log("Cleaning up loading trigger");
       document.body.classList.remove('overflow-hidden');
       if (loadingTrigger && loadingTrigger.parentNode) {
         document.body.removeChild(loadingTrigger);
@@ -58,16 +54,12 @@ const QuickRecipePage = () => {
   if (isLoading || isRetrying) {
     console.log("Showing loading screen for recipe generation");
     return (
-      <div className={cn(
-        "min-h-screen relative touch-action-auto",
-        (isLoading || isRetrying) ? "overflow-hidden" : ""
-      )}>
+      <div className="min-h-screen relative touch-action-auto">
         <LoadingIndicator />
         <FullScreenLoading 
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
-          isRetrying={isRetrying}
         />
       </div>
     );
@@ -87,7 +79,7 @@ const QuickRecipePage = () => {
           />
 
           {isDirectNavigation ? (
-            // Show form directly when navigating from navbar
+            // Show form directly when navigating from navbar - Added wider container for desktop
             <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md mx-auto mb-10 md:max-w-xl lg:max-w-2xl">
               <QuickRecipeFormContainer />
             </div>
