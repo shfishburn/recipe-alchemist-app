@@ -101,29 +101,25 @@ export function LoadingTipCard() {
   };
 
   useEffect(() => {
-    // Initialize tips with a shuffled array
     setTips(shuffle(allTips));
     setIndex(0);
-
     const interval = setInterval(() => {
       setIndex(prev => {
         const next = prev + 1;
         if (next >= tips.length) {
-          const reshuffled = shuffle(allTips);
-          setTips(reshuffled);
+          setTips(shuffle(allTips));
           return 0;
         }
         return next;
       });
     }, 5000);
-
     return () => clearInterval(interval);
   }, [tips.length]);
 
   const tip = tips[index] || allTips[0];
 
   return (
-    <Card className="max-w-md w-full mx-auto bg-white/90 border border-slate-200 rounded-2xl shadow-lg overflow-hidden">
+    <Card className="w-full bg-white/90 border border-slate-200 rounded-2xl shadow-lg overflow-hidden">
       <CardContent className="p-6 flex flex-col items-center text-center min-h-[160px]">
         <div aria-live="polite" className="flex flex-col items-center">
           <div className="mb-1.5">{tip.icon}</div>
