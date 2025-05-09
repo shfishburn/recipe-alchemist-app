@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, RefreshCw, Database, FileText } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { updateAllRecipeNutritionData } from '@/scripts/update-nutrition-data';
+import { updateAllRecipeNutritionData, BatchUpdateResult } from '@/scripts/update-nutrition-data';
 import { updateRecipeScienceData } from '@/utils/nutrition/update-science-data';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,9 +29,8 @@ export function RecipeBatchUpdatePanel() {
       setResult(null);
       setProgress(10); // Show initial progress
 
-      // Use the Promise-based API to get the result 
-      const response = await updateAllRecipeNutritionData(dryRun);
-      const updateResult = response as unknown as BatchUpdateResult;
+      // The function now properly returns BatchUpdateResult
+      const updateResult = await updateAllRecipeNutritionData(dryRun);
       
       setProgress(100);
       setResult(updateResult);
@@ -58,9 +56,8 @@ export function RecipeBatchUpdatePanel() {
       setResult(null);
       setProgress(10); // Show initial progress
 
-      // Use the Promise-based API to get the result
-      const response = await updateRecipeScienceData(dryRun);
-      const updateResult = response as unknown as BatchUpdateResult;
+      // The function now properly returns BatchUpdateResult
+      const updateResult = await updateRecipeScienceData(dryRun);
       
       setProgress(100);
       setResult(updateResult);
