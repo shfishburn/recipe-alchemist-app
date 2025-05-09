@@ -34,7 +34,8 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     
     // Check if we're on a protected resource page that requires auth
     const isProtectedResource = location.pathname.startsWith('/quick-recipe') || 
-                              location.pathname.startsWith('/recipes');
+                              location.pathname.startsWith('/recipes') ||
+                              location.pathname.startsWith('/recipe/');
     
     // Only show the auth toast for protected resources
     if (isProtectedResource) {

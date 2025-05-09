@@ -147,10 +147,17 @@ export const useQuickRecipeSave = () => {
 
       console.log("Recipe saved successfully with ID:", data.id);
       
-      // Navigate to the newly created recipe
-      if (data.id) {
-        navigate(`/recipes/${data.id}`);
-      }
+      // Add a small delay before navigation to ensure state updates complete
+      // This helps avoid navigation issues that might interrupt the rendering process
+      setTimeout(() => {
+        if (data?.id) {
+          // Navigate to the specific recipe detail page instead of the recipes list
+          navigate(`/recipe/${data.id}`);
+        } else {
+          // Fallback to recipes list if ID is not available
+          navigate('/recipes');
+        }
+      }, 100);
       
       return true;
     } catch (error: any) {

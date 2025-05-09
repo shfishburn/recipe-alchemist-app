@@ -5,6 +5,7 @@ import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
 import { QuickCookingMode } from '@/components/quick-recipe/QuickCookingMode';
 import { QuickRecipePrint } from '@/components/quick-recipe/QuickRecipePrint';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
+import { toast } from 'sonner';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
@@ -12,7 +13,7 @@ interface QuickRecipeDisplayProps {
 
 export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   const [cookModeOpen, setCookModeOpen] = useState(false);
-  const { saveRecipe, isSaving, navigate } = useQuickRecipeSave();
+  const { saveRecipe, isSaving } = useQuickRecipeSave();
   
   // Create a ref to the QuickRecipePrint component
   const printRef = React.useRef<HTMLDivElement>(null);
@@ -28,10 +29,22 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   };
 
   const handleSave = async () => {
-    const success = await saveRecipe(recipe);
-    // Only navigate if save was successful
-    if (success) {
-      navigate('/recipes');
+    try {
+      // Show saving feedback to user immediately
+      toast.loading("Saving your recipe...");
+      
+      // Wait for the save operation to complete
+      const success = await saveRecipe(recipe);
+      
+      if (!success) {
+        // The error message is already handled in saveRecipe function
+        console.log("Save operation reported failure");
+      }
+      
+      // Note: Navigation happens inside saveRecipe on success
+    } catch (error) {
+      console.error("Error in handleSave:", error);
+      toast.error("Failed to save recipe. Please try again.");
     }
   };
 

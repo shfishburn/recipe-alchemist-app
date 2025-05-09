@@ -94,42 +94,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
-      if (error) {
-        console.error('Error getting session:', error);
-        handleTokenRefreshError();
-        return;
-      }
-      
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        try {
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentSession.user.id)
-            .single()
-            .then(({ data: profileData }) => {
-              setProfile(profileData);
-              setLoading(false);
-            })
-            .catch((error: any) => { // Fix: Use explicitly typed parameter
-              console.error('Error fetching profile:', error);
-              setLoading(false);
-            });
-        } catch (error) {
-          console.error('Error setting up profile fetch:', error);
+    supabase.auth.getSession()
+      .then(({ data: { session: currentSession }, error }) => {
+        if (error) {
+          console.error('Error getting session:', error);
+          handleTokenRefreshError();
+          return;
+        }
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          try {
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', currentSession.user.id)
+              .single()
+              .then(({ data: profileData }) => {
+                setProfile(profileData);
+                setLoading(false);
+              })
+              .catch((error: any) => { // Fix: Use explicitly typed parameter
+                console.error('Error fetching profile:', error);
+                setLoading(false);
+              });
+          } catch (error) {
+            console.error('Error setting up profile fetch:', error);
+            setLoading(false);
+          }
+        } else {
           setLoading(false);
         }
-      } else {
-        setLoading(false);
-      }
-    }).catch((err: any) => { // Fixed TypeScript error by using a properly typed function parameter
-      console.error('Error in getSession:', err);
-      handleTokenRefreshError();
-    });
+      })
+      .catch((err: any) => { // Fixed TypeScript error by using a properly typed function parameter
+        console.error('Error in getSession:', err);
+        handleTokenRefreshError();
+      });
 
     return () => {
       subscription.unsubscribe();
