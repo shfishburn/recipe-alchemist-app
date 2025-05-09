@@ -32,8 +32,8 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
     debugTag = 'default'
   } = options;
 
-  // Get base URL from Supabase client
-  const supabaseUrl = supabase.supabaseUrl;
+  // Get base URL directly from the constant in client.ts
+  const supabaseUrl = "https://zjyfumqfrtppleftpzjd.supabase.co";
   if (!supabaseUrl) {
     return {
       data: null,

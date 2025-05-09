@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Recipe, Ingredient, Nutrition } from "@/types/recipe";
+import { Json } from "@/integrations/supabase/types";
 
 // Define interfaces for fusion system
 interface NutrientValue {
@@ -266,8 +266,8 @@ export async function updateRecipeWithFusedNutrition(recipeId: string) {
     const { error: updateError } = await supabase
       .from('recipes')
       .update({
-        nutrition_fused: fusedNutrition,
-        nutrition_confidence: fusedNutrition.data_quality
+        nutrition_fused: fusedNutrition as unknown as Json,
+        nutrition_confidence: fusedNutrition.data_quality as unknown as Json
       })
       .eq('id', recipeId);
       
