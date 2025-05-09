@@ -4,7 +4,7 @@ import { AnalysisSection } from './AnalysisSection';
 import { StepReactionItem } from './StepReactionItem';
 import { ReactionsList } from './ReactionsList';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw, Flask, Beaker, Wrench } from 'lucide-react';
+import { RefreshCcw, FlaskRound, Beaker, Wrench } from 'lucide-react';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
@@ -53,7 +53,7 @@ export function AnalysisContent({
         <AnalysisSection 
           title="Chemistry" 
           content={chemistry} 
-          icon={<Flask className="h-5 w-5 text-blue-600" />}
+          icon={<FlaskRound className="h-5 w-5 text-blue-600" />}
         />
       )}
       

@@ -5,7 +5,6 @@ import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { DefaultSeo } from "@/components/seo/DefaultSeo";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/ui/cookie-consent";
 import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
@@ -39,9 +38,8 @@ export const AppLayout = () => {
           <AppRoutes />
         </PageTransition>
         <FooterWrapper />
-        {/* Move these components below the main content to prevent render blocking */}
+        {/* Use only one toaster to prevent duplicates */}
         <Toaster />
-        <Sonner />
         <CookieConsent />
       </div>
     </TooltipProvider>

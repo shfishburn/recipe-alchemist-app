@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useErrorHandler } from '@/hooks/use-error-handler';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 
 /**
@@ -89,14 +89,15 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         clearTimeout(timeoutId);
         analysisRequestRef.current = null;
         
-        console.log('Analysis data received:', data ? 'success' : 'failed');
-
+        // Cache the last successful analysis time
+        lastAnalysisTimeRef.current = Date.now();
+        
         if (error) {
+          console.error('Error fetching recipe analysis:', error);
           throw new Error(error.message || 'Failed to get analysis');
         }
         
-        // Cache the last successful analysis time
-        lastAnalysisTimeRef.current = Date.now();
+        console.log('Analysis data received:', data ? 'success' : 'failed');
         
         // Return properly typed response
         return data as AnalysisResponse;
@@ -121,16 +122,28 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
   // Function to analyze reactions with OpenAI - now with better fallbacks
   const analyzeReactions = async () => {
     if (!recipe.instructions || recipe.instructions.length === 0) {
-      toast.error('Cannot analyze: Recipe has no instructions');
+      toast({
+        title: 'Cannot Analyze',
+        description: 'Recipe has no instructions',
+        variant: 'destructive'
+      });
       return;
     }
     
     try {
       // Use a subtle toast for background analysis
       if (hasAnalysisData) {
-        toast.info('Enhancing analysis data...', { duration: 2000 });
+        toast({
+          title: 'Analysis Update',
+          description: 'Enhancing analysis data...',
+          duration: 2000
+        });
       } else {
-        toast.info('Analyzing recipe reactions...', { duration: 3000 });
+        toast({
+          title: 'Analysis Started',
+          description: 'Analyzing recipe reactions...',
+          duration: 3000
+        });
       }
       
       console.log('Starting analysis of recipe reactions for recipe ID:', recipe.id);
@@ -160,7 +173,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         
         // Only show success toast if this wasn't a background operation
         if (!hasAnalysisData) {
-          toast.success('Analysis complete');
+          toast({
+            title: 'Analysis Complete',
+            variant: 'success',
+            duration: 3000
+          });
         }
         await refetchReactions();
       } catch (error: any) {
@@ -172,7 +189,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     } catch (error: any) {
       console.error('Error analyzing reactions:', error);
       setError(error);
-      toast.error('Failed to analyze reactions: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast({
+        title: 'Analysis Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
     } finally {
       // Only reset analyzing state once both operations are complete or have failed
       if (!analysis) {
@@ -189,7 +210,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       const analysisCooldown = 10000; // 10 seconds between analysis attempts
       
       if ((now - lastAnalysisTimeRef.current) < analysisCooldown) {
-        toast.info("Please wait before analyzing again", { duration: 3000 });
+        toast({
+          title: 'Please Wait',
+          description: "Analysis in progress, please wait before analyzing again",
+          duration: 3000
+        });
         return;
       }
       
@@ -198,9 +223,17 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
       
       // Use a less intrusive message if we already have content
       if (hasAnalysisData) {
-        toast.info("Enhancing analysis in the background...", { duration: 3000 });
+        toast({
+          title: 'Background Analysis',
+          description: "Enhancing analysis in the background...",
+          duration: 3000
+        });
       } else {
-        toast.info("Analyzing recipe chemistry and reactions...", { duration: 5000 });
+        toast({
+          title: 'Analysis Started',
+          description: "Analyzing recipe chemistry and reactions...",
+          duration: 5000
+        });
       }
       
       // Start both analyses in parallel
@@ -208,7 +241,11 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         refetch().catch(error => {
           console.error("Analysis error:", error);
           setError(error);
-          toast.error("Failed to analyze recipe: " + (error instanceof Error ? error.message : "Unknown error"));
+          toast({
+            title: "Analysis Failed",
+            description: error instanceof Error ? error.message : "Unknown error",
+            variant: "destructive"
+          });
         }),
         analyzeReactions()
       ]).finally(() => {
@@ -278,10 +315,17 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
         if (onRecipeUpdate) {
           const updatedRecipe = { ...recipe, science_notes: analysis.science_notes };
           onRecipeUpdate(updatedRecipe);
-          toast.success('Recipe analysis data saved');
+          toast({
+            title: 'Analysis Saved',
+            description: 'Recipe analysis data saved',
+            variant: 'success'
+          });
         }
       } else {
-        toast.info('Analysis complete, but no changes needed.');
+        toast({
+          title: 'Analysis Complete',
+          description: 'No changes needed.',
+        });
       }
       
       setIsAnalyzing(false);
