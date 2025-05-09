@@ -1,62 +1,50 @@
 import React, { useEffect } from 'react';
 import Navbar from '@/components/ui/navbar';
+import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
+import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
-import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
-import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
-import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeError';
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
-import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
+import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
-import { PageContainer, ContentContainer } from '@/components/ui/containers';
+import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
+import { PageContainer } from '@/components/ui/containers';
 
-const QuickRecipePage = () => {
+const QuickRecipePage: React.FC = () => {
   const {
     recipe,
     isLoading,
-    formData,
-    error,
-    hasTimeoutError,
     isRetrying,
-    debugMode,
+    error,
+    formData,
     isDirectNavigation,
+    hasTimeoutError,
     handleRetry,
     handleCancel,
-    toggleDebugMode
+    toggleDebugMode,
+    debugMode,
   } = useQuickRecipePage();
-  
-  console.log("QuickRecipePage - Current state:", { 
-    isLoading, 
-    recipe: !!recipe, 
-    error, 
-    formData: !!formData, 
-    isDirectNavigation
-  });
 
   // Force show loading indicator for navigation
   useEffect(() => {
-    // This will trigger a re-render that loads the indicator
     const loadingTrigger = document.createElement('div');
     loadingTrigger.className = 'loading-trigger';
     document.body.appendChild(loadingTrigger);
-    
     return () => {
-      // Ensure we clean up any loading states when component unmounts
       document.body.classList.remove('overflow-hidden');
-      if (loadingTrigger && loadingTrigger.parentNode) {
+      if (loadingTrigger.parentNode) {
         document.body.removeChild(loadingTrigger);
       }
     };
   }, []);
 
-  // Show full-screen loading when generating a recipe, within the relative container
+  // Full-screen loading while generating or retrying
   if (isLoading || isRetrying) {
-    console.log("Showing loading screen for recipe generation");
     return (
-      <PageContainer className="relative touch-action-auto">
+      <PageContainer className="relative touch-action-auto overflow-hidden">
         <LoadingIndicator />
-        <FullScreenLoading 
+        <FullScreenLoading
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
@@ -69,42 +57,35 @@ const QuickRecipePage = () => {
     <PageContainer>
       <Navbar />
       <LoadingIndicator />
-      <main className="flex-1 py-6 md:py-10 animate-fadeIn">
-        <ContentContainer>
-          {/* Hero Title Section - Always show this */}
-          <QuickRecipeHero 
-            hasRecipe={!!recipe} 
-            toggleDebugMode={toggleDebugMode}
-            debugMode={debugMode}
-          />
+      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
+        <QuickRecipeHero
+          hasRecipe={!!recipe}
+          toggleDebugMode={toggleDebugMode}
+          debugMode={debugMode}
+        />
 
-          {isDirectNavigation ? (
-            // Show form directly when navigating from navbar
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md mb-10">
-              <QuickRecipeFormContainer />
-            </div>
-          ) : error ? (
-            // Show error state
-            <QuickRecipeError 
-              error={error}
-              hasTimeoutError={hasTimeoutError}
-              debugMode={debugMode}
-              formData={formData}
-              onCancel={handleCancel}
-              onRetry={handleRetry}
-              isRetrying={isRetrying}
-            />
-          ) : recipe ? (
-            // Show recipe
-            <div className="space-y-8">
-              <QuickRecipeDisplay recipe={recipe} />
-              <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
-            </div>
-          ) : (
-            // Show empty state
-            <QuickRecipeEmpty />
-          )}
-        </ContentContainer>
+        {isDirectNavigation ? (
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-6">
+            <QuickRecipeFormContainer />
+          </div>
+        ) : error ? (
+          <QuickRecipeError
+            error={error}
+            hasTimeoutError={hasTimeoutError}
+            debugMode={debugMode}
+            formData={formData}
+            onCancel={handleCancel}
+            onRetry={handleRetry}
+            isRetrying={isRetrying}
+          />
+        ) : recipe ? (
+          <div className="space-y-8">
+            <QuickRecipeDisplay recipe={recipe} />
+            <QuickRecipeRegeneration formData={formData} isLoading={isLoading} />
+          </div>
+        ) : (
+          <QuickRecipeEmpty />
+        )}
       </main>
     </PageContainer>
   );
