@@ -30,6 +30,16 @@ declare global {
       toHaveStyle(css: Record<string, any>): R;
       toHaveTextContent(text: string | RegExp): R;
     }
+    
+    // Add support for async matchers
+    interface AsymmetricMatchers {
+      toBeInTheDocument(): void;
+      toBeDisabled(): void;
+      toHaveAttribute(attr: string, value?: string): void;
+      toHaveClass(className: string): void;
+      toHaveStyle(css: Record<string, any>): void;
+      toHaveTextContent(text: string | RegExp): void;
+    }
   }
 }
 
