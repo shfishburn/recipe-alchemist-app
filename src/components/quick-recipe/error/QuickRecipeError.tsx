@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { AlertCircle, ArrowLeft, RefreshCw, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 interface QuickRecipeErrorProps {
   error: string;
@@ -22,13 +23,27 @@ export function QuickRecipeError({
   onRetry,
   isRetrying
 }: QuickRecipeErrorProps) {
+  const { openAuthDrawer } = useAuth();
+  
+  // Check if this is an authentication error
+  const isAuthError = error?.toLowerCase().includes('auth') || 
+                      error?.toLowerCase().includes('sign in') || 
+                      error?.toLowerCase().includes('log in');
+  
   return (
     <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 border rounded-xl bg-red-50 dark:bg-red-900/10">
       <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
       <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
       <p className="text-muted-foreground mb-6">{error}</p>
       
-      {hasTimeoutError && (
+      {isAuthError && (
+        <div className="text-sm text-muted-foreground mb-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg">
+          <p className="font-medium">You need to be signed in to generate recipes</p>
+          <p className="mt-1">Please sign in to use the recipe generator</p>
+        </div>
+      )}
+      
+      {hasTimeoutError && !isAuthError && (
         <div className="text-sm text-muted-foreground mb-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg">
           <p className="font-medium">Tip for timeout errors:</p>
           <ul className="list-disc list-inside mt-1">
@@ -46,6 +61,7 @@ export function QuickRecipeError({
           <pre className="whitespace-pre-wrap">{JSON.stringify({
             formData,
             hasTimeoutError,
+            isAuthError,
             error
           }, null, 2)}</pre>
         </div>
@@ -60,7 +76,16 @@ export function QuickRecipeError({
           <ArrowLeft className="h-4 w-4" />
           Start Over
         </Button>
-        {formData && (
+        
+        {isAuthError ? (
+          <Button 
+            onClick={openAuthDrawer}
+            className="flex items-center gap-2"
+          >
+            <LogIn className="h-4 w-4" />
+            Sign In
+          </Button>
+        ) : formData && (
           <Button 
             onClick={onRetry}
             className="flex items-center gap-2"

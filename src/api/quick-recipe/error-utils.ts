@@ -14,12 +14,16 @@ export const enhanceErrorMessage = (error: any): string => {
     });
   }
   
+  // Handle authentication errors explicitly
+  if (error.status === 401 || error.message?.includes('401') || 
+      error.message?.includes('auth') || error.message?.includes('sign in')) {
+    return "Authentication required: Please sign in to generate recipes";
+  }
+  
   if (error.message?.includes("timeout")) {
     errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
   } else if (error.message?.includes("fetch")) {
     errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
-  } else if (error.status === 401 || error.message?.includes("401")) {
-    errorMessage = "Authentication required. Please sign in to generate recipes.";
   } else if (error.status === 500 || error.message?.includes("500")) {
     errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
   } else if (error.status === 400 || error.message?.includes("400")) {
@@ -37,6 +41,14 @@ export const enhanceErrorMessage = (error: any): string => {
 
 // Process error responses
 export const processErrorResponse = async (error: any): Promise<never> => {
+  // Authentication check first (most important for user experience)
+  if (error.status === 401 || 
+      (error.message && (error.message.includes('401') || 
+                        error.message.includes('auth') || 
+                        error.message.includes('sign in')))) {
+    throw new Error("Authentication required: Please sign in to generate recipes");
+  }
+  
   // Check if the error is from Supabase Functions with response data
   if (error.context?.response) {
     try {
@@ -80,11 +92,6 @@ export const processErrorResponse = async (error: any): Promise<never> => {
         throw new Error(`Server error with status code: ${error.context.response.status}`);
       }
     }
-  }
-  
-  // Special handling for authentication errors
-  if (error.status === 401 || (error.message && error.message.includes('401'))) {
-    throw new Error("Authentication required. Please sign in or check your session.");
   }
   
   // Enhance the error message and throw

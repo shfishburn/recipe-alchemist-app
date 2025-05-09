@@ -44,8 +44,9 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     // Get auth token for request
     const token = await getAuthToken();
     
+    // Check if user is authenticated - NEW
     if (!token) {
-      console.warn('Authentication token is missing or empty. User may need to log in.');
+      throw new Error('Authentication required: Please sign in to generate recipes');
     }
     
     console.log("Using direct fetch to edge function with payload:", {
@@ -75,7 +76,6 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
         payload,
         token,
         debugTag: 'direct-fetch-production'
-        // Removed signal: controller.signal which was causing the type error
       });
       
       // Clear the timeout once the fetch completes
@@ -86,7 +86,7 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
       // Check for authentication errors specifically
       if (status === 401) {
         console.error("Authentication error: User not authenticated or token invalid");
-        throw new Error("Authentication error: Please log in to use this feature");
+        throw new Error("Authentication required: Please sign in to generate recipes");
       }
       
       // Check for other errors
@@ -109,7 +109,7 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     if (fetchError.name === 'AbortError') {
       throw new Error("Recipe generation timed out. Please try again with a simpler request.");
     } else if (fetchError.status === 401) {
-      throw new Error("Authentication required: Please log in to generate recipes");
+      throw new Error("Authentication required: Please sign in to generate recipes");
     } else if (fetchError.status === 400) {
       throw new Error("Invalid request: Please check your inputs and try again");
     } else if (fetchError.context?.response) {
@@ -137,6 +137,12 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
       throw new Error('Invalid request: Please provide all required information for recipe generation');
     }
     
+    // Get auth token and check if user is authenticated - NEW
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error('Authentication required: Please sign in to generate recipes');
+    }
+    
     console.log("Falling back to Supabase functions invoke with payload:", {
       mainIngredient: requestBody.mainIngredient,
       cuisine: requestBody.cuisine || 'any',
@@ -148,7 +154,6 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
     try {
-      // Remove the signal property since it's not supported in FunctionInvokeOptions
       const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
         body: {
           ...requestBody,
@@ -157,7 +162,6 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
           dietary: requestBody.dietary || '', // Ensure dietary is never null/undefined
           servings: requestBody.servings || 2 // Ensure servings has a default
         },
-        // Removed signal: controller.signal which was causing the type error
         headers: {
           'Content-Type': 'application/json',
           'X-Debug-Info': 'supabase-invoke-' + Date.now()
@@ -177,6 +181,10 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
             message: error.message,
             context: error.context || "No context"
           });
+          
+          if (error.message?.includes('401') || error.status === 401) {
+            throw new Error('Authentication required: Please sign in to generate recipes');
+          }
           
           // Check if we have a response object with more details
           if (error.context?.response) {

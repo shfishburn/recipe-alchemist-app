@@ -4,7 +4,7 @@ import { QuickRecipeFormData, QuickRecipe } from '@/types/quick-recipe';
 import { normalizeRecipeResponse } from '@/utils/recipe-normalization';
 import { createTimeoutPromise } from './quick-recipe/timeout-utils';
 import { formatRequestBody } from './quick-recipe/format-utils';
-import { fetchFromEdgeFunction, fetchFromSupabaseFunctions } from './quick-recipe/api-utils';
+import { fetchFromEdgeFunction, fetchFromSupabaseFunctions, getAuthToken } from './quick-recipe/api-utils';
 import { processErrorResponse } from './quick-recipe/error-utils';
 
 // Function to generate a quick recipe
@@ -14,6 +14,12 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     if (!formData.mainIngredient) {
       throw new Error("Please provide a main ingredient");
+    }
+    
+    // Check authentication first
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error("Authentication required: Please sign in to generate recipes");
     }
     
     // Format the request body
@@ -57,6 +63,13 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     return normalizedRecipe;
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
+    
+    // Improve auth error messages
+    if (error.message?.includes('auth') || error.message?.includes('sign in') || 
+        error.status === 401 || error.message?.includes('401')) {
+      throw new Error("Authentication required: Please sign in to generate recipes");
+    }
+    
     return processErrorResponse(error);
   }
 };
