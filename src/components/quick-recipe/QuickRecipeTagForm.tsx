@@ -66,14 +66,20 @@ const QuickRecipeTagForm = ({
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="ingredients" className="text-sm font-medium">Ingredients</Label>
-        <Input 
-          id="ingredients" 
-          placeholder="e.g., chicken, rice, vegetables"
-          value={localIngredients}
-          onChange={handleInputChange}
-          aria-label="Enter your ingredients"
-          className="h-10"
-        />
+        <div className="w-full">
+          <input
+            type="text"
+            id="ingredients"
+            placeholder="Enter ingredients…"
+            value={localIngredients}
+            onChange={handleInputChange}
+            aria-label="Enter your ingredients"
+            className="w-full flex-1 border-0 bg-transparent p-0 outline-none focus:outline-none focus:ring-0 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          <p className="mt-1 text-sm text-muted-foreground text-center">
+            e.g., chicken, rice, vegetables
+          </p>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
