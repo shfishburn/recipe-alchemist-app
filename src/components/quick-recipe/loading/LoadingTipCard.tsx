@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChefHat, Clock, Star, CircleCheck } from 'lucide-react';
+import {
+  Utensils,
+  Thermometer,
+  Scale,
+  TestTube,
+  Cpu,
+  ShoppingCart,
+  Microscope,
+  Fire,
+  FileText,
+  Zap,
+  Leaf,
+  Cheese,
+  Puzzle,
+  Target,
+  Sliders
+} from 'lucide-react';
 
 interface Tip {
   icon: React.ReactNode;
@@ -11,78 +27,78 @@ interface Tip {
 export function LoadingTipCard() {
   const allTips: Tip[] = [
     {
-      icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-      title: '🥣 In the Mixing Bowl',
+      icon: <Utensils className="h-5 w-5 text-recipe-green" />,
+      title: 'In the Mixing Bowl',
       description: 'Tossing your ingredients into the preview—watch flavors fuse in real time.'
     },
     {
-      icon: <Clock className="h-5 w-5 text-recipe-orange" />,
-      title: '⏳ Gentle Simmer',
+      icon: <Thermometer className="h-5 w-5 text-recipe-orange" />,
+      title: 'Gentle Simmer',
       description: 'Let your virtual stew bubble—macros, micros, and yield estimates are on their way.'
     },
     {
-      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
-      title: '🔄 Harmonizing Flavors',
+      icon: <Scale className="h-5 w-5 text-recipe-yellow" />,
+      title: 'Harmonizing Flavors',
       description: 'Balancing taste and texture—your recipe preview is coming into focus.'
     },
     {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: '🔬 Scientific Sear',
+      icon: <TestTube className="h-5 w-5 text-recipe-blue" />,
+      title: 'Scientific Sear',
       description: 'Data is searing—Nutri Score and detailed nutrition will unlock once the preview is ready.'
     },
     {
-      icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-      title: '🤖 Sous-Vide AI',
+      icon: <Cpu className="h-5 w-5 text-recipe-green" />,
+      title: 'Sous-Vide AI',
       description: 'AI Cooking Coach loading—soon you can chat and tweak flavors or ingredient ratios.'
     },
     {
-      icon: <Star className="h-5 w-5 text-recipe-orange" />,
-      title: '🥘 Mise en Place',
+      icon: <ShoppingCart className="h-5 w-5 text-recipe-orange" />,
+      title: 'Mise en Place',
       description: 'Mise en place for your shopping list and yield factors will appear after preview.'
     },
     {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: '🧪 Lab-Tested Flavor',
+      icon: <Microscope className="h-5 w-5 text-recipe-blue" />,
+      title: 'Lab-Tested Flavor',
       description: 'Crunching vitamin, mineral, and calorie counts—pending completion of your preview.'
     },
     {
-      icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-      title: '🌡️ Perfect Temperature',
+      icon: <Fire className="h-5 w-5 text-recipe-green" />,
+      title: 'Perfect Temperature',
       description: 'Heating up—full analytics, shopping list, and Cooking Mode become available soon.'
     },
     {
-      icon: <Clock className="h-5 w-5 text-recipe-orange" />,
-      title: '💡 Chef’s Note',
+      icon: <FileText className="h-5 w-5 text-recipe-orange" />,
+      title: 'Chef’s Note',
       description: 'Precision in measurement yields clarity—nutrition insights load shortly.'
     },
     {
-      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
-      title: '🧂 Seasoned Wisdom',
+      icon: <Zap className="h-5 w-5 text-recipe-yellow" />,
+      title: 'Seasoned Wisdom',
       description: 'A pinch of science is in the works—sodium counts and seasoning balance arriving soon.'
     },
     {
-      icon: <Clock className="h-5 w-5 text-recipe-orange" />,
-      title: '🥕 Rooted in Science',
+      icon: <Leaf className="h-5 w-5 text-recipe-orange" />,
+      title: 'Rooted in Science',
       description: 'Carrot on—fiber counts and glycemic details will be revealed soon.'
     },
     {
-      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
-      title: '🧀 Cream of the Crop',
+      icon: <Cheese className="h-5 w-5 text-recipe-yellow" />,
+      title: 'Cream of the Crop',
       description: 'From curd to count—calcium and fat content analytics loading.'
     },
     {
-      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
-      title: '🧩 Culinary Puzzle',
+      icon: <Puzzle className="h-5 w-5 text-recipe-yellow" />,
+      title: 'Culinary Puzzle',
       description: 'Solve the flavor equation—answers appear in your nutrition panel shortly.'
     },
     {
-      icon: <Star className="h-5 w-5 text-recipe-green" />,
-      title: '🎯 Goal Alignment',
+      icon: <Target className="h-5 w-5 text-recipe-green" />,
+      title: 'Goal Alignment',
       description: 'Personalized goal alignment data will show how this recipe matches your profile.'
     },
     {
-      icon: <ChefHat className="h-5 w-5 text-recipe-orange" />,
-      title: '🥄 Tailor-Made Taste',
+      icon: <Sliders className="h-5 w-5 text-recipe-orange" />,
+      title: 'Tailor-Made Taste',
       description: 'Customize for dietary needs—AI Cooking Coach ready to adjust for preferences and conditions.'
     }
   ];
