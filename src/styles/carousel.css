@@ -28,7 +28,7 @@
 
 /* Pagination dots */
 .carousel-pagination {
-  @apply flex justify-center gap-1 sm:gap-1.5 mt-1 sm:mt-2;
+  @apply flex justify-center gap-1 sm:gap-1.5 mt-3 sm:mt-4;
 }
 
 .carousel-pagination-dot {
@@ -122,4 +122,19 @@
   .reduce-motion-mobile {
     scroll-behavior: auto;
   }
+}
+
+/* Empty state styling for carousel */
+.carousel-empty-state {
+  @apply flex flex-col items-center justify-center p-6 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center h-48;
+}
+
+/* Auto-scrolling progress indicator */
+.carousel-progress-indicator {
+  @apply absolute bottom-0 left-0 h-0.5 bg-recipe-blue opacity-70;
+  width: 0;
+}
+
+.carousel-progress-indicator.animate {
+  animation: carousel-progress linear forwards;
 }

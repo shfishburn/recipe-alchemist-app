@@ -8,6 +8,7 @@ import type { Recipe } from '@/types/recipe';
 import { Carousel, type CarouselItem } from '@/components/ui/carousel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export function RecipeCarousel() {
   const { data: recipes, isLoading } = useRecipes();
@@ -39,6 +40,11 @@ export function RecipeCarousel() {
     );
   };
 
+  // If no recipes are available, don't render the section
+  if (!isLoading && featuredRecipes.length === 0) {
+    return null;
+  }
+
   return (
     <div className="w-full flex flex-col items-center">
       {isLoading ? (
@@ -61,20 +67,23 @@ export function RecipeCarousel() {
             </p>
           </div>
           
-          {/* Using our updated Carousel component with optimized mobile settings */}
-          <Carousel 
-            items={carouselItems}
-            renderItem={renderCarouselItem}
-            showArrows={true}
-            showDots={true}
-            showCounter={false}
-            itemWidthMobile="85%"
-            itemWidthDesktop="33%"
-            gap="gap-2 md:gap-3"
-            arrowPosition="inside"
-            className="w-full max-w-5xl"
-            autoScroll={false}
-          />
+          {/* Wrap the carousel in a ScrollArea for better touch experience */}
+          <ScrollArea className="w-full max-w-5xl touch-scroll">
+            <Carousel 
+              items={carouselItems}
+              renderItem={renderCarouselItem}
+              showArrows={true}
+              showDots={true}
+              showCounter={false}
+              itemWidthMobile="85%"
+              itemWidthDesktop="33%"
+              gap="gap-2 md:gap-3"
+              arrowPosition="inside"
+              className="w-full max-w-5xl"
+              autoScroll={!isMobile} // Only auto-scroll on desktop
+              autoScrollInterval={7000} // 7 seconds between slides
+            />
+          </ScrollArea>
         </div>
       )}
     </div>

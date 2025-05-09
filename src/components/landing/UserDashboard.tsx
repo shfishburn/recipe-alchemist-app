@@ -1,7 +1,4 @@
 
-// path: src/components/landing/UserDashboard.tsx
-// file: UserDashboard.tsx
-
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { QuickRecipeGenerator } from '@/components/quick-recipe/QuickRecipeGenerator';
@@ -13,7 +10,7 @@ export function UserDashboard() {
 
   return (
     <PageContainer className="py-4 md:py-12">
-      <div className="space-y-8 md:space-y-10">
+      <div className="space-y-6 md:space-y-10">
 
         {/* Personalized Welcome */}
         <div>
@@ -30,7 +27,7 @@ export function UserDashboard() {
         </section>
 
         {/* Trending Recipes Carousel - Full width on mobile */}
-        <section className="w-full py-2 sm:py-4 -mx-4 sm:mx-0 px-0 sm:px-4">
+        <section className="w-full py-2 sm:py-6 -mx-4 sm:mx-0 px-0 sm:px-4">
           <RecipeCarousel />
         </section>
 
