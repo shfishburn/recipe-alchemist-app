@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChefHat, Clock, Star, CircleCheck } from 'lucide-react';
-import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 interface Tip {
   icon: React.ReactNode;
@@ -11,210 +9,127 @@ interface Tip {
 }
 
 export function LoadingTipCard() {
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
-  const { formData } = useQuickRecipeStore();
-  
-  // Generic tips that work for all cuisines
-  const genericTips: Tip[] = [
+  const allTips: Tip[] = [
     {
       icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-      title: "Preparation is Key",
-      description: "Read through the recipe completely before starting to cook."
+      title: '🥣 In the Mixing Bowl',
+      description: 'Tossing your ingredients into the preview—watch flavors fuse in real time.'
     },
     {
       icon: <Clock className="h-5 w-5 text-recipe-orange" />,
-      title: "Timing Matters",
-      description: "For best results, prepare all ingredients before cooking begins."
+      title: '⏳ Gentle Simmer',
+      description: 'Let your virtual stew bubble—macros, micros, and yield estimates are on their way.'
     },
     {
       icon: <Star className="h-5 w-5 text-recipe-yellow" />,
-      title: "Flavor Enhancement",
-      description: "Season throughout cooking, not just at the end."
+      title: '🔄 Harmonizing Flavors',
+      description: 'Balancing taste and texture—your recipe preview is coming into focus.'
     },
     {
       icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Quality Ingredients",
-      description: "Fresh ingredients make a noticeable difference in flavor."
+      title: '🔬 Scientific Sear',
+      description: 'Data is searing—Nutri Score and detailed nutrition will unlock once the preview is ready.'
+    },
+    {
+      icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
+      title: '🤖 Sous-Vide AI',
+      description: 'AI Cooking Coach loading—soon you can chat and tweak flavors or ingredient ratios.'
+    },
+    {
+      icon: <Star className="h-5 w-5 text-recipe-orange" />,
+      title: '🥘 Mise en Place',
+      description: 'Mise en place for your shopping list and yield factors will appear after preview.'
+    },
+    {
+      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
+      title: '🧪 Lab-Tested Flavor',
+      description: 'Crunching vitamin, mineral, and calorie counts—pending completion of your preview.'
+    },
+    {
+      icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
+      title: '🌡️ Perfect Temperature',
+      description: 'Heating up—full analytics, shopping list, and Cooking Mode become available soon.'
+    },
+    {
+      icon: <Clock className="h-5 w-5 text-recipe-orange" />,
+      title: '💡 Chef’s Note',
+      description: 'Precision in measurement yields clarity—nutrition insights load shortly.'
+    },
+    {
+      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
+      title: '🧂 Seasoned Wisdom',
+      description: 'A pinch of science is in the works—sodium counts and seasoning balance arriving soon.'
+    },
+    {
+      icon: <Clock className="h-5 w-5 text-recipe-orange" />,
+      title: '🥕 Rooted in Science',
+      description: 'Carrot on—fiber counts and glycemic details will be revealed soon.'
+    },
+    {
+      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
+      title: '🧀 Cream of the Crop',
+      description: 'From curd to count—calcium and fat content analytics loading.'
+    },
+    {
+      icon: <Star className="h-5 w-5 text-recipe-yellow" />,
+      title: '🧩 Culinary Puzzle',
+      description: 'Solve the flavor equation—answers appear in your nutrition panel shortly.'
+    },
+    {
+      icon: <Star className="h-5 w-5 text-recipe-green" />,
+      title: '🎯 Goal Alignment',
+      description: 'Personalized goal alignment data will show how this recipe matches your profile.'
+    },
+    {
+      icon: <ChefHat className="h-5 w-5 text-recipe-orange" />,
+      title: '🥄 Tailor-Made Taste',
+      description: 'Customize for dietary needs—AI Cooking Coach ready to adjust for preferences and conditions.'
     }
   ];
-  
-  // Cuisine-specific tips
-  const cuisineTips: Record<string, Tip[]> = {
-    'italian': [
-      {
-        icon: <Star className="h-5 w-5 text-recipe-orange" />,
-        title: "Italian Cuisine Tip",
-        description: "Use extra virgin olive oil for the best authentic flavor."
-      },
-      {
-        icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-        title: "Pasta Perfection",
-        description: "Salt your pasta water until it tastes like the sea."
-      }
-    ],
-    'mexican': [
-      {
-        icon: <Star className="h-5 w-5 text-recipe-orange" />,
-        title: "Mexican Cuisine Tip",
-        description: "Toast your spices before using them to enhance their flavors."
-      },
-      {
-        icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-        title: "Authentic Flavor",
-        description: "Use lime juice to brighten flavors just before serving."
-      }
-    ],
-    'asian': [
-      {
-        icon: <Star className="h-5 w-5 text-recipe-orange" />,
-        title: "Asian Cuisine Tip",
-        description: "Have all ingredients prepped before starting - stir-fries cook quickly!"
-      },
-      {
-        icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-        title: "Rice Perfect",
-        description: "Rinse rice until water runs clear for fluffier results."
-      }
-    ],
-    'indian': [
-      {
-        icon: <Star className="h-5 w-5 text-recipe-orange" />,
-        title: "Indian Cuisine Tip",
-        description: "Bloom your spices in hot oil to release their full flavor."
-      },
-      {
-        icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-        title: "Curry Secret",
-        description: "Add a splash of cream at the end to balance spicy curries."
-      }
-    ],
-    'mediterranean': [
-      {
-        icon: <Star className="h-5 w-5 text-recipe-orange" />,
-        title: "Mediterranean Cuisine Tip",
-        description: "Use fresh herbs abundantly for authentic Mediterranean flavors."
-      },
-      {
-        icon: <ChefHat className="h-5 w-5 text-recipe-green" />,
-        title: "Healthy Choice",
-        description: "Olive oil and lemon juice make a simple, healthy dressing."
-      }
-    ]
-  };
-  
-  // Ingredient-specific nutrition tips
-  const ingredientTips: Record<string, Tip> = {
-    'chicken': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Chicken Nutrition",
-      description: "High in protein and low in fat, especially without the skin."
-    },
-    'salmon': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Salmon Nutrition",
-      description: "Rich in omega-3 fatty acids that support heart health."
-    },
-    'beef': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Beef Nutrition",
-      description: "Excellent source of iron, zinc and vitamin B12."
-    },
-    'tofu': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Tofu Nutrition",
-      description: "Great plant-based protein source with all essential amino acids."
-    },
-    'lentils': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Lentil Nutrition",
-      description: "High in fiber and plant protein with low glycemic impact."
-    },
-    'quinoa': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Quinoa Nutrition",
-      description: "Complete protein containing all nine essential amino acids."
-    },
-    'avocado': {
-      icon: <CircleCheck className="h-5 w-5 text-recipe-blue" />,
-      title: "Avocado Nutrition",
-      description: "Rich in healthy fats and potassium for heart health."
+
+  const [tips, setTips] = useState<Tip[]>([]);
+  const [index, setIndex] = useState(0);
+
+  // Fisher–Yates shuffle implementation
+  const shuffle = (arr: Tip[]) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
     }
+    return a;
   };
-  
-  // Get all applicable tips based on form data
-  const getAllTips = (): Tip[] => {
-    let tips = [...genericTips];
-    
-    // Add cuisine-specific tips if we have cuisine data
-    if (formData?.cuisine) {
-      // Handle both string and array formats
-      const cuisines = Array.isArray(formData.cuisine) 
-        ? formData.cuisine 
-        : (formData.cuisine ? [formData.cuisine] : []);
-        
-      cuisines.forEach(cuisine => {
-        const cuisineLower = cuisine.toLowerCase();
-        if (cuisineTips[cuisineLower]) {
-          tips = [...tips, ...cuisineTips[cuisineLower]];
-        }
-      });
-    }
-    
-    // Add ingredient-specific tip if we have a main ingredient
-    if (formData?.mainIngredient) {
-      const ingredient = formData.mainIngredient.toLowerCase();
-      // Check for exact or partial matches
-      const matchedIngredient = Object.keys(ingredientTips).find(key => 
-        ingredient.includes(key) || key.includes(ingredient)
-      );
-      
-      if (matchedIngredient && ingredientTips[matchedIngredient]) {
-        tips.push(ingredientTips[matchedIngredient]);
-      }
-    }
-    
-    return tips;
-  };
-  
-  // Get all applicable tips
-  const tips = getAllTips();
-  
-  // Rotate through tips
+
   useEffect(() => {
-    if (tips.length <= 1) return;
-    
+    // Initialize tips with a shuffled array
+    setTips(shuffle(allTips));
+    setIndex(0);
+
     const interval = setInterval(() => {
-      setCurrentTipIndex(prev => (prev + 1) % tips.length);
+      setIndex(prev => {
+        const next = prev + 1;
+        if (next >= tips.length) {
+          const reshuffled = shuffle(allTips);
+          setTips(reshuffled);
+          return 0;
+        }
+        return next;
+      });
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [tips.length]);
-  
-  // If no tips, don't render
-  if (tips.length === 0) return null;
-  
-  const currentTip = tips[currentTipIndex];
-  
+
+  const tip = tips[index] || allTips[0];
+
   return (
-    <Card className="bg-white/90 shadow-sm border-slate-100">
-      <CardContent className="p-4 flex flex-col items-center text-center">
-        <div className="mb-2">
-          {currentTip.icon}
+    <Card className="max-w-md w-full mx-auto bg-white/90 border border-slate-200 rounded-2xl shadow-lg overflow-hidden">
+      <CardContent className="p-6 flex flex-col items-center text-center min-h-[160px]">
+        <div aria-live="polite" className="flex flex-col items-center">
+          <div className="mb-1.5">{tip.icon}</div>
+          <h4 className="text-base sm:text-lg font-medium mb-2">{tip.title}</h4>
+          <p className="text-sm sm:text-base text-muted-foreground">{tip.description}</p>
         </div>
-        <h4 className="text-sm font-medium mb-1">{currentTip.title}</h4>
-        <p className="text-xs text-muted-foreground">{currentTip.description}</p>
-        
-        {/* Tip counter dots */}
-        {tips.length > 1 && (
-          <div className="flex gap-1 mt-3">
-            {tips.map((_, index) => (
-              <div 
-                key={index}
-                className={`h-1.5 w-1.5 rounded-full ${currentTipIndex === index ? 'bg-primary' : 'bg-slate-200'}`}
-              />
-            ))}
-          </div>
-        )}
       </CardContent>
     </Card>
   );
