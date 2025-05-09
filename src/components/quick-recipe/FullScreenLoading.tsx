@@ -6,7 +6,7 @@ import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import { AlertCircle, ArrowLeft, RefreshCw, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { Progress } from '@/components/ui/progress';
+import { ClockProgress } from './loading/ClockProgress';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -109,23 +109,21 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               </div>
             </div>
             
-            {/* Enhanced loading progress - now using the store directly */}
+            {/* Replace progress bar with analog clock */}
             <div className="mb-8 animate-fade-in">
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="font-medium">
                   {loadingState?.stepDescription || "Analyzing your ingredients..."}
                 </span>
-                <span className="text-muted-foreground">
-                  {Math.ceil(loadingState?.percentComplete || 0)}%
-                </span>
               </div>
               
-              <Progress
-                value={loadingState?.percentComplete || 10}
-                className="h-2 bg-gray-100"
-                indicatorClassName="bg-recipe-green"
-                aria-label="Recipe generation progress"
-              />
+              {/* Clock Progress Component */}
+              <div className="flex justify-center my-4">
+                <ClockProgress 
+                  percentComplete={loadingState?.percentComplete || 0} 
+                  showTimeout={showTimeout && !showFinalAnimation}
+                />
+              </div>
               
               {/* Timeout warning */}
               {showTimeout && !showFinalAnimation && (

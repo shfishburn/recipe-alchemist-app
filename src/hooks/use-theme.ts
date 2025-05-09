@@ -1,35 +1,34 @@
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react';
 
 export function useTheme() {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
-
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
   useEffect(() => {
-    // Check for system preference
-    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const defaultTheme = isDarkMode ? 'dark' : 'light'
-    
-    // Check for saved preference
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null
-    
-    if (savedTheme) {
-      setTheme(savedTheme)
-    } else {
-      setTheme(defaultTheme)
+    // Check if document is available (client-side)
+    if (typeof document !== 'undefined') {
+      // Check if dark mode is enabled
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      setTheme(isDarkMode ? 'dark' : 'light');
+      
+      // Create an observer to detect theme changes
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.attributeName === 'class' &&
+            mutation.target === document.documentElement
+          ) {
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            setTheme(isDarkMode ? 'dark' : 'light');
+          }
+        });
+      });
+      
+      observer.observe(document.documentElement, { attributes: true });
+      
+      return () => observer.disconnect();
     }
-  }, [])
-
-  const setThemeValue = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    
-    // Apply theme to document
-    if (newTheme === 'dark' || (newTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
-
-  return { theme, setTheme: setThemeValue }
+  }, []);
+  
+  return { theme, isDark: theme === 'dark' };
 }

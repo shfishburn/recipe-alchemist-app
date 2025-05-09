@@ -1,0 +1,28 @@
+
+/* Clock customization */
+.clock-progress {
+  --clock-face-background: rgba(255, 255, 255, 0.8);
+  --clock-hand-second-background: var(--recipe-green, #4caf50);
+  --clock-hand-minute-background: var(--recipe-blue, #2196f3);
+  --clock-hand-hour-background: #333;
+  --clock-mark-background: #666;
+}
+
+.dark .clock-progress {
+  --clock-face-background: rgba(30, 30, 30, 0.8);
+  --clock-hand-second-background: var(--recipe-green, #4caf50);
+  --clock-hand-minute-background: var(--recipe-blue, #2196f3);
+  --clock-hand-hour-background: #ccc;
+  --clock-mark-background: #999;
+}
+
+/* Animate the second hand for a smoother effect */
+.clock-progress .react-clock__second-hand {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Add a subtle shadow to the clock face */
+.clock-progress .react-clock__face {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(200, 200, 200, 0.2);
+}

@@ -6,7 +6,8 @@ import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import { useAudioInteraction } from '@/hooks/use-audio-interaction';
 import { useUserMessage } from './loading/utils';
 import { LoadingAnimation } from './loading/LoadingAnimation';
-import { ProgressDisplay } from './loading/ProgressDisplay';
+import { ClockProgress } from './loading/ClockProgress';
+import { AlertCircle } from 'lucide-react';
 
 export function QuickRecipeLoading() {
   const { loadingState, formData, completedLoading } = useQuickRecipeStore();
@@ -32,14 +33,21 @@ export function QuickRecipeLoading() {
           {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
         </p>
         
-        {/* Progress indicator with timeout warning */}
-        <ProgressDisplay 
-          percentComplete={loadingState.percentComplete}
-          timeRemaining={loadingState.estimatedTimeRemaining}
-          showFinalAnimation={showFinalAnimation}
-          showTimeout={showTimeout}
-          stepDescription={loadingState.stepDescription}
-        />
+        {/* Replace progress indicator with clock */}
+        <div className="w-full flex justify-center my-4">
+          <ClockProgress
+            percentComplete={loadingState.percentComplete}
+            showTimeout={showTimeout && !showFinalAnimation}
+          />
+        </div>
+        
+        {/* Timeout warning */}
+        {showTimeout && !showFinalAnimation && (
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full">
+            <AlertCircle className="h-4 w-4" />
+            <span>This is taking longer than usual. Please be patient...</span>
+          </div>
+        )}
         
         {/* Smart tip card - Uses full width of parent container */}
         <div className="w-full animate-fade-in">

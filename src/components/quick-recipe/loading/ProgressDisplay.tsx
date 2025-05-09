@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
 import { AlarmClock } from 'lucide-react';
 import { formatTimeRemaining } from './utils';
+import { ClockProgress } from './ClockProgress';
 
 interface ProgressDisplayProps {
   percentComplete: number;
@@ -21,16 +21,12 @@ export function ProgressDisplay({
 }: ProgressDisplayProps) {
   return (
     <>
-      {/* Progress indicator - Full width container */}
-      <div className="w-full">
-        <Progress 
-          value={showFinalAnimation ? 100 : percentComplete} 
-          className="h-2"
-          indicatorClassName={showFinalAnimation ? "bg-recipe-green" : undefined}
+      {/* Clock Progress component replaces the traditional progress bar */}
+      <div className="w-full flex justify-center">
+        <ClockProgress 
+          percentComplete={showFinalAnimation ? 100 : percentComplete}
+          showTimeout={showTimeout && !showFinalAnimation}
         />
-        <p className="text-xs mt-1 text-muted-foreground text-right">
-          {showFinalAnimation ? "100% Complete" : formatTimeRemaining(timeRemaining)}
-        </p>
       </div>
       
       {/* Timeout warning */}
