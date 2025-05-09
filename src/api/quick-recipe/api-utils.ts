@@ -9,7 +9,7 @@ export const getAuthToken = async (): Promise<string> => {
 // Helper function to add delay with exponential backoff
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Direct API fetch to edge function with improved resilience
+// Edge function invocation using Supabase client with improved resilience
 export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
   try {
     // Check if the request has been aborted already
@@ -18,10 +18,7 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
       throw new DOMException("Request aborted by user", "AbortError");
     }
     
-    // Get auth token for request
-    const token = await getAuthToken();
-    
-    console.log("Testing direct fetch to edge function");
+    console.log("Using Supabase client to invoke edge function");
     
     // Create a proper payload with embedding model in body
     const payload = {
@@ -43,54 +40,48 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
           await delay(backoffMs);
         }
         
-        // Make the direct fetch request with CORS-compatible headers
-        const response = await fetch('https://zjyfumqfrtppleftpzjd.supabase.co/functions/v1/generate-quick-recipe', {
-          method: 'POST',
+        // Check if request was aborted during the wait
+        if (signal?.aborted) {
+          console.log("Request aborted during backoff wait");
+          throw new DOMException("Request aborted by user", "AbortError");
+        }
+        
+        // Use Supabase client to invoke the edge function with proper headers
+        const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+          body: payload,
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'X-Debug-Info': 'direct-fetch-production-' + Date.now(),
+            'X-Debug-Info': 'edge-function-client-' + Date.now(),
           },
-          body: JSON.stringify(payload),
-          signal, // Pass the abort signal to the fetch request
-          // Add explicit timeout
-          cache: 'no-cache',
-          keepalive: true, // Keep connection alive
         });
         
         // Check if request was aborted during the fetch
         if (signal?.aborted) {
-          console.log("Request aborted during fetch operation");
+          console.log("Request aborted during edge function invocation");
           throw new DOMException("Request aborted by user", "AbortError");
         }
         
-        console.log("Direct fetch response status:", response.status);
-        const responseText = await response.text();
-        console.log("Direct fetch response:", responseText);
+        console.log("Edge function response received:", data ? "Data present" : "No data");
         
-        // Check if the response is OK
-        if (!response.ok) {
-          try {
-            const errorJson = JSON.parse(responseText);
-            throw new Error(errorJson.error || `API returned status ${response.status}`);
-          } catch (e) {
-            throw new Error(`API returned status ${response.status}: ${responseText.substring(0, 100)}`);
-          }
+        // Check if there was an error from the function call
+        if (error) {
+          console.error("Edge function error:", error);
+          throw new Error(error.message || `Edge function returned an error`);
         }
         
-        // Parse and return the successful response
-        try {
-          const data = JSON.parse(responseText);
-          console.log("Direct fetch parsed JSON:", data);
-          return data;
-        } catch (parseError) {
-          console.error("Direct fetch response is not valid JSON:", responseText);
-          throw new Error("Invalid JSON response from API");
+        // Check if we have a valid response
+        if (!data) {
+          console.error("Edge function returned no data");
+          throw new Error("No data returned from edge function");
         }
+        
+        // Return the successful response
+        console.log("Edge function parsed response:", data);
+        return data;
+        
       } catch (fetchError: any) {
         // Check if this is an abort error
         if (fetchError.name === 'AbortError' || signal?.aborted) {
-          console.log("Direct fetch aborted by user");
+          console.log("Edge function invocation aborted by user");
           throw new DOMException("Request aborted by user", "AbortError");
         }
         
@@ -109,7 +100,7 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
           continue;
         }
         
-        console.error("Direct fetch error:", fetchError);
+        console.error("Edge function invocation error:", fetchError);
         throw fetchError;
       }
     }
@@ -122,7 +113,7 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
       console.log("Fetch aborted by user, no error needed");
       throw new DOMException("Request aborted by user", "AbortError");
     }
-    console.error("Direct fetch error:", fetchError);
+    console.error("Edge function invocation error:", fetchError);
     throw fetchError;
   }
 };
