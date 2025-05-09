@@ -34,9 +34,6 @@ export function UserDashboard() {
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
             Welcome{profile?.username ? `, ${profile.username}` : ''}!
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            What would you like to make in your kitchen today?
-          </p>
         </div>
 
         {/* Quick Actions Section */}
