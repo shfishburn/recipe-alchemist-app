@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { CardWrapper } from "@/components/ui/card-wrapper";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -30,7 +29,6 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     isAnalyzing,
     stepReactions,
     scienceNotes,
-    globalAnalysis,
     hasAnalysisData,
     handleAnalyze,
     error
@@ -143,8 +141,6 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           troubleshooting={troubleshooting}
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
-          globalAnalysis={globalAnalysis}
-          onRegenerate={handleAnalyze}
         />
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />

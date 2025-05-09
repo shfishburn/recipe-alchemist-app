@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
 import { AnalysisSection } from './AnalysisSection';
+import { StepReactionItem } from './StepReactionItem';
 import { ReactionsList } from './ReactionsList';
-import { GlobalAnalysis } from './GlobalAnalysis';
-import { ChemistryIcon, TechniquesIcon, TroubleshootingIcon } from './icons/AnalysisIcons';
+import { Button } from '@/components/ui/button';
+import { RefreshCcw } from 'lucide-react';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
@@ -14,88 +13,103 @@ interface AnalysisContentProps {
   troubleshooting: string | null;
   rawResponse: string | null;
   stepReactions: StepReaction[];
-  globalAnalysis?: {
-    cascade_effects?: string;
-    energy_systems?: string;
-    scaling_considerations?: string;
-    process_flow_optimization?: string;
-    equipment_integration?: string;
-  };
   onRegenerate?: () => void;
 }
 
-export function AnalysisContent({ 
-  chemistry, 
-  techniques, 
+export function AnalysisContent({
+  chemistry,
+  techniques,
   troubleshooting,
   rawResponse,
   stepReactions,
-  globalAnalysis,
   onRegenerate
 }: AnalysisContentProps) {
-  // Check if there's any content to display - only show the raw fallback if none of the structured data exists
-  const hasChemistry = chemistry !== null && chemistry.length > 0;
-  const hasTechniques = techniques !== null && techniques.length > 0;
-  const hasTroubleshooting = troubleshooting !== null && troubleshooting.length > 0;
-  const hasStepReactions = stepReactions && stepReactions.length > 0;
+  // Check if we have any detailed data to display
+  const hasStructuredData = chemistry || techniques || troubleshooting;
   
-  // Only show raw response if we have NO structured data
-  const shouldShowRawResponse = rawResponse && rawResponse.length > 50 &&
-    !hasChemistry && !hasTechniques && !hasTroubleshooting && !hasStepReactions;
+  // Group step reactions by major cooking methods
+  const groupedReactions = React.useMemo(() => {
+    const groups: Record<string, StepReaction[]> = {};
     
+    if (!stepReactions || !Array.isArray(stepReactions)) return groups;
+    
+    stepReactions.forEach(reaction => {
+      if (reaction && reaction.cooking_method) {
+        const method = reaction.cooking_method;
+        if (!groups[method]) {
+          groups[method] = [];
+        }
+        groups[method].push(reaction);
+      }
+    });
+    
+    return groups;
+  }, [stepReactions]);
+  
   return (
-    <ScrollArea className="h-[60vh] sm:h-[70vh] pr-4">
-      <div className="space-y-6">
-        {/* Global Analysis Section */}
-        <GlobalAnalysis globalAnalysis={globalAnalysis} />
-        
-        {/* Chemistry Section */}
-        <AnalysisSection
-          title="Chemistry"
-          content={chemistry}
-          icon={<ChemistryIcon />}
-          bgClass="bg-blue-50/50"
-          borderClass="border-blue-100"
-        />
-        
-        {/* Techniques Section */}
-        <AnalysisSection
-          title="Cooking Techniques"
-          content={techniques}
-          icon={<TechniquesIcon />}
-          bgClass="bg-amber-50/50"
-          borderClass="border-amber-100"
-        />
-        
-        {/* Troubleshooting Section */}
-        <AnalysisSection
-          title="Troubleshooting Guide"
-          content={troubleshooting}
-          icon={<TroubleshootingIcon />}
-          bgClass="bg-green-50/50"
-          borderClass="border-green-100"
-        />
-        
-        {/* Reaction Analysis Section */}
-        {hasStepReactions && (
-          <ReactionsList 
-            stepReactions={stepReactions} 
-            onRegenerateClick={onRegenerate}
-          />
-        )}
-        
-        {/* Fallback Section - Only render if no structured content exists */}
-        {shouldShowRawResponse && (
-          <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4">
-            <FormattedText 
-              text={rawResponse} 
-              preserveWhitespace={true}
-              forceScientific={true}
-              className="scientific-content"
-            />
+    <div className="space-y-6">
+      {/* Chemistry Content */}
+      {chemistry && (
+        <AnalysisSection title="Chemistry" content={chemistry} />
+      )}
+      
+      {/* Techniques Content */}
+      {techniques && (
+        <AnalysisSection title="Techniques" content={techniques} />
+      )}
+      
+      {/* Troubleshooting Content */}
+      {troubleshooting && (
+        <AnalysisSection title="Common Issues & Solutions" content={troubleshooting} />
+      )}
+      
+      {/* Raw Response Fallback */}
+      {!hasStructuredData && rawResponse && (
+        <div className="prose prose-sm max-w-none">
+          <p className="whitespace-pre-line">{rawResponse}</p>
+        </div>
+      )}
+
+      {/* Step Reactions */}
+      {stepReactions && stepReactions.length > 0 && (
+        <div className="space-y-4 mt-6">
+          <h3 className="text-lg font-medium">Step-by-Step Reactions</h3>
+          <div className="space-y-3">
+            {stepReactions.map((reaction, idx) => (
+              <StepReactionItem key={idx} reaction={reaction} />
+            ))}
           </div>
-        )}
-      </div>
-    </ScrollArea>
+        </div>
+      )}
+      
+      {/* Grouped Reactions by Cooking Method */}
+      {Object.keys(groupedReactions).length > 0 && (
+        <div className="space-y-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-medium">Reactions by Cooking Method</h3>
+          <div className="space-y-6">
+            {Object.entries(groupedReactions).map(([method, reactions]) => (
+              <div key={method} className="space-y-2">
+                <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">{method}</h4>
+                <ReactionsList reactions={reactions} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Regenerate Button (at the bottom) */}
+      {onRegenerate && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            variant="outline" 
+            onClick={onRegenerate}
+            className="flex items-center gap-1 text-sm"
+          >
+            <RefreshCcw className="h-3.5 w-3.5 mr-1" />
+            Regenerate Analysis
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

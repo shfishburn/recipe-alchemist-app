@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
@@ -56,13 +55,6 @@ export interface RecipeScienceData {
   stepReactions: StepReaction[];
   hasAnalysisData: boolean;
   scienceNotes: string[];
-  globalAnalysis?: {
-    cascade_effects?: string;
-    energy_systems?: string;
-    scaling_considerations?: string;
-    process_flow_optimization?: string;
-    equipment_integration?: string;
-  };
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -252,19 +244,11 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
   const scienceNotes = recipe?.science_notes && Array.isArray(recipe.science_notes) 
     ? recipe.science_notes 
     : [];
-    
-  // Extract global recipe analysis if available
-  const globalAnalysis = {
-    cascade_effects: "Understanding how each cooking step affects subsequent ones",
-    energy_systems: "Heat transfer mechanisms throughout the cooking process",
-    scaling_considerations: "How to adjust for different portion sizes"
-  };
 
   return {
     stepReactions: stepReactions || [],
     hasAnalysisData,
     scienceNotes,
-    globalAnalysis,
     isLoading,
     error: error as Error | null,
     refetch
