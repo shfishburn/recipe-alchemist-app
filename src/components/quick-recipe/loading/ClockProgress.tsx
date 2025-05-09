@@ -1,8 +1,9 @@
+
 // path: src/components/quick-recipe/loading/ClockProgress.tsx
 // file: ClockProgress.tsx
 // updated: 2025-05-09 14:45 PM
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import './ClockProgress.css';
@@ -21,6 +22,7 @@ interface ClockProgressProps {
 export function ClockProgress({ percentComplete, showTimeout }: ClockProgressProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const [value, setValue] = useState(new Date());
 
   // Map percentComplete (0-100) to a time over a 12-hour cycle
   const percentToTime = (): Date => {
@@ -37,13 +39,25 @@ export function ClockProgress({ percentComplete, showTimeout }: ClockProgressPro
     return date;
   };
 
-  const timeValue = percentToTime();
+  // Update the clock value every second to ensure animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setValue(percentToTime());
+    }, 1000);
+
+    // Set initial value
+    setValue(percentToTime());
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, [percentComplete]);
 
   return (
     <div className="flex flex-col items-center">
       <div className={`relative ${showTimeout ? 'animate-pulse' : ''}`}>
         <Clock
-          value={timeValue}
+          value={value}
           size={120}
           renderNumbers
           hourHandLength={50}
@@ -61,13 +75,13 @@ export function ClockProgress({ percentComplete, showTimeout }: ClockProgressPro
 
         {/* Overlay showing actual percentage for accessibility */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-sm font-medium bg-background/80 px-2 py-0.5 rounded-full">
+          <span className="text-sm font-medium bg-background/80 px-2 py-0.5 rounded-full animate-fade-in">
             {Math.min(100, Math.max(0, Math.round(percentComplete)))}%
           </span>
         </div>
       </div>
 
-      <p className="text-xs mt-2 text-muted-foreground">
+      <p className="text-xs mt-2 text-muted-foreground animate-pulse">
         Recipe generation in progress
       </p>
     </div>

@@ -23,13 +23,13 @@ export function QuickRecipeLoading() {
         {/* Animated cooking pot icon or completion animation */}
         <LoadingAnimation showFinalAnimation={showFinalAnimation} />
         
-        {/* Personalized message */}
-        <h2 className="text-lg sm:text-xl font-semibold">
+        {/* Personalized message with animation */}
+        <h2 className="text-lg sm:text-xl font-semibold animate-fade-in">
           {showFinalAnimation ? "Recipe ready!" : userMessage}
         </h2>
         
-        {/* Step description */}
-        <p className="text-sm text-muted-foreground">
+        {/* Step description with animation */}
+        <p className="text-sm text-muted-foreground animate-pulse">
           {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
         </p>
         
@@ -43,7 +43,7 @@ export function QuickRecipeLoading() {
         
         {/* Timeout warning */}
         {showTimeout && !showFinalAnimation && (
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full animate-fade-in">
             <AlertCircle className="h-4 w-4" />
             <span>This is taking longer than usual. Please be patient...</span>
           </div>
