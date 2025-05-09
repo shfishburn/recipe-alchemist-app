@@ -5,6 +5,7 @@
 import React from 'react';
 import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
+import './ClockProgress.css';
 import { useTheme } from '@/hooks/use-theme';
 
 interface ClockProgressProps {

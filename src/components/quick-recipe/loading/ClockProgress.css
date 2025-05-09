@@ -1,0 +1,46 @@
+
+/* path: src/components/quick-recipe/loading/ClockProgress.css */
+
+/* Face styling */
+.clock-progress .react-clock__face {
+  fill: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(200, 200, 200, 0.2);
+}
+
+/* Hands styling */
+.clock-progress .react-clock__hand--second {
+  stroke: var(--recipe-green, #4caf50);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.clock-progress .react-clock__hand--minute {
+  stroke: var(--recipe-blue, #2196f3);
+}
+
+.clock-progress .react-clock__hand--hour {
+  stroke: #333;
+}
+
+/* Marks styling */
+.clock-progress .react-clock__mark {
+  stroke: #666;
+}
+
+/* Dark mode overrides (root <body> has .dark) */
+.dark .clock-progress .react-clock__face {
+  fill: rgba(30, 30, 30, 0.8);
+}
+
+.dark .clock-progress .react-clock__hand--hour {
+  stroke: #ccc;
+}
+
+.dark .clock-progress .react-clock__mark {
+  stroke: #999;
+}
+
+/* Canvas shadow */
+.clock-progress .react-clock__canvas {
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.1));
+}
