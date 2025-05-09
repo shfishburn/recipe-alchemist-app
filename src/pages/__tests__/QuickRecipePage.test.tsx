@@ -5,7 +5,14 @@ import { BrowserRouter } from 'react-router-dom';
 import QuickRecipePage from '../QuickRecipePage';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
-// Mock the hooks
+/**
+ * Mock Declarations
+ * 
+ * These mocks replace actual implementations with controlled test doubles
+ * that allow us to test components in isolation.
+ */
+
+// Mock the hooks used by the component
 jest.mock('@/hooks/use-quick-recipe-page', () => ({
   useQuickRecipePage: jest.fn().mockImplementation(() => ({
     recipe: null,
@@ -33,10 +40,15 @@ jest.mock('@/hooks/use-quick-recipe', () => ({
   }))
 }));
 
-// Mock the store
+// Mock the store to control its state in tests
 jest.mock('@/store/use-quick-recipe-store');
 
-// Create test renderer wrapper
+/**
+ * Test Renderer Helper
+ * 
+ * A utility function that wraps the component under test with necessary providers.
+ * In this case, we're using BrowserRouter to provide routing context.
+ */
 const renderWithRouter = (component: React.ReactNode) => {
   return render(
     <BrowserRouter>
@@ -81,7 +93,7 @@ describe('QuickRecipePage', () => {
     
     renderWithRouter(<QuickRecipePage />);
     
-    // Expect the form to be rendered
+    // Expect the form to be rendered with Testing Library matcher
     expect(screen.getByText(/Create Your Perfect Recipe/i)).toBeInTheDocument();
   });
 
@@ -134,7 +146,7 @@ describe('QuickRecipePage', () => {
     
     renderWithRouter(<QuickRecipePage />);
     
-    // Expect the recipe to be rendered
+    // Test that the recipe title is displayed
     expect(screen.getByText('Test Recipe')).toBeInTheDocument();
   });
 
@@ -156,7 +168,7 @@ describe('QuickRecipePage', () => {
     
     renderWithRouter(<QuickRecipePage />);
     
-    // Expect the error to be rendered
+    // Test that error messages are displayed
     expect(screen.getByText(/Recipe Generation Failed/i)).toBeInTheDocument();
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
   });
@@ -179,7 +191,7 @@ describe('QuickRecipePage', () => {
     
     renderWithRouter(<QuickRecipePage />);
     
-    // Expect the empty state to be rendered
+    // Test empty state rendering
     expect(screen.getByTestId('quick-recipe-empty')).toBeInTheDocument();
   });
 
