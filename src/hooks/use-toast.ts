@@ -1,5 +1,5 @@
 
-// This is a modified version of the toast hook that is touch-optimized
+// This is a standardized version of the toast hook that works across the application
 import { toast as sonnerToast, type ToastT, type ExternalToast as SonnerExternalToast } from 'sonner'
 
 // Extend the Sonner toast interface to include our custom properties
@@ -8,6 +8,8 @@ export interface ExternalToast extends SonnerExternalToast {
   title?: React.ReactNode;
   description?: React.ReactNode;
   variant?: "default" | "destructive" | "success";
+  action?: React.ReactNode;
+  className?: string;
 }
 
 export type ToastProps = ExternalToast
@@ -20,19 +22,19 @@ export function toast(props: ToastProps) {
     // Increase default duration for better readability on mobile
     duration: props.duration || 5000,
     // Add classes for touch optimization and hardware acceleration
-    className: `${props.className || ''} touch-optimized hw-boost`,
+    className: `${props.className || ''} touch-optimized hw-boost rounded-lg`,
   }
   
-  // For sonner v1.0.0+, the toast function accepts a title as first arg and options object as second arg
-  if (props.title) {
+  // For title+description format
+  if (props.title && props.description) {
     return sonnerToast(props.title, {
       ...enhancedProps,
       description: props.description
     })
   }
   
-  // For backward compatibility and simpler calls
-  return sonnerToast(enhancedProps as unknown as React.ReactNode)
+  // For backward compatibility and simpler calls with just a message
+  return sonnerToast(enhancedProps)
 }
 
 // Enhanced hook with convenience methods
@@ -41,10 +43,25 @@ export function useToast() {
     toast,
     // Re-export other toast functions from sonner
     dismiss: sonnerToast.dismiss,
-    error: (props: ToastProps) => toast({ ...props, variant: "destructive" }),
-    success: (props: ToastProps) => toast({ ...props, variant: "success" }),
-    info: (props: ToastProps) => toast({ ...props, variant: "default" }),
-    // Include toasts property for the Toaster component
+    error: (props: string | ToastProps) => {
+      if (typeof props === 'string') {
+        return toast({ title: props, variant: "destructive" })
+      }
+      return toast({ ...props, variant: "destructive" })
+    },
+    success: (props: string | ToastProps) => {
+      if (typeof props === 'string') {
+        return toast({ title: props, variant: "success" })
+      }
+      return toast({ ...props, variant: "success" })
+    },
+    info: (props: string | ToastProps) => {
+      if (typeof props === 'string') {
+        return toast({ title: props, variant: "default" })
+      }
+      return toast({ ...props, variant: "default" })
+    },
+    // Include toasts property for legacy compatibility
     toasts: [],
   }
 }

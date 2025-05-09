@@ -23,7 +23,7 @@ export function QuickRecipeError({
   onRetry,
   isRetrying
 }: QuickRecipeErrorProps) {
-  const { openAuthDrawer } = useAuth();
+  const auth = useAuth();
   
   // Check if this is an authentication error
   const isAuthError = error?.toLowerCase().includes('auth') || 
@@ -79,7 +79,7 @@ export function QuickRecipeError({
         
         {isAuthError ? (
           <Button 
-            onClick={openAuthDrawer}
+            onClick={() => auth.signIn()}
             className="flex items-center gap-2"
           >
             <LogIn className="h-4 w-4" />

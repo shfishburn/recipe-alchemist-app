@@ -38,7 +38,6 @@ export const AppLayout = () => {
           <AppRoutes />
         </PageTransition>
         <FooterWrapper />
-        {/* Use only one toaster to prevent duplicates */}
         <Toaster />
         <CookieConsent />
       </div>

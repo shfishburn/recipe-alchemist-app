@@ -16,8 +16,8 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({
-          error: "Authentication required",
-          details: "Please provide an Authorization header"
+          error: "Authentication required: Please sign in to generate recipes",
+          details: "No authorization header provided"
         }),
         { 
           status: 401, 
@@ -51,13 +51,27 @@ serve(async (req) => {
         );
       }
       
-      requestBody = JSON.parse(bodyText);
-    } catch (parseError) {
-      console.error("Error parsing request body:", parseError);
+      try {
+        requestBody = JSON.parse(bodyText);
+      } catch (parseError) {
+        console.error("Error parsing request body:", parseError);
+        return new Response(
+          JSON.stringify({
+            error: "Invalid request format: Could not parse JSON body",
+            details: String(parseError)
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+    } catch (bodyError) {
+      console.error("Error reading request body:", bodyError);
       return new Response(
         JSON.stringify({
-          error: "Invalid request format",
-          details: "Could not parse request body as JSON"
+          error: "Could not read request body",
+          details: String(bodyError)
         }),
         { 
           status: 400, 
@@ -73,10 +87,20 @@ serve(async (req) => {
     return await handleRequest(req, debugInfo, embeddingModel);
   } catch (err) {
     console.error("Quick recipe generation error:", err);
+    
+    // Create user-friendly error message
+    let errorMessage = "Unexpected error occurred while generating recipe";
+    let errorDetails = String(err);
+    
+    if (err instanceof Error) {
+      errorMessage = err.message || errorMessage;
+      errorDetails = err.stack || errorDetails;
+    }
+    
     return new Response(
       JSON.stringify({
-        error: err.message || "Unexpected error",
-        details: err.stack || "No stack trace available",
+        error: errorMessage,
+        details: errorDetails,
         debugInfo: "error-handler"
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

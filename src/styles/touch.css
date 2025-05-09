@@ -1,55 +1,37 @@
 
-/* Touch-friendly styling for buttons, inputs, and interactive elements */
-button, 
-.touch-target,
-[role="button"],
-a.link,
-.button {
-  min-height: 44px;
-  min-width: 44px;
+/* Touch-optimized elements */
+.touch-optimized {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-input, 
-select, 
-textarea {
-  min-height: 44px;
-  padding: 0.5rem;
+/* Hardware acceleration for better performance */
+.hw-boost {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
 }
 
-/* Improved touch target size for form elements */
-.form-control-touch {
-  min-height: 44px;
-  padding: 0.75rem;
-  font-size: 1rem;
+/* Toast-specific optimizations */
+.toast-action {
+  @apply rounded-md px-3 py-2 text-sm font-medium transition-colors;
 }
 
-/* Touch-friendly spacing for lists */
-.touch-list li {
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0;
+.toast-action:focus {
+  @apply outline-none ring-2 ring-offset-2 ring-offset-background;
 }
 
-/* Touch-optimized tabs */
-.touch-friendly-tabs .touch-scroll {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;  /* For Firefox */
-  padding: 0.5rem 0;
-  margin: 0 -0.5rem;
+.toast-enter {
+  animation: toast-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.touch-friendly-tabs .touch-scroll::-webkit-scrollbar {
-  display: none;  /* For Chrome, Safari and Opera */
+.toast-leave {
+  animation: toast-leave 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Ensure tab buttons have adequate touch areas */
-.touch-friendly-tabs button {
-  padding: 0.75rem 1rem;
-  min-height: 48px;
-}
-
-/* When in larger screens, maintain tab size */
-@media (min-width: 768px) {
-  .touch-friendly-tabs .touch-scroll {
-    padding: 0.25rem;
+/* Add a gentle haptic feedback style for interactive toast elements */
+@media (hover: hover) {
+  .toast-action:hover {
+    @apply bg-secondary text-secondary-foreground;
   }
 }

@@ -17,8 +17,13 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     }
     
     // Check authentication first
-    const token = await getAuthToken();
-    if (!token) {
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error("Authentication required: Please sign in to generate recipes");
+      }
+    } catch (authError) {
+      console.error("Authentication error:", authError);
       throw new Error("Authentication required: Please sign in to generate recipes");
     }
     
