@@ -54,14 +54,29 @@
 
 /* Navigation menu improvements */
 .horizontal-nav {
-  @apply flex flex-row gap-2 md:gap-4 overflow-x-auto;
+  @apply flex flex-row gap-2 md:gap-4 overflow-x-auto no-scrollbar;
 }
 
 .horizontal-nav::-webkit-scrollbar {
   display: none;
 }
 
+/* Hide scrollbars but allow scrolling */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
 /* Badge styles for consistent appearance */
 .badge {
   @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+/* Prevent overflow issues in mobile layouts */
+.mobile-friendly-container {
+  @apply max-w-full overflow-x-hidden;
 }

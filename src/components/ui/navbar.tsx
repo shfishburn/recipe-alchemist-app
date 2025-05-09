@@ -50,13 +50,14 @@ export function Navbar({ className = '' }: { className?: string }) {
     >
       <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
-          {/* Logo on left */}
-          <div className="flex items-center gap-4">
-            {/* Mobile menu button on the left */}
+          {/* Mobile menu button and logo together on the left */}
+          <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
             <div className="md:hidden">
               <MobileMenu />
             </div>
             
+            {/* Logo */}
             <Link to="/" className="flex-shrink-0">
               <img
                 src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"

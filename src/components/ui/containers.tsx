@@ -32,7 +32,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div className={cn(
-      "flex flex-col",
+      "flex flex-col mobile-friendly-container",
       className
     )}>
       <main className={cn(

@@ -32,16 +32,19 @@ export function MacroBreakdown({ protein, carbs, fat }: MacroBreakdownProps) {
           className="h-full" 
           style={{ width: `${proteinPercent}%`, backgroundColor: NUTRITION_COLORS.protein }}
           title={`Protein: ${proteinPercent}%`}
+          aria-label={`Protein: ${proteinPercent}%`}
         />
         <div 
           className="h-full" 
           style={{ width: `${carbsPercent}%`, backgroundColor: NUTRITION_COLORS.carbs }}
           title={`Carbs: ${carbsPercent}%`}
+          aria-label={`Carbs: ${carbsPercent}%`}
         />
         <div 
           className="h-full" 
           style={{ width: `${fatPercent}%`, backgroundColor: NUTRITION_COLORS.fat }}
           title={`Fat: ${fatPercent}%`}
+          aria-label={`Fat: ${fatPercent}%`}
         />
       </div>
       

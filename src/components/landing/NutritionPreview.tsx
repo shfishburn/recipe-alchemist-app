@@ -51,20 +51,17 @@ export function NutritionPreview() {
             Track macros, set dietary goals, and receive AI-generated meals that match your nutritional needs.
           </div>
           
-          <div className="w-full">
-            {/* Using our updated Carousel component */}
-            <Carousel 
-              items={carouselItems}
-              renderItem={renderCarouselItem}
-              autoScroll={true}
-              autoScrollInterval={5000}
-              showArrows={true}
-              showDots={true}
-              itemWidthMobile="90%"
-              itemWidthDesktop="90%"
-              className="w-full"
-            />
-          </div>
+          {/* Using our updated Carousel component */}
+          <Carousel 
+            items={carouselItems}
+            renderItem={renderCarouselItem}
+            autoScroll={false}
+            showArrows={true}
+            showDots={true}
+            itemWidthMobile="100%"
+            itemWidthDesktop="100%"
+            className="w-full"
+          />
           
           <div className="flex justify-center w-full mt-4">
             <MacroLegend />
