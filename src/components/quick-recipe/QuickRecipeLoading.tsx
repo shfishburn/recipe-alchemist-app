@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { CookingPot, CircleCheck, PartyPopper, AlarmClock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -184,8 +183,8 @@ export function QuickRecipeLoading() {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center py-5 sm:py-8 w-full max-w-md mx-auto animate-fadeIn">
-      <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center">
+    <div className="flex flex-col items-center justify-center py-5 sm:py-8 w-full animate-fadeIn">
+      <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-md mx-auto">
         {/* Animated cooking pot icon or completion animation */}
         <div className="relative">
           {showFinalAnimation ? (
@@ -211,8 +210,8 @@ export function QuickRecipeLoading() {
           {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
         </p>
         
-        {/* Progress indicator */}
-        <div className="w-full max-w-xs">
+        {/* Progress indicator - Full width container */}
+        <div className="w-full">
           <Progress 
             value={showFinalAnimation ? 100 : loadingState.percentComplete} 
             className="h-2"
@@ -225,14 +224,14 @@ export function QuickRecipeLoading() {
         
         {/* Timeout warning */}
         {showTimeout && !showFinalAnimation && (
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full">
             <AlarmClock className="h-4 w-4" />
             <span>This is taking longer than usual. Please be patient...</span>
           </div>
         )}
         
-        {/* Smart tip card */}
-        <div className="w-full max-w-xs animate-fade-in">
+        {/* Smart tip card - Now uses full width of parent container */}
+        <div className="w-full animate-fade-in">
           <LoadingTipCard />
         </div>
       </div>
