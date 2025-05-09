@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/ui/navbar';
 import { ArticlesList } from '@/components/how-it-works/ArticlesList';
@@ -12,6 +11,7 @@ import {
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
 import { Link } from 'react-router-dom';
+import { PageContainer } from '@/components/ui/containers';
 
 const HowItWorks = () => {
   // Schema.org JSON-LD structured data for better SEO
@@ -55,7 +55,7 @@ const HowItWorks = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <PageContainer>
       <PageSeo 
         title="Our Science: AI-Powered Cooking & Nutrition | Recipe Alchemist"
         description="Discover how Recipe Alchemist uses AI and food science to transform your cooking experience with precise nutrition tracking, intelligent substitutions, and science-backed cooking insights."
@@ -67,34 +67,32 @@ const HowItWorks = () => {
       />
       
       <Navbar />
-      <main className="flex-1 animate-fadeIn">
-        <div className="container-page py-8 pb-16 sm:py-10 sm:pb-24">
-          {/* Breadcrumb Navigation */}
-          <nav className="mb-4" aria-label="Breadcrumb">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/">Home</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Our Science</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </nav>
+      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
+        {/* Breadcrumb Navigation */}
+        <div>
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Our Science</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
           <h1 className="text-2xl md:text-3xl font-bold mb-4">Our Science</h1>
           <p className="text-base text-muted-foreground mb-8">
             Explore how Recipe Alchemist combines AI and food science to transform your cooking experience with science-backed nutrition insights.
           </p>
-          
-          <ArticlesList />
         </div>
+        
+        <ArticlesList />
       </main>
-    </div>
+    </PageContainer>
   );
 };
 

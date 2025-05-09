@@ -3,17 +3,16 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '@/components/ui/navbar';
 import { ShoppingListsContainer } from '@/components/shopping-list/ShoppingListsContainer';
+import { PageContainer } from '@/components/ui/containers';
 
 const ShoppingLists = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <PageContainer>
       <Navbar />
-      <main className="flex-1">
-        <div className="container-page py-6 md:py-8 pb-16 sm:pb-20">
-          <ShoppingListsContainer />
-        </div>
+      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
+        <ShoppingListsContainer />
       </main>
-    </div>
+    </PageContainer>
   );
 };
 

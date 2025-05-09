@@ -1,3 +1,4 @@
+
 // path: src/pages/index.tsx
 // file: index.tsx
 // updated: 2025-05-09 14:10 PM
@@ -36,7 +37,7 @@ const Index: React.FC = () => {
   return (
     <PageContainer className={isTouch ? 'touch-optimized' : ''}>
       <Navbar />
-      <main className="flex-1 space-y-10 pb-8 md:pb-12 touch-scroll">
+      <main className="flex-1 space-y-10 py-6 md:py-10 touch-scroll">
         {loading ? (
           <PageLoadingFallback />
         ) : (

@@ -8,6 +8,7 @@ import { useRecipes } from '@/hooks/use-recipes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
+import { PageContainer } from '@/components/ui/containers';
 
 const Recipes = () => {
   const { 
@@ -50,11 +51,11 @@ const Recipes = () => {
   const safeRecipes = Array.isArray(recipes) ? recipes : [];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <PageContainer>
       <Navbar />
-      <main className="flex-1">
-        <div className="container-page py-8">
-          {/* Breadcrumb Navigation */}
+      <main className="space-y-10 py-6 md:py-10 animate-fadeIn">
+        {/* Breadcrumb Navigation */}
+        <div>
           <BreadcrumbNav items={breadcrumbItems} />
           
           <h1 className="text-2xl md:text-3xl font-bold mb-4">My Kitchen</h1>
@@ -77,47 +78,47 @@ const Recipes = () => {
               </div>
             )}
           </div>
-          
-          {isLoading && (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="rounded-lg overflow-hidden">
-                  <Skeleton className="w-full aspect-video" />
-                  <div className="p-4">
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {!isLoading && error && (
-            <div className="text-center text-red-500 p-8 border border-red-200 rounded-lg">
-              <p className="mb-2 font-semibold">Failed to load recipes</p>
-              <p>Please try refreshing the page</p>
-            </div>
-          )}
-          
-          {!isLoading && !error && safeRecipes.length === 0 && (
-            <div className="text-center text-muted-foreground p-8 border border-dashed rounded-lg">
-              {searchTerm 
-                ? <p>No recipes found matching "<span className="font-medium">{searchTerm}</span>"</p>
-                : <p>No recipes found. Start by creating your first recipe!</p>
-              }
-            </div>
-          )}
-          
-          {!isLoading && !error && safeRecipes.length > 0 && (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {safeRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
-              ))}
-            </div>
-          )}
         </div>
+        
+        {isLoading && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="rounded-lg overflow-hidden">
+                <Skeleton className="w-full aspect-video" />
+                <div className="p-4">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {!isLoading && error && (
+          <div className="text-center text-red-500 p-8 border border-red-200 rounded-lg">
+            <p className="mb-2 font-semibold">Failed to load recipes</p>
+            <p>Please try refreshing the page</p>
+          </div>
+        )}
+        
+        {!isLoading && !error && safeRecipes.length === 0 && (
+          <div className="text-center text-muted-foreground p-8 border border-dashed rounded-lg">
+            {searchTerm 
+              ? <p>No recipes found matching "<span className="font-medium">{searchTerm}</span>"</p>
+              : <p>No recipes found. Start by creating your first recipe!</p>
+            }
+          </div>
+        )}
+        
+        {!isLoading && !error && safeRecipes.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {safeRecipes.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </div>
+        )}
       </main>
-    </div>
+    </PageContainer>
   );
 };
 
