@@ -14,7 +14,7 @@ import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Global Navbar with stacked logo and centered nav items.
+ * Global Navbar with horizontal layout and properly separated components.
  */
 export function Navbar({ className = '' }: { className?: string }) {
   const { session } = useAuth();
@@ -52,8 +52,8 @@ export function Navbar({ className = '' }: { className?: string }) {
         className
       )}
     >
-      <div className="px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex flex-col items-center py-3">
-        {/* Top row: Mobile menu and logo */}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between h-16">
+        {/* Left side: Mobile menu and logo */}
         <div className="flex items-center gap-4">
           <MobileMenu />
           <Link to="/" className="flex-shrink-0">
@@ -65,8 +65,8 @@ export function Navbar({ className = '' }: { className?: string }) {
           </Link>
         </div>
 
-        {/* Center row: Navigation Links */}
-        <nav className="mt-2 flex flex-wrap justify-center space-x-4">
+        {/* Center: Navigation Links */}
+        <nav className="hidden md:flex items-center justify-center space-x-6">
           {displayedLinks.map(link => {
             const active = location.pathname === link.path;
             return (
@@ -74,7 +74,7 @@ export function Navbar({ className = '' }: { className?: string }) {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'text-sm font-medium px-3 py-2 rounded-md transition-colors',
+                  'text-sm font-medium px-2 py-1 transition-colors',
                   active
                     ? 'text-recipe-green border-b-2 border-recipe-green'
                     : 'text-gray-700 hover:text-primary'
@@ -86,8 +86,8 @@ export function Navbar({ className = '' }: { className?: string }) {
           })}
         </nav>
 
-        {/* Bottom row: Auth Buttons */}
-        <div className="mt-2 flex space-x-3">
+        {/* Right side: Auth Buttons */}
+        <div className="flex items-center space-x-3">
           {session ? (
             <Button variant="outline" size="sm" asChild className="h-8 px-3">
               <Link to="/profile" className="flex items-center gap-1">
