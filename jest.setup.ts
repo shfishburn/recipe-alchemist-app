@@ -12,16 +12,10 @@
 // Import Testing Library DOM matchers
 import '@testing-library/jest-dom';
 
-/**
- * Type Declarations for Testing Library matchers
- * 
- * These declarations extend Jest's matcher types to include the custom
- * matchers provided by Testing Library, which are used to assert against
- * DOM elements.
- */
+// Explicitly extend Jest's matchers
 declare global {
   namespace jest {
-    interface Matchers<R> {
+    interface Matchers<R, T = any> {
       toBeInTheDocument(): R;
       toBeDisabled(): R;
       toBeEnabled(): R;
@@ -202,4 +196,3 @@ global.requestAnimationFrame = (callback) => {
 global.cancelAnimationFrame = (id) => {
   clearTimeout(id);
 };
-
