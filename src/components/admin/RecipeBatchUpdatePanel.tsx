@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,15 +8,6 @@ import { updateAllRecipeNutritionData, BatchUpdateResult } from '@/scripts/updat
 import { updateRecipeScienceData } from '@/utils/nutrition/update-science-data';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-interface BatchUpdateResult {
-  status: string;
-  totalRecipes: number;
-  updatedRecipes: number;
-  errorCount: number;
-  dryRun: boolean;
-  updateType?: string;
-}
 
 export function RecipeBatchUpdatePanel() {
   const [isLoading, setIsLoading] = useState(false);

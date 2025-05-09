@@ -7,7 +7,7 @@ import { DefaultSeo } from "@/components/seo/DefaultSeo";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/ui/cookie-consent";
-import { AppRoutes } from "@/routes/AppRoutes";
+import { Outlet } from "react-router-dom";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { setupRouteChangeCleanup, cleanupUIState } from "@/utils/dom-cleanup";
@@ -36,7 +36,7 @@ export const AppLayout = () => {
         <DefaultSeo />
         <LoadingIndicator />
         <PageTransition>
-          <AppRoutes />
+          <Outlet />
         </PageTransition>
         <FooterWrapper />
         {/* Move these components below the main content to prevent render blocking */}
