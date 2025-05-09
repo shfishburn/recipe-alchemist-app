@@ -70,11 +70,12 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     
     try {
       // Use our utility instead of hardcoded fetch
+      // Remove the signal property since it's not supported in SupabaseFunctionOptions
       const { data, error, status } = await callSupabaseFunction('generate-quick-recipe', {
         payload,
         token,
-        debugTag: 'direct-fetch-production',
-        signal: controller.signal
+        debugTag: 'direct-fetch-production'
+        // Removed signal: controller.signal which was causing the type error
       });
       
       // Clear the timeout once the fetch completes
@@ -147,6 +148,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
     try {
+      // Remove the signal property since it's not supported in FunctionInvokeOptions
       const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
         body: {
           ...requestBody,
@@ -155,7 +157,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
           dietary: requestBody.dietary || '', // Ensure dietary is never null/undefined
           servings: requestBody.servings || 2 // Ensure servings has a default
         },
-        signal: controller.signal,
+        // Removed signal: controller.signal which was causing the type error
         headers: {
           'Content-Type': 'application/json',
           'X-Debug-Info': 'supabase-invoke-' + Date.now()
