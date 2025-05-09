@@ -12,7 +12,6 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { ButtonWrapper } from '@/components/ui/button-wrapper';
 import { Menu, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -22,10 +21,10 @@ export function MobileMenu() {
   
   // Define navigation links without Profile since it's in the button
   const navigationLinks = [
-    { name: 'My Kitchen', path: '/quick-recipe', requiresAuth: false },
-    { name: 'My Recipes', path: '/recipes', requiresAuth: false },
-    { name: 'My Market', path: '/shopping-lists', requiresAuth: true },
-    { name: 'Our Science', path: '/how-it-works', requiresAuth: false },
+    { name: 'Kitchen', path: '/', requiresAuth: false },
+    { name: 'Recipes', path: '/recipes', requiresAuth: false },
+    { name: 'Market', path: '/shopping-lists', requiresAuth: true },
+    { name: 'Science', path: '/how-it-works', requiresAuth: false },
   ];
 
   // Filter links based on authentication status
@@ -36,8 +35,8 @@ export function MobileMenu() {
   return (
     <Sheet>
       <SheetTrigger>
-        <Button variant="ghost" size="icon" className="md:hidden p-2 h-12 w-12">
-          <Menu className="h-6 w-6" />
+        <Button variant="ghost" size="icon" className="mr-2 p-2 h-10 w-10">
+          <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
@@ -53,18 +52,22 @@ export function MobileMenu() {
             </Link>
           </SheetTitle>
         </SheetHeader>
-        <div className="mt-8 flex flex-col gap-6">
-          {displayedLinks.map((link) => (
-            <SheetClose asChild key={link.path}>
-              <Link 
-                to={link.path} 
-                className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
-              >
-                <span>{link.name}</span>
-              </Link>
-            </SheetClose>
-          ))}
-        </div>
+        <nav className="mt-8">
+          <ul className="flex flex-col gap-4">
+            {displayedLinks.map((link) => (
+              <li key={link.path}>
+                <SheetClose asChild>
+                  <Link 
+                    to={link.path} 
+                    className="text-base font-medium hover:text-primary transition-colors flex items-center h-12 px-2"
+                  >
+                    <span>{link.name}</span>
+                  </Link>
+                </SheetClose>
+              </li>
+            ))}
+          </ul>
+        </nav>
         <Separator className="my-6" />
         <div className="flex flex-col gap-3">
           {session ? (

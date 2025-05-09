@@ -10,7 +10,7 @@ import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Global navigation bar with stacked layout: logo above navigation links
+ * Global navigation bar with horizontal layout
  */
 export function Navbar({ className = '' }: { className?: string }) {
   const { session } = useAuth();
@@ -43,29 +43,31 @@ export function Navbar({ className = '' }: { className?: string }) {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-4 md:py-5',
+        'fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-4',
         hidden ? '-translate-y-full' : 'translate-y-0',
         className
       )}
     >
-      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto flex flex-col items-center space-y-4">
-        {/* Logo centered at top */}
-        <Link to="/" className="flex-shrink-0">
-          <img
-            src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
-            alt="Recipe Alchemy Logo"
-            className="h-12 w-auto"
-          />
-        </Link>
-
-        <div className="flex items-center w-full justify-between">
-          {/* Mobile menu icon (left) visible only on small screens */}
-          <div className="md:hidden">
-            <MobileMenu />
+      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          {/* Logo on left */}
+          <div className="flex items-center gap-4">
+            {/* Mobile menu button on the left */}
+            <div className="md:hidden">
+              <MobileMenu />
+            </div>
+            
+            <Link to="/" className="flex-shrink-0">
+              <img
+                src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
+                alt="Recipe Alchemy Logo"
+                className="h-10 w-auto"
+              />
+            </Link>
           </div>
 
           {/* Navigation Links centered */}
-          <nav className="hidden md:flex items-center justify-center space-x-10">
+          <nav className="hidden md:flex items-center space-x-10">
             {displayedLinks.map(link => {
               const active = location.pathname === link.path;
               return (

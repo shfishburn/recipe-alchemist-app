@@ -1,3 +1,4 @@
+
 // path: src/components/landing/Hero.tsx
 // file: Hero.tsx
 // updated: 2025-05-09 14:15 PM
@@ -11,6 +12,27 @@ import { RecipeCarousel } from './RecipeCarousel';
 import { Brain, ChefHat, ChartPie, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface BadgeProps {
+  icon?: React.ReactNode;
+  label: string;
+  color: 'blue' | 'green' | 'amber';
+}
+
+const Badge: React.FC<BadgeProps> = ({ icon, label, color }) => {
+  const colorClasses = {
+    blue: 'bg-blue-100 text-blue-800',
+    green: 'bg-green-100 text-green-800',
+    amber: 'bg-amber-100 text-amber-800'
+  };
+
+  return (
+    <span className={`${colorClasses[color]} text-xs font-medium px-2.5 py-1 rounded flex items-center`}>
+      {icon}
+      {label}
+    </span>
+  );
+};
+
 /**
  * Hero section for the landing page. Displays title, call-to-action,
  * recipe generator, nutrition preview, and sample carousel.
@@ -21,9 +43,7 @@ const Hero: React.FC = memo(() => {
 
   return (
     <section className="py-6 md:py-12 lg:py-16 content-visibility-auto">
-      {/* Shared vertical spacing for all blocks */}
       <div className="space-y-10">
-
         {/* Hero Title & Actions */}
         <div className="text-center animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-3">
@@ -39,11 +59,14 @@ const Hero: React.FC = memo(() => {
             Tell us what you have in your kitchen and our <strong>AI chef</strong> will transform your ingredients into
             delicious, <strong>personalized recipes</strong> with tailored <strong>nutrition insights</strong>.
           </p>
+          
+          {/* Badges displayed in a horizontal row */}
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <Badge icon={<Sparkles className="w-4 h-4 mr-1" />} label="AI-Powered" color="blue" />
             <Badge icon={<ChartPie className="w-4 h-4 mr-1" />} label="Personalized Nutrition" color="green" />
             <Badge label="Ready in 30 mins" color="amber" />
           </div>
+          
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             <Button size="lg" onClick={openAuthDrawer} className="bg-recipe-green hover:bg-recipe-green/90">
               Get Started for Free
@@ -78,25 +101,9 @@ const Hero: React.FC = memo(() => {
             </div>
           </div>
         </div>
-
       </div>
     </section>
   );
 });
-
-// Reusable badge component
-interface BadgeProps {
-  icon?: React.ReactNode;
-  label: string;
-  color: 'blue' | 'green' | 'amber';
-}
-const Badge: React.FC<BadgeProps> = ({ icon, label, color }) => (
-  <span
-    className={`bg-${color}-100 text-${color}-800 text-xs font-medium px-2.5 py-1 rounded flex items-center`}
-  >
-    {icon}
-    {label}
-  </span>
-);
 
 export default Hero;

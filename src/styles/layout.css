@@ -19,7 +19,7 @@
 
 /* Content padding below navbar */
 .content-padding-top {
-  @apply pt-32 md:pt-36;
+  @apply pt-24 md:pt-28;
 }
 
 /* Standard content width classes */
@@ -50,4 +50,18 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000;
+}
+
+/* Navigation menu improvements */
+.horizontal-nav {
+  @apply flex flex-row gap-2 md:gap-4 overflow-x-auto;
+}
+
+.horizontal-nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* Badge styles for consistent appearance */
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
 }

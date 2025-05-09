@@ -36,9 +36,11 @@ export const AppLayout = () => {
         <DefaultSeo />
         <LoadingIndicator />
         <Navbar />
-        <PageTransition>
-          <AppRoutes />
-        </PageTransition>
+        <main className="flex-1">
+          <PageTransition>
+            <AppRoutes />
+          </PageTransition>
+        </main>
         <FooterWrapper />
         <Toaster />
         <CookieConsent />
