@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { RecipeNutrition } from '@/components/recipe-detail/RecipeNutrition';
+import { NutriScoreSection } from '@/components/recipe-detail/nutrition/NutriScoreSection';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeSections } from '@/hooks/use-recipe-sections';
 
@@ -14,6 +15,10 @@ export function NutritionTabContent({ recipe, onRecipeUpdate }: NutritionTabCont
 
   return (
     <div className="space-y-6">
+      {/* Nutri Score Section */}
+      <NutriScoreSection recipe={recipe} />
+      
+      {/* Detailed Nutrition Information */}
       <RecipeNutrition 
         recipe={recipe}
         isOpen={true} // Always open in its dedicated tab

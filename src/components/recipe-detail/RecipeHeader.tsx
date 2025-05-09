@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { NutriScoreBadge } from './nutrition/NutriScoreBadge';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeHeaderProps {
@@ -31,6 +32,7 @@ export function RecipeHeader({ recipe, hideReasoning = false }: RecipeHeaderProp
               {tag}
             </Badge>
           ))}
+          <NutriScoreBadge nutriScore={recipe.nutri_score} size="sm" />
         </div>
       )}
       
