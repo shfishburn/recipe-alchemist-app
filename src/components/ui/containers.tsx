@@ -1,38 +1,19 @@
+// path: src/components/ui/containers.tsx
+// file: containers.tsx
+// created: 2025-05-09 10:55 AM
 
-import React, { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
-
-interface ContainerProps {
-  children: ReactNode;
-  className?: string;
-}
+import React, { PropsWithChildren } from 'react';
 
 /**
- * PageContainer - Provides consistent outer page structure
- * Controls the max width and horizontal padding of a full page
+ * PageContainer handles page-level layout: full height, Navbar positioning,
+ * and consistent horizontal gutters & max-width for content.
  */
-export function PageContainer({ children, className }: ContainerProps) {
+export function PageContainer({ children, className = '' }: PropsWithChildren<{ className?: string }>) {
   return (
-    <div className={cn(
-      "min-h-screen flex flex-col",
-      className
-    )}>
-      {children}
-    </div>
-  );
-}
-
-/**
- * ContentContainer - Provides consistent content width
- * Use inside PageContainer to center and constrain content
- */
-export function ContentContainer({ children, className }: ContainerProps) {
-  return (
-    <div className={cn(
-      "w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8",
-      className
-    )}>
-      {children}
+    <div className={`min-h-screen flex flex-col ${className}`}>       
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">        
+        {children}
+      </main>
     </div>
   );
 }
