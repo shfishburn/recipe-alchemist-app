@@ -68,22 +68,25 @@ export function useQuickRecipePage() {
             // Create a new abort controller
             const controller = createAbortController();
             
-            // Start an async generation with abort signal
-            generateQuickRecipe(parsedData.formData, { signal: controller.signal })
-              .catch(err => {
-                // Don't show error if aborted
-                if (err.name === 'AbortError') {
-                  console.log("Recipe generation aborted");
-                  return;
-                }
-                
-                console.error("Error resuming recipe generation:", err);
-                toast({
-                  title: "Recipe generation failed",
-                  description: err.message || "Please try again later.",
-                  variant: "destructive",
+            // Add a timeout to prevent UI lockup
+            setTimeout(() => {
+              // Start an async generation with abort signal
+              generateQuickRecipe(parsedData.formData, { signal: controller.signal, timeout: 40000 })
+                .catch(err => {
+                  // Don't show error if aborted
+                  if (err.name === 'AbortError') {
+                    console.log("Recipe generation aborted");
+                    return;
+                  }
+                  
+                  console.error("Error resuming recipe generation:", err);
+                  toast({
+                    title: "Recipe generation failed",
+                    description: err.message || "Please try again later.",
+                    variant: "destructive",
+                  });
                 });
-              });
+            }, 100);
           }
         } catch (err) {
           console.error("Error parsing stored recipe data:", err);
@@ -137,24 +140,37 @@ export function useQuickRecipePage() {
       // Create a new abort controller for this request
       const controller = createAbortController();
       
-      // Start the recipe generation immediately with abort signal
-      await generateQuickRecipe(formData, { signal: controller.signal });
-      
+      // Add a timeout to prevent UI lockup
+      setTimeout(async () => {
+        try {
+          // Start the recipe generation immediately with abort signal and reduced timeout
+          await generateQuickRecipe(formData, { signal: controller.signal, timeout: 40000 });
+        } catch (err: any) {
+          // Don't show error if aborted
+          if (err.name === 'AbortError') {
+            console.log("Recipe generation retry aborted");
+            return;
+          }
+          
+          console.error("Error retrying recipe generation:", err);
+          setError(err.message || "Recipe generation failed. Please try again.");
+          toast({
+            title: "Recipe generation failed",
+            description: err.message || "Please try again later.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsRetrying(false);
+        }
+      }, 100);
     } catch (err: any) {
-      // Don't show error if aborted
-      if (err.name === 'AbortError') {
-        console.log("Recipe generation retry aborted");
-        return;
-      }
-      
-      console.error("Error retrying recipe generation:", err);
+      setIsRetrying(false);
+      console.error("Error setting up retry:", err);
       toast({
-        title: "Recipe generation failed",
-        description: err.message || "Please try again later.",
+        title: "Retry failed",
+        description: "Failed to start recipe generation. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsRetrying(false);
     }
   }, [formData, setError, setLoading, createAbortController, generateQuickRecipe]);
 

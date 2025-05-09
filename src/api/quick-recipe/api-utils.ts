@@ -1,8 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Functions for making API requests
-
 // Helper function to get authentication token
 export const getAuthToken = async (): Promise<string> => {
   return await supabase.auth.getSession()
@@ -98,8 +96,8 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
     // Create a timeout promise that respects abort signal
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
-        reject(new Error("Supabase function timeout"));
-      }, 60000); // 60 second timeout
+        reject(new Error("Recipe generation timed out. Please try again."));
+      }, 40000); // 40 second timeout (reduced from 60)
       
       // If signal is provided, cancel the timeout on abort
       if (signal) {
@@ -126,7 +124,7 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
     const { data, error } = await Promise.race([
       invocationPromise,
       timeoutPromise.then(() => {
-        throw new Error("Supabase function timed out");
+        throw new Error("Recipe generation timed out. Please try again.");
       })
     ]) as { data?: any, error?: any };
     

@@ -36,14 +36,21 @@ export const generateQuickRecipe = async (
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Set a timeout for the request (90 seconds - increased from 60)
-    const timeoutPromise = createTimeoutPromise(options?.timeout || 90000);
+    // Set a reduced timeout for the request (40 seconds - reduced from 90)
+    const timeoutPromise = createTimeoutPromise(options?.timeout || 40000);
     
     // Create a direct fetch function that we'll race against the timeout
     const directFetchPromise = async () => {
       // Pass the abort signal to fetchFromEdgeFunction
       return await fetchFromEdgeFunction(requestBody, options?.signal);
     };
+    
+    // Add abort signal listener to log when aborted
+    if (options?.signal) {
+      options.signal.addEventListener('abort', () => {
+        console.log("AbortSignal detected in generateQuickRecipe");
+      });
+    }
     
     // Race both approaches against the timeout
     const data = await Promise.race([
@@ -91,7 +98,14 @@ export const generateQuickRecipe = async (
       throw error; // Re-throw abort errors
     }
     
+    // Log the error for debugging
     console.error('Error in generateQuickRecipe:', error);
+    
+    // If it's a timeout error, provide a clearer message
+    if (error.message && error.message.includes('timed out')) {
+      throw new Error("Recipe generation timed out. Please try again.");
+    }
+    
     return processErrorResponse(error);
   }
 };

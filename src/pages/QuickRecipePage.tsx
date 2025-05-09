@@ -32,7 +32,8 @@ const QuickRecipePage = () => {
     recipe: !!recipe, 
     error, 
     formData: !!formData, 
-    isDirectNavigation
+    isDirectNavigation,
+    isRetrying
   });
 
   // Force show loading indicator for navigation
@@ -86,7 +87,7 @@ const QuickRecipePage = () => {
           />
 
           {isDirectNavigation ? (
-            // Show form directly when navigating from navbar - Added wider container for desktop
+            // Show form directly when navigating from navbar
             <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 md:p-6 shadow-md mx-auto mb-10 md:max-w-xl lg:max-w-2xl">
               <QuickRecipeFormContainer />
             </div>
