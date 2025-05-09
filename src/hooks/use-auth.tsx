@@ -107,6 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (currentSession?.user) {
           try {
+            // Use a Promise properly here to handle errors
             supabase
               .from('profiles')
               .select('*')
@@ -116,7 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setProfile(profileData);
                 setLoading(false);
               })
-              .catch((error: any) => { // Fix: Use explicitly typed parameter
+              .catch((error: any) => {
                 console.error('Error fetching profile:', error);
                 setLoading(false);
               });
@@ -128,7 +129,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(false);
         }
       })
-      .catch((err: any) => { // Fixed TypeScript error by using a properly typed function parameter
+      .catch((err: any) => {
         console.error('Error in getSession:', err);
         handleTokenRefreshError();
       });

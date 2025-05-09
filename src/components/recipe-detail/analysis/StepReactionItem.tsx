@@ -45,7 +45,8 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
     <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
       <div className="flex items-start gap-3 mb-2">
         <div className="flex-1">
-          <p className="font-semibold text-slate-800">Step {index + 1}: {reaction.step_text}</p>
+          {/* Updated styling as requested */}
+          <p className="mt-1 font-bold text-slate-800">Step {index + 1}: {reaction.step_text}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
             {cookingMethod && (
