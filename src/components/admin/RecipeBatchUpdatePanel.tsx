@@ -30,16 +30,16 @@ export function RecipeBatchUpdatePanel() {
       setResult(null);
       setProgress(10); // Show initial progress
 
-      // Run the update function
-      const updateResult = await updateAllRecipeNutritionData(dryRun);
+      // Run the update function and properly type the result
+      const updateResult = await updateAllRecipeNutritionData(dryRun) as BatchUpdateResult;
       setProgress(100);
-      setResult(updateResult as BatchUpdateResult);
+      setResult(updateResult);
       
       // Show toast notification based on result
       if (dryRun) {
-        toast.info(`Dry run completed: ${updateResult?.totalRecipes || 0} recipes analyzed`);
+        toast.info(`Dry run completed: ${updateResult.totalRecipes} recipes analyzed`);
       } else {
-        toast.success(`Update completed: ${updateResult?.updatedRecipes || 0} recipes updated`);
+        toast.success(`Update completed: ${updateResult.updatedRecipes} recipes updated`);
       }
     } catch (error) {
       console.error('Error updating recipes:', error);
@@ -56,16 +56,16 @@ export function RecipeBatchUpdatePanel() {
       setResult(null);
       setProgress(10); // Show initial progress
 
-      // Run the science update function
-      const updateResult = await updateRecipeScienceData(dryRun);
+      // Run the science update function and properly type the result
+      const updateResult = await updateRecipeScienceData(dryRun) as BatchUpdateResult;
       setProgress(100);
-      setResult(updateResult as BatchUpdateResult);
+      setResult(updateResult);
       
       // Show toast notification based on result
       if (dryRun) {
-        toast.info(`Science dry run completed: ${updateResult?.totalRecipes || 0} recipes analyzed`);
+        toast.info(`Science dry run completed: ${updateResult.totalRecipes} recipes analyzed`);
       } else {
-        toast.success(`Science update completed: ${updateResult?.updatedRecipes || 0} recipes updated`);
+        toast.success(`Science update completed: ${updateResult.updatedRecipes} recipes updated`);
       }
     } catch (error) {
       console.error('Error updating recipe science data:', error);
@@ -101,8 +101,8 @@ export function RecipeBatchUpdatePanel() {
                 size="sm"
                 disabled={isLoading}
                 onClick={() => runNutritionUpdate(true)}
-                leftIcon={<Database className="w-4 h-4" />}
               >
+                <Database className="w-4 h-4 mr-2" />
                 Dry Run
               </Button>
               
@@ -111,8 +111,8 @@ export function RecipeBatchUpdatePanel() {
                 size="sm" 
                 disabled={isLoading}
                 onClick={() => runNutritionUpdate(false)}
-                leftIcon={<RefreshCw className="w-4 h-4" />}
               >
+                <RefreshCw className="w-4 h-4 mr-2" />
                 Update All Recipes
               </Button>
             </div>
@@ -132,8 +132,8 @@ export function RecipeBatchUpdatePanel() {
                 size="sm"
                 disabled={isLoading}
                 onClick={() => runScienceUpdate(true)}
-                leftIcon={<FileText className="w-4 h-4" />}
               >
+                <FileText className="w-4 h-4 mr-2" />
                 Dry Run
               </Button>
               
@@ -142,8 +142,8 @@ export function RecipeBatchUpdatePanel() {
                 size="sm" 
                 disabled={isLoading}
                 onClick={() => runScienceUpdate(false)}
-                leftIcon={<RefreshCw className="w-4 h-4" />}
               >
+                <RefreshCw className="w-4 h-4 mr-2" />
                 Update All Recipes
               </Button>
             </div>
