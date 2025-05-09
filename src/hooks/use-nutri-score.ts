@@ -35,7 +35,7 @@ export function useNutriScore(recipe: Recipe) {
       
       if (error) throw error;
       
-      return data as NutriScore;
+      return data as unknown as NutriScore;
     } catch (error) {
       console.error("Failed to calculate Nutri-Score:", error);
       return null;
@@ -63,7 +63,7 @@ export function useNutriScore(recipe: Recipe) {
           
         if (error) throw error;
         
-        return data.nutri_score as NutriScore;
+        return data.nutri_score as unknown as NutriScore;
       } catch (error) {
         console.error("Error updating Nutri-Score:", error);
         throw error;

@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cooking_method_classifications: {
+        Row: {
+          classified_by: string
+          confidence_score: number
+          created_at: string
+          id: number
+          instruction_text: string
+          normalized_method: string
+        }
+        Insert: {
+          classified_by?: string
+          confidence_score?: number
+          created_at?: string
+          id?: number
+          instruction_text: string
+          normalized_method: string
+        }
+        Update: {
+          classified_by?: string
+          confidence_score?: number
+          created_at?: string
+          id?: number
+          instruction_text?: string
+          normalized_method?: string
+        }
+        Relationships: []
+      }
       embedding_versions: {
         Row: {
           is_production: boolean | null
@@ -244,6 +271,92 @@ export type Database = {
           usda_food_code?: string
         }
         Relationships: []
+      }
+      ingredient_nutrition_fused: {
+        Row: {
+          confidence: Json
+          created_at: string
+          fusion_method: string
+          id: string
+          ingredient_text: string
+          normalized_name: string | null
+          nutrition: Json
+          provenance: Json | null
+          sources: Json
+          updated_at: string
+        }
+        Insert: {
+          confidence: Json
+          created_at?: string
+          fusion_method?: string
+          id?: string
+          ingredient_text: string
+          normalized_name?: string | null
+          nutrition: Json
+          provenance?: Json | null
+          sources: Json
+          updated_at?: string
+        }
+        Update: {
+          confidence?: Json
+          created_at?: string
+          fusion_method?: string
+          id?: string
+          ingredient_text?: string
+          normalized_name?: string | null
+          nutrition?: Json
+          provenance?: Json | null
+          sources?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ingredient_nutrition_values: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          id: string
+          ingredient_text: string
+          metadata: Json | null
+          normalized_name: string | null
+          nutrition: Json
+          source_id: number
+          updated_at: string
+          usda_food_code: string | null
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          ingredient_text: string
+          metadata?: Json | null
+          normalized_name?: string | null
+          nutrition: Json
+          source_id: number
+          updated_at?: string
+          usda_food_code?: string | null
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          ingredient_text?: string
+          metadata?: Json | null
+          normalized_name?: string | null
+          nutrition?: Json
+          source_id?: number
+          updated_at?: string
+          usda_food_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_nutrition_values_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nutri_score_beverage_grades: {
         Row: {
@@ -577,6 +690,42 @@ export type Database = {
           },
         ]
       }
+      nutrition_sources: {
+        Row: {
+          api_url: string | null
+          confidence_factor: number
+          created_at: string
+          description: string | null
+          id: number
+          priority: number
+          source_name: string
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          api_url?: string | null
+          confidence_factor?: number
+          created_at?: string
+          description?: string | null
+          id?: number
+          priority: number
+          source_name: string
+          source_type: string
+          updated_at?: string
+        }
+        Update: {
+          api_url?: string | null
+          confidence_factor?: number
+          created_at?: string
+          description?: string | null
+          id?: number
+          priority?: number
+          source_name?: string
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       nutrition_vectors: {
         Row: {
           created_at: string | null
@@ -789,6 +938,8 @@ export type Database = {
           instructions: string[]
           nutri_score: Json | null
           nutrition: Json | null
+          nutrition_confidence: Json | null
+          nutrition_fused: Json | null
           prep_time_min: number | null
           previous_version_id: string | null
           reasoning: string | null
@@ -819,6 +970,8 @@ export type Database = {
           instructions: string[]
           nutri_score?: Json | null
           nutrition?: Json | null
+          nutrition_confidence?: Json | null
+          nutrition_fused?: Json | null
           prep_time_min?: number | null
           previous_version_id?: string | null
           reasoning?: string | null
@@ -849,6 +1002,8 @@ export type Database = {
           instructions?: string[]
           nutri_score?: Json | null
           nutrition?: Json | null
+          nutrition_confidence?: Json | null
+          nutrition_fused?: Json | null
           prep_time_min?: number | null
           previous_version_id?: string | null
           reasoning?: string | null
@@ -1083,6 +1238,15 @@ export type Database = {
       }
     }
     Views: {
+      nutrition_data_quality: {
+        Row: {
+          avg_confidence: number | null
+          multi_source_ingredients: number | null
+          total_fused_ingredients: number | null
+          total_sources_used: number | null
+        }
+        Relationships: []
+      }
       nutrition_feedback_stats: {
         Row: {
           accuracy_rate: number | null
