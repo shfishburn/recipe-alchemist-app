@@ -34,6 +34,7 @@ export const mockUseQuickRecipePage = (mockData: any) => {
     handleRetry: jest.fn(),
     handleCancel: jest.fn(),
     toggleDebugMode: jest.fn(),
+    abortControllerRef: { current: null },
     ...mockData
   });
 };
