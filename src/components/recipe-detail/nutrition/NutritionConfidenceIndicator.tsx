@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { CirclePercent } from 'lucide-react';
+import { CirclePercent, RefreshCw } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -9,17 +9,20 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import { Button } from '@/components/ui/button';
 
 interface NutritionConfidenceIndicatorProps {
   nutrition: EnhancedNutrition;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
+  onRefresh?: () => void;
 }
 
 export function NutritionConfidenceIndicator({ 
   nutrition, 
   size = 'md',
-  showTooltip = true 
+  showTooltip = true,
+  onRefresh
 }: NutritionConfidenceIndicatorProps) {
   if (!nutrition?.data_quality) {
     return null;
@@ -95,6 +98,36 @@ export function NutritionConfidenceIndicator({
         return "";
     }
   };
+
+  const getImprovementTips = () => {
+    const tips = [
+      "Use specific ingredient names (e.g. 'yellow onion' instead of just 'onion')",
+      "Include precise quantities and standard units for all ingredients",
+      "Avoid abbreviations in ingredient names",
+      "Break down complex ingredients into their components"
+    ];
+
+    return (
+      <div className="mt-2 text-xs border-t pt-2 border-gray-200">
+        <p className="font-semibold">To improve confidence score:</p>
+        <ul className="list-disc pl-4 mt-1 space-y-1">
+          {tips.map((tip, i) => (
+            <li key={i}>{tip}</li>
+          ))}
+        </ul>
+        {onRefresh && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full mt-2 text-xs"
+            onClick={onRefresh}
+          >
+            <RefreshCw className="w-3 h-3 mr-1" /> Refresh Nutrition Data
+          </Button>
+        )}
+      </div>
+    );
+  };
   
   const badge = (
     <Badge className={`${getConfidenceColor()} ${getSizeClasses()} text-white capitalize font-semibold`}>
@@ -132,6 +165,7 @@ export function NutritionConfidenceIndicator({
                 </p>
               </div>
             )}
+            {getImprovementTips()}
           </div>
         </TooltipContent>
       </Tooltip>

@@ -12,6 +12,13 @@ interface RecipeDebugSectionProps {
 
 export function RecipeDebugSection({ recipe }: RecipeDebugSectionProps) {
   const [showDebug, setShowDebug] = useState(false);
+  
+  // Only show debug section in development environment
+  const isDevelopment = import.meta.env.DEV;
+  
+  if (!isDevelopment) {
+    return null; // Don't render anything in production
+  }
 
   // Function to copy JSON to clipboard
   const copyJsonToClipboard = () => {
@@ -63,7 +70,7 @@ export function RecipeDebugSection({ recipe }: RecipeDebugSectionProps) {
                 <li>Steps count: {recipe.steps.length}</li>
                 <li>Ingredients count: {recipe.ingredients.length}</li>
                 <li>Has cooking tip: {recipe.cookingTip ? 'Yes' : 'No'}</li>
-                <li>Recipe type: {recipe.cuisine || 'Not specified'}</li> {/* Use cuisine instead of cuisineType */}
+                <li>Recipe type: {recipe.cuisine || 'Not specified'}</li>
               </ul>
             </div>
           </div>

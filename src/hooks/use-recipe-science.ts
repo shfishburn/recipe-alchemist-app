@@ -86,27 +86,22 @@ export const getStepReaction = (reactions: StepReaction[], stepIndex: number): S
 };
 
 // Helper function to create fallback reactions from recipe instructions and science notes
-// Updated to create more unique and useful fallbacks that don't appear duplicated
+// Updated to create more user-friendly fallbacks without debug messages
 const createFallbackReactions = (recipe: Recipe): StepReaction[] => {
   if (!recipe.instructions || !Array.isArray(recipe.instructions)) {
     return [];
   }
   
-  // Use science notes if available, otherwise create generic notes
-  const scienceNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0
-    ? recipe.science_notes
-    : ["Scientific analysis is being processed.", "Check back later for detailed analysis."];
+  // Create a more generic placeholder message instead of debug info
+  const placeholderScience = [
+    "The science behind this step is being analyzed.",
+    "Analysis of cooking reactions in progress.",
+    "Culinary science breakdown is being prepared.",
+    "Chemical and physical processes being assessed."
+  ];
 
-  // Include timestamp to make each fallback unique
-  const timestamp = new Date().toISOString();
-  const fallbackId = Math.random().toString(36).substring(2, 10);
-  
-  // Create a basic fallback reaction for each instruction step with more variety
+  // Create a basic fallback reaction for each instruction step with proper user-friendly messages
   return recipe.instructions.map((step, index) => {
-    // Use different science notes for variety
-    const noteIndex = index % scienceNotes.length;
-    const scienceNote = scienceNotes[noteIndex];
-    
     // Extract potential cooking method from step
     const lowerStep = step.toLowerCase();
     let cookingMethod = "Basic Cooking";
@@ -129,24 +124,22 @@ const createFallbackReactions = (recipe: Recipe): StepReaction[] => {
       reactions = ["hydration", "emulsification"];
     }
     
-    // Create more helpful fallback messages that don't just appear as duplicates
-    const stepNum = index + 1;
+    // Select a random placeholder message
+    const scienceMessage = placeholderScience[index % placeholderScience.length];
     
     return {
       step_index: index,
       step_text: step,
       reactions: reactions,
       reaction_details: [
-        `Step ${stepNum}: ${scienceNote}`,
-        `Waiting for complete scientific analysis of this step. This is temporary fallback data.`
+        scienceMessage,
+        "Click 'Analyze Recipe' for detailed scientific explanation."
       ],
       confidence: 0.4,
       cooking_method: cookingMethod,
       metadata: {
         isTempFallback: true,
-        fallbackId: `${fallbackId}-${index}`,
-        timestamp: timestamp,
-        recipeId: recipe.id
+        requiresAnalysis: true
       }
     };
   });
@@ -234,16 +227,6 @@ export function useRecipeScience(recipe: Recipe): RecipeScienceData {
                                 Array.isArray(stepReactions) && 
                                 stepReactions.length > 0 && 
                                 !stepReactions.some(r => r.metadata?.isTempFallback);
-    
-    // Log what we found for debugging
-    console.log('Analysis data check:', {
-      recipeId: recipe.id,
-      hasRealScienceNotes,
-      hasRealStepReactions,
-      scienceNotesCount: recipe?.science_notes?.length || 0,
-      stepReactionsCount: stepReactions?.length || 0,
-      hasFallbacks: stepReactions?.some(r => r.metadata?.isTempFallback) || false
-    });
     
     return hasRealScienceNotes || hasRealStepReactions;
   })();

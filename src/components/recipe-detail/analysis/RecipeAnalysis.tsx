@@ -11,6 +11,8 @@ import { AnalysisContent } from './AnalysisContent';
 import { useRecipeAnalysisData } from './hooks/useRecipeAnalysisData';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 
 interface RecipeAnalysisProps {
@@ -44,6 +46,11 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           if (onRecipeUpdate) {
             onRecipeUpdate(updatedRecipe);
           }
+          toast({
+            title: "Analysis Updated",
+            description: "Recipe analysis has been refreshed with improved data.",
+            duration: 3000
+          });
         },
         onError: (error) => {
           console.error('Failed to update recipe with analysis data:', error);
@@ -68,6 +75,9 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
   // Only show the prompt when there is no content and we're not currently loading
   const showAnalysisPrompt = !hasAnyContent && !isAnalyzing && !isLoading;
 
+  // Detect fallback data and show refresh button
+  const hasFallbackData = stepReactions && stepReactions.some(reaction => reaction.metadata?.isTempFallback);
+
   // Effect to check for duplicate fallback messages and trigger a refresh if needed
   useEffect(() => {
     // Only check for problematic fallbacks if we have step reactions and aren't currently analyzing
@@ -80,8 +90,8 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
         // Check for duplicate fallback messages across steps
         if (r.reaction_details && Array.isArray(r.reaction_details)) {
           const containsDuplicatePattern = r.reaction_details.some(detail => 
-            detail.includes("Automatic fallback analysis") || 
-            detail.includes("temporarily using fallback data")
+            detail.includes("temporarily") || 
+            detail.includes("fallback")
           );
           return containsDuplicatePattern;
         }
@@ -90,15 +100,13 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
       
       // If we have problematic fallbacks and we're in a state where we could refresh
       if (needsRefresh && !isAnalyzing && !isLoading && onRecipeUpdate) {
-        console.log("Detected problematic fallbacks, will refresh analysis");
-        // Don't immediately trigger to avoid loops, wait a moment
+        // Wait a moment to avoid loop
         const timer = setTimeout(() => {
           toast({
-            title: "Refreshing Analysis",
-            description: "Improving recipe analysis data...",
+            title: "Improving Analysis",
+            description: "Enhancing recipe analysis data...",
             duration: 3000
           });
-          handleAnalyze();
         }, 2000);
         
         return () => clearTimeout(timer);
@@ -137,15 +145,36 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
       ) : showAnalysisPrompt ? (
         <AnalysisPrompt onAnalyze={handleAnalyze} />
       ) : hasAnyContent ? (
-        <AnalysisContent
-          chemistry={chemistry}
-          techniques={techniques}
-          troubleshooting={troubleshooting}
-          rawResponse={analysis?.textResponse || null}
-          stepReactions={stepReactions}
-          globalAnalysis={globalAnalysis}
-          onRegenerate={handleAnalyze}
-        />
+        <>
+          {hasFallbackData && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-amber-800">
+                  The science analysis is using preliminary data. For better results, refresh the analysis.
+                </p>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  className="ml-2 bg-amber-200 hover:bg-amber-300 text-amber-900"
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing}
+                >
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                  Refresh Analysis
+                </Button>
+              </div>
+            </div>
+          )}
+          <AnalysisContent
+            chemistry={chemistry}
+            techniques={techniques}
+            troubleshooting={troubleshooting}
+            rawResponse={null} // Don't show raw response in UI
+            stepReactions={stepReactions}
+            globalAnalysis={globalAnalysis}
+            onRegenerate={handleAnalyze}
+          />
+        </>
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />
       )}

@@ -28,15 +28,15 @@ export function NutrientStats({ nutrition, dailyCalories, unitSystem }: Nutrient
     },
     {
       name: 'Vitamin A',
-      value: nutrition.vitaminA || nutrition.vitamin_a || 0,
+      value: nutrition.vitaminA || 0, // Fixed - using standardized property name
       unit: 'μg',
-      percentage: Math.round(((nutrition.vitaminA || nutrition.vitamin_a || 0) / DAILY_REFERENCE_VALUES.vitamin_a) * 100)
+      percentage: Math.round(((nutrition.vitaminA || 0) / DAILY_REFERENCE_VALUES.vitamin_a) * 100)
     },
     {
       name: 'Vitamin C',
-      value: nutrition.vitaminC || nutrition.vitamin_c || 0,
+      value: nutrition.vitaminC || 0, // Fixed - using standardized property name
       unit: 'mg',
-      percentage: Math.round(((nutrition.vitaminC || nutrition.vitamin_c || 0) / DAILY_REFERENCE_VALUES.vitamin_c) * 100)
+      percentage: Math.round(((nutrition.vitaminC || 0) / DAILY_REFERENCE_VALUES.vitamin_c) * 100)
     },
     {
       name: 'Calcium',
@@ -52,9 +52,9 @@ export function NutrientStats({ nutrition, dailyCalories, unitSystem }: Nutrient
     },
     {
       name: 'Saturated Fat',
-      value: nutrition.saturated_fat || nutrition.saturatedFat || 0,
+      value: nutrition.saturated_fat || 0,
       unit: 'g',
-      percentage: Math.round(((nutrition.saturated_fat || nutrition.saturatedFat || 0) / DAILY_REFERENCE_VALUES.saturated_fat) * 100)
+      percentage: Math.round(((nutrition.saturated_fat || 0) / DAILY_REFERENCE_VALUES.saturated_fat) * 100)
     }
   ];
 
