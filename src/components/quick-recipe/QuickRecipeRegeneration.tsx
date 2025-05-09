@@ -1,73 +1,29 @@
+// path: src/components/quick-recipe/QuickRecipeRegeneration.tsx
+// file: QuickRecipeRegeneration.tsx
+// updated: 2025-05-09 11:05 AM
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
-import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { generateQuickRecipe } from '@/hooks/use-quick-recipe';
 
-interface QuickRecipeRegenerationProps {
-  formData: QuickRecipeFormData | null;
+export interface QuickRecipeRegenerationProps {
+  formData: any;
   isLoading: boolean;
+  onRetry: () => void;
 }
 
-export function QuickRecipeRegeneration({ formData, isLoading }: QuickRecipeRegenerationProps) {
-  const { navigate, reset, setLoading, setRecipe, setError, isRecipeValid } = useQuickRecipeStore();
-  
-  const handleRegenerate = async () => {
-    if (formData && !isLoading) {
-      try {
-        console.log("Regenerating recipe with form data:", formData);
-        
-        // Reset and set loading state
-        reset();
-        setLoading(true);
-        
-        // Generate a new recipe with the same form data
-        const generatedRecipe = await generateQuickRecipe(formData);
-        
-        // Validate the recipe structure before setting it
-        if (!isRecipeValid(generatedRecipe)) {
-          throw new Error("The recipe format returned from the API was invalid. Please try again.");
-        }
-        
-        console.log("Recipe regeneration successful:", generatedRecipe);
-        setRecipe(generatedRecipe);
-      } catch (error: any) {
-        console.error("Error regenerating recipe:", error);
-        setError(error.message || "Failed to regenerate recipe. Please try again.");
-      }
-    }
-  };
-  
-  const handleTryDifferent = () => {
-    // Go back to the home page to start fresh
-    navigate('/');
-  };
-
+export function QuickRecipeRegeneration({
+  formData,
+  isLoading,
+  onRetry
+}: QuickRecipeRegenerationProps) {
   return (
-    <div className="mt-6 flex justify-center space-x-4">
-      <Button 
-        variant="ghost" 
-        size="sm"
-        onClick={handleTryDifferent}
-        className="text-muted-foreground hover:text-foreground"
+    <div className="flex justify-center">
+      <Button
+        onClick={() => onRetry(formData)}
+        disabled={isLoading}
       >
-        Try a different recipe
+        {isLoading ? 'Regenerating…' : 'Regenerate Recipe'}
       </Button>
-      
-      {formData && (
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={handleRegenerate}
-          disabled={isLoading}
-          className="text-muted-foreground hover:text-foreground flex items-center"
-        >
-          <RefreshCw className="mr-1 h-4 w-4" />
-          Regenerate recipe
-        </Button>
-      )}
     </div>
   );
 }
