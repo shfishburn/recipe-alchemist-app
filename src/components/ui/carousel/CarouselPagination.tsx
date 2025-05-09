@@ -12,7 +12,7 @@ export function CarouselPagination({
   if (!showDots || count <= 1) return null;
   
   return (
-    <div className="carousel-pagination mt-4" role="tablist">
+    <div className="carousel-pagination" role="tablist">
       {Array.from({ length: count }).map((_, index) => (
         <button
           key={index}

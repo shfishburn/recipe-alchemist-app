@@ -26,18 +26,19 @@
   scroll-behavior: auto;
 }
 
-/* Pagination dots */
+/* Pagination dots - improved container */
 .carousel-pagination {
   @apply flex justify-center gap-1 sm:gap-1.5 mt-3 sm:mt-4;
 }
 
+/* Individual dot styling with proper container */
 .carousel-pagination-dot {
+  @apply inline-block rounded-full bg-gray-300 transition-all duration-200;
   width: 6px !important;
   height: 6px !important;
-  @apply rounded-full bg-gray-300 transition-all duration-200;
-  transform-origin: center;
   max-width: 6px !important;
   max-height: 6px !important;
+  transform-origin: center;
 }
 
 @media (min-width: 640px) {
@@ -49,6 +50,7 @@
   }
 }
 
+/* Active dot styling - pill shape with proper dimensions */
 .carousel-pagination-dot-active {
   @apply bg-recipe-blue;
   width: 12px !important;
@@ -142,4 +144,3 @@
 .carousel-progress-indicator.animate {
   animation: carousel-progress linear forwards;
 }
-
