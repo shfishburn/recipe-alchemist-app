@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
