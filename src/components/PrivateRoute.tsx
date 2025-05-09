@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { cleanupUIState } from '@/utils/dom-cleanup';
+import { toast } from 'sonner';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
@@ -30,6 +31,9 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     // Store the current full location before redirecting to login
     // This includes pathname, search params, hash, and state
     console.log("Not authenticated, redirecting to login from:", location.pathname);
+    
+    // Show a user-friendly notification
+    toast.error("Please sign in to access this page");
     
     // Store any form data that was being processed
     const recipeGenerationData = sessionStorage.getItem('recipeGenerationSource');

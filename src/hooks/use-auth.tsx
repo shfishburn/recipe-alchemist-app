@@ -49,55 +49,86 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleTokenRefreshError = () => {
+    // Clear auth state when token refresh fails
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setLoading(false);
+  };
+
   useEffect(() => {
+    // Set up the auth state change listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+      (event, currentSession) => {
+        console.log('Auth state changed:', event);
         
-        if (currentSession?.user) {
-          setTimeout(async () => {
-            try {
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentSession.user.id)
-                .single();
-              
-              setProfile(profileData);
-            } catch (error) {
-              console.error('Error fetching profile:', error);
-            }
-          }, 0);
-        } else {
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
           setProfile(null);
+        } else {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          // Defer profile fetching to avoid Supabase deadlocks
+          if (currentSession?.user) {
+            setTimeout(async () => {
+              try {
+                const { data: profileData } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', currentSession.user.id)
+                  .single();
+                
+                setProfile(profileData);
+              } catch (error) {
+                console.error('Error fetching profile:', error);
+              }
+            }, 0);
+          }
         }
 
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+        handleTokenRefreshError();
+        return;
+      }
+      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
         try {
-          const { data: profileData } = await supabase
+          supabase
             .from('profiles')
             .select('*')
             .eq('id', currentSession.user.id)
-            .single();
-          
-          setProfile(profileData);
+            .single()
+            .then(({ data: profileData }) => {
+              setProfile(profileData);
+              setLoading(false);
+            })
+            .catch(err => {
+              console.error('Error fetching profile:', err);
+              setLoading(false);
+            });
         } catch (error) {
-          console.error('Error fetching profile:', error);
-        } finally {
+          console.error('Error setting up profile fetch:', error);
           setLoading(false);
         }
       } else {
         setLoading(false);
       }
+    }).catch(err => {
+      console.error('Error in getSession:', err);
+      handleTokenRefreshError();
     });
 
     return () => {
