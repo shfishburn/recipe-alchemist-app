@@ -38,7 +38,8 @@ export function QuickRecipeLoading() {
     completedLoading, 
     setCompletedLoading, 
     setError, 
-    reset 
+    reset,
+    navigate,
   } = useQuickRecipeStore();
   
   const isMobile = useIsMobile();
@@ -88,6 +89,28 @@ export function QuickRecipeLoading() {
     };
   }, [audioEnabled, completedLoading, playTypingSound]);
   
+  // Clean up function used for both timeout and manual cancellation
+  const cleanupResources = () => {
+    console.log("Cleaning up resources in QuickRecipeLoading");
+    
+    // Clear all timers
+    if (progressTimerRef.current) clearTimeout(progressTimerRef.current);
+    if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+    if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
+    if (timeoutWarningRef.current) clearTimeout(timeoutWarningRef.current);
+    if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
+    
+    // Stop audio
+    pauseTypingSound();
+    
+    // Abort any pending requests
+    if (abortControllerRef.current) {
+      console.log("Aborting pending requests");
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
+  
   // Set a timeout to prevent infinite loading
   useEffect(() => {
     // Show a timeout warning after 75% of the maximum time
@@ -103,6 +126,7 @@ export function QuickRecipeLoading() {
         console.error("Recipe generation timeout after", MAX_LOADING_TIME, "seconds");
         pauseTypingSound();
         setError("Recipe generation timed out. Please try again.");
+        cleanupResources();
       }
     }, MAX_LOADING_TIME * 1000);
     
@@ -110,16 +134,7 @@ export function QuickRecipeLoading() {
     abortControllerRef.current = new AbortController();
     
     return () => {
-      if (timeoutWarningRef.current) {
-        clearTimeout(timeoutWarningRef.current);
-      }
-      if (timeoutTimerRef.current) {
-        clearTimeout(timeoutTimerRef.current);
-      }
-      // Abort any pending requests on unmount
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      cleanupResources();
     };
   }, [completedLoading, pauseTypingSound, setError]);
   
@@ -239,23 +254,19 @@ export function QuickRecipeLoading() {
   
   // Function to handle cancellation request
   const handleCancel = () => {
-    // Abort any pending requests
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    console.log("User requested cancellation");
     
-    // Clear all timers
-    if (progressTimerRef.current) clearTimeout(progressTimerRef.current);
-    if (stepTimerRef.current) clearInterval(stepTimerRef.current);
-    if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
-    if (timeoutWarningRef.current) clearTimeout(timeoutWarningRef.current);
-    if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
-    
-    // Stop audio
-    pauseTypingSound();
+    // Clean up resources
+    cleanupResources();
     
     // Reset the store state
     reset();
+    
+    // Navigate back to home
+    if (navigate) {
+      console.log("Navigating back to home page");
+      navigate('/');
+    }
   };
   
   return (
@@ -265,13 +276,13 @@ export function QuickRecipeLoading() {
         <div className="relative">
           {showFinalAnimation ? (
             <div className="flex items-center justify-center">
-              <CircleCheck className="h-12 w-12 text-recipe-green animate-scale-in" />
-              <PartyPopper className="absolute -top-2 -right-2 h-6 w-6 text-recipe-orange animate-bounce" />
+              <CircleCheck className="h-12 w-12 text-green-500 animate-scale-in" />
+              <PartyPopper className="absolute -top-2 -right-2 h-6 w-6 text-amber-500 animate-bounce" />
             </div>
           ) : (
             <>
               <CookingPot className="h-12 w-12 text-primary animate-spin" />
-              <div className="absolute -top-2 -right-2 h-3 w-3 bg-recipe-orange rounded-full animate-ping" />
+              <div className="absolute -top-2 -right-2 h-3 w-3 bg-amber-500 rounded-full animate-ping" />
             </>
           )}
         </div>
@@ -290,10 +301,9 @@ export function QuickRecipeLoading() {
         <div className="w-full max-w-xs">
           <Progress 
             value={getCurrentProgress()}
-            indeterminate={!showFinalAnimation && currentPhase === 1} // Use indeterminate during the processing phase
             className="h-2"
             indicatorClassName={cn(
-              showFinalAnimation ? "bg-recipe-green" : undefined,
+              showFinalAnimation ? "bg-green-500" : undefined,
               currentPhase === 1 && !showFinalAnimation ? "animate-pulse" : undefined
             )}
           />
@@ -316,6 +326,7 @@ export function QuickRecipeLoading() {
         <button
           onClick={handleCancel}
           className="mt-2 text-sm text-muted-foreground hover:text-destructive transition-colors focus:outline-none"
+          type="button"
         >
           Cancel
         </button>

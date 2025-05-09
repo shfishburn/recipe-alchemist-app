@@ -21,6 +21,12 @@ export const generateQuickRecipe = async (
   try {
     console.log("Generating quick recipe with form data:", formData);
     
+    // Check if request already aborted
+    if (options?.signal?.aborted) {
+      console.log("Request aborted before starting");
+      throw new DOMException("Recipe generation aborted by user", "AbortError");
+    }
+    
     if (!formData.mainIngredient) {
       throw new Error("Please provide a main ingredient");
     }
@@ -35,6 +41,7 @@ export const generateQuickRecipe = async (
     
     // Create a direct fetch function that we'll race against the timeout
     const directFetchPromise = async () => {
+      // Pass the abort signal to fetchFromEdgeFunction
       return await fetchFromEdgeFunction(requestBody, options?.signal);
     };
     
@@ -43,11 +50,12 @@ export const generateQuickRecipe = async (
       directFetchPromise().catch(err => {
         // Check if this is an abort error
         if (err.name === 'AbortError') {
-          console.log("Request aborted by user");
+          console.log("Direct fetch aborted by user");
           throw err; // Re-throw abort errors
         }
         
         console.warn("Direct fetch failed, trying Supabase invoke:", err);
+        // Pass the abort signal to fetchFromSupabaseFunctions
         return fetchFromSupabaseFunctions(requestBody, options?.signal);
       }),
       timeoutPromise
@@ -55,6 +63,7 @@ export const generateQuickRecipe = async (
     
     // Check for abort signal before continuing
     if (options?.signal?.aborted) {
+      console.log("Recipe generation aborted after data received");
       throw new DOMException("Recipe generation aborted by user", "AbortError");
     }
     
@@ -78,7 +87,7 @@ export const generateQuickRecipe = async (
   } catch (error: any) {
     // Check if this is an abort error
     if (error.name === 'AbortError') {
-      console.log("Request aborted by user");
+      console.log("Recipe generation aborted in catch block");
       throw error; // Re-throw abort errors
     }
     

@@ -23,9 +23,11 @@ export function useQuickRecipePage() {
   const createAbortController = useCallback(() => {
     // Clean up any existing controller
     if (abortControllerRef.current) {
+      console.log("Aborting previous request");
       abortControllerRef.current.abort();
     }
     // Create a new controller
+    console.log("Creating new AbortController");
     abortControllerRef.current = new AbortController();
     return abortControllerRef.current;
   }, []);
@@ -34,6 +36,7 @@ export function useQuickRecipePage() {
   const cleanupRequestState = useCallback(() => {
     // Abort any pending requests on unmount
     if (abortControllerRef.current) {
+      console.log("Cleaning up AbortController on unmount");
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
@@ -106,51 +109,61 @@ export function useQuickRecipePage() {
   }, [isLoading, recipe, error, formData, navigate, isDirectNavigation]);
 
   const handleRetry = useCallback(async () => {
-    if (formData) {
-      try {
-        setIsRetrying(true);
-        console.log("Retrying recipe generation with formData:", formData);
-        
-        // Clear any existing errors
-        setError(null);
-        
-        // Start the recipe generation with proper loading state
-        setLoading(true);
-        
-        toast({
-          title: "Retrying recipe generation",
-          description: "We're attempting to generate your recipe again...",
-        });
-        
-        // Create a new abort controller for this request
-        const controller = createAbortController();
-        
-        // Start the recipe generation immediately with abort signal
-        await generateQuickRecipe(formData, { signal: controller.signal });
-        
-        setIsRetrying(false);
-      } catch (err: any) {
-        // Don't show error if aborted
-        if (err.name === 'AbortError') {
-          console.log("Recipe generation retry aborted");
-          setIsRetrying(false);
-          return;
-        }
-        
-        console.error("Error retrying recipe generation:", err);
-        setIsRetrying(false);
-        toast({
-          title: "Recipe generation failed",
-          description: err.message || "Please try again later.",
-          variant: "destructive",
-        });
+    if (!formData) {
+      console.error("Can't retry without formData");
+      toast({
+        title: "Cannot retry",
+        description: "Missing recipe data. Please try starting a new recipe.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsRetrying(true);
+      console.log("Retrying recipe generation with formData:", formData);
+      
+      // Clear any existing errors
+      setError(null);
+      
+      // Start the recipe generation with proper loading state
+      setLoading(true);
+      
+      toast({
+        title: "Retrying recipe generation",
+        description: "We're attempting to generate your recipe again...",
+      });
+      
+      // Create a new abort controller for this request
+      const controller = createAbortController();
+      
+      // Start the recipe generation immediately with abort signal
+      await generateQuickRecipe(formData, { signal: controller.signal });
+      
+    } catch (err: any) {
+      // Don't show error if aborted
+      if (err.name === 'AbortError') {
+        console.log("Recipe generation retry aborted");
+        return;
       }
+      
+      console.error("Error retrying recipe generation:", err);
+      toast({
+        title: "Recipe generation failed",
+        description: err.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRetrying(false);
     }
   }, [formData, setError, setLoading, createAbortController, generateQuickRecipe]);
 
   const handleCancel = useCallback(() => {
+    console.log("Handling cancel in useQuickRecipePage");
+    
     // Abort any pending requests
     if (abortControllerRef.current) {
+      console.log("Aborting request on cancel");
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }

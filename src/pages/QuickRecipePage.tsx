@@ -38,12 +38,14 @@ const QuickRecipePage = () => {
   // Force show loading indicator for navigation
   useEffect(() => {
     // This will trigger a re-render that loads the indicator
+    console.log("Setting up loading trigger");
     const loadingTrigger = document.createElement('div');
     loadingTrigger.className = 'loading-trigger';
     document.body.appendChild(loadingTrigger);
     
     return () => {
       // Ensure we clean up any loading states when component unmounts
+      console.log("Cleaning up loading trigger");
       document.body.classList.remove('overflow-hidden');
       if (loadingTrigger && loadingTrigger.parentNode) {
         document.body.removeChild(loadingTrigger);

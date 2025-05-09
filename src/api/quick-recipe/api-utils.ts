@@ -12,6 +12,12 @@ export const getAuthToken = async (): Promise<string> => {
 // Direct API fetch to edge function
 export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
   try {
+    // Check if the request has been aborted already
+    if (signal?.aborted) {
+      console.log("Request already aborted before fetch started");
+      throw new DOMException("Request aborted by user", "AbortError");
+    }
+    
     // Get auth token for request
     const token = await getAuthToken();
     
@@ -35,8 +41,9 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
       signal // Pass the abort signal to the fetch request
     });
     
-    // Check if request was aborted
+    // Check if request was aborted during the fetch
     if (signal?.aborted) {
+      console.log("Request aborted during fetch operation");
       throw new DOMException("Request aborted by user", "AbortError");
     }
     
@@ -64,6 +71,11 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
       throw new Error("Invalid JSON response from API");
     }
   } catch (fetchError) {
+    // Properly handle AbortError to avoid showing error messages when the user cancels
+    if (fetchError.name === 'AbortError' || signal?.aborted) {
+      console.log("Fetch aborted by user, no error needed");
+      throw new DOMException("Request aborted by user", "AbortError");
+    }
     console.error("Direct fetch error:", fetchError);
     throw fetchError;
   }
@@ -71,23 +83,35 @@ export const fetchFromEdgeFunction = async (requestBody: any, signal?: AbortSign
 
 // Fallback API call using Supabase functions
 export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: AbortSignal): Promise<any> => {
-  // Create an AbortController that wraps the signal
-  const controller = new AbortController();
-  
-  // If signal is provided, listen for abort events
-  if (signal) {
-    if (signal.aborted) {
-      throw new DOMException("Request aborted by user", "AbortError");
-    }
-    
-    signal.addEventListener('abort', () => {
-      controller.abort();
-    });
+  // Check if request already aborted
+  if (signal?.aborted) {
+    console.log("Request already aborted before Supabase function call");
+    throw new DOMException("Request aborted by user", "AbortError");
   }
   
   try {
+    console.log("Falling back to Supabase functions invoke");
+    
+    // Use a timeout that respects the abort signal
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    // Create a timeout promise that respects abort signal
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error("Supabase function timeout"));
+      }, 60000); // 60 second timeout
+      
+      // If signal is provided, cancel the timeout on abort
+      if (signal) {
+        signal.addEventListener('abort', () => {
+          if (timeoutId) clearTimeout(timeoutId);
+          reject(new DOMException("Request aborted by user", "AbortError"));
+        });
+      }
+    });
+    
     // Remove signal from options since it's not supported in FunctionInvokeOptions
-    const { data, error } = await supabase.functions.invoke('generate-quick-recipe', {
+    const invocationPromise = supabase.functions.invoke('generate-quick-recipe', {
       body: {
         ...requestBody,
         embeddingModel: 'text-embedding-ada-002' // Include model in request body
@@ -96,11 +120,22 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
         'Content-Type': 'application/json',
         'X-Debug-Info': 'supabase-invoke-' + Date.now()
       }
-      // signal is not supported in FunctionInvokeOptions, so we removed it
     });
 
-    // Check for abort
+    // Race invocation against timeout
+    const { data, error } = await Promise.race([
+      invocationPromise,
+      timeoutPromise.then(() => {
+        throw new Error("Supabase function timed out");
+      })
+    ]) as { data?: any, error?: any };
+    
+    // Clear timeout if promise resolved
+    if (timeoutId) clearTimeout(timeoutId);
+    
+    // Check for abort after resolution
     if (signal?.aborted) {
+      console.log("Request aborted during Supabase function call");
       throw new DOMException("Request aborted by user", "AbortError");
     }
     
@@ -115,10 +150,12 @@ export const fetchFromSupabaseFunctions = async (requestBody: any, signal?: Abor
 
     return data;
   } catch (error) {
-    // Check if this is an abort error
+    // Check if this is an abort error or if signal is aborted
     if (error.name === 'AbortError' || signal?.aborted) {
+      console.log("Supabase function call aborted by user");
       throw new DOMException("Request aborted by user", "AbortError");
     }
+    console.error("Supabase function error:", error);
     throw error;
   }
 };
