@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { InfoCircle, CircleCheck, CircleX } from 'lucide-react';
+import { Info, CircleCheck, CircleX } from 'lucide-react';
 import { NutriScoreBadge } from './NutriScoreBadge';
 import type { NutriScore } from '@/types/recipe';
 

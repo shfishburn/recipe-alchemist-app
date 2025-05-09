@@ -56,14 +56,14 @@ export function useNutriScore(recipe: Recipe) {
         // Then update the recipe
         const { data, error } = await supabase
           .from('recipes')
-          .update({ nutri_score: newNutriScore })
+          .update({ nutri_score: newNutriScore as any }) // Type assertion to bypass the JSON constraint
           .eq('id', recipe.id)
           .select('nutri_score')
           .single();
           
         if (error) throw error;
         
-        return data.nutri_score;
+        return data.nutri_score as NutriScore;
       } catch (error) {
         console.error("Error updating Nutri-Score:", error);
         throw error;
