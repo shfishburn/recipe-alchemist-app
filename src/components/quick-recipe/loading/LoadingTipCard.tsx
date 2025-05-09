@@ -8,7 +8,6 @@ import {
   Cpu,
   ShoppingCart,
   Microscope,
-  Fire,
   FileText,
   Zap,
   Leaf,
@@ -54,7 +53,7 @@ export function LoadingTipCard() {
     {
       icon: <ShoppingCart className="h-5 w-5 text-recipe-orange" />,
       title: 'Mise en Place',
-      description: 'Mise en place for your shopping list and yield factors will appear after preview.'
+      description: 'Mise in place for your shopping list and yield factors will appear after preview.'
     },
     {
       icon: <Microscope className="h-5 w-5 text-recipe-blue" />,
@@ -62,7 +61,7 @@ export function LoadingTipCard() {
       description: 'Crunching vitamin, mineral, and calorie counts—pending completion of your preview.'
     },
     {
-      icon: <Fire className="h-5 w-5 text-recipe-green" />,
+      icon: <Thermometer className="h-5 w-5 text-recipe-green" />,
       title: 'Perfect Temperature',
       description: 'Heating up—full analytics, shopping list, and Cooking Mode become available soon.'
     },
