@@ -9,8 +9,8 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
   const progressTimerRef = useRef<number | null>(null);
   const completionTimerRef = useRef<number | null>(null);
   
+  // Clear any existing timers when component unmounts
   useEffect(() => {
-    // Clear any existing timers when component mounts or unmounts
     return () => {
       if (progressTimerRef.current) {
         clearInterval(progressTimerRef.current);
@@ -36,22 +36,21 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
       setProgress(0);
       
       // Initial progress jump to give feeling of responsiveness
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         setProgress(30);
-      });
+      }, 50);
       
-      // Use requestAnimationFrame for smoother animation
+      // Progress timer with a more reliable implementation
       progressTimerRef.current = window.setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) return prev;
-          // Gradually slow down progress as it approaches 90%
-          const increment = Math.max(1, Math.min(5, (90 - prev) / 10));
-          return Math.min(90, prev + increment);
+          // More linear, predictable progress
+          return Math.min(90, prev + 3);
         });
-      }, 150);
+      }, 200);
       
-      // Fallback completion after 2.5 seconds if page load doesn't complete
-      completionTimerRef.current = window.setTimeout(completeLoading, 2500);
+      // Force completion after a reasonable timeout (3 seconds)
+      completionTimerRef.current = window.setTimeout(completeLoading, 3000);
     };
     
     const completeLoading = () => {
@@ -61,16 +60,13 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
         progressTimerRef.current = null;
       }
       
-      // Set to 100%
+      // Set to 100% and hide after animation completes
       setProgress(100);
       
-      // Hide after animation completes
-      const hideTimer = window.setTimeout(() => {
+      setTimeout(() => {
         setIsLoading(false);
         setProgress(0);
       }, 300);
-      
-      return () => clearTimeout(hideTimer);
     };
 
     // Start loading on location change
@@ -85,13 +81,8 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
     
     window.addEventListener('load', handleLoad);
     
-    // Also listen for readystatechange to handle different loading scenarios
-    document.addEventListener('readystatechange', handleLoad);
-    
     return () => {
       window.removeEventListener('load', handleLoad);
-      document.removeEventListener('readystatechange', handleLoad);
-      
       if (progressTimerRef.current) {
         clearInterval(progressTimerRef.current);
       }
@@ -114,14 +105,8 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
         className="nprogress-bar hw-accelerated" 
         style={{ 
           transform: `translateX(${progress - 100}%)`,
-          transition: progress < 100 
-            ? 'transform 0.2s ease-in-out' 
-            : 'transform 0.1s ease-out, opacity 0.3s ease-out'
+          transition: 'transform 0.2s ease-out'
         }}
-        role="progressbar"
-        aria-valuenow={progress}
-        aria-valuemin={0}
-        aria-valuemax={100}
       />
     </div>
   );

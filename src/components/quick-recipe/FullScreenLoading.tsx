@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, memo } from 'react';
+import React, { useEffect } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { LoadingTipCard } from './loading/LoadingTipCard';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
@@ -14,7 +14,7 @@ interface FullScreenLoadingProps {
   error?: string | null;
 }
 
-export const FullScreenLoading = memo(function FullScreenLoading({ 
+export const FullScreenLoading = React.memo(function FullScreenLoading({ 
   onCancel, 
   onRetry, 
   error 
@@ -34,12 +34,9 @@ export const FullScreenLoading = memo(function FullScreenLoading({
       document.body.classList.remove('overflow-hidden');
     };
   }, [isErrorState]);
-
-  // Set appropriate pointer events based on loading state
-  const pointerEventsClass = showFinalAnimation && !isErrorState ? 'pointer-events-none' : '';
   
   return (
-    <div className={`fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
+    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto">
       <TopLoadingBar showFinalAnimation={showFinalAnimation} />
       
       {/* Accessible title for screen readers */}
@@ -61,7 +58,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
                 <Button 
                   variant="outline" 
                   onClick={onCancel}
-                  className="flex items-center gap-2 touch-ripple"
+                  className="flex items-center gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Start Over
@@ -71,7 +68,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               {onRetry && (
                 <Button 
                   onClick={onRetry}
-                  className="flex items-center gap-2 touch-ripple"
+                  className="flex items-center gap-2"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Try Again
@@ -83,43 +80,19 @@ export const FullScreenLoading = memo(function FullScreenLoading({
           <>
             {/* Main loading animation */}
             <div className="flex flex-col items-center space-y-6 mb-8">
-              {/* Enhanced animated cooking pot icon with chef hat */}
-              <div className="relative hw-accelerated">
-                <div className="relative h-20 w-20 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-recipe-green/10 animate-pulse"></div>
-                  <ChefHat className="h-12 w-12 text-recipe-green animate-cooking-pot" />
-                  
-                  {/* Animated 'steam' effects - simplified for better performance */}
-                  <div className="absolute -top-2 left-0 opacity-60">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green animate-steam"></div>
-                  </div>
-                  <div className="absolute -top-1 right-0 opacity-70">
-                    <div className="h-2 w-2 rounded-full bg-recipe-green animate-steam delay-150"></div>
-                  </div>
-                </div>
+              <div className="relative">
+                <ChefHat className="h-12 w-12 text-recipe-green animate-pulse" />
               </div>
               
-              {/* Title and description with gradient text */}
-              <div className="animate-fade-in">
-                <h2 className="text-xl font-medium mb-1 text-gradient animate-gradient-x" 
-                    style={{backgroundImage: "linear-gradient(90deg, #4caf50, #2196f3, #4caf50)"}}>
-                  Creating Your Recipe
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Our AI chef is crafting the perfect recipe for you...
-                </p>
-              </div>
-            </div>
-            
-            {/* Progress indicator section */}
-            <div className="mb-8 animate-fade-in">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-medium">
-                  {loadingState?.stepDescription || "Analyzing your ingredients..."}
-                </span>
-              </div>
+              <h2 className="text-lg sm:text-xl font-semibold animate-fade-in">
+                {showFinalAnimation ? "Recipe ready!" : "Creating Your Recipe"}
+              </h2>
               
-              {/* Simple progress bar */}
+              <p className="text-sm text-muted-foreground">
+                {showFinalAnimation ? "Your recipe has been created." : loadingState.stepDescription}
+              </p>
+              
+              {/* Simple progress indicator */}
               <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-recipe-green transition-all duration-300 ease-out rounded-full"
@@ -129,7 +102,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               
               {/* Timeout warning */}
               {showTimeout && !showFinalAnimation && (
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full animate-fade-in">
                   <AlertCircle className="h-4 w-4" />
                   <span>This is taking longer than usual. Please be patient...</span>
                 </div>
@@ -141,7 +114,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
               <LoadingTipCard />
             </div>
             
-            {/* Cancel button with proper aria description */}
+            {/* Cancel button */}
             {onCancel && (
               <Button 
                 variant="ghost" 

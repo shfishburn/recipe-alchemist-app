@@ -3,8 +3,9 @@ import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function PageLoadingFallback() {
+  // This component is used for Suspense fallback, so it should always show loading state
   return (
-    <div className="min-h-screen w-full max-w-7xl mx-auto p-4 py-8 md:py-12">
+    <div className="min-h-screen w-full max-w-7xl mx-auto p-4 py-8 md:py-12 bg-white dark:bg-gray-950">
       <div className="space-y-8 min-h-[400px]">
         <div className="flex flex-col items-center justify-center">
           <Skeleton className="h-10 w-48 md:w-64" />
@@ -24,3 +25,6 @@ export function PageLoadingFallback() {
     </div>
   );
 }
+
+// Default export for compatibility with lazy loading
+export default PageLoadingFallback;

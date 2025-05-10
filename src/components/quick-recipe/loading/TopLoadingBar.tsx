@@ -20,7 +20,15 @@ export function TopLoadingBar({
   // Start loading bar on component mount
   useEffect(() => {
     if (loadingRef.current) {
-      loadingRef.current.continuousStart();
+      // Start with a fixed value for immediate feedback
+      loadingRef.current.staticStart(30);
+      
+      // More reliable continuous loading
+      setTimeout(() => {
+        if (loadingRef.current) {
+          loadingRef.current.continuousStart(0, 100);
+        }
+      }, 100);
     }
     
     // Complete the loading bar when recipe generation is done
@@ -40,8 +48,10 @@ export function TopLoadingBar({
   
   // Update progress based on percentComplete when available
   useEffect(() => {
-    if (loadingState.percentComplete > 0 && loadingState.percentComplete < 100 && loadingRef.current) {
-      loadingRef.current.setProgress(loadingState.percentComplete);
+    if (loadingState.percentComplete > 0 && loadingRef.current) {
+      // Ensure progress is always moving forward
+      const targetProgress = Math.max(30, loadingState.percentComplete);
+      loadingRef.current.setProgress(targetProgress);
     }
   }, [loadingState.percentComplete]);
 

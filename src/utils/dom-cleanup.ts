@@ -1,43 +1,51 @@
 
 /**
- * Utility functions for cleaning up UI state during navigation
+ * Utility function to clean up UI state that might be stuck
+ * This helps prevent issues with loading states, modals, etc.
  */
+export const cleanupUIState = () => {
+  // Remove any stuck classes
+  document.body.classList.remove('overflow-hidden');
+  document.body.classList.remove('loading');
+  
+  // Remove any loading triggers
+  const loadingTriggers = document.querySelectorAll('.loading-trigger');
+  loadingTriggers.forEach(el => {
+    if (el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+  });
+};
 
-// Cleanup any open tooltips, popovers, or other floating UI elements
-export function cleanupUIState() {
-  // Remove any open modals
-  const modals = document.querySelectorAll('[role="dialog"]');
-  modals.forEach(modal => {
-    if (modal.classList.contains('open')) {
-      modal.classList.remove('open');
+/**
+ * Set up an observer to clean up UI state on route changes
+ * Returns a cleanup function to disconnect the observer
+ */
+export const setupRouteChangeCleanup = () => {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type === 'childList') {
+        // Only run cleanup if we detect a route change
+        if (document.location.hash !== window.lastKnownHash) {
+          window.lastKnownHash = document.location.hash;
+          cleanupUIState();
+        }
+      }
     }
   });
   
-  // Remove any open tooltips
-  const tooltips = document.querySelectorAll('[data-state="open"]');
-  tooltips.forEach(tooltip => {
-    tooltip.setAttribute('data-state', 'closed');
-  });
+  // Store initial hash
+  window.lastKnownHash = document.location.hash;
   
-  // Remove any fixed positioning that may cause scrolling issues
-  document.body.classList.remove('overflow-hidden');
-  document.body.style.paddingRight = '';
+  // Observe body element for changes
+  observer.observe(document.body, { childList: true, subtree: true });
   
-  // Force blur on any focused elements to prevent keyboard issues
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
-}
+  return () => observer.disconnect();
+};
 
-// Setup listener for route changes to clean up UI state
-export function setupRouteChangeCleanup() {
-  const cleanup = () => cleanupUIState();
-  
-  // Clean up when user navigates away from the page
-  window.addEventListener('beforeunload', cleanup);
-  
-  // Return a function to remove the listener
-  return () => {
-    window.removeEventListener('beforeunload', cleanup);
-  };
+// Declare global variable for TypeScript 
+declare global {
+  interface Window {
+    lastKnownHash: string;
+  }
 }

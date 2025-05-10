@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
@@ -13,50 +14,42 @@ interface LoadingInterstitialProps {
 
 const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInterstitialProps) => {
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
-  const [showCriticalError, setShowCriticalError] = useState(false);
   const loadingRef = useRef<any>(null);
   
+  // Reset states and manage loading bar on open/close
   useEffect(() => {
-    let timeoutWarningId: NodeJS.Timeout;
-    let timeoutErrorId: NodeJS.Timeout;
-    let criticalErrorId: NodeJS.Timeout;
-    
     if (isOpen && !error) {
-      // Start the loading bar
-      loadingRef.current?.continuousStart();
+      // Start the loading bar with improved reliability
+      if (loadingRef.current) {
+        // Start with a static value first for immediate feedback
+        loadingRef.current.staticStart(30);
+        
+        // Then switch to continuous after a short delay
+        setTimeout(() => {
+          if (loadingRef.current) {
+            loadingRef.current.continuousStart(0, 100);
+          }
+        }, 100);
+      }
       
       // Show timeout warning after 20 seconds
-      timeoutWarningId = setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         setShowTimeoutMessage(true);
-      }, 20000); // 20 seconds
+      }, 20000);
       
-      // Show error message after 35 seconds
-      timeoutErrorId = setTimeout(() => {
-        setShowErrorMessage(true);
-      }, 35000); // 35 seconds
-      
-      // Show critical error after 50 seconds
-      criticalErrorId = setTimeout(() => {
-        setShowCriticalError(true);
-      }, 50000); // 50 seconds
+      return () => {
+        clearTimeout(timeoutId);
+      };
     } else {
-      // Complete the loading bar when closing or error
-      loadingRef.current?.complete();
+      // Complete the loading bar when dialog closes or error occurs
+      if (loadingRef.current) {
+        loadingRef.current.complete();
+      }
       setShowTimeoutMessage(false);
-      setShowErrorMessage(false);
-      setShowCriticalError(false);
     }
-    
-    return () => {
-      clearTimeout(timeoutWarningId);
-      clearTimeout(timeoutErrorId);
-      clearTimeout(criticalErrorId);
-      loadingRef.current?.complete();
-    };
   }, [isOpen, error]);
 
-  // If there's an explicit error, show the critical error state immediately
+  // If there's an explicit error, show the critical error state
   const hasExplicitError = !!error;
   
   return (
@@ -65,31 +58,26 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
         <LoadingBar color="#4CAF50" height={3} ref={loadingRef} shadow={true} className="absolute top-0 left-0 right-0" />
         
         <div className="relative">
-          {hasExplicitError || showCriticalError ? (
+          {hasExplicitError ? (
             <XCircle className="h-12 w-12 text-destructive" />
           ) : (
             <Loader2 className="h-12 w-12 animate-spin text-recipe-blue" />
           )}
         </div>
+        
         <div className="text-center space-y-2">
           <h3 className="text-lg font-semibold">
-            {hasExplicitError || showCriticalError 
+            {hasExplicitError 
               ? "Recipe Generation Failed" 
-              : showErrorMessage 
-                ? "Recipe Generation Issue" 
-                : "Creating Your Recipe"}
+              : "Creating Your Recipe"}
           </h3>
           <p className="text-muted-foreground text-sm">
             {hasExplicitError
               ? error
-              : showCriticalError
-                ? "We couldn't create your recipe. Please try again with a different request."
-                : showErrorMessage
-                  ? "The recipe is taking longer than expected to create."
-                  : "Our culinary AI is crafting your perfect recipe..."}
+              : "Our culinary AI is crafting your perfect recipe..."}
           </p>
           
-          {showTimeoutMessage && !showErrorMessage && !showCriticalError && !hasExplicitError && (
+          {showTimeoutMessage && !hasExplicitError && (
             <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg text-sm text-amber-700 dark:text-amber-300">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4" />
@@ -102,32 +90,14 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
             </div>
           )}
           
-          {showErrorMessage && !showCriticalError && !hasExplicitError && (
-            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg text-sm text-red-700 dark:text-red-300">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="h-4 w-4" />
-                <span className="font-medium">Recipe generation may have issues</span>
-              </div>
-              <p className="text-xs">
-                We're still working on your recipe, but it's taking longer than usual.
-                You can continue waiting or cancel and try again with a simpler recipe.
-              </p>
-            </div>
-          )}
-          
-          {(hasExplicitError || showCriticalError) && (
+          {hasExplicitError && (
             <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg text-sm text-red-700 dark:text-red-300">
               <div className="flex items-center gap-2 mb-2">
                 <XCircle className="h-4 w-4" />
                 <span className="font-medium">Recipe generation failed</span>
               </div>
               <p className="text-xs">
-                We couldn't generate your recipe. This could be due to:
-                <ul className="list-disc list-inside mt-2">
-                  <li>Complex or unusual ingredient combinations</li>
-                  <li>High system demand</li>
-                  <li>Temporary service interruption</li>
-                </ul>
+                We couldn't generate your recipe. Please try again with simpler ingredients or check your connection.
               </p>
             </div>
           )}
@@ -135,16 +105,16 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
           <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
             {onCancel && (
               <Button 
-                variant={hasExplicitError || showCriticalError ? "outline" : showErrorMessage ? "destructive" : "outline"} 
+                variant={hasExplicitError ? "outline" : "outline"} 
                 size="sm" 
                 onClick={onCancel} 
                 className="w-full sm:w-auto"
               >
-                {hasExplicitError || showCriticalError ? "Close" : showErrorMessage ? "Cancel" : "Cancel"}
+                {hasExplicitError ? "Close" : "Cancel"}
               </Button>
             )}
             
-            {onRetry && (hasExplicitError || showCriticalError) && (
+            {onRetry && hasExplicitError && (
               <Button 
                 variant="default"
                 size="sm" 
