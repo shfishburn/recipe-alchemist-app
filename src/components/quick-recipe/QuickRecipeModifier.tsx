@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
@@ -178,7 +177,6 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
 
   // Render current modification if there's one
   const renderCurrentModification = () => {
-    // Fix type comparison error: check string value, not type
     if (!modifications || status !== 'success') return null;
     
     return (

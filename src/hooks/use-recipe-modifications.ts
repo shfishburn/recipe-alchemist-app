@@ -51,6 +51,15 @@ export type ModificationStatus =
 // Define modification types
 export type RecipeModifications = z.infer<typeof recipeModificationsSchema>;
 
+// Export NutritionImpact type for use in other components
+export type NutritionImpact = {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  summary: string;
+};
+
 export type ModificationHistoryEntry = {
   request: string;
   response: RecipeModifications;
