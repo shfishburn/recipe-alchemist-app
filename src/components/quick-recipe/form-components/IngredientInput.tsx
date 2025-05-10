@@ -1,12 +1,14 @@
 
 /**
  * IngredientInput.tsx
- * Version: 1.0.5
+ * Version: 1.0.6
  * Date: 2025-05-10
  * Changes:
  * - Updated UI strings
  * - Updated placeholder text
  * - Fixed error display
+ * - Improved label layout with double line break
+ * - Changed second sentence styling
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -68,14 +70,19 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
 
       <label
         htmlFor="mainIngredient"
-        className={cn(
-          'block pb-1 text-left font-semibold text-recipe-blue whitespace-normal break-words',
-          isMobile ? 'text-base' : 'text-lg'
-        )}
+        className="block pb-1 text-left whitespace-normal break-words"
       >
-        What do you want to cook or what ingredients do you have in your kitchen?
+        <span className={cn(
+          'font-semibold text-recipe-blue',
+          isMobile ? 'text-base' : 'text-lg'
+        )}>
+          What do you want to cook or what ingredients do you have in your kitchen?
+        </span>
         <br />
-        Let our AI Cooking coach know and optionally select servings, cuisine, and dietary restrictions, and we'll create a custom recipe for you!
+        <br />
+        <span className="text-sm text-gray-500">
+          Let our AI Cooking coach know and optionally select servings, cuisine, and dietary restrictions, and we'll create a custom recipe for you!
+        </span>
       </label>
 
       <div

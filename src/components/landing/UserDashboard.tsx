@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { QuickRecipeGenerator } from '@/components/quick-recipe/QuickRecipeGenerator';
@@ -7,6 +6,12 @@ import { PageContainer } from '@/components/ui/containers';
 
 export function UserDashboard() {
   const { profile } = useAuth();
+
+  const handleSubmit = (formData: any) => {
+    // Handle form submission
+    console.log('Dashboard form submitted:', formData);
+    // Additional form handling logic...
+  }
 
   return (
     <PageContainer className="py-4 md:py-12">
@@ -22,7 +27,7 @@ export function UserDashboard() {
         {/* Quick Actions Section */}
         <section>
           <div className="w-full max-w-3xl mx-auto bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 transition-shadow hover:shadow-xl">
-            <QuickRecipeGenerator />
+            <QuickRecipeGenerator onSubmit={handleSubmit} />
           </div>
         </section>
 

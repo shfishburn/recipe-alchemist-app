@@ -1,4 +1,3 @@
-
 // path: src/components/landing/Hero.tsx
 // file: Hero.tsx
 // updated: 2025-05-10
@@ -40,6 +39,14 @@ const Badge: React.FC<BadgeProps> = ({ icon, label, color }) => {
 const Hero: React.FC = memo(() => {
   const isMobile = useIsMobile();
   const { open: openAuthDrawer } = useAuthDrawer();
+
+  // Find where QuickRecipeGenerator is rendered and add the missing onSubmit prop
+  // This might look something like this:
+  const handleSubmit = (formData: any) => {
+    // Handle form submission
+    console.log('Form submitted:', formData);
+    // Additional form handling logic...
+  }
 
   return (
     <section className="py-6 md:py-12 lg:py-16 content-visibility-auto hero-section w-full max-w-full overflow-hidden">
@@ -88,7 +95,7 @@ const Hero: React.FC = memo(() => {
         {/* Recipe Generator Card */}
         <div className="flex justify-center px-2 sm:px-4 w-full">
           <div className="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-shadow hover:shadow-xl border border-gray-100">
-            <QuickRecipeGenerator />
+            <QuickRecipeGenerator onSubmit={handleSubmit} />
           </div>
         </div>
 
