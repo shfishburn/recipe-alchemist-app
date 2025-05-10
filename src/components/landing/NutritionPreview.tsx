@@ -48,10 +48,20 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full">
-          <div className="flex flex-col">
+          {/* Left Column - Nutri-Score */}
+          <div className="flex flex-col space-y-4">
             <NutriScoreDetail nutriScore={sampleNutriScore} />
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <h4 className="font-medium mb-2">What is Nutri-Score?</h4>
+              <p className="text-sm text-muted-foreground">
+                Nutri-Score rates foods from A (most nutritious) to E (least nutritious) based on a balance
+                of negative elements (calories, sugars, saturated fats, sodium) and positive nutrients (protein, fiber, fruits and vegetables).
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col">
+          
+          {/* Right Column - Macro Breakdown */}
+          <div className="flex flex-col space-y-4">
             <div className="rounded-lg border text-card-foreground shadow-sm bg-muted/40 h-full">
               <div className="px-6 py-4">
                 <div className="flex items-center justify-between mb-2">
@@ -140,9 +150,15 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
                   carbs={30} 
                   fat={100}
                 />
-                
-                <Separator className="my-4" />
               </div>
+            </div>
+            
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <h4 className="font-medium mb-2">Personalized Macro Analysis</h4>
+              <p className="text-sm text-muted-foreground">
+                Your macronutrient breakdown shows the distribution of protein, carbs, and fats in your diet.
+                These values are personalized based on your fitness goals, activity level, and dietary preferences.
+              </p>
             </div>
           </div>
         </div>
