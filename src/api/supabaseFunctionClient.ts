@@ -37,11 +37,8 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
   // Validate authentication token if present
   if (token === '') {
     console.warn('Empty authentication token provided to callSupabaseFunction');
-    return {
-      data: null,
-      error: 'Authentication required. Please sign in to continue.',
-      status: 401
-    };
+    // CHANGED: Don't return an error for empty token
+    // We'll continue with the request without authentication
   }
 
   try {

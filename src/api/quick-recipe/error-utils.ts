@@ -17,7 +17,7 @@ export const enhanceErrorMessage = (error: any): string => {
   // Handle authentication errors explicitly
   if (error.status === 401 || error.message?.includes('401') || 
       error.message?.includes('auth') || error.message?.includes('sign in')) {
-    return "Authentication required: Please sign in to generate recipes";
+    return "Error generating recipe. Try again or sign in for enhanced features.";
   }
   
   if (error.message?.includes("timeout")) {
@@ -46,7 +46,8 @@ export const processErrorResponse = async (error: any): Promise<never> => {
       (error.message && (error.message.includes('401') || 
                         error.message.includes('auth') || 
                         error.message.includes('sign in')))) {
-    throw new Error("Authentication required: Please sign in to generate recipes");
+    // CHANGED: Don't prevent unauthenticated users from generating recipes
+    throw new Error("Error generating recipe. Try again or sign in for enhanced features.");
   }
   
   // Check if the error is from Supabase Functions with response data

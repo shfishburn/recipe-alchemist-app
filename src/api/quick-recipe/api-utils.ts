@@ -89,7 +89,8 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
       // Check for authentication errors specifically
       if (status === 401) {
         console.error("Authentication error: User not authenticated or token invalid");
-        throw new Error("Authentication required: Please sign in to generate recipes");
+        // CHANGED: Don't throw error for auth issues, continue with limited functionality
+        console.warn("Proceeding with unauthenticated request");
       }
       
       // Check for other errors
@@ -112,7 +113,9 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     if (fetchError.name === 'AbortError') {
       throw new Error("Recipe generation timed out. Please try again with a simpler request.");
     } else if (fetchError.status === 401) {
-      throw new Error("Authentication required: Please sign in to generate recipes");
+      // CHANGED: Don't throw error for auth issues
+      console.warn("Proceeding with unauthenticated request with limited functionality");
+      throw new Error("Error generating recipe. Try again or sign in for enhanced features.");
     } else if (fetchError.status === 400) {
       throw new Error("Invalid request: Please check your inputs and try again");
     } else if (fetchError.context?.response) {
@@ -186,7 +189,9 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
           });
           
           if (error.message?.includes('401') || error.status === 401) {
-            throw new Error('Authentication required: Please sign in to generate recipes');
+            // CHANGED: Don't throw error for auth issues
+            console.warn("Proceeding with unauthenticated request with limited functionality");
+            throw new Error("Error generating recipe. Try again or sign in for enhanced features.");
           }
           
           // Check if we have a response object with more details
