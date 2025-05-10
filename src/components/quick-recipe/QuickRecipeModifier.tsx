@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,9 +19,10 @@ import { toast } from "@/hooks/use-toast"
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
+  onModifiedRecipe?: (modifiedRecipe: QuickRecipe) => void;
 }
 
-export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe }) => {
+export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe, onModifiedRecipe }) => {
   const [request, setRequest] = useState('');
   const [immediate, setImmediate] = useState(false);
   const {
@@ -42,6 +44,18 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   // Using type-safe comparison instead of direct string comparison
   const isModificationSuccessful = status === 'success';
   const isApplyingModifications = status === 'applying';
+
+  // Add a callback to notify parent component when modifications are applied
+  const handleApplyModifications = useCallback(() => {
+    applyModifications();
+    if (onModifiedRecipe && modifiedRecipe) {
+      onModifiedRecipe(modifiedRecipe);
+      toast({
+        title: "Modifications Applied",
+        description: "Your recipe modifications have been applied successfully."
+      });
+    }
+  }, [applyModifications, modifiedRecipe, onModifiedRecipe]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -144,7 +158,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
           <CardFooter className="justify-between">
             {isModificationSuccessful && (
               <>
-                <Button onClick={applyModifications} disabled={isApplyingModifications}>
+                <Button onClick={handleApplyModifications} disabled={isApplyingModifications}>
                   {isApplyingModifications ? 'Applying...' : 'Apply Modifications'}
                 </Button>
                 <Button variant="secondary" onClick={rejectModifications}>

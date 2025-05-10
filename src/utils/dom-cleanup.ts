@@ -85,7 +85,7 @@ export const clearActiveLoading = (element: HTMLElement | null) => {
   element.classList.remove('active-loading');
 };
 
-// Added missing exports referenced in other components
+// Export fixed functions that were missing
 export const cleanupUIState = () => {
   console.log("Cleaning up UI state");
   forceCleanupUI();
@@ -94,5 +94,9 @@ export const cleanupUIState = () => {
 export const setupRouteChangeCleanup = () => {
   console.log("Setting up route change cleanup");
   // This function is called from AppLayout to set up cleanup on route changes
-  // For now, it's a placeholder that does nothing, but it's exported for compatibility
+  // For now, it's implemented as a no-op function that just logs
+  return () => {
+    console.log("Route change cleanup triggered");
+    checkAndCleanupLoadingUI();
+  };
 };
