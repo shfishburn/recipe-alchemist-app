@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
@@ -44,7 +45,7 @@ const QuickRecipePage: React.FC = () => {
     };
   }, []);
 
-  // Full-screen loading while generating or retrying
+  // Always render the loading state when loading or retrying, without guard clauses
   if (isLoading || isRetrying) {
     console.log('Rendering loading state in QuickRecipePage');
     return (

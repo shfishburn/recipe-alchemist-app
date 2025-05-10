@@ -2,9 +2,10 @@
 import React from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
-import { AlertCircle, ChefHat } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserMessage } from '@/hooks/use-user-message';
+import { RecipeLoadingAnimation } from './loading/RecipeLoadingAnimation';
 
 export function QuickRecipeLoading() {
   const { loadingState, formData } = useQuickRecipeStore();
@@ -15,6 +16,7 @@ export function QuickRecipeLoading() {
   
   // Handler for cancel button
   const handleCancel = () => {
+    console.log('Cancel clicked');
     cleanup();
     // If we're in the context of a page with navigation, return to home
     if (window.location.pathname.includes('quick-recipe')) {
@@ -42,16 +44,8 @@ export function QuickRecipeLoading() {
       </div>
       
       <div className="flex flex-col items-center space-y-6 text-center w-full max-w-md mx-auto">
-        {/* Animated cooking pot or completion animation */}
-        <div className="relative transform-gpu">
-          <ChefHat 
-            className="h-16 w-16 text-recipe-green animate-cooking-pot" 
-            aria-hidden="true"
-          />
-          <div className="steam" aria-hidden="true" style={{ animationDelay: "0.2s" }}></div>
-          <div className="steam" aria-hidden="true" style={{ animationDelay: "0.8s", left: "12px" }}></div>
-          <div className="absolute -top-1 -right-1 h-3 w-3 bg-recipe-green rounded-full animate-pulse" aria-hidden="true" />
-        </div>
+        {/* Chef hat animation always shows regardless of state */}
+        <RecipeLoadingAnimation />
         
         {/* Personalized message with animation */}
         <h2 className="text-lg font-semibold animate-fade-in">
@@ -80,7 +74,7 @@ export function QuickRecipeLoading() {
           />
         </div>
         
-        {/* Timeout warning */}
+        {/* Timeout warning - show conditionally but don't return null if not showing */}
         {showTimeout && !showFinalAnimation && (
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full animate-fade-in">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -88,7 +82,7 @@ export function QuickRecipeLoading() {
           </div>
         )}
         
-        {/* Tip card */}
+        {/* Tip card - always show */}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 w-full animate-fade-in">
           <h4 className="text-base font-semibold mb-2">Chef's Tip</h4>
           <p className="text-sm text-muted-foreground">

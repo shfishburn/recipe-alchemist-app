@@ -159,10 +159,11 @@ export function useLoadingProgress() {
     
     // Show a timeout warning after 75% of the maximum time
     timeoutWarningRef.current = setTimeout(() => {
+      console.log("Timeout warning triggered"); // Debug log
       if (!completedLoading) {
         setShowTimeout(true);
       }
-    }, (MAX_LOADING_TIME * 0.75) * 1000);
+    }, 2000); // Reduced for testing - will show timeout warning more quickly
     
     // Set a timeout to prevent infinite loading state
     timeoutTimerRef.current = setTimeout(() => {

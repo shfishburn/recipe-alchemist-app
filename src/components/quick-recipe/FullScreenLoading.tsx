@@ -16,6 +16,9 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
 }: FullScreenLoadingProps) {
   const isErrorState = !!error;
   
+  // Debug logs to track component renders
+  console.log("FullScreenLoading rendered", { error, isErrorState });
+  
   return (
     <div 
       className="loading-overlay fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999] animate-fadeIn touch-action-none"

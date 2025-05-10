@@ -18,10 +18,11 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   // Reset states and manage loading progress on open/close
   useEffect(() => {
     if (isOpen && !error) {
-      // Show timeout warning after 20 seconds
+      // Show timeout warning after a few seconds (reduced for testing)
       const timeoutId = setTimeout(() => {
+        console.log("LoadingInterstitial timeout message triggered");
         setShowTimeoutMessage(true);
-      }, 20000);
+      }, 2000); // Reduced for testing
       
       // Progress animation
       let progressInterval: NodeJS.Timeout;
@@ -49,7 +50,13 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
     }
   }, [isOpen, error]);
 
-  // If there's an explicit error, show the critical error state
+  // For debugging
+  useEffect(() => {
+    console.log("LoadingInterstitial mounted", { isOpen, error });
+    return () => console.log("LoadingInterstitial unmounted");
+  }, []);
+
+  // Always render the dialog content, even if there's an error
   const hasExplicitError = !!error;
   
   return (
@@ -86,30 +93,36 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
               : "Our culinary AI is crafting your perfect recipe..."}
           </p>
           
-          {showTimeoutMessage && !hasExplicitError && (
-            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg text-sm text-amber-700 dark:text-amber-300">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="h-4 w-4" />
-                <span className="font-medium">This is taking longer than expected</span>
-              </div>
-              <p className="text-xs">
-                The process may be taking longer due to high demand or a complex recipe.
-                Please wait a few more moments...
-              </p>
-            </div>
-          )}
+          {/* Always render the container but conditionally show content */}
+          <div className={`mt-4 p-3 ${showTimeoutMessage && !hasExplicitError ? 'bg-amber-50 dark:bg-amber-900/10' : 'hidden'} rounded-lg text-sm text-amber-700 dark:text-amber-300`}>
+            {showTimeoutMessage && !hasExplicitError && (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="font-medium">This is taking longer than expected</span>
+                </div>
+                <p className="text-xs">
+                  The process may be taking longer due to high demand or a complex recipe.
+                  Please wait a few more moments...
+                </p>
+              </>
+            )}
+          </div>
           
-          {hasExplicitError && (
-            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg text-sm text-red-700 dark:text-red-300">
-              <div className="flex items-center gap-2 mb-2">
-                <XCircle className="h-4 w-4" />
-                <span className="font-medium">Recipe generation failed</span>
-              </div>
-              <p className="text-xs">
-                We couldn't generate your recipe. Please try again with simpler ingredients or check your connection.
-              </p>
-            </div>
-          )}
+          {/* Always render error message container */}
+          <div className={`mt-4 p-3 ${hasExplicitError ? 'bg-red-50 dark:bg-red-900/10' : 'hidden'} rounded-lg text-sm text-red-700 dark:text-red-300`}>
+            {hasExplicitError && (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <XCircle className="h-4 w-4" />
+                  <span className="font-medium">Recipe generation failed</span>
+                </div>
+                <p className="text-xs">
+                  We couldn't generate your recipe. Please try again with simpler ingredients or check your connection.
+                </p>
+              </>
+            )}
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-2 mt-4 justify-center">
             {onCancel && (
