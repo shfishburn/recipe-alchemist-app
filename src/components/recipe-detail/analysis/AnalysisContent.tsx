@@ -1,10 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AnalysisSection } from './AnalysisSection';
 import { StepReactionItem } from './StepReactionItem';
 import { ReactionsList } from './ReactionsList';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw, FlaskRound, Beaker, Wrench } from 'lucide-react';
+import { RefreshCcw, FlaskRound, Beaker, Wrench, Bug } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from '@/components/ui/dialog';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
@@ -26,6 +36,7 @@ export function AnalysisContent({
 }: AnalysisContentProps) {
   // Check if we have any detailed data to display
   const hasStructuredData = chemistry || techniques || troubleshooting;
+  const [showDebug, setShowDebug] = useState(false);
   
   // Group step reactions by major cooking methods
   const groupedReactions = React.useMemo(() => {
@@ -45,9 +56,87 @@ export function AnalysisContent({
     
     return groups;
   }, [stepReactions]);
+
+  // Function to copy JSON to clipboard
+  const copyJsonToClipboard = (data: any) => {
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+      .then(() => {
+        alert('JSON copied to clipboard!');
+      })
+      .catch(err => {
+        console.error('Failed to copy JSON:', err);
+      });
+  };
   
   return (
     <div className="space-y-6">
+      {/* JSON Debug Button */}
+      <div className="flex justify-end">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1 text-xs"
+            >
+              <Bug className="h-3.5 w-3.5 mr-1" />
+              Show Debug Data
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Analysis Debug Data</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => copyJsonToClipboard({
+                    rawResponse,
+                    stepReactions,
+                    hasStructuredData
+                  })}
+                >
+                  Copy JSON
+                </Button>
+              </div>
+              
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    Raw Response
+                    <span className="text-xs text-muted-foreground">Click to toggle</span>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-4 mt-2 bg-slate-50 dark:bg-slate-900 rounded-md overflow-auto max-h-[400px]">
+                    <pre className="text-xs whitespace-pre-wrap">{rawResponse || "No raw response data"}</pre>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+              
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    Step Reactions Data
+                    <span className="text-xs text-muted-foreground">Click to toggle</span>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="p-4 mt-2 bg-slate-50 dark:bg-slate-900 rounded-md overflow-auto max-h-[400px]">
+                    <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(stepReactions, null, 2) || "No step reactions data"}</pre>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {/* Chemistry Content */}
       {chemistry && (
         <AnalysisSection 
@@ -122,6 +211,51 @@ export function AnalysisContent({
           </Button>
         </div>
       )}
+
+      {/* Debug section for small screen - collapsible */}
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center text-xs text-muted-foreground hover:text-foreground p-1 w-full"
+            onClick={() => setShowDebug(!showDebug)}
+          >
+            <Bug className="h-3 w-3 mr-1" />
+            {showDebug ? 'Hide' : 'Show'} Debug Info
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="mt-4 border rounded-md p-4 bg-slate-50 dark:bg-slate-900">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium">Analysis JSON Data</h4>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs"
+                onClick={() => copyJsonToClipboard({
+                  rawResponse,
+                  stepReactions,
+                  hasStructuredData
+                })}
+              >
+                Copy JSON
+              </Button>
+            </div>
+            <Separator className="my-2" />
+            <div className="text-xs text-muted-foreground mt-2">
+              <p><strong>Data Points:</strong></p>
+              <ul className="list-disc pl-5 mt-1">
+                <li>Raw response length: {rawResponse?.length || 0} chars</li>
+                <li>Steps with reactions: {stepReactions?.length || 0}</li>
+                <li>Chemistry data: {chemistry ? 'Yes' : 'No'}</li>
+                <li>Techniques data: {techniques ? 'Yes' : 'No'}</li>
+                <li>Troubleshooting data: {troubleshooting ? 'Yes' : 'No'}</li>
+              </ul>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

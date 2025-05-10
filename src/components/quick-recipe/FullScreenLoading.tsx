@@ -157,4 +157,4 @@ export const FullScreenLoading = memo(function FullScreenLoading({
       </div>
     </div>
   );
-}
+});

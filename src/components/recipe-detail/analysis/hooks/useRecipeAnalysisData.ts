@@ -29,6 +29,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   const analysisRequestRef = useRef<AbortController | null>(null);
   const recipeIdRef = useRef<string>(recipe.id);
   const lastAnalysisTimeRef = useRef<number>(0);
+  const hasTriggeredInitialAnalysisRef = useRef<boolean>(false);
   
   // Track if we've seen this recipe before
   useEffect(() => {
@@ -37,6 +38,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
       recipeIdRef.current = recipe.id;
       initialAnalysisRef.current = false;
       setHasAppliedUpdates(false);
+      hasTriggeredInitialAnalysisRef.current = false;
     }
   }, [recipe.id]);
   
@@ -202,60 +204,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     }
   };
 
-  // Function to manually trigger analysis - now with automatic background refresh
-  const handleAnalyze = useCallback(() => {
-    if (!isLoading && !isAnalyzing) {
-      // Rate limit analysis - prevent triggering too frequently
-      const now = Date.now();
-      const analysisCooldown = 10000; // 10 seconds between analysis attempts
-      
-      if ((now - lastAnalysisTimeRef.current) < analysisCooldown) {
-        toast({
-          title: 'Please Wait',
-          description: "Analysis in progress, please wait before analyzing again",
-          duration: 3000
-        });
-        return;
-      }
-      
-      setIsAnalyzing(true);
-      clearError(); // Clear any previous errors
-      
-      // Use a less intrusive message if we already have content
-      if (hasAnalysisData) {
-        toast({
-          title: 'Background Analysis',
-          description: "Enhancing analysis in the background...",
-          duration: 3000
-        });
-      } else {
-        toast({
-          title: 'Analysis Started',
-          description: "Analyzing recipe chemistry and reactions...",
-          duration: 5000
-        });
-      }
-      
-      // Start both analyses in parallel
-      Promise.all([
-        refetch().catch(error => {
-          console.error("Analysis error:", error);
-          setError(error);
-          toast({
-            title: "Analysis Failed",
-            description: error instanceof Error ? error.message : "Unknown error",
-            variant: "destructive"
-          });
-        }),
-        analyzeReactions()
-      ]).finally(() => {
-        setIsAnalyzing(false);
-        setHasAppliedUpdates(false); // Reset this flag to allow new updates
-      });
-    }
-  }, [refetch, isLoading, isAnalyzing, clearError, hasAnalysisData]);
-
-  // Improved logic to check if we already have valid analysis data
+  // Improved function to check if we already have valid analysis data
   const hasValidAnalysisData = useCallback(() => {
     // Check for complete analysis data
     const hasCompleteAnalysis = hasAnalysisData && 
@@ -276,25 +225,129 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
     return hasCompleteAnalysis;
   }, [hasAnalysisData, stepReactions, scienceNotes]);
 
-  // Auto-analyze when opened for the first time
-  // Modified to ALWAYS run analysis in the background when recipe loads
+  // Function to manually trigger analysis - now with automatic background refresh
+  const handleAnalyze = useCallback(() => {
+    // Don't regenerate if already analyzing
+    if (isLoading || isAnalyzing) {
+      toast({
+        title: 'Analysis in Progress',
+        description: "Please wait for the current analysis to complete",
+        duration: 3000
+      });
+      return;
+    }
+    
+    // Check if we already have complete analysis data
+    const hasComplete = hasValidAnalysisData();
+    if (hasComplete && (Date.now() - lastAnalysisTimeRef.current) < 60000) {
+      toast({
+        title: 'Analysis Already Complete',
+        description: "This recipe already has complete analysis data. Still want to regenerate?",
+        duration: 5000,
+        action: (
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Force regeneration
+              setIsAnalyzing(true);
+              clearError();
+              
+              Promise.all([
+                refetch(),
+                analyzeReactions()
+              ]).finally(() => {
+                setIsAnalyzing(false);
+              });
+            }}
+          >
+            Regenerate
+          </Button>
+        )
+      });
+      return;
+    }
+    
+    // Rate limit analysis - prevent triggering too frequently
+    const now = Date.now();
+    const analysisCooldown = 10000; // 10 seconds between analysis attempts
+    
+    if ((now - lastAnalysisTimeRef.current) < analysisCooldown) {
+      toast({
+        title: 'Please Wait',
+        description: "Analysis in progress, please wait before analyzing again",
+        duration: 3000
+      });
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    clearError(); // Clear any previous errors
+    
+    // Use a less intrusive message if we already have content
+    if (hasAnalysisData) {
+      toast({
+        title: 'Background Analysis',
+        description: "Enhancing analysis in the background...",
+        duration: 3000
+      });
+    } else {
+      toast({
+        title: 'Analysis Started',
+        description: "Analyzing recipe chemistry and reactions...",
+        duration: 5000
+      });
+    }
+    
+    // Start both analyses in parallel
+    Promise.all([
+      refetch().catch(error => {
+        console.error("Analysis error:", error);
+        setError(error);
+        toast({
+          title: "Analysis Failed",
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "destructive"
+        });
+      }),
+      analyzeReactions()
+    ]).finally(() => {
+      setIsAnalyzing(false);
+      setHasAppliedUpdates(false); // Reset this flag to allow new updates
+    });
+  }, [refetch, isLoading, isAnalyzing, clearError, hasAnalysisData, hasValidAnalysisData, analyzeReactions, refetchReactions, setError]);
+
+  // Auto-analyze when opened for the first time - with improved logic to avoid unnecessary analysis
   useEffect(() => {
-    // Only trigger analysis if we're not currently analyzing
-    if (!isAnalyzing && !initialAnalysisRef.current) {
-      console.log('Auto-triggering analysis for recipe:', recipe.title);
-      initialAnalysisRef.current = true;
+    // Only trigger analysis if:
+    // 1. We're not currently analyzing
+    // 2. We haven't triggered initial analysis for this recipe yet
+    // 3. We don't already have complete analysis data
+    if (!isAnalyzing && !hasTriggeredInitialAnalysisRef.current) {
+      // Mark that we've triggered the initial analysis for this recipe
+      hasTriggeredInitialAnalysisRef.current = true;
       
-      // Small delay to prevent immediate analysis on mount
-      const timer = setTimeout(() => {
-        handleAnalyze();
-      }, 500);
+      // Check if we already have complete data
+      const hasComplete = hasValidAnalysisData();
       
-      return () => clearTimeout(timer);
+      if (!hasComplete) {
+        console.log('Auto-triggering analysis for recipe:', recipe.title);
+        
+        // Small delay to prevent immediate analysis on mount
+        const timer = setTimeout(() => {
+          handleAnalyze();
+        }, 500);
+        
+        return () => clearTimeout(timer);
+      } else {
+        console.log('Skipping auto-analysis - complete data already exists for:', recipe.title);
+        initialAnalysisRef.current = true;
+      }
     } else if (!initialAnalysisRef.current) {
       console.log('Skipping auto-analysis - analysis already running for:', recipe.title);
       initialAnalysisRef.current = true;
     }
-  }, [handleAnalyze, isAnalyzing, recipe.title]);
+  }, [handleAnalyze, isAnalyzing, recipe.title, hasValidAnalysisData]);
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {
