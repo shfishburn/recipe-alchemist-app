@@ -57,7 +57,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       className={cn(
         "loading-overlay fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999]",
         "animate-fadeIn touch-action-none hw-accelerated",
-        isErrorState ? "bg-gray-900/60" : "bg-white/5 backdrop-blur-md"
+        isErrorState ? "bg-gray-900/60" : "bg-white/70 dark:bg-gray-900/70 backdrop-blur-md"
       )}
       aria-modal="true"
       role="dialog"
@@ -112,8 +112,8 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
                   <div className="relative">
                     <ChefHat className="h-12 w-12 text-recipe-green animate-float" />
                     <div className="absolute -top-1 -right-1 h-3 w-3 bg-recipe-green rounded-full animate-pulse" />
-                    <div className="steam animate-steam" style={{ animationDelay: "0.2s" }}></div>
-                    <div className="steam animate-steam" style={{ animationDelay: "0.8s", left: "12px" }}></div>
+                    <div className="steam animate-steam bg-white/80 dark:bg-gray-300/80" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="steam animate-steam bg-white/80 dark:bg-gray-300/80" style={{ animationDelay: "0.8s", left: "12px" }}></div>
                   </div>
                 )}
               </div>

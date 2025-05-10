@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export const LoadingIndicator = memo(function LoadingIndicator() {
   const location = useLocation();
@@ -97,15 +98,22 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
 
   return (
     <div 
-      className="nprogress-container" 
+      className={cn(
+        "nprogress-container",
+        "fixed top-0 left-0 right-0 z-[9999] w-full h-3"
+      )}
       aria-hidden="true" 
       role="presentation"
     >
       <div 
-        className="nprogress-bar hw-accelerated" 
+        className={cn(
+          "nprogress-bar hw-accelerated",
+          "absolute top-0 left-0 h-full bg-recipe-green"
+        )}
         style={{ 
           transform: `translateX(${progress - 100}%)`,
-          transition: 'transform 0.2s ease-out'
+          transition: 'transform 0.2s ease-out',
+          boxShadow: '0 0 8px rgba(76, 175, 80, 0.7)'
         }}
       />
     </div>

@@ -13,7 +13,7 @@ export function RecipeDetailLoading() {
             <div className={cn(
               "relative bg-white/90 dark:bg-gray-800/90 p-4 sm:p-8 rounded-xl shadow-lg",
               "border border-gray-100 dark:border-gray-700 flex flex-col items-center",
-              "w-5/6 sm:w-auto max-w-sm sm:max-w-md hw-accelerated"
+              "w-5/6 sm:w-auto max-w-sm sm:max-w-md hw-accelerated animate-fade-in"
             )}>
               <div className="relative mb-4 sm:mb-6">
                 <div className="loading-pot-container relative">
