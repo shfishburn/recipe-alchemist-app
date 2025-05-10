@@ -44,6 +44,12 @@ const QuickRecipePage: React.FC = () => {
       document.body.style.position = '';
       document.body.style.width = '';
       
+      // Show navbar if it was hidden
+      const navbar = document.querySelector('nav');
+      if (navbar) {
+        navbar.style.display = '';
+      }
+      
       // Run additional cleanup
       forceCleanupUI();
     };
@@ -63,10 +69,22 @@ const QuickRecipePage: React.FC = () => {
       document.body.classList.add('overflow-hidden');
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
+      
+      // Hide navbar during loading
+      const navbar = document.querySelector('nav');
+      if (navbar) {
+        navbar.style.display = 'none';
+      }
     } else {
       document.body.classList.remove('overflow-hidden');
       document.body.style.position = '';
       document.body.style.width = '';
+      
+      // Show navbar again
+      const navbar = document.querySelector('nav');
+      if (navbar) {
+        navbar.style.display = '';
+      }
     }
   }, [isLoading, isRetrying, recipe, error]);
 
@@ -74,14 +92,14 @@ const QuickRecipePage: React.FC = () => {
   if (isLoading || isRetrying) {
     console.log('Rendering loading state in QuickRecipePage', { isLoading, isRetrying });
     return (
-      <PageContainer className="relative touch-action-auto overflow-hidden">
+      <div className="h-screen w-screen fixed top-0 left-0 z-[9999] bg-white dark:bg-gray-950">
         <LoadingIndicator />
         <FullScreenLoading
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
         />
-      </PageContainer>
+      </div>
     );
   }
 

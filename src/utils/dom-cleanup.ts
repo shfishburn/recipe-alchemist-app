@@ -16,6 +16,13 @@ export const cleanupUIState = () => {
     document.body.classList.remove('loading');
   }
   
+  // Restore navbar visibility if it was hidden
+  const navbar = document.querySelector('nav');
+  if (navbar && navbar.style.display === 'none') {
+    console.log('Restoring navbar visibility during cleanup');
+    navbar.style.display = '';
+  }
+  
   // Remove any loading triggers that aren't active
   try {
     const inactiveLoadingTriggers = document.querySelectorAll('.loading-trigger:not(.loading-overlay-active)');
@@ -102,6 +109,13 @@ export const setupRouteChangeCleanup = () => {
 export const forceCleanupUI = () => {
   console.log('Force cleanup UI called');
   
+  // Restore navbar visibility
+  const navbar = document.querySelector('nav');
+  if (navbar && navbar.style.display === 'none') {
+    console.log('Restoring navbar visibility during force cleanup');
+    navbar.style.display = '';
+  }
+  
   // Only clean up inactive loading overlays
   const overlays = document.querySelectorAll('.loading-overlay:not(.active-loading)');
   if (overlays.length > 0) {
@@ -137,6 +151,16 @@ export const ensureRecipeLoadingActive = () => {
   if (recipeLoading && !recipeLoading.classList.contains('active-loading')) {
     console.log('Found recipe loading overlay but not marked as active - fixing');
     recipeLoading.classList.add('active-loading');
+  }
+  
+  // Ensure navbar is hidden during loading
+  const activeLoadingElements = document.querySelectorAll('.loading-overlay.active-loading');
+  if (activeLoadingElements.length > 0) {
+    const navbar = document.querySelector('nav');
+    if (navbar && navbar.style.display !== 'none') {
+      console.log('Active loading detected but navbar is visible - hiding navbar');
+      navbar.style.display = 'none';
+    }
   }
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
@@ -23,7 +24,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   const isErrorState = !!error;
   const { showTimeout, showFinalAnimation } = useLoadingProgress();
   
-  // Enhanced body overflow control with cleanup
+  // Enhanced body overflow control with cleanup and navbar hiding
   useEffect(() => {
     // Log when component mounts/unmounts for debugging
     console.log('FullScreenLoading component mounted', { isErrorState });
@@ -42,6 +43,12 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       loadingTrigger.classList.add('loading-overlay-active');
       loadingTrigger.style.display = 'none';
       document.body.appendChild(loadingTrigger);
+      
+      // Hide navbar during loading
+      const navbar = document.querySelector('nav');
+      if (navbar) {
+        navbar.style.display = 'none';
+      }
     }
     
     // Make sure our loading is properly marked as active
@@ -58,6 +65,12 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       document.body.style.width = '';
       document.body.style.top = '';
       document.body.style.left = '';
+      
+      // Show navbar again
+      const navbar = document.querySelector('nav');
+      if (navbar) {
+        navbar.style.display = '';
+      }
       
       clearInterval(ensureActiveInterval);
       
@@ -87,7 +100,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       className={cn(
         "loading-overlay active-loading fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999]",
         "animate-fadeIn touch-action-none hw-accelerated",
-        isErrorState ? "bg-gray-900/60" : "bg-white/90 backdrop-blur-md dark:bg-gray-900/90"
+        isErrorState ? "bg-gray-900/60" : "bg-white dark:bg-gray-900/95"
       )}
       aria-modal="true"
       role="dialog"
