@@ -34,7 +34,7 @@ export function SimpleMicronutrientList({ data, micronutrientsData }: SimpleMicr
   const renderCategory = (category: MicronutrientCategory) => (
     <div className="mb-3">
       <h5 className="text-xs font-medium text-slate-700 mb-1">{category.title}</h5>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 simpleMicronutrient-table">
         {category.items.slice(0, 4).map((item, index) => (
           <div key={index} className="flex justify-between items-center">
             <span className="text-xs text-slate-600">{item.name}</span>
@@ -46,7 +46,7 @@ export function SimpleMicronutrientList({ data, micronutrientsData }: SimpleMicr
   );
   
   return (
-    <div className="space-y-3 text-sm">
+    <div className="space-y-3 text-sm max-w-full overflow-x-hidden">
       {vitamins && renderCategory(vitamins)}
       {minerals && renderCategory(minerals)}
     </div>

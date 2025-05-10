@@ -1,8 +1,4 @@
 
-// path: src/pages/index.tsx
-// file: index.tsx
-// updated: 2025-05-09 14:10 PM
-
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
 import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
@@ -30,6 +26,7 @@ const Index: React.FC = () => {
     }
     document.body.classList.remove('overflow-hidden');
 
+    // Remove mobile wrappers when component unmounts
     return () => {
       document.body.classList.remove('touch-device');
       document.body.classList.remove('touch-optimized');
@@ -38,11 +35,11 @@ const Index: React.FC = () => {
 
   return (
     <PageContainer 
-      className={isTouch ? 'touch-optimized mobile-friendly-container' : ''} 
+      className={`index-page ${isTouch ? 'touch-optimized mobile-friendly-container' : ''}`}
       variant="default"
       withNavbar={true}
     >
-      <div className="w-full overflow-hidden">
+      <div className="w-full max-w-full overflow-hidden">
         {loading ? (
           <PageLoadingFallback />
         ) : (

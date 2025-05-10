@@ -67,7 +67,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
   );
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full max-w-full">
       <FeatureBadges />
       
       <label htmlFor="mainIngredient" className={cn(
@@ -78,7 +78,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
       </label>
       
       <div className={cn(
-        "relative rounded-xl shadow-md transition-all duration-300",
+        "relative rounded-xl shadow-md transition-all duration-300 w-full",
         isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
         isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
         error ? 'ring-2 ring-red-500' : '',
@@ -94,7 +94,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           onBlur={() => setIsFocused(false)}
           className={cn(
             isMobile ? "min-h-[56px] text-base py-3 px-4" : "min-h-[60px] text-lg",
-            "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl",
+            "pl-10 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl w-full",
             "focus-within:border-recipe-blue placeholder:text-gray-500/80", // Lower opacity for placeholder
             error ? "border-red-500" : "border-gray-200 focus:border-recipe-blue"
           )}

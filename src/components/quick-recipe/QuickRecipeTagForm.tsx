@@ -1,10 +1,11 @@
+
 import React, { useState, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
 import { useDebounce } from '@/hooks/use-debounce';
+import { cn } from '@/lib/utils';
 
 export interface QuickRecipeFormData {
   ingredients: string;
@@ -62,28 +63,25 @@ const QuickRecipeTagForm = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <div className="space-y-6 w-full max-w-full">
+      <div className="space-y-2 w-full">
         <Label htmlFor="ingredients" className="text-sm font-bold text-left">Your Ingredients or Recipe</Label>
         <div className="w-full text-left">
           <input
             type="text"
             id="ingredients"
-            placeholder="Tell us what you have or what you’d like to make …"
+            placeholder="Tell us what you have or what you'd like to make..."
             value={localIngredients}
             onChange={handleInputChange}
-            aria-label="Tell us what you have or what you’d like to make  …"
-            className="
-              w-full flex-1
-              border border-slate-300 rounded-md
-              bg-white p-2
-              outline-none focus:outline-none
-              focus:ring-2 focus:ring-slate-400
-              placeholder:text-left placeholder:text-muted-foreground
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            aria-label="Tell us what you have or what you'd like to make"
+            className={cn(
+              "w-full flex-1 border border-slate-300 rounded-md bg-white p-2",
+              "outline-none focus:outline-none focus:ring-2 focus:ring-slate-400",
+              "placeholder:text-left placeholder:text-muted-foreground text-sm sm:text-base",
+              "disabled:cursor-not-allowed disabled:opacity-50"
+            )}
           />
-          <p className="mt-1 block w-full text-sm text-muted-foreground text-left">
+          <p className="mt-1 block w-full text-xs sm:text-sm text-muted-foreground text-left">
             e.g., chicken curry: chicken, curry paste, coconut milk
           </p>
         </div>
@@ -119,7 +117,7 @@ const QuickRecipeTagForm = ({
       </div>
       
       {onSubmit && (
-        <div className="pt-4">
+        <div className="pt-4 w-full">
           <button 
             type="button" 
             onClick={handleFormSubmit}

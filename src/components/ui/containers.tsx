@@ -32,12 +32,12 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div className={cn(
-      "flex flex-col w-full overflow-hidden mobile-friendly-container",
+      "flex flex-col w-full overflow-x-hidden mobile-friendly-container",
       className
     )}>
       <main className={cn(
         "flex-1 px-3 sm:px-4 lg:px-6 mx-auto w-full", 
-        withNavbar && "pt-24 md:pt-28 pb-12",
+        withNavbar && "pt-20 md:pt-24 lg:pt-28 pb-12",
         variant === 'default' && "max-w-4xl",
         variant === 'narrow' && "max-w-2xl",
         variant === 'full' && "w-full max-w-7xl"
