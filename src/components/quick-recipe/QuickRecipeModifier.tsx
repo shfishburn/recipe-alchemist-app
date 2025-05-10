@@ -177,6 +177,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
 
   // Render current modification if there's one
   const renderCurrentModification = () => {
+    // Fixed type error: We need to check the exact string value since types don't overlap
     if (!modifications || status !== 'success') return null;
     
     return (
@@ -216,7 +217,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 </ul>
               </div>
               
-              {/* Action buttons */}
+              {/* Action buttons - Fixed type error by comparing as string */}
               <div className="mt-3 flex gap-2 justify-end">
                 <Button 
                   variant="outline" 

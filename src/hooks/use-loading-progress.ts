@@ -45,7 +45,7 @@ export function useLoadingProgress() {
     }
   };
 
-  // Update progress every second
+  // Update progress every second - Fixed dependencies to avoid recreating timers on every update
   useEffect(() => {
     // Clear any existing timers first
     cleanupAllTimers();
@@ -92,7 +92,8 @@ export function useLoadingProgress() {
     }, 100);
     
     return cleanupAllTimers;
-  }, [loadingState.estimatedTimeRemaining, updateLoadingState, completedLoading, setCompletedLoading, loadingState.percentComplete]);
+    // Removed loadingState.percentComplete from dependencies to avoid recreating timers on every update
+  }, [loadingState.estimatedTimeRemaining, updateLoadingState, completedLoading, setCompletedLoading]);
   
   // Cycle through loading steps
   useEffect(() => {

@@ -47,7 +47,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         aria-valuenow={showFinalAnimation ? 100 : loadingState.percentComplete}
       >
         <div 
-          className="h-full bg-recipe-green transition-all duration-300 ease-out min-w-[5%]"
+          className="h-full bg-recipe-green transition-all duration-300 ease-out min-w-5"
           style={{ 
             boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`,
             width: showFinalAnimation ? '100%' : `${loadingState.percentComplete || 5}%`
@@ -57,7 +57,9 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
       
       <div className="flex flex-col items-center space-y-6 text-center w-full max-w-md mx-auto">
         {/* Chef hat animation always shows regardless of state */}
-        <RecipeLoadingAnimation />
+        <div className="relative h-24 w-24" aria-hidden="true">
+          <RecipeLoadingAnimation />
+        </div>
         
         {/* Personalized message with animation */}
         <h2 className="text-lg font-semibold animate-fade-in">
@@ -79,14 +81,14 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         <div 
           className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
           role="progressbar"
-          aria-label="Loading progress"
+          aria-label="Loading progress indicator"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={loadingState.percentComplete}
           aria-hidden="true"
         >
           <div 
-            className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse min-w-[5%]"
+            className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse min-w-5"
             style={{ width: `${loadingState.percentComplete || 5}%` }}
           />
         </div>

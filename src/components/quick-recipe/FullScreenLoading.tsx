@@ -31,7 +31,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       aria-live="polite"
       id="fullscreen-loading-overlay"
     >
-      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-12">
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-6 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
         {isErrorState ? (
           <ErrorState 
             error={error}
