@@ -6,8 +6,16 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserMessage } from '@/hooks/use-user-message';
 import { RecipeLoadingAnimation } from './loading/RecipeLoadingAnimation';
+import '@/styles/loading.css'; // Explicitly import the CSS
 
-export function QuickRecipeLoading() {
+// Import loading steps to use as fallback
+import { LOADING_STEPS } from '@/hooks/use-loading-progress';
+
+interface QuickRecipeLoadingProps {
+  onCancel?: () => void;
+}
+
+export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
   const { loadingState, formData } = useQuickRecipeStore();
   const { showTimeout, showFinalAnimation, cleanup } = useLoadingProgress();
   
@@ -18,6 +26,9 @@ export function QuickRecipeLoading() {
   const handleCancel = () => {
     console.log('Cancel clicked');
     cleanup();
+    if (onCancel) {
+      onCancel();
+    }
     // If we're in the context of a page with navigation, return to home
     if (window.location.pathname.includes('quick-recipe')) {
       window.location.href = '/';
@@ -49,13 +60,17 @@ export function QuickRecipeLoading() {
         
         {/* Personalized message with animation */}
         <h2 className="text-lg font-semibold animate-fade-in">
-          {showFinalAnimation ? "Recipe ready!" : userMessage}
+          {showFinalAnimation 
+            ? "Recipe ready!" 
+            : userMessage || "Creating your recipe..."}
         </h2>
         
         {/* Step description with animation */}
         <div aria-live="polite">
           <p className="text-sm text-muted-foreground animate-pulse">
-            {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
+            {showFinalAnimation 
+              ? "Your perfect recipe has been created." 
+              : loadingState.stepDescription || LOADING_STEPS[0]}
           </p>
         </div>
         
@@ -70,7 +85,7 @@ export function QuickRecipeLoading() {
         >
           <div 
             className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse"
-            style={{ width: `${loadingState.percentComplete}%` }}
+            style={{ width: `${loadingState.percentComplete || 5}%` }}
           />
         </div>
         

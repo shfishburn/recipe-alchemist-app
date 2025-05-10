@@ -7,7 +7,6 @@ import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRe
 import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeError';
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
-import { LoadingIndicator } from '@/components/ui/loading-indicator';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 import { forceCleanupUI, checkAndCleanupLoadingUI } from '@/utils/dom-cleanup';
@@ -54,7 +53,6 @@ const QuickRecipePage: React.FC = () => {
         aria-busy="true"
         aria-live="polite"
       >
-        <LoadingIndicator />
         <FullScreenLoading
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}

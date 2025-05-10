@@ -15,8 +15,8 @@ export const LOADING_STEPS = [
 // Maximum time to wait before showing error (in seconds)
 export const MAX_LOADING_TIME = 40;
 
-// Time without progress updates before stalled state (in ms)
-const STALLED_THRESHOLD_MS = 7000;
+// Time before showing timeout warning (in ms)
+const TIMEOUT_WARNING_TIME = 8000;
 
 export function useLoadingProgress() {
   const { loadingState, updateLoadingState, setError, completedLoading, setCompletedLoading } = useQuickRecipeStore();
@@ -24,8 +24,6 @@ export function useLoadingProgress() {
   const stepTimerRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutTimerRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutWarningRef = useRef<NodeJS.Timeout | null>(null);
-  const stalledCheckRef = useRef<NodeJS.Timeout | null>(null);
-  const lastProgressUpdateRef = useRef<number>(Date.now());
   const [showTimeout, setShowTimeout] = useState(false);
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
 
@@ -47,51 +45,18 @@ export function useLoadingProgress() {
       clearTimeout(timeoutWarningRef.current);
       timeoutWarningRef.current = null;
     }
-    if (stalledCheckRef.current) {
-      clearInterval(stalledCheckRef.current);
-      stalledCheckRef.current = null;
-    }
   };
-
-  // Check for stalled progress
-  useEffect(() => {
-    if (stalledCheckRef.current) {
-      clearInterval(stalledCheckRef.current);
-    }
-    
-    // Only start checking for stalled state if not completed
-    if (!completedLoading && !showFinalAnimation) {
-      stalledCheckRef.current = setInterval(() => {
-        const now = Date.now();
-        const timeSinceUpdate = now - lastProgressUpdateRef.current;
-        
-        // If we haven't had progress updates for a while, set stalled state
-        if (timeSinceUpdate > STALLED_THRESHOLD_MS) {
-          console.log(`Progress appears stalled (${timeSinceUpdate}ms since last update)`);
-          updateLoadingState({ isStalled: true });
-        } else {
-          updateLoadingState({ isStalled: false });
-        }
-      }, 2000); // Check every 2 seconds
-    }
-    
-    return () => {
-      if (stalledCheckRef.current) {
-        clearInterval(stalledCheckRef.current);
-        stalledCheckRef.current = null;
-      }
-    };
-  }, [completedLoading, showFinalAnimation, updateLoadingState]);
 
   // Update progress every second
   useEffect(() => {
     // Clear any existing timers first
     cleanupAllTimers();
     
-    if (!loadingState.estimatedTimeRemaining) return;
+    // Set a default estimated time if not provided
+    const initialEstimate = loadingState.estimatedTimeRemaining || 15;
     
+    console.log('Setting up progress timer with estimate:', initialEstimate);
     const startTime = Date.now();
-    const initialEstimate = loadingState.estimatedTimeRemaining;
     
     progressTimerRef.current = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
@@ -104,13 +69,11 @@ export function useLoadingProgress() {
           estimatedTimeRemaining: remaining,
           percentComplete: percent 
         });
-        
-        // Record time of last progress update
-        lastProgressUpdateRef.current = Date.now();
       }
       
       // If almost done, show completion animation
       if (remaining <= 0.5 && !completedLoading) {
+        console.log('Progress timer: showing completion animation');
         setCompletedLoading(true);
         // Show final animation
         setShowFinalAnimation(true);
@@ -138,9 +101,6 @@ export function useLoadingProgress() {
         step: (loadingState.step + 1) % LOADING_STEPS.length,
         stepDescription: LOADING_STEPS[(loadingState.step + 1) % LOADING_STEPS.length]
       });
-      
-      // Record the time of this update as a progress change
-      lastProgressUpdateRef.current = Date.now();
     }, 3000);
     
     return () => {
@@ -151,19 +111,19 @@ export function useLoadingProgress() {
     };
   }, [loadingState.step, updateLoadingState]);
 
-  // Set a timeout to prevent infinite loading
+  // Set a timeout warning and timeout error
   useEffect(() => {
     // Clear any existing timers
     if (timeoutWarningRef.current) clearTimeout(timeoutWarningRef.current);
     if (timeoutTimerRef.current) clearTimeout(timeoutTimerRef.current);
     
-    // Show a timeout warning after 75% of the maximum time
+    // Show a timeout warning after a few seconds
     timeoutWarningRef.current = setTimeout(() => {
-      console.log("Timeout warning triggered"); // Debug log
+      console.log("Timeout warning triggered");
       if (!completedLoading) {
         setShowTimeout(true);
       }
-    }, 2000); // Reduced for testing - will show timeout warning more quickly
+    }, TIMEOUT_WARNING_TIME);
     
     // Set a timeout to prevent infinite loading state
     timeoutTimerRef.current = setTimeout(() => {

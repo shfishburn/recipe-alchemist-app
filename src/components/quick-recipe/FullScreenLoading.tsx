@@ -37,7 +37,9 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
             onRetry={onRetry}
           />
         ) : (
-          <QuickRecipeLoading />
+          <QuickRecipeLoading 
+            onCancel={onCancel}
+          />
         )}
       </div>
     </div>

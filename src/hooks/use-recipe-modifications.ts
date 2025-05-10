@@ -144,7 +144,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
             userRequest: actualRequest,
             modificationHistory
           },
-          abortSignal: abortControllerRef.current.signal
+          signal: abortControllerRef.current.signal // Pass the signal properly
         });
         
         // Clear the abort controller reference after successful completion
