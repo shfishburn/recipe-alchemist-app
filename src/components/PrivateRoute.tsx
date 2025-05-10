@@ -22,8 +22,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   // Clean up UI state when this component mounts
   useEffect(() => {
     // This helps clean up any lingering overlays from previous auth state changes
-    // But we respect active loading states to prevent interfering with loading animations
-    cleanupUIState({ respectActiveLoading: true });
+    cleanupUIState();
   }, []);
 
   // Show loading state while checking authentication
@@ -42,8 +41,8 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 
   // For private routes when not authenticated
   if (!session) {
-    // Clean up UI state before redirecting, but respect any active loading states
-    cleanupUIState({ respectActiveLoading: true });
+    // Clean up UI state before redirecting
+    cleanupUIState();
     
     // Store the current full location before redirecting to login
     console.log("Not authenticated, redirecting to login from:", location.pathname);

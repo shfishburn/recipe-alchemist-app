@@ -44,8 +44,7 @@ const Auth = () => {
     let redirectState = {};
     
     // First, clean up any UI elements that might be lingering
-    // But respect any active loading states
-    cleanupUIState({ respectActiveLoading: true });
+    cleanupUIState();
     
     // Try to get the stored location data
     const storedLocationData = sessionStorage.getItem('redirectAfterAuth');

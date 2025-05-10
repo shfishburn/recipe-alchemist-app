@@ -37,9 +37,8 @@ const QuickRecipePage: React.FC = () => {
     document.body.appendChild(loadingTrigger);
     
     // Force cleanup any previous loading states when component mounts
-    // But respect current loading state if active
     if (!isLoading && !isRetrying) {
-      forceCleanupUI({ respectActiveLoading: true });
+      forceCleanupUI();
     }
     
     return () => {
@@ -55,8 +54,8 @@ const QuickRecipePage: React.FC = () => {
         document.body.removeChild(loadingTrigger);
       }
       
-      // Run additional cleanup but respect any active loading that might be happening elsewhere
-      forceCleanupUI({ respectActiveLoading: true });
+      // Run additional cleanup
+      forceCleanupUI();
     };
   }, []);
 
