@@ -11,7 +11,8 @@ export type ModificationStatus =
   | 'error' 
   | 'applying' 
   | 'applied'
-  | 'rejected';
+  | 'rejected'
+  | 'not-deployed';
 
 // Define modification types
 export type IngredientModification = {
@@ -132,7 +133,14 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         abortControllerRef.current = null;
         
         if (response.error) {
-          throw new Error(response.error.message || 'Error requesting modifications');
+          // Check if error is a 404 (function not deployed)
+          if (response.error.message?.includes('Not Found') || response.error.status === 404) {
+            setStatus('not-deployed');
+            setError('Recipe modification service is not yet deployed. Please deploy the edge function "modify-quick-recipe" to your Supabase project.');
+            throw new Error('Edge function not deployed: modify-quick-recipe');
+          } else {
+            throw new Error(response.error.message || 'Error requesting modifications');
+          }
         }
         
         console.log('Received modification response:', response.data);
@@ -158,11 +166,21 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         // Don't show abort errors from user cancellation
         if (err.name !== 'AbortError') {
           setError(errorMessage);
-          setStatus('error');
           
-          toast.error("Modification request failed", {
-            description: errorMessage.substring(0, 100),
-          });
+          // If the error indicates the function isn't deployed, set status accordingly
+          if (errorMessage.includes('not deployed') || errorMessage.includes('Not Found') || errorMessage.includes('404')) {
+            setStatus('not-deployed');
+            
+            toast.error("Modification service not available", {
+              description: "The recipe modification service needs to be deployed. Please check the Supabase Edge Functions section.",
+            });
+          } else {
+            setStatus('error');
+            
+            toast.error("Modification request failed", {
+              description: errorMessage.substring(0, 100),
+            });
+          }
         }
       }
     };

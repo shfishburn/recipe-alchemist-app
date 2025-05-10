@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { Separator } from '@/components/ui/separator';
-import { SendHorizontal, MessagesSquare, Check, X, PanelLeftClose, ArrowUpRight, Undo2 } from 'lucide-react';
+import { SendHorizontal, MessagesSquare, Check, X, PanelLeftClose, ArrowUpRight, Undo2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QuickRecipeModifierProps {
@@ -241,6 +240,40 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
     );
   };
   
+  // New function to render deployment error
+  const renderDeploymentError = () => {
+    if (status !== 'not-deployed') return null;
+    
+    return (
+      <div className="space-y-4">
+        <div className="rounded-md bg-amber-50 p-4 border border-amber-200">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-amber-400" aria-hidden="true" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-amber-800">Edge Function Not Deployed</h3>
+              <div className="mt-2 text-sm text-amber-700">
+                <p>
+                  The recipe modification service needs to be deployed to your Supabase project. 
+                  Please deploy the <code className="bg-amber-100 px-1 py-0.5 rounded">modify-quick-recipe</code> edge function.
+                </p>
+                <p className="mt-2">
+                  Steps to deploy:
+                </p>
+                <ol className="list-decimal ml-5 mt-1 space-y-1">
+                  <li>Navigate to your Supabase dashboard</li>
+                  <li>Go to Edge Functions section</li>
+                  <li>Deploy the "modify-quick-recipe" function</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <Card className="border-2 border-recipe-green/20">
       <CardHeader className="pb-3">
@@ -286,6 +319,9 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 {/* Current modification */}
                 {renderCurrentModification()}
                 
+                {/* Deployment error */}
+                {renderDeploymentError()}
+                
                 {/* Error message */}
                 {status === 'error' && error && (
                   <ErrorDisplay 
@@ -311,12 +347,12 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                   onKeyDown={handleKeyPress}
                   placeholder="Modify recipe (e.g., 'Make this recipe low-carb')"
                   className="pr-12 min-h-[80px] resize-none"
-                  disabled={status === 'loading' || status === 'applying'}
+                  disabled={status === 'loading' || status === 'applying' || status === 'not-deployed'}
                 />
                 <Button
                   size="sm"
                   type="submit"
-                  disabled={status === 'loading' || status === 'applying' || !inputValue.trim()}
+                  disabled={status === 'loading' || status === 'applying' || status === 'not-deployed' || !inputValue.trim()}
                   className="absolute bottom-2 right-2 h-8 w-8 p-0"
                 >
                   <SendHorizontal className="h-4 w-4" />

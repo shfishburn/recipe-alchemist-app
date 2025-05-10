@@ -49,6 +49,26 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
       debugTag,
       payloadKeys: payload ? Object.keys(payload) : 'no payload'
     });
+    
+    // First check if the function exists by calling the functions list endpoint
+    const functionsResponse = await supabase.functions.listFunctions();
+    
+    if (functionsResponse.error) {
+      console.error('Error checking available functions:', functionsResponse.error);
+    } else {
+      const functionExists = functionsResponse.data.some(func => func.name === functionName);
+      
+      if (!functionExists) {
+        console.error(`Function "${functionName}" does not exist or is not deployed in this Supabase project`);
+        return {
+          data: null,
+          error: `Edge function "${functionName}" is not deployed. Please deploy it to your Supabase project.`,
+          status: 404
+        };
+      } else {
+        console.log(`Function "${functionName}" exists and is deployed.`);
+      }
+    }
 
     // Use the Supabase functions.invoke method rather than direct fetch
     const response = await supabase.functions.invoke<TOutput>(functionName, {
