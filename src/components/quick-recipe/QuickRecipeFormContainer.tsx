@@ -21,6 +21,7 @@ export function QuickRecipeFormContainer() {
 
   // Add state for all the required form fields
   const [ingredients, setIngredients] = useState('');
+  // Updated default servings from 2 to 4 as requested
   const [selectedServings, setSelectedServings] = useState(4);
   const [selectedCuisine, setSelectedCuisine] = useState('any');
   const [selectedDietary, setSelectedDietary] = useState('any');

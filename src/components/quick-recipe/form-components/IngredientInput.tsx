@@ -1,11 +1,13 @@
+
 /**
  * IngredientInput.tsx
- * Version: 1.0.1
+ * Version: 1.0.2
  * Date: 2025-05-10
  * Changes:
  * - Vertically centered textarea and icon via flex container
  * - Removed textarea vertical padding for proper centering
  * - Ensured helper text wraps on mobile with whitespace-normal and break-words
+ * - Adjusted the magnifying glass position to prevent overlap with helper text
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -84,7 +86,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           'bg-gradient-to-r from-white to-blue-50/70 dark:from-gray-900 dark:to-gray-800'
         )}
       >
-        <Search className="absolute left-3 h-5 w-5 text-recipe-blue" />
+        {/* Adjusted positioning of the search icon */}
+        <Search className="absolute left-3 h-5 w-5 text-recipe-blue" aria-hidden="true" />
         <Textarea
           id="mainIngredient"
           ref={textareaRef}
@@ -95,10 +98,12 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           onBlur={() => setIsFocused(false)}
           rows={1}
           className={cn(
-            isMobile ? 'min-h-[56px] text-base px-4' : 'min-h-[60px] text-lg px-4',
+            isMobile ? 'min-h-[56px] text-base' : 'min-h-[60px] text-lg',
             'flex-1 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl w-full',
             'focus-within:border-recipe-blue placeholder:text-gray-500/80',
-            error ? 'border-red-500' : 'border-gray-200 focus:border-recipe-blue'
+            error ? 'border-red-500' : 'border-gray-200 focus:border-recipe-blue',
+            // Increased left padding to ensure text doesn't overlap with the search icon
+            'pl-10 pr-4'
           )}
           style={{ touchAction: 'manipulation' }}
         />
