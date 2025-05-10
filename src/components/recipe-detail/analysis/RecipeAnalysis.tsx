@@ -85,8 +85,8 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
   // Use our hook to extract analysis content
   const { chemistry, techniques, troubleshooting, hasAnyContent } = useAnalysisContent(
     analysis,
-    scienceNotes,
-    stepReactions
+    scienceNotes || [],
+    stepReactions || []
   );
 
   // Show analysis prompt only when there is absolutely no data and we're not analyzing
@@ -147,9 +147,9 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
         <AnalysisPrompt onAnalyze={handleAnalyze} />
       ) : hasAnyContent ? (
         <AnalysisContent
-          chemistry={chemistry}
-          techniques={techniques}
-          troubleshooting={troubleshooting}
+          chemistry={Array.isArray(chemistry) ? chemistry : chemistry ? [chemistry] : []}
+          techniques={Array.isArray(techniques) ? techniques : techniques ? [techniques] : []}
+          troubleshooting={Array.isArray(troubleshooting) ? troubleshooting : troubleshooting ? [troubleshooting] : []}
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
           onRegenerate={null} // Remove regenerate button from here

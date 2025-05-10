@@ -11,9 +11,9 @@ interface AnalysisResponse {
 }
 
 interface AnalysisContentData {
-  chemistry: string | null;
-  techniques: string | null;
-  troubleshooting: string | null;
+  chemistry: string[];
+  techniques: string[];
+  troubleshooting: string[];
   hasAnyContent: boolean;
 }
 
@@ -25,31 +25,31 @@ export function useAnalysisContent(
   // Extract analysis content with memoized callback
   const extractAnalysisContent = useCallback(() => {
     // First check for pre-existing notes in the recipe
-    const existingNotes = scienceNotes.length > 0;
+    const existingNotes = scienceNotes && Array.isArray(scienceNotes) && scienceNotes.length > 0;
     
     // If we don't have analysis data, fall back to recipe notes
     if (!analysis) {
       return { 
-        chemistry: existingNotes ? scienceNotes.join('\n\n') : null,
-        techniques: null,
-        troubleshooting: null
+        chemistry: existingNotes ? scienceNotes : [],
+        techniques: [],
+        troubleshooting: []
       };
     }
     
     // Extract chemistry section
     const chemistry = (analysis.science_notes && Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0)
-      ? analysis.science_notes.join('\n\n')
-      : (existingNotes ? scienceNotes.join('\n\n') : null);
+      ? analysis.science_notes
+      : (existingNotes ? scienceNotes : []);
     
     // Extract techniques section
     const techniques = (analysis.techniques && Array.isArray(analysis.techniques) && analysis.techniques.length > 0)
-      ? analysis.techniques.join('\n\n')
-      : null;
+      ? analysis.techniques
+      : [];
     
     // Extract troubleshooting section
     const troubleshooting = (analysis.troubleshooting && Array.isArray(analysis.troubleshooting) && analysis.troubleshooting.length > 0)
-      ? analysis.troubleshooting.join('\n\n')
-      : null;
+      ? analysis.troubleshooting
+      : [];
     
     return { chemistry, techniques, troubleshooting };
   }, [analysis, scienceNotes]);
@@ -62,9 +62,9 @@ export function useAnalysisContent(
   
   // Determine if there's any analysis content available with memoization
   const hasAnyContent = useMemo(() => 
-    (chemistry !== null) || 
-    (techniques !== null) || 
-    (troubleshooting !== null) ||
+    (chemistry.length > 0) || 
+    (techniques.length > 0) || 
+    (troubleshooting.length > 0) ||
     (analysis?.textResponse && analysis.textResponse.length > 50) ||
     (stepReactions && stepReactions.length > 0),
     [chemistry, techniques, troubleshooting, analysis?.textResponse, stepReactions]

@@ -76,7 +76,7 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
         </div>
       </div>
       
-      {reaction.reactions.length > 0 && (
+      {Array.isArray(reaction.reactions) && reaction.reactions.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-blue-200">
           {reaction.reactions.map((type, i) => (
             <span 

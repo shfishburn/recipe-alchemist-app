@@ -36,7 +36,7 @@ export function AnalysisContent({
         </TabsList>
         
         <TabsContent value="chemistry" className="space-y-2">
-          {chemistry.length > 0 ? (
+          {chemistry && chemistry.length > 0 ? (
             <ul className="list-disc pl-5 space-y-2">
               {chemistry.map((item, index) => (
                 <li key={index} className="text-muted-foreground">{item}</li>
@@ -48,7 +48,7 @@ export function AnalysisContent({
         </TabsContent>
         
         <TabsContent value="techniques" className="space-y-2">
-          {techniques.length > 0 ? (
+          {techniques && techniques.length > 0 ? (
             <ul className="list-disc pl-5 space-y-2">
               {techniques.map((item, index) => (
                 <li key={index} className="text-muted-foreground">{item}</li>
@@ -60,7 +60,7 @@ export function AnalysisContent({
         </TabsContent>
         
         <TabsContent value="troubleshooting" className="space-y-2">
-          {troubleshooting.length > 0 ? (
+          {troubleshooting && troubleshooting.length > 0 ? (
             <ul className="list-disc pl-5 space-y-2">
               {troubleshooting.map((item, index) => (
                 <li key={index} className="text-muted-foreground">{item}</li>
@@ -73,7 +73,7 @@ export function AnalysisContent({
         
         <TabsContent value="reactions" className="space-y-2">
           {stepReactions && stepReactions.length > 0 ? (
-            <ReactionsList reactions={stepReactions} />
+            <ReactionsList stepReactions={stepReactions} />
           ) : (
             <p className="text-muted-foreground italic">No step-by-step analysis available yet.</p>
           )}
