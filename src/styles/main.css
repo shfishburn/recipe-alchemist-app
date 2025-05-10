@@ -29,19 +29,81 @@ textarea:focus-visible {
   box-shadow: 0 0 0 2px white, 0 0 0 4px var(--recipe-blue);
 }
 
-/* Override for react-select components to prevent blue rectangle */
+/* Completely remove the blue rectangle from react-select components */
 .multi-select__control:focus,
 .multi-select__control:focus-within,
 .multi-select__control *:focus,
-.multi-select__control *:focus-visible {
+.multi-select__control *:focus-visible,
+.multi-select__value-container *:focus,
+.multi-select__value-container *:focus-visible,
+.multi-select__input:focus,
+.multi-select__input:focus-visible,
+.multi-select__multi-value:focus,
+.multi-select__multi-value:focus-visible,
+.multi-select__multi-value__label:focus,
+.multi-select__multi-value__label:focus-visible,
+.multi-select__multi-value__remove:focus,
+.multi-select__multi-value__remove:focus-visible {
   outline: none !important;
   box-shadow: none !important;
   border-color: rgb(209, 213, 219) !important;
 }
 
-.multi-select__control--is-focused {
-  border-color: rgb(209, 213, 219) !important;
-  box-shadow: none !important;
+.multi-select__control--is-focused,
+.multi-select__control--is-focused:hover {
+  border-color: rgb(37, 99, 235) !important;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* Fix the multi-value selected items */
+.multi-select__multi-value {
+  align-items: center;
+  background-color: rgb(219, 234, 254) !important;
+  border-radius: 0.375rem !important;
+  margin: 2px 4px 2px 0 !important;
+}
+
+.multi-select__multi-value__label {
+  color: rgb(37, 99, 235) !important;
+  font-size: 0.875rem !important;
+  padding: 2px 4px 2px 6px !important;
+}
+
+.multi-select__multi-value__remove {
+  color: rgb(37, 99, 235) !important;
+  padding: 0 6px !important;
+  border-radius: 0 0.375rem 0.375rem 0 !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.multi-select__multi-value__remove:hover {
+  background-color: rgb(191, 219, 254) !important;
+  color: rgb(37, 99, 235) !important;
+}
+
+/* Mobile optimizations for touch */
+@media (max-width: 640px) {
+  .multi-select__control {
+    min-height: 44px !important;
+  }
+  
+  .multi-select__value-container {
+    padding: 2px 8px !important;
+  }
+  
+  .multi-select__multi-value {
+    max-width: calc(100% - 20px) !important;
+  }
+  
+  .multi-select__multi-value__label {
+    max-width: 140px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
 }
 
 .container-page {

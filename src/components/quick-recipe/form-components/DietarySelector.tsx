@@ -1,9 +1,12 @@
+
 /**
  * DietarySelector.tsx
- * Version: 1.0.3
+ * Version: 1.0.4
  * Date: 2025-05-10
  * Changes:
  * - Converted to use grouped options with category labels for improved UX
+ * - Fixed mobile styling for selection boxes
+ * - Improved X button alignment
  */
 
 import React from 'react'
