@@ -1,13 +1,12 @@
 
-// path: src/components/quick-recipe/QuickRecipeDisplay.tsx
-// file: QuickRecipeDisplay.tsx
-// updated: 2025-05-09 11:05 AM
-
-import React from 'react';
+import React, { useState } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
+import { QuickRecipeModifier } from '@/components/quick-recipe/QuickRecipeModifier'; 
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Utensils, MessagesSquare } from 'lucide-react';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
@@ -15,19 +14,52 @@ interface QuickRecipeDisplayProps {
 
 export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   const { saveRecipe, isSaving } = useQuickRecipeSave();
+  const [currentRecipe, setCurrentRecipe] = useState<QuickRecipe>(recipe);
+  const [activeTab, setActiveTab] = useState<string>('recipe');
 
   const handleSave = async () => {
     toast.loading("Saving your recipe...");
-    await saveRecipe(recipe);
+    await saveRecipe(currentRecipe);
+  };
+
+  const handleModifiedRecipe = (modifiedRecipe: QuickRecipe) => {
+    setCurrentRecipe(modifiedRecipe);
   };
 
   return (
-    <>
-      <QuickRecipeCard
-        recipe={recipe}
-        onSave={handleSave}
-        isSaving={isSaving}
-      />
-    </>
+    <div className="space-y-4">
+      <Tabs 
+        defaultValue="recipe" 
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="recipe" className="flex items-center gap-1.5">
+            <Utensils className="h-4 w-4" />
+            Recipe
+          </TabsTrigger>
+          <TabsTrigger value="modify" className="flex items-center gap-1.5">
+            <MessagesSquare className="h-4 w-4" />
+            Modify Recipe
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="recipe" className="pt-4">
+          <QuickRecipeCard
+            recipe={currentRecipe}
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
+        </TabsContent>
+        
+        <TabsContent value="modify" className="pt-4">
+          <QuickRecipeModifier 
+            recipe={recipe}
+            onModifiedRecipe={handleModifiedRecipe}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

@@ -1,198 +1,73 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+
+import { useState, useCallback } from 'react';
+import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
-import { QuickRecipe } from '@/hooks/use-quick-recipe';
-import { useAuth } from '@/hooks/use-auth';
-import { Json } from '@/integrations/supabase/types';
-import { estimateNutrition } from './nutrition-estimation';
-import { useQueryClient } from '@tanstack/react-query';
-import { standardizeNutrition } from '@/utils/nutrition-utils';
-import { getCuisineCategory } from '@/api/quick-recipe/format-utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth';
 
-export const useQuickRecipeSave = () => {
+export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { user, session } = useAuth();
-  const queryClient = useQueryClient();
+  const { session } = useAuth();
 
-  const saveRecipe = async (recipe: QuickRecipe) => {
+  const saveRecipe = useCallback(async (recipe: QuickRecipe) => {
     try {
       setIsSaving(true);
       
-      if (!recipe) {
-        throw new Error("No recipe data to save");
-      }
-
-      console.log("Saving recipe:", recipe);
-      
-      // Check if user is authenticated
-      if (!session || !user?.id) {
-        console.log("User not authenticated, redirecting to login");
-        
-        // Store the current recipe data in session storage
-        sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
-          formData: recipe,
-          returnToRecipe: true
-        }));
-        
-        // Ask user to login to save the recipe
-        toast({
-          title: "Sign in to save recipe",
-          description: "You need to sign in to save this recipe to your collection.",
-        });
-        
-        // Redirect to auth page with current location
-        navigate('/auth', { 
-          state: { 
-            from: { 
-              pathname: '/quick-recipe',
-              state: { returningUser: true }
-            } 
-          } 
-        });
-        
-        return false;
+      // Check if user is logged in
+      if (!session?.user) {
+        toast.error("You need to be logged in to save recipes");
+        return;
       }
       
-      // Ensure nutrition data is available or estimate it
-      let nutritionData = recipe.nutrition || estimateNutrition(recipe.ingredients, recipe.servings || 2);
-      
-      // Make sure nutrition data follows the expected format
-      if (nutritionData) {
-        // Standardize nutrition keys for consistency
-        nutritionData = standardizeNutrition(nutritionData);
-        
-        // Ensure we have at least basic nutrition fields
-        if (!nutritionData.calories && !nutritionData.kcal) {
-          console.log("Adding basic nutrition values from estimation");
-          const estimatedValues = estimateNutrition(recipe.ingredients, recipe.servings || 2);
-          nutritionData = {
-            ...nutritionData,
-            ...estimatedValues
-          };
-        }
-        
-        // Log the final nutrition data for debugging
-        console.log("Final nutrition data being saved:", nutritionData);
-      }
-      
-      // Enhanced error handling for nutrition data
-      try {
-        // Validate nutrition data to ensure it's well-formed
-        if (nutritionData && typeof nutritionData === 'object') {
-          console.log("Nutrition fields present:", Object.keys(nutritionData));
-        } else {
-          console.warn("Nutrition data is not an object:", nutritionData);
-          nutritionData = estimateNutrition(recipe.ingredients, recipe.servings || 2);
-          console.log("Using estimated nutrition instead:", nutritionData);
-        }
-      } catch (nutritionError) {
-        console.error("Error processing nutrition data:", nutritionError);
-        // Fallback to estimated nutrition
-        nutritionData = estimateNutrition(recipe.ingredients, recipe.servings || 2);
-      }
-      
-      // Ensure science_notes is an array of strings
-      const scienceNotes = Array.isArray(recipe.science_notes) 
-        ? recipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
-        : (recipe.science_notes ? [String(recipe.science_notes)] : []);
-      
-      // Process cuisine value properly - ensure it's never null/undefined/empty
-      const originalCuisine = recipe.cuisine;
-      const cuisineString = originalCuisine && originalCuisine.trim() !== '' 
-        ? originalCuisine.trim() 
-        : "any";
-      
-      console.log(`Recipe cuisine being saved: "${cuisineString}" (type: ${typeof cuisineString})`);
-      
-      // Calculate a valid cuisine_category based on the cuisine string
-      // IMPORTANT: We explicitly set cuisine_category based on cuisineString to avoid relying on the database trigger
-      const cuisineCategory = getCuisineCategory(cuisineString);
-      console.log(`Using cuisine_category: "${cuisineCategory}" for cuisine: "${cuisineString}"`);
-      
-      // Convert the quick recipe format to database format
-      const recipeData = {
-        title: recipe.title || "Untitled Recipe",
-        tagline: recipe.description || "", // Map description to tagline
-        ingredients: recipe.ingredients as unknown as Json,
-        instructions: recipe.steps || recipe.instructions || [],
-        prep_time_min: recipe.prepTime,
-        cook_time_min: recipe.cookTime,
-        cuisine: cuisineString, // Use processed cuisine value
-        cuisine_category: cuisineCategory, // Explicitly set cuisine_category to a valid value
-        dietary: recipe.dietary || "", // Use dietary instead of dietaryType
-        cooking_tip: recipe.cookingTip,
-        science_notes: scienceNotes as unknown as Json, // Ensure it's array of strings
-        servings: recipe.servings || 2,
-        user_id: user.id, // Add the user_id to the recipe data
-        nutrition: nutritionData as unknown as Json // Add enhanced nutrition data
+      // Add user ID to the recipe
+      const recipeWithUser = {
+        ...recipe,
+        user_id: session.user.id
       };
       
-      console.log("Recipe data prepared for database:", {
-        title: recipeData.title,
-        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.length + " items" : "no ingredients",
-        science_notes: Array.isArray(scienceNotes) ? scienceNotes.length + " notes" : "no notes",
-        nutrition: nutritionData ? "present" : "missing",
-        nutrition_type: nutritionData ? typeof nutritionData : "N/A",
-        cuisine: cuisineString,
-        cuisine_category: cuisineCategory,
-        user_id: user.id
-      });
-
-      // Insert the recipe into the database - using a cleaner insert approach
-      const { data, error } = await supabase
-        .from('recipes')
-        .insert([recipeData])
-        .select('id')
-        .single();
-
-      if (error) {
-        console.error("Error saving recipe:", error);
-        console.error("Error details:", error.details, error.hint, error.code);
-        
-        // Provide more helpful error messages based on the error
-        if (error.message.includes('cuisine_category')) {
-          throw new Error(`Failed to save recipe: Database issue with cuisine category. Please try again.`);
-        } else if (error.message.includes('violates foreign key constraint')) {
-          throw new Error(`Failed to save recipe: There was an issue with the user account. Please try logging in again.`);
-        } else {
-          throw new Error(`Failed to save recipe: ${error.message}`);
+      // Implement robust circuit-breaker style retry logic
+      const maxRetries = 3;
+      let retries = 0;
+      let success = false;
+      
+      while (retries < maxRetries && !success) {
+        try {
+          const { data, error } = await supabase
+            .from('recipes')
+            .insert(recipeWithUser)
+            .select('id')
+            .single();
+          
+          if (error) {
+            throw error;
+          }
+          
+          // Success!
+          success = true;
+          toast.success("Recipe saved successfully!");
+          return data;
+          
+        } catch (err) {
+          retries++;
+          
+          if (retries >= maxRetries) {
+            throw err;
+          }
+          
+          // Exponential backoff
+          const delay = Math.pow(2, retries) * 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
-
-      // Invalidate the recipes query to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-
-      toast({
-        title: "Recipe saved",
-        description: "Your recipe has been saved to your collection.",
-      });
       
-      // Add a small delay before navigation
-      setTimeout(() => {
-        if (data?.id) {
-          navigate(`/recipes/${data.id}`);
-        } else {
-          navigate('/recipes');
-        }
-      }, 100);
-      
-      return true;
     } catch (error: any) {
-      console.error("Error in saveRecipe:", error);
-      toast({
-        title: "Save failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-      return false;
+      console.error("Error saving recipe:", error);
+      toast.error(`Failed to save recipe: ${error.message}`);
+      throw error;
     } finally {
       setIsSaving(false);
     }
-  };
-
-  return { saveRecipe, isSaving, navigate };
-};
+  }, [session]);
+  
+  return { saveRecipe, isSaving };
+}
