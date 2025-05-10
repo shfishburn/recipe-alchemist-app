@@ -38,6 +38,9 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   const lastAnalysisTimeRef = useRef<number>(0);
   const hasTriggeredInitialAnalysisRef = useRef<boolean>(false);
   
+  // Add a ref to track if we have the exact same science notes
+  const previousScienceNotesRef = useRef<string[]>(recipe.science_notes || []);
+  
   // Check if this recipe has been analyzed before using our cache
   const cachedAnalysis = analyzedRecipesCache[recipe.id];
   const hasBeenAnalyzedBefore = Boolean(cachedAnalysis?.hasAnalyzedData);
@@ -50,6 +53,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
       initialAnalysisRef.current = false;
       setHasAppliedUpdates(false);
       hasTriggeredInitialAnalysisRef.current = false;
+      previousScienceNotesRef.current = recipe.science_notes || [];
     }
   }, [recipe.id]);
   
@@ -161,7 +165,7 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
     }
   }, [handleAnalyze, isAnalyzing, recipe.title, hasValidAnalysisData, hasBeenAnalyzedBefore, cachedAnalysis]);
 
-  // Apply analysis updates to recipe when data is available
+  // Apply analysis updates to recipe when data is available - IMPROVED WITH DEEP COMPARISON
   useEffect(() => {
     // Only run this effect if we have analysis data, we haven't applied updates yet,
     // and there's a callback for updates
@@ -173,20 +177,38 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
       
       // Only proceed if we have meaningful science notes to update
       if (Array.isArray(analysis.science_notes) && analysis.science_notes.length > 0) {
-        console.log('Applying science notes from analysis:', analysis.science_notes.length);
-        setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
+        // Check if the science notes are different from what we already have
+        const currentScienceNotesJson = JSON.stringify(recipe.science_notes || []);
+        const newScienceNotesJson = JSON.stringify(analysis.science_notes);
         
-        // Update with safely constructed data - pass only the updated recipe to the callback
-        if (onRecipeUpdate) {
-          const updatedRecipe = { ...recipe, science_notes: analysis.science_notes };
-          onRecipeUpdate(updatedRecipe);
+        // Only update if the notes are actually different
+        if (currentScienceNotesJson !== newScienceNotesJson) {
+          console.log('Applying science notes from analysis:', analysis.science_notes.length);
+          setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
+          
+          // Store the updated notes to prevent future updates with the same data
+          previousScienceNotesRef.current = analysis.science_notes;
+          
+          // Update with safely constructed data - pass only the updated recipe to the callback
+          if (onRecipeUpdate) {
+            const updatedRecipe = { ...recipe, science_notes: analysis.science_notes };
+            onRecipeUpdate(updatedRecipe);
+            toast({
+              title: 'Analysis Saved',
+              description: 'Recipe analysis data saved',
+              variant: 'success'
+            });
+          }
+        } else {
+          console.log('Science notes already up to date, skipping update');
+          setHasAppliedUpdates(true); // Mark as applied anyway to prevent future attempts
           toast({
-            title: 'Analysis Saved',
-            description: 'Recipe analysis data saved',
-            variant: 'success'
+            title: 'Analysis Complete',
+            description: 'No changes needed.',
           });
         }
       } else {
+        setHasAppliedUpdates(true); // Mark as applied so we don't try again
         toast({
           title: 'Analysis Complete',
           description: 'No changes needed.',

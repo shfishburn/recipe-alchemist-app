@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CardWrapper } from "@/components/ui/card-wrapper";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
 import { useAnalysisContent } from '@/hooks/use-analysis-content';
@@ -22,6 +22,11 @@ interface RecipeAnalysisProps {
 export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: RecipeAnalysisProps) {
   const { updateRecipe } = useRecipeUpdates(recipe.id);
   const { toast } = useToast();
+  const updatePendingRef = useRef(false);
+  const hasUpdatedRef = useRef(false);
+  
+  // Deep compare science notes to prevent infinite updates
+  const existingNotesRef = useRef<string[]>(recipe.science_notes || []);
   
   // Use our custom hook for analysis data with automatic analysis enabled
   const {
@@ -34,27 +39,48 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
     handleAnalyze,
     error
   } = useRecipeAnalysisData(recipe, (updatedRecipe) => {
-    // Handle recipe updates with the update mutation
-    updateRecipe.mutate(
-      { science_notes: updatedRecipe.science_notes }, 
-      {
-        onSuccess: () => {
-          // Call the parent's update callback if provided
-          if (onRecipeUpdate) {
-            onRecipeUpdate(updatedRecipe);
+    // Avoid unnecessary updates if science notes haven't actually changed
+    const existingScienceNotesJson = JSON.stringify(existingNotesRef.current);
+    const newScienceNotesJson = JSON.stringify(updatedRecipe.science_notes);
+    
+    if (existingScienceNotesJson !== newScienceNotesJson && !updatePendingRef.current) {
+      updatePendingRef.current = true;
+      console.log('Science notes have actually changed, updating recipe');
+
+      // Update the recipe with the new science notes
+      updateRecipe.mutate(
+        { science_notes: updatedRecipe.science_notes }, 
+        {
+          onSuccess: () => {
+            updatePendingRef.current = false;
+            hasUpdatedRef.current = true;
+            existingNotesRef.current = updatedRecipe.science_notes;
+            
+            // Call the parent's update callback if provided
+            if (onRecipeUpdate) {
+              onRecipeUpdate(updatedRecipe);
+            }
+          },
+          onError: (error) => {
+            updatePendingRef.current = false;
+            console.error('Failed to update recipe with analysis data:', error);
+            toast({
+              title: "Update Failed",
+              description: "Failed to save analysis data. Please try again.",
+              variant: "destructive"
+            });
           }
-        },
-        onError: (error) => {
-          console.error('Failed to update recipe with analysis data:', error);
-          toast({
-            title: "Update Failed",
-            description: "Failed to save analysis data. Please try again.",
-            variant: "destructive"
-          });
         }
-      }
-    );
+      );
+    } else {
+      console.log('Science notes unchanged or update already pending, skipping update');
+    }
   });
+
+  // Update the ref whenever recipe changes
+  useEffect(() => {
+    existingNotesRef.current = recipe.science_notes || [];
+  }, [recipe.id, recipe.science_notes]);
 
   // Use our hook to extract analysis content
   const { chemistry, techniques, troubleshooting, hasAnyContent } = useAnalysisContent(
