@@ -6,6 +6,9 @@ import { cn } from '@/lib/utils';
 export function RecipeDetailLoading() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
+      {/* Top loading bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-recipe-green to-recipe-blue animate-pulse"></div>
+      
       <main className="flex-1">
         <div className="container-page py-4 sm:py-8">
           {/* Enhanced loading indicator - mobile responsive */}

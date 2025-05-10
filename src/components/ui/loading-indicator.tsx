@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 export const LoadingIndicator = memo(function LoadingIndicator() {
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading active
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<number | null>(null);
   const completionTimerRef = useRef<number | null>(null);
@@ -65,7 +65,6 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
       
       setTimeout(() => {
         setIsLoading(false);
-        setProgress(0);
       }, 300);
     };
 

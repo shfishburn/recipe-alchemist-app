@@ -21,6 +21,23 @@ export const cleanupUIState = () => {
   } catch (e) {
     console.error('Error cleaning up loading triggers:', e);
   }
+
+  // Remove any stuck overlay elements that might be blocking the UI
+  try {
+    const possibleOverlays = document.querySelectorAll('.loading-overlay');
+    possibleOverlays.forEach(overlay => {
+      // Check if the overlay exists and might be "stuck"
+      const computedStyle = window.getComputedStyle(overlay);
+      if (computedStyle.display !== 'none') {
+        console.log('Removing potentially stuck overlay');
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Error cleaning up overlay elements:', e);
+  }
 };
 
 /**
@@ -55,6 +72,12 @@ export const setupRouteChangeCleanup = () => {
   }
   
   return () => observer.disconnect();
+};
+
+// Add a manual cleanup method to be called from components
+export const forceCleanupUI = () => {
+  console.log('Force cleanup UI called');
+  cleanupUIState();
 };
 
 // Declare global variable for TypeScript 

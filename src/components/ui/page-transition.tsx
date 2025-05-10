@@ -82,6 +82,9 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
     }
   }, [transitionStage, location.pathname]);
 
+  // Add a console.log to track page transitions
+  console.log(`Page transition: ${displayLocation.pathname} (stage: ${transitionStage})`);
+
   return (
     <div 
       className={`page-transition ${transitionStage} hw-accelerated`}

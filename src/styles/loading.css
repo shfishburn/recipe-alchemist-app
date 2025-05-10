@@ -203,7 +203,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  width: 0%;
+  width: 100%;
   transform-origin: left;
   box-shadow: 0 0 6px var(--recipe-blue, #4CAF50);
   display: block;
@@ -232,7 +232,7 @@
 
 /* Loading overlay for full-screen loaders */
 .loading-overlay {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   position: fixed;
@@ -249,6 +249,8 @@
   /* Performance optimizations */
   will-change: opacity;
   transform: translateZ(0);
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Dark mode support */
@@ -298,4 +300,27 @@
 .dark .loading-overlay-content {
   background-color: #1f2937;
   border-color: #374151;
+}
+
+/* Page transition animations */
+.page-transition {
+  transition: opacity 0.2s ease;
+}
+
+.fadeIn {
+  opacity: 1;
+}
+
+.fadeOut {
+  opacity: 0;
+}
+
+/* Loading fallback specific styles */
+.loading-fallback {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
 }
