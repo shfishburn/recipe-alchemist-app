@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -94,8 +95,7 @@ export function useQuickRecipeForm() {
         // Add a small delay to ensure navigation completes
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // If not logged in, we'll be redirected to login page
-        // and the recipe generation will resume after login
+        // Generate the recipe - authentication check removed
         const generatedRecipe = await generateQuickRecipe(processedFormData);
         
         // Validate the recipe structure before setting it

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +37,12 @@ export const useQuickRecipeSave = () => {
           formData: recipe,
           returnToRecipe: true
         }));
+        
+        // Ask user to login to save the recipe
+        toast({
+          title: "Sign in to save recipe",
+          description: "You need to sign in to save this recipe to your collection.",
+        });
         
         // Redirect to auth page with current location
         navigate('/auth', { 
@@ -165,17 +170,12 @@ export const useQuickRecipeSave = () => {
         title: "Recipe saved",
         description: "Your recipe has been saved to your collection.",
       });
-
-      console.log("Recipe saved successfully with ID:", data.id);
       
-      // Add a small delay before navigation to ensure state updates complete
-      // This helps avoid navigation issues that might interrupt the rendering process
+      // Add a small delay before navigation
       setTimeout(() => {
         if (data?.id) {
-          // Navigate to the specific recipe detail page instead of the recipes list
           navigate(`/recipes/${data.id}`);
         } else {
-          // Fallback to recipes list if ID is not available
           navigate('/recipes');
         }
       }, 100);

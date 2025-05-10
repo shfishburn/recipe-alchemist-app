@@ -15,7 +15,7 @@ export function ChatLoading() {
     <Card className="border-slate-100">
       <CardContent className="pt-2 sm:pt-6 relative">
         <LoadingBar color="#4CAF50" height={3} ref={loadingRef} shadow={true} className="absolute top-0 left-0 right-0" />
-        <div className="w-full flex justify-center items-center min-h-24 py-8">
+        <div className="w-full flex justify-center items-center min-h-[150px] py-8">
           <div className="space-y-4 text-center">
             <div className="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
               <div className="h-full bg-recipe-green animate-pulse rounded-full" style={{ width: '60%' }} />

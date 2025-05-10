@@ -9,7 +9,7 @@ export function RecipeDetailLoading() {
       <Navbar />
       <main className="flex-1">
         <div className="container-page py-4 sm:py-8">
-          <div className="flex justify-center my-8 sm:my-12">
+          <div className="flex justify-center my-8 sm:my-12 min-h-[200px] items-center">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         </div>

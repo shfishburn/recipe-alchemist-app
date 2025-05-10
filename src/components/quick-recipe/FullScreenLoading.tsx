@@ -39,7 +39,7 @@ export const FullScreenLoading = memo(function FullScreenLoading({
   const pointerEventsClass = showFinalAnimation && !isErrorState ? 'pointer-events-none' : '';
   
   return (
-    <div className={`absolute inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
+    <div className={`fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto ${pointerEventsClass}`}>
       <TopLoadingBar showFinalAnimation={showFinalAnimation} />
       
       {/* Accessible title for screen readers */}
@@ -157,6 +157,4 @@ export const FullScreenLoading = memo(function FullScreenLoading({
       </div>
     </div>
   );
-});
-
-export default FullScreenLoading;
+}

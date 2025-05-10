@@ -16,16 +16,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       throw new Error("Please provide a main ingredient");
     }
     
-    // Check authentication first
-    try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error("Authentication required: Please sign in to generate recipes");
-      }
-    } catch (authError) {
-      console.error("Authentication error:", authError);
-      throw new Error("Authentication required: Please sign in to generate recipes");
-    }
+    // Authentication check removed - users can generate recipes without being signed in
     
     // Format the request body
     const requestBody = formatRequestBody(formData);
@@ -69,12 +60,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     
-    // Improve auth error messages
-    if (error.message?.includes('auth') || error.message?.includes('sign in') || 
-        error.status === 401 || error.message?.includes('401')) {
-      throw new Error("Authentication required: Please sign in to generate recipes");
-    }
-    
+    // Improve error messages but remove authentication-specific errors
     return processErrorResponse(error);
   }
 };

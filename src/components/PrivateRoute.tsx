@@ -5,9 +5,19 @@ import { useAuth } from '@/hooks/use-auth';
 import { cleanupUIState } from '@/utils/dom-cleanup';
 import { toast } from 'sonner';
 
+// List of routes that don't require authentication
+const PUBLIC_ROUTES = [
+  '/quick-recipe'  // Recipe creation is now public
+];
+
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   const location = useLocation();
+
+  // Check if the current route is public
+  const isPublicRoute = PUBLIC_ROUTES.some(route => 
+    location.pathname.startsWith(route)
+  );
 
   // Clean up UI state when this component mounts
   useEffect(() => {
@@ -24,17 +34,21 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // If route is public or user is authenticated, render children
+  if (isPublicRoute || session) {
+    return <>{children}</>;
+  }
+
+  // For private routes when not authenticated
   if (!session) {
     // Clean up UI state before redirecting
     cleanupUIState();
     
     // Store the current full location before redirecting to login
-    // This includes pathname, search params, hash, and state
     console.log("Not authenticated, redirecting to login from:", location.pathname);
     
     // Check if we're on a protected resource page that requires auth
-    const isProtectedResource = location.pathname.startsWith('/quick-recipe') || 
-                              location.pathname.startsWith('/recipes') ||
+    const isProtectedResource = location.pathname.startsWith('/recipes') ||
                               location.pathname.startsWith('/recipe/');
     
     // Only show the auth toast for protected resources
