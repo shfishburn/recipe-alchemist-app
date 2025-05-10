@@ -31,12 +31,7 @@ const QuickRecipePage: React.FC = () => {
   useEffect(() => {
     console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
     
-    const loadingTrigger = document.createElement('div');
-    loadingTrigger.className = 'loading-trigger';
-    loadingTrigger.dataset.page = 'quick-recipe';
-    document.body.appendChild(loadingTrigger);
-    
-    // Force cleanup any previous loading states when component mounts
+    // Only clean up previous loading states if we're not currently loading
     if (!isLoading && !isRetrying) {
       forceCleanupUI();
     }
@@ -44,22 +39,17 @@ const QuickRecipePage: React.FC = () => {
     return () => {
       console.log('QuickRecipePage unmounted');
       
-      // Clean up body classes and loading triggers
+      // Clean up body classes
       document.body.classList.remove('overflow-hidden');
       document.body.style.position = '';
       document.body.style.width = '';
-      
-      // Remove loading trigger element
-      if (loadingTrigger.parentNode) {
-        document.body.removeChild(loadingTrigger);
-      }
       
       // Run additional cleanup
       forceCleanupUI();
     };
   }, []);
 
-  // Log state changes to help with debugging
+  // Log state changes and manage body overflow
   useEffect(() => {
     console.log('QuickRecipePage state change', { 
       isLoading, 

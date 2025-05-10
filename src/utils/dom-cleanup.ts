@@ -30,9 +30,10 @@ export const cleanupUIState = () => {
   }
 
   // Remove any stuck overlay elements that might be blocking the UI
+  // But SKIP active loading overlays that are intentionally showing
   try {
-    const possibleOverlays = document.querySelectorAll('.loading-overlay');
-    console.log(`Found ${possibleOverlays.length} loading overlays to check`);
+    const possibleOverlays = document.querySelectorAll('.loading-overlay:not(.active-loading)');
+    console.log(`Found ${possibleOverlays.length} inactive loading overlays to check`);
     possibleOverlays.forEach(overlay => {
       // Check if the overlay exists and might be "stuck"
       if (overlay.parentNode) {
@@ -86,10 +87,10 @@ export const setupRouteChangeCleanup = () => {
 export const forceCleanupUI = () => {
   console.log('Force cleanup UI called');
   
-  // Double check for loading overlays
-  const overlays = document.querySelectorAll('.loading-overlay');
+  // Only clean up inactive loading overlays
+  const overlays = document.querySelectorAll('.loading-overlay:not(.active-loading)');
   if (overlays.length > 0) {
-    console.log(`Found ${overlays.length} overlays during force cleanup`);
+    console.log(`Found ${overlays.length} inactive overlays during force cleanup`);
     
     // Check if any overlay isn't in the process of being removed already
     overlays.forEach(overlay => {

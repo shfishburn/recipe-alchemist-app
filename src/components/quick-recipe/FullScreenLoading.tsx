@@ -80,7 +80,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   return (
     <div 
       className={cn(
-        "loading-overlay fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999]",
+        "loading-overlay active-loading fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999]",
         "animate-fadeIn touch-action-none hw-accelerated",
         isErrorState ? "bg-gray-900/60" : "bg-white/90 backdrop-blur-md dark:bg-gray-900/90"
       )}

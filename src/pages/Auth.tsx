@@ -43,8 +43,13 @@ const Auth = () => {
     let redirectTo = from;
     let redirectState = {};
     
-    // First, clean up any UI elements that might be lingering
-    cleanupUIState();
+    // Check for active loading overlays before cleanup
+    const hasActiveLoadingOverlay = document.querySelector('.loading-overlay.active-loading');
+    
+    if (!hasActiveLoadingOverlay) {
+      // First, clean up any UI elements that might be lingering
+      cleanupUIState();
+    }
     
     // Try to get the stored location data
     const storedLocationData = sessionStorage.getItem('redirectAfterAuth');

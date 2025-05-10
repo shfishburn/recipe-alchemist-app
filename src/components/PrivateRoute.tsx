@@ -19,10 +19,14 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     location.pathname.startsWith(route)
   );
 
-  // Clean up UI state when this component mounts
+  // Clean up UI state when this component mounts, but don't remove active loading overlays
   useEffect(() => {
-    // This helps clean up any lingering overlays from previous auth state changes
-    cleanupUIState();
+    // Check if there's an active loading overlay before cleanup
+    const hasActiveLoadingOverlay = document.querySelector('.loading-overlay.active-loading');
+    if (!hasActiveLoadingOverlay) {
+      // Only clean up if there's no active loading overlay
+      cleanupUIState();
+    }
   }, []);
 
   // Show loading state while checking authentication
@@ -41,8 +45,12 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 
   // For private routes when not authenticated
   if (!session) {
-    // Clean up UI state before redirecting
-    cleanupUIState();
+    // Check for active loading overlay before cleaning up UI state
+    const hasActiveLoadingOverlay = document.querySelector('.loading-overlay.active-loading');
+    if (!hasActiveLoadingOverlay) {
+      // Only clean up if there's no active loading overlay
+      cleanupUIState();
+    }
     
     // Store the current full location before redirecting to login
     console.log("Not authenticated, redirecting to login from:", location.pathname);
