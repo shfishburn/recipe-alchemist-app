@@ -12,7 +12,6 @@ interface AnalysisContentProps {
   troubleshooting?: string[];
   rawResponse?: string | null;
   stepReactions?: any[] | null;
-  onRegenerate?: (() => void) | null;
 }
 
 export function AnalysisContent({ 
@@ -20,8 +19,7 @@ export function AnalysisContent({
   techniques = [],
   troubleshooting = [],
   rawResponse = null,
-  stepReactions = null,
-  onRegenerate = null
+  stepReactions = null
 }: AnalysisContentProps) {
   const [showRaw, setShowRaw] = useState(false);
   

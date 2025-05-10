@@ -1,13 +1,11 @@
 
 import React from 'react';
 import { CardTitle, CardDescription } from "@/components/ui/card";
-import { Beaker, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Beaker } from "lucide-react";
 
 interface AnalysisHeaderProps {
   title?: string;
   description?: string;
-  onRegenerate?: () => void;
   hasContent: boolean;
   isAnalyzing: boolean;
 }
@@ -15,7 +13,6 @@ interface AnalysisHeaderProps {
 export function AnalysisHeader({ 
   title = "Scientific Analysis",
   description = "In-depth breakdown of cooking chemistry and techniques",
-  onRegenerate,
   hasContent,
   isAnalyzing
 }: AnalysisHeaderProps) {
@@ -28,18 +25,6 @@ export function AnalysisHeader({
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </div>
-      {onRegenerate && (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onRegenerate}
-          disabled={isAnalyzing}
-          className="flex items-center text-xs"
-        >
-          <RefreshCw className="h-3 w-3 mr-1" />
-          Force Regenerate
-        </Button>
-      )}
     </div>
   );
 }

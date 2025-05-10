@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { CardWrapper } from "@/components/ui/card-wrapper";
 import { useRecipeUpdates } from '@/hooks/use-recipe-updates';
@@ -137,7 +136,6 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
         <AnalysisHeader 
           hasContent={hasAnyContent}
           isAnalyzing={isAnalyzing}
-          onRegenerate={handleForceRegenerate}
         />
       }
     >
@@ -152,7 +150,6 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           troubleshooting={Array.isArray(troubleshooting) ? troubleshooting : troubleshooting ? [troubleshooting] : []}
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
-          onRegenerate={null} // Remove regenerate button from here
         />
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />
