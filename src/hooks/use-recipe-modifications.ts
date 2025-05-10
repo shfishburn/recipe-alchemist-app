@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { toast } from 'sonner';
@@ -12,7 +13,8 @@ export type ModificationStatus =
   | 'applying' 
   | 'applied'
   | 'rejected'
-  | 'not-deployed';
+  | 'not-deployed'
+  | 'canceled';
 
 // Define modification types
 export type IngredientModification = {
@@ -85,6 +87,19 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     // Don't clear history - we want to keep it for context
   }, [recipe.id]);
 
+  // Cleanup function to clear any ongoing requests when component unmounts
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      if (requestTimerRef.current !== null) {
+        window.clearTimeout(requestTimerRef.current);
+      }
+    };
+  }, []);
+
   // Debounced modification request
   const requestModifications = useCallback(async (request: string, immediate = false) => {
     if (!request.trim()) {
@@ -94,6 +109,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     // Cancel previous request if pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     
     // Clear previous timer
@@ -127,9 +143,11 @@ export function useRecipeModifications(recipe: QuickRecipe) {
             recipe: modifiedRecipe,
             userRequest: actualRequest,
             modificationHistory
-          }
+          },
+          abortSignal: abortControllerRef.current.signal
         });
         
+        // Clear the abort controller reference after successful completion
         abortControllerRef.current = null;
         
         if (response.error) {
@@ -141,6 +159,10 @@ export function useRecipeModifications(recipe: QuickRecipe) {
           } else {
             throw new Error(response.error.message || 'Error requesting modifications');
           }
+        }
+        
+        if (!response.data) {
+          throw new Error('No data returned from modification service');
         }
         
         console.log('Received modification response:', response.data);
@@ -160,27 +182,31 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         setStatus('success');
         
       } catch (err: any) {
+        // Don't update state if the request was aborted
+        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+          console.log('Recipe modification request was canceled');
+          setStatus('canceled');
+          return;
+        }
+        
         const errorMessage = err.message || 'Failed to get recipe modifications';
         console.error('Recipe modification error:', errorMessage);
         
-        // Don't show abort errors from user cancellation
-        if (err.name !== 'AbortError') {
-          setError(errorMessage);
+        setError(errorMessage);
+        
+        // If the error indicates the function isn't deployed, set status accordingly
+        if (errorMessage.includes('not deployed') || errorMessage.includes('Not Found') || errorMessage.includes('404')) {
+          setStatus('not-deployed');
           
-          // If the error indicates the function isn't deployed, set status accordingly
-          if (errorMessage.includes('not deployed') || errorMessage.includes('Not Found') || errorMessage.includes('404')) {
-            setStatus('not-deployed');
-            
-            toast.error("Modification service not available", {
-              description: "The recipe modification service needs to be deployed. Please check the Supabase Edge Functions section.",
-            });
-          } else {
-            setStatus('error');
-            
-            toast.error("Modification request failed", {
-              description: errorMessage.substring(0, 100),
-            });
-          }
+          toast.error("Modification service not available", {
+            description: "The recipe modification service needs to be deployed. Please check the Supabase Edge Functions section.",
+          });
+        } else {
+          setStatus('error');
+          
+          toast.error("Modification request failed", {
+            description: errorMessage.substring(0, 100),
+          });
         }
       }
     };
@@ -376,6 +402,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   // Cancel current request
   const cancelRequest = useCallback(() => {
     if (abortControllerRef.current) {
+      console.log('Canceling current modification request');
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
@@ -387,8 +414,12 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       requestTimerRef.current = null;
     }
     
-    setStatus('idle');
+    setStatus('canceled');
     setError(null);
+    
+    toast.info("Request canceled", {
+      description: "The modification request was canceled."
+    });
   }, []);
   
   // Revert to original recipe

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
@@ -8,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { Separator } from '@/components/ui/separator';
-import { SendHorizontal, MessagesSquare, Check, X, PanelLeftClose, ArrowUpRight, Undo2, AlertTriangle } from 'lucide-react';
+import { SendHorizontal, MessagesSquare, Check, X, PanelLeftClose, ArrowUpRight, Undo2, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QuickRecipeModifierProps {
@@ -57,7 +58,9 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
     
     const trimmedValue = inputValue.trim();
     if (!trimmedValue) {
-      toast.error("Empty request");
+      toast.error("Empty request", {
+        description: "Please enter a modification request."
+      });
       return;
     }
     
@@ -162,10 +165,9 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
           </div>
           <div className="flex-1">
             <div className="bg-primary/10 rounded-lg p-3 text-sm animate-pulse">
-              <div className="flex items-center gap-1">
-                <div className="bg-primary/25 h-2 w-2 rounded-full animate-bounce"></div>
-                <div className="bg-primary/25 h-2 w-2 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="bg-primary/25 h-2 w-2 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span>Generating modifications...</span>
               </div>
             </div>
           </div>
@@ -228,9 +230,19 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 <Button 
                   size="sm"
                   onClick={applyModifications}
+                  disabled={status === 'applying'}
                 >
-                  <Check className="h-4 w-4 mr-1" />
-                  Apply Changes
+                  {status === 'applying' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Applying...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Apply Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -268,6 +280,24 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 </ol>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render canceled state
+  const renderCanceledState = () => {
+    if (status !== 'canceled') return null;
+    
+    return (
+      <div className="flex gap-3 items-start">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <MessagesSquare className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex-1">
+          <div className="bg-muted rounded-lg p-3 text-sm text-muted-foreground">
+            <p>Request canceled. You can make a new modification request below.</p>
           </div>
         </div>
       </div>
@@ -322,6 +352,9 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 {/* Deployment error */}
                 {renderDeploymentError()}
                 
+                {/* Canceled state */}
+                {renderCanceledState()}
+                
                 {/* Error message */}
                 {status === 'error' && error && (
                   <ErrorDisplay 
@@ -347,15 +380,19 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                   onKeyDown={handleKeyPress}
                   placeholder="Modify recipe (e.g., 'Make this recipe low-carb')"
                   className="pr-12 min-h-[80px] resize-none"
-                  disabled={status === 'loading' || status === 'applying' || status === 'not-deployed'}
+                  disabled={['loading', 'applying', 'not-deployed'].includes(status)}
                 />
                 <Button
                   size="sm"
                   type="submit"
-                  disabled={status === 'loading' || status === 'applying' || status === 'not-deployed' || !inputValue.trim()}
+                  disabled={['loading', 'applying', 'not-deployed'].includes(status) || !inputValue.trim()}
                   className="absolute bottom-2 right-2 h-8 w-8 p-0"
                 >
-                  <SendHorizontal className="h-4 w-4" />
+                  {status === 'loading' ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <SendHorizontal className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               
