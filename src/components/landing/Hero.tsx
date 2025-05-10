@@ -1,3 +1,4 @@
+
 // path: src/components/landing/Hero.tsx
 // file: Hero.tsx
 // updated: 2025-05-10
@@ -71,7 +72,7 @@ const Hero: React.FC = memo(() => {
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <Badge icon={<Sparkles className="w-4 h-4 mr-1" />} label="AI-Powered" color="blue" />
             <Badge icon={<ChartPie className="w-4 h-4 mr-1" />} label="Personalized Nutrition" color="green" />
-            <Badge label="Ready in 30 mins" color="amber" />
+            <Badge label="Ingredient-Based" color="amber" />
           </div>
           
           <div className="flex flex-wrap justify-center gap-4 mt-6">

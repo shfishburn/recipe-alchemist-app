@@ -114,7 +114,7 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
           ) : (
             <>
               <ChefHat className="mr-2 h-4 w-4" />
-              Create Recipe
+              Create My Recipe
             </>
           )}
         </Button>

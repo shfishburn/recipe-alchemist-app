@@ -1,7 +1,7 @@
 
 /**
  * IngredientInput.tsx
- * Version: 1.0.6
+ * Version: 1.0.7
  * Date: 2025-05-10
  * Changes:
  * - Updated UI strings
@@ -9,6 +9,7 @@
  * - Fixed error display
  * - Improved label layout with double line break
  * - Changed second sentence styling
+ * - Removed duplicated FeatureBadges component
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -50,24 +51,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
     }
   }, [value, isMobile])
 
-  const FeatureBadges = () => (
-     <div role="group" aria-label="Feature tags" className="flex flex-wrap justify-center gap-2 mb-3">
-      <span className="bg-recipe-green/10 text-recipe-green rounded-full px-3 py-1 text-xs font-medium">
-        Nutrition-Focused
-      </span>
-      <span className="bg-recipe-blue/10 text-recipe-blue rounded-full px-3 py-1 text-xs font-medium">
-        Ingredient-Based
-      </span>
-      <span className="bg-recipe-orange/10 text-recipe-orange rounded-full px-3 py-1 text-xs font-medium">
-        Time-Saving
-      </span>
-    </div>
-  )
-
   return (
     <div className="space-y-2 w-full max-w-full">
-      <FeatureBadges />
-
       <label
         htmlFor="mainIngredient"
         className="block pb-1 text-left whitespace-normal break-words"
