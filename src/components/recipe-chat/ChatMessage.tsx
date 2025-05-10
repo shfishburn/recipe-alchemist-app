@@ -12,6 +12,7 @@ interface ChatMessageProps {
   isApplying?: boolean;
   isOptimistic?: boolean;
   applied?: boolean;
+  retryMessage?: () => void;
 }
 
 export function ChatMessage({
@@ -20,16 +21,25 @@ export function ChatMessage({
   applyChanges,
   isApplying = false,
   isOptimistic = false,
-  applied = false
+  applied = false,
+  retryMessage
 }: ChatMessageProps) {
-  // Check if this is an optimistic message without an AI response yet
+  // Enhanced optimistic message detection
   const isOptimisticUserMessage = isOptimistic || 
     (!!getChatMeta(chat, 'optimistic_id', '') && !chat.ai_response);
+  
+  // Check if this message has an error
+  const hasError = getChatMeta(chat, 'error', false);
   
   // For optimistic user messages, only show the user message
   if (isOptimisticUserMessage) {
     return (
-      <UserMessage message={chat.user_message} isOptimistic={true} />
+      <UserMessage 
+        message={chat.user_message} 
+        isOptimistic={true} 
+        isError={hasError}
+        onRetry={hasError && retryMessage ? retryMessage : undefined} 
+      />
     );
   }
 
@@ -39,7 +49,12 @@ export function ChatMessage({
 
   return (
     <div className="space-y-4">
-      <UserMessage message={chat.user_message} isOptimistic={isOptimistic} />
+      <UserMessage 
+        message={chat.user_message} 
+        isOptimistic={isOptimistic} 
+        isError={hasError}
+        onRetry={hasError && retryMessage ? retryMessage : undefined}
+      />
       
       {chat.ai_response && (
         <ChatResponse

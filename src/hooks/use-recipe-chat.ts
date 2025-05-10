@@ -33,7 +33,10 @@ export const useRecipeChat = (recipe: Recipe) => {
     setMessage, 
     sendMessage, 
     uploadRecipeImage, 
-    submitRecipeUrl, 
+    submitRecipeUrl,
+    retryMessage,
+    uploadProgress,
+    isUploading,
     isSending 
   } = useChatActions(recipe, addOptimisticMessage);
   
@@ -58,6 +61,9 @@ export const useRecipeChat = (recipe: Recipe) => {
     isSending,
     uploadRecipeImage,
     submitRecipeUrl,
+    retryMessage,
+    uploadProgress,
+    isUploading,
     
     // Recipe change application
     applyChanges,

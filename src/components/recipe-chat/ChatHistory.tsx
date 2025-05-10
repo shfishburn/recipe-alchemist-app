@@ -14,6 +14,7 @@ interface ChatHistoryProps {
   applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
   isApplying?: boolean;
   recipe: Recipe;
+  retryMessage?: () => void;
 }
 
 export function ChatHistory({
@@ -23,7 +24,8 @@ export function ChatHistory({
   setMessage,
   applyChanges,
   isApplying = false,
-  recipe
+  recipe,
+  retryMessage
 }: ChatHistoryProps) {
   // Use a more reliable approach to filter out duplicate messages
   const combinedMessages = useMemo(() => {
@@ -55,6 +57,7 @@ export function ChatHistory({
           isApplying={isApplying && chat.id === chatHistory[chatHistory.length - 1]?.id}
           isOptimistic={'pending' in chat && !!chat.pending}
           applied={!!chat.applied}
+          retryMessage={retryMessage}
         />
       ))}
       

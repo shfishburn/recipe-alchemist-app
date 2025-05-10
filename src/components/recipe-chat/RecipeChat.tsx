@@ -30,6 +30,9 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     uploadRecipeImage,
     submitRecipeUrl,
     clearChatHistory,
+    retryMessage,
+    uploadProgress,
+    isUploading
   } = useRecipeChat(recipe);
 
   // Create a wrapper for applyChanges that only takes the chatMessage parameter
@@ -115,6 +118,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                     applyChanges={applyChanges}
                     isApplying={isApplying}
                     recipe={recipe}
+                    retryMessage={retryMessage}
                   />
                   <div ref={messagesEndRef} />
                 </div>
@@ -130,6 +134,8 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
               isSending={isSending}
               onUpload={handleUpload}
               onUrlSubmit={handleUrlSubmit}
+              uploadProgress={uploadProgress}
+              isUploading={isUploading}
             />
           </div>
         </div>

@@ -1,37 +1,55 @@
 
 import React from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { User } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface UserMessageProps {
   message: string;
   isOptimistic?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }
 
-export function UserMessage({ message, isOptimistic = false }: UserMessageProps) {
+export function UserMessage({ 
+  message, 
+  isOptimistic = false,
+  isError = false,
+  onRetry 
+}: UserMessageProps) {
+  const OpacityClass = isOptimistic ? 'opacity-70' : '';
+  
   return (
-    <div className={`flex items-start space-x-2 ${isOptimistic ? 'opacity-70' : ''}`}>
-      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-        <User className="h-5 w-5 text-primary-foreground" />
-      </div>
-      
-      <div className="flex-1">
-        <div className="bg-muted rounded-lg p-3">
-          <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-            {message}
-          </p>
+    <div className="flex justify-end">
+      <div className="max-w-[calc(100%-32px)]">
+        <div className={`inline-block rounded-[20px] rounded-tr-[5px] px-4 py-2
+                       bg-recipe-blue text-white ${OpacityClass} 
+                       ${isError ? 'bg-red-500' : ''}`}>
+          <p className="text-sm break-words">{message}</p>
+          
+          {isError && onRetry && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-1 text-white hover:text-white hover:bg-red-600 p-1 h-auto text-xs w-full flex justify-center"
+              onClick={onRetry}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Retry
+            </Button>
+          )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function UserMessageSkeleton() {
-  return (
-    <div className="flex items-start space-x-2">
-      <Skeleton className="h-8 w-8 rounded-full" />
-      <div className="flex-1">
-        <Skeleton className="h-16 w-full rounded-lg" />
+        
+        {isOptimistic && !isError && (
+          <div className="mt-1 text-xs text-gray-400 text-right pr-2">
+            Processing...
+          </div>
+        )}
+        
+        {isError && (
+          <div className="mt-1 text-xs text-red-500 text-right pr-2">
+            Failed to send
+          </div>
+        )}
       </div>
     </div>
   );

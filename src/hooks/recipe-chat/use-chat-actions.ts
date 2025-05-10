@@ -13,6 +13,16 @@ export const useChatActions = (
   addOptimisticMessage: (message: OptimisticMessage) => void
 ) => {
   const [message, setMessage] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [pendingRetryData, setPendingRetryData] = useState<{
+    messageText: string;
+    messageId: string;
+    sourceType?: 'manual' | 'image' | 'url';
+    sourceUrl?: string;
+    sourceImage?: string;
+  } | null>(null);
+  
   const { toast } = useToast();
   const mutation = useChatMutations(recipe);
 
@@ -24,24 +34,86 @@ export const useChatActions = (
   }, []);
 
   /**
-   * Upload and process a recipe image
+   * Retry sending a failed message
+   */
+  const retryMessage = useCallback(() => {
+    if (!pendingRetryData) return;
+    
+    const { messageText, messageId, sourceType, sourceUrl, sourceImage } = pendingRetryData;
+    
+    // Create new optimistic message with retry flag
+    const optimisticMessage: OptimisticMessage = {
+      user_message: messageText,
+      pending: true,
+      id: messageId,
+      meta: {
+        optimistic_id: messageId,
+        tracking_id: messageId,
+        processing_stage: 'pending',
+        is_retry: true,
+        source_info: {
+          type: sourceType || 'manual',
+          url: sourceUrl,
+        }
+      }
+    };
+    
+    // Add optimistic message
+    addOptimisticMessage(optimisticMessage);
+    
+    // Send the message with retry flag
+    mutation.mutate({
+      message: messageText,
+      sourceType,
+      sourceUrl,
+      sourceImage,
+      messageId,
+      isRetry: true
+    });
+    
+    // Clear retry data
+    setPendingRetryData(null);
+  }, [pendingRetryData, addOptimisticMessage, mutation]);
+
+  /**
+   * Upload and process a recipe image with progress tracking
    */
   const uploadRecipeImage = useCallback(async (file: File) => {
     try {
       console.log("Processing image upload");
+      setIsUploading(true);
+      setUploadProgress(10); // Start progress
       
       // Validate file type
       if (!file.type.startsWith('image/')) {
+        setIsUploading(false);
         throw new Error('Selected file is not an image');
       }
       
       const reader = new FileReader();
       
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 50); // Up to 50%
+          setUploadProgress(progress);
+        }
+      };
+      
       reader.onload = async (e) => {
+        setUploadProgress(60); // Reading complete
+        
         const base64Image = e.target?.result as string;
         
         // Create a unique message ID to help with tracking and cleanup
         const messageId = generateTrackingId('image');
+        
+        // Save retry data
+        setPendingRetryData({
+          messageText: "Analyzing recipe image...",
+          messageId,
+          sourceType: 'image',
+          sourceImage: base64Image
+        });
         
         // Add optimistic message
         const optimisticMessage: OptimisticMessage = {
@@ -59,16 +131,23 @@ export const useChatActions = (
         };
         
         addOptimisticMessage(optimisticMessage);
+        setUploadProgress(80); // Added optimistic message
         
-        mutation.mutate({
-          message: "Please analyze this recipe image",
-          sourceType: 'image',
-          sourceImage: base64Image,
-          messageId
-        });
+        // Set a timeout to ensure progress animation is visible
+        setTimeout(() => {
+          setUploadProgress(100);
+          setIsUploading(false);
+          mutation.mutate({
+            message: "Please analyze this recipe image",
+            sourceType: 'image',
+            sourceImage: base64Image,
+            messageId
+          });
+        }, 500);
       };
       
       reader.onerror = () => {
+        setIsUploading(false);
         toast({
           title: "Error",
           description: "Failed to read image file",
@@ -78,6 +157,7 @@ export const useChatActions = (
       
       reader.readAsDataURL(file);
     } catch (error) {
+      setIsUploading(false);
       console.error("Image upload error:", error);
       toast({
         title: "Error",
@@ -105,6 +185,14 @@ export const useChatActions = (
     
     // Create a unique message ID
     const messageId = generateTrackingId('url');
+    
+    // Save retry data
+    setPendingRetryData({
+      messageText: `Analyzing recipe from: ${url}`,
+      messageId,
+      sourceType: 'url',
+      sourceUrl: url
+    });
     
     // Add optimistic message
     const optimisticMessage: OptimisticMessage = {
@@ -148,6 +236,13 @@ export const useChatActions = (
     // Create a unique ID for tracking
     const messageId = generateTrackingId('msg');
     
+    // Save retry data
+    setPendingRetryData({
+      messageText: trimmedMessage,
+      messageId,
+      sourceType: 'manual'
+    });
+    
     // Create optimistic message with unique ID
     const optimisticMessage: OptimisticMessage = {
       user_message: trimmedMessage,
@@ -186,6 +281,9 @@ export const useChatActions = (
     sendMessage,
     uploadRecipeImage,
     submitRecipeUrl,
+    retryMessage,
+    uploadProgress,
+    isUploading,
     isSending: mutation.isPending
   };
 };
