@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartPie, Activity } from 'lucide-react';
-import { macroDistributionData, carbsData, fatsData } from './nutrition/nutrition-sample-data';
+import { macroDistributionData } from './nutrition/nutrition-sample-data';
 import { Carousel, type CarouselItem } from '@/components/ui/carousel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,10 +12,9 @@ import { MacroBreakdown } from '../recipe-detail/nutrition/MacroBreakdown';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import type { NutriScore } from '@/types/recipe';
-import { MacroChart } from './nutrition/MacroChart';
-import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
-import { MacroDetailsPanel } from './nutrition/MacroDetailsPanel';
-import { MacroLegend } from './nutrition/MacroLegend';
+import { SimplifiedDistributionPreview } from './nutrition/SimplifiedDistributionPreview';
+import { SimplifiedMacroChart } from './nutrition/SimplifiedMacroChart';
+import { SimplifiedMacroLegend } from './nutrition/SimplifiedMacroLegend';
 
 interface NutritionPreviewProps {
   isLoading?: boolean;
@@ -43,6 +42,15 @@ const sampleNutriScore: NutriScore = {
 
 export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
   const isMobile = useIsMobile();
+  
+  // Simplify the data structure for our charts
+  const mainChartData = useMemo(() => {
+    return macroDistributionData[0].data.map(item => ({
+      name: item.name,
+      value: item.value,
+      color: item.color
+    }));
+  }, []);
   
   // Render function for Nutri-Score carousel item
   const renderNutriScoreSlide = () => {
@@ -79,7 +87,7 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
     );
   };
 
-  // Render function for Macro Breakdown carousel item
+  // Render function for Macro Breakdown carousel item - simplified
   const renderMacroBreakdownSlide = () => {
     return (
       <div className="w-full px-2 sm:px-4 py-3 flex flex-col items-center">
@@ -88,20 +96,15 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full">
-          {/* Macro Breakdown Detail */}
-          <div className="flex flex-col space-y-4 justify-center">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <h4 className="font-medium mb-2">Personalized Macro Analysis</h4>
-              <p className="text-sm text-muted-foreground">
-                Your macronutrient breakdown shows the distribution of protein, carbs, and fats in your diet.
-                These values are personalized based on your fitness goals, activity level, and dietary preferences.
+          {/* Simplified Macro Chart */}
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-full max-w-[240px] mx-auto">
+              <SimplifiedMacroChart data={mainChartData} height={isMobile ? 180 : 200} />
+              <SimplifiedMacroLegend data={mainChartData} />
+              <p className="text-xs text-center text-gray-500 mt-2 italic">
+                *Protein and carbs: 4 cal/g, fat: 9 cal/g
               </p>
             </div>
-            <MacroDetailsPanel 
-              title="Macro Distribution"
-              description="Your personalized macronutrient targets based on your profile"
-              data={macroDistributionData[0].data}
-            />
           </div>
           
           {/* Macro Values Panel */}
@@ -131,64 +134,6 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
                 
                 <Separator className="mb-4" />
                 
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-medium" id="protein-label">Protein</p>
-                    <p className="text-xs text-muted-foreground">180% DV</p>
-                  </div>
-                  <Progress 
-                    value={100} 
-                    className="h-2"
-                    indicatorClassName="bg-primary" 
-                    indicatorColor="rgba(155, 135, 245, 0.9)"
-                    aria-labelledby="protein-label"
-                  />
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-medium" id="carbs-label">Carbs</p>
-                    <p className="text-xs text-muted-foreground">11% DV</p>
-                  </div>
-                  <Progress 
-                    value={11} 
-                    className="h-2"
-                    indicatorClassName="bg-primary" 
-                    indicatorColor="rgba(14, 165, 233, 0.9)"
-                    aria-labelledby="carbs-label"
-                  />
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-medium" id="fat-label">Fat</p>
-                    <p className="text-xs text-muted-foreground">128% DV</p>
-                  </div>
-                  <Progress 
-                    value={100} 
-                    className="h-2"
-                    indicatorClassName="bg-primary" 
-                    indicatorColor="rgba(34, 197, 94, 0.9)"
-                    aria-labelledby="fat-label"
-                  />
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-medium" id="fiber-label">Fiber</p>
-                    <p className="text-xs text-muted-foreground">11% DV</p>
-                  </div>
-                  <Progress 
-                    value={11} 
-                    className="h-2"
-                    indicatorClassName="bg-primary" 
-                    indicatorColor="rgba(251, 146, 60, 0.9)"
-                    aria-labelledby="fiber-label"
-                  />
-                </div>
-                
-                <Separator className="my-4" />
-                
                 <MacroBreakdown 
                   protein={90} 
                   carbs={30} 
@@ -202,15 +147,16 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
     );
   };
 
-  // Render function for Doughnut Chart carousel item
-  const renderDoughnutSlide = () => {
-    // For carousel item that will display doughnut charts, we use the first item from macroDistributionData
+  // Render function for Distribution Preview carousel item - completely simplified
+  const renderDistributionSlide = () => {
     return (
-      <MacroCarouselItem 
-        item={macroDistributionData[3]} // This is the "special" item that will show pie charts
-        carbsData={carbsData}
-        fatsData={fatsData}
-      />
+      <div className="w-full px-2 sm:px-4 py-3 flex flex-col items-center">
+        <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-2 sm:mb-3">
+          Nutrition Distribution
+        </h3>
+        
+        <SimplifiedDistributionPreview macroData={mainChartData} />
+      </div>
     );
   };
 
@@ -235,7 +181,7 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
   const carouselItems: CarouselItem[] = useMemo(() => [
     { id: 1, content: "nutri-score" },
     { id: 2, content: "macro-breakdown" },
-    { id: 3, content: "macro-doughnut" }
+    { id: 3, content: "distribution" }
   ], []);
 
   // Function to render the appropriate content based on the item type
@@ -245,8 +191,8 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
         return renderNutriScoreSlide();
       case "macro-breakdown":
         return renderMacroBreakdownSlide();
-      case "macro-doughnut":
-        return renderDoughnutSlide();
+      case "distribution":
+        return renderDistributionSlide();
       default:
         return null;
     }
