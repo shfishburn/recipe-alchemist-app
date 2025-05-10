@@ -5,14 +5,7 @@ import { StructuredOutputParser } from "https://esm.sh/@langchain/core/output_pa
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
 import { recipeModificationsSchema } from "./schema.ts";
-
-// Define CORS headers for cross-origin requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Retry mechanism with exponential backoff
 async function withRetry(fn, maxRetries = 3, initialDelay = 500) {
