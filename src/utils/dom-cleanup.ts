@@ -104,7 +104,7 @@ export const forceCleanupUI = () => {
             console.log('Removing marked overlay');
             overlay.parentNode.removeChild(overlay);
           }
-        }, 100);
+        }, 300);
       }
     });
   }

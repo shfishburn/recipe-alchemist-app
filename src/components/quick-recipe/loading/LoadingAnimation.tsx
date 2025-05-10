@@ -24,14 +24,14 @@ export function LoadingAnimation({ showFinalAnimation }: LoadingAnimationProps) 
             <Utensils className="absolute -bottom-1 -right-3 h-6 w-6 sm:h-8 sm:w-8 text-gray-600 rotate-45 opacity-70" />
             
             {/* Steam effects with improved visibility and responsive sizing */}
-            <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0s" }}></div>
-            <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0.6s", left: "15px" }}></div>
-            <div className="steam animate-steam bg-white/80" style={{ animationDelay: "1.2s", left: "10px" }}></div>
-            <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0.9s", left: "20px" }}></div>
+            <div className="steam animate-steam bg-white/80 dark:bg-gray-200/80" style={{ animationDelay: "0s" }}></div>
+            <div className="steam animate-steam bg-white/80 dark:bg-gray-200/80" style={{ animationDelay: "0.6s", left: "15px" }}></div>
+            <div className="steam animate-steam bg-white/80 dark:bg-gray-200/80" style={{ animationDelay: "1.2s", left: "10px" }}></div>
+            <div className="steam animate-steam bg-white/80 dark:bg-gray-200/80" style={{ animationDelay: "0.9s", left: "20px" }}></div>
             
             {/* Animated bubbles inside the pot - mobile responsive */}
-            <div className="absolute top-1/2 left-1/4 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 rounded-full animate-bubble" style={{ animationDelay: "0.2s" }}></div>
-            <div className="absolute top-1/2 left-1/2 w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/50 rounded-full animate-bubble" style={{ animationDelay: "0.7s" }}></div>
+            <div className="absolute top-1/2 left-1/4 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 dark:bg-gray-200/50 rounded-full animate-bubble" style={{ animationDelay: "0.2s" }}></div>
+            <div className="absolute top-1/2 left-1/2 w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/50 dark:bg-gray-200/50 rounded-full animate-bubble" style={{ animationDelay: "0.7s" }}></div>
           </div>
         </div>
       )}

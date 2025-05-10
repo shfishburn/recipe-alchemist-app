@@ -16,8 +16,8 @@ export function RecipeLoadingAnimation({ showFinalAnimation }: RecipeLoadingAnim
         <div className="relative">
           <ChefHat className="h-12 w-12 text-recipe-green animate-float" />
           <div className="absolute -top-1 -right-1 h-3 w-3 bg-recipe-green rounded-full animate-pulse" />
-          <div className="steam animate-steam bg-white/80 dark:bg-gray-300/80" style={{ animationDelay: "0.2s" }}></div>
-          <div className="steam animate-steam bg-white/80 dark:bg-gray-300/80" style={{ animationDelay: "0.8s", left: "12px" }}></div>
+          <div className="steam animate-steam bg-white/80 dark:bg-gray-200/80" style={{ animationDelay: "0.2s" }}></div>
+          <div className="steam animate-steam bg-white/80 dark:bg-gray-200/80" style={{ animationDelay: "0.8s", left: "12px" }}></div>
         </div>
       )}
     </div>
