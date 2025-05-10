@@ -35,10 +35,24 @@
 @media (max-width: 360px) {
   .nutrition-carousel .carousel-item {
     max-width: 90vw !important; 
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .nutrition-carousel .simpleMicronutrient-table {
     font-size: 0.65rem;
+  }
+  
+  .carousel-scroll-area {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  
+  /* Make tab text smaller on very small screens */
+  .tabs-xs-text .TabsTrigger {
+    font-size: 0.7rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 
@@ -81,11 +95,11 @@
 /* Fix for the carousel on mobile */
 @media (max-width: 640px) {
   .nutrition-carousel {
-    margin-left: -4px;
-    margin-right: -4px;
-    width: calc(100% + 8px);
-    padding-left: 4px;
-    padding-right: 4px;
+    margin-left: -2px;
+    margin-right: -2px;
+    width: calc(100% + 4px);
+    padding-left: 2px;
+    padding-right: 2px;
   }
   
   /* Make text tables more compact on mobile */
@@ -98,4 +112,34 @@
     width: 100% !important;
     max-width: 95vw !important;
   }
+  
+  /* Reduce table cell padding on small screens */
+  .touch-optimized td,
+  .touch-optimized th {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  /* Better spacing for inputs on small screens */
+  .touch-optimized .form-field {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Compress some paddings on mobile */
+  .mobile-p-reduce {
+    padding: 0.75rem !important;
+  }
+  
+  /* Stack flex items on small screens when needed */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+}
+
+/* Debug CSS - adds visible borders to help identify overflow issues */
+.debug-layout * {
+  outline: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.debug-layout .overflow-issue {
+  outline: 2px solid rgba(255, 0, 0, 0.8);
 }

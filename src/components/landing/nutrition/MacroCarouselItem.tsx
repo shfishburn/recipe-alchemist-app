@@ -42,11 +42,11 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
         </div>
       )}
       
-      <CardHeader className="p-3 sm:p-4 pb-0">
+      <CardHeader className="p-2 sm:p-4 pb-0">
         <div className="flex justify-between items-start flex-wrap gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg truncate">{item.title}</CardTitle>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+            <CardTitle className="text-sm sm:text-lg truncate">{item.title}</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
           </div>
           {item.nutriScore && (
             <div className="flex-shrink-0">
@@ -56,22 +56,22 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
         </div>
       </CardHeader>
       
-      <CardContent className="p-3 sm:p-4">
+      <CardContent className="p-2 sm:p-4">
         <Tabs defaultValue="chart" className="w-full">
-          <TabsList className="w-full mb-3 grid grid-cols-2">
-            <TabsTrigger value="chart" className="text-xs sm:text-sm">Distribution</TabsTrigger>
-            <TabsTrigger value="details" className="text-xs sm:text-sm">Details</TabsTrigger>
+          <TabsList className="w-full mb-2 grid grid-cols-2">
+            <TabsTrigger value="chart" className="text-xs">Distribution</TabsTrigger>
+            <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="chart" className="h-48 sm:h-60">
+          <TabsContent value="chart" className="h-40 sm:h-60">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart margin={isMobile ? { top: 0, right: 0, bottom: 0, left: 0 } : { top: 5, right: 30, bottom: 5, left: 5 }}>
                 <Pie
                   data={item.data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={isMobile ? 40 : 60}
-                  outerRadius={isMobile ? 60 : 90}
+                  innerRadius={isMobile ? 30 : 50}
+                  outerRadius={isMobile ? 45 : 75}
                   fill="#8884d8"
                   paddingAngle={2}
                   dataKey="value"
@@ -85,7 +85,7 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
                   layout={isMobile ? "horizontal" : "vertical"} 
                   verticalAlign={isMobile ? "bottom" : "middle"} 
                   align={isMobile ? "center" : "right"}
-                  wrapperStyle={isMobile ? { fontSize: '10px' } : { fontSize: '12px' }}
+                  wrapperStyle={isMobile ? { fontSize: '10px', paddingBottom: '10px' } : { fontSize: '12px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -95,7 +95,7 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
             <div className="space-y-3 text-xs sm:text-sm">
               {/* Nutri-Score details if available */}
               {item.nutriScore && (
-                <div className="mb-3">
+                <div className="mb-2">
                   <h4 className="font-medium mb-1">Nutri-Score: {item.nutriScore}</h4>
                   <p className="text-xs text-muted-foreground">
                     Our simple A to E rating for nutrition quality
@@ -106,11 +106,11 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
               {/* Detailed breakdown of macros */}
               <div>
                 <h4 className="font-medium mb-2">Macronutrient Details</h4>
-                <div className="overflow-x-auto -mx-3 px-3">
+                <div className="w-full overflow-x-auto -mx-1 px-1">
                   <Table className="w-full">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[150px]">Nutrient</TableHead>
+                        <TableHead className="w-[100px]">Nutrient</TableHead>
                         <TableHead>% of Total</TableHead>
                         <TableHead className="text-right">Calories</TableHead>
                       </TableRow>
@@ -128,47 +128,9 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
                 </div>
               </div>
               
-              {/* Carbs breakdown if it's not a main carbs item */}
-              {item.title !== "Carbohydrates Breakdown" && (
-                <div className="mt-4">
-                  <h4 className="font-medium mb-2">Carbs Breakdown</h4>
-                  <div className="overflow-x-auto -mx-3 px-3">
-                    <Table className="w-full">
-                      <TableBody className="text-xs">
-                        {carbsData.map((carb) => (
-                          <TableRow key={carb.name}>
-                            <TableCell className="font-medium">{carb.name}</TableCell>
-                            <TableCell>{carb.value}%</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              )}
-              
-              {/* Fats breakdown if it's not a main fats item */}
-              {item.title !== "Fats Breakdown" && (
-                <div className="mt-4">
-                  <h4 className="font-medium mb-2">Fats Breakdown</h4>
-                  <div className="overflow-x-auto -mx-3 px-3">
-                    <Table className="w-full">
-                      <TableBody className="text-xs">
-                        {fatsData.map((fat) => (
-                          <TableRow key={fat.name}>
-                            <TableCell className="font-medium">{fat.name}</TableCell>
-                            <TableCell>{fat.value}%</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              )}
-              
               {/* Micronutrients if available */}
               {item.showMicronutrients && item.micronutrientsData && (
-                <div className="mt-5">
+                <div className="mt-2">
                   <SimpleMicronutrientList micronutrientsData={item.micronutrientsData} />
                 </div>
               )}

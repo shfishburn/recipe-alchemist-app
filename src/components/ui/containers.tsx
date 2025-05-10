@@ -32,11 +32,11 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div className={cn(
-      "flex flex-col mobile-friendly-container w-full",
+      "flex flex-col w-full overflow-hidden mobile-friendly-container",
       className
     )}>
       <main className={cn(
-        "flex-1 px-4 sm:px-6 lg:px-8 mx-auto", 
+        "flex-1 px-3 sm:px-4 lg:px-6 mx-auto w-full", 
         withNavbar && "pt-24 md:pt-28 pb-12",
         variant === 'default' && "max-w-4xl",
         variant === 'narrow' && "max-w-2xl",
@@ -56,7 +56,7 @@ export function ContentSection({
   className = ''
 }: PropsWithChildren<{ className?: string }>) {
   return (
-    <section className={cn("py-6 md:py-8 space-y-6", className)}>
+    <section className={cn("py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6 w-full overflow-hidden", className)}>
       {children}
     </section>
   );

@@ -1,25 +1,25 @@
 
 .container-page {
-  @apply container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  @apply container max-w-7xl mx-auto px-3 sm:px-4 lg:px-6;
 }
 
 /* Standardized responsive spacing */
 .spacing-y-responsive {
-  @apply space-y-4 sm:space-y-6 md:space-y-8;
+  @apply space-y-3 sm:space-y-4 md:space-y-6;
 }
 
 .spacing-x-responsive {
-  @apply space-x-3 sm:space-x-4 md:space-x-5;
+  @apply space-x-2 sm:space-x-3 md:space-x-4;
 }
 
 /* Page section spacing */
 .section-spacing {
-  @apply py-6 sm:py-8 md:py-10;
+  @apply py-4 sm:py-6 md:py-8;
 }
 
 /* Content padding below navbar */
 .content-padding-top {
-  @apply pt-24 md:pt-28;
+  @apply pt-20 md:pt-24;
 }
 
 /* Standard content width classes */
@@ -37,12 +37,12 @@
 
 /* Fixed position footer for mobile drawer actions */
 .drawer-fixed-footer {
-  @apply fixed bottom-0 left-0 right-0 p-4 bg-white border-t;
+  @apply fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white border-t;
 }
 
 /* Mobile-optimized drawer content */
 .mobile-drawer-footer {
-  @apply sticky bottom-0 left-0 right-0 bg-white border-t py-3 px-4 shadow-lg z-10;
+  @apply sticky bottom-0 left-0 right-0 bg-white border-t py-2 sm:py-3 px-3 sm:px-4 shadow-lg z-10;
 }
 
 /* Hardware acceleration utility */
@@ -54,7 +54,7 @@
 
 /* Navigation menu improvements */
 .horizontal-nav {
-  @apply flex flex-row gap-2 md:gap-4 overflow-x-auto no-scrollbar;
+  @apply flex flex-row gap-1 sm:gap-2 overflow-x-auto no-scrollbar;
 }
 
 .horizontal-nav::-webkit-scrollbar {
@@ -73,7 +73,7 @@
 
 /* Badge styles for consistent appearance */
 .badge {
-  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
 }
 
 /* Prevent overflow issues in mobile layouts */
@@ -84,7 +84,7 @@
 /* Better padding for mobile containers */
 @media (max-width: 640px) {
   .container-page {
-    @apply px-4;
+    @apply px-3;
   }
   
   .mobile-container-fix {
@@ -92,9 +92,46 @@
     margin-left: 8px;
     margin-right: 8px;
   }
+  
+  /* Add compressed spacing classes for mobile */
+  .sm-p-2 {
+    padding: 0.5rem !important;
+  }
+  
+  .sm-px-2 {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  
+  .sm-py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  /* Reduce margin in mobile views */
+  .mobile-my-reduce {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Add aggressive overflow protection */
+  .mobile-safe {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
 }
 
 /* Ensure tables don't break mobile layout */
 .responsive-table-container {
-  @apply w-full overflow-x-auto -mx-4 px-4;
+  @apply w-full overflow-x-auto -mx-3 sm:-mx-4 px-3 sm:px-4;
+}
+
+/* Focus outlines should be visible but not overpowering */
+.focus-visible-outline:focus-visible {
+  @apply outline-offset-2 outline-2 outline-blue-500;
+}
+
+/* Consistent padding for cards across screen sizes */
+.card-padding-responsive {
+  @apply p-3 sm:p-4 md:p-6;
 }

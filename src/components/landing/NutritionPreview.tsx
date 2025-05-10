@@ -18,11 +18,11 @@ export function NutritionPreview() {
   });
   
   return (
-    <section className="py-8 md:py-16 bg-slate-50 w-full overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 md:px-8">
-        <div className="text-center mb-6 md:mb-10">
-          <h2 className="text-xl md:text-3xl font-bold mb-2">Personalized Nutrition Analysis</h2>
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto px-2">
+    <section className="py-6 md:py-12 bg-slate-50 w-full overflow-hidden">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6">
+        <div className="text-center mb-4 md:mb-6">
+          <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">Personalized Nutrition Analysis</h2>
+          <p className="text-xs md:text-sm text-muted-foreground max-w-2xl mx-auto px-2">
             Track your macro and micronutrient intake with our intelligent nutrition tracking system
           </p>
         </div>

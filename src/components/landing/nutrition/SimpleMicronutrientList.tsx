@@ -19,11 +19,17 @@ interface MicronutrientData {
 }
 
 interface SimpleMicronutrientListProps {
-  data: MicronutrientData;
+  data?: MicronutrientData;
+  micronutrientsData?: MicronutrientData;
 }
 
-export function SimpleMicronutrientList({ data }: SimpleMicronutrientListProps) {
-  const { vitamins, minerals } = data;
+export function SimpleMicronutrientList({ data, micronutrientsData }: SimpleMicronutrientListProps) {
+  // Use micronutrientsData as fallback if data is not provided
+  const nutrients = data || micronutrientsData;
+  
+  if (!nutrients) return null;
+  
+  const { vitamins, minerals } = nutrients;
   
   const renderCategory = (category: MicronutrientCategory) => (
     <div className="mb-3">
