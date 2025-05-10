@@ -3,8 +3,18 @@
  * Utility function to clean up UI state that might be stuck
  * This helps prevent issues with loading states, modals, etc.
  */
-export const cleanupUIState = () => {
-  console.log('Running UI state cleanup');
+export const cleanupUIState = (options?: { respectActiveLoading?: boolean }) => {
+  const respectActiveLoading = options?.respectActiveLoading ?? false;
+  console.log('Running UI state cleanup', { respectActiveLoading });
+  
+  // Check if there's an active loading state that should be preserved
+  if (respectActiveLoading) {
+    const activeLoadingElements = document.querySelectorAll('.loading-overlay-active');
+    if (activeLoadingElements.length > 0) {
+      console.log('Active loading detected, skipping cleanup');
+      return; // Skip cleanup if there's an active loading state and we're told to respect it
+    }
+  }
   
   // Remove any stuck classes with safety checks
   if (document.body) {
@@ -21,6 +31,10 @@ export const cleanupUIState = () => {
     const loadingTriggers = document.querySelectorAll('.loading-trigger');
     console.log(`Found ${loadingTriggers.length} loading triggers to clean up`);
     loadingTriggers.forEach(el => {
+      // Don't remove active loading triggers if we're respecting active loading
+      if (respectActiveLoading && el.classList.contains('loading-overlay-active')) {
+        return;
+      }
       if (el.parentNode) {
         el.parentNode.removeChild(el);
       }
@@ -34,6 +48,15 @@ export const cleanupUIState = () => {
     const possibleOverlays = document.querySelectorAll('.loading-overlay');
     console.log(`Found ${possibleOverlays.length} loading overlays to check`);
     possibleOverlays.forEach(overlay => {
+      // Skip active loading overlays if we're respecting active loading
+      const isActiveLoadingOverlay = overlay.id === 'fullscreen-loading-overlay' && 
+                                    document.querySelector('.loading-overlay-active');
+      
+      if (respectActiveLoading && isActiveLoadingOverlay) {
+        console.log('Skipping active loading overlay cleanup');
+        return;
+      }
+      
       // Check if the overlay exists and might be "stuck"
       if (overlay.parentNode) {
         const computedStyle = window.getComputedStyle(overlay);
@@ -68,7 +91,7 @@ export const setupRouteChangeCleanup = () => {
         const currentHash = document.location.hash || '';
         if (window.lastKnownHash !== currentHash) {
           window.lastKnownHash = currentHash;
-          cleanupUIState();
+          cleanupUIState({ respectActiveLoading: true });
         }
       }
     }
@@ -83,8 +106,8 @@ export const setupRouteChangeCleanup = () => {
 };
 
 // Add a manual cleanup method to be called from components
-export const forceCleanupUI = () => {
-  console.log('Force cleanup UI called');
+export const forceCleanupUI = (options?: { respectActiveLoading?: boolean }) => {
+  console.log('Force cleanup UI called', options);
   
   // Double check for loading overlays
   const overlays = document.querySelectorAll('.loading-overlay');
@@ -93,6 +116,15 @@ export const forceCleanupUI = () => {
     
     // Check if any overlay isn't in the process of being removed already
     overlays.forEach(overlay => {
+      // Skip active loading overlays if we're respecting active loading
+      const isActiveLoadingOverlay = overlay.id === 'fullscreen-loading-overlay' && 
+                                    document.querySelector('.loading-overlay-active');
+                                    
+      if (options?.respectActiveLoading && isActiveLoadingOverlay) {
+        console.log('Skipping active loading overlay during force cleanup');
+        return;
+      }
+      
       if (overlay.parentNode && !overlay.classList.contains('being-removed')) {
         overlay.classList.add('being-removed');
         console.log('Marking overlay for removal');
@@ -109,7 +141,7 @@ export const forceCleanupUI = () => {
   }
   
   // Run standard cleanup
-  cleanupUIState();
+  cleanupUIState(options);
 };
 
 // Declare global variable for TypeScript 

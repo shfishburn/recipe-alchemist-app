@@ -42,7 +42,7 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
       }
       
       // Only clean up UI if there's no active loading overlay
-      cleanupUIState();
+      cleanupUIState({ respectActiveLoading: true });
       
       // Start exit animation
       setTransitionStage("fadeOut");
