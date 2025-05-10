@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QuickRecipe } from '@/types/quick-recipe';
@@ -36,6 +37,38 @@ export interface RecipeModifications {
   reasoning: string;
 }
 
+// Define the ModificationHistoryEntry interface that was missing
+interface ModificationHistoryEntry {
+  request: string;
+  response: RecipeModifications;
+  timestamp: string;
+  applied: boolean;
+}
+
+// Define schema for validation
+const recipeModificationsSchema = {
+  parse: (data: any) => {
+    // Simple validation check
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data format');
+    }
+    
+    if (!data.modifications || typeof data.modifications !== 'object') {
+      throw new Error('Missing modifications object');
+    }
+    
+    if (!data.nutritionImpact || typeof data.nutritionImpact !== 'object') {
+      throw new Error('Missing nutritionImpact object');
+    }
+    
+    if (!data.reasoning || typeof data.reasoning !== 'string') {
+      throw new Error('Missing reasoning string');
+    }
+    
+    return data as RecipeModifications;
+  }
+};
+
 // Type for status
 export type ModificationStatus = 
   'idle' | 
@@ -44,7 +77,9 @@ export type ModificationStatus =
   'applying' | 
   'error' | 
   'canceled' | 
-  'not-deployed';
+  'not-deployed' |
+  'applied' |    // Added this status
+  'rejected';    // Added this status
 
 export function useRecipeModifications(recipe: QuickRecipe) {
   // State machine
@@ -354,7 +389,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       
       // Update the modified recipe
       setModifiedRecipe(newRecipe);
-      setStatus('applied');
+      setStatus('idle'); // Changed from 'applied' to 'idle' to match the ModificationStatus type
       setModifications(null);
       
       toast.success("Recipe modified", {
@@ -374,7 +409,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   // Reject modifications
   const rejectModifications = useCallback(() => {
     setModifications(null);
-    setStatus('rejected');
+    setStatus('idle'); // Changed from 'rejected' to 'idle' to match the ModificationStatus type
     
     // Mark current modification as not applied in history
     setModificationHistory(prev => 

@@ -1,8 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ErrorState } from './loading/ErrorState';
 import { QuickRecipeLoading } from './QuickRecipeLoading';
 import { useKeyPress } from '@/hooks/use-key-press';
+import { markActiveLoading, clearActiveLoading } from '@/utils/dom-cleanup';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -16,6 +17,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   error 
 }: FullScreenLoadingProps) {
   const isErrorState = !!error;
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Handle Escape key press
   useKeyPress('Escape', () => {
@@ -26,18 +28,47 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   });
 
   // Focus trap implementation
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  
   useEffect(() => {
-    // Focus the container on mount
+    const previousActiveElement = document.activeElement as HTMLElement;
+    
+    // Mark this overlay as the active one to prevent cleanup
     if (containerRef.current) {
+      markActiveLoading(containerRef.current);
       containerRef.current.focus();
     }
     
-    // Store previous active element to restore focus on unmount
-    const previousActiveElement = document.activeElement as HTMLElement;
+    // Handle focus trap
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (!containerRef.current) return;
+      
+      if (e.key === 'Tab') {
+        // Find all focusable elements within container
+        const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusableContent = containerRef.current.querySelectorAll(focusableElements);
+        const firstElement = focusableContent[0] as HTMLElement;
+        const lastElement = focusableContent[focusableContent.length - 1] as HTMLElement;
+        
+        // Lock focus inside the modal
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleFocusTrap);
     
     return () => {
+      // Remove active loading mark on unmount
+      if (containerRef.current) {
+        clearActiveLoading(containerRef.current);
+      }
+      
+      document.removeEventListener('keydown', handleFocusTrap);
+      
       // Restore focus on unmount
       if (previousActiveElement && 'focus' in previousActiveElement) {
         previousActiveElement.focus();
@@ -47,19 +78,16 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   
   return (
     <div 
-      className="loading-overlay fixed inset-0 flex flex-col items-center justify-center p-4 z-50"
-      style={{ 
-        backgroundColor: isErrorState ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.95)',
-      }}
-      aria-modal="true"
-      role="dialog"
+      className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center loading-overlay active-loading"
       aria-busy="true"
+      role="dialog"
+      aria-modal="true"
       aria-live="polite"
       id="fullscreen-loading-overlay"
       ref={containerRef}
       tabIndex={-1} // Make focusable for focus trap
     >
-      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-6 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md mx-auto animate-fadeIn">
         {isErrorState ? (
           <ErrorState 
             error={error}

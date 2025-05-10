@@ -30,6 +30,7 @@ const QuickRecipePage: React.FC = () => {
   useEffect(() => {
     console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
     
+    // Only clean up if we're not loading or retrying
     if (!isLoading && !isRetrying) {
       forceCleanupUI();
     }
@@ -40,33 +41,26 @@ const QuickRecipePage: React.FC = () => {
     return () => {
       console.log('QuickRecipePage unmounted');
       clearInterval(cleanupInterval);
-      forceCleanupUI();
+      
+      // Only clean up if we're not loading or retrying
+      // This prevents cleaning up when navigating while loading
+      if (!isLoading && !isRetrying) {
+        forceCleanupUI();
+      }
     };
   }, [isLoading, isRetrying]);
 
-  // Render the loading state when loading or retrying - show overlay in place without navigation
-  if (isLoading || isRetrying) {
-    console.log('Rendering loading state in QuickRecipePage');
-    return (
-      <PageContainer>
-        <div 
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-          aria-busy="true"
-        >
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md mx-auto">
-            <FullScreenLoading
-              onCancel={handleCancel}
-              onRetry={error ? handleRetry : undefined}
-              error={error}
-            />
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
-
   return (
     <PageContainer>
+      {/* Loading/Retrying Overlay */}
+      {(isLoading || isRetrying) && (
+        <FullScreenLoading
+          onCancel={handleCancel}
+          onRetry={error ? handleRetry : undefined}
+          error={error}
+        />
+      )}
+      
       <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
         <QuickRecipeHero
           hasRecipe={!!recipe}
