@@ -49,15 +49,15 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
   }, [value, isMobile])
 
   const FeatureBadges = () => (
-    <div className="flex flex-wrap justify-center gap-2 mb-3">
+     <div role="group" aria-label="Feature tags" className="flex flex-wrap justify-center gap-2 mb-3">
       <span className="bg-recipe-green/10 text-recipe-green rounded-full px-3 py-1 text-xs font-medium">
-        Ready in 30 mins
+        Nutrition-Focused
       </span>
       <span className="bg-recipe-blue/10 text-recipe-blue rounded-full px-3 py-1 text-xs font-medium">
-        Easy cleanup
+        Ingredient-Based
       </span>
       <span className="bg-recipe-orange/10 text-recipe-orange rounded-full px-3 py-1 text-xs font-medium">
-        Ingredient-based
+        Time-Saving
       </span>
     </div>
   )
@@ -74,6 +74,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
         )}
       >
         What do you want to cook or what ingredients do you have in your kitchen?
+        <br />
+        Let our AI Cooking coach know and optionally select servings, cuisine, and dietary restrictions, and we'll create a custom recipe for you!
       </label>
 
       <div
