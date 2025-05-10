@@ -18,7 +18,7 @@ export function QuickRecipeLoading() {
   const userMessage = useUserMessage(formData?.mainIngredient);
   
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[40vh] sm:min-h-[50vh] py-3 sm:py-5 px-2 sm:px-4 hw-accelerated">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[40vh] sm:min-h-[50vh] py-3 sm:py-5 touch-flex-container animate-fadeIn px-2 sm:px-4">
       {/* Top loading bar that shows progress */}
       <TopLoadingBar 
         color="#4CAF50" 
@@ -26,8 +26,8 @@ export function QuickRecipeLoading() {
       />
       
       <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-xs sm:max-w-md mx-auto p-2 sm:p-4">
-        {/* Animated cooking pot icon or completion animation - hardware accelerated */}
-        <div className="hw-accelerated">
+        {/* Animated cooking pot icon or completion animation */}
+        <div className="transform-gpu">
           <LoadingAnimation showFinalAnimation={showFinalAnimation} />
         </div>
         
@@ -49,7 +49,7 @@ export function QuickRecipeLoading() {
           />
         </div>
         
-        {/* Timeout warning with mobile optimization */}
+        {/* Timeout warning */}
         {showTimeout && !showFinalAnimation && (
           <div className="flex items-center gap-1 sm:gap-2 text-amber-600 dark:text-amber-400 text-xs sm:text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-2 sm:px-3 rounded-lg mt-1 sm:mt-2 w-full animate-fade-in">
             <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />

@@ -18,18 +18,18 @@ export function TopLoadingBar({
   const { loadingState, completedLoading } = useQuickRecipeStore();
   const hasMountedRef = useRef(false);
   
-  // Start loading bar on component mount with better reliability
+  // Start loading bar on component mount
   useEffect(() => {
     if (!hasMountedRef.current && loadingRef.current) {
       // Start with a fixed value for immediate feedback
       loadingRef.current.staticStart(30);
       
-      // More reliable continuous loading with a slight delay
+      // More reliable continuous loading
       const timerId = setTimeout(() => {
         if (loadingRef.current) {
-          loadingRef.current.continuousStart(0, 500); // Lower interval for better mobile performance
+          loadingRef.current.continuousStart(0, 1000);
         }
-      }, 50);
+      }, 100);
       
       hasMountedRef.current = true;
       
@@ -52,8 +52,9 @@ export function TopLoadingBar({
   // Update progress based on percentComplete when available
   useEffect(() => {
     if (loadingState?.percentComplete > 0 && loadingRef.current && !completedLoading && !showFinalAnimation) {
-      // Make progress seem faster and more responsive
-      const targetProgress = Math.min(95, loadingState.percentComplete + 5);
+      // Ensure progress is always moving forward
+      // Add +10 to make progress seem faster and more responsive
+      const targetProgress = Math.max(30, Math.min(95, loadingState.percentComplete + 10));
       loadingRef.current.setProgress(targetProgress);
     }
   }, [loadingState.percentComplete, completedLoading, showFinalAnimation]);
@@ -64,7 +65,7 @@ export function TopLoadingBar({
       height={height} 
       ref={loadingRef} 
       shadow={true}
-      className="z-[102]" // Higher z-index to ensure visibility
+      className="z-50"
     />
   );
 }

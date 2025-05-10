@@ -10,32 +10,50 @@ import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
-import { cleanupUIState, detectTouchDevice } from "@/utils/dom-cleanup";
+
+// Simple utility to clean up UI state on route changes
+const cleanupUIState = () => {
+  // Remove any stuck loading classes
+  document.body.classList.remove('overflow-hidden');
+  
+  // Remove any loading triggers
+  const loadingTriggers = document.querySelectorAll('.loading-trigger');
+  loadingTriggers.forEach(el => {
+    if (el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+  });
+};
+
+// Set up route change cleanup
+const setupRouteChangeCleanup = () => {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type === 'childList') {
+        cleanupUIState();
+      }
+    }
+  });
+  
+  observer.observe(document.body, { childList: true, subtree: true });
+  
+  return () => observer.disconnect();
+};
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
   useScrollRestoration();
   
-  // Clean up UI state on mount and route changes
+  // Set up UI state cleanup for route changes
   useEffect(() => {
     // Clean up any existing issues when app loads
     cleanupUIState();
     
-    // Detect touch devices and add appropriate class
-    detectTouchDevice();
+    // Set up cleanup for future route changes
+    const cleanupListener = setupRouteChangeCleanup();
     
-    // Set up a MutationObserver to detect route changes
-    const observer = new MutationObserver(() => {
-      // Clean up any stuck UI states when DOM changes
-      cleanupUIState();
-    });
-    
-    // Start observing
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Clean up on unmount
     return () => {
-      observer.disconnect();
+      cleanupListener();
       cleanupUIState();
     };
   }, []);

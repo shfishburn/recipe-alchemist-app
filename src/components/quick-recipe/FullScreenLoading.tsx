@@ -24,26 +24,20 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   const isErrorState = !!error;
   const { showTimeout, showFinalAnimation } = useLoadingProgress();
   
-  // Improved body class management
+  // Clean up on mount/unmount
   useEffect(() => {
     // Add overflow-hidden only if loading
     if (!isErrorState) {
       document.body.classList.add('overflow-hidden');
-      document.documentElement.classList.add('overflow-hidden'); // Ensure html element is also locked
     }
     
     return () => {
-      // Cleanup body classes on unmount
       document.body.classList.remove('overflow-hidden');
-      document.documentElement.classList.remove('overflow-hidden');
     };
   }, [isErrorState]);
   
   return (
-    <div className="fixed inset-0 bg-white/95 dark:bg-gray-950/95 hw-accelerated overflow-auto touch-none z-[100]">
-      {/* Better fallback for backdrop-filter with solid background */}
-      <div className="absolute inset-0 loading-overlay z-[100]"></div>
-      
+    <div className="fixed inset-0 loading-overlay flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto">
       <TopLoadingBar showFinalAnimation={showFinalAnimation} />
       
       {/* Accessible title for screen readers */}
@@ -53,9 +47,9 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
         </h1>
       </VisuallyHidden>
       
-      <div className="fixed inset-0 z-[101] flex flex-col items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-12">
         {isErrorState ? (
-          <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-4 sm:p-6 animate-scale-in bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+          <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 animate-scale-in bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
             <p className="text-muted-foreground mb-6">{error}</p>
@@ -85,8 +79,8 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
           </div>
         ) : (
           <>
-            {/* Main loading animation - mobile optimized */}
-            <div className="flex flex-col items-center space-y-4 sm:space-y-6 mb-4 sm:mb-8 bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg p-4 sm:p-8 border border-gray-100 dark:border-gray-700 w-full max-w-md">
+            {/* Main loading animation */}
+            <div className="flex flex-col items-center space-y-6 mb-8 bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 w-full">
               <div className="relative transform-gpu">
                 {showFinalAnimation ? (
                   <LoadingAnimation showFinalAnimation={true} />
@@ -100,7 +94,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
                 )}
               </div>
               
-              <h2 className="text-lg sm:text-xl font-semibold">
+              <h2 className="text-lg sm:text-xl font-semibold animate-fade-in">
                 {showFinalAnimation ? "Recipe ready!" : "Creating Your Recipe"}
               </h2>
               
@@ -118,24 +112,24 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
               
               {/* Timeout warning */}
               {showTimeout && !showFinalAnimation && (
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg w-full">
-                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full animate-fade-in">
+                  <AlertCircle className="h-4 w-4" />
                   <span>This is taking longer than usual. Please be patient...</span>
                 </div>
               )}
             </div>
             
-            {/* Cooking tip card - better mobile spacing */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-4 sm:mb-8 max-w-sm mx-auto w-full">
+            {/* Cooking tip card */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto w-full">
               <LoadingTipCard />
             </div>
             
-            {/* Cancel button - better touch target */}
+            {/* Cancel button */}
             {onCancel && (
               <Button 
                 variant="ghost" 
                 onClick={onCancel} 
-                className="text-muted-foreground hover:text-foreground animate-fade-in h-12 sm:h-10 min-w-[120px]"
+                className="text-muted-foreground hover:text-foreground animate-fade-in"
                 aria-label="Cancel recipe generation"
               >
                 Cancel

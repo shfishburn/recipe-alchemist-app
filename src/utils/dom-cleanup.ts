@@ -6,7 +6,6 @@
 export const cleanupUIState = () => {
   // Remove any stuck classes
   document.body.classList.remove('overflow-hidden');
-  document.documentElement.classList.remove('overflow-hidden');
   document.body.classList.remove('loading');
   
   // Remove any loading triggers
@@ -42,27 +41,6 @@ export const setupRouteChangeCleanup = () => {
   observer.observe(document.body, { childList: true, subtree: true });
   
   return () => observer.disconnect();
-};
-
-// Detect touch devices and add a class
-export const detectTouchDevice = () => {
-  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-    document.body.classList.add('touch-device');
-  }
-};
-
-// Clean up any stuck transitions, animations, or effects
-export const cleanupAnimationEffects = () => {
-  // Find elements with infinite animations and disable them temporarily
-  const animatedElements = document.querySelectorAll('.animate-pulse, .animate-spin, .animate-ping');
-  animatedElements.forEach(el => {
-    el.classList.add('animation-paused');
-    
-    // Re-enable after a short delay
-    setTimeout(() => {
-      el.classList.remove('animation-paused');
-    }, 10);
-  });
 };
 
 // Declare global variable for TypeScript 
