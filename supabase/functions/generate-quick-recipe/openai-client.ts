@@ -26,10 +26,10 @@ export async function generateRecipeWithOpenAI(
     
     console.log("Sending request to OpenAI API...");
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Keep using the more capable model
+      model: "gpt-4o", // Use the powerful model for better recipes
       response_format: { type: "json_object" },
-      temperature: 0.5, // Reduced from 0.7 to make output more consistent
-      max_tokens: 4000, // Increased to allow for more comprehensive steps
+      temperature: 0.5,
+      max_tokens: 4000,
       messages: [
         {
           role: "system",
@@ -85,25 +85,25 @@ export async function generateRecipeWithOpenAI(
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
     
-  } catch (openaiError) {
+  } catch (openaiError: any) {
     console.error("OpenAI API error:", openaiError);
     // Improved error response with more details
-    let errorMessage = "Error generating recipe from OpenAI";
+    let errorMessage = "Error generating recipe";
     let errorDetails = openaiError.message || "Unknown OpenAI error";
     
     // Check for common OpenAI error patterns
     if (errorDetails.includes("401")) {
-      errorMessage = "Invalid OpenAI API key";
-      errorDetails = "The API key provided was rejected by OpenAI. Please check the key and try again.";
+      errorMessage = "Recipe service configuration error";
+      errorDetails = "API authentication error";
     } else if (errorDetails.includes("429")) {
-      errorMessage = "OpenAI rate limit exceeded";
-      errorDetails = "The OpenAI API rate limit has been exceeded. Please try again later.";
+      errorMessage = "Recipe service is busy";
+      errorDetails = "Our AI is experiencing high demand. Please try again in a few minutes.";
     } else if (errorDetails.includes("500")) {
-      errorMessage = "OpenAI internal server error";
-      errorDetails = "OpenAI is experiencing internal issues. Please try again later.";
+      errorMessage = "Recipe service error";
+      errorDetails = "Internal service error. Please try again later.";
     } else if (errorDetails.includes("400")) {
-      errorMessage = "Invalid request format";
-      errorDetails = "The request to OpenAI was invalid. This could be due to an issue with the prompt or parameters.";
+      errorMessage = "Invalid recipe request";
+      errorDetails = "There was an issue with your recipe request. Please simplify and try again.";
     }
     
     return new Response(

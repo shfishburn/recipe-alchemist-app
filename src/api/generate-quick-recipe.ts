@@ -16,19 +16,24 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       throw new Error("Please provide a main ingredient");
     }
     
-    // Authentication check removed - users can generate recipes without being signed in
+    // REMOVED: Authentication check - this allows guest usage
     
     // Format the request body
     const requestBody = formatRequestBody(formData);
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Set a timeout for the request (90 seconds - increased from 60)
-    const timeoutPromise = createTimeoutPromise(90000);
+    // Set a timeout for the request (120 seconds - increased from 90)
+    const timeoutPromise = createTimeoutPromise(120000);
     
     // Create a direct fetch function that we'll race against the timeout
     const directFetchPromise = async () => {
-      return await fetchFromEdgeFunction(requestBody);
+      try {
+        return await fetchFromEdgeFunction(requestBody);
+      } catch (err) {
+        console.error("Direct fetch error:", err);
+        throw err;
+      }
     };
     
     // Race both approaches against the timeout
@@ -60,7 +65,12 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     
-    // Improve error messages but remove authentication-specific errors
+    // Improve error messages and remove authentication requirements
+    if (error.message?.includes('Authentication')) {
+      // Override auth errors to allow guest usage
+      error.message = "Recipe generation service is temporarily unavailable. Please try again.";
+    }
+    
     return processErrorResponse(error);
   }
 };

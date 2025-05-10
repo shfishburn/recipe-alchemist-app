@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { AlertCircle, ArrowLeft, RefreshCw, LogIn } from 'lucide-react';
+import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
-import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 
 interface QuickRecipeErrorProps {
   error: string;
@@ -24,13 +22,7 @@ export function QuickRecipeError({
   onRetry,
   isRetrying
 }: QuickRecipeErrorProps) {
-  const auth = useAuth();
-  const { open: openAuthDrawer } = useAuthDrawer();
-  
-  // Check if this is an authentication error
-  const isAuthError = error?.toLowerCase().includes('auth') || 
-                      error?.toLowerCase().includes('sign in') || 
-                      error?.toLowerCase().includes('log in');
+  // Authentication checking removed to allow guest usage
   
   return (
     <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 border rounded-xl bg-red-50 dark:bg-red-900/10">
@@ -38,14 +30,7 @@ export function QuickRecipeError({
       <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
       <p className="text-muted-foreground mb-6">{error}</p>
       
-      {isAuthError && (
-        <div className="text-sm text-muted-foreground mb-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg">
-          <p className="font-medium">You need to be signed in to generate recipes</p>
-          <p className="mt-1">Please sign in to use the recipe generator</p>
-        </div>
-      )}
-      
-      {hasTimeoutError && !isAuthError && (
+      {hasTimeoutError && (
         <div className="text-sm text-muted-foreground mb-4 bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg">
           <p className="font-medium">Tip for timeout errors:</p>
           <ul className="list-disc list-inside mt-1">
@@ -63,7 +48,6 @@ export function QuickRecipeError({
           <pre className="whitespace-pre-wrap">{JSON.stringify({
             formData,
             hasTimeoutError,
-            isAuthError,
             error
           }, null, 2)}</pre>
         </div>
@@ -79,15 +63,7 @@ export function QuickRecipeError({
           Start Over
         </Button>
         
-        {isAuthError ? (
-          <Button 
-            onClick={openAuthDrawer}
-            className="flex items-center gap-2"
-          >
-            <LogIn className="h-4 w-4" />
-            Sign In
-          </Button>
-        ) : formData && (
+        {formData && (
           <Button 
             onClick={onRetry}
             className="flex items-center gap-2"
@@ -101,4 +77,3 @@ export function QuickRecipeError({
     </div>
   );
 }
-

@@ -42,8 +42,8 @@ export async function handleRequest(
       console.error("OpenAI API key is not configured");
       return new Response(
         JSON.stringify({ 
-          error: "OpenAI API key is not configured",
-          details: "The OPENAI_API_KEY environment variable is missing or empty",
+          error: "Our recipe AI service is temporarily unavailable",
+          details: "Missing API configuration - please try again later",
           debugInfo: debugInfo
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -121,8 +121,8 @@ export async function handleRequest(
     console.error("Quick recipe generation error:", error);
     return new Response(
       JSON.stringify({
-        error: error.message || "An unexpected error occurred",
-        details: error.stack || "No stack trace available",
+        error: "Recipe generation service error - please try again",
+        details: error.message || "An unexpected error occurred",
         debugInfo: debugInfo
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

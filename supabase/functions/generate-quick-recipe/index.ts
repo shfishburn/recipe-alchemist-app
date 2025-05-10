@@ -11,20 +11,20 @@ serve(async (req) => {
   }
   
   try {
-    // Check authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({
-          error: "Authentication required: Please sign in to generate recipes",
-          details: "No authorization header provided"
-        }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
+    // REMOVED: Authentication requirement - allowing guest access
+    // const authHeader = req.headers.get('Authorization');
+    // if (!authHeader) {
+    //  return new Response(
+    //    JSON.stringify({
+    //      error: "Authentication required: Please sign in to generate recipes",
+    //      details: "No authorization header provided"
+    //    }),
+    //    { 
+    //      status: 401, 
+    //      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    //    }
+    //  );
+    // }
     
     // Get debug info from headers if present
     const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
