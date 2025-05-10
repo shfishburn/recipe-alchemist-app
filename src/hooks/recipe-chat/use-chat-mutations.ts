@@ -21,7 +21,7 @@ export const useChatMutations = (recipe: Recipe) => {
       sourceUrl, 
       sourceImage,
       messageId,
-      isRetry
+      isRetry = false
     }: {
       message: string;
       sourceType?: 'manual' | 'image' | 'url' | 'analysis';

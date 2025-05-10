@@ -26,9 +26,9 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     const timeoutPromise = createTimeoutPromise(120000);
     
     // Create a function to call using our utility
-    const callWithSuapbaseFunctionClient = async () => {
+    const callWithSupabaseFunctionClient = async () => {
       const token = await getAuthToken();
-      const response = await callSupabaseFunction('generate-quick-recipe', {
+      const response = await callSupabaseFunction<typeof requestBody, any>('generate-quick-recipe', {
         payload: requestBody,
         token,
         debugTag: 'direct-fetch-production'
@@ -43,7 +43,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     // Race both approaches against the timeout
     const data = await Promise.race([
-      callWithSuapbaseFunctionClient().catch(err => {
+      callWithSupabaseFunctionClient().catch(err => {
         console.warn("Supabase function client failed, falling back to direct fetch:", err);
         return fetchFromEdgeFunction(requestBody);
       }),
@@ -56,9 +56,10 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       throw new Error('No recipe data returned. Please try again.');
     }
     
-    if (data.error) {
+    // Type guard for checking if data has an error property
+    if (typeof data === 'object' && data !== null && 'error' in data && data.error) {
       console.error('Error in recipe data:', data.error);
-      throw new Error(data.error);
+      throw new Error(typeof data.error === 'string' ? data.error : 'Error generating recipe');
     }
     
     // Normalize the recipe data to ensure it matches our expected structure

@@ -51,7 +51,7 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
     });
 
     // Use the Supabase functions.invoke method rather than direct fetch
-    const response = await supabase.functions.invoke(functionName, {
+    const response = await supabase.functions.invoke<TOutput>(functionName, {
       method,
       body: payload,
       headers: {
@@ -61,21 +61,21 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
       }
     });
 
-    // Log response status for debugging
-    console.log(`Supabase function "${functionName}" responded with status:`, response.status);
+    // Handle different response types safely
+    console.log(`Supabase function "${functionName}" responded:`, response);
 
     if (response.error) {
       return {
         data: null,
         error: response.error.message || `Error calling function: ${functionName}`,
-        status: response.status || 500
+        status: response.error.status || 500
       };
     }
 
     return {
-      data: response.data as TOutput,
+      data: response.data,
       error: null,
-      status: response.status || 200
+      status: 200 // Successful responses always have 200 status
     };
   } catch (err: any) {
     console.error(`Error calling Supabase function "${functionName}"`, err);

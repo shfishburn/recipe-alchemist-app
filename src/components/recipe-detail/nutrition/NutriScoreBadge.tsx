@@ -15,6 +15,7 @@ const GRADE_COLORS = {
 
 interface NutriScoreBadgeProps {
   nutriScore?: NutriScore | null;
+  grade?: 'A' | 'B' | 'C' | 'D' | 'E'; // Added grade as direct prop option
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
   className?: string;
@@ -22,16 +23,19 @@ interface NutriScoreBadgeProps {
 
 export function NutriScoreBadge({ 
   nutriScore, 
+  grade: directGrade,
   size = 'md', 
   showTooltip = true,
   className = '' 
 }: NutriScoreBadgeProps) {
+  // Use directly provided grade or extract from nutriScore
+  const grade = directGrade || (nutriScore?.grade as 'A' | 'B' | 'C' | 'D' | 'E' | undefined);
+  
   // If no valid nutri-score is provided, don't render anything
-  if (!nutriScore || !nutriScore.grade || !['A', 'B', 'C', 'D', 'E'].includes(nutriScore.grade)) {
+  if (!grade || !['A', 'B', 'C', 'D', 'E'].includes(grade)) {
     return null;
   }
   
-  const grade = nutriScore.grade;
   const gradeColor = GRADE_COLORS[grade as keyof typeof GRADE_COLORS] || 'bg-gray-100 text-gray-800 border-gray-300';
   
   const sizeClasses = {
