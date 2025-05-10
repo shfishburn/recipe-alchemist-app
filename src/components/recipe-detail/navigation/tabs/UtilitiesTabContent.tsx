@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CardWrapper } from '@/components/ui/card-wrapper';
-import { RefreshCw, FlaskRound } from 'lucide-react';
+import { RefreshCw, FlaskRound, Share, Printer } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,29 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
     
     // Force the analysis to regenerate
     analyzeRecipe(true); // Pass true to force regeneration
+  };
+
+  // Placeholder handlers for other utilities
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: recipe.title,
+        text: `Check out this recipe: ${recipe.title}`,
+        url: window.location.href,
+      }).catch(err => {
+        console.error('Error sharing:', err);
+      });
+    } else {
+      toast({
+        title: "Share",
+        description: "Sharing is not supported in this browser",
+        duration: 3000
+      });
+    }
   };
   
   return (
@@ -70,7 +93,50 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
         </div>
       </CardWrapper>
       
-      {/* Other utility sections can be added here */}
+      <CardWrapper 
+        title="Recipe Utilities" 
+        description="Additional tools for this recipe"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-medium">Share Recipe</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Share this recipe with friends and family.
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleShare}
+              className="flex items-center gap-1 whitespace-nowrap"
+            >
+              <Share className="h-3.5 w-3.5 mr-1" />
+              Share
+            </Button>
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-medium">Print Recipe</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Print this recipe for your recipe collection.
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePrint}
+              className="flex items-center gap-1 whitespace-nowrap"
+            >
+              <Printer className="h-3.5 w-3.5 mr-1" />
+              Print
+            </Button>
+          </div>
+        </div>
+      </CardWrapper>
     </div>
   );
 }

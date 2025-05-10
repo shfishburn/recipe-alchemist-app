@@ -1,80 +1,156 @@
-
-// Sample data for different macro distributions
-export const macroDistributionData = [
-  {
-    title: "Balanced Macros",
-    description: "Balanced macros for general health and wellbeing",
-    data: [
-      { name: 'Protein', value: 30, color: '#9b87f5' },
-      { name: 'Carbs', value: 45, color: '#0EA5E9' },
-      { name: 'Fat', value: 25, color: '#22c55e' }
-    ],
-    nutriScore: 'B'
-  },
-  {
-    title: "High Protein",
-    description: "High protein for muscle building and strength training",
-    data: [
-      { name: 'Protein', value: 40, color: '#9b87f5' },
-      { name: 'Carbs', value: 35, color: '#0EA5E9' },
-      { name: 'Fat', value: 25, color: '#22c55e' }
-    ],
-    nutriScore: 'A'
-  },
-  {
-    title: "Endurance Focus",
-    description: "Higher carbs for endurance activities and performance",
-    data: [
-      { name: 'Protein', value: 25, color: '#9b87f5' },
-      { name: 'Carbs', value: 50, color: '#0EA5E9' },
-      { name: 'Fat', value: 25, color: '#22c55e' }
-    ],
-    nutriScore: 'B'
-  },
-  {
-    title: "Specialized Diet",
-    description: "Personalized nutrition based on your health needs",
-    data: [
-      { name: 'Protein', value: 35, color: '#9b87f5' },
-      { name: 'Carbs', value: 40, color: '#0EA5E9' },
-      { name: 'Fat', value: 25, color: '#22c55e' }
-    ],
-    special: true,
-    nutriScore: 'C'
-  }
-];
-
-// Export the macroItems array for use in NutritionPreview
-export const macroItems = macroDistributionData;
-
-// Sample data for carb distribution
-export const carbsData = [
-  { name: 'Complex Carbs', value: 65, color: '#4f46e5' },
-  { name: 'Simple Carbs', value: 35, color: '#818cf8' }
-];
-
-// Sample data for fat distribution
-export const fatsData = [
-  { name: 'Unsaturated Fat', value: 70, color: '#86efac' },
-  { name: 'Saturated Fat', value: 30, color: '#22c55e' }
-];
-
-// Sample micronutrients data
 export const sampleMicronutrientsData = {
   vitamins: {
     title: "Vitamins",
     items: [
-      { name: "Vitamin A", value: "2.6 lb", percentage: "133%", color: "#A5C8FF" },
-      { name: "Vitamin C", value: "10g", percentage: "11%", color: "#FFF8A5" },
-      { name: "Vitamin D", value: "75g", percentage: "375%", color: "#A5C8FF" }
+      {
+        name: "Vitamin A",
+        value: "750 μg",
+        percentage: "83%",
+        color: "#4CAF50"
+      },
+      {
+        name: "Vitamin C",
+        value: "45 mg",
+        percentage: "50%",
+        color: "#FFC107"
+      },
+      {
+        name: "Vitamin D",
+        value: "5 μg",
+        percentage: "25%",
+        color: "#FF9800"
+      },
+      {
+        name: "Vitamin E",
+        value: "15 mg",
+        percentage: "100%",
+        color: "#4CAF50"
+      }
     ]
   },
   minerals: {
     title: "Minerals",
     items: [
-      { name: "Calcium", value: "150mg", percentage: "12%", color: "#FFF8A5" },
-      { name: "Iron", value: "5mg", percentage: "28%", color: "#FFF8A5" },
-      { name: "Potassium", value: "800mg", percentage: "17%", color: "#FFF8A5" }
+      {
+        name: "Calcium",
+        value: "300 mg",
+        percentage: "30%",
+        color: "#FF9800"
+      },
+      {
+        name: "Iron",
+        value: "8 mg",
+        percentage: "45%",
+        color: "#FFC107"
+      },
+      {
+        name: "Magnesium",
+        value: "120 mg",
+        percentage: "30%",
+        color: "#FF9800"
+      },
+      {
+        name: "Zinc",
+        value: "5 mg",
+        percentage: "45%",
+        color: "#FFC107"
+      }
     ]
   }
 };
+
+// Enhance macroItems to include Nutri-Score for all items
+export const macroItems = [
+  {
+    title: "Balanced Macro Distribution",
+    description: "Ideal balance of proteins, carbohydrates, and fats for general health",
+    data: [
+      { name: "Protein", value: 30, color: "#8884d8" },
+      { name: "Carbs", value: 40, color: "#82ca9d" },
+      { name: "Fat", value: 30, color: "#ffc658" }
+    ],
+    nutriScore: "A" as const
+  },
+  {
+    title: "High Protein Diet",
+    description: "Optimized for muscle building and recovery",
+    data: [
+      { name: "Protein", value: 40, color: "#8884d8" },
+      { name: "Carbs", value: 30, color: "#82ca9d" },
+      { name: "Fat", value: 30, color: "#ffc658" }
+    ],
+    special: true,
+    nutriScore: "B" as const
+  },
+  {
+    title: "Complete Nutritional Profile",
+    description: "Detailed breakdown of all nutritional components",
+    data: [
+      { name: "Protein", value: 25, color: "#8884d8" },
+      { name: "Carbs", value: 45, color: "#82ca9d" },
+      { name: "Fat", value: 30, color: "#ffc658" }
+    ],
+    showMicronutrients: true,
+    micronutrientsData: {
+      vitamins: {
+        title: "Vitamins",
+        items: [
+          {
+            name: "Vitamin A",
+            value: "750 μg",
+            percentage: "83%",
+            color: "#4CAF50"
+          },
+          {
+            name: "Vitamin C",
+            value: "45 mg",
+            percentage: "50%",
+            color: "#FFC107"
+          },
+          {
+            name: "Vitamin D",
+            value: "5 μg",
+            percentage: "25%",
+            color: "#FF9800"
+          },
+          {
+            name: "Vitamin E",
+            value: "15 mg",
+            percentage: "100%",
+            color: "#4CAF50"
+          }
+        ]
+      },
+      minerals: {
+        title: "Minerals",
+        items: [
+          {
+            name: "Calcium",
+            value: "300 mg",
+            percentage: "30%",
+            color: "#FF9800"
+          },
+          {
+            name: "Iron",
+            value: "8 mg",
+            percentage: "45%",
+            color: "#FFC107"
+          },
+          {
+            name: "Magnesium",
+            value: "120 mg",
+            percentage: "30%",
+            color: "#FF9800"
+          },
+          {
+            name: "Zinc",
+            value: "5 mg",
+            percentage: "45%",
+            color: "#FFC107"
+          }
+        ]
+      }
+    },
+    nutriScore: "A" as const
+  }
+];
