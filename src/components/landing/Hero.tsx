@@ -11,6 +11,8 @@ import { NutritionPreview } from './NutritionPreview';
 import { RecipeCarousel } from './RecipeCarousel';
 import { Brain, ChefHat, ChartPie, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
+import { toast } from '@/hooks/use-toast';
 
 interface BadgeProps {
   icon?: React.ReactNode;
@@ -40,12 +42,32 @@ const Badge: React.FC<BadgeProps> = ({ icon, label, color }) => {
 const Hero: React.FC = memo(() => {
   const isMobile = useIsMobile();
   const { open: openAuthDrawer } = useAuthDrawer();
+  const { handleSubmit } = useQuickRecipeForm();
 
-  const handleSubmit = (formData: any) => {
-    // Handle form submission with array support
+  const handleFormSubmit = (formData: any) => {
     console.log('Form submitted:', formData);
-    // Additional form handling logic...
-  }
+    
+    // Validate the form data before submitting
+    if (!formData.ingredients || !formData.ingredients.trim()) {
+      toast({
+        title: "Missing ingredient",
+        description: "Please enter at least one main ingredient",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Format the data expected by the recipe generation function
+    const recipeFormData = {
+      mainIngredient: formData.ingredients.trim(),
+      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : [formData.cuisine].filter(Boolean),
+      dietary: Array.isArray(formData.dietary) ? formData.dietary : formData.dietary ? [formData.dietary] : [],
+      servings: Number(formData.servings) || 4
+    };
+    
+    // Call the recipe generation function
+    handleSubmit(recipeFormData);
+  };
 
   return (
     <section className="py-6 md:py-12 lg:py-16 content-visibility-auto hero-section w-full max-w-full overflow-hidden">
@@ -94,7 +116,7 @@ const Hero: React.FC = memo(() => {
         {/* Recipe Generator Card */}
         <div className="flex justify-center px-2 sm:px-4 w-full">
           <div className="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-shadow hover:shadow-xl border border-gray-100">
-            <QuickRecipeGenerator onSubmit={handleSubmit} />
+            <QuickRecipeGenerator onSubmit={handleFormSubmit} />
           </div>
         </div>
 
