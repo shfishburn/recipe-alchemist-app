@@ -9,6 +9,10 @@
 :root {
   --recipe-blue: rgb(29, 78, 216);
   --recipe-blue-hover: rgb(37, 99, 235);
+  --recipe-green: rgb(76, 175, 80);
+  --recipe-green-hover: rgb(67, 160, 71);
+  --recipe-orange: rgb(255, 152, 0);
+  --recipe-orange-hover: rgb(245, 124, 0);
 }
 
 /* Global focus styles */

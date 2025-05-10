@@ -27,7 +27,9 @@ export function QuickRecipeLoading() {
       
       <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-md mx-auto p-4">
         {/* Animated cooking pot icon or completion animation */}
-        <LoadingAnimation showFinalAnimation={showFinalAnimation} />
+        <div className="transform-gpu">
+          <LoadingAnimation showFinalAnimation={showFinalAnimation} />
+        </div>
         
         {/* Personalized message with animation */}
         <h2 className="text-lg sm:text-xl font-semibold animate-fade-in">
@@ -39,10 +41,10 @@ export function QuickRecipeLoading() {
           {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
         </p>
         
-        {/* Simple progress indicator */}
-        <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+        {/* Enhanced progress indicator */}
+        <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-recipe-green transition-all duration-300 ease-out rounded-full"
+            className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse"
             style={{ width: `${loadingState.percentComplete}%` }}
           />
         </div>

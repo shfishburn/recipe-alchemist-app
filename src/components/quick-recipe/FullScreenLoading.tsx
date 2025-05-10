@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, RefreshCw, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { TopLoadingBar } from './loading/TopLoadingBar';
+import { LoadingAnimation } from './loading/LoadingAnimation';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -36,7 +37,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   }, [isErrorState]);
   
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto">
+    <div className="fixed inset-0 loading-overlay flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto">
       <TopLoadingBar showFinalAnimation={showFinalAnimation} />
       
       {/* Accessible title for screen readers */}
@@ -48,7 +49,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       
       <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-12">
         {isErrorState ? (
-          <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 animate-scale-in">
+          <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 animate-scale-in bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
             <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
             <p className="text-muted-foreground mb-6">{error}</p>
@@ -68,7 +69,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
               {onRetry && (
                 <Button 
                   onClick={onRetry}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-recipe-green hover:bg-recipe-green/90"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Try Again
@@ -79,9 +80,18 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
         ) : (
           <>
             {/* Main loading animation */}
-            <div className="flex flex-col items-center space-y-6 mb-8">
-              <div className="relative">
-                <ChefHat className="h-12 w-12 text-recipe-green animate-pulse" />
+            <div className="flex flex-col items-center space-y-6 mb-8 bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 w-full">
+              <div className="relative transform-gpu">
+                {showFinalAnimation ? (
+                  <LoadingAnimation showFinalAnimation={true} />
+                ) : (
+                  <div className="relative">
+                    <ChefHat className="h-12 w-12 text-recipe-green animate-float" />
+                    <div className="absolute -top-1 -right-1 h-3 w-3 bg-recipe-green rounded-full animate-pulse" />
+                    <div className="steam animate-steam" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="steam animate-steam" style={{ animationDelay: "0.8s", left: "12px" }}></div>
+                  </div>
+                )}
               </div>
               
               <h2 className="text-lg sm:text-xl font-semibold animate-fade-in">
@@ -92,10 +102,10 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
                 {showFinalAnimation ? "Your recipe has been created." : loadingState.stepDescription}
               </p>
               
-              {/* Simple progress indicator */}
-              <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+              {/* Enhanced progress indicator with gradient */}
+              <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-recipe-green transition-all duration-300 ease-out rounded-full"
+                  className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full"
                   style={{ width: `${loadingState.percentComplete}%` }}
                 />
               </div>
