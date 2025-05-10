@@ -14,35 +14,11 @@
   100% { opacity: 0; transform: translateY(-15px) translateX(6px) scale(1.2); }
 }
 
-@keyframes progress-pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 /* Essential animation classes */
 .animate-cooking-pot {
   animation: cooking-pot 2s ease-in-out infinite;
 }
 
-.animate-progress-pulse {
-  animation: progress-pulse 1.5s ease-in-out infinite;
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.animate-pulse {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Steam styling */
 .steam {
   animation: steam 2s ease-in-out infinite;
   position: absolute;
@@ -53,9 +29,4 @@
   border-radius: 50%;
   filter: blur(3px);
   background-color: rgba(255, 255, 255, 0.8);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
 }
