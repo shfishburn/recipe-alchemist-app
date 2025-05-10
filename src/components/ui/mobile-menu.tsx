@@ -12,7 +12,7 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, User, LogOut, X } from 'lucide-react';
+import { Menu, User, LogOut } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
@@ -59,8 +59,8 @@ export function MobileMenu() {
               />
             </Link>
           </SheetTitle>
-          <SheetClose className="rounded-full p-1">
-            <X className="h-5 w-5" />
+          <SheetClose className="rounded-full p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100">
+            <span className="sr-only">Close</span>
           </SheetClose>
         </SheetHeader>
         <nav className="mt-8">

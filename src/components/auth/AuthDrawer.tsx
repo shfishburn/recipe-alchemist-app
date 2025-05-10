@@ -83,7 +83,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
           <DrawerHeader className="flex items-center justify-between border-b pb-4">
             <DrawerTitle className="text-center">Account</DrawerTitle>
             <DrawerClose>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </Button>
@@ -109,7 +109,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
         <SheetHeader className="flex items-center justify-between border-b pb-4">
           <SheetTitle>Account</SheetTitle>
           <SheetClose>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </Button>

@@ -135,3 +135,13 @@
 .card-padding-responsive {
   @apply p-3 sm:p-4 md:p-6;
 }
+
+/* Global button style consistency overrides */
+button, .button {
+  @apply touch-feedback;
+}
+
+/* Improved spacing and consistency for content blocks */
+.content-block {
+  @apply my-6 md:my-8;
+}
