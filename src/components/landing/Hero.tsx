@@ -1,7 +1,7 @@
 
 // path: src/components/landing/Hero.tsx
 // file: Hero.tsx
-// updated: 2025-05-09 14:15 PM
+// updated: 2025-05-10
 
 import React, { memo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';

@@ -38,6 +38,16 @@
   width: 100%;
 }
 
+/* Fix navbar logo size - NEVER exceed these dimensions */
+header img.logo,
+.navbar-logo,
+.header-logo,
+header a img {
+  max-height: 40px !important;
+  width: auto !important;
+  object-fit: contain;
+}
+
 /* Fix for narrow mobile screens */
 @media (max-width: 360px) {
   .nutrition-carousel .carousel-item {

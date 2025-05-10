@@ -47,7 +47,7 @@ export function MobileMenu() {
               <img 
                 src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png" 
                 alt="Recipe Alchemy Logo" 
-                className="h-10 w-auto"
+                className="h-8 w-auto max-h-8"
               />
             </Link>
           </SheetTitle>
