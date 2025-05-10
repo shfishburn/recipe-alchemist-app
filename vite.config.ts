@@ -7,12 +7,29 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    // Use a more flexible host configuration
+    host: "0.0.0.0", // Allow connections from all network interfaces
     port: 8080,
     // Add historyApiFallback to handle client-side routing
     historyApiFallback: true,
-    // Allow requests from Lovable sandbox host
-    allowedHosts: ["all", "9da91218-18b0-4fc0-991c-29a180c2ef2e.lovableproject.com"],
+    // Add explicit CORS support
+    cors: true,
+    // Allow requests from Lovable sandbox host - include multiple patterns
+    allowedHosts: [
+      "all", 
+      "localhost",
+      "*.lovableproject.com",
+      "9da91218-18b0-4fc0-991c-29a180c2ef2e.lovableproject.com"
+    ],
+    // Add proxy configuration for potential API requests
+    proxy: {
+      // Proxy API requests if needed
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   plugins: [
     react(),
@@ -31,5 +48,12 @@ export default defineConfig(({ mode }) => ({
     },
     // Apply PostCSS to all CSS files
     postcss: './postcss.config.cjs'
+  },
+  // Ensure build optimization for better performance
+  build: {
+    outDir: 'dist',
+    minify: true,
+    sourcemap: true,
+    target: 'esnext',
   },
 }));
