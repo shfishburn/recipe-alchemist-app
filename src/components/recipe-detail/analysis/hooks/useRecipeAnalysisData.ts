@@ -261,7 +261,9 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 setIsAnalyzing(false);
               });
             }}
-          />
+          >
+            Regenerate
+          </Button>
         )
       });
       return;
