@@ -33,7 +33,10 @@ const validateRequestPayload = (payload: any): boolean => {
   return true;
 };
 
-// Direct API fetch to edge function
+/**
+ * Direct API fetch to edge function
+ * NOTE: DO NOT MODIFY THIS FUNCTION - it contains important fallback logic for recipe generation
+ */
 export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
   try {
     // Validate the request payload before proceeding
@@ -44,10 +47,10 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
     // Get auth token for request
     const token = await getAuthToken();
     
-    // Check if user is authenticated - NEW
-    if (!token) {
-      throw new Error('Authentication required: Please sign in to generate recipes');
-    }
+    // REMOVED: Authentication check - now allowing unauthenticated requests
+    // if (!token) {
+    //   throw new Error('Authentication required: Please sign in to generate recipes');
+    // }
     
     console.log("Using direct fetch to edge function with payload:", {
       mainIngredient: requestBody.mainIngredient,
@@ -74,7 +77,7 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
       // Remove the signal property since it's not supported in SupabaseFunctionOptions
       const { data, error, status } = await callSupabaseFunction('generate-quick-recipe', {
         payload,
-        token,
+        token, // We pass the token if available, but don't require it
         debugTag: 'direct-fetch-production'
       });
       
@@ -129,7 +132,10 @@ export const fetchFromEdgeFunction = async (requestBody: any): Promise<any> => {
   }
 };
 
-// Fallback API call using Supabase functions
+/**
+ * Fallback API call using Supabase functions
+ * NOTE: DO NOT MODIFY THIS FUNCTION - it contains important fallback logic for recipe generation
+ */
 export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any> => {
   try {
     // Validate the request payload before proceeding
@@ -137,11 +143,8 @@ export const fetchFromSupabaseFunctions = async (requestBody: any): Promise<any>
       throw new Error('Invalid request: Please provide all required information for recipe generation');
     }
     
-    // Get auth token and check if user is authenticated - NEW
+    // Get auth token but don't require it
     const token = await getAuthToken();
-    if (!token) {
-      throw new Error('Authentication required: Please sign in to generate recipes');
-    }
     
     console.log("Falling back to Supabase functions invoke with payload:", {
       mainIngredient: requestBody.mainIngredient,

@@ -7,7 +7,8 @@ import { toast } from 'sonner';
 
 // List of routes that don't require authentication
 const PUBLIC_ROUTES = [
-  '/quick-recipe'  // Recipe creation is now public
+  '/quick-recipe',  // Recipe creation is now public
+  '/'               // Home page is public
 ];
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {

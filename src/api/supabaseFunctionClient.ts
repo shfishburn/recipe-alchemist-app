@@ -19,6 +19,8 @@ interface SupabaseFunctionResponse<TOutput> {
 
 /**
  * Type-safe fetch to a Supabase Edge Function with optional payload, auth, and debugging
+ * 
+ * NOTE: DO NOT MODIFY THIS FUNCTION - it contains important fallback logic for the recipe generation system
  */
 export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
   functionName: string,
@@ -50,26 +52,9 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
       payloadKeys: payload ? Object.keys(payload) : 'no payload'
     });
     
-    // First check if the function exists by calling the functions list endpoint
-    const functionsResponse = await supabase.functions.listFunctions();
+    // REMOVED: Function existence check which was causing build errors
+    // The listFunctions method no longer exists in the Supabase JS client v2.49.4
     
-    if (functionsResponse.error) {
-      console.error('Error checking available functions:', functionsResponse.error);
-    } else {
-      const functionExists = functionsResponse.data.some(func => func.name === functionName);
-      
-      if (!functionExists) {
-        console.error(`Function "${functionName}" does not exist or is not deployed in this Supabase project`);
-        return {
-          data: null,
-          error: `Edge function "${functionName}" is not deployed. Please deploy it to your Supabase project.`,
-          status: 404
-        };
-      } else {
-        console.log(`Function "${functionName}" exists and is deployed.`);
-      }
-    }
-
     // Use the Supabase functions.invoke method rather than direct fetch
     const response = await supabase.functions.invoke<TOutput>(functionName, {
       method,
