@@ -16,26 +16,29 @@ export function TopLoadingBar({
 }: TopLoadingBarProps) {
   const loadingRef = useRef<any>(null);
   const { loadingState, completedLoading } = useQuickRecipeStore();
+  const hasMountedRef = useRef(false);
   
   // Start loading bar on component mount
   useEffect(() => {
-    if (loadingRef.current) {
+    if (!hasMountedRef.current && loadingRef.current) {
       // Start with a fixed value for immediate feedback
       loadingRef.current.staticStart(30);
       
       // More reliable continuous loading
-      setTimeout(() => {
+      const timerId = setTimeout(() => {
         if (loadingRef.current) {
-          loadingRef.current.continuousStart(0, 100);
+          loadingRef.current.continuousStart(0, 1000);
         }
       }, 100);
+      
+      hasMountedRef.current = true;
+      
+      return () => clearTimeout(timerId);
     }
     
     // Complete the loading bar when recipe generation is done
-    if (completedLoading || showFinalAnimation) {
-      if (loadingRef.current) {
-        loadingRef.current.complete();
-      }
+    if ((completedLoading || showFinalAnimation) && loadingRef.current) {
+      loadingRef.current.complete();
     }
     
     return () => {
@@ -48,12 +51,13 @@ export function TopLoadingBar({
   
   // Update progress based on percentComplete when available
   useEffect(() => {
-    if (loadingState.percentComplete > 0 && loadingRef.current) {
+    if (loadingState?.percentComplete > 0 && loadingRef.current && !completedLoading && !showFinalAnimation) {
       // Ensure progress is always moving forward
-      const targetProgress = Math.max(30, loadingState.percentComplete);
+      // Add +10 to make progress seem faster and more responsive
+      const targetProgress = Math.max(30, Math.min(95, loadingState.percentComplete + 10));
       loadingRef.current.setProgress(targetProgress);
     }
-  }, [loadingState.percentComplete]);
+  }, [loadingState.percentComplete, completedLoading, showFinalAnimation]);
 
   return (
     <LoadingBar 

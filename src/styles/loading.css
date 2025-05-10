@@ -25,9 +25,15 @@
 }
 
 @keyframes steam {
-  0% { opacity: 0; transform: translateY(0) translateX(0); }
-  50% { opacity: 0.8; transform: translateY(-15px) translateX(5px); }
-  100% { opacity: 0; transform: translateY(-25px) translateX(10px); }
+  0% { opacity: 0; transform: translateY(0) translateX(0) scale(0.5); }
+  50% { opacity: 0.8; transform: translateY(-15px) translateX(5px) scale(1); }
+  100% { opacity: 0; transform: translateY(-25px) translateX(10px) scale(1.5); }
+}
+
+@keyframes bubble {
+  0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+  50% { transform: translateY(-10px) scale(1.2); opacity: 0.7; }
+  100% { transform: translateY(-18px) scale(0.8); opacity: 0; }
 }
 
 @keyframes progress-pulse {
@@ -86,6 +92,17 @@
 
 .animate-steam {
   animation: steam 2s ease-in-out infinite;
+  position: absolute;
+  top: -5px;
+  left: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  filter: blur(5px);
+}
+
+.animate-bubble {
+  animation: bubble 1.5s ease-in-out infinite;
 }
 
 .animate-progress-pulse {
@@ -135,6 +152,16 @@
 .touch-ripple:active::after {
   opacity: 1;
   transition: opacity 0s;
+}
+
+/* Loading pot container styling */
+.loading-pot-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  width: 80px;
+  position: relative;
 }
 
 /* Text gradient for recipe titles */
@@ -196,16 +223,16 @@
   background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,255,240,0.95) 100%);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  z-index: 50;
 }
 
-/* Steam effect for cooking animations */
+/* Fix for the steam visuals */
 .steam {
   position: absolute;
   top: -5px;
   left: 5px;
-  width: 20px;
-  height: 20px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.7);
-  filter: blur(5px);
+  filter: blur(3px);
 }
