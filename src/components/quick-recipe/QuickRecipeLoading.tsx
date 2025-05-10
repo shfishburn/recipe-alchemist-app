@@ -18,7 +18,7 @@ export function QuickRecipeLoading() {
   const userMessage = useUserMessage(formData?.mainIngredient);
   
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[50vh] py-5 sm:py-8 animate-fadeIn">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[50vh] py-5 sm:py-8 touch-flex-container animate-fadeIn">
       {/* Top loading bar that shows progress */}
       <TopLoadingBar 
         color="#4CAF50" 

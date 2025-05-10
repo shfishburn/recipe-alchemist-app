@@ -60,10 +60,9 @@ export function TabsView({ recipe, onRecipeUpdate, refetch }: TabsViewProps) {
       <div className="touch-friendly-tabs">
         <TabsList className="w-full grid grid-cols-5 mb-6 touch-scroll">
           {tabItems.map(tab => (
-            <TabsTrigger key={tab.value} value={tab.value} className="flex flex-col items-center relative">
-              {tab.icon}
-              {!isMobile && <span className="text-xs mt-1">{tab.label}</span>}
-              <span className="sr-only">{tab.label}</span>
+            <TabsTrigger key={tab.value} value={tab.value} className="flex flex-col items-center relative tab-trigger">
+              <span className={isMobile ? "" : "mb-1"}>{tab.icon}</span>
+              <span className={isMobile ? "sr-only" : "text-xs"}>{tab.label}</span>
               {tab.highlight && (
                 <span className="absolute -top-1 -right-1 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>

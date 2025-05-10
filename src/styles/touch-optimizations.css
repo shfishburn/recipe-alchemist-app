@@ -68,9 +68,16 @@
 
 /* Improve spacing for icons-only tabs on mobile */
 @media (max-width: 640px) {
-  .tab-icon-only {
+  .tab-trigger {
+    min-width: 42px;
     padding: 0.5rem !important;
     margin: 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .tab-icon-only {
+    padding: 0.5rem !important;
   }
   
   .tab-icon-label {

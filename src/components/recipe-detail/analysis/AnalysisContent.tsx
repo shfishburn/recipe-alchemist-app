@@ -6,6 +6,8 @@ import { ReactionsList } from "./ReactionsList";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ChemistryIcon, TechniquesIcon, TroubleshootingIcon, ReactionIcon } from './icons/AnalysisIcons';
 
 interface AnalysisContentProps {
   chemistry?: string[];
@@ -23,6 +25,7 @@ export function AnalysisContent({
   stepReactions = null
 }: AnalysisContentProps) {
   const [showRaw, setShowRaw] = useState(false);
+  const isMobile = useIsMobile();
   
   const renderList = (items: string[]) => {
     if (!items || items.length === 0) {
@@ -43,11 +46,23 @@ export function AnalysisContent({
   return (
     <div className="space-y-4">
       <Tabs defaultValue="chemistry" className="w-full">
-        <TabsList className="mb-2">
-          <TabsTrigger value="chemistry">Chemistry</TabsTrigger>
-          <TabsTrigger value="techniques">Techniques</TabsTrigger>
-          <TabsTrigger value="troubleshooting">Troubleshooting</TabsTrigger>
-          <TabsTrigger value="reactions">Step Analysis</TabsTrigger>
+        <TabsList className="mb-2 touch-scroll">
+          <TabsTrigger value="chemistry" className="tab-trigger">
+            <ChemistryIcon />
+            <span className={isMobile ? "sr-only" : "ml-1"}>Chemistry</span>
+          </TabsTrigger>
+          <TabsTrigger value="techniques" className="tab-trigger">
+            <TechniquesIcon />
+            <span className={isMobile ? "sr-only" : "ml-1"}>Techniques</span>
+          </TabsTrigger>
+          <TabsTrigger value="troubleshooting" className="tab-trigger">
+            <TroubleshootingIcon />
+            <span className={isMobile ? "sr-only" : "ml-1"}>Troubleshooting</span>
+          </TabsTrigger>
+          <TabsTrigger value="reactions" className="tab-trigger">
+            <ReactionIcon />
+            <span className={isMobile ? "sr-only" : "ml-1"}>Step Analysis</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="chemistry" className="space-y-2 pt-2">
