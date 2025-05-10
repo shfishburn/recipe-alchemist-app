@@ -4,15 +4,32 @@ import { useQuery } from '@tanstack/react-query';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { toast } from '@/hooks/use-toast';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { Recipe } from '@/types/recipe';
 import { fetchRecipeAnalysis, hasValidAnalysisData as checkValidAnalysisData, AnalysisResponse } from './analysis-utils';
 import { useAnalyzeRecipe } from './useAnalyzeRecipe';
+
+// Key for tracking already analyzed recipes in localStorage
+const ANALYZED_RECIPES_KEY = 'recipe-analysis-cache';
+
+interface AnalyzedRecipeCache {
+  [recipeId: string]: {
+    timestamp: number;  // When the analysis was performed
+    hasAnalyzedData: boolean; // Whether analysis was already performed
+  };
+}
 
 /**
  * Hook to manage recipe analysis data fetching and state
  * with auto-analysis in the background
  */
 export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedRecipe: Recipe) => void) {
+  // Cache for tracking recipes we've already analyzed
+  const [analyzedRecipesCache, setAnalyzedRecipesCache] = useLocalStorage<AnalyzedRecipeCache>(
+    ANALYZED_RECIPES_KEY, 
+    {}
+  );
+  
   const initialAnalysisRef = useRef(false);
   const [hasAppliedUpdates, setHasAppliedUpdates] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -20,6 +37,10 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   const recipeIdRef = useRef<string>(recipe.id);
   const lastAnalysisTimeRef = useRef<number>(0);
   const hasTriggeredInitialAnalysisRef = useRef<boolean>(false);
+  
+  // Check if this recipe has been analyzed before using our cache
+  const cachedAnalysis = analyzedRecipesCache[recipe.id];
+  const hasBeenAnalyzedBefore = Boolean(cachedAnalysis?.hasAnalyzedData);
   
   // Track if we've seen this recipe before
   useEffect(() => {
@@ -58,6 +79,15 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         lastAnalysisTimeRef.current = Date.now();
         analysisRequestRef.current = null;
         
+        // Update our cache to indicate this recipe has been analyzed
+        setAnalyzedRecipesCache(prev => ({
+          ...prev,
+          [recipe.id]: {
+            timestamp: Date.now(),
+            hasAnalyzedData: true
+          }
+        }));
+        
         return data;
       } catch (error) {
         throw error;
@@ -95,18 +125,28 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
 
   // Auto-analyze when opened for the first time - with improved logic to avoid unnecessary analysis
   useEffect(() => {
-    // Only trigger analysis if:
-    // 1. We're not currently analyzing
-    // 2. We haven't triggered initial analysis for this recipe yet
-    // 3. We don't already have complete analysis data
-    if (!isAnalyzing && !hasTriggeredInitialAnalysisRef.current) {
-      // Mark that we've triggered the initial analysis for this recipe
+    // Skip auto-analysis if any of these are true:
+    // 1. We're currently analyzing
+    // 2. We've triggered initial analysis for this recipe already
+    // 3. This recipe has been analyzed before according to our cache (within the last 24 hours)
+    // 4. We already have complete analysis data
+    if (
+      !isAnalyzing && 
+      !hasTriggeredInitialAnalysisRef.current && 
+      !initialAnalysisRef.current
+    ) {
+      // Mark that we've triggered the initial analysis check for this recipe
       hasTriggeredInitialAnalysisRef.current = true;
+      initialAnalysisRef.current = true;
       
-      // Check if we already have complete data
+      // Check if we should trigger analysis by seeing if we have complete data OR
+      // if this recipe was analyzed recently according to our cache
       const hasComplete = hasValidAnalysisData();
+      const recentlyCached = hasBeenAnalyzedBefore && 
+                            cachedAnalysis && 
+                            (Date.now() - cachedAnalysis.timestamp < 24 * 60 * 60 * 1000); // 24 hours
       
-      if (!hasComplete) {
+      if (!hasComplete && !recentlyCached) {
         console.log('Auto-triggering analysis for recipe:', recipe.title);
         
         // Small delay to prevent immediate analysis on mount
@@ -116,14 +156,10 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         
         return () => clearTimeout(timer);
       } else {
-        console.log('Skipping auto-analysis - complete data already exists for:', recipe.title);
-        initialAnalysisRef.current = true;
+        console.log('Skipping auto-analysis - complete data already exists or recent cache for:', recipe.title);
       }
-    } else if (!initialAnalysisRef.current) {
-      console.log('Skipping auto-analysis - analysis already running for:', recipe.title);
-      initialAnalysisRef.current = true;
     }
-  }, [handleAnalyze, isAnalyzing, recipe.title, hasValidAnalysisData]);
+  }, [handleAnalyze, isAnalyzing, recipe.title, hasValidAnalysisData, hasBeenAnalyzedBefore, cachedAnalysis]);
 
   // Apply analysis updates to recipe when data is available
   useEffect(() => {

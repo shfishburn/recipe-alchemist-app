@@ -1,7 +1,6 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { useErrorHandler } from '@/hooks/use-error-handler';
 import { analyzeReactions, hasValidAnalysisData } from './analysis-utils';
 import type { Recipe } from '@/types/recipe';
 import { Button } from '@/components/ui/button';
@@ -42,24 +41,26 @@ export function useAnalyzeRecipe(
         title: 'Analysis Already Complete',
         description: "This recipe already has complete analysis data. Still want to regenerate?",
         duration: 5000,
-        action: <Button 
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            // Force regeneration
-            setIsAnalyzing(true);
-            clearError();
-            
-            Promise.all([
-              refetch(),
-              analyzeReactions(recipe).then(refetchReactions)
-            ]).finally(() => {
-              setIsAnalyzing(false);
-            });
-          }}
-        >
-          Regenerate
-        </Button>
+        action: (
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Force regeneration
+              setIsAnalyzing(true);
+              clearError();
+              
+              Promise.all([
+                refetch(),
+                analyzeReactions(recipe).then(refetchReactions)
+              ]).finally(() => {
+                setIsAnalyzing(false);
+              });
+            }}
+          >
+            Regenerate
+          </Button>
+        )
       });
       return;
     }
