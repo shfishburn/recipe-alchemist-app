@@ -18,22 +18,22 @@
 
 @keyframes cooking-pot {
   0% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-5px) rotate(-2deg); }
-  50% { transform: translateY(-10px) rotate(0deg); }
-  75% { transform: translateY(-5px) rotate(2deg); }
+  25% { transform: translateY(-3px) rotate(-1deg); }
+  50% { transform: translateY(-6px) rotate(0deg); }
+  75% { transform: translateY(-3px) rotate(1deg); }
   100% { transform: translateY(0) rotate(0deg); }
 }
 
 @keyframes steam {
   0% { opacity: 0; transform: translateY(0) translateX(0) scale(0.5); }
-  50% { opacity: 0.8; transform: translateY(-15px) translateX(5px) scale(1); }
-  100% { opacity: 0; transform: translateY(-25px) translateX(10px) scale(1.5); }
+  50% { opacity: 0.8; transform: translateY(-10px) translateX(3px) scale(0.9); }
+  100% { opacity: 0; transform: translateY(-15px) translateX(6px) scale(1.2); }
 }
 
 @keyframes bubble {
   0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
-  50% { transform: translateY(-10px) scale(1.2); opacity: 0.7; }
-  100% { transform: translateY(-18px) scale(0.8); opacity: 0; }
+  50% { transform: translateY(-6px) scale(1.1); opacity: 0.7; }
+  100% { transform: translateY(-10px) scale(0.8); opacity: 0; }
 }
 
 @keyframes progress-pulse {
@@ -44,7 +44,7 @@
 
 @keyframes float {
   0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-4px); }
   100% { transform: translateY(0px); }
 }
 
@@ -55,12 +55,12 @@
 
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes ping {
   0% { transform: scale(1); opacity: 1; }
-  75%, 100% { transform: scale(2); opacity: 0; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
 }
 
 @keyframes progress-bar {
@@ -95,10 +95,10 @@
   position: absolute;
   top: -5px;
   left: 5px;
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  filter: blur(5px);
+  filter: blur(3px);
 }
 
 .animate-bubble {
@@ -154,14 +154,21 @@
   transition: opacity 0s;
 }
 
-/* Loading pot container styling */
+/* Loading pot container styling - mobile responsive */
 .loading-pot-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 80px;
-  width: 80px;
+  height: 60px;
+  width: 60px;
   position: relative;
+}
+
+@media (min-width: 640px) {
+  .loading-pot-container {
+    height: 80px;
+    width: 80px;
+  }
 }
 
 /* Text gradient for recipe titles */
@@ -174,13 +181,13 @@
 
 /* Custom recipe green glow effect */
 .glow-recipe-green {
-  box-shadow: 0 0 15px 2px rgba(75, 175, 80, 0.3);
+  box-shadow: 0 0 10px 1px rgba(75, 175, 80, 0.3);
   animation: glow 2s ease-in-out infinite alternate;
 }
 
 @keyframes glow {
-  from { box-shadow: 0 0 10px 2px rgba(75, 175, 80, 0.2); }
-  to { box-shadow: 0 0 20px 5px rgba(75, 175, 80, 0.4); }
+  from { box-shadow: 0 0 6px 1px rgba(75, 175, 80, 0.2); }
+  to { box-shadow: 0 0 12px 3px rgba(75, 175, 80, 0.4); }
 }
 
 /* Hardware acceleration for smoother animations */
@@ -214,25 +221,42 @@
   height: 100%;
   width: 0%;
   transform-origin: left;
-  box-shadow: 0 0 10px var(--recipe-blue, #4CAF50);
+  box-shadow: 0 0 6px var(--recipe-blue, #4CAF50);
   display: block;
 }
 
-/* Loading background overlay */
+/* Loading background overlay - mobile responsive */
 .loading-overlay {
   background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,255,240,0.95) 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 50;
 }
 
-/* Fix for the steam visuals */
+@media (min-width: 640px) {
+  .loading-overlay {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Fix for the steam visuals - mobile responsive */
 .steam {
   position: absolute;
-  top: -5px;
-  left: 5px;
-  width: 8px;
-  height: 8px;
+  top: -4px;
+  left: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  filter: blur(3px);
+  filter: blur(2px);
+}
+
+@media (min-width: 640px) {
+  .steam {
+    top: -5px;
+    left: 5px;
+    width: 8px;
+    height: 8px;
+    filter: blur(3px);
+  }
 }
