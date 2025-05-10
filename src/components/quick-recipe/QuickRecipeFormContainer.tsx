@@ -1,3 +1,4 @@
+
 // path: src/components/quick-recipe/QuickRecipeFormContainer.tsx
 // file: QuickRecipeFormContainer.tsx
 // updated: 2025-05-09 14:02 PM
@@ -11,7 +12,6 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Cake, ChefHat, Egg } from 'lucide-react';
 import { QuickRecipeFormData as TagFormData } from './QuickRecipeTagForm';
 import { toast } from '@/hooks/use-toast';
-import { FullScreenLoading } from './FullScreenLoading';
 
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
@@ -79,7 +79,8 @@ export function QuickRecipeFormContainer() {
 
   return (
     <div className="relative overflow-hidden">
-      {isLoading && <FullScreenLoading onCancel={handleCancel} />}
+      {/* Removed the duplicate loading component that was here: 
+         {isLoading && <FullScreenLoading onCancel={handleCancel} />} */}
       <div className="absolute -top-8 left-0 w-20 h-20 md:w-32 md:h-32 bg-recipe-green/20 rounded-full blur-md z-0 animate-pulse" />
       <div className="absolute -bottom-10 right-0 w-24 h-24 md:w-40 md:h-40 bg-recipe-orange/20 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: '1s' }} />
       <div className="absolute top-1/2 right-4 w-16 h-16 md:w-24 md:h-24 bg-recipe-blue/15 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: '1.5s' }} />
