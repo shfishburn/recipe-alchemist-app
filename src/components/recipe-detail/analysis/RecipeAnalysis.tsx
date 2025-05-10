@@ -92,6 +92,18 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
   // Show analysis prompt only when there is absolutely no data and we're not analyzing
   const showAnalysisPrompt = !hasAnyContent && !isAnalyzing && !isLoading && !hasAnalysisData;
 
+  // Handle force regeneration - will bypass all the caching mechanisms
+  const handleForceRegenerate = () => {
+    toast({
+      title: "Force Regenerating Analysis",
+      description: "Re-analyzing recipe with enhanced scientific detail...",
+      duration: 5000
+    });
+    
+    // Force the analysis to regenerate
+    handleAnalyze();
+  };
+
   // Show a subtle background refresh message when we're analyzing
   useEffect(() => {
     if (isAnalyzing && hasAnyContent) {
@@ -125,7 +137,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
         <AnalysisHeader 
           hasContent={hasAnyContent}
           isAnalyzing={isAnalyzing}
-          onRegenerate={hasAnyContent ? handleAnalyze : undefined}
+          onRegenerate={handleForceRegenerate}
         />
       }
     >
@@ -140,7 +152,7 @@ export function RecipeAnalysis({ recipe, isOpen = true, onRecipeUpdate }: Recipe
           troubleshooting={troubleshooting}
           rawResponse={analysis?.textResponse || null}
           stepReactions={stepReactions}
-          onRegenerate={isAnalyzing ? undefined : handleAnalyze}
+          onRegenerate={null} // Remove regenerate button from here
         />
       ) : (
         <EmptyAnalysis onAnalyze={handleAnalyze} />

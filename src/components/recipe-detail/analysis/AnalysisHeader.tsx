@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { CardTitle, CardDescription } from "@/components/ui/card";
-import { Beaker } from "lucide-react";
+import { Beaker, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AnalysisHeaderProps {
   title?: string;
@@ -27,7 +28,18 @@ export function AnalysisHeader({
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </div>
-      {/* Removed the Regenerate Button */}
+      {onRegenerate && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRegenerate}
+          disabled={isAnalyzing}
+          className="flex items-center text-xs"
+        >
+          <RefreshCw className="h-3 w-3 mr-1" />
+          Force Regenerate
+        </Button>
+      )}
     </div>
   );
 }
