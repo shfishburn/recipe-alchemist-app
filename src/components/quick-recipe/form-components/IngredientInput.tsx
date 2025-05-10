@@ -107,7 +107,8 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
         />
       </div>
 
-      {error ? (
+      {error && (
+        <p className="text-sm text-red-500 mt-1">{error}</p>
       )}
     </div>
   )
