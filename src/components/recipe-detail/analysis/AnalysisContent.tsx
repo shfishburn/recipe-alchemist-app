@@ -4,7 +4,7 @@ import { AnalysisSection } from './AnalysisSection';
 import { StepReactionItem } from './StepReactionItem';
 import { ReactionsList } from './ReactionsList';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw, FlaskRound, Beaker, Wrench, Bug } from 'lucide-react';
+import { RefreshCcw, FlaskRound, Beaker, Wrench, Bug, Copy } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/hooks/use-toast';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
@@ -61,81 +62,94 @@ export function AnalysisContent({
   const copyJsonToClipboard = (data: any) => {
     navigator.clipboard.writeText(JSON.stringify(data, null, 2))
       .then(() => {
-        alert('JSON copied to clipboard!');
+        toast({
+          title: 'Copied to clipboard',
+          description: 'JSON data copied successfully',
+          variant: 'success'
+        });
       })
       .catch(err => {
         console.error('Failed to copy JSON:', err);
+        toast({
+          title: 'Copy failed',
+          description: 'Failed to copy JSON data',
+          variant: 'destructive'
+        });
       });
   };
   
+  // Generate analysis data for export
+  const getAnalysisData = () => ({
+    rawResponse,
+    stepReactions,
+    chemistry,
+    techniques,
+    troubleshooting,
+    hasStructuredData
+  });
+  
   return (
     <div className="space-y-6">
-      {/* JSON Debug Button */}
-      <div className="flex justify-end">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="flex items-center gap-1 text-xs"
-            >
-              <Bug className="h-3.5 w-3.5 mr-1" />
-              Show Debug Data
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
-            <DialogHeader>
-              <DialogTitle>Analysis Debug Data</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4">
-              <div className="flex justify-end">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => copyJsonToClipboard({
-                    rawResponse,
-                    stepReactions,
-                    hasStructuredData
-                  })}
-                >
-                  Copy JSON
-                </Button>
-              </div>
-              
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    Raw Response
-                    <span className="text-xs text-muted-foreground">Click to toggle</span>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="p-4 mt-2 bg-slate-50 dark:bg-slate-900 rounded-md overflow-auto max-h-[400px]">
-                    <pre className="text-xs whitespace-pre-wrap">{rawResponse || "No raw response data"}</pre>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-              
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    Step Reactions Data
-                    <span className="text-xs text-muted-foreground">Click to toggle</span>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="p-4 mt-2 bg-slate-50 dark:bg-slate-900 rounded-md overflow-auto max-h-[400px]">
-                    <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(stepReactions, null, 2) || "No step reactions data"}</pre>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+      {/* Advanced Debug Dialog */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-1 text-xs float-right"
+          >
+            <Bug className="h-3.5 w-3.5 mr-1" />
+            Show Debug Data
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Analysis Debug Data</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => copyJsonToClipboard(getAnalysisData())}
+              >
+                Copy JSON
+              </Button>
             </div>
-            <DialogClose asChild>
-              <Button variant="outline">Close</Button>
-            </DialogClose>
-          </DialogContent>
-        </Dialog>
-      </div>
+            
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  Raw Response
+                  <span className="text-xs text-muted-foreground">Click to toggle</span>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="p-4 mt-2 bg-slate-50 dark:bg-slate-900 rounded-md overflow-auto max-h-[400px]">
+                  <pre className="text-xs whitespace-pre-wrap">{rawResponse || "No raw response data"}</pre>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  Step Reactions Data
+                  <span className="text-xs text-muted-foreground">Click to toggle</span>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="p-4 mt-2 bg-slate-50 dark:bg-slate-900 rounded-md overflow-auto max-h-[400px]">
+                  <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(stepReactions, null, 2) || "No step reactions data"}</pre>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
 
       {/* Chemistry Content */}
       {chemistry && (
@@ -198,6 +212,25 @@ export function AnalysisContent({
         </div>
       )}
       
+      {/* JSON Copy Button - More Prominent Placement */}
+      <div className="mt-6 p-3 border border-dashed border-gray-300 rounded-md bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-medium">Recipe Analysis Data</h4>
+            <p className="text-xs text-muted-foreground">Copy all analysis data as JSON</p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => copyJsonToClipboard(getAnalysisData())}
+            className="flex items-center gap-1"
+          >
+            <Copy className="h-4 w-4 mr-1" />
+            Copy JSON Data
+          </Button>
+        </div>
+      </div>
+      
       {/* Regenerate Button (at the bottom) */}
       {onRegenerate && (
         <div className="flex justify-center pt-4">
@@ -211,51 +244,6 @@ export function AnalysisContent({
           </Button>
         </div>
       )}
-
-      {/* Debug section for small screen - collapsible */}
-      <Collapsible>
-        <CollapsibleTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="flex items-center text-xs text-muted-foreground hover:text-foreground p-1 w-full"
-            onClick={() => setShowDebug(!showDebug)}
-          >
-            <Bug className="h-3 w-3 mr-1" />
-            {showDebug ? 'Hide' : 'Show'} Debug Info
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="mt-4 border rounded-md p-4 bg-slate-50 dark:bg-slate-900">
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="text-sm font-medium">Analysis JSON Data</h4>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs"
-                onClick={() => copyJsonToClipboard({
-                  rawResponse,
-                  stepReactions,
-                  hasStructuredData
-                })}
-              >
-                Copy JSON
-              </Button>
-            </div>
-            <Separator className="my-2" />
-            <div className="text-xs text-muted-foreground mt-2">
-              <p><strong>Data Points:</strong></p>
-              <ul className="list-disc pl-5 mt-1">
-                <li>Raw response length: {rawResponse?.length || 0} chars</li>
-                <li>Steps with reactions: {stepReactions?.length || 0}</li>
-                <li>Chemistry data: {chemistry ? 'Yes' : 'No'}</li>
-                <li>Techniques data: {techniques ? 'Yes' : 'No'}</li>
-                <li>Troubleshooting data: {troubleshooting ? 'Yes' : 'No'}</li>
-              </ul>
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { toast } from '@/hooks/use-toast';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useDebounce } from '@/hooks/use-debounce';
 import type { Recipe } from '@/types/recipe';
 import { fetchRecipeAnalysis, hasValidAnalysisData as checkValidAnalysisData, AnalysisResponse } from './analysis-utils';
 import { useAnalyzeRecipe } from './useAnalyzeRecipe.tsx';
@@ -37,9 +38,13 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
   const recipeIdRef = useRef<string>(recipe.id);
   const lastAnalysisTimeRef = useRef<number>(0);
   const hasTriggeredInitialAnalysisRef = useRef<boolean>(false);
+  const updateVersionRef = useRef<number>(0);
   
-  // Add a ref to track if we have the exact same science notes
-  const previousScienceNotesRef = useRef<string[]>(recipe.science_notes || []);
+  // Track the exact content of science notes to prevent duplicate updates
+  const scienceNotesHashRef = useRef<string>(JSON.stringify(recipe.science_notes || []));
+  
+  // Debounce updates to prevent rapid successive updates
+  const debouncedRecipe = useDebounce(recipe, 300);
   
   // Check if this recipe has been analyzed before using our cache
   const cachedAnalysis = analyzedRecipesCache[recipe.id];
@@ -53,7 +58,8 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
       initialAnalysisRef.current = false;
       setHasAppliedUpdates(false);
       hasTriggeredInitialAnalysisRef.current = false;
-      previousScienceNotesRef.current = recipe.science_notes || [];
+      scienceNotesHashRef.current = JSON.stringify(recipe.science_notes || []);
+      updateVersionRef.current = 0;
     }
   }, [recipe.id]);
   
@@ -83,14 +89,15 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         lastAnalysisTimeRef.current = Date.now();
         analysisRequestRef.current = null;
         
-        // Update our cache to indicate this recipe has been analyzed
-        setAnalyzedRecipesCache((prev) => {
-          const updated: AnalyzedRecipeCache = {...prev};
-          updated[recipe.id] = {
-            timestamp: Date.now(),
-            hasAnalyzedData: true
+        // Fix TypeScript error by using a new object that matches the expected type
+        setAnalyzedRecipesCache(prevCache => {
+          return {
+            ...prevCache,
+            [recipe.id]: {
+              timestamp: Date.now(),
+              hasAnalyzedData: true
+            }
           };
-          return updated;
         });
         
         return data;
@@ -186,13 +193,18 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         const currentScienceNotesJson = JSON.stringify(recipe.science_notes || []);
         const newScienceNotesJson = JSON.stringify(analysis.science_notes);
         
-        // Only update if the notes are actually different
-        if (currentScienceNotesJson !== newScienceNotesJson) {
+        // Create a version hash to track updates
+        const newVersionHash = newScienceNotesJson;
+        
+        // Only update if the notes are actually different and haven't been updated with this exact version before
+        if (currentScienceNotesJson !== newScienceNotesJson && 
+            scienceNotesHashRef.current !== newVersionHash) {
           console.log('Applying science notes from analysis:', analysis.science_notes.length);
           setHasAppliedUpdates(true); // Mark updates as applied to prevent further runs
           
-          // Store the updated notes to prevent future updates with the same data
-          previousScienceNotesRef.current = analysis.science_notes;
+          // Store the updated hash to prevent future updates with the same data
+          scienceNotesHashRef.current = newVersionHash;
+          updateVersionRef.current += 1;
           
           // Update with safely constructed data - pass only the updated recipe to the callback
           if (onRecipeUpdate) {

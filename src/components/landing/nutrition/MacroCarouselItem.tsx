@@ -4,6 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MacroChart } from './MacroChart';
 import { MacroDetailsPanel } from './MacroDetailsPanel';
 import { SimplifiedMicronutrientsDisplay } from './SimplifiedMicronutrientsDisplay';
+import { SimplifiedNutriScore } from './SimplifiedNutriScore';
+import { sampleMicronutrientsData } from './nutrition-sample-data';
 
 // Use React's lazy loading for the MacroPieCharts component
 const MacroPieCharts = lazy(() => import('@/components/profile/macro-details/MacroPieCharts'));
@@ -20,6 +22,7 @@ interface MacroCarouselItemProps {
     special?: boolean;
     showMicronutrients?: boolean;
     micronutrientsData?: any;
+    nutriScore?: 'A' | 'B' | 'C' | 'D' | 'E';
   };
   carbsData: Array<{
     name: string;
@@ -37,39 +40,16 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
   // Create an accessible summary of the chart data for screen readers
   const accessibleSummary = item.data.map(d => `${d.name}: ${d.value}%`).join(', ');
   
-  // Sample micronutrients data structure
-  const sampleMicronutrientsData = {
-    vitamins: {
-      title: "Vitamins",
-      items: [
-        { name: "Vitamin A", value: "2.6 lb", percentage: "133%", color: "#A5C8FF" },
-        { name: "Vitamin C", value: "10g", percentage: "11%", color: "#FFF8A5" },
-        { name: "Vitamin D", value: "75g", percentage: "375%", color: "#A5C8FF" }
-      ]
-    },
-    minerals: {
-      title: "Minerals",
-      items: [
-        { name: "Calcium", value: "150mg", percentage: "12%", color: "#FFF8A5" },
-        { name: "Iron", value: "5mg", percentage: "28%", color: "#FFF8A5" },
-        { name: "Potassium", value: "800mg", percentage: "17%", color: "#FFF8A5" }
-      ]
-    },
-    others: {
-      title: "Other Nutrients",
-      items: [
-        { name: "Sodium", value: "1.2 g", percentage: "52%", color: "#B5FFD9" },
-        { name: "Fiber", value: "3g", percentage: "11%", color: "#FFF8A5" },
-        { name: "Sugar", value: "2g", percentage: "4%", color: "#FFB5B5" }
-      ]
-    }
-  };
-  
   return (
     <div className="w-full px-2 sm:px-4 pt-1 pb-2 flex flex-col items-center" aria-label={`Nutrition chart for ${item.title}`}>
-      <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-2 sm:mb-3" id={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}>
-        {item.title}
-      </h3>
+      <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
+        <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple" id={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}>
+          {item.title}
+        </h3>
+        {item.nutriScore && (
+          <SimplifiedNutriScore grade={item.nutriScore} size="sm" showLabel={false} />
+        )}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
         <div className="flex flex-col items-center justify-center">
@@ -117,6 +97,15 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
               description={item.description}
               data={item.data}
             />
+          )}
+          
+          {item.nutriScore && (
+            <div className="mt-3 flex justify-center items-center">
+              <div className="flex flex-col items-center">
+                <span className="text-xs text-muted-foreground mb-1">Quality Rating</span>
+                <SimplifiedNutriScore grade={item.nutriScore} size="md" />
+              </div>
+            </div>
           )}
         </div>
       </div>

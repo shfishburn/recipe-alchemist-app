@@ -2,7 +2,7 @@
 import React from 'react';
 import { Carousel } from '@/components/ui/carousel';
 import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
-import { macroItems, carbsData, fatsData } from './nutrition/nutrition-sample-data';
+import { macroItems, carbsData, fatsData, sampleMicronutrientsData } from './nutrition/nutrition-sample-data';
 
 export function NutritionPreview() {
   // Add micronutrients data to the third item in the carousel
@@ -10,7 +10,8 @@ export function NutritionPreview() {
     if (index === 2) {
       return {
         ...item,
-        showMicronutrients: true
+        showMicronutrients: true,
+        micronutrientsData: sampleMicronutrientsData
       };
     }
     return item;

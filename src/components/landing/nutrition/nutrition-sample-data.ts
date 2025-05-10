@@ -8,7 +8,8 @@ export const macroDistributionData = [
       { name: 'Protein', value: 30, color: '#9b87f5' },
       { name: 'Carbs', value: 45, color: '#0EA5E9' },
       { name: 'Fat', value: 25, color: '#22c55e' }
-    ]
+    ],
+    nutriScore: 'B'
   },
   {
     title: "High Protein",
@@ -17,7 +18,8 @@ export const macroDistributionData = [
       { name: 'Protein', value: 40, color: '#9b87f5' },
       { name: 'Carbs', value: 35, color: '#0EA5E9' },
       { name: 'Fat', value: 25, color: '#22c55e' }
-    ]
+    ],
+    nutriScore: 'A'
   },
   {
     title: "Endurance Focus",
@@ -26,7 +28,8 @@ export const macroDistributionData = [
       { name: 'Protein', value: 25, color: '#9b87f5' },
       { name: 'Carbs', value: 50, color: '#0EA5E9' },
       { name: 'Fat', value: 25, color: '#22c55e' }
-    ]
+    ],
+    nutriScore: 'B'
   },
   {
     title: "Specialized Diet",
@@ -36,7 +39,8 @@ export const macroDistributionData = [
       { name: 'Carbs', value: 40, color: '#0EA5E9' },
       { name: 'Fat', value: 25, color: '#22c55e' }
     ],
-    special: true
+    special: true,
+    nutriScore: 'C'
   }
 ];
 
@@ -54,3 +58,23 @@ export const fatsData = [
   { name: 'Unsaturated Fat', value: 70, color: '#86efac' },
   { name: 'Saturated Fat', value: 30, color: '#22c55e' }
 ];
+
+// Sample micronutrients data
+export const sampleMicronutrientsData = {
+  vitamins: {
+    title: "Vitamins",
+    items: [
+      { name: "Vitamin A", value: "2.6 lb", percentage: "133%", color: "#A5C8FF" },
+      { name: "Vitamin C", value: "10g", percentage: "11%", color: "#FFF8A5" },
+      { name: "Vitamin D", value: "75g", percentage: "375%", color: "#A5C8FF" }
+    ]
+  },
+  minerals: {
+    title: "Minerals",
+    items: [
+      { name: "Calcium", value: "150mg", percentage: "12%", color: "#FFF8A5" },
+      { name: "Iron", value: "5mg", percentage: "28%", color: "#FFF8A5" },
+      { name: "Potassium", value: "800mg", percentage: "17%", color: "#FFF8A5" }
+    ]
+  }
+};
