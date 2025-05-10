@@ -12,7 +12,7 @@ export function ServingsSelector({ selectedServings, onServingsChange }: Serving
   const isMobile = useIsMobile();
   
   // Ensure selectedServings has a valid value
-  const servingValue = selectedServings !== undefined ? selectedServings.toString() : '2';
+  const servingValue = selectedServings !== undefined ? selectedServings.toString() : '4';
   
   // Define common serving options
   const servingOptions = [1, 2, 3, 4, 6, 8];
