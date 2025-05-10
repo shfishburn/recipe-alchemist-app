@@ -1,14 +1,15 @@
+
 /* Scientific content styling */
 .scientific-content {
   line-height: 1.6;
-  color: var(--gray-600); /* Base text color */
+  color: var(--gray-700);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Remove prose class conflict by being more specific */
 .scientific-content.prose,
 .scientific-content .prose {
-  color: inherit; /* Use inherited color instead of hardcoded */
+  color: inherit;
   max-width: none;
 }
 
@@ -18,7 +19,7 @@
   font-weight: 600;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
-  color: var(--gray-700); /* Slightly darker for headings */
+  color: var(--gray-800);
 }
 
 /* Lists */
@@ -26,18 +27,18 @@
 .scientific-content ol {
   margin-left: 1.5em;
   margin-bottom: 1em;
-  color: inherit; /* Use inherited color */
+  color: inherit;
 }
 
 .scientific-content li {
   margin-bottom: 0.5em;
-  color: inherit; /* Use inherited color */
+  color: inherit;
 }
 
 /* Paragraphs */
 .scientific-content p {
   margin-bottom: 1em;
-  color: inherit; /* Use inherited color */
+  color: inherit;
 }
 
 .scientific-content p:last-child {
@@ -55,7 +56,7 @@
 /* Text emphasis */
 .scientific-content strong {
   font-weight: 600;
-  color: var(--primary); /* Use green for emphasis */
+  color: var(--primary);
 }
 
 .scientific-content em {
@@ -81,7 +82,7 @@
   border: 1px solid var(--gray-200);
   padding: 8px;
   text-align: left;
-  color: inherit; /* Use inherited color */
+  color: inherit;
 }
 
 .scientific-content th {
@@ -90,16 +91,16 @@
 }
 
 .scientific-content tr:nth-child(even) {
-  background-color: var(--gray-100);
+  background-color: var(--gray-50);
 }
 
 /* Scientific panels and cards */
 .scientific-panel,
 .scientific-card {
-  background-color: var(--blue-50); /* Consistent light blue background */
+  background-color: var(--blue-50);
   border: 1px solid var(--blue-200);
   border-radius: var(--radius-md);
-  color: inherit; /* Use inherited color */
+  color: inherit;
 }
 
 /* Override text color for fallback messages */
