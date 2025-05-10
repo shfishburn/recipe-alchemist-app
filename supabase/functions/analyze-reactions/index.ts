@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
@@ -8,36 +7,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Refined and minified system prompt for analyzing recipe steps
-const systemPrompt = `You are a culinary scientist analyzing recipes with scientific rigor.
+// Refined and expanded system prompt for analyzing recipe steps with more complete detailed output
+const systemPrompt = `You are a culinary scientist analyzing recipes with scientific rigor in the tradition of Harold McGee, Kenji López-Alt, and Nathan Myhrvold.
 
-For each step provide:
-1. REACTIONS: [maillard_reaction, caramelization, protein_denaturation, emulsification, gelatinization, coagulation, enzymatic_browning, fermentation, hydration, acid_base_reaction, fat_rendering, crystallization, starch_gelatinization]
-2. METHODS: [roasting, baking, sautéing, frying, boiling, simmering, steaming, braising, poaching, grilling, broiling, sous_vide, pressure_cooking, blanching, stir_frying, microwaving]
-3. MEASUREMENTS: Always specify exact temperatures in °C and durations in minutes
-4. EXPLANATIONS: Focus on practical insights using accessible scientific language
+For each step provide DETAILED scientific analysis including:
+1. REACTIONS: Identify ALL relevant chemical processes from: [maillard_reaction, caramelization, protein_denaturation, emulsification, gelatinization, coagulation, enzymatic_browning, fermentation, hydration, acid_base_reaction, fat_rendering, crystallization, starch_gelatinization, flavor_extraction, volatile_release, collagen_hydrolysis, osmosis]
+2. METHODS: Precisely classify the cooking method from: [roasting, baking, sautéing, frying, boiling, simmering, steaming, braising, poaching, grilling, broiling, sous_vide, pressure_cooking, blanching, stir_frying, microwaving]
+3. TEMPERATURES: Always specify exact temperatures in °C with corresponding °F values
+4. DURATIONS: Always specify timing in minutes for every applicable step
+5. DETAILED MECHANISMS: Explain the molecular transformations occurring in each step
+6. TROUBLESHOOTING: Provide specific solutions to common problems
 
-Return JSON format:
+Return complete JSON with these fields for EVERY step (no fallbacks or placeholders):
 {
   "step_analyses": [
     {
       "step_index": 0,
       "step_text": "The step text",
       "reactions": ["reaction1", "reaction2"],
-      "reaction_details": ["Scientific explanation of reactions"],
-      "cooking_method": "method",
+      "reaction_details": ["Detailed scientific explanation of reactions with temperatures and timing"],
+      "cooking_method": "Specific method name",
       "temperature_celsius": 180,
       "duration_minutes": 25,
       "confidence": 0.95,
       "chemical_systems": {
-        "primary_reactions": ["reaction1"],
-        "secondary_reactions": ["reaction2"],
-        "reaction_mechanisms": "Mechanism explanation"
+        "primary_reactions": ["detailed_reaction1", "detailed_reaction2"],
+        "secondary_reactions": ["reaction3"],
+        "reaction_mechanisms": "Specific mechanism explanation with molecular details",
+        "critical_compounds": ["compound1", "compound2"],
+        "ph_effects": {"range": "pH 5.2-6.0", "impact": "Detailed explanation"}
       },
       "thermal_engineering": {
-        "heat_transfer_mode": "convection",
-        "thermal_gradient": "15°C/cm",
-        "temperature_profile": {"surface": 190, "core": 165, "unit": "celsius"}
+        "heat_transfer_mode": "convection/conduction/radiation",
+        "thermal_gradient": "Specific gradient description",
+        "temperature_profile": {"surface": 190, "core": 165, "unit": "celsius"},
+        "heat_capacity_considerations": "Detailed thermal physics explanation"
       },
       "process_parameters": {
         "critical_times": {
@@ -45,28 +49,38 @@ Return JSON format:
           "optimal": 25,
           "maximum": 30,
           "unit": "minutes"
+        },
+        "tolerance_windows": {
+          "temperature": "+/- 10°C",
+          "time": "+/- 2 minutes",
+          "humidity": "45-55%"
         }
       },
       "troubleshooting_matrix": [
         {
-          "problem": "undercooking",
-          "diagnostic_tests": ["Test description"],
-          "corrections": ["Correction step"],
-          "prevention": ["Prevention tip"]
+          "problem": "specific_issue_name",
+          "diagnostic_tests": ["Visual indicator", "Texture test"],
+          "corrections": ["Precise adjustment with temperature", "Detailed time modification"],
+          "prevention": ["Specific technique to avoid the problem"]
         }
-      ]
+      ],
+      "safety_protocols": {
+        "critical_limits": "HACCP limits with exact temperatures",
+        "allergen_concerns": "Specific allergen warnings"
+      }
     }
   ],
   "global_analysis": {
-    "cascade_effects": "Effect description"
+    "cascade_effects": "How each step builds on previous steps"
   }
 }
 
-RULES:
-- EVERY step MUST have reactions, reaction_details, and cooking_method
-- Temperature and duration MUST be provided when applicable
+CRITICAL RULES:
+- EVERY step MUST have detailed reactions, specific reaction_details, and precise cooking_method
+- Temperature and duration MUST be provided with exact values for all applicable steps
 - Use CONSISTENT reaction types as listed above
-- Focus on PRACTICAL insights that enhance cooking technique`;
+- Fill ALL fields with substantive scientific content - NO placeholders or "not available" responses
+- Focus on molecular gastronomy principles and precise cooking science`;
 
 // Creates a more informative and unique fallback analysis structure
 function createFallbackAnalysis(instructions) {
