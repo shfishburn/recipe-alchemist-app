@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartPie, Activity } from 'lucide-react';
-import { macroDistributionData } from './nutrition/nutrition-sample-data';
+import { macroDistributionData, carbsData, fatsData } from './nutrition/nutrition-sample-data';
 import { Carousel, type CarouselItem } from '@/components/ui/carousel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -12,6 +12,10 @@ import { MacroBreakdown } from '../recipe-detail/nutrition/MacroBreakdown';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import type { NutriScore } from '@/types/recipe';
+import { MacroChart } from './nutrition/MacroChart';
+import { MacroCarouselItem } from './nutrition/MacroCarouselItem';
+import { MacroDetailsPanel } from './nutrition/MacroDetailsPanel';
+import { MacroLegend } from './nutrition/MacroLegend';
 
 interface NutritionPreviewProps {
   isLoading?: boolean;
@@ -40,28 +44,67 @@ const sampleNutriScore: NutriScore = {
 export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
   const isMobile = useIsMobile();
   
-  // Render function for carousel items
-  const renderCarouselItem = () => {
+  // Render function for Nutri-Score carousel item
+  const renderNutriScoreSlide = () => {
     return (
       <div className="w-full px-2 sm:px-4 py-3 flex flex-col items-center">
         <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-2 sm:mb-3">
-          Personalized Nutrition Analysis
+          Nutrition Quality Score
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full">
-          {/* Left Column - Nutri-Score */}
+          {/* Nutri-Score Detail */}
           <div className="flex flex-col space-y-4">
             <NutriScoreDetail nutriScore={sampleNutriScore} />
-            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+          </div>
+          
+          {/* Explanation Panel */}
+          <div className="flex flex-col space-y-4">
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg h-full flex flex-col justify-center">
               <h4 className="font-medium mb-2">What is Nutri-Score?</h4>
               <p className="text-sm text-muted-foreground">
                 Nutri-Score rates foods from A (most nutritious) to E (least nutritious) based on a balance
                 of negative elements (calories, sugars, saturated fats, sodium) and positive nutrients (protein, fiber, fruits and vegetables).
               </p>
+              <div className="mt-4 pt-4 border-t border-purple-100 dark:border-purple-700/50">
+                <p className="text-xs text-muted-foreground italic">
+                  Our AI analyzes each recipe's ingredients to calculate its nutritional profile and Nutri-Score
+                  to help you make health-conscious choices.
+                </p>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render function for Macro Breakdown carousel item
+  const renderMacroBreakdownSlide = () => {
+    return (
+      <div className="w-full px-2 sm:px-4 py-3 flex flex-col items-center">
+        <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple mb-2 sm:mb-3">
+          Macro Breakdown Analysis
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full">
+          {/* Macro Breakdown Detail */}
+          <div className="flex flex-col space-y-4 justify-center">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <h4 className="font-medium mb-2">Personalized Macro Analysis</h4>
+              <p className="text-sm text-muted-foreground">
+                Your macronutrient breakdown shows the distribution of protein, carbs, and fats in your diet.
+                These values are personalized based on your fitness goals, activity level, and dietary preferences.
+              </p>
+            </div>
+            <MacroDetailsPanel 
+              title="Macro Distribution"
+              description="Your personalized macronutrient targets based on your profile"
+              data={macroDistributionData[0].data}
+            />
+          </div>
           
-          {/* Right Column - Macro Breakdown */}
+          {/* Macro Values Panel */}
           <div className="flex flex-col space-y-4">
             <div className="rounded-lg border text-card-foreground shadow-sm bg-muted/40 h-full">
               <div className="px-6 py-4">
@@ -153,17 +196,21 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
                 />
               </div>
             </div>
-            
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <h4 className="font-medium mb-2">Personalized Macro Analysis</h4>
-              <p className="text-sm text-muted-foreground">
-                Your macronutrient breakdown shows the distribution of protein, carbs, and fats in your diet.
-                These values are personalized based on your fitness goals, activity level, and dietary preferences.
-              </p>
-            </div>
           </div>
         </div>
       </div>
+    );
+  };
+
+  // Render function for Doughnut Chart carousel item
+  const renderDoughnutSlide = () => {
+    // For carousel item that will display doughnut charts, we use the first item from macroDistributionData
+    return (
+      <MacroCarouselItem 
+        item={macroDistributionData[3]} // This is the "special" item that will show pie charts
+        carbsData={carbsData}
+        fatsData={fatsData}
+      />
     );
   };
 
@@ -184,10 +231,26 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
     </div>
   );
 
-  // Create a single carousel item
+  // Create carousel items for the three slides
   const carouselItems: CarouselItem[] = useMemo(() => [
-    { id: 1, content: "nutrition-preview" }
+    { id: 1, content: "nutri-score" },
+    { id: 2, content: "macro-breakdown" },
+    { id: 3, content: "macro-doughnut" }
   ], []);
+
+  // Function to render the appropriate content based on the item type
+  const renderCarouselItem = (item: CarouselItem) => {
+    switch(item.content) {
+      case "nutri-score":
+        return renderNutriScoreSlide();
+      case "macro-breakdown":
+        return renderMacroBreakdownSlide();
+      case "macro-doughnut":
+        return renderDoughnutSlide();
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="w-full flex flex-col items-center py-10">
@@ -219,8 +282,8 @@ export function NutritionPreview({ isLoading = false }: NutritionPreviewProps) {
                 renderItem={renderCarouselItem}
                 autoScroll={!isMobile}
                 autoScrollInterval={8000}
-                showArrows={false}
-                showDots={false}
+                showArrows={true}
+                showDots={true}
                 itemWidthMobile="100%"
                 itemWidthDesktop="100%"
                 className="w-full overflow-visible"
