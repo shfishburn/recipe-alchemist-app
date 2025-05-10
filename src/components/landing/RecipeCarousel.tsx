@@ -16,7 +16,7 @@ export function RecipeCarousel() {
   
   // Memoize featured recipes to prevent unnecessary re-renders
   const featuredRecipes = useMemo(() => {
-    return recipes?.slice(0, 5) || [];
+    return recipes?.slice(0, 6) || [];
   }, [recipes]);
 
   // Map recipes to carousel items format

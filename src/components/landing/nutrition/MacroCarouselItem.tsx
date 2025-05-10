@@ -3,6 +3,7 @@ import React, { Suspense, lazy } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MacroChart } from './MacroChart';
 import { MacroDetailsPanel } from './MacroDetailsPanel';
+import { SimplifiedMicronutrientsDisplay } from './SimplifiedMicronutrientsDisplay';
 
 // Use React's lazy loading for the MacroPieCharts component
 const MacroPieCharts = lazy(() => import('@/components/profile/macro-details/MacroPieCharts'));
@@ -17,6 +18,8 @@ interface MacroCarouselItemProps {
       color: string;
     }>;
     special?: boolean;
+    showMicronutrients?: boolean;
+    micronutrientsData?: any;
   };
   carbsData: Array<{
     name: string;
@@ -33,6 +36,34 @@ interface MacroCarouselItemProps {
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
   // Create an accessible summary of the chart data for screen readers
   const accessibleSummary = item.data.map(d => `${d.name}: ${d.value}%`).join(', ');
+  
+  // Sample micronutrients data structure
+  const sampleMicronutrientsData = {
+    vitamins: {
+      title: "Vitamins",
+      items: [
+        { name: "Vitamin A", value: "2.6 lb", percentage: "133%", color: "#A5C8FF" },
+        { name: "Vitamin C", value: "10g", percentage: "11%", color: "#FFF8A5" },
+        { name: "Vitamin D", value: "75g", percentage: "375%", color: "#A5C8FF" }
+      ]
+    },
+    minerals: {
+      title: "Minerals",
+      items: [
+        { name: "Calcium", value: "150mg", percentage: "12%", color: "#FFF8A5" },
+        { name: "Iron", value: "5mg", percentage: "28%", color: "#FFF8A5" },
+        { name: "Potassium", value: "800mg", percentage: "17%", color: "#FFF8A5" }
+      ]
+    },
+    others: {
+      title: "Other Nutrients",
+      items: [
+        { name: "Sodium", value: "1.2 g", percentage: "52%", color: "#B5FFD9" },
+        { name: "Fiber", value: "3g", percentage: "11%", color: "#FFF8A5" },
+        { name: "Sugar", value: "2g", percentage: "4%", color: "#FFB5B5" }
+      ]
+    }
+  };
   
   return (
     <div className="w-full px-2 sm:px-4 pt-1 pb-2 flex flex-col items-center" aria-label={`Nutrition chart for ${item.title}`}>
@@ -67,7 +98,12 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
         </div>
         
         <div className="flex flex-col items-center justify-center">
-          {item.special ? (
+          {item.showMicronutrients ? (
+            <SimplifiedMicronutrientsDisplay 
+              data={item.micronutrientsData || sampleMicronutrientsData}
+              className="w-full"
+            />
+          ) : item.special ? (
             <Suspense fallback={
               <div className="h-[180px] w-full flex items-center justify-center">
                 <Skeleton className="h-[160px] w-[180px]" />

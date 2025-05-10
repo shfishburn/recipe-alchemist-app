@@ -4,7 +4,7 @@ import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 // Utility function that adds better error handling and retries to lazy loading
-const createLazyComponent = (importFn: () => Promise<any>, retries = 2) => {
+const createLazyComponent = (importFn: () => Promise<any>, retries = 3) => {
   const LazyComponent = lazy(() => {
     let attempt = 0;
 
@@ -15,8 +15,9 @@ const createLazyComponent = (importFn: () => Promise<any>, retries = 2) => {
         if (error instanceof Error && error.message.includes('Failed to fetch dynamically imported module') && attempt < retries) {
           console.log(`Retrying import attempt ${attempt + 1}/${retries}`);
           attempt += 1;
-          // Exponential backoff retry
-          const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+          // Exponential backoff retry with jitter
+          const jitter = Math.random() * 500;
+          const delay = Math.min(1000 * Math.pow(2, attempt) + jitter, 8000);
           await new Promise(resolve => setTimeout(resolve, delay));
           return attemptImport();
         }

@@ -51,6 +51,13 @@ export function useCarousel({
   // Handle user interaction to stop auto-scrolling
   const handleUserInteraction = useCallback(() => {
     setUserInteracted(true);
+    
+    // Reset auto-scrolling after a period of inactivity (30 seconds)
+    const timer = setTimeout(() => {
+      setUserInteracted(false);
+    }, 30000);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Handle mouse enter/leave for pause on hover
@@ -69,7 +76,12 @@ export function useCarousel({
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
     
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    const scrollListener = (e: Event) => {
+      // Use requestAnimationFrame for better performance
+      requestAnimationFrame(() => handleScroll());
+    };
+    
+    scrollContainer.addEventListener('scroll', scrollListener, { passive: true });
     scrollContainer.addEventListener('touchstart', handleUserInteraction, { passive: true });
     scrollContainer.addEventListener('mousedown', handleUserInteraction, { passive: true });
     
@@ -79,7 +91,7 @@ export function useCarousel({
     }
     
     return () => {
-      scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer.removeEventListener('scroll', scrollListener);
       scrollContainer.removeEventListener('touchstart', handleUserInteraction);
       scrollContainer.removeEventListener('mousedown', handleUserInteraction);
       
@@ -101,31 +113,44 @@ export function useCarousel({
     return () => clearInterval(interval);
   }, [autoScroll, userInteracted, activeIndex, itemCount, autoScrollInterval, pauseOnHover, isHovering]);
 
-  // Scroll to specified index
+  // Scroll to specified index with error handling
   const scrollToItem = useCallback((index: number) => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
     
-    // Add class to temporarily disable smooth scrolling
-    scrollContainer.classList.add('user-scrolling');
-    
-    const containerWidth = scrollContainer.clientWidth;
-    const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
-    
-    scrollContainer.scrollTo({
-      left: itemWidthValue * index,
-      behavior: 'smooth'
-    });
-    
-    setActiveIndex(index);
-    if (onSlideChange) onSlideChange(index);
-    
-    // Remove class after animation completes
-    setTimeout(() => {
-      if (scrollContainer) {
-        scrollContainer.classList.remove('user-scrolling');
+    try {
+      // Add class to temporarily disable smooth scrolling
+      scrollContainer.classList.add('user-scrolling');
+      
+      const containerWidth = scrollContainer.clientWidth;
+      const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
+      
+      scrollContainer.scrollTo({
+        left: itemWidthValue * index,
+        behavior: 'smooth'
+      });
+      
+      setActiveIndex(index);
+      if (onSlideChange) onSlideChange(index);
+      
+      // Remove class after animation completes
+      setTimeout(() => {
+        if (scrollContainer) {
+          scrollContainer.classList.remove('user-scrolling');
+        }
+      }, 500);
+    } catch (error) {
+      console.error("Error scrolling to item:", error);
+      
+      // Fallback to simple scroll without animation
+      try {
+        scrollContainer.scrollLeft = parseFloat(itemWidth) / 100 * scrollContainer.clientWidth * index;
+        setActiveIndex(index);
+        if (onSlideChange) onSlideChange(index);
+      } catch (fallbackError) {
+        console.error("Fallback scroll failed:", fallbackError);
       }
-    }, 500);
+    }
   }, [itemWidth, onSlideChange]);
 
   return {
