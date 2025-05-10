@@ -1,13 +1,10 @@
 
 /**
  * IngredientInput.tsx
- * Version: 1.0.2
+ * Version: 1.0.3
  * Date: 2025-05-10
  * Changes:
- * - Vertically centered textarea and icon via flex container
- * - Removed textarea vertical padding for proper centering
- * - Ensured helper text wraps on mobile with whitespace-normal and break-words
- * - Adjusted the magnifying glass position to prevent overlap with helper text
+ * - Updated UI strings
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -67,15 +64,16 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
     <div className="space-y-2 w-full max-w-full">
       <FeatureBadges />
 
-      <label
-        htmlFor="mainIngredient"
-        className={cn(
-          'block pb-1 text-left font-semibold text-recipe-blue',
-          isMobile ? 'text-base' : 'text-lg'
-        )}
-      >
-        What ingredients do you have today?
-      </label>
+    <label
+  htmlFor="mainIngredient"
+  className={cn(
+    'block pb-1 text-left font-semibold text-recipe-blue whitespace-normal break-words',
+    isMobile ? 'text-base' : 'text-lg'
+  )}
+>
+  What do you want to cook or what ingredients do you have in your kitchen?
+</label>
+
 
       <div
         className={cn(
@@ -110,13 +108,6 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
       </div>
 
       {error ? (
-        <p className="text-xs text-left text-red-500 font-medium whitespace-normal break-words animate-fade-in">
-          {error}
-        </p>
-      ) : (
-        <p className="text-xs text-left text-recipe-blue font-medium whitespace-normal break-words">
-          Tell us what you want to cook with!
-        </p>
       )}
     </div>
   )
