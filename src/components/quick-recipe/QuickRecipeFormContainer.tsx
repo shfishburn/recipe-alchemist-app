@@ -48,8 +48,9 @@ export function QuickRecipeFormContainer() {
     });
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(),
-      cuisine: formData.cuisine === 'any' ? 'any' : formData.cuisine,
-      dietary: formData.dietary === 'any' ? '' : formData.dietary,
+      // Handle both array and string formats for cuisine and dietary
+      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : [formData.cuisine].filter(Boolean),
+      dietary: Array.isArray(formData.dietary) ? formData.dietary : formData.dietary ? [formData.dietary] : [],
       servings: Number(formData.servings) || 4, // Default to 4 instead of 2
     };
     console.log('Adapted form data for API:', adaptedFormData);

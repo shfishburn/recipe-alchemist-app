@@ -41,10 +41,8 @@ const Hero: React.FC = memo(() => {
   const isMobile = useIsMobile();
   const { open: openAuthDrawer } = useAuthDrawer();
 
-  // Find where QuickRecipeGenerator is rendered and add the missing onSubmit prop
-  // This might look something like this:
   const handleSubmit = (formData: any) => {
-    // Handle form submission
+    // Handle form submission with array support
     console.log('Form submitted:', formData);
     // Additional form handling logic...
   }

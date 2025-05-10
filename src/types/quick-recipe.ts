@@ -32,8 +32,8 @@ export interface QuickRecipe {
   science_notes?: string[];
   nutritionHighlight?: string;
   cookingTip?: string;
-  cuisine?: string;
-  dietary?: string;
+  cuisine?: string[] | string;
+  dietary?: string[] | string;
   flavor_tags?: string[];
   user_id?: string;
   id?: string;
@@ -48,8 +48,8 @@ export interface QuickRecipeFormData {
 }
 
 export interface QuickRecipeOptions {
-  cuisine: string;
-  dietary: string;
+  cuisine: string[] | string;
+  dietary: string[] | string;
   flavorTags: string[];
   servings: number;
   maxCalories?: number;

@@ -13,9 +13,9 @@ import { DietarySelector } from './form-components/DietarySelector';
 
 export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
-  const [cuisine, setCuisine] = useState('any');
-  const [dietary, setDietary] = useState('');
-  const [servings, setServings] = useState(4); // Updated default value from 2 to 4
+  const [cuisines, setCuisines] = useState<string[]>(['any']); // Changed to array
+  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]); // Changed to array
+  const [servings, setServings] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputError, setInputError] = useState('');
   const navigate = useNavigate();
@@ -40,8 +40,8 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
       // Create form data with all fields
       const formData = {
         ingredients: mainIngredient.trim(),
-        cuisine: cuisine,
-        dietary: dietary,
+        cuisine: cuisines.length > 0 ? cuisines : ['any'], // Handle array
+        dietary: dietaryPreferences, // Already an array
         servings: servings
       };
 
@@ -81,19 +81,19 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
           />
         </div>
         
-        {/* Cuisine Selector */}
+        {/* Cuisine Selector - Updated to handle arrays */}
         <div>
           <CuisineSelector 
-            value={cuisine} 
-            onChange={setCuisine} 
+            value={cuisines} 
+            onChange={setCuisines} 
           />
         </div>
         
-        {/* Dietary Selector */}
+        {/* Dietary Selector - Updated to handle arrays */}
         <div>
           <DietarySelector 
-            value={dietary} 
-            onChange={setDietary} 
+            value={dietaryPreferences} 
+            onChange={setDietaryPreferences} 
           />
         </div>
       </div>

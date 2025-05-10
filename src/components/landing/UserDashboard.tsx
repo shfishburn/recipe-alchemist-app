@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { QuickRecipeGenerator } from '@/components/quick-recipe/QuickRecipeGenerator';
