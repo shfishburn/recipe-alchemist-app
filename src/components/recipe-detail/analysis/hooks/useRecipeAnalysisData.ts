@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import type { Recipe } from '@/types/recipe';
 
 /**
@@ -260,9 +261,7 @@ Include specific temperature thresholds, timing considerations, and visual/tacti
                 setIsAnalyzing(false);
               });
             }}
-          >
-            Regenerate
-          </Button>
+          />
         )
       });
       return;
