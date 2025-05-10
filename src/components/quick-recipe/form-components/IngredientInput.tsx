@@ -1,11 +1,12 @@
 
 /**
  * IngredientInput.tsx
- * Version: 1.0.4
+ * Version: 1.0.5
  * Date: 2025-05-10
  * Changes:
  * - Updated UI strings
  * - Updated placeholder text
+ * - Fixed error display
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -89,7 +90,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
         <Textarea
           id="mainIngredient"
           ref={textareaRef}
-          placeholder="e.g., chicken thighs, pasta, bell peppers, onions..."
+          placeholder="e.g., chicken curry: chicken, curry paste, coconut milk"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}

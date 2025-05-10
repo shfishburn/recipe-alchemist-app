@@ -4,13 +4,12 @@
 // updated: 2025-05-10 14:02 PM
 
 import React, { useState } from 'react';
-import QuickRecipeTagForm from './QuickRecipeTagForm';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Cake, ChefHat, Egg } from 'lucide-react';
-import { QuickRecipeFormData as TagFormData } from './QuickRecipeTagForm';
+import { QuickRecipeGenerator } from './QuickRecipeGenerator';
 import { toast } from '@/hooks/use-toast';
 // Remove FullScreenLoading import - we don't need it here as it's handled in the parent component
 // import { FullScreenLoading } from './FullScreenLoading';
@@ -18,29 +17,6 @@ import { toast } from '@/hooks/use-toast';
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
   const { isLoading } = useQuickRecipeStore();
-
-  // Add state for all the required form fields
-  const [ingredients, setIngredients] = useState('');
-  // Updated default servings from 2 to 4 as requested
-  const [selectedServings, setSelectedServings] = useState(4);
-  const [selectedCuisine, setSelectedCuisine] = useState('any');
-  const [selectedDietary, setSelectedDietary] = useState('any');
-
-  // Handlers for each input type
-  const handleIngredientsChange = (value: string) => {
-    setIngredients(value);
-  };
-  const handleServingsChange = (servings: number) => {
-    setSelectedServings(servings);
-  };
-  const handleCuisineChange = (cuisine: string) => {
-    console.log('Cuisine selected:', cuisine);
-    setSelectedCuisine(cuisine);
-  };
-  const handleDietaryChange = (dietary: string) => {
-    console.log('Dietary selected:', dietary);
-    setSelectedDietary(dietary);
-  };
 
   // Handle user cancellation
   const handleCancel = () => {
@@ -54,7 +30,7 @@ export function QuickRecipeFormContainer() {
   };
 
   // Create an adapter function to handle form submission
-  const handleFormSubmit = (formData: TagFormData) => {
+  const handleFormSubmit = (formData: any) => {
     console.log('Handling form submission:', formData);
     if (!formData.ingredients || !formData.ingredients.trim()) {
       toast({
@@ -74,7 +50,7 @@ export function QuickRecipeFormContainer() {
       mainIngredient: formData.ingredients.trim(),
       cuisine: formData.cuisine === 'any' ? 'any' : formData.cuisine,
       dietary: formData.dietary === 'any' ? '' : formData.dietary,
-      servings: Number(formData.servings) || 2,
+      servings: Number(formData.servings) || 4, // Default to 4 instead of 2
     };
     console.log('Adapted form data for API:', adaptedFormData);
     handleSubmit(adaptedFormData);
@@ -110,18 +86,7 @@ export function QuickRecipeFormContainer() {
           </p>
         </div>
 
-        <QuickRecipeTagForm
-          onIngredientsChange={handleIngredientsChange}
-          onServingsSelect={handleServingsChange}
-          onCuisineSelect={handleCuisineChange}
-          onDietarySelect={handleDietaryChange}
-          ingredients={ingredients}
-          selectedServings={selectedServings}
-          selectedCuisine={selectedCuisine}
-          selectedDietary={selectedDietary}
-          onSubmit={handleFormSubmit}
-          isLoading={isLoading}
-        />
+        <QuickRecipeGenerator onSubmit={handleFormSubmit} />
       </Card>
     </div>
   );

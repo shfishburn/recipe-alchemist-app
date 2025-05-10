@@ -25,6 +25,7 @@ export function ServingsSelector({
     <Select
       value={String(selectedServings)}
       onValueChange={handleValueChange}
+      defaultValue="4" // Adding default value here
     >
       <SelectTrigger className="w-full bg-white">
         <SelectValue placeholder="Select number of servings" />

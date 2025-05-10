@@ -11,17 +11,16 @@ import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
 
-export function QuickRecipeGenerator() {
+export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
   const [cuisine, setCuisine] = useState('any');
   const [dietary, setDietary] = useState('');
-  const [servings, setServings] = useState(2);
+  const [servings, setServings] = useState(4); // Updated default value from 2 to 4
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputError, setInputError] = useState('');
-  const { handleSubmit } = useQuickRecipeForm();
   const navigate = useNavigate();
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!mainIngredient.trim()) {
@@ -39,15 +38,15 @@ export function QuickRecipeGenerator() {
       setInputError('');
       
       // Create form data with all fields
-      const formData: QuickRecipeFormData = {
-        mainIngredient: mainIngredient.trim(),
+      const formData = {
+        ingredients: mainIngredient.trim(),
         cuisine: cuisine,
         dietary: dietary,
         servings: servings
       };
 
       // Submit the form data
-      await handleSubmit(formData);
+      onSubmit(formData);
       
     } catch (error) {
       console.error('Error generating recipe:', error);
@@ -62,7 +61,7 @@ export function QuickRecipeGenerator() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleFormSubmit} className="space-y-4">
       {/* Ingredient Input */}
       <div className="space-y-3">
         <IngredientInput 
