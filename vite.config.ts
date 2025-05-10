@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
     // Add historyApiFallback to handle client-side routing
     historyApiFallback: true,
     // Allow requests from Lovable sandbox host
-    allowedHosts: ["all"],
+    allowedHosts: ["all", "9da91218-18b0-4fc0-991c-29a180c2ef2e.lovableproject.com"],
   },
   plugins: [
     react(),
