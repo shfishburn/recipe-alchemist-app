@@ -21,6 +21,7 @@ export function QuickRecipeNutritionSummary({
   className = '',
   compact = false
 }: QuickRecipeNutritionSummaryProps) {
+  // Fix for nutrition data - provide fallback defaults if any values are missing
   const nutrition = recipe.nutrition || {
     calories: 0,
     protein: 0,
@@ -31,13 +32,20 @@ export function QuickRecipeNutritionSummary({
     sodium: 0
   };
 
-  // Calculate percentages for the macro breakdown
-  const totalMacros = (nutrition.protein || 0) + (nutrition.carbs || 0) + (nutrition.fat || 0);
-  const proteinPercentage = totalMacros > 0 ? Math.round((nutrition.protein || 0) / totalMacros * 100) : 0;
-  const carbsPercentage = totalMacros > 0 ? Math.round((nutrition.carbs || 0) / totalMacros * 100) : 0;
-  const fatPercentage = totalMacros > 0 ? Math.round((nutrition.fat || 0) / totalMacros * 100) : 0;
+  // Ensure we have valid numbers for calculations
+  const calories = nutrition.calories || nutrition.kcal || 0;
+  const protein = nutrition.protein || 0;
+  const carbs = nutrition.carbs || 0;
+  const fat = nutrition.fat || 0;
+  const fiber = nutrition.fiber || 0;
 
-  // Format numbers for display
+  // Calculate percentages for the macro breakdown with safety checks
+  const totalMacros = protein + carbs + fat;
+  const proteinPercentage = totalMacros > 0 ? Math.round(protein / totalMacros * 100) : 0;
+  const carbsPercentage = totalMacros > 0 ? Math.round(carbs / totalMacros * 100) : 0;
+  const fatPercentage = totalMacros > 0 ? Math.round(fat / totalMacros * 100) : 0;
+
+  // Format numbers for display with improved handling
   const formatNumber = (num: number | undefined) => {
     if (num === undefined || isNaN(num)) return '0';
     return Math.round(num).toString();
@@ -75,7 +83,7 @@ export function QuickRecipeNutritionSummary({
           </div>
           <div className="flex items-center gap-1">
             <span className="text-lg font-semibold">
-              {formatNumber(nutrition.calories || nutrition.kcal)}
+              {formatNumber(calories)}
             </span>
             {nutritionImpact && nutritionImpact.calories !== 0 && (
               <Badge 
@@ -100,7 +108,7 @@ export function QuickRecipeNutritionSummary({
               {nutritionImpact && renderImpactIndicator(nutritionImpact.protein)}
             </div>
             <div className="flex items-center gap-1">
-              <span className="font-medium">{formatNumber(nutrition.protein)}g</span>
+              <span className="font-medium">{formatNumber(protein)}g</span>
               <span className="text-xs text-muted-foreground">({proteinPercentage}%)</span>
               {nutritionImpact && nutritionImpact.protein !== 0 && (
                 <Badge 
@@ -125,7 +133,7 @@ export function QuickRecipeNutritionSummary({
               {nutritionImpact && renderImpactIndicator(nutritionImpact.carbs)}
             </div>
             <div className="flex items-center gap-1">
-              <span className="font-medium">{formatNumber(nutrition.carbs)}g</span>
+              <span className="font-medium">{formatNumber(carbs)}g</span>
               <span className="text-xs text-muted-foreground">({carbsPercentage}%)</span>
               {nutritionImpact && nutritionImpact.carbs !== 0 && (
                 <Badge 
@@ -150,7 +158,7 @@ export function QuickRecipeNutritionSummary({
               {nutritionImpact && renderImpactIndicator(nutritionImpact.fat)}
             </div>
             <div className="flex items-center gap-1">
-              <span className="font-medium">{formatNumber(nutrition.fat)}g</span>
+              <span className="font-medium">{formatNumber(fat)}g</span>
               <span className="text-xs text-muted-foreground">({fatPercentage}%)</span>
               {nutritionImpact && nutritionImpact.fat !== 0 && (
                 <Badge 

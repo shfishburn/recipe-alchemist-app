@@ -43,12 +43,16 @@ const QuickRecipePage: React.FC = () => {
       document.body.classList.remove('overflow-hidden');
       document.body.style.position = '';
       document.body.style.width = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
       
-      // Show navbar if it was hidden
-      const navbar = document.querySelector('nav');
-      if (navbar) {
-        navbar.style.display = '';
-      }
+      // Show all navbars if they were hidden
+      const navbars = document.querySelectorAll('nav');
+      navbars.forEach(navbar => {
+        if (navbar) {
+          navbar.style.display = '';
+        }
+      });
       
       // Run additional cleanup
       forceCleanupUI();
@@ -69,22 +73,30 @@ const QuickRecipePage: React.FC = () => {
       document.body.classList.add('overflow-hidden');
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
       
-      // Hide navbar during loading
-      const navbar = document.querySelector('nav');
-      if (navbar) {
-        navbar.style.display = 'none';
-      }
+      // Hide all navbars during loading
+      const navbars = document.querySelectorAll('nav');
+      navbars.forEach(navbar => {
+        if (navbar) {
+          navbar.style.display = 'none';
+        }
+      });
     } else {
       document.body.classList.remove('overflow-hidden');
       document.body.style.position = '';
       document.body.style.width = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
       
-      // Show navbar again
-      const navbar = document.querySelector('nav');
-      if (navbar) {
-        navbar.style.display = '';
-      }
+      // Show navbars again
+      const navbars = document.querySelectorAll('nav');
+      navbars.forEach(navbar => {
+        if (navbar) {
+          navbar.style.display = '';
+        }
+      });
     }
   }, [isLoading, isRetrying, recipe, error]);
 

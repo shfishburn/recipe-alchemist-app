@@ -44,11 +44,13 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       loadingTrigger.style.display = 'none';
       document.body.appendChild(loadingTrigger);
       
-      // Hide navbar during loading
-      const navbar = document.querySelector('nav');
-      if (navbar) {
-        navbar.style.display = 'none';
-      }
+      // Hide all navbars during loading
+      const navbars = document.querySelectorAll('nav');
+      navbars.forEach(navbar => {
+        if (navbar) {
+          navbar.style.display = 'none';
+        }
+      });
     }
     
     // Make sure our loading is properly marked as active
@@ -66,11 +68,13 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       document.body.style.top = '';
       document.body.style.left = '';
       
-      // Show navbar again
-      const navbar = document.querySelector('nav');
-      if (navbar) {
-        navbar.style.display = '';
-      }
+      // Show all navbars again
+      const navbars = document.querySelectorAll('nav');
+      navbars.forEach(navbar => {
+        if (navbar) {
+          navbar.style.display = '';
+        }
+      });
       
       clearInterval(ensureActiveInterval);
       

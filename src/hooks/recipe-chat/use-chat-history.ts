@@ -12,6 +12,12 @@ export const useChatHistory = (recipeId: string) => {
     queryFn: async () => {
       console.log(`Fetching chat history for recipe ${recipeId}`);
       
+      // Validate recipe ID to prevent API errors
+      if (!recipeId) {
+        console.warn("Missing recipe ID in useChatHistory");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('recipe_chats')
         .select('*')
@@ -40,7 +46,8 @@ export const useChatHistory = (recipeId: string) => {
           changes_suggested: null,
           applied: chat.applied || false,
           created_at: chat.created_at,
-          follow_up_questions: [] // Default empty array
+          follow_up_questions: [], // Default empty array
+          meta: chat.meta || {}
         };
 
         // Process changes_suggested as a properly typed object

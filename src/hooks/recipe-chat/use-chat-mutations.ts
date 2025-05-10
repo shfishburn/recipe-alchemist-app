@@ -26,8 +26,14 @@ export const useChatMutations = (recipe: Recipe) => {
       console.log("Starting recipe chat mutation:", { 
         message, 
         sourceType,
-        messageId: messageId || 'not-provided'
+        messageId: messageId || 'not-provided',
+        recipeId: recipe.id
       });
+      
+      // Validate recipe ID to prevent errors
+      if (!recipe || !recipe.id) {
+        throw new Error("Invalid recipe data: missing recipe ID");
+      }
       
       // Enhanced error recovery - start with reduced toast time
       const toastId = toast({
@@ -94,7 +100,7 @@ export const useChatMutations = (recipe: Recipe) => {
         }
 
         // Extract and validate the AI response content
-        const aiResponse = response.data.textResponse || JSON.stringify({
+        const aiResponse = response.data.textResponse || response.data.text || JSON.stringify({
           textResponse: "I couldn't generate a proper analysis for this recipe. Please try again."
         });
         
