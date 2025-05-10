@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ErrorState } from './loading/ErrorState';
 import { QuickRecipeLoading } from './QuickRecipeLoading';
+import { useKeyPress } from '@/hooks/use-key-press';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -16,8 +17,33 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
 }: FullScreenLoadingProps) {
   const isErrorState = !!error;
   
-  // Debug logs to track component renders
-  console.log("FullScreenLoading rendered", { error, isErrorState });
+  // Handle Escape key press
+  useKeyPress('Escape', () => {
+    if (onCancel) {
+      console.log('Escape pressed, cancelling loading');
+      onCancel();
+    }
+  });
+
+  // Focus trap implementation
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Focus the container on mount
+    if (containerRef.current) {
+      containerRef.current.focus();
+    }
+    
+    // Store previous active element to restore focus on unmount
+    const previousActiveElement = document.activeElement as HTMLElement;
+    
+    return () => {
+      // Restore focus on unmount
+      if (previousActiveElement && 'focus' in previousActiveElement) {
+        previousActiveElement.focus();
+      }
+    };
+  }, []);
   
   return (
     <div 
@@ -30,6 +56,8 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       aria-busy="true"
       aria-live="polite"
       id="fullscreen-loading-overlay"
+      ref={containerRef}
+      tabIndex={-1} // Make focusable for focus trap
     >
       <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-6 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
         {isErrorState ? (

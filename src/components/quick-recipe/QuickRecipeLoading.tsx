@@ -29,10 +29,6 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
     if (onCancel) {
       onCancel();
     }
-    // If we're in the context of a page with navigation, return to home
-    if (window.location.pathname.includes('quick-recipe')) {
-      window.location.href = '/';
-    }
   };
   
   return (

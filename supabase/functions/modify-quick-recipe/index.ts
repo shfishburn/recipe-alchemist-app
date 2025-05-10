@@ -4,7 +4,7 @@ import { ChatOpenAI } from "https://esm.sh/langchain/chat_models/openai";
 import { StructuredOutputParser } from "https://esm.sh/langchain/output_parsers";
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
-import { z } from "https://esm.sh/zod@3.21.4";
+import { recipeModificationsSchema } from "./schema.ts";
 
 // Define CORS headers for cross-origin requests
 const corsHeaders = {
@@ -12,37 +12,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Define the schema for recipe modifications using Zod
-const recipeModificationsSchema = z.object({
-  modifications: z.object({
-    title: z.string().optional(),
-    description: z.string().optional(),
-    ingredients: z.array(z.object({
-      action: z.enum(["add", "remove", "modify"]),
-      originalIndex: z.number().optional(),
-      item: z.string(),
-      qty_metric: z.number().optional(),
-      unit_metric: z.string().optional(),
-      qty_imperial: z.number().optional(),
-      unit_imperial: z.string().optional(),
-      notes: z.string().optional(),
-    })).optional(),
-    steps: z.array(z.object({
-      action: z.enum(["add", "remove", "modify"]),
-      originalIndex: z.number().optional(),
-      content: z.string(),
-    })).optional(),
-  }),
-  nutritionImpact: z.object({
-    calories: z.number(),
-    protein: z.number(),
-    carbs: z.number(),
-    fat: z.number(),
-    summary: z.string(),
-  }),
-  reasoning: z.string(),
-});
 
 // Retry mechanism with exponential backoff
 async function withRetry(fn, maxRetries = 3, initialDelay = 500) {
@@ -222,7 +191,7 @@ serve(async (req) => {
       );
     }
 
-    // Process the request using our langchain sequence with circuit breaker
+    // Process the request using our langchain sequence with circuit breaker and retry
     const runnable = createLangChainSequence();
     
     // Structure the input with recipe details and modification history for context
@@ -303,7 +272,10 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify(parsed),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     } catch (parseError) {
       console.error("Schema validation error:", parseError);

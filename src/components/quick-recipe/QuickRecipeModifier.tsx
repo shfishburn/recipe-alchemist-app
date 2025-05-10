@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { QuickRecipeNutritionSummary } from './nutrition/QuickRecipeNutritionSummary';
@@ -51,6 +52,13 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
     }
   }, [modificationHistory.length, modifications]);
   
+  // Focus input after sending message using useLayoutEffect instead of setTimeout
+  useLayoutEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [modificationHistory.length]);
+  
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,13 +74,6 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
     // Request modifications with the immediate flag set to true
     requestModifications(trimmedValue, true);
     setInputValue('');
-    
-    // Focus back on input after sending
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 0);
   };
   
   // Handle input changes
@@ -100,7 +101,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
     }
     
     return modificationHistory.map((entry, index) => (
-      <div key={index} className="space-y-4">
+      <div key={entry.timestamp} className="space-y-4">
         {/* User request */}
         <div className="flex gap-3 items-start">
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -177,7 +178,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
 
   // Render current modification if there's one
   const renderCurrentModification = () => {
-    // Fixed type error: We need to check the exact string value since types don't overlap
+    // Fix type comparison error: check string value, not type
     if (!modifications || status !== 'success') return null;
     
     return (
@@ -217,12 +218,13 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 </ul>
               </div>
               
-              {/* Action buttons - Fixed type error by comparing as string */}
+              {/* Action buttons - Fixed type comparison error */}
               <div className="mt-3 flex gap-2 justify-end">
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={rejectModifications}
+                  aria-label="Reject recipe modifications"
                 >
                   <X className="h-4 w-4 mr-1" />
                   Reject
@@ -230,9 +232,10 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 <Button 
                   size="sm"
                   onClick={applyModifications}
-                  disabled={status === "applying"}
+                  disabled={status === 'applying'}
+                  aria-label="Apply recipe modifications"
                 >
-                  {status === "applying" ? (
+                  {status === 'applying' ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                       Applying...
@@ -315,6 +318,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
               size="sm"
               onClick={resetToOriginal}
               className="text-xs h-7 gap-1"
+              aria-label="Reset all recipe modifications"
             >
               <Undo2 className="h-3 w-3" />
               Reset All Changes
@@ -387,6 +391,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                   type="submit"
                   disabled={['loading', 'applying', 'not-deployed'].includes(status) || !inputValue.trim()}
                   className="absolute bottom-2 right-2 h-8 w-8 p-0"
+                  aria-label="Send modification request"
                 >
                   {status === 'loading' ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -402,6 +407,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                   size="sm" 
                   onClick={cancelRequest}
                   className="mt-2 w-full"
+                  aria-label="Cancel current request"
                 >
                   Cancel
                 </Button>

@@ -12,7 +12,7 @@ export const LOADING_STEPS = [
   "Finalizing your perfect recipe..."
 ];
 
-// Configuration constants
+// Configuration constants - consolidated in one place
 export const MAX_LOADING_TIME = 40; // Maximum time to wait before showing error (in seconds)
 export const TIMEOUT_WARNING_TIME = 8000; // Time before showing timeout warning (in ms)
 
@@ -92,7 +92,7 @@ export function useLoadingProgress() {
     }, 100);
     
     return cleanupAllTimers;
-    // Removed loadingState.percentComplete from dependencies to avoid recreating timers on every update
+    // FIXED: Removed loadingState.percentComplete from dependencies to avoid recreating timers on every update
   }, [loadingState.estimatedTimeRemaining, updateLoadingState, completedLoading, setCompletedLoading]);
   
   // Cycle through loading steps

@@ -1,7 +1,40 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+// Define schema for validation
+export const recipeModificationsSchema = z.object({
+  modifications: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    ingredients: z.array(z.object({
+      action: z.enum(["add", "remove", "modify"]),
+      originalIndex: z.number().optional(),
+      item: z.string(),
+      qty_metric: z.number().optional(),
+      unit_metric: z.string().optional(),
+      qty_imperial: z.number().optional(),
+      unit_imperial: z.string().optional(),
+      notes: z.string().optional(),
+    })).optional(),
+    steps: z.array(z.object({
+      action: z.enum(["add", "remove", "modify"]),
+      originalIndex: z.number().optional(),
+      content: z.string(),
+    })).optional(),
+  }),
+  nutritionImpact: z.object({
+    calories: z.number(),
+    protein: z.number(),
+    carbs: z.number(),
+    fat: z.number(),
+    summary: z.string(),
+  }),
+  reasoning: z.string(),
+});
 
 // Define modification states for state machine
 export type ModificationStatus = 
@@ -16,41 +49,7 @@ export type ModificationStatus =
   | 'canceled';
 
 // Define modification types
-export type IngredientModification = {
-  action: 'add' | 'remove' | 'modify';
-  originalIndex?: number;
-  item: string;
-  qty_metric?: number;
-  unit_metric?: string;
-  qty_imperial?: number;
-  unit_imperial?: string;
-  notes?: string;
-};
-
-export type StepModification = {
-  action: 'add' | 'remove' | 'modify';
-  originalIndex?: number;
-  content: string;
-};
-
-export type NutritionImpact = {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  summary: string;
-};
-
-export type RecipeModifications = {
-  modifications: {
-    title?: string;
-    description?: string;
-    ingredients?: IngredientModification[];
-    steps?: StepModification[];
-  };
-  nutritionImpact: NutritionImpact;
-  reasoning: string;
-};
+export type RecipeModifications = z.infer<typeof recipeModificationsSchema>;
 
 export type ModificationHistoryEntry = {
   request: string;
@@ -91,10 +90,12 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
       
       if (requestTimerRef.current !== null) {
         window.clearTimeout(requestTimerRef.current);
+        requestTimerRef.current = null;
       }
     };
   }, []);
@@ -165,20 +166,25 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         
         console.log('Received modification response:', response.data);
         
-        const modifications = response.data;
-        
-        // Add to history but mark as not applied yet
-        const historyEntry: ModificationHistoryEntry = {
-          request: actualRequest,
-          response: modifications,
-          timestamp: new Date().toISOString(),
-          applied: false
-        };
-        
-        setModifications(modifications);
-        setModificationHistory(prev => [...prev, historyEntry]);
-        setStatus('success');
-        
+        try {
+          // Validate the response with the Zod schema
+          const validatedModifications = recipeModificationsSchema.parse(response.data);
+          
+          // Add to history but mark as not applied yet
+          const historyEntry: ModificationHistoryEntry = {
+            request: actualRequest,
+            response: validatedModifications,
+            timestamp: new Date().toISOString(),
+            applied: false
+          };
+          
+          setModifications(validatedModifications);
+          setModificationHistory(prev => [...prev, historyEntry]);
+          setStatus('success');
+        } catch (validationError) {
+          console.error("Schema validation error:", validationError);
+          throw new Error('Received malformed response from server. Please try again.');
+        }
       } catch (err: any) {
         // Don't update state if the request was aborted
         if (err.name === 'AbortError' || err.message?.includes('aborted')) {
