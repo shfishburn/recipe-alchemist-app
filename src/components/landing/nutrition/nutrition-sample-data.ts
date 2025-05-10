@@ -1,3 +1,4 @@
+
 export const sampleMicronutrientsData = {
   vitamins: {
     title: "Vitamins",
@@ -58,6 +59,20 @@ export const sampleMicronutrientsData = {
     ]
   }
 };
+
+// Add missing carbsData export
+export const carbsData = [
+  { name: "Complex Carbs", value: 70, color: "#8bc34a" },
+  { name: "Simple Carbs", value: 20, color: "#cddc39" },
+  { name: "Fiber", value: 10, color: "#4caf50" }
+];
+
+// Add missing fatsData export
+export const fatsData = [
+  { name: "Unsaturated", value: 65, color: "#2196f3" },
+  { name: "Saturated", value: 25, color: "#ff9800" },
+  { name: "Trans", value: 10, color: "#f44336" }
+];
 
 // Enhance macroItems to include Nutri-Score for all items
 export const macroItems = [

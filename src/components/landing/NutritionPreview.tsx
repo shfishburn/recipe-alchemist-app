@@ -18,16 +18,16 @@ export function NutritionPreview() {
   });
   
   return (
-    <section className="py-12 md:py-16 bg-slate-50">
-      <div className="container-page">
-        <div className="text-center mb-8 md:mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">Personalized Nutrition Analysis</h2>
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+    <section className="py-8 md:py-16 bg-slate-50 w-full overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 md:px-8">
+        <div className="text-center mb-6 md:mb-10">
+          <h2 className="text-xl md:text-3xl font-bold mb-2">Personalized Nutrition Analysis</h2>
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto px-2">
             Track your macro and micronutrient intake with our intelligent nutrition tracking system
           </p>
         </div>
         
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-full md:max-w-4xl mx-auto">
           <Carousel
             items={enhancedMacroItems.map((item, index) => ({
               id: `macro-item-${index}`,
@@ -43,9 +43,10 @@ export function NutritionPreview() {
             showArrows={true}
             showDots={true}
             showCounter={false}
-            itemWidthMobile="100%"
-            itemWidthDesktop="90%"
+            itemWidthMobile="90%"
+            itemWidthDesktop="85%"
             className="nutrition-carousel"
+            gap="gap-2 md:gap-4"
           />
         </div>
       </div>

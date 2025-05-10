@@ -13,7 +13,7 @@ interface UtilitiesTabContentProps {
 }
 
 export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
-  const { analyzeRecipe, isAnalyzing } = useRecipeScience(recipe);
+  const { refetch, isLoading: isAnalyzing } = useRecipeScience(recipe);
   const { toast } = useToast();
 
   const handleForceRegenerate = () => {
@@ -24,7 +24,7 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
     });
     
     // Force the analysis to regenerate
-    analyzeRecipe(true); // Pass true to force regeneration
+    refetch?.(); // Use optional chaining to safely call refetch
   };
 
   // Placeholder handlers for other utilities

@@ -2,7 +2,6 @@
 /* Standardized Carousel Components */
 .carousel-container {
   @apply relative h-auto;
-  /* Removed overflow-hidden and max-height that were causing clipping */
   overflow: visible;
   -webkit-overflow-scrolling: touch;
 }
@@ -13,6 +12,7 @@
   scrollbar-width: none;
   scroll-behavior: smooth;
   min-height: 0; /* Critical fix for flex items */
+  max-width: 100vw; /* Prevent horizontal overflow */
 }
 
 .carousel-scroll-area::-webkit-scrollbar {
@@ -22,6 +22,7 @@
 .carousel-item {
   @apply flex-shrink-0 snap-start h-auto align-top;
   transition: opacity 0.3s ease;
+  max-width: 100%; /* Ensure carousel items don't exceed viewport width */
 }
 
 /* Add class for disabling smooth scrolling during user interaction */
@@ -96,8 +97,8 @@
 /* Carousel navigation buttons */
 .carousel-nav-button {
   @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-blue hover:text-white hover:border-transparent;
-  min-height: 32px;
-  min-width: 32px;
+  min-height: 28px; /* Smaller on mobile */
+  min-width: 28px;
   opacity: 0.9;
   transition: all 0.2s ease;
 }
@@ -153,6 +154,24 @@
   .reduce-motion-mobile {
     scroll-behavior: auto;
   }
+  
+  /* Ensure mobile carousel doesn't overflow screen */
+  .nutrition-carousel {
+    margin-left: -4px;
+    margin-right: -4px;
+    width: calc(100% + 8px);
+  }
+  
+  /* Make text tables more compact on mobile */
+  .nutrition-carousel .simpleMicronutrient-table {
+    font-size: 0.7rem;
+  }
+  
+  /* Ensure carousel items don't overflow */
+  .carousel-scroll-area > * {
+    width: 100% !important;
+    max-width: 95vw !important;
+  }
 }
 
 /* Empty state styling for carousel */
@@ -168,4 +187,15 @@
 
 .carousel-progress-indicator.animate {
   animation: carousel-progress linear forwards;
+}
+
+/* Fix for narrow mobile screens */
+@media (max-width: 360px) {
+  .carousel-item {
+    max-width: 90vw !important; 
+  }
+  
+  .nutrition-carousel .simpleMicronutrient-table {
+    font-size: 0.65rem;
+  }
 }
