@@ -11,14 +11,15 @@ import { NutriScoreDetail } from '../recipe-detail/nutrition/NutriScoreDetail';
 import { MacroBreakdown } from '../recipe-detail/nutrition/MacroBreakdown';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import type { NutriScore } from '@/types/recipe';
 
 interface NutritionPreviewProps {
   isLoading?: boolean;
 }
 
 // Sample Nutri-Score data for the preview
-const sampleNutriScore = {
-  grade: 'D',
+const sampleNutriScore: NutriScore = {
+  grade: 'D' as const,
   score: 18,
   negative_points: {
     total: 21,
