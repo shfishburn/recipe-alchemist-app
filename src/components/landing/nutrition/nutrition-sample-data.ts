@@ -40,6 +40,9 @@ export const macroDistributionData = [
   }
 ];
 
+// Export the macroItems array for use in NutritionPreview
+export const macroItems = macroDistributionData;
+
 // Sample data for carb distribution
 export const carbsData = [
   { name: 'Complex Carbs', value: 65, color: '#4f46e5' },

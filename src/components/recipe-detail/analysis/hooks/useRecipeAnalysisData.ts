@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { Recipe } from '@/types/recipe';
 import { fetchRecipeAnalysis, hasValidAnalysisData as checkValidAnalysisData, AnalysisResponse } from './analysis-utils';
-import { useAnalyzeRecipe } from './useAnalyzeRecipe';
+import { useAnalyzeRecipe } from './useAnalyzeRecipe.tsx';
 
 // Key for tracking already analyzed recipes in localStorage
 const ANALYZED_RECIPES_KEY = 'recipe-analysis-cache';
@@ -84,13 +84,14 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         analysisRequestRef.current = null;
         
         // Update our cache to indicate this recipe has been analyzed
-        setAnalyzedRecipesCache(prev => ({
-          ...prev,
-          [recipe.id]: {
+        setAnalyzedRecipesCache((prev) => {
+          const updated: AnalyzedRecipeCache = {...prev};
+          updated[recipe.id] = {
             timestamp: Date.now(),
             hasAnalyzedData: true
-          }
-        }));
+          };
+          return updated;
+        });
         
         return data;
       } catch (error) {
@@ -123,8 +124,12 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
     setIsAnalyzing,
     clearError,
     setError,
-    refetch,
-    refetchReactions
+    async () => {
+      await refetch();
+    },
+    async () => {
+      await refetchReactions();
+    }
   );
 
   // Auto-analyze when opened for the first time - with improved logic to avoid unnecessary analysis
