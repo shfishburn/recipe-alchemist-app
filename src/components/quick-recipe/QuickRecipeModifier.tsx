@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { Separator } from '@/components/ui/separator';
-import { send, MessagesSquare, Check, X, PanelLeftClose, ArrowUpRight, Undo2 } from 'lucide-react';
+import { SendHorizontal, MessagesSquare, Check, X, PanelLeftClose, ArrowUpRight, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QuickRecipeModifierProps {
@@ -58,10 +58,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
     
     const trimmedValue = inputValue.trim();
     if (!trimmedValue) {
-      toast({ 
-        title: "Empty request",
-        description: "Please enter a modification request"
-      });
+      toast.error("Empty request");
       return;
     }
     
@@ -322,7 +319,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                   disabled={status === 'loading' || status === 'applying' || !inputValue.trim()}
                   className="absolute bottom-2 right-2 h-8 w-8 p-0"
                 >
-                  <send className="h-4 w-4" />
+                  <SendHorizontal className="h-4 w-4" />
                 </Button>
               </div>
               

@@ -126,8 +126,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
             recipe: modifiedRecipe,
             userRequest: actualRequest,
             modificationHistory
-          },
-          signal: abortControllerRef.current.signal
+          }
         });
         
         abortControllerRef.current = null;
@@ -161,10 +160,8 @@ export function useRecipeModifications(recipe: QuickRecipe) {
           setError(errorMessage);
           setStatus('error');
           
-          toast({
-            title: 'Modification request failed',
+          toast.error("Modification request failed", {
             description: errorMessage.substring(0, 100),
-            variant: 'destructive',
           });
         }
       }
@@ -325,19 +322,16 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       setStatus('applied');
       setModifications(null);
       
-      toast({
-        title: "Recipe modified",
-        description: "The changes have been applied to your recipe.",
+      toast.success("Recipe modified", {
+        description: "The changes have been applied to your recipe."
       });
     } catch (err: any) {
       console.error('Error applying modifications:', err);
       setStatus('error');
       setError(`Failed to apply modifications: ${err.message}`);
       
-      toast({
-        title: "Failed to apply modifications",
-        description: `Error: ${err.message}`,
-        variant: 'destructive',
+      toast.error("Failed to apply modifications", {
+        description: `Error: ${err.message}`
       });
     }
   }, [modifications, modifiedRecipe, status]);
@@ -356,9 +350,8 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       )
     );
     
-    toast({
-      title: "Modifications rejected",
-      description: "The recipe was not modified.",
+    toast.info("Modifications rejected", {
+      description: "The recipe was not modified."
     });
   }, []);
 
@@ -392,9 +385,8 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       prev.map(entry => ({ ...entry, applied: false }))
     );
     
-    toast({
-      title: "Recipe reset",
-      description: "All modifications have been reverted.",
+    toast.success("Recipe reset", {
+      description: "All modifications have been reverted."
     });
   }, [recipe]);
   

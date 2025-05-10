@@ -43,8 +43,8 @@ export function QuickRecipeNutritionSummary({
     return Math.round(num).toString();
   };
 
-  // Determine nutriScore grade or default to 'C'
-  const nutriScoreGrade = recipe.nutri_score?.grade || 'C';
+  // Determine nutri score grade or default to 'C'
+  const nutriScoreGrade = recipe.nutrition?.grade || 'C';
 
   // Impact indicators
   const renderImpactIndicator = (value: number | undefined) => {

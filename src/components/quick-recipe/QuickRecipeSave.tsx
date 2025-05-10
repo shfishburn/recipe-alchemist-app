@@ -25,6 +25,9 @@ export function useQuickRecipeSave() {
         user_id: session.user.id
       };
       
+      // Serialize the recipe to handle complex objects and ensure JSON compatibility
+      const serializedRecipe = JSON.parse(JSON.stringify(recipeWithUser));
+      
       // Implement robust circuit-breaker style retry logic
       const maxRetries = 3;
       let retries = 0;
@@ -34,7 +37,7 @@ export function useQuickRecipeSave() {
         try {
           const { data, error } = await supabase
             .from('recipes')
-            .insert(recipeWithUser)
+            .insert(serializedRecipe)
             .select('id')
             .single();
           
