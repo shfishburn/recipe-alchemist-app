@@ -70,6 +70,11 @@ export function MultiSelect({
       boxShadow: error ? '0 0 0 1px rgb(239, 68, 68)' : 'none',
       '&:hover': {
         borderColor: error ? 'rgb(239, 68, 68)' : 'rgb(107, 114, 128)'
+      },
+      // Fix for the blue outline issue
+      '&:focus-visible, &:focus': {
+        boxShadow: 'none',
+        outline: 'none'
       }
     }),
     menu: (base: any) => ({
@@ -114,6 +119,33 @@ export function MultiSelect({
       textTransform: 'uppercase',
       padding: '8px 12px',
       backgroundColor: 'rgb(249, 250, 251)'
+    }),
+    // Remove default focus styling
+    container: (base: any) => ({
+      ...base,
+      outline: 'none',
+      boxShadow: 'none'
+    }),
+    // Fix for the blue outline/rectangle
+    valueContainer: (base: any) => ({
+      ...base,
+      outline: 'none'
+    }),
+    indicatorsContainer: (base: any) => ({
+      ...base,
+      outline: 'none'
+    }),
+    dropdownIndicator: (base: any) => ({
+      ...base,
+      outline: 'none'
+    }),
+    clearIndicator: (base: any) => ({
+      ...base,
+      outline: 'none'
+    }),
+    indicatorSeparator: (base: any) => ({
+      ...base,
+      outline: 'none'
     })
   };
 
@@ -129,6 +161,10 @@ export function MultiSelect({
         classNamePrefix="multi-select"
         styles={selectStyles}
         noOptionsMessage={() => "No options found"}
+        // Override default browser focus styling
+        unstyled={false}
+        isClearable={true}
+        isSearchable={true}
       />
       {error && (
         <p className="text-sm text-red-500 mt-1">{error}</p>

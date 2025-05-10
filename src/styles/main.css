@@ -29,6 +29,21 @@ textarea:focus-visible {
   box-shadow: 0 0 0 2px white, 0 0 0 4px var(--recipe-blue);
 }
 
+/* Override for react-select components to prevent blue rectangle */
+.multi-select__control:focus,
+.multi-select__control:focus-within,
+.multi-select__control *:focus,
+.multi-select__control *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: rgb(209, 213, 219) !important;
+}
+
+.multi-select__control--is-focused {
+  border-color: rgb(209, 213, 219) !important;
+  box-shadow: none !important;
+}
+
 .container-page {
   max-width: 1400px;
   margin-left: auto;
