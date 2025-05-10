@@ -16,6 +16,7 @@ import {
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
+import { SimplifiedNutriScore } from '@/components/landing/nutrition/SimplifiedNutriScore';
 import type { StepReaction } from '@/hooks/use-recipe-science';
 
 interface AnalysisContentProps {
@@ -87,6 +88,15 @@ export function AnalysisContent({
     troubleshooting,
     hasStructuredData
   });
+
+  // Extract the nutri-score if present in the data
+  const nutriScore = React.useMemo(() => {
+    if (rawResponse && rawResponse.includes('Nutri-Score')) {
+      const match = rawResponse.match(/Nutri-Score\s+([A-E])/i);
+      return match ? match[1] as 'A' | 'B' | 'C' | 'D' | 'E' : null;
+    }
+    return null;
+  }, [rawResponse]);
   
   return (
     <div className="space-y-6">
@@ -151,6 +161,14 @@ export function AnalysisContent({
         </DialogContent>
       </Dialog>
 
+      {/* Display Nutri-Score if available */}
+      {nutriScore && (
+        <div className="flex items-center mb-4">
+          <span className="text-sm font-medium mr-2">Recipe Quality:</span>
+          <SimplifiedNutriScore grade={nutriScore} size="md" showLabel={true} />
+        </div>
+      )}
+
       {/* Chemistry Content */}
       {chemistry && (
         <AnalysisSection 
@@ -212,21 +230,20 @@ export function AnalysisContent({
         </div>
       )}
       
-      {/* JSON Copy Button - More Prominent Placement */}
-      <div className="mt-6 p-3 border border-dashed border-gray-300 rounded-md bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-        <div className="flex items-center justify-between">
+      {/* NEW - JSON Copy Button - More Prominent Placement */}
+      <div className="mt-6 p-3 border border-blue-200 rounded-md bg-blue-50 dark:border-blue-900 dark:bg-blue-900/30 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h4 className="text-sm font-medium">Recipe Analysis Data</h4>
-            <p className="text-xs text-muted-foreground">Copy all analysis data as JSON</p>
+            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300">Recipe Analysis Data</h4>
+            <p className="text-xs text-blue-600 dark:text-blue-400">Export complete analysis data as JSON</p>
           </div>
           <Button
             variant="secondary"
-            size="sm"
             onClick={() => copyJsonToClipboard(getAnalysisData())}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 bg-white border border-blue-200 hover:bg-blue-100 text-blue-700"
           >
             <Copy className="h-4 w-4 mr-1" />
-            Copy JSON Data
+            Copy Analysis JSON
           </Button>
         </div>
       </div>

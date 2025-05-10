@@ -89,15 +89,14 @@ export function useRecipeAnalysisData(recipe: Recipe, onRecipeUpdate?: (updatedR
         lastAnalysisTimeRef.current = Date.now();
         analysisRequestRef.current = null;
         
-        // Fix TypeScript error by using a new object that matches the expected type
-        setAnalyzedRecipesCache(prevCache => {
-          return {
-            ...prevCache,
-            [recipe.id]: {
-              timestamp: Date.now(),
-              hasAnalyzedData: true
-            }
+        // Fix TypeScript error by explicitly creating a new object with the correct structure
+        setAnalyzedRecipesCache((prevCache) => {
+          const updatedCache = { ...prevCache };
+          updatedCache[recipe.id] = {
+            timestamp: Date.now(),
+            hasAnalyzedData: true
           };
+          return updatedCache;
         });
         
         return data;

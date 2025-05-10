@@ -1,114 +1,86 @@
 
-import React, { Suspense, lazy } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { MacroChart } from './MacroChart';
-import { MacroDetailsPanel } from './MacroDetailsPanel';
-import { SimplifiedMicronutrientsDisplay } from './SimplifiedMicronutrientsDisplay';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SimplifiedNutriScore } from './SimplifiedNutriScore';
-import { sampleMicronutrientsData } from './nutrition-sample-data';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { Badge } from '@/components/ui/badge';
+import { SimpleMicronutrientList } from './SimpleMicronutrientList';
 
-// Use React's lazy loading for the MacroPieCharts component
-const MacroPieCharts = lazy(() => import('@/components/profile/macro-details/MacroPieCharts'));
+interface MacroItem {
+  title: string;
+  description: string;
+  data: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  special?: boolean;
+  nutriScore?: 'A' | 'B' | 'C' | 'D' | 'E';
+  showMicronutrients?: boolean;
+  micronutrientsData?: any;
+}
 
 interface MacroCarouselItemProps {
-  item: {
-    title: string;
-    description: string;
-    data: Array<{
-      name: string;
-      value: number;
-      color: string;
-    }>;
-    special?: boolean;
-    showMicronutrients?: boolean;
-    micronutrientsData?: any;
-    nutriScore?: 'A' | 'B' | 'C' | 'D' | 'E';
-  };
-  carbsData: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
-  fatsData: Array<{
-    name: string;
-    value: number;
-    color: string;
-  }>;
+  item: MacroItem;
+  carbsData: Array<{ name: string; value: number; color: string }>;
+  fatsData: Array<{ name: string; value: number; color: string }>;
 }
 
 export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselItemProps) {
-  // Create an accessible summary of the chart data for screen readers
-  const accessibleSummary = item.data.map(d => `${d.name}: ${d.value}%`).join(', ');
-  
   return (
-    <div className="w-full px-2 sm:px-4 pt-1 pb-2 flex flex-col items-center" aria-label={`Nutrition chart for ${item.title}`}>
-      <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
-        <h3 className="text-center text-lg sm:text-xl font-semibold text-recipe-purple" id={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}>
-          {item.title}
-        </h3>
-        {item.nutriScore && (
-          <SimplifiedNutriScore grade={item.nutriScore} size="sm" showLabel={false} />
-        )}
-      </div>
+    <Card className="h-full overflow-hidden border border-slate-100 shadow-sm relative">
+      {item.special && (
+        <div className="absolute top-0 right-0 z-10">
+          <Badge className="m-2 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600">
+            Premium
+          </Badge>
+        </div>
+      )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
-        <div className="flex flex-col items-center justify-center">
-          <div className="w-full max-w-[240px] mx-auto overflow-visible -mt-1">
-            <Suspense fallback={
-              <div className="h-[180px] w-full mx-auto flex items-center justify-center">
-                <Skeleton className="h-[160px] w-[160px] rounded-full" />
-              </div>
-            }>
-              <figure>
-                <MacroChart 
-                  data={item.data}
-                  height={180}
-                  showTooltip 
-                  titleId={`chart-title-${item.title.replace(/\s+/g, '-').toLowerCase()}`}
-                />
-                <figcaption className="sr-only">
-                  {item.title} - {accessibleSummary}
-                </figcaption>
-                <div className="text-xs text-center text-gray-500 mt-1">
-                  <p className="italic">*Protein and carbs: 4 cal/g, fat: 9 cal/g</p>
-                </div>
-              </figure>
-            </Suspense>
+      <CardHeader className="p-4 pb-0">
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-lg">{item.title}</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
           </div>
+          {item.nutriScore && (
+            <SimplifiedNutriScore grade={item.nutriScore} />
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="p-4">
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={item.data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                fill="#8884d8"
+                paddingAngle={2}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {item.data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Legend layout="vertical" verticalAlign="middle" align="right" />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
         
-        <div className="flex flex-col items-center justify-center">
-          {item.showMicronutrients ? (
-            <SimplifiedMicronutrientsDisplay 
-              data={item.micronutrientsData || sampleMicronutrientsData}
-              className="w-full"
-            />
-          ) : item.special ? (
-            <Suspense fallback={
-              <div className="h-[180px] w-full flex items-center justify-center">
-                <Skeleton className="h-[160px] w-[180px]" />
-              </div>
-            }>
-              <MacroPieCharts carbsData={carbsData} fatsData={fatsData} />
-            </Suspense>
-          ) : (
-            <MacroDetailsPanel 
-              title={item.title}
-              description={item.description}
-              data={item.data}
-            />
-          )}
-          
-          {item.nutriScore && (
-            <div className="mt-3 flex justify-center items-center">
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-muted-foreground mb-1">Quality Rating</span>
-                <SimplifiedNutriScore grade={item.nutriScore} size="md" />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+        {/* Show micronutrients if specified */}
+        {item.showMicronutrients && item.micronutrientsData && (
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <h4 className="text-sm font-medium mb-2">Micronutrient Profile:</h4>
+            <SimpleMicronutrientList data={item.micronutrientsData} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
