@@ -1,73 +1,51 @@
-
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { QuickRecipe } from '@/types/quick-recipe';
-import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { z } from 'zod';
+import { toast } from 'sonner';
+import { QuickRecipe } from '@/types/quick-recipe';
 
-// Define schema for validation
-export const recipeModificationsSchema = z.object({
-  modifications: z.object({
-    title: z.string().optional(),
-    description: z.string().optional(),
-    ingredients: z.array(z.object({
-      action: z.enum(["add", "remove", "modify"]),
-      originalIndex: z.number().optional(),
-      item: z.string(),
-      qty_metric: z.number().optional(),
-      unit_metric: z.string().optional(),
-      qty_imperial: z.number().optional(),
-      unit_imperial: z.string().optional(),
-      notes: z.string().optional(),
-    })).optional(),
-    steps: z.array(z.object({
-      action: z.enum(["add", "remove", "modify"]),
-      originalIndex: z.number().optional(),
-      content: z.string(),
-    })).optional(),
-  }),
-  nutritionImpact: z.object({
-    calories: z.number(),
-    protein: z.number(),
-    carbs: z.number(),
-    fat: z.number(),
-    summary: z.string(),
-  }),
-  reasoning: z.string(),
-});
-
-// Define modification states for state machine
-export type ModificationStatus = 
-  | 'idle' 
-  | 'loading' 
-  | 'success' 
-  | 'error' 
-  | 'applying' 
-  | 'applied'
-  | 'rejected'
-  | 'not-deployed'
-  | 'canceled';
-
-// Define modification types
-export type RecipeModifications = z.infer<typeof recipeModificationsSchema>;
-
-// Export NutritionImpact type for use in other components
-export type NutritionImpact = {
+// Define the NutritionImpact type that was missing
+export interface NutritionImpact {
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   summary: string;
-};
+}
 
-export type ModificationHistoryEntry = {
-  request: string;
-  response: RecipeModifications;
-  timestamp: string;
-  applied: boolean;
-};
+export interface RecipeModifications {
+  modifications: {
+    title?: string;
+    description?: string;
+    ingredients?: {
+      action: 'add' | 'remove' | 'modify';
+      originalIndex?: number;
+      item: string;
+      qty_metric?: number;
+      unit_metric?: string;
+      qty_imperial?: number;
+      unit_imperial?: string;
+      notes?: string;
+    }[];
+    steps?: {
+      action: 'add' | 'remove' | 'modify';
+      originalIndex?: number;
+      content: string;
+    }[];
+  };
+  nutritionImpact: NutritionImpact;
+  reasoning: string;
+}
 
-// Main hook interface
+// Type for status
+export type ModificationStatus = 
+  'idle' | 
+  'loading' | 
+  'success' | 
+  'applying' | 
+  'error' | 
+  'canceled' | 
+  'not-deployed';
+
 export function useRecipeModifications(recipe: QuickRecipe) {
   // State machine
   const [status, setStatus] = useState<ModificationStatus>('idle');

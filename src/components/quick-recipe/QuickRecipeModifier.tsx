@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
+import { useRecipeModifications, NutritionImpact, ModificationStatus } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { QuickRecipeNutritionSummary } from './nutrition/QuickRecipeNutritionSummary';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -216,7 +216,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 </ul>
               </div>
               
-              {/* Action buttons - Fixed type comparison errors by using state comparison instead of string literals */}
+              {/* Action buttons - Fixed type comparison errors by using string equality instead of reference equality */}
               <div className="mt-3 flex gap-2 justify-end">
                 <Button 
                   variant="outline" 

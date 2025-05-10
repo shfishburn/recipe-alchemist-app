@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
-import { StructuredOutputParser } from "https://esm.sh/langchain/output_parsers";
+import { StructuredOutputParser } from "https://esm.sh/@langchain/core/output_parsers";
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
 import { recipeModificationsSchema } from "./schema.ts";
@@ -9,8 +9,9 @@ import { recipeModificationsSchema } from "./schema.ts";
 // Define CORS headers for cross-origin requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 // Retry mechanism with exponential backoff
@@ -159,10 +160,10 @@ function validateRecipe(recipe) {
 
 // Main handler function
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests - CRITICAL FIX
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      status: 204,
+      status: 204, // Must be a 2xx status for preflight to succeed
       headers: corsHeaders 
     });
   }
@@ -236,15 +237,15 @@ serve(async (req) => {
       let errorDetails = error.message;
       let statusCode = 500;
       
-      if (error.message.includes("Circuit is open")) {
+      if (error.message?.includes("Circuit is open")) {
         errorMessage = "Service temporarily unavailable";
         errorDetails = "Too many failures detected. Please try again later.";
         statusCode = 503;
-      } else if (error.message.includes("timeout")) {
+      } else if (error.message?.includes("timeout")) {
         errorMessage = "Request timed out";
         errorDetails = "The modification request took too long to process. Try a simpler request.";
         statusCode = 504;
-      } else if (error.message.includes("OpenAI API key not found")) {
+      } else if (error.message?.includes("OpenAI API key not found")) {
         errorMessage = "Configuration error";
         errorDetails = "The server is missing required credentials.";
         statusCode = 500;

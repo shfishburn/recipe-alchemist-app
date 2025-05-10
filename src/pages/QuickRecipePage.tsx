@@ -42,23 +42,26 @@ const QuickRecipePage: React.FC = () => {
       clearInterval(cleanupInterval);
       forceCleanupUI();
     };
-  }, []);
+  }, [isLoading, isRetrying]);
 
-  // Always render the loading state when loading or retrying, without guard clauses
+  // Render the loading state when loading or retrying - show overlay in place without navigation
   if (isLoading || isRetrying) {
     console.log('Rendering loading state in QuickRecipePage');
     return (
-      <div 
-        className="h-screen w-screen fixed top-0 left-0 z-50 bg-white dark:bg-gray-950"
-        aria-busy="true"
-        aria-live="polite"
-      >
-        <FullScreenLoading
-          onCancel={handleCancel}
-          onRetry={error ? handleRetry : undefined}
-          error={error}
-        />
-      </div>
+      <PageContainer>
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+          aria-busy="true"
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 max-w-md mx-auto">
+            <FullScreenLoading
+              onCancel={handleCancel}
+              onRetry={error ? handleRetry : undefined}
+              error={error}
+            />
+          </div>
+        </div>
+      </PageContainer>
     );
   }
 
