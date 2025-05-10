@@ -45,6 +45,12 @@
   margin-bottom: 0;
 }
 
+/* Bold text - important for ** formatting */
+.scientific-content strong {
+  font-weight: 600;
+  color: var(--recipe-blue);
+}
+
 /* Code formatting */
 .scientific-content code {
   background-color: rgba(0, 0, 0, 0.05);
@@ -54,11 +60,6 @@
 }
 
 /* Text emphasis */
-.scientific-content strong {
-  font-weight: 600;
-  color: var(--primary);
-}
-
 .scientific-content em {
   font-style: italic;
 }

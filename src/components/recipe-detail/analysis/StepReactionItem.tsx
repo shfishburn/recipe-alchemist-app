@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { formatReactionName } from '@/hooks/use-recipe-science';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Thermometer, Timer } from 'lucide-react';
 import type { StepReaction } from '@/hooks/use-recipe-science';
+import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
 
 interface StepReactionItemProps {
   reaction: StepReaction;
@@ -42,11 +42,12 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
     reaction.thermal_engineering?.heat_transfer_mode || '';
     
   return (
-    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
+    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm mb-4">
       <div className="flex items-start gap-3 mb-2">
         <div className="flex-1">
-          {/* Updated styling as requested */}
-          <p className="mt-1 font-bold text-slate-800">Step {index + 1}: {reaction.step_text}</p>
+          {/* Updated styling for consistency */}
+          <h3 className="font-semibold text-slate-800">Step {index + 1}</h3>
+          <p className="text-slate-700">{reaction.step_text}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
             {cookingMethod && (
@@ -71,7 +72,9 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
           </div>
           
           {reactionDetails && (
-            <p className="text-sm text-slate-600 mt-2">{reactionDetails}</p>
+            <div className="text-sm text-slate-600 mt-3">
+              <FormattedText text={reactionDetails} forceScientific={true} />
+            </div>
           )}
         </div>
       </div>
@@ -127,17 +130,19 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
                   {reaction.chemical_systems.reaction_mechanisms && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">Reaction Mechanism:</p>
-                      <p className="text-xs text-slate-700">{reaction.chemical_systems.reaction_mechanisms}</p>
+                      <div className="text-xs text-slate-700">
+                        <FormattedText text={reaction.chemical_systems.reaction_mechanisms} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                   
                   {reaction.chemical_systems.ph_effects?.impact && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">pH Impact:</p>
-                      <p className="text-xs text-slate-700">
+                      <div className="text-xs text-slate-700">
                         {reaction.chemical_systems.ph_effects.range && `Range: ${reaction.chemical_systems.ph_effects.range}. `}
-                        {reaction.chemical_systems.ph_effects.impact}
-                      </p>
+                        <FormattedText text={reaction.chemical_systems.ph_effects.impact} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -151,21 +156,27 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
                   {reaction.thermal_engineering.heat_transfer_mode && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">Heat Transfer Mode:</p>
-                      <p className="text-xs text-slate-700">{reaction.thermal_engineering.heat_transfer_mode}</p>
+                      <div className="text-xs text-slate-700">
+                        <FormattedText text={reaction.thermal_engineering.heat_transfer_mode} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                   
                   {reaction.thermal_engineering.thermal_gradient && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">Thermal Gradient:</p>
-                      <p className="text-xs text-slate-700">{reaction.thermal_engineering.thermal_gradient}</p>
+                      <div className="text-xs text-slate-700">
+                        <FormattedText text={reaction.thermal_engineering.thermal_gradient} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                   
                   {reaction.thermal_engineering.heat_capacity_considerations && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">Heat Capacity Considerations:</p>
-                      <p className="text-xs text-slate-700">{reaction.thermal_engineering.heat_capacity_considerations}</p>
+                      <div className="text-xs text-slate-700">
+                        <FormattedText text={reaction.thermal_engineering.heat_capacity_considerations} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -216,7 +227,9 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
                           <p className="text-xs text-slate-500">Solutions:</p>
                           <ul className="text-xs text-slate-700 list-disc pl-4">
                             {issue.corrections.map((correction, j) => (
-                              <li key={j}>{correction}</li>
+                              <li key={j}>
+                                <FormattedText text={correction} forceScientific={true} />
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -234,14 +247,18 @@ export function StepReactionItem({ reaction, index }: StepReactionItemProps) {
                   {reaction.safety_protocols.critical_limits && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">Critical Limits:</p>
-                      <p className="text-xs text-slate-700">{reaction.safety_protocols.critical_limits}</p>
+                      <div className="text-xs text-slate-700">
+                        <FormattedText text={reaction.safety_protocols.critical_limits} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                   
                   {reaction.safety_protocols.allergen_concerns && (
                     <div className="mb-2">
                       <p className="text-xs text-slate-500">Allergen Concerns:</p>
-                      <p className="text-xs text-slate-700">{reaction.safety_protocols.allergen_concerns}</p>
+                      <div className="text-xs text-slate-700">
+                        <FormattedText text={reaction.safety_protocols.allergen_concerns} forceScientific={true} />
+                      </div>
                     </div>
                   )}
                 </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CardWrapper } from '@/components/ui/card-wrapper';
@@ -12,7 +13,7 @@ interface UtilitiesTabContentProps {
 }
 
 export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
-  const { handleAnalyze, isAnalyzing } = useRecipeScience(recipe);
+  const { analyzeRecipe, isAnalyzing } = useRecipeScience(recipe);
   const { toast } = useToast();
 
   const handleForceRegenerate = () => {
@@ -23,7 +24,7 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
     });
     
     // Force the analysis to regenerate
-    handleAnalyze();
+    analyzeRecipe(true); // Pass true to force regeneration
   };
   
   return (

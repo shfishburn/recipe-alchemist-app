@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Beaker } from "lucide-react";
 import { ReactionsList } from "./ReactionsList";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { FormattedText } from '@/components/recipe-chat/response/FormattedText';
 
 interface AnalysisContentProps {
   chemistry?: string[];
@@ -23,9 +24,25 @@ export function AnalysisContent({
 }: AnalysisContentProps) {
   const [showRaw, setShowRaw] = useState(false);
   
+  const renderList = (items: string[]) => {
+    if (!items || items.length === 0) {
+      return <p className="text-muted-foreground italic">No data available yet.</p>;
+    }
+    
+    return (
+      <ul className="list-disc pl-5 space-y-2">
+        {items.map((item, index) => (
+          <li key={index} className="text-muted-foreground">
+            <FormattedText text={item} preserveWhitespace={false} forceScientific={true} />
+          </li>
+        ))}
+      </ul>
+    );
+  };
+  
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="chemistry">
+      <Tabs defaultValue="chemistry" className="w-full">
         <TabsList className="mb-2">
           <TabsTrigger value="chemistry">Chemistry</TabsTrigger>
           <TabsTrigger value="techniques">Techniques</TabsTrigger>
@@ -33,43 +50,19 @@ export function AnalysisContent({
           <TabsTrigger value="reactions">Step Analysis</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="chemistry" className="space-y-2">
-          {chemistry && chemistry.length > 0 ? (
-            <ul className="list-disc pl-5 space-y-2">
-              {chemistry.map((item, index) => (
-                <li key={index} className="text-muted-foreground">{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted-foreground italic">No chemistry analysis available yet.</p>
-          )}
+        <TabsContent value="chemistry" className="space-y-2 pt-2">
+          {renderList(chemistry)}
         </TabsContent>
         
-        <TabsContent value="techniques" className="space-y-2">
-          {techniques && techniques.length > 0 ? (
-            <ul className="list-disc pl-5 space-y-2">
-              {techniques.map((item, index) => (
-                <li key={index} className="text-muted-foreground">{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted-foreground italic">No technique analysis available yet.</p>
-          )}
+        <TabsContent value="techniques" className="space-y-2 pt-2">
+          {renderList(techniques)}
         </TabsContent>
         
-        <TabsContent value="troubleshooting" className="space-y-2">
-          {troubleshooting && troubleshooting.length > 0 ? (
-            <ul className="list-disc pl-5 space-y-2">
-              {troubleshooting.map((item, index) => (
-                <li key={index} className="text-muted-foreground">{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted-foreground italic">No troubleshooting tips available yet.</p>
-          )}
+        <TabsContent value="troubleshooting" className="space-y-2 pt-2">
+          {renderList(troubleshooting)}
         </TabsContent>
         
-        <TabsContent value="reactions" className="space-y-2">
+        <TabsContent value="reactions" className="space-y-2 pt-2">
           {stepReactions && stepReactions.length > 0 ? (
             <ReactionsList stepReactions={stepReactions} />
           ) : (
@@ -79,7 +72,7 @@ export function AnalysisContent({
       </Tabs>
       
       {rawResponse && (
-        <Collapsible className="mt-4">
+        <Collapsible className="mt-4 border-t border-gray-100 pt-3">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground flex items-center">
               <Beaker className="h-4 w-4 mr-1" />
@@ -92,9 +85,14 @@ export function AnalysisContent({
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-2">
-            <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-96">
-              {rawResponse}
-            </pre>
+            <div className="bg-muted p-3 rounded-md overflow-auto max-h-96">
+              <FormattedText 
+                text={rawResponse} 
+                preserveWhitespace={true} 
+                forceScientific={true} 
+                className="text-xs scientific-content"
+              />
+            </div>
           </CollapsibleContent>
         </Collapsible>
       )}

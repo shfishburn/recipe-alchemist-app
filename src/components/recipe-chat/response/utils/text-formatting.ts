@@ -45,8 +45,8 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
     
     // Handle italic formatting with _text_
     if (text[i] === '_' && (!codeActive) && 
-        (!text[i-1] || /\s/.test(text[i-1])) && 
-        (!text[i+1] || !/\s/.test(text[i+1]))) {
+        (i === 0 || /\s/.test(text[i-1])) && 
+        (i+1 < text.length && !/\s/.test(text[i+1]))) {
       // Add accumulated text before the marker
       if (currentText) {
         if (boldActive) {
@@ -99,7 +99,8 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
       if (boldActive) {
         parts.push(
           React.createElement('strong', { 
-            key: `bold-${i}`
+            key: `bold-${i}`,
+            className: "text-recipe-blue"
           }, 
             italicActive ? React.createElement('em', null, currentText) : currentText
           )
