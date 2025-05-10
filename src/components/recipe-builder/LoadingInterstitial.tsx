@@ -1,9 +1,8 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import LoadingBar from 'react-top-loading-bar';
 
 interface LoadingInterstitialProps {
   isOpen: boolean;
@@ -14,38 +13,39 @@ interface LoadingInterstitialProps {
 
 const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInterstitialProps) => {
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
-  const loadingRef = useRef<any>(null);
+  const [progress, setProgress] = useState(0);
   
-  // Reset states and manage loading bar on open/close
+  // Reset states and manage loading progress on open/close
   useEffect(() => {
     if (isOpen && !error) {
-      // Start the loading bar with improved reliability
-      if (loadingRef.current) {
-        // Start with a static value first for immediate feedback
-        loadingRef.current.staticStart(30);
-        
-        // Then switch to continuous after a short delay
-        setTimeout(() => {
-          if (loadingRef.current) {
-            loadingRef.current.continuousStart(0, 100);
-          }
-        }, 100);
-      }
-      
       // Show timeout warning after 20 seconds
       const timeoutId = setTimeout(() => {
         setShowTimeoutMessage(true);
       }, 20000);
       
+      // Progress animation
+      let progressInterval: NodeJS.Timeout;
+      setProgress(0);
+      
+      progressInterval = setInterval(() => {
+        setProgress(prev => {
+          // Slowly increase up to 90%
+          if (prev < 90) {
+            return prev + (90 - prev) / 20;
+          }
+          return prev;
+        });
+      }, 300);
+      
       return () => {
         clearTimeout(timeoutId);
+        clearInterval(progressInterval);
+        setProgress(0);
+        setShowTimeoutMessage(false);
       };
     } else {
-      // Complete the loading bar when dialog closes or error occurs
-      if (loadingRef.current) {
-        loadingRef.current.complete();
-      }
-      setShowTimeoutMessage(false);
+      // Complete the loading progress when dialog closes or error occurs
+      setProgress(100);
     }
   }, [isOpen, error]);
 
@@ -55,7 +55,16 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   return (
     <Dialog open={isOpen} modal={true}>
       <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-10 gap-6">
-        <LoadingBar color="#4CAF50" height={3} ref={loadingRef} shadow={true} className="absolute top-0 left-0 right-0" />
+        {/* Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">
+          <div 
+            className="h-full bg-recipe-green transition-all duration-300 ease-out"
+            style={{ 
+              width: `${progress}%`,
+              boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`
+            }}
+          />
+        </div>
         
         <div className="relative">
           {hasExplicitError ? (

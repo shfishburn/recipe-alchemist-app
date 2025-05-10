@@ -1,14 +1,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 
-// Format time remaining
-export const formatTimeRemaining = (seconds: number) => {
-  if (seconds <= 0) return "Recipe ready!";
-  if (seconds < 10) return `${Math.ceil(seconds)} seconds left`;
-  return `About ${Math.ceil(seconds)} seconds`;
-};
-
-// If main ingredient is complex like "chicken thighs", just use the first word for display
+// Get simple ingredient name (first word)
 export const getSimpleIngredientName = (mainIngredient?: string) => {
   if (!mainIngredient) return 'recipe';
   const firstWord = mainIngredient.split(' ')[0];

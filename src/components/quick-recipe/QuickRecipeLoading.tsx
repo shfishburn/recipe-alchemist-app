@@ -1,48 +1,79 @@
 
 import React from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { LoadingTipCard } from './loading/LoadingTipCard';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
-import { useAudioInteraction } from '@/hooks/use-audio-interaction';
-import { useUserMessage } from './loading/utils';
-import { LoadingAnimation } from './loading/LoadingAnimation';
-import { TopLoadingBar } from './loading/TopLoadingBar';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ChefHat } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useUserMessage } from '@/hooks/use-user-message';
 
 export function QuickRecipeLoading() {
-  const { loadingState, formData, completedLoading } = useQuickRecipeStore();
-  const { showTimeout, showFinalAnimation } = useLoadingProgress();
-  useAudioInteraction(completedLoading);
+  const { loadingState, formData } = useQuickRecipeStore();
+  const { showTimeout, showFinalAnimation, cleanup } = useLoadingProgress();
   
-  // Get personalized message
+  // Get personalized message based on the main ingredient
   const userMessage = useUserMessage(formData?.mainIngredient);
   
+  // Handler for cancel button
+  const handleCancel = () => {
+    cleanup();
+    // If we're in the context of a page with navigation, return to home
+    if (window.location.pathname.includes('quick-recipe')) {
+      window.location.href = '/';
+    }
+  };
+  
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-[40vh] sm:min-h-[50vh] py-3 sm:py-5 touch-flex-container animate-fadeIn px-2 sm:px-4">
-      {/* Top loading bar that shows progress */}
-      <TopLoadingBar 
-        color="#4CAF50" 
-        showFinalAnimation={showFinalAnimation} 
-      />
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[40vh] py-5 animate-fadeIn px-2 sm:px-4">
+      {/* Top progress bar that shows loading progress */}
+      <div 
+        className="fixed top-0 left-0 right-0 h-1 z-[10000]"
+        role="progressbar" 
+        aria-valuemin={0} 
+        aria-valuemax={100}
+        aria-valuenow={showFinalAnimation ? 100 : loadingState.percentComplete}
+      >
+        <div 
+          className="h-full bg-recipe-green transition-all duration-300 ease-out"
+          style={{ 
+            boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`,
+            width: showFinalAnimation ? '100%' : `${loadingState.percentComplete}%`
+          }}
+        />
+      </div>
       
-      <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-xs sm:max-w-md mx-auto p-2 sm:p-4">
-        {/* Animated cooking pot icon or completion animation */}
-        <div className="transform-gpu">
-          <LoadingAnimation showFinalAnimation={showFinalAnimation} />
+      <div className="flex flex-col items-center space-y-6 text-center w-full max-w-md mx-auto">
+        {/* Animated cooking pot or completion animation */}
+        <div className="relative transform-gpu">
+          <ChefHat 
+            className="h-16 w-16 text-recipe-green animate-cooking-pot" 
+            aria-hidden="true"
+          />
+          <div className="steam" aria-hidden="true" style={{ animationDelay: "0.2s" }}></div>
+          <div className="steam" aria-hidden="true" style={{ animationDelay: "0.8s", left: "12px" }}></div>
+          <div className="absolute -top-1 -right-1 h-3 w-3 bg-recipe-green rounded-full animate-pulse" aria-hidden="true" />
         </div>
         
         {/* Personalized message with animation */}
-        <h2 className="text-base sm:text-lg font-semibold animate-fade-in">
+        <h2 className="text-lg font-semibold animate-fade-in">
           {showFinalAnimation ? "Recipe ready!" : userMessage}
         </h2>
         
         {/* Step description with animation */}
-        <p className="text-xs sm:text-sm text-muted-foreground animate-pulse">
-          {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
-        </p>
+        <div aria-live="polite">
+          <p className="text-sm text-muted-foreground animate-pulse">
+            {showFinalAnimation ? "Your perfect recipe has been created." : loadingState.stepDescription}
+          </p>
+        </div>
         
         {/* Enhanced progress indicator */}
-        <div className="w-full h-2 sm:h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+        <div 
+          className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={loadingState.percentComplete}
+          aria-hidden="true"
+        >
           <div 
             className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse"
             style={{ width: `${loadingState.percentComplete}%` }}
@@ -51,16 +82,30 @@ export function QuickRecipeLoading() {
         
         {/* Timeout warning */}
         {showTimeout && !showFinalAnimation && (
-          <div className="flex items-center gap-1 sm:gap-2 text-amber-600 dark:text-amber-400 text-xs sm:text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-2 sm:px-3 rounded-lg mt-1 sm:mt-2 w-full animate-fade-in">
-            <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg mt-2 w-full animate-fade-in">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>This is taking longer than usual. Please be patient...</span>
           </div>
         )}
         
-        {/* Smart tip card - Uses full width of parent container */}
-        <div className="w-full animate-fade-in">
-          <LoadingTipCard />
+        {/* Tip card */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 w-full animate-fade-in">
+          <h4 className="text-base font-semibold mb-2">Chef's Tip</h4>
+          <p className="text-sm text-muted-foreground">
+            {showFinalAnimation
+              ? "Your recipe is ready! Enjoy cooking your personalized dish."
+              : "Patience is key in cooking. The best flavors take time to develop, just like your recipe is taking shape now."}
+          </p>
         </div>
+        
+        {/* Cancel button */}
+        <Button 
+          variant="ghost" 
+          onClick={handleCancel} 
+          className="text-muted-foreground hover:text-foreground animate-fade-in"
+        >
+          Cancel
+        </Button>
       </div>
     </div>
   );

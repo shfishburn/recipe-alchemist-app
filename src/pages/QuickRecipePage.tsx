@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
@@ -27,11 +26,10 @@ const QuickRecipePage: React.FC = () => {
     debugMode,
   } = useQuickRecipePage();
 
-  // Force show loading indicator for navigation and clean up on unmount
+  // Clean up any stale loading UI on mount and unmount
   useEffect(() => {
     console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
     
-    // Clean up any stale loading UI immediately on mount
     if (!isLoading && !isRetrying) {
       forceCleanupUI();
     }
@@ -42,25 +40,13 @@ const QuickRecipePage: React.FC = () => {
     return () => {
       console.log('QuickRecipePage unmounted');
       clearInterval(cleanupInterval);
-      
-      // Force cleanup when unmounting
       forceCleanupUI();
     };
   }, []);
 
-  // Manage body overflow based on loading state changes
-  useEffect(() => {
-    console.log('QuickRecipePage state change', { 
-      isLoading, 
-      isRetrying, 
-      hasRecipe: !!recipe, 
-      hasError: !!error 
-    });
-  }, [isLoading, isRetrying, recipe, error]);
-
   // Full-screen loading while generating or retrying
   if (isLoading || isRetrying) {
-    console.log('Rendering loading state in QuickRecipePage', { isLoading, isRetrying });
+    console.log('Rendering loading state in QuickRecipePage');
     return (
       <div 
         className="h-screen w-screen fixed top-0 left-0 z-[9999] bg-white dark:bg-gray-950"

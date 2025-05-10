@@ -1,21 +1,5 @@
 
-/* Animation keyframes */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-@keyframes gradientX {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
+/* Essential animation keyframes */
 @keyframes cooking-pot {
   0% { transform: translateY(0) rotate(0deg); }
   25% { transform: translateY(-3px) rotate(-1deg); }
@@ -30,83 +14,36 @@
   100% { opacity: 0; transform: translateY(-15px) translateX(6px) scale(1.2); }
 }
 
-@keyframes bubble {
-  0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
-  50% { transform: translateY(-6px) scale(1.1); opacity: 0.7; }
-  100% { transform: translateY(-10px) scale(0.8); opacity: 0; }
-}
-
 @keyframes progress-pulse {
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
 
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-  100% { transform: translateY(0px); }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Essential animation classes */
+.animate-cooking-pot {
+  animation: cooking-pot 2s ease-in-out infinite;
 }
 
-@keyframes spin-slow {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes ping {
-  0% { transform: scale(1); opacity: 1; }
-  75%, 100% { transform: scale(1.8); opacity: 0; }
-}
-
-@keyframes ping-slow {
-  0% { transform: scale(1); opacity: 1; }
-  75%, 100% { transform: scale(1.4); opacity: 0; }
-}
-
-@keyframes progress-bar {
-  0% { width: 0; }
-  100% { width: 100%; }
-}
-
-@keyframes shake-gentle {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-1px); }
-  75% { transform: translateX(1px); }
-}
-
-/* Animation classes */
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.animate-gradient-x {
-  animation: gradientX 3s linear infinite;
-  background-size: 200% 200%;
+.animate-progress-pulse {
+  animation: progress-pulse 1.5s ease-in-out infinite;
 }
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
 
-.animate-cooking-pot {
-  animation: cooking-pot 2s ease-in-out infinite;
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.animate-steam {
+/* Steam styling */
+.steam {
   animation: steam 2s ease-in-out infinite;
   position: absolute;
   top: -5px;
@@ -115,95 +52,10 @@
   height: 8px;
   border-radius: 50%;
   filter: blur(3px);
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
-.animate-bubble {
-  animation: bubble 1.5s ease-in-out infinite;
-}
-
-.animate-progress-pulse {
-  animation: progress-pulse 1.5s ease-in-out infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
-.animate-bounce {
-  animation: bounce 1s ease-in-out infinite;
-}
-
-.animate-ping {
-  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-.animate-ping-slow {
-  animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-.animate-progress-bar {
-  animation: progress-bar 30s linear forwards;
-}
-
-.shake-gentle {
-  animation: shake-gentle 2s ease-in-out infinite;
-}
-
-/* Delay utilities */
-.delay-150 {
-  animation-delay: 150ms;
-}
-
-.delay-300 {
-  animation-delay: 300ms;
-}
-
-/* Loading pot container styling - mobile responsive */
-.loading-pot-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 60px;
-  width: 60px;
-  position: relative;
-}
-
-@media (min-width: 640px) {
-  .loading-pot-container {
-    height: 80px;
-    width: 80px;
-  }
-}
-
-/* Text gradient for recipe titles */
-.text-gradient {
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  position: relative;
-}
-
-/* Custom recipe green glow effect */
-.glow-recipe-green {
-  box-shadow: 0 0 10px 1px rgba(75, 175, 80, 0.3);
-  animation: glow 2s ease-in-out infinite alternate;
-}
-
-/* Hardware acceleration for animations */
-.hw-accelerated {
-  will-change: transform, opacity;
-  transform: translateZ(0);
-}
-
-/* Touch action fixes for mobile */
-.touch-action-none {
-  touch-action: none;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
