@@ -14,7 +14,11 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
     if (chatHistory.length > 0 && optimisticMessages.length > 0) {
       // Create a map of optimistic message IDs that have been replaced by real messages
       const replacedOptimisticIds = chatHistory.reduce<Record<string, boolean>>((acc, message) => {
-        const optimisticId = getChatMeta(message, 'optimistic_id', '');
+        // Safely check for meta.optimistic_id
+        const optimisticId = message.meta && typeof message.meta === 'object' 
+          ? message.meta.optimistic_id 
+          : getChatMeta(message, 'optimistic_id', '');
+          
         if (optimisticId) {
           acc[optimisticId] = true;
         }
@@ -23,12 +27,16 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
       
       // Filter out optimistic messages that now have real counterparts
       const filteredMessages = optimisticMessages.filter(message => {
-        const messageId = message.id || getChatMeta(message, 'optimistic_id', '');
+        const messageId = message.id || (message.meta && message.meta.optimistic_id) || '';
         return !messageId || !replacedOptimisticIds[messageId];
       });
       
       // Update if we filtered any messages out
       if (filteredMessages.length !== optimisticMessages.length) {
+        console.log("Clearing optimistic messages that have been replaced by real messages", {
+          before: optimisticMessages.length,
+          after: filteredMessages.length
+        });
         setOptimisticMessages(filteredMessages);
       }
     }
@@ -37,13 +45,16 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
   const addOptimisticMessage = (message: OptimisticMessage) => {
     console.log("Adding optimistic message:", message);
     
+    // Generate a unique ID if not provided
+    const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    
     // Ensure message has an ID and meta data structure
     const enhancedMessage = {
       ...message,
-      id: message.id || `optimistic-${Date.now()}`,
+      id: message.id || optimisticId,
       meta: {
         ...(message.meta || {}),
-        optimistic_id: message.id || `optimistic-${Date.now()}`
+        optimistic_id: message.id || optimisticId
       }
     };
     

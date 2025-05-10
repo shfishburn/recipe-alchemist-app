@@ -791,6 +791,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          meta: Json | null
           recipe_id: string
           source_image: string | null
           source_type: string | null
@@ -804,6 +805,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          meta?: Json | null
           recipe_id: string
           source_image?: string | null
           source_type?: string | null
@@ -817,6 +819,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          meta?: Json | null
           recipe_id?: string
           source_image?: string | null
           source_type?: string | null

@@ -51,13 +51,19 @@ function validateRecipeChanges(rawResponse) {
       }
     }
     
+    // Ensure follow-up questions is properly initialized
+    if (!jsonResponse.followUpQuestions) {
+      jsonResponse.followUpQuestions = [];
+    }
+    
     return jsonResponse;
   } catch (error) {
     console.error("Error validating recipe changes:", error);
     // Fallback to wrapping the raw response as text
     return {
-      textResponse: rawResponse,
-      changes: { mode: "none" }
+      textResponse: typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse),
+      changes: { mode: "none" },
+      followUpQuestions: []
     };
   }
 }
@@ -97,7 +103,8 @@ Return response as JSON with this exact structure:
       "items": []
     },
     "instructions": []
-  }
+  },
+  "followUpQuestions": ["Array of suggested follow-up questions"] 
 }`;
 
 // Inline chat system prompt
@@ -198,38 +205,39 @@ function extractScienceNotesFromText(text: string): string[] {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const requestData = await req.json()
-    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId } = requestData
+    const requestData = await req.json();
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId, retryAttempt = 0 } = requestData;
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
-      console.error("Missing recipe data in request")
-      throw new Error("Recipe data is required")
+      console.error("Missing recipe data in request");
+      throw new Error("Recipe data is required");
     }
     
     if (!userMessage) {
-      console.error("Missing user message in request")
-      throw new Error("User message is required")
+      console.error("Missing user message in request");
+      throw new Error("User message is required");
     }
     
-    console.log(`Processing recipe chat request for recipe ${recipe.id} with message: ${userMessage.substring(0, 50)}...`)
+    console.log(`Processing recipe chat request for recipe ${recipe.id} with message: ${userMessage.substring(0, 50)}...`);
+    console.log(`Retry attempt: ${retryAttempt}`);
     
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
     // Use the appropriate prompt based on the source type
     const systemPrompt = sourceType === 'analysis' ? recipeAnalysisPrompt : chatSystemPrompt;
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
-      throw new Error('OPENAI_API_KEY is not set')
+      throw new Error('OPENAI_API_KEY is not set');
     }
 
     // Special safety parameters for analysis mode to prevent data loss
@@ -253,34 +261,41 @@ serve(async (req) => {
 
     Please respond conversationally in plain text. If suggesting changes, include them in a separate JSON structure.
     If relevant, provide cooking advice and tips as a culinary expert would.
-    `
+    Always include 2-3 follow-up questions at the end that the user might want to ask next.
+    `;
 
-    console.log(`Sending request to OpenAI with ${prompt.length} characters`)
+    console.log(`Sending request to OpenAI with ${prompt.length} characters`);
 
     try {
-      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openaiApiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt + "\nIMPORTANT: Provide responses in a conversational tone. For analysis requests, make sure to include explicit sections for science notes, techniques, and troubleshooting.",
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          temperature: 0.7,
-          response_format: { type: "json_object" }, // Enforce JSON output format
-          max_tokens: 2500,
-        }),
-      }).then((res) => res.json())
+      // Calculate an adaptive timeout based on retry attempt
+      const timeout = Math.min(60000 + (retryAttempt * 15000), 120000); // Between 60-120 seconds
+      
+      const aiResponse = await Promise.race([
+        fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openaiApiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt + "\nIMPORTANT: Provide responses in a conversational tone. For analysis requests, make sure to include explicit sections for science notes, techniques, and troubleshooting. Always include follow-up questions.",
+              },
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+            temperature: 0.7,
+            response_format: { type: "json_object" }, // Enforce JSON output format
+            max_tokens: 3500, // Increased for more comprehensive responses
+          }),
+        }).then((res) => res.json()),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("OpenAI API timeout")), timeout))
+      ]);
       
       if (!aiResponse.choices || !aiResponse.choices[0] || !aiResponse.choices[0].message) {
         console.error("Invalid AI response structure:", aiResponse);
@@ -299,6 +314,7 @@ serve(async (req) => {
       let scienceNotes = processedResponse.science_notes || [];
       let techniques = processedResponse.techniques || [];
       let troubleshooting = processedResponse.troubleshooting || [];
+      let followUpQuestions = processedResponse.followUpQuestions || [];
       
       // Add additional safety checks for analysis mode
       if (sourceType === 'analysis') {
@@ -325,31 +341,43 @@ serve(async (req) => {
             science_notes: scienceNotes,
             techniques: techniques,
             troubleshooting: troubleshooting,
+            followUpQuestions: followUpQuestions,
             textResponse: textResponse // Include text response for fallback
           }
-        : { success: true, changes, textResponse };
+        : { 
+            success: true, 
+            changes, 
+            textResponse, 
+            followUpQuestions 
+          };
 
       // Store the chat interaction if it's not an analysis
       if (sourceType !== 'analysis' && recipe.id) {
         // Create meta object for optimistic updates tracking
-        const meta = messageId ? { optimistic_id: messageId } : null;
+        const meta = messageId ? { optimistic_id: messageId } : {};
         
-        const { error: chatError } = await supabaseClient
-          .from('recipe_chats')
-          .insert({
-            recipe_id: recipe.id,
-            user_message: userMessage,
-            ai_response: textResponse,
-            changes_suggested: changes,
-            source_type: sourceType || 'manual',
-            source_url: sourceUrl,
-            source_image: sourceImage,
-            meta: meta
-          })
+        try {
+          const { error: chatError } = await supabaseClient
+            .from('recipe_chats')
+            .insert({
+              recipe_id: recipe.id,
+              user_message: userMessage,
+              ai_response: textResponse,
+              changes_suggested: changes,
+              source_type: sourceType || 'manual',
+              source_url: sourceUrl,
+              source_image: sourceImage,
+              meta: meta
+            });
 
-        if (chatError) {
-          console.error("Error storing chat:", chatError);
-          throw chatError;
+          if (chatError) {
+            console.error("Error storing chat:", chatError);
+            throw chatError;
+          }
+        } catch (dbError) {
+          console.error("Database error in recipe-chat function:", dbError);
+          // Still return a successful response even if DB insert failed
+          // The frontend will handle this via invalidating queries
         }
       }
 
@@ -361,7 +389,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
         }
-      )
+      );
     } catch (aiError) {
       console.error("Error with OpenAI request:", aiError);
       throw new Error(`OpenAI request failed: ${aiError.message}`);
@@ -377,6 +405,6 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
       }
-    )
+    );
   }
 });

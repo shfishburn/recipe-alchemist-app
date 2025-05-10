@@ -10,7 +10,7 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
-import { forceCleanupUI } from '@/utils/dom-cleanup';
+import { forceCleanupUI, checkAndCleanupLoadingUI } from '@/utils/dom-cleanup';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -31,35 +31,24 @@ const QuickRecipePage: React.FC = () => {
   useEffect(() => {
     console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
     
-    // Only clean up previous loading states if we're not currently loading
+    // Clean up any stale loading UI immediately on mount
     if (!isLoading && !isRetrying) {
       forceCleanupUI();
     }
     
+    // Set up periodic checks for orphaned loading UI
+    const cleanupInterval = setInterval(checkAndCleanupLoadingUI, 5000);
+    
     return () => {
       console.log('QuickRecipePage unmounted');
+      clearInterval(cleanupInterval);
       
-      // Clean up body classes
-      document.body.classList.remove('overflow-hidden');
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      
-      // Show all navbars if they were hidden
-      const navbars = document.querySelectorAll('nav');
-      navbars.forEach(navbar => {
-        if (navbar) {
-          navbar.style.display = '';
-        }
-      });
-      
-      // Run additional cleanup
+      // Force cleanup when unmounting
       forceCleanupUI();
     };
   }, []);
 
-  // Log state changes and manage body overflow
+  // Manage body overflow based on loading state changes
   useEffect(() => {
     console.log('QuickRecipePage state change', { 
       isLoading, 
@@ -67,44 +56,17 @@ const QuickRecipePage: React.FC = () => {
       hasRecipe: !!recipe, 
       hasError: !!error 
     });
-    
-    // Apply or remove overflow handling when loading state changes
-    if (isLoading || isRetrying) {
-      document.body.classList.add('overflow-hidden');
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = '0';
-      document.body.style.left = '0';
-      
-      // Hide all navbars during loading
-      const navbars = document.querySelectorAll('nav');
-      navbars.forEach(navbar => {
-        if (navbar) {
-          navbar.style.display = 'none';
-        }
-      });
-    } else {
-      document.body.classList.remove('overflow-hidden');
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      
-      // Show navbars again
-      const navbars = document.querySelectorAll('nav');
-      navbars.forEach(navbar => {
-        if (navbar) {
-          navbar.style.display = '';
-        }
-      });
-    }
   }, [isLoading, isRetrying, recipe, error]);
 
   // Full-screen loading while generating or retrying
   if (isLoading || isRetrying) {
     console.log('Rendering loading state in QuickRecipePage', { isLoading, isRetrying });
     return (
-      <div className="h-screen w-screen fixed top-0 left-0 z-[9999] bg-white dark:bg-gray-950">
+      <div 
+        className="h-screen w-screen fixed top-0 left-0 z-[9999] bg-white dark:bg-gray-950"
+        aria-busy="true"
+        aria-live="polite"
+      >
         <LoadingIndicator />
         <FullScreenLoading
           onCancel={handleCancel}

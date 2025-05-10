@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
@@ -29,29 +28,37 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     // Log when component mounts/unmounts for debugging
     console.log('FullScreenLoading component mounted', { isErrorState });
     
-    // Force position fixed to prevent scrolling while loading
-    if (!isErrorState) {
-      document.body.classList.add('overflow-hidden');
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = '0';
-      document.body.style.left = '0';
-      
-      // Add a loading-trigger marker to help with cleanup detection
-      const loadingTrigger = document.createElement('div');
-      loadingTrigger.classList.add('loading-trigger');
-      loadingTrigger.classList.add('loading-overlay-active');
-      loadingTrigger.style.display = 'none';
-      document.body.appendChild(loadingTrigger);
-      
-      // Hide all navbars during loading
-      const navbars = document.querySelectorAll('nav');
-      navbars.forEach(navbar => {
-        if (navbar) {
-          navbar.style.display = 'none';
-        }
-      });
+    // Only modify the DOM if this component is actually mounted
+    const loadingElement = document.getElementById('fullscreen-loading-overlay');
+    if (!loadingElement) {
+      console.warn('Loading overlay element not found in DOM');
+      return;
     }
+    
+    // Force position fixed to prevent scrolling while loading
+    document.body.classList.add('overflow-hidden');
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    
+    // Add a loading-trigger marker to help with cleanup detection
+    const loadingTrigger = document.createElement('div');
+    loadingTrigger.id = 'loading-trigger-marker';
+    loadingTrigger.classList.add('loading-trigger');
+    loadingTrigger.classList.add('loading-overlay-active');
+    loadingTrigger.style.display = 'none';
+    document.body.appendChild(loadingTrigger);
+    
+    // Hide all navbars during loading
+    const navbars = document.querySelectorAll('nav, header');
+    navbars.forEach(navbar => {
+      if (navbar) {
+        navbar.style.visibility = 'hidden';
+        navbar.setAttribute('aria-hidden', 'true');
+        navbar.dataset.hiddenByLoading = 'true';
+      }
+    });
     
     // Make sure our loading is properly marked as active
     ensureRecipeLoadingActive();
@@ -61,7 +68,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     
     return () => {
       // Ensure we clean up properly on unmount
-      console.log('FullScreenLoading component unmounted');
+      console.log('FullScreenLoading component unmounted - cleaning up DOM modifications');
       document.body.classList.remove('overflow-hidden');
       document.body.style.position = '';
       document.body.style.width = '';
@@ -69,22 +76,22 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       document.body.style.left = '';
       
       // Show all navbars again
-      const navbars = document.querySelectorAll('nav');
-      navbars.forEach(navbar => {
+      const hiddenNavbars = document.querySelectorAll('[data-hidden-by-loading="true"]');
+      hiddenNavbars.forEach(navbar => {
         if (navbar) {
-          navbar.style.display = '';
+          navbar.style.visibility = '';
+          navbar.removeAttribute('aria-hidden');
+          navbar.removeAttribute('data-hidden-by-loading');
         }
       });
       
       clearInterval(ensureActiveInterval);
       
       // Remove any loading triggers we created
-      const loadingTriggers = document.querySelectorAll('.loading-trigger');
-      loadingTriggers.forEach(el => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      });
+      const loadingTrigger = document.getElementById('loading-trigger-marker');
+      if (loadingTrigger && loadingTrigger.parentNode) {
+        loadingTrigger.parentNode.removeChild(loadingTrigger);
+      }
       
       // Force cleanup UI as a safety measure
       forceCleanupUI();
@@ -123,7 +130,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       }}
       id="fullscreen-loading-overlay"
     >
-      <TopLoadingBar showFinalAnimation={showFinalAnimation} />
+      <TopLoadingBar showFinalAnimation={showFinalAnimation} color="#4CAF50" />
       
       {/* Accessible title for screen readers */}
       <VisuallyHidden asChild>

@@ -63,7 +63,7 @@ export const useChatMutations = (recipe: Recipe) => {
                 }
               }),
               new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Request timed out")), 40000) // Increased from 20s to 40s
+                setTimeout(() => reject(new Error("Request timed out")), 60000) // Increased from 40s to 60s
               )
             ]) as { data?: any, error?: any };
             
@@ -72,14 +72,16 @@ export const useChatMutations = (recipe: Recipe) => {
             }
             
             return response;
-          } catch (error) {
-            // Implement retry for certain errors
-            if (retryCount < 2 && 
+          } catch (error: any) {
+            // Implement retry for certain errors with exponential backoff
+            if (retryCount < 3 && 
                (error.message?.includes("timeout") || 
                 error.message?.includes("network") || 
                 error.status === 503 || 
                 error.status === 504)) {
               console.log(`Retrying request (attempt ${retryCount + 1})...`);
+              // Add exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
               return makeRequest(retryCount + 1);
             }
             throw error;
@@ -114,7 +116,7 @@ export const useChatMutations = (recipe: Recipe) => {
         
         try {
           // Create meta object for optimistic updates tracking
-          const meta = messageId ? { optimistic_id: messageId } : null;
+          const meta = messageId ? { optimistic_id: messageId } : {};
           
           // Insert the chat message into the database
           const { data, error } = await supabase
