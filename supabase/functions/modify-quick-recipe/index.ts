@@ -246,11 +246,13 @@ serve(async (req) => {
     // Execute with circuit breaker and retry mechanism
     let result;
     try {
+      const runInvocation = () => runnable.invoke({
+        input,
+        history,
+      });
+
       result = await openAICircuitBreaker.execute(async () => {
-        return await withRetry(() => runnable.invoke({
-          input,
-          history,
-        }));
+        return await withRetry(runInvocation);
       });
       
       console.log("Successfully generated recipe modifications");
@@ -288,17 +290,34 @@ serve(async (req) => {
       );
     }
 
-    const processingTime = Date.now() - startTime;
-    console.log("Recipe modification completed", { 
-      processingTime: `${processingTime}ms`,
-      timestamp: new Date().toISOString()
-    });
-
-    // Return the result
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Validate the result with our schema before sending it back
+    try {
+      // Parse ensures the response matches our defined schema
+      const parsed = recipeModificationsSchema.parse(result);
+      
+      const processingTime = Date.now() - startTime;
+      console.log("Recipe modification completed", { 
+        processingTime: `${processingTime}ms`,
+        timestamp: new Date().toISOString()
+      });
+      
+      return new Response(
+        JSON.stringify(parsed),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (parseError) {
+      console.error("Schema validation error:", parseError);
+      return new Response(
+        JSON.stringify({
+          error: "Invalid AI response format",
+          details: "The generated modifications did not match the expected format."
+        }),
+        { 
+          status: 422, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
   } catch (error) {
     console.error("Unexpected error in modify-quick-recipe function:", error);
     

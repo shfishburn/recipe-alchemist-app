@@ -39,17 +39,18 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
     <div className="flex flex-col items-center justify-center w-full h-full min-h-[40vh] py-5 animate-fadeIn px-2 sm:px-4">
       {/* Top progress bar that shows loading progress */}
       <div 
-        className="fixed top-0 left-0 right-0 h-1 z-[10000]"
+        className="fixed top-0 left-0 right-0 h-1 z-50"
         role="progressbar" 
+        aria-label="Loading progress"
         aria-valuemin={0} 
         aria-valuemax={100}
         aria-valuenow={showFinalAnimation ? 100 : loadingState.percentComplete}
       >
         <div 
-          className="h-full bg-recipe-green transition-all duration-300 ease-out"
+          className="h-full bg-recipe-green transition-all duration-300 ease-out min-w-[5%]"
           style={{ 
             boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`,
-            width: showFinalAnimation ? '100%' : `${loadingState.percentComplete}%`
+            width: showFinalAnimation ? '100%' : `${loadingState.percentComplete || 5}%`
           }}
         />
       </div>
@@ -78,13 +79,14 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         <div 
           className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
           role="progressbar"
+          aria-label="Loading progress"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={loadingState.percentComplete}
           aria-hidden="true"
         >
           <div 
-            className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse"
+            className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse min-w-[5%]"
             style={{ width: `${loadingState.percentComplete || 5}%` }}
           />
         </div>

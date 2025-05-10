@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { toast } from 'sonner';
@@ -143,8 +142,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
             recipe: modifiedRecipe,
             userRequest: actualRequest,
             modificationHistory
-          },
-          signal: abortControllerRef.current.signal // Pass the signal properly
+          }
         });
         
         // Clear the abort controller reference after successful completion

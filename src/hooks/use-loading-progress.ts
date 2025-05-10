@@ -12,11 +12,9 @@ export const LOADING_STEPS = [
   "Finalizing your perfect recipe..."
 ];
 
-// Maximum time to wait before showing error (in seconds)
-export const MAX_LOADING_TIME = 40;
-
-// Time before showing timeout warning (in ms)
-const TIMEOUT_WARNING_TIME = 8000;
+// Configuration constants
+export const MAX_LOADING_TIME = 40; // Maximum time to wait before showing error (in seconds)
+export const TIMEOUT_WARNING_TIME = 8000; // Time before showing timeout warning (in ms)
 
 export function useLoadingProgress() {
   const { loadingState, updateLoadingState, setError, completedLoading, setCompletedLoading } = useQuickRecipeStore();
@@ -58,6 +56,13 @@ export function useLoadingProgress() {
     console.log('Setting up progress timer with estimate:', initialEstimate);
     const startTime = Date.now();
     
+    // Initialize with at least 5% to show something immediately
+    if (loadingState.percentComplete === 0) {
+      updateLoadingState({ 
+        percentComplete: 5 
+      });
+    }
+    
     progressTimerRef.current = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
       const remaining = Math.max(0, initialEstimate - elapsed);
@@ -96,6 +101,14 @@ export function useLoadingProgress() {
       clearInterval(stepTimerRef.current);
     }
     
+    // Initialize with first step if empty
+    if (!loadingState.stepDescription) {
+      updateLoadingState({
+        step: 0,
+        stepDescription: LOADING_STEPS[0]
+      });
+    }
+    
     stepTimerRef.current = setInterval(() => {
       updateLoadingState({
         step: (loadingState.step + 1) % LOADING_STEPS.length,
@@ -109,7 +122,7 @@ export function useLoadingProgress() {
         stepTimerRef.current = null;
       }
     };
-  }, [loadingState.step, updateLoadingState]);
+  }, [loadingState.step, updateLoadingState, loadingState.stepDescription]);
 
   // Set a timeout warning and timeout error
   useEffect(() => {

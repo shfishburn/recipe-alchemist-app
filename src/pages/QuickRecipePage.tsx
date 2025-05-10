@@ -49,7 +49,7 @@ const QuickRecipePage: React.FC = () => {
     console.log('Rendering loading state in QuickRecipePage');
     return (
       <div 
-        className="h-screen w-screen fixed top-0 left-0 z-[9999] bg-white dark:bg-gray-950"
+        className="h-screen w-screen fixed top-0 left-0 z-50 bg-white dark:bg-gray-950"
         aria-busy="true"
         aria-live="polite"
       >
