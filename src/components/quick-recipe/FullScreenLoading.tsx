@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -24,10 +23,16 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   const isErrorState = !!error;
   const { showTimeout, showFinalAnimation } = useLoadingProgress();
   
+  // Ref to track mounting state
+  const isMounted = useRef(false);
+  // Ref to store interval ID
+  const activeIntervalRef = useRef<number | null>(null);
+  
   // Enhanced body overflow control with cleanup and navbar hiding
   useEffect(() => {
     // Log when component mounts/unmounts for debugging
     console.log('FullScreenLoading component mounted', { isErrorState });
+    isMounted.current = true;
     
     // Only modify the DOM if this component is actually mounted
     const loadingElement = document.getElementById('fullscreen-loading-overlay');
@@ -37,11 +42,13 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     }
     
     // Force position fixed to prevent scrolling while loading
-    document.body.classList.add('overflow-hidden');
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.top = '0';
-    document.body.style.left = '0';
+    if (document.body) {
+      document.body.classList.add('overflow-hidden');
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+    }
     
     // Add a loading-trigger marker to help with cleanup detection
     const loadingTrigger = document.createElement('div');
@@ -49,16 +56,15 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     loadingTrigger.classList.add('loading-trigger');
     loadingTrigger.classList.add('loading-overlay-active');
     loadingTrigger.style.display = 'none';
-    document.body.appendChild(loadingTrigger);
+    document.body?.appendChild(loadingTrigger);
     
     // Hide all navbars during loading
     const navbars = document.querySelectorAll('nav, header');
     navbars.forEach(navbar => {
-      if (navbar) {
-        const navbarElement = navbar as HTMLElement;
-        navbarElement.style.visibility = 'hidden';
-        navbarElement.setAttribute('aria-hidden', 'true');
-        navbarElement.dataset.hiddenByLoading = 'true';
+      if (navbar instanceof HTMLElement) {
+        navbar.style.visibility = 'hidden';
+        navbar.setAttribute('aria-hidden', 'true');
+        navbar.dataset.hiddenByLoading = 'true';
       }
     });
     
@@ -66,29 +72,45 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     ensureRecipeLoadingActive();
     
     // Keep checking that the loading overlay remains active
-    const ensureActiveInterval = setInterval(ensureRecipeLoadingActive, 1000);
+    if (activeIntervalRef.current) {
+      window.clearInterval(activeIntervalRef.current);
+    }
+    
+    activeIntervalRef.current = window.setInterval(() => {
+      if (isMounted.current) {
+        ensureRecipeLoadingActive();
+      }
+    }, 1000);
     
     return () => {
       // Ensure we clean up properly on unmount
       console.log('FullScreenLoading component unmounted - cleaning up DOM modifications');
-      document.body.classList.remove('overflow-hidden');
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
+      isMounted.current = false;
+      
+      // Clear the interval
+      if (activeIntervalRef.current !== null) {
+        window.clearInterval(activeIntervalRef.current);
+        activeIntervalRef.current = null;
+      }
+      
+      // Restore body state
+      if (document.body) {
+        document.body.classList.remove('overflow-hidden');
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+      }
       
       // Show all navbars again
       const hiddenNavbars = document.querySelectorAll('[data-hidden-by-loading="true"]');
       hiddenNavbars.forEach(navbar => {
-        if (navbar) {
-          const navbarElement = navbar as HTMLElement;
-          navbarElement.style.visibility = '';
-          navbarElement.removeAttribute('aria-hidden');
-          navbarElement.removeAttribute('data-hidden-by-loading');
+        if (navbar instanceof HTMLElement) {
+          navbar.style.visibility = '';
+          navbar.removeAttribute('aria-hidden');
+          navbar.removeAttribute('data-hidden-by-loading');
         }
       });
-      
-      clearInterval(ensureActiveInterval);
       
       // Remove any loading triggers we created
       const loadingTrigger = document.getElementById('loading-trigger-marker');

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatMutations } from './use-chat-mutations';
 import type { Recipe } from '@/types/recipe';
@@ -16,53 +16,110 @@ export const useChatActions = (
   const { toast } = useToast();
   const mutation = useChatMutations(recipe);
 
-  const uploadRecipeImage = async (file: File) => {
+  /**
+   * Generate a tracking ID with timestamp and source information
+   */
+  const generateTrackingId = useCallback((prefix: string): string => {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  }, []);
+
+  /**
+   * Upload and process a recipe image
+   */
+  const uploadRecipeImage = useCallback(async (file: File) => {
     try {
       console.log("Processing image upload");
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Selected file is not an image');
+      }
+      
       const reader = new FileReader();
+      
       reader.onload = async (e) => {
         const base64Image = e.target?.result as string;
         
         // Create a unique message ID to help with tracking and cleanup
-        const messageId = `image-${Date.now()}`;
+        const messageId = generateTrackingId('image');
         
         // Add optimistic message
         const optimisticMessage: OptimisticMessage = {
           user_message: "Analyzing recipe image...",
           pending: true,
-          id: messageId // Add unique ID to help with cleanup
+          id: messageId,
+          meta: {
+            optimistic_id: messageId,
+            tracking_id: messageId,
+            processing_stage: 'pending',
+            source_info: {
+              type: 'image'
+            }
+          }
         };
+        
         addOptimisticMessage(optimisticMessage);
         
         mutation.mutate({
           message: "Please analyze this recipe image",
           sourceType: 'image',
           sourceImage: base64Image,
-          messageId // Pass message ID to the mutation
+          messageId
         });
       };
+      
+      reader.onerror = () => {
+        toast({
+          title: "Error",
+          description: "Failed to read image file",
+          variant: "destructive",
+        });
+      };
+      
       reader.readAsDataURL(file);
     } catch (error) {
       console.error("Image upload error:", error);
       toast({
         title: "Error",
-        description: "Failed to process image",
+        description: error instanceof Error ? error.message : "Failed to process image",
         variant: "destructive",
       });
     }
-  };
+  }, [toast, mutation, addOptimisticMessage, generateTrackingId]);
 
-  const submitRecipeUrl = (url: string) => {
+  /**
+   * Submit a recipe URL for analysis
+   */
+  const submitRecipeUrl = useCallback((url: string) => {
     console.log("Processing URL submission:", url);
     
+    // Basic URL validation
+    if (!url.match(/^https?:\/\/.+\..+/)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid URL starting with http:// or https://",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Create a unique message ID
-    const messageId = `url-${Date.now()}`;
+    const messageId = generateTrackingId('url');
     
     // Add optimistic message
     const optimisticMessage: OptimisticMessage = {
       user_message: `Analyzing recipe from: ${url}`,
       pending: true,
-      id: messageId
+      id: messageId,
+      meta: {
+        optimistic_id: messageId,
+        tracking_id: messageId,
+        processing_stage: 'pending',
+        source_info: {
+          type: 'url',
+          url: url
+        }
+      }
     };
     addOptimisticMessage(optimisticMessage);
     
@@ -72,10 +129,14 @@ export const useChatActions = (
       sourceUrl: url,
       messageId
     });
-  };
+  }, [toast, mutation, addOptimisticMessage, generateTrackingId]);
 
-  const sendMessage = () => {
-    if (!message.trim()) {
+  /**
+   * Send a chat message
+   */
+  const sendMessage = useCallback(() => {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
       toast({
         title: "Error",
         description: "Please enter a message",
@@ -85,25 +146,39 @@ export const useChatActions = (
     }
     
     // Create a unique ID for tracking
-    const messageId = `msg-${Date.now()}`;
+    const messageId = generateTrackingId('msg');
     
     // Create optimistic message with unique ID
     const optimisticMessage: OptimisticMessage = {
-      user_message: message,
+      user_message: trimmedMessage,
       pending: true,
-      id: messageId
+      id: messageId,
+      meta: {
+        optimistic_id: messageId,
+        tracking_id: messageId,
+        processing_stage: 'pending',
+        source_info: {
+          type: 'manual'
+        }
+      }
     };
     
     // Add to optimistic messages queue
     addOptimisticMessage(optimisticMessage);
     
-    console.log("Sending chat message:", message.substring(0, 30) + (message.length > 30 ? '...' : ''));
+    console.log("Sending chat message:", 
+      trimmedMessage.length > 30 
+        ? `${trimmedMessage.substring(0, 30)}...` 
+        : trimmedMessage
+    );
+    
     mutation.mutate({ 
-      message,
+      message: trimmedMessage,
       messageId
     });
+    
     setMessage(''); // Clear the input after sending
-  };
+  }, [message, toast, mutation, addOptimisticMessage, generateTrackingId]);
 
   return {
     message,

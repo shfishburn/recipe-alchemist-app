@@ -10,21 +10,29 @@ export function forceCleanupUI() {
   console.log("Forcing cleanup of UI elements");
   
   try {
-    // Remove any loading classes from body
-    document.body.classList.remove('overflow-hidden');
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
+    // Create a safety wrapper for DOM operations
+    const safelyRemoveClass = (element: HTMLElement, className: string) => {
+      if (element && element.classList && element.classList.contains(className)) {
+        element.classList.remove(className);
+      }
+    };
+
+    // Remove any loading classes from body with safety checks
+    if (document.body) {
+      safelyRemoveClass(document.body, 'overflow-hidden');
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+    }
     
-    // Show all hidden navbars
+    // Show all hidden navbars with safety checks
     const hiddenNavbars = document.querySelectorAll('[data-hidden-by-loading="true"]');
     hiddenNavbars.forEach(navbar => {
-      if (navbar) {
-        const navbarElement = navbar as HTMLElement;
-        navbarElement.style.visibility = '';
-        navbarElement.removeAttribute('aria-hidden');
-        navbarElement.removeAttribute('data-hidden-by-loading');
+      if (navbar && navbar instanceof HTMLElement) {
+        navbar.style.visibility = '';
+        navbar.removeAttribute('aria-hidden');
+        navbar.removeAttribute('data-hidden-by-loading');
       }
     });
     
@@ -32,8 +40,10 @@ export function forceCleanupUI() {
     const loadingOverlays = document.querySelectorAll('.loading-overlay');
     loadingOverlays.forEach(overlay => {
       // Check if it's not currently in use
-      if (!overlay.classList.contains('active-loading-current')) {
-        console.log("Removing stale loading overlay", overlay);
+      if (overlay && 
+          overlay instanceof HTMLElement && 
+          !overlay.classList.contains('active-loading-current')) {
+        console.log("Removing stale loading overlay");
         if (overlay.parentNode) {
           overlay.parentNode.removeChild(overlay);
         }
@@ -43,7 +53,7 @@ export function forceCleanupUI() {
     // Remove any loading triggers
     const loadingTriggers = document.querySelectorAll('.loading-trigger');
     loadingTriggers.forEach(el => {
-      if (el.parentNode) {
+      if (el && el instanceof HTMLElement && el.parentNode) {
         el.parentNode.removeChild(el);
       }
     });
@@ -62,7 +72,7 @@ export const cleanupUIState = forceCleanupUI;
  */
 export function ensureRecipeLoadingActive() {
   const loadingOverlay = document.getElementById('fullscreen-loading-overlay');
-  if (loadingOverlay) {
+  if (loadingOverlay && loadingOverlay instanceof HTMLElement) {
     // Add a class to mark this as the currently active loading overlay
     loadingOverlay.classList.add('active-loading-current');
   }
@@ -72,7 +82,8 @@ export function ensureRecipeLoadingActive() {
  * Check if any loading UI is currently active
  */
 export function isLoadingActive(): boolean {
-  const hasLoadingClass = document.body.classList.contains('overflow-hidden');
+  // Use optional chaining for safer DOM access
+  const hasLoadingClass = document.body?.classList.contains('overflow-hidden') || false;
   const hasLoadingOverlay = !!document.querySelector('.loading-overlay.active-loading');
   const hasLoadingTrigger = !!document.querySelector('.loading-trigger.loading-overlay-active');
   
@@ -108,11 +119,15 @@ export function setupRouteChangeCleanup(): () => void {
     setTimeout(checkAndCleanupLoadingUI, 100);
   };
   
-  // Listen for browser navigation events
-  window.addEventListener('popstate', handlePopState);
+  // Listen for browser navigation events with safety check
+  if (typeof window !== 'undefined') {
+    window.addEventListener('popstate', handlePopState);
+    
+    // Return function to remove event listeners
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }
   
-  // Return function to remove event listeners
-  return () => {
-    window.removeEventListener('popstate', handlePopState);
-  };
+  return () => {}; // Empty cleanup function if window is not available
 }

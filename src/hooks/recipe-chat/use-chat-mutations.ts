@@ -5,10 +5,16 @@ import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
+/**
+ * Custom hook for handling chat message mutations
+ */
 export const useChatMutations = (recipe: Recipe) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  /**
+   * Mutation hook for sending chat messages and handling responses
+   */
   const mutation = useMutation({
     mutationFn: async ({ 
       message, 
@@ -35,7 +41,7 @@ export const useChatMutations = (recipe: Recipe) => {
         throw new Error("Invalid recipe data: missing recipe ID");
       }
       
-      // Enhanced error recovery - start with reduced toast time
+      // Show toast notification for request processing
       const toastId = toast({
         title: "Processing your request",
         description: sourceType === 'manual' 
@@ -44,12 +50,13 @@ export const useChatMutations = (recipe: Recipe) => {
         duration: 5000, // Shorter duration for better UX
       });
       
-      console.log("Invoking recipe-chat edge function");
-      
       try {
         // Implement enhanced request timeout handling with retry logic
         const makeRequest = async (retryCount = 0): Promise<any> => {
           try {
+            // Set progressively longer timeouts for retries
+            const timeout = 60000 + (retryCount * 15000); // 60s, 75s, 90s, 105s
+            
             const response = await Promise.race([
               supabase.functions.invoke('recipe-chat', {
                 body: { 
@@ -63,7 +70,7 @@ export const useChatMutations = (recipe: Recipe) => {
                 }
               }),
               new Promise((_, reject) => 
-                setTimeout(() => reject(new Error("Request timed out")), 60000) // Increased from 40s to 60s
+                setTimeout(() => reject(new Error("Request timed out after " + timeout + "ms")), timeout)
               )
             ]) as { data?: any, error?: any };
             
@@ -74,14 +81,25 @@ export const useChatMutations = (recipe: Recipe) => {
             return response;
           } catch (error: any) {
             // Implement retry for certain errors with exponential backoff
-            if (retryCount < 3 && 
-               (error.message?.includes("timeout") || 
-                error.message?.includes("network") || 
-                error.status === 503 || 
-                error.status === 504)) {
+            const isRetriableError = 
+              error.message?.includes("timeout") || 
+              error.message?.includes("network") || 
+              error.status === 503 || 
+              error.status === 504;
+              
+            if (retryCount < 3 && isRetriableError) {
               console.log(`Retrying request (attempt ${retryCount + 1})...`);
+              // Update toast to show retry attempt
+              toast({
+                id: toastId,
+                title: "Still processing",
+                description: `Retry attempt ${retryCount + 1}...`,
+                duration: 3000,
+              });
               // Add exponential backoff
-              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+              await new Promise(resolve => 
+                setTimeout(resolve, 1000 * Math.pow(2, retryCount))
+              );
               return makeRequest(retryCount + 1);
             }
             throw error;
@@ -102,9 +120,11 @@ export const useChatMutations = (recipe: Recipe) => {
         }
 
         // Extract and validate the AI response content
-        const aiResponse = response.data.textResponse || response.data.text || JSON.stringify({
-          textResponse: "I couldn't generate a proper analysis for this recipe. Please try again."
-        });
+        const aiResponse = response.data.textResponse || 
+                          response.data.text || 
+                          JSON.stringify({
+                            textResponse: "I couldn't generate a proper analysis for this recipe. Please try again."
+                          });
         
         if (!aiResponse) {
           console.error("No valid response content found in:", response.data);
@@ -153,6 +173,12 @@ export const useChatMutations = (recipe: Recipe) => {
       } catch (err: any) {
         console.error("Recipe chat error:", err);
         throw err;
+      } finally {
+        // Clear the processing toast regardless of outcome
+        toast({
+          id: toastId,
+          duration: 0, // Immediately remove the processing toast
+        });
       }
     },
     onSuccess: (result) => {
@@ -161,21 +187,38 @@ export const useChatMutations = (recipe: Recipe) => {
       toast({
         title: "Response received",
         description: "Culinary analysis complete",
+        duration: 3000,
       });
     },
     onError: (error: any, variables) => {
       console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
       
       // Enhanced error handling with better UX
-      const errorMessage = error.message || "Failed to get AI response";
+      let errorMessage = "Failed to get AI response";
+      
+      // Extract the most meaningful error message
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error?.message) {
+        errorMessage = error.error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // Truncate very long error messages
+      const displayMessage = errorMessage.length > 100 
+        ? `${errorMessage.substring(0, 100)}...` 
+        : errorMessage;
+      
       toast({
         title: "Error",
-        description: errorMessage.length > 100 ? `${errorMessage.substring(0, 100)}...` : errorMessage,
+        description: displayMessage,
         variant: "destructive",
         duration: 8000, // Give users more time to read error messages
       });
       
       // Even though there was an error, invalidate the query to refresh the chat history
+      // This ensures any partial data is correctly displayed
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
     },
   });

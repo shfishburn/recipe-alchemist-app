@@ -3,6 +3,7 @@ import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
+import { getChatMeta } from '@/utils/chat-meta';
 
 interface ChatMessageProps {
   chat: ChatMessageType;
@@ -21,8 +22,12 @@ export function ChatMessage({
   isOptimistic = false,
   applied = false
 }: ChatMessageProps) {
-  // Only render optimistic message if it has no AI response yet
-  if (chat.meta?.optimistic_id && !chat.ai_response) {
+  // Check if this is an optimistic message without an AI response yet
+  const isOptimisticUserMessage = isOptimistic || 
+    (!!getChatMeta(chat, 'optimistic_id', '') && !chat.ai_response);
+  
+  // For optimistic user messages, only show the user message
+  if (isOptimisticUserMessage) {
     return (
       <UserMessage message={chat.user_message} isOptimistic={true} />
     );
