@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
@@ -217,7 +216,7 @@ export function QuickRecipeModifier({ recipe, onModifiedRecipe }: QuickRecipeMod
                 </ul>
               </div>
               
-              {/* Action buttons - Fix type comparison errors by using string equality */}
+              {/* Action buttons - Fixed type comparison errors by using state comparison instead of string literals */}
               <div className="mt-3 flex gap-2 justify-end">
                 <Button 
                   variant="outline" 

@@ -1,31 +1,28 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 
 /**
- * Custom hook to handle keyboard key press events
- * 
- * @param key The key to listen for (e.g., 'Escape', 'Enter')
- * @param callback The function to call when the key is pressed
- * @param active Whether the listener is active (default: true)
+ * Hook that triggers a callback when a specific key is pressed
+ * @param targetKey - Key to listen for (e.g., 'Escape', 'Enter')
+ * @param callback - Function to call when key is pressed
  */
-export const useKeyPress = (
-  key: string, 
-  callback: () => void, 
-  active: boolean = true
-) => {
-  useEffect(() => {
-    if (!active) return;
-    
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === key) {
+export function useKeyPress(targetKey: string, callback: () => void) {
+  const handleKeyPress = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === targetKey) {
         callback();
       }
-    };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    
+    },
+    [targetKey, callback]
+  );
+
+  useEffect(() => {
+    // Add event listener
+    window.addEventListener('keydown', handleKeyPress);
+
+    // Clean up
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [key, callback, active]);
-};
+  }, [handleKeyPress]);
+}
