@@ -1,8 +1,8 @@
+
 // path: src/components/quick-recipe/QuickRecipeFormContainer.tsx
 // file: QuickRecipeFormContainer.tsx
-// updated: 2025-05-09 14:02 PM
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import QuickRecipeTagForm from './QuickRecipeTagForm';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
@@ -31,11 +31,9 @@ export function QuickRecipeFormContainer() {
     setSelectedServings(servings);
   };
   const handleCuisineChange = (cuisine: string) => {
-    console.log('Cuisine selected:', cuisine);
     setSelectedCuisine(cuisine);
   };
   const handleDietaryChange = (dietary: string) => {
-    console.log('Dietary selected:', dietary);
     setSelectedDietary(dietary);
   };
 
@@ -45,14 +43,10 @@ export function QuickRecipeFormContainer() {
       title: 'Recipe generation cancelled',
       description: "You can try again with different ingredients.",
     });
-    if (window.location.pathname === '/') {
-      window.location.reload();
-    }
   };
 
   // Create an adapter function to handle form submission
   const handleFormSubmit = (formData: TagFormData) => {
-    console.log('Handling form submission:', formData);
     if (!formData.ingredients || !formData.ingredients.trim()) {
       toast({
         title: 'Missing ingredient',
@@ -61,21 +55,32 @@ export function QuickRecipeFormContainer() {
       });
       return;
     }
-    console.log('Original form values:', {
-      ingredients: formData.ingredients,
-      servings: formData.servings,
-      cuisine: formData.cuisine,
-      dietary: formData.dietary,
-    });
+    
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(),
       cuisine: formData.cuisine === 'any' ? 'any' : formData.cuisine,
       dietary: formData.dietary === 'any' ? '' : formData.dietary,
       servings: Number(formData.servings) || 2,
     };
-    console.log('Adapted form data for API:', adaptedFormData);
+    
     handleSubmit(adaptedFormData);
   };
+  
+  // Add touch-device detection for mobile responsiveness
+  useEffect(() => {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) {
+      document.body.classList.add('touch-device');
+    }
+    
+    return () => {
+      // Clean up any stuck loading state on unmount
+      if (isLoading) {
+        document.body.classList.remove('overflow-hidden');
+        document.documentElement.classList.remove('overflow-hidden');
+      }
+    };
+  }, [isLoading]);
 
   return (
     <div className="relative overflow-hidden">

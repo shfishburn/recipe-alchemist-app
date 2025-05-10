@@ -8,7 +8,7 @@ interface LoadingAnimationProps {
 
 export function LoadingAnimation({ showFinalAnimation }: LoadingAnimationProps) {
   return (
-    <div className="relative">
+    <div className="relative hw-accelerated">
       {showFinalAnimation ? (
         <div className="flex items-center justify-center">
           <CircleCheck className="h-10 w-10 sm:h-12 sm:w-12 text-recipe-green animate-scale-in" />
@@ -18,20 +18,17 @@ export function LoadingAnimation({ showFinalAnimation }: LoadingAnimationProps) 
         <div className="relative flex items-center justify-center">
           <div className="loading-pot-container relative">
             <CookingPot className="h-12 w-12 sm:h-16 sm:w-16 text-recipe-green animate-cooking-pot" />
-            <div className="absolute top-0 -right-1 h-3 w-3 bg-recipe-orange rounded-full animate-ping" />
+            <div className="absolute top-0 -right-1 h-3 w-3 bg-recipe-orange rounded-full animate-pulse" />
             
             {/* Utensils - mobile responsive */}
             <Utensils className="absolute -bottom-1 -right-3 h-6 w-6 sm:h-8 sm:w-8 text-gray-600 rotate-45 opacity-70" />
             
-            {/* Steam effects with improved visibility and responsive sizing */}
+            {/* Steam effects - simplified for mobile, optimized performance */}
             <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0s" }}></div>
             <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0.6s", left: "15px" }}></div>
-            <div className="steam animate-steam bg-white/80" style={{ animationDelay: "1.2s", left: "10px" }}></div>
-            <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0.9s", left: "20px" }}></div>
             
-            {/* Animated bubbles inside the pot - mobile responsive */}
+            {/* Animated bubbles - reduced for mobile performance */}
             <div className="absolute top-1/2 left-1/4 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 rounded-full animate-bubble" style={{ animationDelay: "0.2s" }}></div>
-            <div className="absolute top-1/2 left-1/2 w-1 sm:w-1.5 h-1 sm:h-1.5 bg-white/50 rounded-full animate-bubble" style={{ animationDelay: "0.7s" }}></div>
           </div>
         </div>
       )}

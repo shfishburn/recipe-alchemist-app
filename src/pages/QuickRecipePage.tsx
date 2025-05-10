@@ -10,6 +10,7 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
+import { cleanupUIState } from '@/utils/dom-cleanup';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -26,23 +27,31 @@ const QuickRecipePage: React.FC = () => {
     debugMode,
   } = useQuickRecipePage();
 
-  // Force show loading indicator for navigation
+  // Clean up UI state when component mounts and unmounts
   useEffect(() => {
-    const loadingTrigger = document.createElement('div');
-    loadingTrigger.className = 'loading-trigger';
-    document.body.appendChild(loadingTrigger);
+    // Ensure proper cleanup of all UI states
+    cleanupUIState();
+    
     return () => {
       document.body.classList.remove('overflow-hidden');
-      if (loadingTrigger.parentNode) {
-        document.body.removeChild(loadingTrigger);
-      }
+      document.documentElement.classList.remove('overflow-hidden');
+      cleanupUIState();
     };
   }, []);
+
+  // Add specific class for mobile touch handling on loading
+  useEffect(() => {
+    if (isLoading || isRetrying) {
+      document.body.classList.add('touch-device');
+    } else {
+      document.body.classList.remove('touch-device');
+    }
+  }, [isLoading, isRetrying]);
 
   // Full-screen loading while generating or retrying
   if (isLoading || isRetrying) {
     return (
-      <PageContainer className="relative touch-action-auto overflow-hidden">
+      <PageContainer className="relative overflow-hidden">
         <LoadingIndicator />
         <FullScreenLoading
           onCancel={handleCancel}
