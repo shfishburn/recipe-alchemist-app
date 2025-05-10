@@ -4,15 +4,20 @@
  * This helps prevent issues with loading states, modals, etc.
  */
 export const cleanupUIState = () => {
+  console.log('Running UI state cleanup');
+  
   // Remove any stuck classes with safety checks
   if (document.body) {
     document.body.classList.remove('overflow-hidden');
     document.body.classList.remove('loading');
+    document.body.style.position = '';
+    document.body.style.width = '';
   }
   
   // Remove any loading triggers
   try {
     const loadingTriggers = document.querySelectorAll('.loading-trigger');
+    console.log(`Found ${loadingTriggers.length} loading triggers to clean up`);
     loadingTriggers.forEach(el => {
       if (el.parentNode) {
         el.parentNode.removeChild(el);
@@ -25,6 +30,7 @@ export const cleanupUIState = () => {
   // Remove any stuck overlay elements that might be blocking the UI
   try {
     const possibleOverlays = document.querySelectorAll('.loading-overlay');
+    console.log(`Found ${possibleOverlays.length} loading overlays to check`);
     possibleOverlays.forEach(overlay => {
       // Check if the overlay exists and might be "stuck"
       const computedStyle = window.getComputedStyle(overlay);

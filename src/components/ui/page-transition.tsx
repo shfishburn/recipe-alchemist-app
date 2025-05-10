@@ -14,6 +14,7 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
   
   // Memoize the location change handler
   const handleLocationChange = useCallback(() => {
+    // Don't transition if the page is the same (e.g. query param changes)
     if (location.pathname === displayLocation.pathname && 
         location.search === displayLocation.search) {
       return;
@@ -30,8 +31,14 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
         // Silent fail if sessionStorage is unavailable
       }
       
-      // Clean up UI elements before transition
-      cleanupUIState();
+      // Check if there's an active loading overlay - don't interfere with it
+      const hasLoadingOverlay = document.querySelector('.loading-overlay');
+      if (!hasLoadingOverlay) {
+        // Only clean up UI if there's no active loading overlay
+        cleanupUIState();
+      } else {
+        console.log('Page transition detected active loading overlay - skipping cleanup');
+      }
       
       // Start exit animation
       setTransitionStage("fadeOut");

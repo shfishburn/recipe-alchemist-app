@@ -9,6 +9,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { TopLoadingBar } from './loading/TopLoadingBar';
 import { LoadingAnimation } from './loading/LoadingAnimation';
 import { cn } from '@/lib/utils';
+import { forceCleanupUI } from '@/utils/dom-cleanup';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -27,9 +28,14 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   
   // Enhanced body overflow control with cleanup
   useEffect(() => {
+    // Log when component mounts/unmounts for debugging
+    console.log('FullScreenLoading component mounted', { isErrorState });
+    
     // Add overflow-hidden only if loading, not in error state
     if (!isErrorState) {
       document.body.classList.add('overflow-hidden');
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
       
       // Add a loading-trigger marker to help with cleanup detection
       const loadingTrigger = document.createElement('div');
@@ -40,7 +46,10 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     
     return () => {
       // Ensure we clean up properly on unmount
+      console.log('FullScreenLoading component unmounted');
       document.body.classList.remove('overflow-hidden');
+      document.body.style.position = '';
+      document.body.style.width = '';
       
       // Remove any loading triggers we created
       const loadingTriggers = document.querySelectorAll('.loading-trigger');
@@ -49,19 +58,40 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
           el.parentNode.removeChild(el);
         }
       });
+      
+      // Force cleanup UI as a safety measure
+      forceCleanupUI();
     };
   }, [isErrorState]);
+  
+  // Ensure the component is visible - debug info
+  console.log('Rendering FullScreenLoading', { 
+    loadingState, 
+    showTimeout, 
+    showFinalAnimation,
+    isErrorState 
+  });
   
   return (
     <div 
       className={cn(
         "loading-overlay fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999]",
         "animate-fadeIn touch-action-none hw-accelerated",
-        isErrorState ? "bg-gray-900/60" : "bg-white/80 backdrop-blur-md"
+        isErrorState ? "bg-gray-900/60" : "bg-white/90 backdrop-blur-md dark:bg-gray-900/90"
       )}
       aria-modal="true"
       role="dialog"
-      style={{ opacity: 1, visibility: 'visible' }}
+      style={{ 
+        opacity: 1, 
+        visibility: 'visible',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999,
+      }}
+      id="fullscreen-loading-overlay"
     >
       <TopLoadingBar showFinalAnimation={showFinalAnimation} />
       
@@ -113,8 +143,8 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
                   <div className="relative">
                     <ChefHat className="h-12 w-12 text-recipe-green animate-float" />
                     <div className="absolute -top-1 -right-1 h-3 w-3 bg-recipe-green rounded-full animate-pulse" />
-                    <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0.2s" }}></div>
-                    <div className="steam animate-steam bg-white/80" style={{ animationDelay: "0.8s", left: "12px" }}></div>
+                    <div className="steam animate-steam bg-white/80 dark:bg-gray-300/80" style={{ animationDelay: "0.2s" }}></div>
+                    <div className="steam animate-steam bg-white/80 dark:bg-gray-300/80" style={{ animationDelay: "0.8s", left: "12px" }}></div>
                   </div>
                 )}
               </div>
@@ -124,14 +154,14 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
               </h2>
               
               <p className="text-sm text-muted-foreground">
-                {showFinalAnimation ? "Your recipe has been created." : loadingState.stepDescription}
+                {showFinalAnimation ? "Your recipe has been created." : loadingState.stepDescription || "Processing your request..."}
               </p>
               
               {/* Enhanced progress indicator with gradient */}
               <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full"
-                  style={{ width: `${loadingState.percentComplete}%` }}
+                  style={{ width: `${loadingState.percentComplete || 10}%` }}
                 />
               </div>
               

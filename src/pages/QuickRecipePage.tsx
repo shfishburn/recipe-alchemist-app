@@ -28,10 +28,14 @@ const QuickRecipePage: React.FC = () => {
 
   // Force show loading indicator for navigation
   useEffect(() => {
+    console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
     const loadingTrigger = document.createElement('div');
     loadingTrigger.className = 'loading-trigger';
+    loadingTrigger.dataset.page = 'quick-recipe';
     document.body.appendChild(loadingTrigger);
+    
     return () => {
+      console.log('QuickRecipePage unmounted');
       document.body.classList.remove('overflow-hidden');
       if (loadingTrigger.parentNode) {
         document.body.removeChild(loadingTrigger);
@@ -39,8 +43,19 @@ const QuickRecipePage: React.FC = () => {
     };
   }, []);
 
+  // Log state changes to help with debugging
+  useEffect(() => {
+    console.log('QuickRecipePage state change', { 
+      isLoading, 
+      isRetrying, 
+      hasRecipe: !!recipe, 
+      hasError: !!error 
+    });
+  }, [isLoading, isRetrying, recipe, error]);
+
   // Full-screen loading while generating or retrying
   if (isLoading || isRetrying) {
+    console.log('Rendering loading state in QuickRecipePage', { isLoading, isRetrying });
     return (
       <PageContainer className="relative touch-action-auto overflow-hidden">
         <LoadingIndicator />
