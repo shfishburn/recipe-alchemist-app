@@ -4,7 +4,7 @@ import { AnalysisSection } from './AnalysisSection';
 import { StepReactionItem } from './StepReactionItem';
 import { ReactionsList } from './ReactionsList';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw, FlaskRound, Beaker, Wrench, Bug, Copy } from 'lucide-react';
+import { FlaskRound, Beaker, Wrench, Bug, Copy } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -230,7 +230,7 @@ export function AnalysisContent({
         </div>
       )}
       
-      {/* NEW - JSON Copy Button - More Prominent Placement */}
+      {/* JSON Copy Button - More Prominent Placement */}
       <div className="mt-6 p-3 border border-blue-200 rounded-md bg-blue-50 dark:border-blue-900 dark:bg-blue-900/30 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -248,19 +248,7 @@ export function AnalysisContent({
         </div>
       </div>
       
-      {/* Regenerate Button (at the bottom) */}
-      {onRegenerate && (
-        <div className="flex justify-center pt-4">
-          <Button 
-            variant="outline" 
-            onClick={onRegenerate}
-            className="flex items-center gap-1 text-sm"
-          >
-            <RefreshCcw className="h-3.5 w-3.5 mr-1" />
-            Regenerate Analysis
-          </Button>
-        </div>
-      )}
+      {/* Removed the Regenerate Button that was at the bottom */}
     </div>
   );
 }

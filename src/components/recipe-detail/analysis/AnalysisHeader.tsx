@@ -2,7 +2,6 @@
 import React from 'react';
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import { Beaker } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface AnalysisHeaderProps {
   title?: string;
@@ -28,16 +27,7 @@ export function AnalysisHeader({
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </div>
-      {!isAnalyzing && hasContent && onRegenerate && (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onRegenerate}
-          className="text-xs"
-        >
-          Regenerate
-        </Button>
-      )}
+      {/* Removed the Regenerate Button */}
     </div>
   );
 }
