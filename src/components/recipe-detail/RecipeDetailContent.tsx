@@ -29,7 +29,8 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   }
   
   const [localRecipe, setLocalRecipe] = useState<Recipe>(recipe);
-  const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id.split('-').pop() || id) ? id : '');
+  // Fix: Pass the complete recipe ID without splitting it
+  const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id) ? id : '');
   const { hasAnalysisData, scienceNotes, refetch: refetchScience } = useRecipeScience(recipe);
 
   // Add effect to sync recipe data
