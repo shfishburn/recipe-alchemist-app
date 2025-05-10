@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { TopLoadingBar } from './loading/TopLoadingBar';
 import { LoadingAnimation } from './loading/LoadingAnimation';
+import { cn } from '@/lib/utils';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -24,20 +25,43 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
   const isErrorState = !!error;
   const { showTimeout, showFinalAnimation } = useLoadingProgress();
   
-  // Clean up on mount/unmount
+  // Enhanced body overflow control with cleanup
   useEffect(() => {
-    // Add overflow-hidden only if loading
+    // Add overflow-hidden only if loading, not in error state
     if (!isErrorState) {
       document.body.classList.add('overflow-hidden');
+      
+      // Add a loading-trigger marker to help with cleanup detection
+      const loadingTrigger = document.createElement('div');
+      loadingTrigger.classList.add('loading-trigger');
+      loadingTrigger.style.display = 'none';
+      document.body.appendChild(loadingTrigger);
     }
     
     return () => {
+      // Ensure we clean up properly on unmount
       document.body.classList.remove('overflow-hidden');
+      
+      // Remove any loading triggers we created
+      const loadingTriggers = document.querySelectorAll('.loading-trigger');
+      loadingTriggers.forEach(el => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
     };
   }, [isErrorState]);
   
   return (
-    <div className="fixed inset-0 loading-overlay flex flex-col items-center justify-center p-4 z-[100] animate-fadeIn overflow-auto">
+    <div 
+      className={cn(
+        "loading-overlay fixed inset-0 flex flex-col items-center justify-center p-4 z-[9999]",
+        "animate-fadeIn touch-action-none hw-accelerated",
+        isErrorState ? "bg-gray-900/60" : "bg-white/5 backdrop-blur-md"
+      )}
+      aria-modal="true"
+      role="dialog"
+    >
       <TopLoadingBar showFinalAnimation={showFinalAnimation} />
       
       {/* Accessible title for screen readers */}

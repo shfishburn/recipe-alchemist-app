@@ -229,3 +229,73 @@
     filter: blur(3px);
   }
 }
+
+/* Loading overlay for full-screen loaders */
+.loading-overlay {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Prevent interactions */
+  touch-action: none;
+  pointer-events: auto;
+  /* Performance optimizations */
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+/* Dark mode support */
+.dark .loading-overlay {
+  background-color: rgba(17, 24, 39, 0.8);
+}
+
+/* Touch action none utility */
+.touch-action-none {
+  touch-action: none;
+  pointer-events: auto;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .loading-overlay {
+    /* Fix for iOS backdrop-filter */
+    background-color: rgba(255, 255, 255, 0.85);
+  }
+  
+  .dark .loading-overlay {
+    background-color: rgba(17, 24, 39, 0.9);
+  }
+}
+
+/* Loading animation container improvements */
+.loading-animation-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Overlay specific content styling */
+.loading-overlay-content {
+  max-width: 24rem;
+  width: 100%;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background-color: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.dark .loading-overlay-content {
+  background-color: #1f2937;
+  border-color: #374151;
+}

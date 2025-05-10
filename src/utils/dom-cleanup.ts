@@ -4,17 +4,23 @@
  * This helps prevent issues with loading states, modals, etc.
  */
 export const cleanupUIState = () => {
-  // Remove any stuck classes
-  document.body.classList.remove('overflow-hidden');
-  document.body.classList.remove('loading');
+  // Remove any stuck classes with safety checks
+  if (document.body) {
+    document.body.classList.remove('overflow-hidden');
+    document.body.classList.remove('loading');
+  }
   
   // Remove any loading triggers
-  const loadingTriggers = document.querySelectorAll('.loading-trigger');
-  loadingTriggers.forEach(el => {
-    if (el.parentNode) {
-      el.parentNode.removeChild(el);
-    }
-  });
+  try {
+    const loadingTriggers = document.querySelectorAll('.loading-trigger');
+    loadingTriggers.forEach(el => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+  } catch (e) {
+    console.error('Error cleaning up loading triggers:', e);
+  }
 };
 
 /**
@@ -22,23 +28,31 @@ export const cleanupUIState = () => {
  * Returns a cleanup function to disconnect the observer
  */
 export const setupRouteChangeCleanup = () => {
+  // Store initial hash for comparison
+  if (typeof window !== 'undefined') {
+    window.lastKnownHash = document.location.hash || '';
+  }
+  
   const observer = new MutationObserver((mutations) => {
+    // Don't process if document or location is undefined (SSR)
+    if (typeof document === 'undefined' || typeof document.location === 'undefined') return;
+    
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
         // Only run cleanup if we detect a route change
-        if (document.location.hash !== window.lastKnownHash) {
-          window.lastKnownHash = document.location.hash;
+        const currentHash = document.location.hash || '';
+        if (window.lastKnownHash !== currentHash) {
+          window.lastKnownHash = currentHash;
           cleanupUIState();
         }
       }
     }
   });
   
-  // Store initial hash
-  window.lastKnownHash = document.location.hash;
-  
-  // Observe body element for changes
-  observer.observe(document.body, { childList: true, subtree: true });
+  // Only observe if document is available
+  if (typeof document !== 'undefined' && document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
   
   return () => observer.disconnect();
 };

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Loader2, CookingPot, Utensils } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function RecipeDetailLoading() {
   return (
@@ -9,7 +10,11 @@ export function RecipeDetailLoading() {
         <div className="container-page py-4 sm:py-8">
           {/* Enhanced loading indicator - mobile responsive */}
           <div className="flex flex-col items-center justify-center my-6 sm:my-12 min-h-[250px] sm:min-h-[300px]">
-            <div className="relative bg-white/90 dark:bg-gray-800/90 p-4 sm:p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col items-center w-5/6 sm:w-auto max-w-sm sm:max-w-md">
+            <div className={cn(
+              "relative bg-white/90 dark:bg-gray-800/90 p-4 sm:p-8 rounded-xl shadow-lg",
+              "border border-gray-100 dark:border-gray-700 flex flex-col items-center",
+              "w-5/6 sm:w-auto max-w-sm sm:max-w-md hw-accelerated"
+            )}>
               <div className="relative mb-4 sm:mb-6">
                 <div className="loading-pot-container relative">
                   <CookingPot className="h-12 w-12 sm:h-16 sm:w-16 text-recipe-green animate-cooking-pot" />
