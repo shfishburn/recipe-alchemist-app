@@ -12,11 +12,11 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, User } from 'lucide-react';
+import { Menu, User, LogOut, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function MobileMenu() {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
   
   // Define navigation links without Profile since it's in the button
@@ -32,6 +32,14 @@ export function MobileMenu() {
     link => !link.requiresAuth || (link.requiresAuth && session)
   );
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger>
@@ -41,7 +49,7 @@ export function MobileMenu() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[85vw] max-w-[300px] sm:max-w-[320px]">
-        <SheetHeader>
+        <SheetHeader className="flex flex-row items-center justify-between">
           <SheetTitle>
             <Link to="/" className="flex items-center">
               <img 
@@ -51,6 +59,9 @@ export function MobileMenu() {
               />
             </Link>
           </SheetTitle>
+          <SheetClose className="rounded-full p-1">
+            <X className="h-5 w-5" />
+          </SheetClose>
         </SheetHeader>
         <nav className="mt-8">
           <ul className="flex flex-col gap-4">
@@ -71,14 +82,24 @@ export function MobileMenu() {
         <Separator className="my-6" />
         <div className="flex flex-col gap-3">
           {session ? (
-            <SheetClose asChild>
-              <Button variant="outline" asChild>
-                <Link to="/profile" className="w-full h-12 justify-start flex items-center">
-                  <User className="h-5 w-5 mr-3" />
-                  <span>Profile</span>
-                </Link>
+            <>
+              <SheetClose asChild>
+                <Button variant="outline" asChild>
+                  <Link to="/profile" className="w-full h-12 justify-start flex items-center">
+                    <User className="h-5 w-5 mr-3" />
+                    <span>Profile</span>
+                  </Link>
+                </Button>
+              </SheetClose>
+              <Button 
+                variant="outline" 
+                className="w-full h-12 justify-start"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                <span>Logout</span>
               </Button>
-            </SheetClose>
+            </>
           ) : (
             <>
               <Button variant="outline" className="w-full h-12" onClick={() => openAuthDrawer()}>
