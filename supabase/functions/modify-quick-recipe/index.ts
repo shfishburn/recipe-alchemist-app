@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
 import { StructuredOutputParser } from "https://esm.sh/langchain/output_parsers";
@@ -214,13 +215,16 @@ serve(async (req) => {
     // Execute with circuit breaker and retry mechanism
     let result;
     try {
+      console.log("Executing LLM call with circuit breaker and retry mechanism");
+      
       const runInvocation = () => runnable.invoke({
         input,
         history,
       });
 
+      // Wrap the LLM call with circuit breaker and retry
       result = await openAICircuitBreaker.execute(async () => {
-        return await withRetry(runInvocation);
+        return await withRetry(runInvocation, 3, 500);
       });
       
       console.log("Successfully generated recipe modifications");

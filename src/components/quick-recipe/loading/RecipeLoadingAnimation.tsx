@@ -1,10 +1,10 @@
 
 import React from 'react';
-import '@/styles/loading.css';
+import styles from '@/styles/loading.module.css';
 
 export function RecipeLoadingAnimation() {
   return (
-    <div className="animate-cooking-pot" aria-hidden="true">
+    <div className={styles.animateCookingPot} aria-hidden="true">
       <svg 
         width="96" 
         height="96" 
@@ -22,10 +22,10 @@ export function RecipeLoadingAnimation() {
         <path d="M54 54L42 66" stroke="white" strokeWidth="2" strokeLinecap="round" />
       </svg>
       
-      {/* Steam particles with CSS classes instead of inline styles */}
-      <div className="steam steam-1"></div>
-      <div className="steam steam-2"></div>
-      <div className="steam steam-3"></div>
+      {/* Steam particles with CSS module classes instead of inline styles */}
+      <div className={`${styles.steam} ${styles.steam1}`}></div>
+      <div className={`${styles.steam} ${styles.steam2}`}></div>
+      <div className={`${styles.steam} ${styles.steam3}`}></div>
     </div>
   );
 }

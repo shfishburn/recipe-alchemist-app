@@ -6,7 +6,7 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserMessage } from '@/hooks/use-user-message';
 import { RecipeLoadingAnimation } from './loading/RecipeLoadingAnimation';
-import '@/styles/loading.css'; // Explicitly import the CSS
+import styles from '@/styles/loading.module.css';
 
 // Import loading steps to use as fallback
 import { LOADING_STEPS } from '@/hooks/use-loading-progress';
@@ -43,7 +43,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         aria-valuenow={showFinalAnimation ? 100 : loadingState.percentComplete}
       >
         <div 
-          className="h-full bg-recipe-green transition-all duration-300 ease-out min-w-5"
+          className={`h-full bg-recipe-green transition-all duration-300 ease-out ${styles.minW5}`}
           style={{ 
             boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`,
             width: showFinalAnimation ? '100%' : `${loadingState.percentComplete || 5}%`
@@ -84,7 +84,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
           aria-hidden="true"
         >
           <div 
-            className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full animate-progress-pulse min-w-5"
+            className={`h-full bg-gradient-to-r from-recipe-green to-recipe-blue transition-all duration-300 ease-out rounded-full ${styles.animateProgressPulse} ${styles.minW5}`}
             style={{ width: `${loadingState.percentComplete || 5}%` }}
           />
         </div>

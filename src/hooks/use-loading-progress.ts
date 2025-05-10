@@ -45,7 +45,7 @@ export function useLoadingProgress() {
     }
   };
 
-  // Update progress every second - Fixed dependencies to avoid recreating timers on every update
+  // Update progress every 100ms - FIXED: Removed loadingState.percentComplete from dependencies to avoid recreating timers
   useEffect(() => {
     // Clear any existing timers first
     cleanupAllTimers();
