@@ -16,11 +16,11 @@ export const cleanupUIState = () => {
     document.body.classList.remove('loading');
   }
   
-  // Remove any loading triggers
+  // Remove any loading triggers that aren't active
   try {
-    const loadingTriggers = document.querySelectorAll('.loading-trigger');
-    console.log(`Found ${loadingTriggers.length} loading triggers to clean up`);
-    loadingTriggers.forEach(el => {
+    const inactiveLoadingTriggers = document.querySelectorAll('.loading-trigger:not(.loading-overlay-active)');
+    console.log(`Found ${inactiveLoadingTriggers.length} inactive loading triggers to clean up`);
+    inactiveLoadingTriggers.forEach(el => {
       if (el.parentNode) {
         el.parentNode.removeChild(el);
       }
@@ -35,8 +35,8 @@ export const cleanupUIState = () => {
     const possibleOverlays = document.querySelectorAll('.loading-overlay:not(.active-loading)');
     console.log(`Found ${possibleOverlays.length} inactive loading overlays to check`);
     possibleOverlays.forEach(overlay => {
-      // Check if the overlay exists and might be "stuck"
-      if (overlay.parentNode) {
+      // Double-check that the overlay isn't active before removing it
+      if (overlay.parentNode && !overlay.classList.contains('active-loading')) {
         const computedStyle = window.getComputedStyle(overlay);
         if (computedStyle.display !== 'none') {
           console.log('Removing potentially stuck overlay');
@@ -62,6 +62,21 @@ export const setupRouteChangeCleanup = () => {
   const observer = new MutationObserver((mutations) => {
     // Don't process if document or location is undefined (SSR)
     if (typeof document === 'undefined' || typeof document.location === 'undefined') return;
+    
+    let hasActiveLoading = false;
+    
+    // First check if there's any active loading overlay
+    try {
+      hasActiveLoading = !!document.querySelector('.active-loading');
+    } catch (e) {
+      console.error('Error checking for active loading:', e);
+    }
+    
+    // If there's active loading, don't process further
+    if (hasActiveLoading) {
+      console.log('Route change detected but active loading found - skipping cleanup');
+      return;
+    }
     
     for (const mutation of mutations) {
       if (mutation.type === 'childList') {
@@ -111,6 +126,18 @@ export const forceCleanupUI = () => {
   
   // Run standard cleanup
   cleanupUIState();
+};
+
+// Add a specific method to handle recipe loading cleanup
+export const ensureRecipeLoadingActive = () => {
+  // Find any recipe loading overlay
+  const recipeLoading = document.querySelector('.loading-overlay#fullscreen-loading-overlay');
+  
+  // If found, make sure it's marked as active
+  if (recipeLoading && !recipeLoading.classList.contains('active-loading')) {
+    console.log('Found recipe loading overlay but not marked as active - fixing');
+    recipeLoading.classList.add('active-loading');
+  }
 };
 
 // Declare global variable for TypeScript 

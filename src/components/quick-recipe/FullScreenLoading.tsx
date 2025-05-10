@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
@@ -7,7 +6,7 @@ import { TopLoadingBar } from './loading/TopLoadingBar';
 import { ErrorState } from './loading/ErrorState';
 import { LoadingContainer } from './loading/LoadingContainer';
 import { cn } from '@/lib/utils';
-import { forceCleanupUI } from '@/utils/dom-cleanup';
+import { forceCleanupUI, ensureRecipeLoadingActive } from '@/utils/dom-cleanup';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -45,6 +44,12 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       document.body.appendChild(loadingTrigger);
     }
     
+    // Make sure our loading is properly marked as active
+    ensureRecipeLoadingActive();
+    
+    // Keep checking that the loading overlay remains active
+    const ensureActiveInterval = setInterval(ensureRecipeLoadingActive, 1000);
+    
     return () => {
       // Ensure we clean up properly on unmount
       console.log('FullScreenLoading component unmounted');
@@ -53,6 +58,8 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       document.body.style.width = '';
       document.body.style.top = '';
       document.body.style.left = '';
+      
+      clearInterval(ensureActiveInterval);
       
       // Remove any loading triggers we created
       const loadingTriggers = document.querySelectorAll('.loading-trigger');

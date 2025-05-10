@@ -12,6 +12,7 @@ interface LoadingState {
   stepDescription: string;
   percentComplete: number;
   estimatedTimeRemaining: number;
+  isStalled?: boolean;
 }
 
 /**
@@ -22,6 +23,7 @@ const initialLoadingState: LoadingState = {
   stepDescription: "Analyzing your ingredients...",
   percentComplete: 0,
   estimatedTimeRemaining: 30,
+  isStalled: false
 };
 
 /**

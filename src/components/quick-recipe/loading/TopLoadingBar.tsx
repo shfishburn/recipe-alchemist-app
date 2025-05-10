@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import LoadingBar from 'react-top-loading-bar';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
@@ -18,6 +18,43 @@ export function TopLoadingBar({
   const { loadingState, completedLoading } = useQuickRecipeStore();
   const hasMountedRef = useRef(false);
   const progressSetRef = useRef(false);
+  const [isPulsing, setIsPulsing] = useState(false);
+  
+  // Detect stalled state to create pulsing effect
+  useEffect(() => {
+    if (loadingState.isStalled && !isPulsing) {
+      setIsPulsing(true);
+    } else if (!loadingState.isStalled && isPulsing) {
+      setIsPulsing(false);
+    }
+  }, [loadingState.isStalled, isPulsing]);
+
+  // Ensure we have a pulse effect during stalls
+  useEffect(() => {
+    let pulseTimer: NodeJS.Timeout | null = null;
+    
+    if (isPulsing && loadingRef.current) {
+      const pulsateProgress = () => {
+        try {
+          // If we're stalled, make the progress bar pulse between values
+          const currentProgress = loadingRef.current?.getProgress() || 0;
+          const targetProgress = Math.max(30, Math.min(80, currentProgress > 70 ? 65 : 75));
+          
+          if (typeof loadingRef.current?.setProgress === 'function') {
+            loadingRef.current.setProgress(targetProgress);
+          }
+        } catch (err) {
+          console.error("Error in pulsing loading bar:", err);
+        }
+      };
+      
+      pulseTimer = setInterval(pulsateProgress, 2000);
+    }
+    
+    return () => {
+      if (pulseTimer) clearInterval(pulseTimer);
+    };
+  }, [isPulsing]);
   
   // Start loading bar on component mount
   useEffect(() => {
@@ -31,7 +68,7 @@ export function TopLoadingBar({
         const timerId = setTimeout(() => {
           if (loadingRef.current) {
             try {
-              loadingRef.current.continuousStart(0, 1000);
+              loadingRef.current.continuousStart(10, 800);
             } catch (err) {
               console.error("Error starting continuous loading:", err);
             }
@@ -67,6 +104,9 @@ export function TopLoadingBar({
   
   // Update progress based on percentComplete when available
   useEffect(() => {
+    // Skip updates if we're in stalled/pulsing mode
+    if (isPulsing) return;
+    
     if (loadingState?.percentComplete > 0 && loadingRef.current && !completedLoading && !showFinalAnimation && hasMountedRef.current) {
       try {
         // Ensure progress is always moving forward
@@ -84,11 +124,11 @@ export function TopLoadingBar({
         console.error("Error updating loading progress:", err);
       }
     }
-  }, [loadingState.percentComplete, completedLoading, showFinalAnimation]);
+  }, [loadingState.percentComplete, completedLoading, showFinalAnimation, isPulsing]);
 
   return (
     <LoadingBar 
-      color={color} 
+      color={isPulsing ? "#FFA500" : color} 
       height={height} 
       ref={loadingRef} 
       shadow={true}

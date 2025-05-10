@@ -7,9 +7,10 @@ interface ErrorStateProps {
   error: string | null;
   onCancel?: () => void;
   onRetry?: () => void;
+  isRetrying?: boolean;
 }
 
-export function ErrorState({ error, onCancel, onRetry }: ErrorStateProps) {
+export function ErrorState({ error, onCancel, onRetry, isRetrying = false }: ErrorStateProps) {
   // Ensure we have a default error message if error is null or empty
   const errorMessage = error || "An unexpected error occurred while generating your recipe";
   
@@ -25,6 +26,7 @@ export function ErrorState({ error, onCancel, onRetry }: ErrorStateProps) {
             variant="outline" 
             onClick={onCancel}
             className="flex items-center gap-2"
+            disabled={isRetrying}
           >
             <ArrowLeft className="h-4 w-4" />
             Start Over
@@ -35,9 +37,10 @@ export function ErrorState({ error, onCancel, onRetry }: ErrorStateProps) {
           <Button 
             onClick={onRetry}
             className="flex items-center gap-2 bg-recipe-green hover:bg-recipe-green/90"
+            disabled={isRetrying}
           >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
+            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            {isRetrying ? 'Retrying...' : 'Try Again'}
           </Button>
         )}
       </div>

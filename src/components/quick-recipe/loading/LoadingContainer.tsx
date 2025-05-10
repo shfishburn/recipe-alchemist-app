@@ -9,6 +9,7 @@ interface LoadingContainerProps {
   loadingState: {
     percentComplete: number;
     stepDescription: string;
+    isStalled?: boolean;
   };
   showTimeout: boolean;
   showFinalAnimation: boolean;
@@ -25,7 +26,10 @@ export function LoadingContainer({
     <>
       {/* Main loading animation */}
       <div className="flex flex-col items-center space-y-6 mb-8 bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 w-full">
-        <RecipeLoadingAnimation showFinalAnimation={showFinalAnimation} />
+        <RecipeLoadingAnimation 
+          showFinalAnimation={showFinalAnimation}
+          isStalled={loadingState.isStalled} 
+        />
         <ProgressIndicator 
           loadingState={loadingState} 
           showTimeout={showTimeout} 
