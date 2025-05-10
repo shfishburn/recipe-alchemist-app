@@ -30,13 +30,13 @@ export function ServingsSelector({
         <SelectValue placeholder="Select number of servings" />
       </SelectTrigger>
       <SelectContent className="bg-white">
-        <SelectItem value="1">1 person</SelectItem>
-        <SelectItem value="2">2 people</SelectItem>
-        <SelectItem value="3">3 people</SelectItem>
-        <SelectItem value="4">4 people</SelectItem>
-        <SelectItem value="6">6 people</SelectItem>
-        <SelectItem value="8">8 people</SelectItem>
-        <SelectItem value="10">10+ people</SelectItem>
+        <SelectItem value="1" className="pl-8">1 person</SelectItem>
+        <SelectItem value="2" className="pl-8">2 people</SelectItem>
+        <SelectItem value="3" className="pl-8">3 people</SelectItem>
+        <SelectItem value="4" className="pl-8">4 people</SelectItem>
+        <SelectItem value="6" className="pl-8">6 people</SelectItem>
+        <SelectItem value="8" className="pl-8">8 people</SelectItem>
+        <SelectItem value="10" className="pl-8">10+ people</SelectItem>
       </SelectContent>
     </Select>
   );
