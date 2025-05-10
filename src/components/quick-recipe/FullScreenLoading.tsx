@@ -46,7 +46,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
         </h1>
       </VisuallyHidden>
       
-      <div className="w-full max-w-md mx-auto text-center py-12">
+      <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center text-center py-12">
         {isErrorState ? (
           <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 animate-scale-in">
             <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
@@ -110,7 +110,7 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
             </div>
             
             {/* Cooking tip card */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 mb-8 max-w-sm mx-auto w-full">
               <LoadingTipCard />
             </div>
             

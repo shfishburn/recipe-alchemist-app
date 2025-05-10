@@ -18,14 +18,14 @@ export function QuickRecipeLoading() {
   const userMessage = useUserMessage(formData?.mainIngredient);
   
   return (
-    <div className="flex flex-col items-center justify-center py-5 sm:py-8 w-full animate-fadeIn">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-[50vh] py-5 sm:py-8 animate-fadeIn">
       {/* Top loading bar that shows progress */}
       <TopLoadingBar 
         color="#4CAF50" 
         showFinalAnimation={showFinalAnimation} 
       />
       
-      <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-md mx-auto">
+      <div className="flex flex-col items-center space-y-4 sm:space-y-6 text-center w-full max-w-md mx-auto p-4">
         {/* Animated cooking pot icon or completion animation */}
         <LoadingAnimation showFinalAnimation={showFinalAnimation} />
         
