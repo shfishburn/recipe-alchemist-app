@@ -1,10 +1,11 @@
 
 /**
  * IngredientInput.tsx
- * Version: 1.0.3
+ * Version: 1.0.4
  * Date: 2025-05-10
  * Changes:
  * - Updated UI strings
+ * - Updated placeholder text
  */
 
 import React, { useRef, useEffect, useState } from 'react'
@@ -64,16 +65,15 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
     <div className="space-y-2 w-full max-w-full">
       <FeatureBadges />
 
-    <label
-  htmlFor="mainIngredient"
-  className={cn(
-    'block pb-1 text-left font-semibold text-recipe-blue whitespace-normal break-words',
-    isMobile ? 'text-base' : 'text-lg'
-  )}
->
-  What do you want to cook or what ingredients do you have in your kitchen?
-</label>
-
+      <label
+        htmlFor="mainIngredient"
+        className={cn(
+          'block pb-1 text-left font-semibold text-recipe-blue whitespace-normal break-words',
+          isMobile ? 'text-base' : 'text-lg'
+        )}
+      >
+        What do you want to cook or what ingredients do you have in your kitchen?
+      </label>
 
       <div
         className={cn(
