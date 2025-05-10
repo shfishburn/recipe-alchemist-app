@@ -1,121 +1,77 @@
 
-/* Touch-friendly optimizations for mobile devices */
+/* Touch optimizations for better mobile experience */
 
-.touch-device {
-  /* Increase tap target sizes for better mobile UX */
-  --tap-min-size: 44px;
-}
-
-/* Add extra padding to interactive elements on touch devices */
-.touch-device button:not(.icon-only),
-.touch-device a.button:not(.icon-only),
-.touch-device .interactive {
-  min-height: var(--tap-min-size);
-  padding: 0.5rem 0.75rem;
-}
-
-/* Icon-only buttons still need appropriate tap target size */
-.touch-device button.icon-only,
-.touch-device a.button.icon-only {
-  min-width: var(--tap-min-size);
-  min-height: var(--tap-min-size);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Form controls */
-.touch-device input:not([type="checkbox"]):not([type="radio"]),
-.touch-device select,
-.touch-device textarea {
-  min-height: var(--tap-min-size);
-  font-size: 16px; /* Prevents iOS zoom on focus */
-}
-
-/* Better scrolling for touch devices */
+/* Basic touch optimizations */
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
-  overflow-x: auto;
-  -ms-overflow-style: none; /* IE and Edge */
+  touch-action: pan-x pan-y;
   scrollbar-width: none; /* Firefox */
 }
 
-/* Hide scrollbars on touch scroll elements */
 .touch-scroll::-webkit-scrollbar {
-  display: none;
+  display: none; /* Chrome, Safari, Opera */
 }
 
-/* Touch-friendly tabs */
-.touch-friendly-tabs .tabs-list {
-  padding: 0.25rem;
+/* Better tap targets for touch devices */
+.touch-optimized button,
+.touch-optimized a,
+.touch-optimized [role="button"],
+.touch-optimized input[type="checkbox"],
+.touch-optimized input[type="radio"],
+.touch-optimized label {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-.touch-friendly-tabs .tab-trigger {
-  min-height: var(--tap-min-size);
-  min-width: var(--tap-min-size);
-  padding: 0.5rem;
+/* Touch indicator feedback */
+.touch-optimized .touch-feedback {
   position: relative;
-  white-space: nowrap;
+  overflow: hidden;
 }
 
-/* Ensure tab scrolling is smooth on mobile */
-.touch-optimized .tabs-list {
-  gap: 0.5rem;
-  padding-bottom: 0.5rem;
+.touch-optimized .touch-feedback::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: currentColor;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-/* Improve spacing for icons-only tabs on mobile */
-@media (max-width: 640px) {
-  .tab-trigger {
-    min-width: 42px;
-    padding: 0.5rem !important;
-    margin: 0 auto;
-    display: flex;
-    justify-content: center;
-  }
-  
-  .tab-icon-only {
-    padding: 0.5rem !important;
-  }
-  
-  .tab-icon-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-  }
+.touch-optimized .touch-feedback:active::after {
+  opacity: 0.1;
 }
 
-/* Additional utilities for mobile-friendly spacing */
-.mobile-spacing-y {
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
+/* Touch-friendly spacing for interactive elements */
+.touch-optimized .touch-friendly-spacing > * {
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
-.mobile-padding-x {
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* Better spacing for tabs on touch devices */
+.touch-optimized .touch-friendly-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Container optimization for mobile */
-.mobile-container {
-  width: 100%;
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* Add extra padding to touch elements */
+.touch-optimized .touch-target {
+  padding: 0.75rem;
+  min-height: 44px;
 }
 
-/* Flex container optimizations for touch */
-.touch-flex-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh;
-  width: 100%;
+/* Optimized list items for touch */
+.touch-optimized li.touch-item {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Utility class to detect completion of loading */
+.completed-loading {
+  /* This class will be used to indicate loading is complete */
 }

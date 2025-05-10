@@ -138,22 +138,6 @@
   animation-delay: 300ms;
 }
 
-/* Touch ripple effect */
-.touch-ripple::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-
-.touch-ripple:active::after {
-  opacity: 1;
-  transition: opacity 0s;
-}
-
 /* Loading pot container styling - mobile responsive */
 .loading-pot-container {
   display: flex;
@@ -223,21 +207,6 @@
   transform-origin: left;
   box-shadow: 0 0 6px var(--recipe-blue, #4CAF50);
   display: block;
-}
-
-/* Loading background overlay - mobile responsive */
-.loading-overlay {
-  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,255,240,0.95) 100%);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 50;
-}
-
-@media (min-width: 640px) {
-  .loading-overlay {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
 }
 
 /* Fix for the steam visuals - mobile responsive */

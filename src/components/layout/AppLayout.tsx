@@ -10,35 +10,7 @@ import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
-
-// Simple utility to clean up UI state on route changes
-const cleanupUIState = () => {
-  // Remove any stuck loading classes
-  document.body.classList.remove('overflow-hidden');
-  
-  // Remove any loading triggers
-  const loadingTriggers = document.querySelectorAll('.loading-trigger');
-  loadingTriggers.forEach(el => {
-    if (el.parentNode) {
-      el.parentNode.removeChild(el);
-    }
-  });
-};
-
-// Set up route change cleanup
-const setupRouteChangeCleanup = () => {
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type === 'childList') {
-        cleanupUIState();
-      }
-    }
-  });
-  
-  observer.observe(document.body, { childList: true, subtree: true });
-  
-  return () => observer.disconnect();
-};
+import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
@@ -50,10 +22,10 @@ export const AppLayout = () => {
     cleanupUIState();
     
     // Set up cleanup for future route changes
-    const cleanupListener = setupRouteChangeCleanup();
+    const cleanup = setupRouteChangeCleanup();
     
     return () => {
-      cleanupListener();
+      cleanup();
       cleanupUIState();
     };
   }, []);

@@ -1,12 +1,10 @@
 
 import React from 'react';
-import Navbar from '@/components/ui/navbar';
-import { Loader2, ChefHat, CookingPot, Utensils } from 'lucide-react';
+import { Loader2, CookingPot, Utensils } from 'lucide-react';
 
 export function RecipeDetailLoading() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950">
-      <Navbar />
       <main className="flex-1">
         <div className="container-page py-4 sm:py-8">
           {/* Enhanced loading indicator - mobile responsive */}
