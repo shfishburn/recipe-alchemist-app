@@ -1,73 +1,70 @@
 
-
-/* Touch-optimized elements */
-.touch-optimized {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+/* Basic touch optimizations */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
-/* Hardware acceleration for better performance */
-.hw-boost {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000;
+/* Better tap targets for touch devices */
+.touch-device button,
+.touch-device a,
+.touch-device [role="button"],
+.touch-device input,
+.touch-device label {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-/* Toast-specific optimizations */
-.toast-action {
-  @apply rounded-md px-3 py-2 text-sm font-medium transition-colors;
+/* Touch indicator feedback */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
 }
 
-.toast-action:focus {
-  @apply outline-none ring-2 ring-offset-2 ring-offset-background;
+.touch-feedback::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: currentColor;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-.toast-enter {
-  animation: toast-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+.touch-device .touch-feedback:active::after {
+  opacity: 0.1;
 }
 
-.toast-leave {
-  animation: toast-leave 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+/* Touch-specific carousel optimizations */
+.touch-device .carousel-scroll-area {
+  scroll-snap-type: x mandatory;
+  -webkit-scroll-snap-type: x mandatory;
+  -ms-scroll-snap-type: x mandatory;
 }
 
-/* Add a gentle haptic feedback style for interactive toast elements */
-@media (hover: hover) {
-  .toast-action:hover {
-    @apply bg-secondary text-secondary-foreground;
+.touch-device .carousel-item {
+  scroll-snap-align: center;
+  -webkit-scroll-snap-align: center;
+}
+
+/* Touch-friendly tabs */
+.touch-device .touch-friendly-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Adjusted padding for touch targets */
+.touch-device .tab-trigger {
+  min-height: 44px;
+}
+
+/* Enhanced scroll physics */
+@supports (-webkit-overflow-scrolling: touch) {
+  .enhanced-scroll {
+    -webkit-overflow-scrolling: touch;
   }
 }
-
-/* Auth UI specific touch optimizations */
-.auth-button {
-  min-height: 44px;
-  touch-action: manipulation;
-}
-
-/* Ensure auth drawer buttons are touch-friendly */
-.auth-drawer button {
-  min-height: 44px;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  touch-action: manipulation;
-}
-
-/* Ensure touch events propagate correctly in dialogs */
-[role="dialog"] {
-  touch-action: none;
-}
-
-[role="dialog"] .content {
-  touch-action: auto;
-}
-
-/* Fix iOS touch issues */
-button, 
-[role="button"],
-a.button,
-input[type="button"], 
-input[type="submit"],
-input[type="reset"] {
-  cursor: pointer;
-  -webkit-touch-callout: none;
-}
-

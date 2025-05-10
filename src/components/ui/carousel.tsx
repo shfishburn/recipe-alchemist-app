@@ -72,6 +72,18 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       scrollToItem(newIndex);
     };
 
+    // Calculate carousel padding to allow space on sides for center alignment
+    const sideSpacerStyle = React.useMemo(() => {
+      // Add a transparent pseudo-item at the beginning and end to allow center alignment
+      const width = isMobile ? itemWidthMobile : itemWidthDesktop;
+      // Convert percentage string to number (remove the %)
+      const widthNum = parseFloat(width);
+      
+      // Calculate remaining space as percentage
+      const spacerWidth = `${(100 - widthNum) / 2}%`;
+      return { width: spacerWidth, minWidth: spacerWidth };
+    }, [isMobile, itemWidthMobile, itemWidthDesktop]);
+
     return (
       <div 
         ref={ref}
@@ -98,10 +110,17 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
             aria-live="polite"
             aria-roledescription="carousel"
           >
+            {/* Start spacer for center alignment */}
+            <div className="carousel-spacer flex-shrink-0" style={sideSpacerStyle} aria-hidden="true" />
+            
+            {/* Actual carousel items */}
             {items.map((item, index) => (
               <div 
                 key={item.id} 
-                className="carousel-item"
+                className={cn(
+                  "carousel-item",
+                  activeIndex === index ? "active-carousel-item" : ""
+                )}
                 style={{ width: isMobile ? itemWidthMobile : itemWidthDesktop }}
                 aria-hidden={activeIndex !== index}
                 role="group"
@@ -111,6 +130,9 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                 {renderItem(item, index, activeIndex === index)}
               </div>
             ))}
+            
+            {/* End spacer for center alignment */}
+            <div className="carousel-spacer flex-shrink-0" style={sideSpacerStyle} aria-hidden="true" />
           </div>
           
           {/* Arrow navigation */}

@@ -40,11 +40,28 @@ export function useCarousel({
     const scrollPosition = scrollContainer.scrollLeft;
     const containerWidth = scrollContainer.clientWidth;
     const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
-    const newIndex = Math.round(scrollPosition / itemWidthValue);
     
-    if (newIndex !== activeIndex && newIndex >= 0 && newIndex < itemCount) {
-      setActiveIndex(newIndex);
-      if (onSlideChange) onSlideChange(newIndex);
+    // Calculate center point of viewport
+    const viewportCenter = scrollPosition + (containerWidth / 2);
+    
+    // Find which slide is closest to the center
+    let closestIndex = 0;
+    let minDistance = Number.MAX_VALUE;
+    
+    // Loop through all items and find the one closest to the center
+    for (let i = 0; i < itemCount; i++) {
+      const itemCenterPosition = (i * itemWidthValue) + (itemWidthValue / 2);
+      const distance = Math.abs(viewportCenter - itemCenterPosition);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    }
+    
+    if (closestIndex !== activeIndex && closestIndex >= 0 && closestIndex < itemCount) {
+      setActiveIndex(closestIndex);
+      if (onSlideChange) onSlideChange(closestIndex);
     }
   }, [activeIndex, itemCount, itemWidth, onSlideChange]);
 
@@ -113,20 +130,26 @@ export function useCarousel({
     return () => clearInterval(interval);
   }, [autoScroll, userInteracted, activeIndex, itemCount, autoScrollInterval, pauseOnHover, isHovering]);
 
-  // Scroll to specified index with error handling
+  // Function to center an item in the viewport
   const scrollToItem = useCallback((index: number) => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
     
     try {
-      // Add class to temporarily disable smooth scrolling
-      scrollContainer.classList.add('user-scrolling');
-      
+      // Get container dimensions
       const containerWidth = scrollContainer.clientWidth;
       const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
       
+      // Calculate position that centers the item in the viewport
+      const itemCenter = (index * itemWidthValue) + (itemWidthValue / 2);
+      const scrollPosition = itemCenter - (containerWidth / 2);
+      
+      // Temporarily add class to disable smooth scrolling for programmatic changes
+      scrollContainer.classList.add('user-scrolling');
+      
+      // Scroll to the calculated position
       scrollContainer.scrollTo({
-        left: itemWidthValue * index,
+        left: scrollPosition,
         behavior: 'smooth'
       });
       
@@ -142,9 +165,13 @@ export function useCarousel({
     } catch (error) {
       console.error("Error scrolling to item:", error);
       
-      // Fallback to simple scroll without animation
+      // Fallback for browsers that don't support scrollTo with options
       try {
-        scrollContainer.scrollLeft = parseFloat(itemWidth) / 100 * scrollContainer.clientWidth * index;
+        const containerWidth = scrollContainer.clientWidth;
+        const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
+        const itemCenter = (index * itemWidthValue) + (itemWidthValue / 2);
+        scrollContainer.scrollLeft = itemCenter - (containerWidth / 2);
+        
         setActiveIndex(index);
         if (onSlideChange) onSlideChange(index);
       } catch (fallbackError) {

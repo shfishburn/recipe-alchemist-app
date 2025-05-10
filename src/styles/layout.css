@@ -145,3 +145,32 @@ button, .button {
 .content-block {
   @apply my-6 md:my-8;
 }
+
+/* Center alignment utilities for carousels */
+.carousel-center-container {
+  @apply relative w-full overflow-hidden;
+}
+
+.carousel-center-item {
+  scroll-snap-align: center;
+  -webkit-scroll-snap-align: center;
+}
+
+/* Touch-friendly spacing for interactive elements */
+.touch-friendly-spacing > * {
+  @apply my-2;
+}
+
+/* Explicitly set touch action for horizontal scrolling elements */
+.horizontal-scroll {
+  @apply touch-scroll;
+  touch-action: pan-x;
+}
+
+/* Add extra padding to touch elements on mobile */
+@media (max-width: 640px) {
+  .touch-device .touch-target {
+    @apply p-3;
+    min-height: 44px;
+  }
+}

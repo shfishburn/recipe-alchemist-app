@@ -7,12 +7,13 @@
 }
 
 .carousel-scroll-area {
-  @apply flex overflow-x-auto pb-4 snap-x;
+  @apply flex overflow-x-auto pb-4 snap-x snap-mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   scroll-behavior: smooth;
   min-height: 0; /* Critical fix for flex items */
   max-width: 100vw; /* Prevent horizontal overflow */
+  scroll-snap-type: x mandatory; /* Force snap */
 }
 
 .carousel-scroll-area::-webkit-scrollbar {
@@ -20,9 +21,11 @@
 }
 
 .carousel-item {
-  @apply flex-shrink-0 snap-start h-auto align-top;
+  @apply flex-shrink-0 h-auto align-top;
   transition: opacity 0.3s ease;
   max-width: 100%; /* Ensure carousel items don't exceed viewport width */
+  scroll-snap-align: center; /* Center alignment for snapping */
+  scroll-snap-stop: always; /* Ensure it always snaps */
 }
 
 /* Add class for disabling smooth scrolling during user interaction */
@@ -222,5 +225,28 @@
   .carousel-nav-button {
     min-height: 22px;
     min-width: 22px;
+  }
+}
+
+/* Added center alignment styles for carousel items */
+.carousel-item {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Ensure consistent snap behavior across browsers */
+.carousel-scroll-area {
+  -ms-scroll-snap-type: x mandatory;
+  -webkit-scroll-snap-type: x mandatory;
+}
+
+/* Explicit Safari support for scroll snap */
+@supports (-webkit-overflow-scrolling: touch) {
+  .carousel-scroll-area {
+    -webkit-scroll-snap-type: x mandatory;
+  }
+  
+  .carousel-item {
+    -webkit-scroll-snap-align: center;
   }
 }
