@@ -28,6 +28,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Create a function to call using our utility
     const callWithSupabaseFunctionClient = async () => {
       const token = await getAuthToken();
+      console.log("Got auth token:", token ? "token exists" : "no token");
+      
       const response = await callSupabaseFunction<typeof requestBody, any>('generate-quick-recipe', {
         payload: requestBody,
         token,
@@ -35,13 +37,16 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       });
       
       if (response.error) {
+        console.error("Supabase function error:", response.error);
         throw new Error(response.error);
       }
       
+      console.log("Supabase function response:", response);
       return response.data;
     };
     
     // Race both approaches against the timeout
+    console.log("Starting race with timeout");
     const data = await Promise.race([
       callWithSupabaseFunctionClient().catch(err => {
         console.warn("Supabase function client failed, falling back to direct fetch:", err);
@@ -49,6 +54,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       }),
       timeoutPromise
     ]);
+    
+    console.log("Race completed, data received:", data ? "data exists" : "no data");
     
     // Check for error in data
     if (!data) {

@@ -41,7 +41,7 @@ export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
       ) : (
         <div className="flex items-center justify-center">
           <span className={isMobile ? "font-medium" : "font-medium"}>
-            Show My Recipe
+            Create My Recipe
           </span>
           <ArrowRight className={cn(
             "ml-1 group-hover:translate-x-1 transition-transform",

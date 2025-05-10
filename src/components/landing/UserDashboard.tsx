@@ -22,6 +22,8 @@ export function UserDashboard() {
       servings: formData.servings
     };
     
+    console.log('Converted to quickRecipeFormData:', quickRecipeFormData);
+    
     // Call the handleSubmit function from useQuickRecipeForm
     handleSubmit(quickRecipeFormData);
   };

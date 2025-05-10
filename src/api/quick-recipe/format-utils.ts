@@ -4,7 +4,6 @@ import { QuickRecipeFormData } from '@/types/quick-recipe';
 // Functions to format and process form data for API requests
 
 // Determine cuisine category from cuisine values - used for API calls only
-// NOTE: Database uses the trigger to set this value, not this function
 export const getCuisineCategory = (cuisineValue: string): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" => {
   // This function now matches database trigger logic
   if (!cuisineValue || typeof cuisineValue !== 'string') {
@@ -56,13 +55,16 @@ export const processCuisineValue = (cuisineValue: string | string[]): string => 
     }
     
     // Process array of values - take the first valid one or default to "any"
-    const filteredValues = cuisineValue.filter(Boolean).map(v => v.trim().toLowerCase());
-    console.log(`Processing array cuisine value with ${filteredValues.length} items: ${JSON.stringify(filteredValues)}`);
+    const filteredValues = cuisineValue.filter(Boolean).map(v => typeof v === 'string' ? v.trim().toLowerCase() : v);
+    console.log(`Processing array cuisine value with ${filteredValues.length} items:`, filteredValues);
     
     // Return the first value from the array
     if (filteredValues.length > 0) {
-      console.log(`Using first value from cuisine array: "${filteredValues[0]}"`);
-      return filteredValues[0];
+      const firstValue = filteredValues[0];
+      if (typeof firstValue === 'string') {
+        console.log(`Using first value from cuisine array: "${firstValue}"`);
+        return firstValue;
+      }
     }
     
     return "any";
@@ -91,7 +93,7 @@ export const processDietaryValue = (dietaryValue: string | string[]): string => 
   }
   
   if (Array.isArray(dietaryValue)) {
-    return dietaryValue.filter(Boolean).map(v => v.trim()).join(', ');
+    return dietaryValue.filter(Boolean).map(v => typeof v === 'string' ? v.trim() : v).join(', ');
   }
   
   return "";
@@ -101,11 +103,15 @@ export const processDietaryValue = (dietaryValue: string | string[]): string => 
 export const formatRequestBody = (formData: QuickRecipeFormData) => {
   // Handle array and string formats consistently
   let cuisineValue = formData.cuisine;
+  console.log("Original cuisine value in formatRequestBody:", cuisineValue);
+  
   if (Array.isArray(cuisineValue) && cuisineValue.length > 0) {
     // Use first selected cuisine if it's an array
     cuisineValue = cuisineValue[0];
+    console.log("Using first value from cuisine array:", cuisineValue);
   } else if (Array.isArray(cuisineValue) && cuisineValue.length === 0) {
     cuisineValue = "any";
+    console.log("Empty cuisine array, using 'any'");
   }
   
   const cuisineString = processCuisineValue(cuisineValue);

@@ -3,16 +3,13 @@
 // file: QuickRecipeFormContainer.tsx
 // updated: 2025-05-10 14:02 PM
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Cake, ChefHat, Egg } from 'lucide-react';
 import { QuickRecipeGenerator } from './QuickRecipeGenerator';
 import { toast } from '@/hooks/use-toast';
-// Remove FullScreenLoading import - we don't need it here as it's handled in the parent component
-// import { FullScreenLoading } from './FullScreenLoading';
 
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
@@ -31,7 +28,8 @@ export function QuickRecipeFormContainer() {
 
   // Create an adapter function to handle form submission
   const handleFormSubmit = (formData: any) => {
-    console.log('Handling form submission:', formData);
+    console.log('QuickRecipeFormContainer - Handling form submission:', formData);
+    
     if (!formData.ingredients || !formData.ingredients.trim()) {
       toast({
         title: 'Missing ingredient',
@@ -40,12 +38,14 @@ export function QuickRecipeFormContainer() {
       });
       return;
     }
+    
     console.log('Original form values:', {
       ingredients: formData.ingredients,
       servings: formData.servings,
       cuisine: formData.cuisine,
       dietary: formData.dietary,
     });
+    
     const adaptedFormData = {
       mainIngredient: formData.ingredients.trim(),
       // Handle both array and string formats for cuisine and dietary
@@ -53,13 +53,13 @@ export function QuickRecipeFormContainer() {
       dietary: Array.isArray(formData.dietary) ? formData.dietary : formData.dietary ? [formData.dietary] : [],
       servings: Number(formData.servings) || 4, // Default to 4 instead of 2
     };
+    
     console.log('Adapted form data for API:', adaptedFormData);
     handleSubmit(adaptedFormData);
   };
 
   return (
     <div className="relative overflow-hidden">
-      {/* Remove duplicate FullScreenLoading component - it's now handled in the parent QuickRecipePage */}
       <div className="absolute -top-8 left-0 w-20 h-20 md:w-32 md:h-32 bg-recipe-green/20 rounded-full blur-md z-0 animate-pulse" />
       <div className="absolute -bottom-10 right-0 w-24 h-24 md:w-40 md:h-40 bg-recipe-orange/20 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: '1s' }} />
       <div className="absolute top-1/2 right-4 w-16 h-16 md:w-24 md:h-24 bg-recipe-blue/15 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: '1.5s' }} />

@@ -1,24 +1,20 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChefHat } from 'lucide-react';
-import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { toast } from '@/hooks/use-toast';
-import { QuickRecipeFormData } from '@/types/quick-recipe';
 import { IngredientInput } from './form-components/IngredientInput';
 import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
+import { SubmitButton } from './form-components/SubmitButton';
 
 export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
-  const [cuisines, setCuisines] = useState<string[]>(['any']); // Changed to array
-  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]); // Changed to array
+  const [cuisines, setCuisines] = useState<string[]>(['any']); // Default to 'any'
+  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
   const [servings, setServings] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputError, setInputError] = useState('');
-  const navigate = useNavigate();
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,11 +36,13 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
       // Create form data with all fields
       const formData = {
         ingredients: mainIngredient.trim(),
-        cuisine: cuisines.length > 0 ? cuisines : ['any'], // Handle array
+        cuisine: cuisines.length > 0 ? cuisines : ['any'], // Ensure we have an array
         dietary: dietaryPreferences, // Already an array
         servings: servings
       };
 
+      console.log('QuickRecipeGenerator - Submitting form data:', formData);
+      
       // Submit the form data
       onSubmit(formData);
       
@@ -56,7 +54,8 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
         variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      // Keep isSubmitting true since the page will navigate away
+      // The loading state will be managed by the store
     }
   };
 
@@ -81,7 +80,7 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
           />
         </div>
         
-        {/* Cuisine Selector - Updated to handle arrays */}
+        {/* Cuisine Selector */}
         <div>
           <CuisineSelector 
             value={cuisines} 
@@ -89,7 +88,7 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
           />
         </div>
         
-        {/* Dietary Selector - Updated to handle arrays */}
+        {/* Dietary Selector */}
         <div>
           <DietarySelector 
             value={dietaryPreferences} 
@@ -100,24 +99,10 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
       
       {/* Submit Button */}
       <div className="flex justify-center mt-4">
-        <Button 
-          type="submit" 
-          size="lg"
-          disabled={isSubmitting || !mainIngredient.trim()}
-          className="w-full md:w-auto bg-recipe-green hover:bg-recipe-green/90"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            <>
-              <ChefHat className="mr-2 h-4 w-4" />
-              Create My Recipe
-            </>
-          )}
-        </Button>
+        <SubmitButton 
+          isLoading={isSubmitting}
+          disabled={!mainIngredient.trim()}
+        />
       </div>
     </form>
   );

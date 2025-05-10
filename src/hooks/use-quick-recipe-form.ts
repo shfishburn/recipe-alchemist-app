@@ -31,7 +31,7 @@ export function useQuickRecipeForm() {
   // Handle form submission
   const handleSubmit = useCallback(async (formData: QuickRecipeFormData) => {
     try {
-      console.log("Handling form submission with data:", formData);
+      console.log("useQuickRecipeForm - Handling form submission with data:", formData);
       
       // Validate that we have mainIngredient, which is required by the API
       if (!formData.mainIngredient || (typeof formData.mainIngredient === 'string' && formData.mainIngredient.trim() === '')) {
@@ -46,8 +46,10 @@ export function useQuickRecipeForm() {
       // Ensure cuisine has a valid value - never undefined or null
       const processedFormData = {
         ...formData,
-        cuisine: formData.cuisine || 'any', // Default to 'any' if not provided
-        dietary: formData.dietary || ''  // Default to empty string if not provided
+        cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : 
+                (formData.cuisine ? [formData.cuisine] : ['any']), // Ensure it's an array with at least 'any'
+        dietary: Array.isArray(formData.dietary) ? formData.dietary : 
+                (formData.dietary ? [formData.dietary] : [])  // Ensure it's an array
       };
 
       console.log("Processed form data:", processedFormData);
