@@ -43,12 +43,12 @@ export function Navbar({ className = '' }: { className?: string }) {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-4',
+        'fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-sm border-b shadow-sm transition-transform duration-300 py-3',
         hidden ? '-translate-y-full' : 'translate-y-0',
         className
       )}
     >
-      <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
+      <div className="container-page">
         <div className="flex items-center justify-between">
           {/* Mobile menu button and logo together on the left */}
           <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function Navbar({ className = '' }: { className?: string }) {
           </div>
 
           {/* Navigation Links centered */}
-          <nav className="hidden md:flex items-center space-x-10">
+          <nav className="hidden md:flex items-center space-x-8">
             {displayedLinks.map(link => {
               const active = location.pathname === link.path;
               return (
@@ -76,10 +76,10 @@ export function Navbar({ className = '' }: { className?: string }) {
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    'text-sm font-medium px-2 py-1 transition-colors',
+                    'text-sm font-medium px-3 py-2 rounded-md transition-colors',
                     active
-                      ? 'text-recipe-green border-b-2 border-recipe-green'
-                      : 'text-gray-700 hover:text-primary'
+                      ? 'text-white bg-primary hover:bg-primary/90'
+                      : 'text-gray-700 hover:text-primary hover:bg-gray-100/50'
                   )}
                 >
                   {link.name}
@@ -89,7 +89,7 @@ export function Navbar({ className = '' }: { className?: string }) {
           </nav>
 
           {/* Auth Buttons on the right */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             {session ? (
               <Button variant="outline" size="sm" asChild className="h-9 px-4">
                 <Link to="/profile" className="flex items-center gap-1">
@@ -105,7 +105,7 @@ export function Navbar({ className = '' }: { className?: string }) {
                 <Button
                   size="sm"
                   onClick={open}
-                  className="h-9 px-4 bg-recipe-green text-white hover:bg-recipe-green/90"
+                  className="h-9 px-4 bg-primary text-white hover:bg-primary/90"
                 >
                   Sign up
                 </Button>

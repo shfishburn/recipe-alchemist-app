@@ -70,7 +70,11 @@ export default {
 					yellow: '#facc15',
                     purple: '#9b87f5', // Purple color for servings
                     teal: '#14b8a6', // Teal color for cuisine
-                    amber: '#d97706'  // Amber color for dietary
+                    amber: '#d97706',  // Amber color for dietary
+                    primaryPurple: '#9b87f5', // Primary Purple
+                    secondaryPurple: '#7E69AB', // Secondary Purple  
+                    tertiaryPurple: '#6E59A5', // Tertiary Purple
+                    darkPurple: '#1A1F2C' // Dark Purple
 				}
 			},
 			borderRadius: {
