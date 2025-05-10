@@ -34,7 +34,7 @@ export function useQuickRecipeForm() {
       console.log("Handling form submission with data:", formData);
       
       // Validate that we have mainIngredient, which is required by the API
-      if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
+      if (!formData.mainIngredient || (typeof formData.mainIngredient === 'string' && formData.mainIngredient.trim() === '')) {
         toast({
           title: "Missing ingredient",
           description: "Please enter at least one main ingredient",
@@ -104,7 +104,8 @@ export function useQuickRecipeForm() {
         }
         
         // Ensure recipe has valid cuisine value
-        if (!generatedRecipe.cuisine || generatedRecipe.cuisine.trim() === '') {
+        if (!generatedRecipe.cuisine || 
+            (typeof generatedRecipe.cuisine === 'string' && generatedRecipe.cuisine.trim() === '')) {
           console.log("Setting default cuisine for recipe as it was missing");
           generatedRecipe.cuisine = "any";
         }

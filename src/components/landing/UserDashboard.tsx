@@ -4,15 +4,27 @@ import { useAuth } from '@/hooks/use-auth';
 import { QuickRecipeGenerator } from '@/components/quick-recipe/QuickRecipeGenerator';
 import { RecipeCarousel } from '@/components/landing/RecipeCarousel';
 import { PageContainer } from '@/components/ui/containers';
+import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 
 export function UserDashboard() {
   const { profile } = useAuth();
+  const { handleSubmit } = useQuickRecipeForm();
 
-  const handleSubmit = (formData: any) => {
+  const handleFormSubmission = (formData: any) => {
     // Handle form submission
     console.log('Dashboard form submitted:', formData);
-    // Additional form handling logic...
-  }
+    
+    // Convert the formData to the expected format for the quick recipe form
+    const quickRecipeFormData = {
+      mainIngredient: formData.ingredients,
+      cuisine: formData.cuisine,
+      dietary: formData.dietary,
+      servings: formData.servings
+    };
+    
+    // Call the handleSubmit function from useQuickRecipeForm
+    handleSubmit(quickRecipeFormData);
+  };
 
   return (
     <PageContainer className="py-4 md:py-12">
@@ -28,7 +40,7 @@ export function UserDashboard() {
         {/* Quick Actions Section */}
         <section>
           <div className="w-full max-w-3xl mx-auto bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100 transition-shadow hover:shadow-xl">
-            <QuickRecipeGenerator onSubmit={handleSubmit} />
+            <QuickRecipeGenerator onSubmit={handleFormSubmission} />
           </div>
         </section>
 
