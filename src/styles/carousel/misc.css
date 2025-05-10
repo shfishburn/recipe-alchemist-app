@@ -1,0 +1,41 @@
+
+/* Empty state styling for carousel */
+.carousel-empty-state {
+  @apply flex flex-col items-center justify-center p-4 sm:p-6 bg-white/80 dark:bg-gray-800/80 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 text-center h-40 sm:h-48;
+}
+
+/* Performance optimizations */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+}
+
+/* Reduce motion for low-power mode or user preference */
+@media (prefers-reduced-motion) {
+  .carousel-scroll-area {
+    scroll-behavior: auto;
+  }
+  
+  .carousel-item {
+    transition: none;
+  }
+}
+
+/* Ensure consistent snap behavior across browsers */
+.carousel-scroll-area {
+  -ms-scroll-snap-type: x mandatory;
+  -webkit-scroll-snap-type: x mandatory;
+}
+
+/* Explicit Safari support for scroll snap */
+@supports (-webkit-overflow-scrolling: touch) {
+  .carousel-scroll-area {
+    -webkit-scroll-snap-type: x mandatory;
+  }
+  
+  .carousel-item {
+    -webkit-scroll-snap-align: center;
+  }
+}

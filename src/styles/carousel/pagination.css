@@ -1,0 +1,64 @@
+
+/* Pagination dots - improved container */
+.carousel-pagination {
+  @apply flex justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3;
+}
+
+/* Individual dot styling with proper container - exclude from touch-target rules */
+.carousel-pagination-dot {
+  @apply inline-block rounded-full bg-gray-300 transition-all duration-200;
+  width: 5px !important;
+  height: 5px !important;
+  max-width: 5px !important;
+  max-height: 5px !important;
+  min-width: 5px !important;
+  min-height: 5px !important;
+  padding: 0 !important;
+  transform-origin: center;
+  /* Increase the tap target with padding but keep visual size small */
+  position: relative;
+}
+
+/* Create a larger invisible hit area but keep visual dot small */
+.carousel-pagination-dot::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  right: -12px;
+  bottom: -12px;
+  z-index: 1;
+}
+
+@media (min-width: 640px) {
+  .carousel-pagination-dot {
+    width: 7px !important;
+    height: 7px !important;
+    max-width: 7px !important;
+    max-height: 7px !important;
+    min-width: 7px !important;
+    min-height: 7px !important;
+  }
+}
+
+/* Active dot styling - pill shape with proper dimensions */
+.carousel-pagination-dot-active {
+  @apply bg-recipe-blue;
+  width: 10px !important;
+  height: 5px !important; /* Match the height to base dot height */
+  max-width: 10px !important;
+  max-height: 5px !important; /* Match the max-height to base dot max-height */
+  min-width: 10px !important;
+  min-height: 5px !important;
+}
+
+@media (min-width: 640px) {
+  .carousel-pagination-dot-active {
+    width: 14px !important;
+    height: 7px !important; /* Match the height to base dot height for desktop */
+    max-width: 14px !important;
+    max-height: 7px !important; /* Match the max-height to base dot max-height for desktop */
+    min-width: 14px !important;
+    min-height: 7px !important;
+  }
+}

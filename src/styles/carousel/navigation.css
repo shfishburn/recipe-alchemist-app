@@ -1,0 +1,32 @@
+
+/* Carousel navigation buttons */
+.carousel-nav-button {
+  @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-blue hover:text-white hover:border-transparent;
+  min-height: 24px; /* Smaller on mobile */
+  min-width: 24px;
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .carousel-nav-button {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+.carousel-nav-button:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Better positioning for arrows */
+@media (max-width: 640px) {
+  .carousel-nav-button.previous {
+    left: -6px;
+  }
+  
+  .carousel-nav-button.next {
+    right: -6px;
+  }
+}

@@ -1,0 +1,54 @@
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './styles/main.css';
+@import './styles/loading.css';
+@import './styles/clock.css';
+@import './styles/carousel/index.css';
+@import './styles/scientific-content.css';
+@import 'react-clock/dist/Clock.css';
+
+/* Enhanced scientific content styling */
+.scientific-content {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.scientific-content h3, 
+.scientific-content h4 {
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.scientific-content ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin: 0.75rem 0;
+}
+
+.scientific-content ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin: 0.75rem 0;
+}
+
+/* Add animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

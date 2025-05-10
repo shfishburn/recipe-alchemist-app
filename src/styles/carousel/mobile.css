@@ -1,0 +1,56 @@
+
+/* Additional mobile optimizations */
+@media (max-width: 640px) {
+  .carousel-pagination {
+    gap: 0.5rem;
+  }
+  
+  .reduce-motion-mobile {
+    scroll-behavior: auto;
+  }
+  
+  /* Ensure mobile carousel doesn't overflow screen */
+  .nutrition-carousel {
+    margin-left: -2px;
+    margin-right: -2px;
+    max-width: calc(100% + 4px);
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  /* Make text tables more compact on mobile */
+  .nutrition-carousel .simpleMicronutrient-table {
+    font-size: 0.7rem;
+  }
+  
+  /* Ensure carousel items don't overflow */
+  .carousel-scroll-area > * {
+    width: 100% !important;
+    max-width: 92vw !important;
+  }
+}
+
+/* Fix for narrow mobile screens */
+@media (max-width: 360px) {
+  .carousel-item {
+    max-width: 85vw !important; 
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .nutrition-carousel .simpleMicronutrient-table {
+    font-size: 0.65rem;
+  }
+  
+  /* Make tables more compact on small screens */
+  .nutrition-carousel td,
+  .nutrition-carousel th {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  /* Smaller arrows for tiny screens */
+  .carousel-nav-button {
+    min-height: 22px;
+    min-width: 22px;
+  }
+}
