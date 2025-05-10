@@ -1,6 +1,7 @@
 
 import React, { Suspense, lazy } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NutritionPreview } from './NutritionPreview';
 
 // Lazy load non-critical components
 const Hero = lazy(() => import('@/components/landing/Hero'));
@@ -42,6 +43,16 @@ const FeaturesSkeleton = () => (
   </section>
 );
 
+const NutritionSkeleton = () => (
+  <section className="py-12">
+    <div className="container-page">
+      <Skeleton className="h-8 w-1/2 mx-auto mb-4" />
+      <Skeleton className="h-4 w-3/4 mx-auto mb-8" />
+      <Skeleton className="h-64 w-full rounded-lg max-w-4xl mx-auto" />
+    </div>
+  </section>
+);
+
 export function MarketingHomepage() {
   return (
     <>
@@ -51,7 +62,9 @@ export function MarketingHomepage() {
       <Suspense fallback={<FeaturesSkeleton />}>
         <Features />
       </Suspense>
-      {/* NutritionPreview component removed from here */}
+      <Suspense fallback={<NutritionSkeleton />}>
+        <NutritionPreview />
+      </Suspense>
     </>
   );
 }
