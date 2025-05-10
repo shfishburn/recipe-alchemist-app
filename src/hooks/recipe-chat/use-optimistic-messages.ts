@@ -14,10 +14,8 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
     if (chatHistory.length > 0 && optimisticMessages.length > 0) {
       // Create a map of optimistic message IDs that have been replaced by real messages
       const replacedOptimisticIds = chatHistory.reduce<Record<string, boolean>>((acc, message) => {
-        // Safely check for meta.optimistic_id
-        const optimisticId = message.meta && typeof message.meta === 'object' 
-          ? message.meta.optimistic_id 
-          : getChatMeta(message, 'optimistic_id', '');
+        // Safely get optimistic_id from meta
+        const optimisticId = getChatMeta(message, 'optimistic_id', '');
           
         if (optimisticId) {
           acc[optimisticId] = true;
@@ -27,7 +25,7 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
       
       // Filter out optimistic messages that now have real counterparts
       const filteredMessages = optimisticMessages.filter(message => {
-        const messageId = message.id || (message.meta && message.meta.optimistic_id) || '';
+        const messageId = message.id || getChatMeta(message, 'optimistic_id', '');
         return !messageId || !replacedOptimisticIds[messageId];
       });
       

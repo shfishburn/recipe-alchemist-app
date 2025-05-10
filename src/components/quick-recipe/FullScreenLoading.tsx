@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useLoadingProgress } from '@/hooks/use-loading-progress';
@@ -54,9 +55,10 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     const navbars = document.querySelectorAll('nav, header');
     navbars.forEach(navbar => {
       if (navbar) {
-        navbar.style.visibility = 'hidden';
-        navbar.setAttribute('aria-hidden', 'true');
-        navbar.dataset.hiddenByLoading = 'true';
+        const navbarElement = navbar as HTMLElement;
+        navbarElement.style.visibility = 'hidden';
+        navbarElement.setAttribute('aria-hidden', 'true');
+        navbarElement.dataset.hiddenByLoading = 'true';
       }
     });
     
@@ -79,9 +81,10 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       const hiddenNavbars = document.querySelectorAll('[data-hidden-by-loading="true"]');
       hiddenNavbars.forEach(navbar => {
         if (navbar) {
-          navbar.style.visibility = '';
-          navbar.removeAttribute('aria-hidden');
-          navbar.removeAttribute('data-hidden-by-loading');
+          const navbarElement = navbar as HTMLElement;
+          navbarElement.style.visibility = '';
+          navbarElement.removeAttribute('aria-hidden');
+          navbarElement.removeAttribute('data-hidden-by-loading');
         }
       });
       

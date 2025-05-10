@@ -14,13 +14,16 @@ export function getChatMeta<T>(
   // If meta doesn't exist or isn't an object, return default
   if (!message.meta || typeof message.meta !== 'object') return defaultValue;
   
-  // Try to get the value
-  const value = (message.meta as Record<string, unknown>)[key];
-  
-  // Return the value if it exists and is of the expected type
-  // This is a simplified type check, might need to be adjusted based on specific needs
-  if (value !== undefined && typeof value === typeof defaultValue) {
-    return value as T;
+  try {
+    // Try to get the value
+    const value = (message.meta as Record<string, unknown>)[key];
+    
+    // Return the value if it exists and is of the expected type
+    if (value !== undefined && typeof value === typeof defaultValue) {
+      return value as T;
+    }
+  } catch (e) {
+    console.error(`Error getting meta value for key ${key}:`, e);
   }
   
   return defaultValue;

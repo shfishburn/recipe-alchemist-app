@@ -47,7 +47,7 @@ export const useChatHistory = (recipeId: string) => {
           applied: chat.applied || false,
           created_at: chat.created_at,
           follow_up_questions: [], // Default empty array
-          meta: chat.meta || {} // Ensure meta is always an object
+          meta: typeof chat.meta === 'object' ? chat.meta || {} : {} // Ensure meta is always a valid object
         };
 
         // Process changes_suggested as a properly typed object

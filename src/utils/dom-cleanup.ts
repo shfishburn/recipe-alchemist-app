@@ -21,9 +21,10 @@ export function forceCleanupUI() {
     const hiddenNavbars = document.querySelectorAll('[data-hidden-by-loading="true"]');
     hiddenNavbars.forEach(navbar => {
       if (navbar) {
-        navbar.style.visibility = '';
-        navbar.removeAttribute('aria-hidden');
-        navbar.removeAttribute('data-hidden-by-loading');
+        const navbarElement = navbar as HTMLElement;
+        navbarElement.style.visibility = '';
+        navbarElement.removeAttribute('aria-hidden');
+        navbarElement.removeAttribute('data-hidden-by-loading');
       }
     });
     
@@ -50,6 +51,11 @@ export function forceCleanupUI() {
     console.error("Error during UI cleanup", e);
   }
 }
+
+/**
+ * Alias for forceCleanupUI - for consistent naming across the app
+ */
+export const cleanupUIState = forceCleanupUI;
 
 /**
  * Ensure the recipe loading animation stays active
@@ -89,4 +95,24 @@ export function checkAndCleanupLoadingUI() {
   }
   
   return false; // No cleanup needed
+}
+
+/**
+ * Set up cleanup handlers for route changes
+ * Returns a cleanup function
+ */
+export function setupRouteChangeCleanup(): () => void {
+  // Create handler for popstate events (browser back/forward)
+  const handlePopState = () => {
+    console.log("Route change detected (popstate), cleaning up UI");
+    setTimeout(checkAndCleanupLoadingUI, 100);
+  };
+  
+  // Listen for browser navigation events
+  window.addEventListener('popstate', handlePopState);
+  
+  // Return function to remove event listeners
+  return () => {
+    window.removeEventListener('popstate', handlePopState);
+  };
 }
