@@ -6,6 +6,7 @@ import { createTimeoutPromise } from './quick-recipe/timeout-utils';
 import { formatRequestBody } from './quick-recipe/format-utils';
 import { fetchFromEdgeFunction, fetchFromSupabaseFunctions, getAuthToken } from './quick-recipe/api-utils';
 import { processErrorResponse } from './quick-recipe/error-utils';
+import { callSupabaseFunction } from './supabaseFunctionClient';
 
 // Function to generate a quick recipe
 export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promise<QuickRecipe> => {
@@ -16,31 +17,35 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       throw new Error("Please provide a main ingredient");
     }
     
-    // REMOVED: Authentication check - this allows guest usage
-    
     // Format the request body
     const requestBody = formatRequestBody(formData);
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Set a timeout for the request (120 seconds - increased from 90)
+    // Set a timeout for the request (120 seconds)
     const timeoutPromise = createTimeoutPromise(120000);
     
-    // Create a direct fetch function that we'll race against the timeout
-    const directFetchPromise = async () => {
-      try {
-        return await fetchFromEdgeFunction(requestBody);
-      } catch (err) {
-        console.error("Direct fetch error:", err);
-        throw err;
+    // Create a function to call using our utility
+    const callWithSuapbaseFunctionClient = async () => {
+      const token = await getAuthToken();
+      const response = await callSupabaseFunction('generate-quick-recipe', {
+        payload: requestBody,
+        token,
+        debugTag: 'direct-fetch-production'
+      });
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
+      
+      return response.data;
     };
     
     // Race both approaches against the timeout
     const data = await Promise.race([
-      directFetchPromise().catch(err => {
-        console.warn("Direct fetch failed, trying Supabase invoke:", err);
-        return fetchFromSupabaseFunctions(requestBody);
+      callWithSuapbaseFunctionClient().catch(err => {
+        console.warn("Supabase function client failed, falling back to direct fetch:", err);
+        return fetchFromEdgeFunction(requestBody);
       }),
       timeoutPromise
     ]);
@@ -64,12 +69,6 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     return normalizedRecipe;
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
-    
-    // Improve error messages and remove authentication requirements
-    if (error.message?.includes('Authentication')) {
-      // Override auth errors to allow guest usage
-      error.message = "Recipe generation service is temporarily unavailable. Please try again.";
-    }
     
     return processErrorResponse(error);
   }

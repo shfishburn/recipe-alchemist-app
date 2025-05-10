@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,18 +20,21 @@ export const useChatMutations = (recipe: Recipe) => {
       sourceType, 
       sourceUrl, 
       sourceImage,
-      messageId
+      messageId,
+      isRetry
     }: {
       message: string;
       sourceType?: 'manual' | 'image' | 'url' | 'analysis';
       sourceUrl?: string;
       sourceImage?: string;
       messageId?: string;
+      isRetry?: boolean;
     }) => {
       console.log("Starting recipe chat mutation:", { 
         message, 
         sourceType,
         messageId: messageId || 'not-provided',
+        isRetry: !!isRetry,
         recipeId: recipe.id
       });
       
@@ -136,7 +138,10 @@ export const useChatMutations = (recipe: Recipe) => {
         
         try {
           // Create meta object for optimistic updates tracking
-          const meta = messageId ? { optimistic_id: messageId } : {};
+          const meta = messageId ? { 
+            optimistic_id: messageId,
+            is_retry: !!isRetry
+          } : {};
           
           // Insert the chat message into the database
           const { data, error } = await supabase

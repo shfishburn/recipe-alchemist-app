@@ -32,19 +32,6 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
     debugTag = 'default'
   } = options;
 
-  // Get base URL directly from the constant in client.ts
-  const supabaseUrl = "https://zjyfumqfrtppleftpzjd.supabase.co";
-  if (!supabaseUrl) {
-    return {
-      data: null,
-      error: 'Supabase URL could not be determined',
-      status: 500
-    };
-  }
-
-  const baseUrl = `${supabaseUrl}/functions/v1`;
-  const url = `${baseUrl}/${functionName}`;
-
   // Validate authentication token if present
   if (token === '') {
     console.warn('Empty authentication token provided to callSupabaseFunction');
@@ -55,71 +42,40 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
     };
   }
 
-  const requestOptions: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      'X-Debug-Info': `${debugTag}-${Date.now()}`,
-      ...headers
-    },
-    ...(payload && { body: JSON.stringify(payload) })
-  };
-
-  // Log request details for debugging
-  console.log(`Calling Supabase function "${functionName}" with:`, {
-    url,
-    method,
-    hasToken: !!token,
-    debugTag,
-    payloadKeys: payload ? Object.keys(payload) : 'no payload'
-  });
-
   try {
-    const response = await fetch(url, requestOptions);
-    const contentType = response.headers.get('content-type');
+    console.log(`Calling Supabase function "${functionName}" with:`, {
+      method,
+      hasToken: !!token,
+      debugTag,
+      payloadKeys: payload ? Object.keys(payload) : 'no payload'
+    });
+
+    // Use the Supabase functions.invoke method rather than direct fetch
+    const response = await supabase.functions.invoke(functionName, {
+      method,
+      body: payload,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'X-Debug-Info': `${debugTag}-${Date.now()}`,
+        ...headers
+      }
+    });
 
     // Log response status for debugging
     console.log(`Supabase function "${functionName}" responded with status:`, response.status);
 
-    let json: any = null;
-    if (contentType?.includes('application/json')) {
-      try {
-        json = await response.json();
-      } catch (parseError) {
-        const text = await response.text();
-        console.error('Error parsing JSON response:', parseError, 'Response text:', text);
-        return {
-          data: null,
-          error: `Invalid JSON response: ${parseError?.message || 'Unknown parse error'}`,
-          status: response.status
-        };
-      }
-    } else {
-      json = await response.text();
-    }
-
-    if (!response.ok) {
-      // For authentication errors, provide a clear message
-      if (response.status === 401) {
-        return {
-          data: null,
-          error: 'Authentication required. Please sign in to continue.',
-          status: 401
-        };
-      }
-
+    if (response.error) {
       return {
         data: null,
-        error: typeof json === 'string' ? json : json?.error || `Error: ${response.status} ${response.statusText}`,
-        status: response.status
+        error: response.error.message || `Error calling function: ${functionName}`,
+        status: response.status || 500
       };
     }
 
     return {
-      data: json as TOutput,
+      data: response.data as TOutput,
       error: null,
-      status: response.status
+      status: response.status || 200
     };
   } catch (err: any) {
     console.error(`Error calling Supabase function "${functionName}"`, err);

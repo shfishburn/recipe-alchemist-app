@@ -28,89 +28,72 @@ export function NutriScoreDetail({ nutriScore }: NutriScoreDetailProps) {
     );
   }
 
-  // Calculate percentages for the progress bars
-  const negativePoints = nutriScore.negative_points.total || 0;
-  const positivePoints = nutriScore.positive_points.total || 0;
+  // Calculate percentages for visualization
+  const negativePoints = nutriScore.negative_points?.total || 0;
+  const positivePoints = nutriScore.positive_points?.total || 0;
+  const maxPoints = 40; // Maximum possible points in Nutri-Score system
   
-  // Max points for reference (based on Nutri-Score documentation)
-  const maxNegative = 40;
-  const maxPositive = 15;
+  const negativePercentage = Math.min(100, (negativePoints / maxPoints) * 100);
+  const positivePercentage = Math.min(100, (positivePoints / maxPoints) * 100);
   
-  const negativePercentage = Math.min((negativePoints / maxNegative) * 100, 100);
-  const positivePercentage = Math.min((positivePoints / maxPositive) * 100, 100);
-
   return (
-    <Card className="bg-muted/40">
+    <Card>
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-md">Nutri-Score</CardTitle>
-          <NutriScoreBadge nutriScore={nutriScore} size="md" />
-        </div>
+        <CardTitle className="text-md flex items-center justify-between">
+          <span>Nutri-Score</span>
+          <NutriScoreBadge grade={nutriScore.grade} size="sm" />
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground">Unfavorable nutrients</span>
-              <span className="text-xs font-medium">{negativePoints} pts</span>
-            </div>
-            <Progress 
-              value={negativePercentage} 
-              className="h-2 bg-gray-200" 
-              indicatorClassName="bg-red-400"
-            />
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <div className="text-xs">
-                <span className="text-muted-foreground">Energy: </span>
-                <span className="font-medium">{nutriScore.negative_points.energy || 0} pts</span>
-              </div>
-              <div className="text-xs">
-                <span className="text-muted-foreground">Saturated Fat: </span>
-                <span className="font-medium">{nutriScore.negative_points.saturated_fat || 0} pts</span>
-              </div>
-              <div className="text-xs">
-                <span className="text-muted-foreground">Sugars: </span>
-                <span className="font-medium">{nutriScore.negative_points.sugars || 0} pts</span>
-              </div>
-              <div className="text-xs">
-                <span className="text-muted-foreground">Sodium: </span>
-                <span className="font-medium">{nutriScore.negative_points.sodium || 0} pts</span>
-              </div>
+      <CardContent className="space-y-4">
+        {/* Score explanation */}
+        <p className="text-xs text-muted-foreground">
+          Nutri-Score rates foods from A (healthiest) to E (less nutritious) based on nutrients.
+        </p>
+        
+        {/* Negative points */}
+        <div>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="font-medium">Negative Points</span>
+            <span className="text-red-500 font-medium">{negativePoints}</span>
+          </div>
+          <Progress 
+            value={negativePercentage} 
+            className="h-2" 
+            indicatorColor="#ef4444"
+          />
+          <div className="flex justify-between items-center mt-2 gap-1">
+            <div className="flex items-center gap-1">
+              <CircleX className="h-3 w-3 text-red-500" />
+              <span className="text-xs text-muted-foreground">Energy, Sugars, Sat. Fat, Sodium</span>
             </div>
           </div>
-          
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground">Favorable nutrients</span>
-              <span className="text-xs font-medium">{positivePoints} pts</span>
-            </div>
-            <Progress 
-              value={positivePercentage} 
-              className="h-2 bg-gray-200" 
-              indicatorClassName="bg-green-400"
-            />
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <div className="text-xs">
-                <span className="text-muted-foreground">Fiber: </span>
-                <span className="font-medium">{nutriScore.positive_points.fiber || 0} pts</span>
-              </div>
-              <div className="text-xs">
-                <span className="text-muted-foreground">Protein: </span>
-                <span className="font-medium">{nutriScore.positive_points.protein || 0} pts</span>
-              </div>
-              <div className="text-xs">
-                <span className="text-muted-foreground">Fruits/Veg/Nuts: </span>
-                <span className="font-medium">{nutriScore.positive_points.fruit_veg_nuts || 0} pts</span>
-              </div>
+        </div>
+        
+        {/* Positive points */}
+        <div>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="font-medium">Positive Points</span>
+            <span className="text-green-500 font-medium">{positivePoints}</span>
+          </div>
+          <Progress 
+            value={positivePercentage} 
+            className="h-2" 
+            indicatorColor="#22c55e"
+          />
+          <div className="flex justify-between items-center mt-2 gap-1">
+            <div className="flex items-center gap-1">
+              <CircleCheck className="h-3 w-3 text-green-500" />
+              <span className="text-xs text-muted-foreground">Fiber, Protein, Fruits/Veg</span>
             </div>
           </div>
-          
-          <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-            <p>Final score: {nutriScore.score} points (lower is better)</p>
-            <p className="mt-1">
-              Calculated based on nutritional content per 100g.
-            </p>
-          </div>
+        </div>
+        
+        {/* Final score */}
+        <div className="pt-2 flex items-center justify-between">
+          <span className="text-xs font-medium">Final Score:</span>
+          <span className="text-xs font-semibold">
+            {nutriScore.score} ({nutriScore.grade})
+          </span>
         </div>
       </CardContent>
     </Card>
