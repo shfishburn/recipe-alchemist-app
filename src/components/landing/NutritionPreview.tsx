@@ -27,7 +27,7 @@ export function NutritionPreview() {
           </p>
         </div>
         
-        <div className="max-w-full md:max-w-4xl mx-auto">
+        <div className="max-w-full md:max-w-4xl mx-auto px-1">
           <Carousel
             items={enhancedMacroItems.map((item, index) => ({
               id: `macro-item-${index}`,

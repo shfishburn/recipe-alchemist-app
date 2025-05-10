@@ -1,6 +1,6 @@
 
 .container-page {
-  @apply container max-w-7xl mx-auto px-6 sm:px-8 lg:px-12;
+  @apply container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
 /* Standardized responsive spacing */
@@ -79,4 +79,22 @@
 /* Prevent overflow issues in mobile layouts */
 .mobile-friendly-container {
   @apply max-w-full overflow-x-hidden;
+}
+
+/* Better padding for mobile containers */
+@media (max-width: 640px) {
+  .container-page {
+    @apply px-4;
+  }
+  
+  .mobile-container-fix {
+    width: calc(100% - 16px) !important;
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+}
+
+/* Ensure tables don't break mobile layout */
+.responsive-table-container {
+  @apply w-full overflow-x-auto -mx-4 px-4;
 }

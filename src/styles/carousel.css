@@ -159,7 +159,9 @@
   .nutrition-carousel {
     margin-left: -4px;
     margin-right: -4px;
-    width: calc(100% + 8px);
+    max-width: calc(100% + 8px);
+    padding-left: 0;
+    padding-right: 0;
   }
   
   /* Make text tables more compact on mobile */
@@ -170,7 +172,14 @@
   /* Ensure carousel items don't overflow */
   .carousel-scroll-area > * {
     width: 100% !important;
-    max-width: 95vw !important;
+    max-width: 90vw !important;
+  }
+  
+  /* Fix overflow issues on small screens */
+  .nutrition-carousel .carousel-item {
+    width: 90% !important;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -192,10 +201,18 @@
 /* Fix for narrow mobile screens */
 @media (max-width: 360px) {
   .carousel-item {
-    max-width: 90vw !important; 
+    max-width: 88vw !important; 
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .nutrition-carousel .simpleMicronutrient-table {
     font-size: 0.65rem;
+  }
+  
+  /* Make tables more compact on small screens */
+  .nutrition-carousel td,
+  .nutrition-carousel th {
+    padding: 0.5rem 0.25rem;
   }
 }

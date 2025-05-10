@@ -43,9 +43,9 @@ const Hero: React.FC = memo(() => {
 
   return (
     <section className="py-6 md:py-12 lg:py-16 content-visibility-auto">
-      <div className="space-y-10">
+      <div className="space-y-10 max-w-full overflow-hidden">
         {/* Hero Title & Actions */}
-        <div className="text-center animate-fade-in">
+        <div className="text-center animate-fade-in px-4">
           <div className="flex items-center justify-center gap-2 mb-3">
             <ChefHat className="h-8 w-8 text-recipe-green" />
             <Brain className="h-8 w-8 text-recipe-blue" />
@@ -78,14 +78,14 @@ const Hero: React.FC = memo(() => {
         </div>
 
         {/* Recipe Generator Card */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg transition-shadow hover:shadow-xl border border-gray-100">
+        <div className="flex justify-center px-4">
+          <div className="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg transition-shadow hover:shadow-xl border border-gray-100">
             <QuickRecipeGenerator />
           </div>
         </div>
 
         {/* Nutrition Preview */}
-        <div className="flex justify-center">
+        <div className="flex justify-center w-full">
           <div className="w-full max-w-3xl">
             <NutritionPreview />
           </div>
@@ -96,7 +96,7 @@ const Hero: React.FC = memo(() => {
           <div className="w-full max-w-6xl mx-auto relative overflow-hidden">
             <div className="absolute -top-6 -left-6 w-16 h-16 md:w-24 md:h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl" />
             <div className="absolute -bottom-6 -right-6 w-20 h-20 md:w-32 md:h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl" />
-            <div className="relative z-10">
+            <div className="relative z-10 px-4">
               <RecipeCarousel />
             </div>
           </div>

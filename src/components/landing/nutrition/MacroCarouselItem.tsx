@@ -33,7 +33,7 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
   const isMobile = useIsMobile();
 
   return (
-    <Card className="h-full overflow-hidden border border-slate-100 shadow-sm relative">
+    <Card className="h-full overflow-hidden border border-slate-100 shadow-sm relative w-full">
       {item.special && (
         <div className="absolute top-0 right-0 z-10">
           <Badge className="m-2 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600">
@@ -91,52 +91,85 @@ export function MacroCarouselItem({ item, carbsData, fatsData }: MacroCarouselIt
             </ResponsiveContainer>
           </TabsContent>
           
-          <TabsContent value="details">
-            <div className="space-y-3 text-xs sm:text-sm overflow-x-hidden">
+          <TabsContent value="details" className="overflow-x-auto">
+            <div className="space-y-3 text-xs sm:text-sm">
               {/* Nutri-Score details if available */}
               {item.nutriScore && (
                 <div className="mb-3">
-                  <h4 className="text-xs font-medium mb-1">Nutri-Score Details</h4>
-                  <div className="overflow-x-auto -mx-3 sm:mx-0">
-                    <Table className="text-xs w-full">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="py-1 px-2">Category</TableHead>
-                          <TableHead className="py-1 px-2">Points</TableHead>
-                          <TableHead className="py-1 px-2">Impact</TableHead>
+                  <h4 className="font-medium mb-1">Nutri-Score: {item.nutriScore}</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Our simple A to E rating for nutrition quality
+                  </p>
+                </div>
+              )}
+              
+              {/* Detailed breakdown of macros */}
+              <div>
+                <h4 className="font-medium mb-2">Macronutrient Details</h4>
+                <div className="overflow-x-auto -mx-3 px-3">
+                  <Table className="w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">Nutrient</TableHead>
+                        <TableHead>% of Total</TableHead>
+                        <TableHead className="text-right">Calories</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="text-xs">
+                      {item.data.map((macro) => (
+                        <TableRow key={macro.name}>
+                          <TableCell className="font-medium">{macro.name}</TableCell>
+                          <TableCell>{macro.value}%</TableCell>
+                          <TableCell className="text-right">{Math.round(macro.value * 20)} kcal</TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="py-1 px-2">Energy</TableCell>
-                          <TableCell className="py-1 px-2">2</TableCell>
-                          <TableCell className="text-red-600 py-1 px-2">Negative</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="py-1 px-2">Sugars</TableCell>
-                          <TableCell className="py-1 px-2">1</TableCell>
-                          <TableCell className="text-red-600 py-1 px-2">Negative</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="py-1 px-2">Fiber</TableCell>
-                          <TableCell className="py-1 px-2">3</TableCell>
-                          <TableCell className="text-green-600 py-1 px-2">Positive</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="py-1 px-2">Protein</TableCell>
-                          <TableCell className="py-1 px-2">5</TableCell>
-                          <TableCell className="text-green-600 py-1 px-2">Positive</TableCell>
-                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+              
+              {/* Carbs breakdown if it's not a main carbs item */}
+              {item.title !== "Carbohydrates Breakdown" && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">Carbs Breakdown</h4>
+                  <div className="overflow-x-auto -mx-3 px-3">
+                    <Table className="w-full">
+                      <TableBody className="text-xs">
+                        {carbsData.map((carb) => (
+                          <TableRow key={carb.name}>
+                            <TableCell className="font-medium">{carb.name}</TableCell>
+                            <TableCell>{carb.value}%</TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </div>
                 </div>
               )}
               
-              {/* Micronutrients data */}
+              {/* Fats breakdown if it's not a main fats item */}
+              {item.title !== "Fats Breakdown" && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-2">Fats Breakdown</h4>
+                  <div className="overflow-x-auto -mx-3 px-3">
+                    <Table className="w-full">
+                      <TableBody className="text-xs">
+                        {fatsData.map((fat) => (
+                          <TableRow key={fat.name}>
+                            <TableCell className="font-medium">{fat.name}</TableCell>
+                            <TableCell>{fat.value}%</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+              
+              {/* Micronutrients if available */}
               {item.showMicronutrients && item.micronutrientsData && (
-                <div className="overflow-x-hidden">
-                  <SimpleMicronutrientList data={item.micronutrientsData} />
+                <div className="mt-5">
+                  <SimpleMicronutrientList micronutrientsData={item.micronutrientsData} />
                 </div>
               )}
             </div>

@@ -24,18 +24,21 @@ const Index: React.FC = () => {
     const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || (navigator as any).msMaxTouchPoints > 0;
     setIsTouch(touch);
 
-    if (touch) document.body.classList.add('touch-device');
+    if (touch) {
+      document.body.classList.add('touch-device');
+      document.body.classList.add('touch-optimized');
+    }
     document.body.classList.remove('overflow-hidden');
 
     return () => {
       document.body.classList.remove('touch-device');
-      document.body.classList.remove('overflow-hidden');
+      document.body.classList.remove('touch-optimized');
     };
   }, []);
 
   return (
-    <PageContainer className={isTouch ? 'touch-optimized' : ''} variant="default">
-      <div className="space-y-10">
+    <PageContainer className={isTouch ? 'touch-optimized mobile-friendly-container' : ''} variant="default">
+      <div className="space-y-10 max-w-full">
         {loading ? (
           <PageLoadingFallback />
         ) : (
