@@ -31,15 +31,18 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
     // Log when component mounts/unmounts for debugging
     console.log('FullScreenLoading component mounted', { isErrorState });
     
-    // Add overflow-hidden only if loading, not in error state
+    // Force position fixed to prevent scrolling while loading
     if (!isErrorState) {
       document.body.classList.add('overflow-hidden');
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
       
       // Add a loading-trigger marker to help with cleanup detection
       const loadingTrigger = document.createElement('div');
       loadingTrigger.classList.add('loading-trigger');
+      loadingTrigger.classList.add('loading-overlay-active');
       loadingTrigger.style.display = 'none';
       document.body.appendChild(loadingTrigger);
     }
@@ -50,6 +53,8 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
       document.body.classList.remove('overflow-hidden');
       document.body.style.position = '';
       document.body.style.width = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
       
       // Remove any loading triggers we created
       const loadingTriggers = document.querySelectorAll('.loading-trigger');
@@ -89,7 +94,10 @@ export const FullScreenLoading = React.memo(function FullScreenLoading({
         left: 0,
         right: 0,
         bottom: 0,
+        width: '100vw',
+        height: '100vh',
         zIndex: 9999,
+        display: 'flex',
       }}
       id="fullscreen-loading-overlay"
     >

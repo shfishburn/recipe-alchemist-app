@@ -10,6 +10,7 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { LoadingIndicator } from '@/components/ui/loading-indicator';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
+import { forceCleanupUI } from '@/utils/dom-cleanup';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -26,20 +27,35 @@ const QuickRecipePage: React.FC = () => {
     debugMode,
   } = useQuickRecipePage();
 
-  // Force show loading indicator for navigation
+  // Force show loading indicator for navigation and clean up on unmount
   useEffect(() => {
     console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
+    
     const loadingTrigger = document.createElement('div');
     loadingTrigger.className = 'loading-trigger';
     loadingTrigger.dataset.page = 'quick-recipe';
     document.body.appendChild(loadingTrigger);
     
+    // Force cleanup any previous loading states when component mounts
+    if (!isLoading && !isRetrying) {
+      forceCleanupUI();
+    }
+    
     return () => {
       console.log('QuickRecipePage unmounted');
+      
+      // Clean up body classes and loading triggers
       document.body.classList.remove('overflow-hidden');
+      document.body.style.position = '';
+      document.body.style.width = '';
+      
+      // Remove loading trigger element
       if (loadingTrigger.parentNode) {
         document.body.removeChild(loadingTrigger);
       }
+      
+      // Run additional cleanup
+      forceCleanupUI();
     };
   }, []);
 
@@ -51,6 +67,17 @@ const QuickRecipePage: React.FC = () => {
       hasRecipe: !!recipe, 
       hasError: !!error 
     });
+    
+    // Apply or remove overflow handling when loading state changes
+    if (isLoading || isRetrying) {
+      document.body.classList.add('overflow-hidden');
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.classList.remove('overflow-hidden');
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
   }, [isLoading, isRetrying, recipe, error]);
 
   // Full-screen loading while generating or retrying

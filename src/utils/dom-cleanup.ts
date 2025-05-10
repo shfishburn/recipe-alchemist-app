@@ -9,9 +9,11 @@ export const cleanupUIState = () => {
   // Remove any stuck classes with safety checks
   if (document.body) {
     document.body.classList.remove('overflow-hidden');
-    document.body.classList.remove('loading');
     document.body.style.position = '';
     document.body.style.width = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.classList.remove('loading');
   }
   
   // Remove any loading triggers
@@ -33,10 +35,10 @@ export const cleanupUIState = () => {
     console.log(`Found ${possibleOverlays.length} loading overlays to check`);
     possibleOverlays.forEach(overlay => {
       // Check if the overlay exists and might be "stuck"
-      const computedStyle = window.getComputedStyle(overlay);
-      if (computedStyle.display !== 'none') {
-        console.log('Removing potentially stuck overlay');
-        if (overlay.parentNode) {
+      if (overlay.parentNode) {
+        const computedStyle = window.getComputedStyle(overlay);
+        if (computedStyle.display !== 'none') {
+          console.log('Removing potentially stuck overlay');
           overlay.parentNode.removeChild(overlay);
         }
       }
@@ -83,6 +85,30 @@ export const setupRouteChangeCleanup = () => {
 // Add a manual cleanup method to be called from components
 export const forceCleanupUI = () => {
   console.log('Force cleanup UI called');
+  
+  // Double check for loading overlays
+  const overlays = document.querySelectorAll('.loading-overlay');
+  if (overlays.length > 0) {
+    console.log(`Found ${overlays.length} overlays during force cleanup`);
+    
+    // Check if any overlay isn't in the process of being removed already
+    overlays.forEach(overlay => {
+      if (overlay.parentNode && !overlay.classList.contains('being-removed')) {
+        overlay.classList.add('being-removed');
+        console.log('Marking overlay for removal');
+        
+        // Use timeout to ensure any transitions can complete
+        setTimeout(() => {
+          if (overlay.parentNode) {
+            console.log('Removing marked overlay');
+            overlay.parentNode.removeChild(overlay);
+          }
+        }, 100);
+      }
+    });
+  }
+  
+  // Run standard cleanup
   cleanupUIState();
 };
 

@@ -33,12 +33,16 @@ export const PageTransition = memo(function PageTransition({ children }: PageTra
       
       // Check if there's an active loading overlay - don't interfere with it
       const hasLoadingOverlay = document.querySelector('.loading-overlay');
-      if (!hasLoadingOverlay) {
-        // Only clean up UI if there's no active loading overlay
-        cleanupUIState();
-      } else {
-        console.log('Page transition detected active loading overlay - skipping cleanup');
+      const hasLoadingTrigger = document.querySelector('.loading-overlay-active');
+      if (hasLoadingOverlay || hasLoadingTrigger) {
+        console.log('Page transition detected active loading overlay - skipping cleanup and animation');
+        // Just update location without animation when loading is active
+        setDisplayLocation(location);
+        return;
       }
+      
+      // Only clean up UI if there's no active loading overlay
+      cleanupUIState();
       
       // Start exit animation
       setTransitionStage("fadeOut");
