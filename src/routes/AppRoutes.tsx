@@ -1,11 +1,29 @@
 
 import React, { Suspense } from 'react';
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
 import PrivateRoute from "@/components/PrivateRoute";
 import * as LazyRoutes from "@/routes/LazyRoutes";
 
 export const AppRoutes = () => {
+  const location = useLocation();
+  // Check if we're on the loading page
+  const isLoadingRoute = location.pathname === '/loading';
+  
+  // If we're on the loading route, don't wrap it in the normal layout
+  if (isLoadingRoute) {
+    return (
+      <Routes>
+        <Route path="/loading" element={
+          <Suspense fallback={<PageLoadingFallback />}>
+            <LazyRoutes.LoadingPage />
+          </Suspense>
+        } />
+      </Routes>
+    );
+  }
+  
+  // Normal routes with app layout
   return (
     <Routes>
       <Route path="/" element={
@@ -27,12 +45,6 @@ export const AppRoutes = () => {
       <Route path="/quick-recipe" element={
         <Suspense fallback={<PageLoadingFallback />}>
           <LazyRoutes.QuickRecipePage />
-        </Suspense>
-      } />
-      {/* New loading route for recipe generation */}
-      <Route path="/loading" element={
-        <Suspense fallback={<PageLoadingFallback />}>
-          <LazyRoutes.LoadingPage />
         </Suspense>
       } />
       <Route path="/auth" element={

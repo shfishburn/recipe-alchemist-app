@@ -1,5 +1,5 @@
-
 import React, { Suspense, lazy, StrictMode } from "react";
+import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import "./styles/loading.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -13,20 +13,43 @@ const AppLayout = lazy(() => import("@/components/layout/AppLayout").then(module
   default: module.AppLayout
 })));
 
+// Route aware wrapper component
+const AppWithRoutes = () => {
+  const location = useLocation();
+  const isLoadingRoute = location.pathname === '/loading';
+  
+  // If we're on the loading route, render the AppRoutes directly
+  if (isLoadingRoute) {
+    const LoadingPage = lazy(() => import("@/pages/LoadingPage"));
+    return (
+      <Suspense fallback={<PageLoadingFallback />}>
+        <LoadingPage />
+      </Suspense>
+    );
+  }
+  
+  // Otherwise, use the normal app layout
+  return (
+    <Suspense fallback={<PageLoadingFallback />}>
+      <AppLayout />
+    </Suspense>
+  );
+};
+
 const App = () => (
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <Suspense fallback={<PageLoadingFallback />}>
+      <Router>
         <ErrorBoundary>
           <AuthProvider>
             <ProfileProvider>
               <CookieConsentProvider>
-                <AppLayout />
+                <AppWithRoutes />
               </CookieConsentProvider>
             </ProfileProvider>
           </AuthProvider>
         </ErrorBoundary>
-      </Suspense>
+      </Router>
     </QueryClientProvider>
   </StrictMode>
 );

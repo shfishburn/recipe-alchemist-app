@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -8,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 
 /**
- * Standalone loading page that displays while a recipe is being generated
- * This page replaces the entire app layout including the navbar
+ * Standalone loading page that completely replaces the app layout
+ * This page exists outside the normal layout hierarchy
  */
 const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -106,11 +105,7 @@ const LoadingPage: React.FC = () => {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[200] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950"
-      aria-modal="true"
-      role="dialog"
-    >
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950">
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
         {/* Progress bar at the top */}
         <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">

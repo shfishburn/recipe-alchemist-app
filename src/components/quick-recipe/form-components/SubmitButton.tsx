@@ -26,7 +26,7 @@ export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitBut
         "transition-all text-white shadow-lg font-medium group",
         "relative overflow-hidden rounded-xl",
         isMobile ? "py-4 text-base" : "py-4 text-lg", // Increased padding and text size for desktop
-        isLoading ? "animate-pulse" : ""
+        isLoading ? "animate-pulse cursor-not-allowed" : ""
       )}
       size={isMobile ? "lg" : "lg"}
       disabled={isLoading || disabled}
