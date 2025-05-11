@@ -21,6 +21,7 @@ export function useLoadingPage() {
   
   const { generateQuickRecipe } = useQuickRecipe();
   
+  // Ensuring all hooks are called unconditionally
   const [progress, setProgress] = useState(10);
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);

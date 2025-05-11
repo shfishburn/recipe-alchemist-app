@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LoadingError } from '@/components/loading/LoadingError';
 import { LoadingState } from '@/components/loading/LoadingState';
 import { useLoadingPage } from '@/hooks/use-loading-page';
