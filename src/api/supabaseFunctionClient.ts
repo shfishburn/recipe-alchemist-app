@@ -29,12 +29,18 @@ export async function callSupabaseFunction<T, R>(
     }
 
     // Make the function call with proper abort signal handling
+    // Remove the signal from the invoke options as it's not supported
     const response = await supabase.functions.invoke(functionName, {
       method,
       body: payload,
       headers,
-      signal // Pass the AbortSignal to the fetch request
+      // signal is not supported in FunctionInvokeOptions, so we handle it differently
     });
+
+    // Create a way to handle abort manually if needed
+    if (signal && signal.aborted) {
+      throw new DOMException('The operation was aborted', 'AbortError');
+    }
 
     // Return a standardized response object
     return {

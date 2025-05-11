@@ -62,23 +62,23 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
           <IngredientInput 
             value={mainIngredient}
             onChange={setMainIngredient}
-            placeholder="Enter a dish name or ingredient (e.g., 'Tacos' or 'Chicken')"
+            // Remove the placeholder prop as it's not defined in IngredientInputProps
           />
         </div>
         
         <CuisineSelector 
-          selected={cuisines}
+          value={cuisines}
           onChange={setCuisines}
         />
         
         <DietarySelector 
-          selected={dietaryPreferences}
+          value={dietaryPreferences}
           onChange={setDietaryPreferences}
         />
         
         <ServingsSelector 
-          value={servings}
-          onChange={setServings}
+          selectedServings={servings}
+          onServingsChange={setServings}
         />
       </div>
       
