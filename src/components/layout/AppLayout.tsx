@@ -11,10 +11,25 @@ import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
+import { useLocation } from "react-router-dom";
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
   useScrollRestoration();
+  const location = useLocation();
+  
+  // Check if we're on the loading page
+  const isLoadingRoute = location.pathname === '/loading';
+
+  // If we're on the loading route, render only the LoadingPage
+  if (isLoadingRoute) {
+    const LoadingPage = React.lazy(() => import("@/pages/LoadingPage"));
+    return (
+      <React.Suspense fallback={<div className="fixed inset-0 bg-white dark:bg-gray-950" />}>
+        <LoadingPage />
+      </React.Suspense>
+    );
+  }
   
   // Set up UI state cleanup for route changes
   useEffect(() => {
