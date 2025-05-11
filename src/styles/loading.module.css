@@ -47,33 +47,39 @@
   animation: cooking-pot 2s ease-in-out infinite;
   position: relative;
   transform: translateZ(0); /* Hardware acceleration */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .steam {
   animation: steam 2s ease-in-out infinite;
   position: absolute;
-  top: -5px;
+  top: 5px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
   filter: blur(3px);
   background-color: rgba(255, 255, 255, 0.8);
   transform: translateZ(0); /* Hardware acceleration */
+  pointer-events: none;
 }
 
 /* Steam particles positioning with classes instead of inline styles */
 .steam1 {
-  left: 5px;
+  left: 30px;
   animation-delay: 0.2s;
 }
 
 .steam2 {
-  left: 15px;
+  left: 45px;
   animation-delay: 0.6s;
 }
 
 .steam3 {
-  left: 25px;
+  left: 60px;
   animation-delay: 1.2s;
 }
 
@@ -81,6 +87,7 @@
 .animateProgressPulse {
   animation: progress-pulse 2s ease-in-out infinite;
   transform: translateZ(0); /* Hardware acceleration */
+  will-change: opacity;
 }
 
 /* Loading UI helper classes */

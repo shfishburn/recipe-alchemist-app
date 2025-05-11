@@ -70,7 +70,7 @@ const QuickRecipePage: React.FC = () => {
 
   return (
     <>
-      {/* Loading/Retrying Overlay - Moved outside PageContainer to ensure full screen coverage */}
+      {/* Loading/Retrying Overlay - Positioned outside PageContainer with high z-index */}
       {(isLoading || isRetrying) && (
         <FullScreenLoading
           key="loading-overlay"

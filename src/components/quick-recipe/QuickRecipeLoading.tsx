@@ -40,7 +40,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
     <div className="flex flex-col items-center justify-center w-full">
       {/* Top progress bar that shows loading progress */}
       <div 
-        className="fixed top-0 left-0 right-0 h-1 z-[10000]"
+        className={`${styles.hwAccelerated} fixed top-0 left-0 right-0 h-1 z-[10001]`}
         role="progressbar" 
         aria-label="Loading progress"
         aria-valuemin={0} 
@@ -48,14 +48,11 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         aria-valuenow={progressValue}
       >
         <div 
-          className={`h-full bg-recipe-green transition-all duration-300 ease-out ${styles.animateProgressPulse}`}
+          className={`h-full bg-recipe-green ${styles.animateProgressPulse}`}
           style={{ 
-            boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`,
             width: `${progressValue || 5}%`,
             minWidth: '5%',
-            transformOrigin: 'left',
-            willChange: 'width, transform',
-            transition: 'width 0.5s ease-out'
+            boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`,
           }}
         />
       </div>
@@ -75,7 +72,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         
         {/* Step description with animation */}
         <div aria-live="polite">
-          <p className={`text-sm text-muted-foreground ${styles.animateProgressPulse}`}>
+          <p className={`text-sm text-muted-foreground ${styles.fadeIn}`}>
             {showFinalAnimation 
               ? "Your perfect recipe has been created." 
               : loadingState.stepDescription || LOADING_STEPS[0]}
@@ -86,6 +83,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
         <Progress 
           value={progressValue} 
           className="w-full"
+          key={`progress-${progressValue}`}
           indicatorClassName={styles.animateProgressPulse}
           indicatorColor="#4CAF50"
           aria-hidden="true"

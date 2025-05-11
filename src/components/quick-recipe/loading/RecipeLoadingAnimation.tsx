@@ -28,7 +28,7 @@ export function RecipeLoadingAnimation() {
         <path d="M54 54L42 66" stroke="white" strokeWidth="2" strokeLinecap="round" />
       </svg>
       
-      {/* Steam particles with CSS module classes */}
+      {/* Steam particles with explicit CSS module classes */}
       <div className={`${styles.steam} ${styles.steam1}`} aria-hidden="true"></div>
       <div className={`${styles.steam} ${styles.steam2}`} aria-hidden="true"></div>
       <div className={`${styles.steam} ${styles.steam3}`} aria-hidden="true"></div>
