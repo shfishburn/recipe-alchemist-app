@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChefHat } from 'lucide-react';
@@ -13,93 +12,97 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
   const [mainIngredient, setMainIngredient] = useState('');
   const [cuisines, setCuisines] = useState<string[]>(['any']); // Default to 'any'
   const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
-  const [servings, setServings] = useState<number>(4);
+  const [servings, setServings] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inputError, setInputError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!mainIngredient.trim()) {
+      setInputError('Please enter an ingredient');
       toast({
-        title: "Missing ingredients",
-        description: "Please provide at least one ingredient or dish name.",
-        variant: "destructive"
+        title: 'Please enter an ingredient',
+        description: 'Tell us what you have in your kitchen',
+        variant: 'destructive',
       });
       return;
     }
 
     try {
       setIsSubmitting(true);
+      setInputError('');
       
-      // Construct the form data
+      // Create form data with all fields
       const formData = {
-        mainIngredient,
-        cuisine: cuisines,
-        dietary: dietaryPreferences,
-        servings
+        ingredients: mainIngredient.trim(),
+        cuisine: cuisines.length > 0 ? cuisines : ['any'], // Ensure we have an array
+        dietary: dietaryPreferences, // Already an array
+        servings: servings
       };
+
+      console.log('QuickRecipeGenerator - Submitting form data:', formData);
       
-      console.log("Submitting recipe request with data:", formData);
+      // Submit the form data
+      onSubmit(formData);
       
-      // Pass the form data to the parent component
-      await onSubmit(formData);
     } catch (error) {
-      console.error("Error submitting recipe request:", error);
+      console.error('Error generating recipe:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit recipe request. Please try again.",
-        variant: "destructive"
+        title: 'Something went wrong',
+        description: 'Failed to generate recipe. Please try again.',
+        variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      // Keep isSubmitting true since the page will navigate away
+      // The loading state will be managed by the store
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="col-span-2">
-          <IngredientInput 
-            value={mainIngredient}
-            onChange={setMainIngredient}
-            // Remove the placeholder prop as it's not defined in IngredientInputProps
-          />
-        </div>
-        
-        <CuisineSelector 
-          value={cuisines}
-          onChange={setCuisines}
-        />
-        
-        <DietarySelector 
-          value={dietaryPreferences}
-          onChange={setDietaryPreferences}
-        />
-        
-        <ServingsSelector 
-          selectedServings={servings}
-          onServingsChange={setServings}
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      {/* Ingredient Input */}
+      <div className="space-y-3">
+        <IngredientInput 
+          value={mainIngredient}
+          onChange={setMainIngredient}
+          error={inputError}
         />
       </div>
       
-      <div className="flex justify-center pt-2">
-        <Button
-          type="submit"
-          disabled={isSubmitting || !mainIngredient.trim()}
-          className="w-full sm:w-auto transition-all bg-recipe-green hover:bg-recipe-green/90"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Recipe...
-            </>
-          ) : (
-            <>
-              <ChefHat className="mr-2 h-4 w-4" />
-              Create Recipe
-            </>
-          )}
-        </Button>
+      {/* Additional Options */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Servings Selector */}
+        <div>
+          <ServingsSelector 
+            selectedServings={servings} 
+            onServingsChange={setServings} 
+          />
+        </div>
+        
+        {/* Cuisine Selector */}
+        <div>
+          <CuisineSelector 
+            value={cuisines} 
+            onChange={setCuisines} 
+          />
+        </div>
+        
+        {/* Dietary Selector */}
+        <div>
+          <DietarySelector 
+            value={dietaryPreferences} 
+            onChange={setDietaryPreferences} 
+          />
+        </div>
+      </div>
+      
+      {/* Submit Button */}
+      <div className="flex justify-center mt-4">
+        <SubmitButton 
+          isLoading={isSubmitting}
+          disabled={!mainIngredient.trim()}
+        />
       </div>
     </form>
   );

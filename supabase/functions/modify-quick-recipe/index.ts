@@ -132,10 +132,9 @@ serve(async (req) => {
         withRetry(() => chain.invoke({ input, history }), 3, 500)
       );
     } catch (llmErr) {
-      console.error("LLM error:", llmErr);
-      const msg = llmErr.message?.includes("Circuit is open")
+      const msg = llmErr.message.includes("Circuit is open")
         ? { error: "Service unavailable, too many failures" }
-        : llmErr.message?.includes("timeout")
+        : llmErr.message.includes("timeout")
           ? { error: "AI request timed out" }
           : { error: "AI generation failed" };
       return new Response(JSON.stringify(msg), { status: 503, headers });
@@ -146,7 +145,6 @@ serve(async (req) => {
     try {
       parsed = recipeModificationsSchema.parse(result);
     } catch (parseErr) {
-      console.error("Parse error:", parseErr);
       return new Response(
         JSON.stringify({
           error: "Invalid AI response format",

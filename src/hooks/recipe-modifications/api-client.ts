@@ -14,8 +14,16 @@ export async function requestRecipeModifications(
   console.log('Requesting recipe modifications:', userRequest);
   
   try {
-    // Create the actual function call
-    const functionPromise = callSupabaseFunction<
+    // Register abort handler to throw an AbortError if the controller aborts
+    // This allows us to catch and handle it properly below
+    const abortPromise = new Promise<never>((_, reject) => {
+      abortController.signal.addEventListener('abort', () => {
+        reject(new DOMException('Request aborted', 'AbortError'));
+      });
+    });
+    
+    // Race the function call against abort
+    const responsePromise = callSupabaseFunction<
       { recipe: QuickRecipe; userRequest: string; modificationHistory: any[] },
       RecipeModifications
     >('modify-quick-recipe', {
@@ -26,17 +34,11 @@ export async function requestRecipeModifications(
         modificationHistory
       },
       token,
-      debugTag: 'recipe-modification',
-      signal: abortController.signal // Pass the abort signal directly to the function call
+      debugTag: 'recipe-modification'
     });
     
-    // Add event listener for abort signal
-    abortController.signal.addEventListener('abort', () => {
-      console.log('Request aborted by controller');
-    });
-    
-    // Wait for the response
-    const response = await functionPromise;
+    // This will either resolve with the function response or reject if aborted
+    const response = await Promise.race([responsePromise, abortPromise]);
 
     // Check for errors in the response
     if (response.error) {
@@ -56,9 +58,9 @@ export async function requestRecipeModifications(
     
     // Use Zod to validate the response data
     return recipeModificationsSchema.parse(response.data);
-  } catch (err: any) {
+  } catch (err) {
     // Check if this is an AbortError from the AbortController
-    if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+    if (err.name === 'AbortError') {
       console.log('Request was canceled');
       throw err;
     }

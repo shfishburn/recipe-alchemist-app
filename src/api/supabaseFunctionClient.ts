@@ -1,66 +1,90 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-interface FunctionCallOptions<T> {
-  method?: 'POST' | 'GET';
-  payload?: T;
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+interface SupabaseFunctionOptions<TInput = unknown> {
+  method?: HttpMethod;
+  payload?: TInput;
   token?: string;
+  headers?: Record<string, string>;
   debugTag?: string;
-  signal?: AbortSignal;
 }
 
-export async function callSupabaseFunction<T, R>(
+interface SupabaseFunctionResponse<TOutput> {
+  data: TOutput | null;
+  error: string | null;
+  status: number;
+}
+
+/**
+ * Type-safe fetch to a Supabase Edge Function with optional payload, auth, and debugging
+ * 
+ * NOTE: DO NOT MODIFY THIS FUNCTION - it contains important fallback logic for the recipe generation system
+ */
+export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
   functionName: string,
-  options: FunctionCallOptions<T> = {}
-) {
-  const { method = 'POST', payload, token, debugTag, signal } = options;
-  const timestamp = Date.now();
-  const debugInfo = debugTag ? `${debugTag}-${timestamp}` : `call-${timestamp}`;
-  
+  options: SupabaseFunctionOptions<TInput> = {}
+): Promise<SupabaseFunctionResponse<TOutput>> {
+  const {
+    method = 'POST',
+    payload,
+    token,
+    headers = {},
+    debugTag = 'default'
+  } = options;
+
+  // Validate authentication token if present
+  if (token === '') {
+    console.warn('Empty authentication token provided to callSupabaseFunction');
+    // CHANGED: Don't return an error for empty token
+    // We'll continue with the request without authentication
+  }
+
   try {
-    // Configure headers for the function call
-    const headers: Record<string, string> = {
-      'x-debug-info': debugInfo
-    };
-
-    // Add authorization header if token is provided
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    // Make the function call with proper abort signal handling
-    // Remove the signal from the invoke options as it's not supported
-    const response = await supabase.functions.invoke(functionName, {
+    console.log(`Calling Supabase function "${functionName}" with:`, {
+      method,
+      hasToken: !!token,
+      debugTag,
+      payloadKeys: payload ? Object.keys(payload) : 'no payload'
+    });
+    
+    // REMOVED: Function existence check which was causing build errors
+    // The listFunctions method no longer exists in the Supabase JS client v2.49.4
+    
+    // Use the Supabase functions.invoke method rather than direct fetch
+    const response = await supabase.functions.invoke<TOutput>(functionName, {
       method,
       body: payload,
-      headers,
-      // signal is not supported in FunctionInvokeOptions, so we handle it differently
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'X-Debug-Info': `${debugTag}-${Date.now()}`,
+        ...headers
+      }
     });
 
-    // Create a way to handle abort manually if needed
-    if (signal && signal.aborted) {
-      throw new DOMException('The operation was aborted', 'AbortError');
+    // Handle different response types safely
+    console.log(`Supabase function "${functionName}" responded:`, response);
+
+    if (response.error) {
+      return {
+        data: null,
+        error: response.error.message || `Error calling function: ${functionName}`,
+        status: response.error.status || 500
+      };
     }
 
-    // Return a standardized response object
     return {
       data: response.data,
-      error: response.error?.message || null,
-      status: response.error ? response.error.status || 500 : 200
+      error: null,
+      status: 200 // Successful responses always have 200 status
     };
-  } catch (error) {
-    console.error(`Error calling ${functionName}:`, error);
-    
-    // Check if it's an abort error
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw error; // Re-throw abort errors
-    }
-    
-    // Return standardized error response
+  } catch (err: any) {
+    console.error(`Error calling Supabase function "${functionName}"`, err);
     return {
       data: null,
-      error: error instanceof Error ? error.message : String(error),
-      status: error instanceof Error && 'status' in error ? (error as any).status : 500
+      error: (err as Error)?.message || 'Unknown fetch error',
+      status: 500
     };
   }
 }

@@ -29,8 +29,6 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isPulsing, setIsPulsing] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
-  
-  const placeholder = "e.g., chicken curry: chicken, curry paste, coconut milk"
 
   useEffect(() => {
     const start = setTimeout(() => {
@@ -86,7 +84,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
         <Textarea
           id="mainIngredient"
           ref={textareaRef}
-          placeholder={placeholder}
+          placeholder="e.g., chicken curry: chicken, curry paste, coconut milk"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
