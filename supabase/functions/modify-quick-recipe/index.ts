@@ -4,6 +4,7 @@ import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
 import { StructuredOutputParser } from "https://esm.sh/@langchain/core/output_parsers";
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { recipeModificationsSchema } from "./schema.ts";
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
@@ -266,6 +267,47 @@ serve(async (req) => {
         processingTime: `${processingTime}ms`,
         timestamp: new Date().toISOString()
       });
+      
+      // Initialize Supabase client with proper authentication
+      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+      const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+        console.error("Missing required Supabase environment variables");
+        throw new Error("🛑 Supabase configuration is incomplete - SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing");
+      }
+      
+      const supabaseClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${SERVICE_ROLE_KEY}`
+          }
+        }
+      });
+      
+      // Store the modification in recipe_chats if a recipe ID is provided
+      if (recipe.id) {
+        try {
+          const { error: chatError } = await supabaseClient
+            .from('recipe_chats')
+            .insert({
+              recipe_id: recipe.id,
+              user_message: userRequest,
+              ai_response: "Recipe modification request",
+              changes_suggested: parsed,
+              source_type: 'modification'
+            });
+
+          if (chatError) {
+            console.error("Error storing chat:", chatError);
+            // Continue with response even if DB insert failed
+            // The frontend will handle this case
+          }
+        } catch (dbError) {
+          console.error("Database error in modify-quick-recipe function:", dbError);
+          // Continue with response even if DB operation failed
+        }
+      }
       
       return new Response(
         JSON.stringify(parsed),
