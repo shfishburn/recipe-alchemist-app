@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeError';
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
-import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 
@@ -24,33 +24,39 @@ const QuickRecipePage: React.FC = () => {
     toggleDebugMode,
     debugMode,
   } = useQuickRecipePage();
-                            
-  const renderErrorContent = () => {
-    return (
-      <QuickRecipeError
-        error={error}
-        hasTimeoutError={hasTimeoutError}
-        debugMode={debugMode}
-        formData={formData}
-        onCancel={handleCancel}
-        onRetry={handleRetry}
-        isRetrying={isRetrying}
-      />
-    );
-  };
-
-  // If loading or retrying, ONLY show the full screen loading overlay
-  // This is important - we return JUST the loading component with no other layout elements
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // If loading or retrying, redirect to the loading page to prevent flicker
+  useEffect(() => {
+    if ((isLoading || isRetrying) && location.pathname !== '/loading') {
+      console.log("Redirecting to loading page from QuickRecipePage due to loading state");
+      
+      // Define retry function that can be passed to the loading page
+      const retryFunction = async () => {
+        if (formData) {
+          console.log("Retrying recipe generation with formData:", formData);
+          handleRetry();
+          return true;
+        }
+        return false;
+      };
+      
+      navigate('/loading', { 
+        state: { 
+          fromQuickRecipePage: true,
+          onRetry: formData ? retryFunction : undefined,
+          error: error
+        }
+      });
+    }
+  }, [isLoading, isRetrying, navigate, location.pathname, formData, handleRetry, error]);
+  
+  // If loading is happening, don't render anything so we don't see a flash
+  // Let the redirect to loading page handle it
   if (isLoading || isRetrying) {
-    return (
-      <FullScreenLoading
-        key="loading-overlay"
-        onCancel={handleCancel}
-        onRetry={error ? handleRetry : undefined}
-        error={error}
-        isRetrying={isRetrying}
-      />
-    );
+    return null;
   }
   
   return (
@@ -67,7 +73,15 @@ const QuickRecipePage: React.FC = () => {
             <QuickRecipeFormContainer />
           </div>
         ) : error ? (
-          renderErrorContent()
+          <QuickRecipeError
+            error={error}
+            hasTimeoutError={hasTimeoutError}
+            debugMode={debugMode}
+            formData={formData}
+            onCancel={handleCancel}
+            onRetry={handleRetry}
+            isRetrying={isRetrying}
+          />
         ) : recipe ? (
           <div className="space-y-8">
             <QuickRecipeDisplay recipe={recipe} />

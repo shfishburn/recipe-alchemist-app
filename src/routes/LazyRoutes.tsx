@@ -64,5 +64,6 @@ export const Privacy = createLazyComponent(() => import("@/pages/Privacy"));
 export const Terms = createLazyComponent(() => import("@/pages/Terms"));
 export const Cookies = createLazyComponent(() => import("@/pages/Cookies"));
 export const QuickRecipePage = createLazyComponent(() => import("@/pages/QuickRecipePage"));
+export const LoadingPage = createLazyComponent(() => import("@/pages/LoadingPage"));
 export const DataImport = createLazyComponent(() => import("@/pages/DataImport"));
 export const Auth = createLazyComponent(() => import("@/pages/Auth"));
