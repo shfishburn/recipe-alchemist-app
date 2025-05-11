@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { HelmetProvider } from 'react-helmet-async';
-import { BrowserRouter } from 'react-router-dom';
 
 // Function to safely initialize the app
 const initializeApp = () => {
@@ -22,11 +21,9 @@ const initializeApp = () => {
     
     root.render(
       <React.StrictMode>
-        <BrowserRouter>
-          <HelmetProvider>
-            <App />
-          </HelmetProvider>
-        </BrowserRouter>
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
       </React.StrictMode>
     );
   } catch (error) {
