@@ -26,7 +26,7 @@ export function useTransitionGuard(
         // Call the callback to determine if navigation should proceed
         const canNavigate = await onNavigate();
         if (canNavigate) {
-          originalPush(...args);
+          originalPush.apply(navigator, args);
         }
       } catch (err) {
         console.error("Error during navigation guard:", err);
