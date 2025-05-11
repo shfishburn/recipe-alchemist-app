@@ -10,7 +10,6 @@ import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
 import { NutritionPreview } from './NutritionPreview';
 import { RecipeCarousel } from './RecipeCarousel';
 import { Brain, ChefHat, ChartPie, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { toast } from '@/hooks/use-toast';
 
@@ -93,23 +92,6 @@ const Hero: React.FC = memo(() => {
             <Badge icon={<Sparkles className="w-4 h-4 mr-1" />} label="AI-Powered" color="blue" />
             <Badge icon={<ChartPie className="w-4 h-4 mr-1" />} label="Personalized Nutrition" color="green" />
             <Badge label="Ingredient-Based" color="amber" />
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-4 mt-6">
-            <Button 
-              size={isMobile ? "default" : "lg"} 
-              onClick={openAuthDrawer} 
-              className="bg-recipe-green hover:bg-recipe-green/90"
-            >
-              Get Started Free
-            </Button>
-            <Button 
-              size={isMobile ? "default" : "lg"} 
-              variant="outline" 
-              asChild
-            >
-              <a href="/how-it-works">Learn More</a>
-            </Button>
           </div>
         </div>
 

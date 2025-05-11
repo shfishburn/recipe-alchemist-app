@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { MobileMenu } from '@/components/ui/mobile-menu';
 import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -88,30 +86,8 @@ export function Navbar({ className = '' }: { className?: string }) {
             })}
           </nav>
 
-          {/* Auth Buttons on the right */}
-          <div className="hidden md:flex items-center space-x-3">
-            {session ? (
-              <Button variant="outline" size="sm" asChild className="h-9 px-4">
-                <Link to="/profile" className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-              </Button>
-            ) : (
-              <>  
-                <Button variant="outline" size="sm" onClick={open} className="h-9 px-4">
-                  Log in
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={open}
-                  className="h-9 px-4 bg-primary text-white hover:bg-primary/90"
-                >
-                  Sign up
-                </Button>
-              </>
-            )}
-          </div>
+          {/* Empty div to maintain layout */}
+          <div className="hidden md:block w-32"></div>
         </div>
       </div>
 
