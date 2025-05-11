@@ -36,8 +36,16 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     const savedRequest = localStorage.getItem('recipe_modification_request');
     if (savedRequest) {
       setRequest(savedRequest);
+      
+      // Also restore immediate setting
+      const savedImmediate = localStorage.getItem('recipe_modification_immediate');
+      if (savedImmediate) {
+        setImmediate(savedImmediate === 'true');
+      }
+      
       // Clear the saved request to prevent it from showing up on every load
       localStorage.removeItem('recipe_modification_request');
+      localStorage.removeItem('recipe_modification_immediate');
     }
   }, []);
 
@@ -46,6 +54,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     if (request.trim()) {
       localStorage.setItem('recipe_modification_request', request);
       localStorage.setItem('recipe_modification_page', window.location.pathname);
+      localStorage.setItem('recipe_modification_immediate', String(immediate));
     }
   };
 
@@ -105,10 +114,15 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     resetToOriginal
   } = useRecipeModifications(recipe);
 
-  // Fix the type comparison error for status === "success" vs "applying"
-  // Using type-safe comparison instead of direct string comparison
-  const isModificationSuccessful = status === 'success';
-  const isApplyingModifications = status === 'applying';
+  // Handle for auth-related errors by reopening the auth drawer
+  useEffect(() => {
+    if (status === 'not-authenticated') {
+      // Save the current state
+      saveRequestToLocalStorage();
+      // Open the auth drawer
+      openAuthDrawer();
+    }
+  }, [status, openAuthDrawer]);
 
   // Add a callback to notify parent component when modifications are applied
   const handleApplyModifications = useCallback(() => {
@@ -120,6 +134,17 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
       });
     }
   }, [applyModifications, modifiedRecipe, onModifiedRecipe]);
+
+  // Handle submitting modifications
+  const handleRequestModifications = useCallback(() => {
+    if (!session) {
+      saveRequestToLocalStorage();
+      openAuthDrawer();
+      return;
+    }
+    
+    requestModifications(request, immediate);
+  }, [request, immediate, requestModifications, session, openAuthDrawer]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -154,7 +179,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
           <CardFooter className="justify-between">
             <Button
               variant="outline"
-              onClick={() => requestModifications(request, immediate)}
+              onClick={handleRequestModifications}
               disabled={status === 'loading' || status === 'applying'}
             >
               {status === 'loading' ? 'Loading...' : 'Request Modifications'}
@@ -220,10 +245,10 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
             )}
           </CardContent>
           <CardFooter className="justify-between">
-            {isModificationSuccessful && (
+            {status === 'success' && (
               <>
-                <Button onClick={handleApplyModifications} disabled={isApplyingModifications}>
-                  {isApplyingModifications ? 'Applying...' : 'Apply Modifications'}
+                <Button onClick={handleApplyModifications} disabled={status === 'applying'}>
+                  {status === 'applying' ? 'Applying...' : 'Apply Modifications'}
                 </Button>
                 <Button variant="secondary" onClick={rejectModifications}>
                   Reject Modifications

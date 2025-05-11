@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -60,9 +61,11 @@ export type ModificationStatus =
   | 'loading'
   | 'success'
   | 'applying'
+  | 'applied'
   | 'error'
   | 'canceled'
-  | 'not-deployed';
+  | 'not-deployed'
+  | 'not-authenticated';
 
 export function useRecipeModifications(recipe: QuickRecipe) {
   const { session } = useAuth();
@@ -100,7 +103,13 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     // Fail fast if no authentication
     if (!session) {
       setError('Authentication required to modify recipes');
-      setStatus('error');
+      setStatus('not-authenticated');
+      // Save current request to localStorage for after login
+      if (request) {
+        localStorage.setItem('recipe_modification_request', request);
+        localStorage.setItem('recipe_modification_page', window.location.pathname);
+        localStorage.setItem('recipe_modification_immediate', String(immediate));
+      }
       return;
     }
 
@@ -124,7 +133,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       const token = session?.access_token;
       if (!token) {
         setError('Authentication required');
-        setStatus('error');
+        setStatus('not-authenticated');
         return;
       }
 
@@ -132,36 +141,46 @@ export function useRecipeModifications(recipe: QuickRecipe) {
 
       try {
         console.log('Requesting recipe modifications:', actualRequest);
-        const response = await supabase.functions.invoke(
-          'modify-quick-recipe',
-          {
-            body: {
-              recipe: modifiedRecipe,
-              userRequest: actualRequest,
-              modificationHistory
-            },
-            headers: {
-              Authorization: `Bearer ${token}`
-            },
-            signal: abortControllerRef.current.signal
-          }
-        );
+        
+        // Use direct fetch instead of supabase.functions.invoke to ensure proper auth header
+        const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-quick-recipe`;
+        
+        const response = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            recipe: modifiedRecipe,
+            userRequest: actualRequest,
+            modificationHistory
+          }),
+          signal: abortControllerRef.current.signal
+        });
 
         abortControllerRef.current = null;
 
-        if (response.error) {
-          if (response.error.status === 401) {
+        if (!response.ok) {
+          // Handle authentication errors
+          if (response.status === 401) {
+            setStatus('not-authenticated');
             throw new Error('Authentication required to modify recipes');
-          } else if (response.error.status === 404 || response.error.message?.includes('Not Found')) {
+          } else if (response.status === 404) {
             setStatus('not-deployed');
             setError('Modification service not deployed');
           } else {
-            throw new Error(response.error.message);
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || `HTTP error ${response.status}`);
           }
-        } else if (!response.data) {
+        }
+        
+        const data = await response.json();
+        
+        if (!data) {
           throw new Error('No data returned');
         } else {
-          const validated = recipeModificationsSchema.parse(response.data);
+          const validated = recipeModificationsSchema.parse(data);
           const entry: ModificationHistoryEntry = {
             request: actualRequest,
             response: validated,
@@ -201,7 +220,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       if (modifications.modifications.description) next.description = modifications.modifications.description;
       // (you can keep your existing apply logic here)
       setModifiedRecipe(next);
-      setStatus('idle');
+      setStatus('applied');
       setModifications(null);
       setModificationHistory(h =>
         h.map((e, i) => i === h.length - 1 ? { ...e, applied: true } : e)

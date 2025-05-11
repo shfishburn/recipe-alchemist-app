@@ -7,6 +7,7 @@ import { QuickRecipeModifier } from '@/components/quick-recipe/QuickRecipeModifi
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Utensils, MessagesSquare } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
@@ -16,14 +17,39 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   const { saveRecipe, isSaving } = useQuickRecipeSave();
   const [currentRecipe, setCurrentRecipe] = useState<QuickRecipe>(recipe);
   const [activeTab, setActiveTab] = useState<string>('recipe');
-
-  // Check for URL hash to determine initial tab
+  const { session } = useAuth();
+  
+  // Check for URL hash to determine initial tab and handle hash changes
   useEffect(() => {
-    // If URL has #modify, open the modify tab
-    if (window.location.hash === '#modify') {
-      setActiveTab('modify');
-    }
+    const handleHashChange = () => {
+      // If URL has #modify, open the modify tab
+      if (window.location.hash === '#modify') {
+        setActiveTab('modify');
+      }
+    };
+    
+    // Set initial tab based on hash
+    handleHashChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
+
+  // Update URL hash when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    // Update URL hash without triggering a page reload
+    if (value === 'modify') {
+      window.history.replaceState(null, '', `${window.location.pathname}#modify`);
+    } else {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  };
 
   const handleSave = async () => {
     toast("Saving your recipe...");
@@ -39,7 +65,7 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
       <Tabs 
         defaultValue="recipe" 
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
         className="w-full"
       >
         <TabsList className="grid w-full grid-cols-2">
