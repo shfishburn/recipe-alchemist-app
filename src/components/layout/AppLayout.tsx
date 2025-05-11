@@ -12,6 +12,7 @@ import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation } from "react-router-dom";
+import { prefetchAssets } from '@/utils/performance';
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
@@ -21,15 +22,15 @@ export const AppLayout = () => {
   // Check if we're on the loading page
   const isLoadingRoute = location.pathname === '/loading';
 
-  // If we're on the loading route, render only the LoadingPage
-  if (isLoadingRoute) {
-    const LoadingPage = React.lazy(() => import("@/pages/LoadingPage"));
-    return (
-      <React.Suspense fallback={<div className="fixed inset-0 bg-white dark:bg-gray-950" />}>
-        <LoadingPage />
-      </React.Suspense>
-    );
-  }
+  // Prefetch critical assets for better performance
+  useEffect(() => {
+    prefetchAssets([
+      // Critical scripts and styles for the loading experience
+      '/src/components/quick-recipe/QuickRecipeDisplay.tsx',
+      '/src/components/quick-recipe/QuickRecipeFormContainer.tsx',
+      '/src/styles/loading.css',
+    ]);
+  }, []);
   
   // Set up UI state cleanup for route changes
   useEffect(() => {
@@ -44,6 +45,22 @@ export const AppLayout = () => {
       cleanupUIState();
     };
   }, []);
+  
+  // If we're on the loading route, render only the LoadingPage with smooth transition
+  if (isLoadingRoute) {
+    const LoadingPage = React.lazy(() => import("@/pages/LoadingPage"));
+    return (
+      <React.Suspense fallback={
+        <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center">
+          <div className="loading-pulse-ring w-20 h-20 border-4 border-recipe-green opacity-30"></div>
+          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-blue opacity-20" 
+               style={{ animationDelay: '-0.5s' }}></div>
+        </div>
+      }>
+        <LoadingPage />
+      </React.Suspense>
+    );
+  }
   
   return (
     <TooltipProvider>

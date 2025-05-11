@@ -9,32 +9,67 @@ import { cn } from "@/lib/utils"
 export interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
   indicatorColor?: string;
   indicatorClassName?: string;
+  showValue?: boolean;
+  valueFormatter?: (value: number) => string;
+  showLabel?: boolean;
+  label?: string;
 }
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, indicatorColor, indicatorClassName, ...props }, ref) => (
-  <ProgressPrimitive.Root
-    ref={ref}
-    className={cn(
-      "relative h-2 w-full overflow-hidden rounded-full bg-gray-100",
-      className
-    )}
-    {...props}
-  >
-    <ProgressPrimitive.Indicator
-      className={cn(
-        "h-full w-full flex-1 transition-all",
-        indicatorClassName
+>(({ 
+  className, 
+  value, 
+  indicatorColor, 
+  indicatorClassName,
+  showValue = false,
+  valueFormatter,
+  showLabel = false,
+  label,
+  ...props 
+}, ref) => {
+  // Format value for display
+  const formattedValue = valueFormatter 
+    ? valueFormatter(value || 0) 
+    : `${Math.round(value || 0)}%`;
+
+  return (
+    <div className="space-y-1.5">
+      {showLabel && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{label}</span>
+          {showValue && <span className="font-medium">{formattedValue}</span>}
+        </div>
       )}
-      style={{ 
-        transform: `translateX(-${100 - (value || 0)}%)`,
-        ...(indicatorColor ? { backgroundColor: indicatorColor } : { backgroundColor: "hsl(var(--primary))" })
-      }}
-    />
-  </ProgressPrimitive.Root>
-))
+      <ProgressPrimitive.Root
+        ref={ref}
+        className={cn(
+          "relative h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800",
+          className
+        )}
+        {...props}
+      >
+        <ProgressPrimitive.Indicator
+          className={cn(
+            "h-full w-full flex-1 transition-all",
+            indicatorClassName
+          )}
+          style={{ 
+            transform: `translateX(-${100 - (value || 0)}%)`,
+            ...(indicatorColor ? { backgroundColor: indicatorColor } : { backgroundColor: "hsl(var(--primary))" })
+          }}
+        />
+        {!showLabel && showValue && (
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] font-medium">
+            {formattedValue}
+          </div>
+        )}
+      </ProgressPrimitive.Root>
+    </div>
+  );
+})
+
 Progress.displayName = ProgressPrimitive.Root.displayName
 
 export { Progress }

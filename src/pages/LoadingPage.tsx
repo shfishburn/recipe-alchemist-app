@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Standalone loading page that completely replaces the app layout
@@ -29,6 +31,27 @@ const LoadingPage: React.FC = () => {
   const [progress, setProgress] = React.useState(10);
   const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
   const [isRetrying, setIsRetrying] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
+  const [hasNetworkIssue, setHasNetworkIssue] = React.useState(false);
+  const MAX_RETRIES = 3;
+  
+  // Check network status
+  useEffect(() => {
+    const handleNetworkChange = () => {
+      setHasNetworkIssue(!navigator.onLine);
+    };
+    
+    window.addEventListener('online', handleNetworkChange);
+    window.addEventListener('offline', handleNetworkChange);
+    
+    // Initial check
+    setHasNetworkIssue(!navigator.onLine);
+    
+    return () => {
+      window.removeEventListener('online', handleNetworkChange);
+      window.removeEventListener('offline', handleNetworkChange);
+    };
+  }, []);
   
   // Redirect back to quick-recipe if loading is complete or we have a recipe
   useEffect(() => {
@@ -50,24 +73,43 @@ const LoadingPage: React.FC = () => {
     }
   }, [isLoading, error]);
 
-  // Simulate progress movement
+  // Simulate progress movement with more dynamic steps
   useEffect(() => {
     if (isLoading && !error) {
       // Reset progress when loading starts
       setProgress(10);
       
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          // Progress moves quickly to 60%, then slows down
-          if (prev < 60) {
-            return Math.min(prev + 5, 60);
-          } else {
-            return Math.min(prev + 0.5, 95); // Never quite reaches 100%
-          }
-        });
-      }, 750);
+      // More realistic progress steps
+      const progressSteps = [
+        { target: 20, time: 1000 },  // Quick initial progress
+        { target: 35, time: 2000 },  // Analyzing ingredients
+        { target: 50, time: 3000 },  // Generating recipe
+        { target: 65, time: 5000 },  // Finalizing
+        { target: 80, time: 8000 }   // Waiting for response
+      ];
       
-      return () => clearInterval(interval);
+      // Create a series of timeouts for each progress step
+      progressSteps.forEach(step => {
+        const timeoutId = setTimeout(() => {
+          setProgress(prev => Math.max(prev, step.target));
+        }, step.time);
+        
+        return () => clearTimeout(timeoutId);
+      });
+      
+      // Slow progress after initial steps
+      const slowProgressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 80) {
+            return Math.min(prev + 0.2, 95); // Very slow progress up to 95%
+          }
+          return prev;
+        });
+      }, 1000);
+      
+      return () => {
+        clearInterval(slowProgressInterval);
+      };
     } else {
       // Complete the progress when loading finishes
       setProgress(100);
@@ -75,18 +117,28 @@ const LoadingPage: React.FC = () => {
   }, [isLoading, error]);
 
   // Define cancel handler that will reset state and navigate home
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     reset();
     navigate('/', { replace: true });
-  };
+  }, [navigate, reset]);
 
-  // Handle retry attempts
-  const handleRetry = async () => {
+  // Handle retry attempts with retry count limit
+  const handleRetry = useCallback(async () => {
+    if (retryCount >= MAX_RETRIES) {
+      toast({
+        title: "Maximum retry limit reached",
+        description: "Please try again with different ingredients or options.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (formData) {
       try {
         setIsRetrying(true);
         setError(null);
         setLoading(true);
+        setRetryCount(prev => prev + 1);
         
         console.log("Retrying recipe generation with formData:", formData);
         
@@ -102,7 +154,7 @@ const LoadingPage: React.FC = () => {
       // If no form data is available, go back to quick recipe page
       navigate('/quick-recipe');
     }
-  };
+  }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading, setIsRetrying]);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950">
@@ -119,14 +171,20 @@ const LoadingPage: React.FC = () => {
           />
         </div>
 
-        {error ? (
+        {error || hasNetworkIssue ? (
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500" />
-            <h2 className="text-xl font-semibold">Recipe Generation Failed</h2>
-            <p className="text-muted-foreground">{error}</p>
+            <AlertCircle className="w-12 h-12 text-red-500 animate-pulse" />
+            <h2 className="text-xl font-semibold">
+              {hasNetworkIssue ? "Network Connection Lost" : "Recipe Generation Failed"}
+            </h2>
+            <p className="text-muted-foreground">
+              {hasNetworkIssue 
+                ? "Please check your internet connection and try again."
+                : error}
+            </p>
             
             {/* Timeout message */}
-            {hasTimeoutError && (
+            {hasTimeoutError && !hasNetworkIssue && (
               <div className="mt-4 p-3 rounded-lg text-sm bg-amber-50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-300">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="h-4 w-4" />
@@ -135,6 +193,13 @@ const LoadingPage: React.FC = () => {
                 <p className="text-xs">
                   Try again with a simpler recipe request or fewer ingredients.
                 </p>
+              </div>
+            )}
+            
+            {/* Retry count indicator */}
+            {retryCount > 0 && (
+              <div className="text-xs text-muted-foreground mt-2">
+                Retry attempt {retryCount} of {MAX_RETRIES}
               </div>
             )}
             
@@ -148,7 +213,7 @@ const LoadingPage: React.FC = () => {
                 Start Over
               </Button>
               
-              {formData && (
+              {formData && retryCount < MAX_RETRIES && !hasNetworkIssue && (
                 <Button 
                   onClick={handleRetry}
                   disabled={isRetrying}
@@ -162,7 +227,7 @@ const LoadingPage: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center space-y-8 w-full">
-            {/* Gift box SVG icon - keep the same from original FullScreenLoading */}
+            {/* Gift box SVG icon with enhanced animation */}
             <div className="relative animate-gift-bounce">
               <svg 
                 width="120" 
@@ -171,22 +236,35 @@ const LoadingPage: React.FC = () => {
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
                 aria-hidden="true"
+                className="drop-shadow-md"
               >
-                <rect x="30" y="45" width="60" height="60" rx="4" fill="#D1D5DB" />
+                <rect x="30" y="45" width="60" height="60" rx="4" fill="#D1D5DB" className="dark:fill-gray-700" />
                 <path d="M30 49a4 4 0 014-4h52a4 4 0 014 4v10H30V49z" fill="#4CAF50" />
                 <path d="M60 45V30M50 37.5C50 32.8 54.5 25 60 30c5.5 5 10 2.5 10 7.5S65 45 60 45s-10-2.8-10-7.5z" stroke="#4CAF50" strokeWidth="3" />
+                
+                {/* Adding sparkle effects */}
+                <circle cx="40" cy="60" r="2" fill="white" className="animate-pulse" />
+                <circle cx="75" cy="65" r="1.5" fill="white" className="animate-pulse" style={{ animationDelay: '0.5s' }} />
+                <circle cx="55" cy="80" r="2" fill="white" className="animate-pulse" style={{ animationDelay: '0.8s' }} />
               </svg>
             </div>
             
-            <h2 className="text-2xl font-semibold">Creating your recipe...</h2>
+            <h2 className="text-2xl font-semibold bg-clip-text bg-gradient-to-r from-recipe-green to-recipe-blue text-transparent animate-pulse">
+              Creating your recipe...
+            </h2>
             
             {/* Progress bar with animation */}
-            <Progress 
-              value={progress}
-              className="w-full" 
-              indicatorClassName="animate-progress-pulse" 
-              indicatorColor="#4CAF50" 
-            />
+            <div className="w-full space-y-1">
+              <Progress 
+                value={progress}
+                className="w-full h-2" 
+                indicatorClassName="animate-progress-pulse" 
+                indicatorColor="#4CAF50" 
+              />
+              <div className="text-xs text-muted-foreground text-right">
+                {progress.toFixed(0)}%
+              </div>
+            </div>
             
             {/* Timeout warning */}
             {showTimeoutMessage && (

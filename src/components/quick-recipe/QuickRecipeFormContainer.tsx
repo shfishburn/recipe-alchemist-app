@@ -1,19 +1,20 @@
 
 // path: src/components/quick-recipe/QuickRecipeFormContainer.tsx
 // file: QuickRecipeFormContainer.tsx
-// updated: 2025-05-10 14:02 PM
 
 import React from 'react';
 import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
 import { Card } from '@/components/ui/card';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { Cake, ChefHat, Egg } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 import { QuickRecipeGenerator } from './QuickRecipeGenerator';
 import { toast } from '@/hooks/use-toast';
+import { useNetworkStatus } from '@/hooks/use-network-status';
 
 export function QuickRecipeFormContainer() {
   const { handleSubmit } = useQuickRecipeForm();
   const { isLoading } = useQuickRecipeStore();
+  const { isOnline } = useNetworkStatus();
 
   // Handle user cancellation
   const handleCancel = () => {
@@ -29,6 +30,16 @@ export function QuickRecipeFormContainer() {
   // Create an adapter function to handle form submission
   const handleFormSubmit = (formData: any) => {
     console.log('QuickRecipeFormContainer - Handling form submission:', formData);
+    
+    // Check network status before submitting
+    if (!isOnline) {
+      toast({
+        title: 'No internet connection',
+        description: 'Please check your network connection and try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     if (!formData.ingredients || !formData.ingredients.trim()) {
       toast({
@@ -54,41 +65,27 @@ export function QuickRecipeFormContainer() {
       servings: Number(formData.servings) || 4, // Default to 4 instead of 2
     };
     
-    console.log('Adapted form data for API:', adaptedFormData);
+    console.log('Adapted form data:', adaptedFormData);
     handleSubmit(adaptedFormData);
   };
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="absolute -top-8 left-0 w-20 h-20 md:w-32 md:h-32 bg-recipe-green/20 rounded-full blur-md z-0 animate-pulse" />
-      <div className="absolute -bottom-10 right-0 w-24 h-24 md:w-40 md:h-40 bg-recipe-orange/20 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 right-4 w-16 h-16 md:w-24 md:h-24 bg-recipe-blue/15 rounded-full blur-md z-0 animate-pulse" style={{ animationDelay: '1.5s' }} />
-
-      <Card className="relative z-10 bg-white/90 backdrop-blur-sm border border-gray-100 shadow-lg p-5 md:p-6 rounded-xl max-w-xl mx-auto">
-        <div className="text-center mb-5 md:mb-6">
-          <div className="inline-flex items-center justify-center mb-3">
-            <div className="flex -space-x-2">
-              <div className="bg-recipe-green/20 p-2 rounded-full">
-                <ChefHat size={24} className="text-recipe-green" />
-              </div>
-              <div className="bg-recipe-blue/20 p-2 rounded-full">
-                <Egg size={24} className="text-recipe-blue" />
-              </div>
-              <div className="bg-recipe-orange/20 p-2 rounded-full">
-                <Cake size={24} className="text-recipe-orange" />
-              </div>
-            </div>
-          </div>
-          <h2 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-recipe-blue to-recipe-green bg-clip-text text-transparent">
-            Create Your Perfect Recipe
-          </h2>
-          <p className="text-sm md:text-base text-muted-foreground mt-2">
-            Tell us what you want to make or what ingredients you have. Our AI Cooking Coach will do the rest!
-          </p>
+    <Card className="bg-white/50 backdrop-blur-sm dark:bg-gray-900/50 shadow-md p-4 sm:p-6 transition-all">
+      <div className="mb-6 flex justify-center">
+        <div className="inline-flex items-center px-4 py-2 rounded-full bg-recipe-green/10 text-recipe-green dark:bg-recipe-green/20">
+          <ChefHat className="h-5 w-5 mr-2" />
+          <span className="font-medium">Quick Recipe Creator</span>
         </div>
-
-        <QuickRecipeGenerator onSubmit={handleFormSubmit} />
-      </Card>
-    </div>
+      </div>
+      
+      <QuickRecipeGenerator onSubmit={handleFormSubmit} />
+      
+      {/* Network status warning */}
+      {!isOnline && (
+        <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/10 text-red-700 dark:text-red-300 text-sm text-center">
+          You appear to be offline. Please check your internet connection.
+        </div>
+      )}
+    </Card>
   );
 }

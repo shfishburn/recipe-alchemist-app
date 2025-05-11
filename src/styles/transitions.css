@@ -23,6 +23,27 @@
     opacity: 0;
     transform: translateY(5px);
   }
+  
+  /* Add slide transitions for loading page */
+  .loading-enter {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  
+  .loading-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  .loading-exit {
+    opacity: 1;
+  }
+  
+  .loading-exit-active {
+    opacity: 0;
+    transition: opacity 200ms;
+  }
 }
 
 /* Mobile optimized transitions - opacity only for better performance */
@@ -33,6 +54,25 @@
   
   .page-transition.fadeOut {
     opacity: 0;
+  }
+  
+  /* Mobile optimized loading transitions */
+  .loading-enter {
+    opacity: 0;
+  }
+  
+  .loading-enter-active {
+    opacity: 1;
+    transition: opacity 300ms;
+  }
+  
+  .loading-exit {
+    opacity: 1;
+  }
+  
+  .loading-exit-active {
+    opacity: 0;
+    transition: opacity 200ms;
   }
 }
 
@@ -55,8 +95,35 @@
   .fade-in,
   .fade-out,
   .zoom-in,
-  .zoom-out {
+  .zoom-out,
+  .loading-enter-active,
+  .loading-exit-active {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* Optimized loading indicator animations */
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1); opacity: 0.3; }
+  100% { transform: scale(0.85); opacity: 0.6; }
+}
+
+.loading-pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Gradient animation for backgrounds */
+@keyframes gradient-x {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-x {
+  background-size: 200% 100%;
+  animation: gradient-x 15s ease infinite;
 }
