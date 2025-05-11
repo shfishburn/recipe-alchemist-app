@@ -1,35 +1,38 @@
 
-import { z } from "https://esm.sh/zod@3.21.4";
+import { z } from "https://esm.sh/zod@3.22.4";
 
-// Define the schema for recipe modifications using Zod
+// Define schema for nutrition impact assessment
+const nutritionImpactSchema = z.object({
+  calories: z.number().optional(),
+  protein: z.number().optional(),
+  carbs: z.number().optional(),
+  fat: z.number().optional(),
+  fiber: z.number().optional(),
+  sugar: z.number().optional(),
+  sodium: z.number().optional(),
+  assessment: z.string().optional()
+});
+
+// Define schema for recipe modifications
 export const recipeModificationsSchema = z.object({
+  textResponse: z.string(),
+  reasoning: z.string(),
   modifications: z.object({
     title: z.string().optional(),
     description: z.string().optional(),
     ingredients: z.array(z.object({
-      action: z.enum(["add", "remove", "modify"]),
-      originalIndex: z.number().optional(),
-      item: z.string(),
-      qty_metric: z.number().optional(),
-      unit_metric: z.string().optional(),
-      qty_imperial: z.number().optional(),
-      unit_imperial: z.string().optional(),
-      notes: z.string().optional(),
+      original: z.string().optional(),
+      modified: z.string(),
+      reason: z.string().optional()
     })).optional(),
     steps: z.array(z.object({
-      action: z.enum(["add", "remove", "modify"]),
-      originalIndex: z.number().optional(),
-      content: z.string(),
+      original: z.string().optional(),
+      modified: z.string(),
+      reason: z.string().optional()
     })).optional(),
+    cookingTip: z.string().optional(),
   }),
-  nutritionImpact: z.object({
-    calories: z.number(),
-    protein: z.number(),
-    carbs: z.number(),
-    fat: z.number(),
-    summary: z.string(),
-  }),
-  reasoning: z.string(),
+  nutritionImpact: nutritionImpactSchema.optional()
 });
 
 export type RecipeModifications = z.infer<typeof recipeModificationsSchema>;
