@@ -100,7 +100,7 @@ export function useQuickRecipeForm() {
         const generatedRecipe = await generateQuickRecipe(processedFormData);
         
         // Check if generatedRecipe is an error object
-        if (generatedRecipe && 'isError' in generatedRecipe && generatedRecipe.isError) {
+        if (generatedRecipe && 'isError' in generatedRecipe && generatedRecipe.isError === true) {
           console.error('Recipe generation returned error:', generatedRecipe.error);
           setError(generatedRecipe.error || 'Error generating recipe');
           

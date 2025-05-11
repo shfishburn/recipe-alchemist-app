@@ -40,7 +40,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       if (response.error) {
         console.error("Supabase function error:", response.error);
         // Return the error response instead of throwing
-        return processErrorResponse(new Error(response.error));
+        const errorObj = await processErrorResponse(new Error(response.error));
+        return errorObj;
       }
       
       console.log("Supabase function response:", response);
@@ -50,7 +51,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Race both approaches against the timeout
     console.log("Starting race with timeout");
     const data = await Promise.race([
-      callWithSupabaseFunctionClient().catch(err => {
+      callWithSupabaseFunctionClient().catch(async err => {
         console.warn("Supabase function client failed, falling back to direct fetch:", err);
         return fetchFromEdgeFunction(requestBody);
       }),
@@ -62,7 +63,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Check for error in data
     if (!data) {
       console.error('No data returned from recipe generation');
-      return processErrorResponse(new Error('No recipe data returned. Please try again.')) as QuickRecipe;
+      const errorObj = await processErrorResponse(new Error('No recipe data returned. Please try again.'));
+      return errorObj as QuickRecipe;
     }
     
     // Check for error or isError flag in data (for our error objects)
@@ -74,9 +76,10 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       
       if ('error' in data && data.error) {
         console.error('Error in recipe data:', data.error);
-        return processErrorResponse(
+        const errorObj = await processErrorResponse(
           typeof data.error === 'string' ? new Error(data.error) : new Error('Error generating recipe')
-        ) as QuickRecipe;
+        );
+        return errorObj as QuickRecipe;
       }
     }
     
@@ -90,6 +93,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     console.error('Error in generateQuickRecipe:', error);
     
     // Return an error recipe object instead of throwing
-    return processErrorResponse(error) as QuickRecipe;
+    const errorObj = await processErrorResponse(error);
+    return errorObj as QuickRecipe;
   }
 };

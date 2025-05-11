@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -75,7 +74,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         // Actions
         setRecipe: (recipe) => {
           // Check if recipe is actually an error object
-          if (recipe && ('isError' in recipe || (recipe.error && typeof recipe.error === 'string'))) {
+          if (recipe && 'isError' in recipe && recipe.isError) {
             console.log('Recipe is an error object:', recipe);
             set({ 
               recipe: null,

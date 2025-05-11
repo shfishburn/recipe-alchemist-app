@@ -1,3 +1,4 @@
+
 // Error handling utilities for recipe generation API calls
 
 export const enhanceErrorMessage = (error: any): string => {
@@ -38,7 +39,7 @@ export const enhanceErrorMessage = (error: any): string => {
   return errorMessage;
 };
 
-// Process error responses - MODIFIED to return an error object instead of throwing
+// Process error responses - returns an error object instead of throwing
 export const processErrorResponse = async (error: any): Promise<any> => {
   // Authentication check first (most important for user experience)
   let errorMessage = "Error generating recipe";
@@ -99,8 +100,7 @@ export const processErrorResponse = async (error: any): Promise<any> => {
   // Enhance the error message
   const enhancedMessage = enhanceErrorMessage(error) || errorMessage;
   
-  // Instead of throwing, return an error object that conforms to QuickRecipe shape
-  // but includes error information
+  // Return an error object that conforms to QuickRecipe shape
   return {
     title: "Error generating recipe",
     description: enhancedMessage,

@@ -37,6 +37,9 @@ export interface QuickRecipe {
   flavor_tags?: string[];
   user_id?: string;
   id?: string;
+  // Error-related properties
+  error?: string;
+  isError?: boolean;
 }
 
 export interface QuickRecipeFormData {
