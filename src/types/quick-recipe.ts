@@ -39,6 +39,7 @@ export interface QuickRecipe {
   id?: string;
   // Error-related properties
   error?: string;
+  error_message?: string;
   isError?: boolean;
 }
 
