@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { useRecipeModifications } from '@/hooks/use-recipe-modifications';
+import { useRecipeModifications, ModificationStatus } from '@/hooks/use-recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { IngredientList } from './ingredient/IngredientList';
 import { StepList } from './step/StepList';

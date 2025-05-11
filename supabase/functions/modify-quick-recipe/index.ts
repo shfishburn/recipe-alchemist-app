@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/langchain/chat_models/openai";
 import { StructuredOutputParser } from "https://esm.sh/@langchain/output_parsers";
@@ -92,14 +93,15 @@ function validateRecipe(recipe: any) {
 
 // === edge function ===
 serve(async (req) => {
-  const headers = {
-    ...getCorsHeadersWithOrigin(req),
-    "Content-Type": "application/json",
-  };
-
-  // preflight
+  // CORS headers for all responses
+  const headers = getCorsHeadersWithOrigin(req);
+  
+  // Handle CORS preflight requests - explicitly check for OPTIONS method
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers });
+    return new Response(null, { 
+      status: 204, // Use 204 No Content for OPTIONS
+      headers 
+    });
   }
 
   try {

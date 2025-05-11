@@ -129,6 +129,15 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       setStatus('loading');
       setError(null);
 
+      // Get the Supabase URL from our client
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || supabase.supabaseUrl;
+      
+      if (!SUPABASE_URL) {
+        setError('Supabase URL configuration missing');
+        setStatus('error');
+        return;
+      }
+
       // get session token
       const token = session?.access_token;
       if (!token) {
@@ -142,8 +151,10 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       try {
         console.log('Requesting recipe modifications:', actualRequest);
         
-        // Use direct fetch instead of supabase.functions.invoke to ensure proper auth header
-        const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-quick-recipe`;
+        // Use direct fetch with proper URL construction
+        const functionUrl = `${SUPABASE_URL}/functions/v1/modify-quick-recipe`;
+        
+        console.log('Calling edge function at URL:', functionUrl);
         
         const response = await fetch(functionUrl, {
           method: 'POST',
