@@ -1,6 +1,5 @@
 
 import React, { Suspense, lazy, StrictMode } from "react";
-import { BrowserRouter as Router } from "react-router-dom";
 import "./styles/loading.css";
 import "./styles/transitions.css"; // Import the transitions CSS
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -18,19 +17,17 @@ const AppLayout = lazy(() => import("@/components/layout/AppLayout").then(module
 const App = () => (
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <ErrorBoundary>
-          <AuthProvider>
-            <ProfileProvider>
-              <CookieConsentProvider>
-                <Suspense fallback={<PageLoadingFallback />}>
-                  <AppLayout />
-                </Suspense>
-              </CookieConsentProvider>
-            </ProfileProvider>
-          </AuthProvider>
-        </ErrorBoundary>
-      </Router>
+      <ErrorBoundary>
+        <AuthProvider>
+          <ProfileProvider>
+            <CookieConsentProvider>
+              <Suspense fallback={<PageLoadingFallback />}>
+                <AppLayout />
+              </Suspense>
+            </CookieConsentProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>
 );
