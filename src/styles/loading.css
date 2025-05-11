@@ -14,6 +14,17 @@
   100% { opacity: 0; transform: translateY(-15px) translateX(6px) scale(1.2); }
 }
 
+/* Animation for the progress bar */
+@keyframes progress-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.animate-progress-pulse {
+  animation: progress-pulse 2s ease-in-out infinite;
+}
+
 /* Essential animation classes */
 .animate-cooking-pot {
   animation: cooking-pot 2s ease-in-out infinite;
@@ -52,13 +63,12 @@
   min-width: 5%;
 }
 
-/* Progress bar animation - pulsing effect */
-@keyframes progress-pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+/* Gift box animation */
+@keyframes gift-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
-.animate-progress-pulse {
-  animation: progress-pulse 2s ease-in-out infinite;
+.animate-gift-bounce {
+  animation: gift-bounce 3s ease-in-out infinite;
 }

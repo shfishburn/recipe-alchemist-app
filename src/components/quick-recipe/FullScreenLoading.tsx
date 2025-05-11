@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, XCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -11,7 +12,6 @@ interface FullScreenLoadingProps {
 }
 
 export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false }: FullScreenLoadingProps) {
-  // Clean, simplified component with no header
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white"
@@ -51,8 +51,8 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-8">
-            {/* Simple gift box icon - similar to what's shown in screenshot */}
+          <div className="flex flex-col items-center justify-center space-y-8 w-full">
+            {/* Simple gift box icon */}
             <div className="relative">
               <svg 
                 width="120" 
@@ -70,12 +70,15 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
             
             <h2 className="text-2xl font-semibold">Creating your recipe...</h2>
             
-            {/* Simple progress bar - similar to what's in screenshot */}
-            <div className="w-full h-2 bg-gray-100 rounded-full">
-              <div className="bg-recipe-green h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
+            {/* Progress bar with animation */}
+            <Progress 
+              value={60}
+              className="w-full" 
+              indicatorClassName="animate-pulse" 
+              indicatorColor="#4CAF50" 
+            />
             
-            {/* Tip card - styled to match screenshot */}
+            {/* Tip card */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 w-full">
               <h4 className="text-lg font-semibold mb-2">Chef's Tip</h4>
               <p className="text-gray-600">
@@ -83,7 +86,7 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
               </p>
             </div>
             
-            {/* Cancel button - styled to match screenshot */}
+            {/* Cancel button */}
             {onCancel && (
               <Button 
                 variant="ghost" 

@@ -39,48 +39,48 @@ const QuickRecipePage: React.FC = () => {
     );
   };
 
+  // If loading or retrying, only show the full screen loading overlay
+  if (isLoading || isRetrying) {
+    return (
+      <FullScreenLoading
+        key="loading-overlay"
+        onCancel={handleCancel}
+        onRetry={error ? handleRetry : undefined}
+        error={error}
+        isRetrying={isRetrying}
+      />
+    );
+  }
+  
   return (
-    <>
-      {/* Simplified Loading/Retrying Overlay */}
-      {(isLoading || isRetrying) && (
-        <FullScreenLoading
-          key="loading-overlay"
-          onCancel={handleCancel}
-          onRetry={error ? handleRetry : undefined}
-          error={error}
-          isRetrying={isRetrying}
+    <PageContainer>
+      <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
+        <QuickRecipeHero
+          hasRecipe={!!recipe}
+          toggleDebugMode={toggleDebugMode}
+          debugMode={debugMode}
         />
-      )}
-      
-      <PageContainer>
-        <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
-          <QuickRecipeHero
-            hasRecipe={!!recipe}
-            toggleDebugMode={toggleDebugMode}
-            debugMode={debugMode}
-          />
 
-          {isDirectNavigation ? (
-            <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
-              <QuickRecipeFormContainer />
-            </div>
-          ) : error ? (
-            renderErrorContent()
-          ) : recipe ? (
-            <div className="space-y-8">
-              <QuickRecipeDisplay recipe={recipe} />
-              <QuickRecipeRegeneration 
-                formData={formData} 
-                isLoading={isLoading} 
-                onRetry={handleRetry} 
-              />
-            </div>
-          ) : (
-            <QuickRecipeEmpty />
-          )}
-        </div>
-      </PageContainer>
-    </>
+        {isDirectNavigation ? (
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
+            <QuickRecipeFormContainer />
+          </div>
+        ) : error ? (
+          renderErrorContent()
+        ) : recipe ? (
+          <div className="space-y-8">
+            <QuickRecipeDisplay recipe={recipe} />
+            <QuickRecipeRegeneration 
+              formData={formData} 
+              isLoading={isLoading} 
+              onRetry={handleRetry} 
+            />
+          </div>
+        ) : (
+          <QuickRecipeEmpty />
+        )}
+      </div>
+    </PageContainer>
   );
 };
 
