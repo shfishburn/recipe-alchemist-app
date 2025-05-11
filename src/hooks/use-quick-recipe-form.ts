@@ -1,9 +1,14 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useTransitionController } from '@/hooks/use-transition-controller';
+
+// Prevent multiple simultaneous submissions
+let isSubmitting = false;
 
 export function useQuickRecipeForm() {
   const navigate = useNavigate();
@@ -22,14 +27,47 @@ export function useQuickRecipeForm() {
     updateLoadingState
   } = useQuickRecipeStore();
   
+  // Use transition controller for smoother transitions
+  const { withDelayedTransition } = useTransitionController();
+  
   // Store navigate function in the global store for use in other components
   useEffect(() => {
     setNavigate(navigate);
   }, [navigate, setNavigate]);
   
+  // Normalize and enhance error messages for better user feedback
+  const normalizeErrorMessage = useCallback((error: any): string => {
+    if (!error) return "An unknown error occurred";
+    
+    const message = typeof error === 'string' ? error : error.message || "An unknown error occurred";
+    
+    if (message.toLowerCase().includes('timeout')) {
+      setHasTimeoutError(true);
+      return "Recipe generation timed out. Please try again with a simpler recipe request.";
+    }
+    
+    if (message.toLowerCase().includes('network') || message.toLowerCase().includes('connection')) {
+      return "Network error while generating recipe. Please check your internet connection and try again.";
+    }
+    
+    if (message.toLowerCase().includes('openai')) {
+      console.error("CRITICAL: OpenAI API issue detected");
+      return "There's an issue with our AI service. Our team has been notified.";
+    }
+    
+    return message;
+  }, [setHasTimeoutError]);
+  
   // Handle form submission
   const handleSubmit = useCallback(async (formData: QuickRecipeFormData) => {
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log("Submission already in progress, ignoring request");
+      return null;
+    }
+    
     try {
+      isSubmitting = true;
       console.log("useQuickRecipeForm - Handling form submission with data:", formData);
       
       // Validate that we have mainIngredient, which is required by the API
@@ -39,6 +77,7 @@ export function useQuickRecipeForm() {
           description: "Please enter at least one main ingredient",
           variant: "destructive",
         });
+        isSubmitting = false;
         return null;
       }
       
@@ -53,33 +92,34 @@ export function useQuickRecipeForm() {
 
       console.log("Processed form data:", processedFormData);
       
-      // Reset any previous state
-      reset();
-      
-      // Set loading state immediately so it shows the loading animation
-      setLoading(true);
-      setFormData(processedFormData);
-      
-      // Initialize loading state with estimated time
-      updateLoadingState({
-        step: 0,
-        stepDescription: "Analyzing your ingredients...",
-        percentComplete: 0,
-        estimatedTimeRemaining: 30
+      await withDelayedTransition(async () => {
+        // Reset any previous state
+        reset();
+        
+        // Set loading state immediately so it shows the loading animation
+        setLoading(true);
+        setFormData(processedFormData);
+        
+        // Initialize loading state with estimated time
+        updateLoadingState({
+          step: 0,
+          stepDescription: "Analyzing your ingredients...",
+          percentComplete: 0,
+          estimatedTimeRemaining: 30
+        });
+        
+        // Log in console instead of showing non-error toast
+        console.log("Creating your recipe - processing request...");
+        
+        // Save current path and form data to session storage in case user needs to log in
+        // This will allow us to resume the recipe generation after login
+        sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
+          path: location.pathname,
+          formData: processedFormData
+        }));
       });
       
-      // Log in console instead of showing non-error toast
-      console.log("Creating your recipe - processing request...");
-      
-      // Save current path and form data to session storage in case user needs to log in
-      // This will allow us to resume the recipe generation after login
-      sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
-        path: location.pathname,
-        formData: processedFormData
-      }));
-      
-      // FIXED: Don't pass functions in state, they can't be serialized
-      // Navigate to the loading page INSTEAD of quick recipe page
+      // Navigate to the loading page AFTER transition is complete
       navigate('/loading', { 
         state: { 
           fromForm: true, 
@@ -87,99 +127,30 @@ export function useQuickRecipeForm() {
         }
       });
       
-      // Start generating the recipe immediately after navigation
-      try {
-        console.log("Starting recipe generation with payload:", {
-          cuisine: processedFormData.cuisine,
-          dietary: processedFormData.dietary,
-          mainIngredient: processedFormData.mainIngredient,
-          servings: processedFormData.servings || 2 // Ensure servings has a default value
-        });
-        
-        // Add a small delay to ensure navigation completes
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Generate the recipe - authentication check removed
-        const generatedRecipe = await generateQuickRecipe(processedFormData);
-        
-        // Check if generatedRecipe is an error object
-        if (generatedRecipe && 'isError' in generatedRecipe && generatedRecipe.isError === true) {
-          console.error('Recipe generation returned error:', generatedRecipe.error);
-          setError(generatedRecipe.error || 'Error generating recipe');
-          
-          // Keep error toast only
-          toast({
-            title: "Recipe generation failed",
-            description: generatedRecipe.error || 'Error generating recipe',
-            variant: "destructive",
-          });
-          
-          return null;
-        }
-        
-        // Validate the recipe structure before setting it
-        if (!isRecipeValid(generatedRecipe)) {
-          throw new Error("The recipe format returned from the API was invalid. Please try again.");
-        }
-        
-        // Ensure recipe has valid cuisine value
-        if (!generatedRecipe.cuisine || 
-            (typeof generatedRecipe.cuisine === 'string' && generatedRecipe.cuisine.trim() === '')) {
-          console.log("Setting default cuisine for recipe as it was missing");
-          generatedRecipe.cuisine = "any";
-        }
-        
-        console.log("Recipe generation successful:", generatedRecipe);
-        setRecipe(generatedRecipe);
-        
-        // Success message in console instead of toast
-        console.log("Recipe created successfully!");
-        
-        return generatedRecipe;
-      } catch (error: any) {
-        console.error('Error generating recipe:', error);
-        setLoading(false);
-        
-        // More specific error message based on the error type
-        let errorMessage = error.message || "Failed to generate recipe. Please try again.";
-        let isTimeout = false;
-        
-        if (error.message?.includes('timeout')) {
-          errorMessage = "Recipe generation timed out. Please try again with a simpler recipe request.";
-          isTimeout = true;
-          setHasTimeoutError(true);
-        } else if (error.status === 400) {
-          errorMessage = "Invalid recipe request. Please check your inputs and try again.";
-        } else if (error.message?.includes('Edge Function')) {
-          errorMessage = "We're having trouble connecting to our recipe service. Please try again shortly.";
-        } else if (error.message?.includes('OpenAI API key')) {
-          errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
-          // Log specifically for API key issues
-          console.error("CRITICAL: OpenAI API key issue detected");
-        } else if (error.message?.includes('Empty request body')) {
-          errorMessage = "The recipe request couldn't be sent correctly. Please try again.";
-          console.error("CRITICAL: Empty request body detected");
-        }
-        
-        // Set descriptive error with timeout flag
-        setError(errorMessage);
-        
-        // Keep error toast only
-        toast({
-          title: "Recipe generation failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        return null;
-      }
+      // The loading page will handle starting the recipe generation
+      return processedFormData;
     } catch (error: any) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
-      setError(error.message || "Failed to submit recipe request. Please try again.");
+      
+      const errorMessage = normalizeErrorMessage(error);
+      setError(errorMessage);
+      
+      toast({
+        title: "Recipe generation failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      isSubmitting = false;
       return null;
+    } finally {
+      // Reset submitting state after a delay to prevent immediate resubmissions
+      setTimeout(() => {
+        isSubmitting = false;
+      }, 1000);
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError, updateLoadingState]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, location.pathname, normalizeErrorMessage, updateLoadingState, withDelayedTransition]);
 
   return {
     handleSubmit,

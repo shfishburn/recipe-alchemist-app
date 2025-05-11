@@ -10,6 +10,7 @@ import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmp
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 import { useTransitionController } from '@/hooks/use-transition-controller';
+import { PageWrapper } from '@/components/ui/PageWrapper';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -40,7 +41,7 @@ const QuickRecipePage: React.FC = () => {
     if (location.state?.fromLoading) {
       const timeout = setTimeout(() => {
         setIsReady(true);
-      }, 50);
+      }, 100);
       return () => clearTimeout(timeout);
     } else {
       setIsReady(!isLoading && !isRetrying);
@@ -69,42 +70,44 @@ const QuickRecipePage: React.FC = () => {
   }
   
   return (
-    <PageContainer>
-      <div className="space-y-10 py-6 md:py-10">
-        <QuickRecipeHero
-          hasRecipe={!!recipe}
-          toggleDebugMode={toggleDebugMode}
-          debugMode={debugMode}
-        />
-
-        {isDirectNavigation ? (
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
-            <QuickRecipeFormContainer />
-          </div>
-        ) : error ? (
-          <QuickRecipeError
-            error={error}
-            hasTimeoutError={hasTimeoutError}
+    <PageWrapper ready={isReady}>
+      <PageContainer>
+        <div className="space-y-10 py-6 md:py-10">
+          <QuickRecipeHero
+            hasRecipe={!!recipe}
+            toggleDebugMode={toggleDebugMode}
             debugMode={debugMode}
-            formData={formData}
-            onCancel={handleCancel}
-            onRetry={handleRetry}
-            isRetrying={isRetrying}
           />
-        ) : recipe ? (
-          <div className="space-y-8">
-            <QuickRecipeDisplay recipe={recipe} />
-            <QuickRecipeRegeneration 
-              formData={formData} 
-              isLoading={isLoading} 
-              onRetry={handleRetry} 
+
+          {isDirectNavigation ? (
+            <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
+              <QuickRecipeFormContainer />
+            </div>
+          ) : error ? (
+            <QuickRecipeError
+              error={error}
+              hasTimeoutError={hasTimeoutError}
+              debugMode={debugMode}
+              formData={formData}
+              onCancel={handleCancel}
+              onRetry={handleRetry}
+              isRetrying={isRetrying}
             />
-          </div>
-        ) : (
-          <QuickRecipeEmpty />
-        )}
-      </div>
-    </PageContainer>
+          ) : recipe ? (
+            <div className="space-y-8">
+              <QuickRecipeDisplay recipe={recipe} />
+              <QuickRecipeRegeneration 
+                formData={formData} 
+                isLoading={isLoading} 
+                onRetry={handleRetry} 
+              />
+            </div>
+          ) : (
+            <QuickRecipeEmpty />
+          )}
+        </div>
+      </PageContainer>
+    </PageWrapper>
   );
 };
 

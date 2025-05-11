@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { LoadingError } from '@/components/loading/LoadingError';
 import { LoadingState } from '@/components/loading/LoadingState';
 import { useLoadingPage } from '@/hooks/use-loading-page';
+import { PageWrapper } from '@/components/ui/PageWrapper';
 
 /**
  * Standalone loading page that completely replaces the app layout
@@ -23,7 +24,11 @@ const LoadingPage: React.FC = () => {
   } = useLoadingPage();
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 transition-opacity duration-400 ${animateExit ? 'opacity-0' : 'opacity-100'}`}>
+    <PageWrapper
+      isLoading={true}
+      ready={ready}
+      className={`fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 transition-opacity duration-400 ${animateExit ? 'opacity-0' : 'opacity-100'}`}
+    >
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
         {error ? (
           <LoadingError 
@@ -42,7 +47,7 @@ const LoadingPage: React.FC = () => {
           />
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 
