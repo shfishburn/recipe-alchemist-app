@@ -1,126 +1,25 @@
 
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { Progress } from '@/components/ui/progress';
-import { AlertCircle, XCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useQuickRecipe } from '@/hooks/use-quick-recipe';
+import React from 'react';
+import { LoadingError } from '@/components/loading/LoadingError';
+import { LoadingState } from '@/components/loading/LoadingState';
+import { useLoadingPage } from '@/hooks/use-loading-page';
 
 /**
  * Standalone loading page that completely replaces the app layout
  * This page exists outside the normal layout hierarchy
  */
 const LoadingPage: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { 
-    error, 
-    recipe, 
-    isLoading, 
+  const {
+    error,
+    progress,
+    showTimeoutMessage,
     formData,
-    reset, 
     hasTimeoutError,
-    setLoading,
-    setError,
-  } = useQuickRecipeStore();
-  
-  const { generateQuickRecipe } = useQuickRecipe();
-  
-  const [progress, setProgress] = React.useState(10);
-  const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
-  const [isRetrying, setIsRetrying] = React.useState(false);
-  const [animateExit, setAnimateExit] = React.useState(false);
-  
-  // Redirect back to quick-recipe if loading is complete or we have a recipe
-  useEffect(() => {
-    if (!isLoading && recipe) {
-      // Set animateExit to true to trigger exit animation
-      setAnimateExit(true);
-      
-      // Delay navigation to allow for exit animation
-      const timeout = setTimeout(() => {
-        navigate('/quick-recipe', { state: { fromLoading: true } });
-      }, 200); // Match this to transition duration
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading, recipe, navigate]);
-
-  // Handle timeout warning display
-  useEffect(() => {
-    if (isLoading && !error) {
-      // Show timeout warning after 15 seconds
-      const timeoutId = setTimeout(() => {
-        setShowTimeoutMessage(true);
-      }, 15000);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isLoading, error]);
-
-  // Simulate progress movement
-  useEffect(() => {
-    if (isLoading && !error) {
-      // Reset progress when loading starts
-      setProgress(10);
-      
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          // Progress moves quickly to 60%, then slows down
-          if (prev < 60) {
-            return Math.min(prev + 5, 60);
-          } else {
-            return Math.min(prev + 0.5, 95); // Never quite reaches 100%
-          }
-        });
-      }, 750);
-      
-      return () => clearInterval(interval);
-    } else {
-      // Complete the progress when loading finishes
-      setProgress(100);
-    }
-  }, [isLoading, error]);
-
-  // Define cancel handler that will reset state and navigate home
-  const handleCancel = () => {
-    reset();
-    // Set animateExit to true to trigger exit animation
-    setAnimateExit(true);
-    
-    // Delay navigation to allow for exit animation
-    setTimeout(() => {
-      navigate('/', { replace: true });
-    }, 200); // Match this to transition duration
-  };
-
-  // Handle retry attempts
-  const handleRetry = async () => {
-    if (formData) {
-      try {
-        setIsRetrying(true);
-        setError(null);
-        setLoading(true);
-        
-        console.log("Retrying recipe generation with formData:", formData);
-        
-        // Start a new generation with the existing form data
-        await generateQuickRecipe(formData);
-        
-        setIsRetrying(false);
-      } catch (error: any) {
-        console.error("Error during retry:", error);
-        setIsRetrying(false);
-      }
-    } else {
-      // If no form data is available, go back to quick recipe page
-      setAnimateExit(true);
-      setTimeout(() => {
-        navigate('/quick-recipe');
-      }, 200);
-    }
-  };
+    isRetrying,
+    animateExit,
+    handleCancel,
+    handleRetry
+  } = useLoadingPage();
 
   return (
     <div className={`fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 transition-opacity duration-200 ${animateExit ? 'opacity-0' : 'opacity-100'}`}>
@@ -138,104 +37,20 @@ const LoadingPage: React.FC = () => {
         </div>
 
         {error ? (
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500" />
-            <h2 className="text-xl font-semibold">Recipe Generation Failed</h2>
-            <p className="text-muted-foreground">{error}</p>
-            
-            {/* Timeout message */}
-            {hasTimeoutError && (
-              <div className="mt-4 p-3 rounded-lg text-sm bg-amber-50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="font-medium">This request timed out</span>
-                </div>
-                <p className="text-xs">
-                  Try again with a simpler recipe request or fewer ingredients.
-                </p>
-              </div>
-            )}
-            
-            <div className="flex flex-row gap-3 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={handleCancel}
-                className="flex items-center gap-2"
-              >
-                <XCircle className="h-4 w-4" />
-                Start Over
-              </Button>
-              
-              {formData && (
-                <Button 
-                  onClick={handleRetry}
-                  disabled={isRetrying}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                  Try Again
-                </Button>
-              )}
-            </div>
-          </div>
+          <LoadingError 
+            error={error}
+            hasTimeoutError={hasTimeoutError}
+            onCancel={handleCancel}
+            onRetry={handleRetry}
+            isRetrying={isRetrying}
+            formData={formData}
+          />
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-8 w-full">
-            {/* Gift box SVG icon - keep the same from original FullScreenLoading */}
-            <div className="relative animate-gift-bounce">
-              <svg 
-                width="120" 
-                height="120" 
-                viewBox="0 0 120 120" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <rect x="30" y="45" width="60" height="60" rx="4" fill="#D1D5DB" />
-                <path d="M30 49a4 4 0 014-4h52a4 4 0 014 4v10H30V49z" fill="#4CAF50" />
-                <path d="M60 45V30M50 37.5C50 32.8 54.5 25 60 30c5.5 5 10 2.5 10 7.5S65 45 60 45s-10-2.8-10-7.5z" stroke="#4CAF50" strokeWidth="3" />
-              </svg>
-            </div>
-            
-            <h2 className="text-2xl font-semibold">Creating your recipe...</h2>
-            
-            {/* Progress bar with animation */}
-            <Progress 
-              value={progress}
-              className="w-full" 
-              indicatorClassName="animate-progress-pulse" 
-              indicatorColor="#4CAF50" 
-            />
-            
-            {/* Timeout warning */}
-            {showTimeoutMessage && (
-              <div className="bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-800 p-4 w-full">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  <h4 className="text-base font-medium text-amber-700 dark:text-amber-400">Taking longer than expected</h4>
-                </div>
-                <p className="text-sm text-amber-600 dark:text-amber-300 mt-1">
-                  The recipe is taking a bit longer to create. Please be patient as our AI is working hard on your request.
-                </p>
-              </div>
-            )}
-            
-            {/* Tip card - Simplified to a single tip */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-5 w-full">
-              <h4 className="text-lg font-semibold mb-2">Chef's Tip</h4>
-              <p className="text-gray-600 dark:text-gray-300">
-                Patience is key in cooking. The best flavors take time to develop, just like your recipe is taking shape now.
-              </p>
-            </div>
-            
-            {/* Cancel button */}
-            <Button 
-              variant="ghost" 
-              onClick={handleCancel} 
-              className="text-gray-500"
-            >
-              Cancel
-            </Button>
-          </div>
+          <LoadingState 
+            progress={progress}
+            showTimeoutMessage={showTimeoutMessage}
+            onCancel={handleCancel}
+          />
         )}
       </div>
     </div>
