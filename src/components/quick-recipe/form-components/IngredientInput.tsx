@@ -53,23 +53,6 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
 
   return (
     <div className="space-y-2 w-full max-w-full">
-      <label
-        htmlFor="mainIngredient"
-        className="block pb-1 text-left whitespace-normal break-words"
-      >
-        <span className={cn(
-          'font-semibold text-recipe-blue',
-          isMobile ? 'text-base' : 'text-lg'
-        )}>
-          What do you want to cook or what ingredients do you have in your kitchen?
-        </span>
-        <br />
-        <br />
-        <span className="text-sm text-gray-500">
-          Let our AI Cooking coach know and optionally select servings, cuisine, and dietary restrictions, and we'll create a custom recipe for you!
-        </span>
-      </label>
-
       <div
         className={cn(
           'relative flex items-center rounded-xl shadow-md transition-all duration-300 w-full',
