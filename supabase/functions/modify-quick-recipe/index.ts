@@ -1,337 +1,186 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
-import { StructuredOutputParser } from "https://esm.sh/@langchain/core/output_parsers";
+import { ChatOpenAI } from "https://esm.sh/langchain/chat_models/openai";
+import { StructuredOutputParser } from "https://esm.sh/@langchain/output_parsers";
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { recipeModificationsSchema } from "./schema.ts";
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
-// Retry mechanism with exponential backoff
-async function withRetry(fn, maxRetries = 3, initialDelay = 500) {
+// === retry helper ===
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 500): Promise<T> {
   let retries = 0;
   while (true) {
     try {
       return await fn();
-    } catch (error) {
-      retries++;
-      if (retries > maxRetries) {
-        console.error(`Failed after ${maxRetries} retries:`, error);
-        throw error;
-      }
-      const delay = initialDelay * Math.pow(2, retries - 1);
-      console.log(`Retry ${retries}/${maxRetries} after ${delay}ms`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+    } catch (err) {
+      if (++retries > maxRetries) throw err;
+      const delay = initialDelay * 2 ** (retries - 1);
+      console.warn(`Retry ${retries}/${maxRetries} after ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
     }
   }
 }
 
-// Circuit breaker to prevent cascading failures
+// === circuit breaker ===
 class CircuitBreaker {
-  private failureCount = 0;
-  private lastFailureTime: number | null = null;
-  private isOpen = false;
+  private failures = 0;
+  private openUntil: number = 0;
 
-  constructor(
-    private maxFailures = 5,
-    private resetTimeout = 30000 // 30 seconds
-  ) {}
+  constructor(private maxFailures = 5, private resetMs = 30_000) {}
 
-  async execute(fn) {
-    if (this.isOpen) {
-      if (Date.now() - (this.lastFailureTime || 0) > this.resetTimeout) {
-        this.reset();
-      } else {
-        throw new Error("Circuit is open, request rejected");
-      }
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    if (Date.now() < this.openUntil) {
+      throw new Error("Circuit is open");
     }
-
     try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch (error) {
-      this.onFailure();
-      throw error;
+      const res = await fn();
+      this.failures = 0;
+      return res;
+    } catch (err) {
+      if (++this.failures >= this.maxFailures) {
+        this.openUntil = Date.now() + this.resetMs;
+      }
+      throw err;
     }
-  }
-
-  private onSuccess() {
-    this.failureCount = 0;
-  }
-
-  private onFailure() {
-    this.failureCount++;
-    this.lastFailureTime = Date.now();
-    
-    if (this.failureCount >= this.maxFailures) {
-      this.isOpen = true;
-    }
-  }
-
-  private reset() {
-    this.failureCount = 0;
-    this.isOpen = false;
-    this.lastFailureTime = null;
   }
 }
+const openAICircuit = new CircuitBreaker();
 
-// Create circuit breaker instance
-const openAICircuitBreaker = new CircuitBreaker();
-
-// Initialize the OpenAI model
+// === build LangChain pipeline ===
 function createLangChainSequence() {
   const parser = StructuredOutputParser.fromZodSchema(recipeModificationsSchema);
+  const key = Deno.env.get("OPENAI_API_KEY");
+  if (!key) throw new Error("OPENAI_API_KEY missing");
 
-  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openAIApiKey) {
-    throw new Error("OpenAI API key not found");
-  }
-  
-  // Initialize with more robust parameters
-  const model = new ChatOpenAI({ 
-    openAIApiKey,
+  const model = new ChatOpenAI({
+    openAIApiKey: key,
     modelName: "gpt-4o",
     temperature: 0.2,
-    timeout: 60000, // 60 second timeout
-    maxRetries: 3,
+    timeout: 60_000,
+    maxRetries: 0, // we handle retries ourselves
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
-    ["system", `You are a culinary nutrition expert who helps users modify recipes to meet their goals.
-    
-    When modifying recipes:
-    1. Always maintain culinary integrity - changes should make sense and taste good
-    2. Consider the chemistry of cooking when making substitutions
-    3. Accurately calculate the nutrition impact of any changes
-    4. Provide specific quantities and units for ingredients
-    5. Explain the reasoning behind your modifications
-    
-    IMPORTANT: You must respond with a valid JSON object matching the expected output format.
-    Your final response must ONLY include this JSON object, nothing else.`],
+    ["system", `
+You are a culinary nutrition expert. When modifying recipes:
+1) Keep flavors balanced and logical.
+2) Honor cooking chemistry in substitutions.
+3) Correctly recalc nutrition.
+4) Return a strict JSON matching the Zod schema, nothing else.
+`],
     new MessagesPlaceholder("history"),
     ["human", "{input}"],
-    ["human", "Respond ONLY with a valid JSON object. Include your explanation in the 'reasoning' field."],
   ]);
 
   return RunnableSequence.from([
-    {
-      input: (request) => request.input,
-      history: (request) => request.history || [],
-    },
+    { input: (r) => r.input, history: (r) => r.history || [] },
     prompt,
     model,
-    parser,
+    parser
   ]);
 }
 
-// Validate recipe structure and prevent data loss
-function validateRecipe(recipe) {
-  if (!recipe) {
-    throw new Error("Recipe is required");
-  }
-  
-  // Check essential fields
-  if (!recipe.title) {
-    throw new Error("Recipe title is missing");
-  }
-  
-  if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-    throw new Error("Recipe must have ingredients");
-  }
-  
-  // Ensure we have either steps or instructions
-  const hasSteps = Array.isArray(recipe.steps) && recipe.steps.length > 0;
-  const hasInstructions = Array.isArray(recipe.instructions) && recipe.instructions.length > 0;
-  
-  if (!hasSteps && !hasInstructions) {
-    throw new Error("Recipe must have steps or instructions");
-  }
-  
-  return true;
+// === validate incoming recipe ===
+function validateRecipe(recipe: any) {
+  if (!recipe?.title) throw new Error("Missing recipe.title");
+  if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0)
+    throw new Error("Must have at least one ingredient");
+  if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))
+    throw new Error("Must have steps or instructions");
 }
 
-// Main handler function
+// === edge function ===
 serve(async (req) => {
-  // Prepare consistent headers for all responses
   const headers = {
     ...getCorsHeadersWithOrigin(req),
-    'Content-Type': 'application/json'
+    "Content-Type": "application/json",
   };
 
-  // Handle CORS preflight requests with dynamic origin support for credentials
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 204, 
-      headers: getCorsHeadersWithOrigin(req)
-    });
+  // preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers });
   }
 
   try {
-    const startTime = Date.now();
-    console.log("Starting recipe modification request", { timestamp: new Date().toISOString() });
-    
-    const requestData = await req.json();
-    const { recipe, userRequest, modificationHistory = [] } = requestData;
-    
-    console.log("Validating recipe...");
+    const { recipe, userRequest, modificationHistory = [] } = await req.json();
+
+    // validate input
     try {
       validateRecipe(recipe);
-    } catch (validationError) {
-      console.error("Recipe validation failed:", validationError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Invalid recipe data", 
-          details: validationError.message 
-        }),
-        { status: 400, headers }
-      );
+    } catch (vall) {
+      return new Response(JSON.stringify({ error: vall.message }), { status: 400, headers });
     }
 
-    // Process the request using our langchain sequence with circuit breaker and retry
-    const runnable = createLangChainSequence();
-    
-    // Structure the input with recipe details and modification history for context
+    // build LangChain call
+    const chain = createLangChainSequence();
     const input = `
-      Recipe to modify: ${JSON.stringify(recipe)}
-      
-      User request: ${userRequest}
-      
-      Current nutrition information: ${JSON.stringify(recipe.nutrition || {})}
+      Recipe: ${JSON.stringify(recipe)}
+      Request: ${userRequest}
     `;
+    const history = [
+      ...modificationHistory.map(e => ({ role: "human", content: e.request })),
+      ...modificationHistory.map(e => ({ role: "ai", content: JSON.stringify(e.response) }))
+    ];
 
-    // Create history context from previous modifications if available
-    const history = modificationHistory.map(entry => ({
-      role: "human",
-      content: entry.request,
-    })).concat(modificationHistory.map(entry => ({
-      role: "ai",
-      content: JSON.stringify(entry.response),
-    })));
-
-    // Execute with circuit breaker and retry mechanism
-    let result;
+    // call LLM with circuit breaker + retry
+    let result: any;
     try {
-      console.log("Executing LLM call with circuit breaker and retry mechanism");
-      
-      const runInvocation = () => runnable.invoke({
-        input,
-        history,
-      });
-
-      // Wrap the LLM call with circuit breaker and retry
-      result = await openAICircuitBreaker.execute(async () => {
-        return await withRetry(runInvocation, 3, 500);
-      });
-      
-      console.log("Successfully generated recipe modifications");
-    } catch (error) {
-      console.error("Error generating recipe modifications:", error);
-      
-      // Provide a specific, actionable error message based on error type
-      let errorMessage = "Failed to generate recipe modifications";
-      let errorDetails = error.message;
-      let statusCode = 500;
-      
-      if (error.message?.includes("Circuit is open")) {
-        errorMessage = "Service temporarily unavailable";
-        errorDetails = "Too many failures detected. Please try again later.";
-        statusCode = 503;
-      } else if (error.message?.includes("timeout")) {
-        errorMessage = "Request timed out";
-        errorDetails = "The modification request took too long to process. Try a simpler request.";
-        statusCode = 504;
-      } else if (error.message?.includes("OpenAI API key not found")) {
-        errorMessage = "Configuration error";
-        errorDetails = "The server is missing required credentials.";
-        statusCode = 500;
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          error: errorMessage, 
-          details: errorDetails
-        }),
-        { status: statusCode, headers }
+      result = await openAICircuit.execute(() =>
+        withRetry(() => chain.invoke({ input, history }), 3, 500)
       );
+    } catch (llmErr) {
+      const msg = llmErr.message.includes("Circuit is open")
+        ? { error: "Service unavailable, too many failures" }
+        : llmErr.message.includes("timeout")
+          ? { error: "AI request timed out" }
+          : { error: "AI generation failed" };
+      return new Response(JSON.stringify(msg), { status: 503, headers });
     }
 
-    // Validate the result with our schema before sending it back
+    // Zod-validate AI output
+    let parsed: any;
     try {
-      // Parse ensures the response matches our defined schema
-      const parsed = recipeModificationsSchema.parse(result);
-      
-      const processingTime = Date.now() - startTime;
-      console.log("Recipe modification completed", { 
-        processingTime: `${processingTime}ms`,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Initialize Supabase client with proper authentication
-      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-      const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-      
-      if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-        console.error("Missing required Supabase environment variables");
-        throw new Error("🛑 Supabase configuration is incomplete - SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing");
-      }
-      
-      const supabaseClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${SERVICE_ROLE_KEY}`
-          }
-        }
-      });
-      
-      // Store the modification in recipe_chats if a recipe ID is provided
-      if (recipe.id) {
-        try {
-          const { error: chatError } = await supabaseClient
-            .from('recipe_chats')
-            .insert({
-              recipe_id: recipe.id,
-              user_message: userRequest,
-              ai_response: "Recipe modification request",
-              changes_suggested: parsed,
-              source_type: 'modification'
-            });
-
-          if (chatError) {
-            console.error("Error storing chat:", chatError);
-            // Continue with response even if DB insert failed
-            // The frontend will handle this case
-          }
-        } catch (dbError) {
-          console.error("Database error in modify-quick-recipe function:", dbError);
-          // Continue with response even if DB operation failed
-        }
-      }
-      
-      return new Response(
-        JSON.stringify(parsed),
-        { status: 200, headers }
-      );
-    } catch (parseError) {
-      console.error("Schema validation error:", parseError);
+      parsed = recipeModificationsSchema.parse(result);
+    } catch (parseErr) {
       return new Response(
         JSON.stringify({
           error: "Invalid AI response format",
-          details: "The generated modifications did not match the expected format."
+          details: (parseErr as Error).message
         }),
         { status: 422, headers }
       );
     }
-  } catch (error) {
-    console.error("Unexpected error in modify-quick-recipe function:", error);
-    
-    return new Response(
-      JSON.stringify({
-        error: "Unexpected error occurred",
-        details: error.message || "Unknown error"
-      }),
-      { status: 500, headers }
-    );
+
+    // write chat record
+    const SUPA_URL = Deno.env.get("SUPABASE_URL");
+    const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPA_URL || !SUPA_KEY) {
+      console.error("Missing Supabase env vars");
+    } else {
+      try {
+        const sb = createClient(SUPA_URL, SUPA_KEY, {
+          global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
+        });
+        await sb.from("recipe_chats").insert({
+          recipe_id: recipe.id,
+          user_message: userRequest,
+          ai_response: parsed.textResponse,
+          changes_suggested: parsed.modifications,
+          source_type: "modification"
+        });
+      } catch (dbErr) {
+        console.error("DB insert failed", dbErr);
+      }
+    }
+
+    // return success
+    return new Response(JSON.stringify(parsed), { status: 200, headers });
+  } catch (err) {
+    console.error("Unexpected error", err);
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
+      status: 500,
+      headers
+    });
   }
 });
