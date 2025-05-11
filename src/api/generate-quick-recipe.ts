@@ -60,30 +60,20 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     console.log("Race completed, data received:", data ? "data exists" : "no data");
     
-    // Check for error in data
+    // Simplified error handling - less aggressive checks
     if (!data) {
       console.error('No data returned from recipe generation');
       const errorObj = await processErrorResponse(new Error('No recipe data returned. Please try again.'));
       return errorObj as QuickRecipe;
     }
     
-    // Check for error or isError flag in data (for our error objects)
-    if (typeof data === 'object' && data !== null) {
-      if ('isError' in data && data.isError) {
-        console.log("Received error object from processing:", data);
-        return data as QuickRecipe;
-      }
-      
-      if ('error' in data && data.error) {
-        console.error('Error in recipe data:', data.error);
-        const errorObj = await processErrorResponse(
-          typeof data.error === 'string' ? new Error(data.error) : new Error('Error generating recipe')
-        );
-        return errorObj as QuickRecipe;
-      }
+    // Check for error or isError flag in data
+    if (typeof data === 'object' && data !== null && 'isError' in data && data.isError) {
+      console.log("Received error object from processing:", data);
+      return data as QuickRecipe;
     }
     
-    // Normalize the recipe data to ensure it matches our expected structure
+    // Normalize the recipe data with more forgiving validation
     const normalizedRecipe = normalizeRecipeResponse(data);
     
     console.log('Normalized recipe:', normalizedRecipe);

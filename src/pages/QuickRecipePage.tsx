@@ -55,33 +55,10 @@ const QuickRecipePage: React.FC = () => {
     };
   }, [isLoading, isRetrying]);
   
-  // Error handling for edge function failures specifically
-  const isEdgeFunctionError = error?.includes('Edge Function') || 
-                              error?.includes('Failed to send a request') ||
-                              error?.includes('FunctionsFetchError');
+  // REMOVED: Edge function error handling specifically
                               
   const renderErrorContent = () => {
-    if (isEdgeFunctionError) {
-      return (
-        <div className="space-y-6">
-          <ErrorDisplay 
-            error="Recipe generation service is currently unavailable" 
-            title="Service Temporarily Unavailable"
-            onRetry={handleRetry}
-            variant="destructive"
-          />
-          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-sm">
-            <p className="font-medium mb-2">You can still:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Try again in a few minutes</li>
-              <li>Use a simpler recipe request</li>
-              <li>Our team has been notified of this issue</li>
-            </ul>
-          </div>
-        </div>
-      );
-    }
-    
+    // Simplified error display without edge function specific handling
     return (
       <QuickRecipeError
         error={error}

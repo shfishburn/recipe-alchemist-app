@@ -62,17 +62,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     resetToOriginal
   } = useRecipeModifications(recipe);
 
-  // Add error handling for edge function failures
-  useEffect(() => {
-    if (error && (
-      error.message?.includes('Failed to send a request to the Edge Function') || 
-      error.message?.includes('Edge Function') ||
-      error.message?.includes('FunctionsFetchError')
-    )) {
-      console.error("Edge Function Error detected:", error);
-      setEdgeFunctionError(new Error("The recipe modification service is currently unavailable. Our team has been notified."));
-    }
-  }, [error]);
+  // REMOVED: Edge function error detection logic
 
   // Handle for auth-related errors by reopening the auth drawer
   useEffect(() => {
@@ -107,36 +97,25 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
       requestModifications(request, immediate);
     } catch (err: any) {
       console.error("Error requesting modifications:", err);
-      setEdgeFunctionError(err);
-      // Show friendly error toast
-      toast.error("Unable to connect to recipe service", {
-        description: "Our AI modification service is temporarily unavailable. Please try again later."
+      // Simplified error handling - just log the error
+      toast.error("Unable to process recipe modifications", {
+        description: "Please try again later."
       });
     }
   }, [request, immediate, requestModifications, session, openAuthDrawer]);
 
-  // If there's an edge function error, show a dedicated error state
-  if (edgeFunctionError) {
+  // SIMPLIFIED: Error display - only show regular error state, not special edge function error
+  if (error) {
     return (
       <div className="space-y-6">
         <ErrorDisplay
-          error={edgeFunctionError}
-          title="Recipe Modification Unavailable"
+          error={error}
+          title="Recipe Modification Error"
           variant="destructive"
           onRetry={() => {
-            setEdgeFunctionError(null);
-            // Try to clear the error state
             cancelRequest();
           }}
         />
-        <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-sm">
-          <p className="font-medium mb-2">You can still use the recipe as is:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Check out the recipe in the "Recipe" tab</li>
-            <li>Try generating a new recipe if needed</li>
-            <li>Our team has been notified of this issue</li>
-          </ul>
-        </div>
       </div>
     );
   }

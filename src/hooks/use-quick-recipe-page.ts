@@ -114,21 +114,15 @@ export function useQuickRecipePage() {
     }
   }, [isDirectNavigation, isLoading, reset, isResumingGeneration]);
 
-  // Only redirect if not loading AND no recipe data AND no error AND no formData AND not direct navigation
+  // Only redirect if NOT direct navigation AND not loading AND no recipe AND no error AND no form data
+  // MODIFIED: Less aggressive redirection logic
   useEffect(() => {
-    // Don't redirect if:
-    // - We're currently loading
-    // - We're in the middle of resuming generation
-    // - We have a recipe to display
-    // - We have form data that might be used soon
-    // - We have an error to show
-    // - This is a direct navigation from navbar
-    const shouldRedirect = !isLoading && 
+    const shouldRedirect = !isDirectNavigation && 
+                           !isLoading && 
                            !isResumingGeneration && 
                            !recipe && 
                            !formData && 
-                           !error && 
-                           !isDirectNavigation;
+                           !error;
     
     if (shouldRedirect) {
       console.log("No recipe data available, redirecting to home");

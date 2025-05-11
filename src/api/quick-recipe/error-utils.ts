@@ -5,15 +5,6 @@ export const enhanceErrorMessage = (error: any): string => {
   // Add more context to the error message
   let errorMessage = error.message || "Unknown error occurred";
   
-  if (error.name === "FunctionsError" || error.name === "FunctionsHttpError") {
-    console.error("Supabase Functions error details:", {
-      name: error.name,
-      message: error.message,
-      context: error.context || "No context",
-      status: error.status || "No status",
-    });
-  }
-  
   // Handle authentication errors explicitly
   if (error.status === 401 || error.message?.includes('401') || 
       error.message?.includes('auth') || error.message?.includes('sign in')) {
@@ -21,19 +12,13 @@ export const enhanceErrorMessage = (error: any): string => {
   }
   
   if (error.message?.includes("timeout")) {
-    errorMessage = "Recipe generation timed out. The AI model is taking too long to respond. Please try again with a simpler recipe.";
+    errorMessage = "Recipe generation timed out. Please try again with a simpler recipe.";
   } else if (error.message?.includes("fetch")) {
     errorMessage = "Network error while generating recipe. Please check your internet connection and try again.";
   } else if (error.status === 500 || error.message?.includes("500")) {
-    errorMessage = "Server error while generating recipe. Our recipe AI is currently experiencing issues. Please try again later.";
+    errorMessage = "Server error while generating recipe. Please try again later.";
   } else if (error.status === 400 || error.message?.includes("400")) {
     errorMessage = "Invalid request format. Please check your inputs and try again.";
-  } else if (error.message?.includes("SyntaxError") || error.message?.includes("JSON")) {
-    errorMessage = "Error processing the recipe. The AI generated an invalid response format. Please try again.";
-  } else if (error.message?.includes("OpenAI API key")) {
-    errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
-  } else if (error.message?.includes("Empty request body")) {
-    errorMessage = "The request couldn't be processed because it was empty. Please try again.";
   }
   
   return errorMessage;
@@ -89,11 +74,6 @@ export const processErrorResponse = async (error: any): Promise<any> => {
       }
     } catch (e) {
       console.error("Could not process response body:", e);
-      
-      // If the error has a status code, include it in the message
-      if (error.context.response.status) {
-        errorMessage = `Server error with status code: ${error.context.response.status}`;
-      }
     }
   }
   

@@ -27,7 +27,7 @@ export function QuickRecipeError({
   return (
     <div className="flex flex-col items-center justify-center text-center max-w-lg mx-auto p-6 border rounded-xl bg-red-50 dark:bg-red-900/10">
       <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
-      <h2 className="text-xl font-semibold mb-2">Recipe Generation Failed</h2>
+      <h2 className="text-xl font-semibold mb-2">Recipe Generation Issue</h2>
       <p className="text-muted-foreground mb-6">{error}</p>
       
       {hasTimeoutError && (

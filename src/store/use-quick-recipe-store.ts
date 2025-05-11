@@ -119,7 +119,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           loadingState: { ...initialLoadingState }
         }),
         
-        // Helper function to validate recipe data
+        // More lenient validation function
         isRecipeValid: (recipe) => {
           if (!recipe) return false;
           
@@ -129,25 +129,20 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
             return false;
           }
           
-          const requiredFields = ['title', 'ingredients', 'steps'];
-          
-          // Check required fields exist
-          for (const field of requiredFields) {
-            if (!recipe[field]) {
-              console.error(`Recipe validation failed: missing ${field}`);
-              return false;
-            }
-          }
-          
-          // Validate ingredients array
-          if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-            console.error('Recipe validation failed: ingredients is not a valid array');
+          // Less strict validation - try to be permissive
+          // Just check that there's a title at minimum
+          if (!recipe.title) {
+            console.log('Recipe validation: missing title');
             return false;
           }
           
-          // Validate steps array (or instructions as fallback)
-          if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions)) {
-            console.error('Recipe validation failed: neither steps nor instructions is a valid array');
+          // Consider valid if we have either ingredients, steps or instructions
+          const hasIngredients = Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0;
+          const hasSteps = Array.isArray(recipe.steps) && recipe.steps.length > 0;
+          const hasInstructions = Array.isArray(recipe.instructions) && recipe.instructions.length > 0;
+          
+          if (!hasIngredients && !hasSteps && !hasInstructions) {
+            console.log('Recipe validation: missing content (no ingredients, steps, or instructions)');
             return false;
           }
           
