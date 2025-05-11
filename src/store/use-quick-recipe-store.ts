@@ -5,6 +5,16 @@ import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe'
 import { NavigateFunction } from 'react-router-dom';
 
 /**
+ * Interface for the loading state
+ */
+interface LoadingState {
+  step: number;
+  stepDescription: string;
+  percentComplete: number;
+  estimatedTimeRemaining?: number;
+}
+
+/**
  * Interface for the quick recipe store
  */
 interface QuickRecipeState {
@@ -15,6 +25,7 @@ interface QuickRecipeState {
   isLoading: boolean;
   navigate: NavigateFunction | null;
   hasTimeoutError: boolean;
+  loadingState: LoadingState;
   
   // Actions
   setRecipe: (recipe: QuickRecipe) => void;
@@ -23,6 +34,7 @@ interface QuickRecipeState {
   setLoading: (isLoading: boolean) => void;
   setNavigate: (navigate: NavigateFunction) => void;
   setHasTimeoutError: (hasTimeoutError: boolean) => void;
+  updateLoadingState: (loadingState: Partial<LoadingState>) => void;
   reset: () => void;
   
   // Helper functions
@@ -43,6 +55,11 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         isLoading: false,
         navigate: null,
         hasTimeoutError: false,
+        loadingState: {
+          step: 0,
+          stepDescription: "Initializing...",
+          percentComplete: 0
+        },
         
         // Actions
         setRecipe: (recipe) => {
@@ -93,6 +110,13 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         setNavigate: (navigate) => set({ navigate }),
         
         setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
+        
+        updateLoadingState: (loadingState) => set((state) => ({
+          loadingState: {
+            ...state.loadingState,
+            ...loadingState
+          }
+        })),
         
         reset: () => set({ 
           recipe: null, 
