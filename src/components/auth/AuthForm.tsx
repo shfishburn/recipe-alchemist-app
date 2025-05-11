@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -217,6 +216,19 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       if (error) throw error;
       
       console.log("Login successful:", data);
+      
+      // Check for recipe modification request in localStorage
+      const modificationPage = localStorage.getItem('recipe_modification_page');
+      if (modificationPage) {
+        // Clear the flag but keep the request text for the component to use
+        localStorage.removeItem('recipe_modification_page');
+        
+        // Navigate back to the modification page with the tab parameter
+        const url = new URL(modificationPage, window.location.origin);
+        url.hash = 'modify'; // Set the hash to open the modify tab
+        navigate(url.toString());
+        return;
+      }
       
       // Check for redirect path in sessionStorage first, then use onSuccess or navigate to home
       const redirectPath = sessionStorage.getItem('redirectPath');

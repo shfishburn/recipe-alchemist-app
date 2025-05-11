@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,7 +15,10 @@ import { StepList } from './step/StepList';
 import { NutritionSummary } from './NutritionSummary';
 import { RecipeDisplay } from './RecipeDisplay';
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner";
+import { useAuth } from '@/hooks/use-auth';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
+import { LogIn, UserPlus } from 'lucide-react';
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
@@ -25,6 +28,68 @@ interface QuickRecipeModifierProps {
 export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe, onModifiedRecipe }) => {
   const [request, setRequest] = useState('');
   const [immediate, setImmediate] = useState(false);
+  const { session } = useAuth();
+  const { open: openAuthDrawer } = useAuthDrawer();
+  
+  // Check for saved request in localStorage
+  useEffect(() => {
+    const savedRequest = localStorage.getItem('recipe_modification_request');
+    if (savedRequest) {
+      setRequest(savedRequest);
+      // Clear the saved request to prevent it from showing up on every load
+      localStorage.removeItem('recipe_modification_request');
+    }
+  }, []);
+
+  // Save request to localStorage when user is not authenticated and tries to submit
+  const saveRequestToLocalStorage = () => {
+    if (request.trim()) {
+      localStorage.setItem('recipe_modification_request', request);
+      localStorage.setItem('recipe_modification_page', window.location.pathname);
+    }
+  };
+
+  // Handle auth flow
+  const handleLogin = () => {
+    saveRequestToLocalStorage();
+    openAuthDrawer();
+  };
+
+  // If user is not authenticated, show auth overlay
+  if (!session) {
+    return (
+      <Card className="relative">
+        <CardHeader>
+          <CardTitle>Recipe Modification</CardTitle>
+          <CardDescription>
+            Personalize and improve your recipes with AI assistance
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="min-h-[300px] flex items-center justify-center">
+          <div className="text-center space-y-6 max-w-md mx-auto p-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Sign in to modify recipes</h3>
+              <p className="text-muted-foreground">
+                You must be signed in to use the AI-powered recipe editor. Log in now to unlock personalized tweaks, 
+                save your history, and get the most out of your AI Cooking Coach.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button onClick={handleLogin} className="flex items-center gap-2">
+                <LogIn className="h-4 w-4" />
+                <span>Log In</span>
+              </Button>
+              <Button onClick={handleLogin} variant="outline" className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                <span>Sign Up</span>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const {
     status,
     error,
@@ -50,8 +115,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     applyModifications();
     if (onModifiedRecipe && modifiedRecipe) {
       onModifiedRecipe(modifiedRecipe);
-      toast({
-        title: "Modifications Applied",
+      toast("Modifications Applied", {
         description: "Your recipe modifications have been applied successfully."
       });
     }

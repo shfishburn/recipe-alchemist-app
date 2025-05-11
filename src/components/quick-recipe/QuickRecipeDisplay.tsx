@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
@@ -17,8 +17,16 @@ export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
   const [currentRecipe, setCurrentRecipe] = useState<QuickRecipe>(recipe);
   const [activeTab, setActiveTab] = useState<string>('recipe');
 
+  // Check for URL hash to determine initial tab
+  useEffect(() => {
+    // If URL has #modify, open the modify tab
+    if (window.location.hash === '#modify') {
+      setActiveTab('modify');
+    }
+  }, []);
+
   const handleSave = async () => {
-    toast.loading("Saving your recipe...");
+    toast("Saving your recipe...");
     await saveRecipe(currentRecipe);
   };
 

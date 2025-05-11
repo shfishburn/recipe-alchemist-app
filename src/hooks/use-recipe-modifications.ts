@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QuickRecipe } from '@/types/quick-recipe';
+import { useAuth } from '@/hooks/use-auth';
 
 // Define the NutritionImpact type
 export interface NutritionImpact {
@@ -64,6 +65,7 @@ export type ModificationStatus =
   | 'not-deployed';
 
 export function useRecipeModifications(recipe: QuickRecipe) {
+  const { session } = useAuth();
   const [status, setStatus] = useState<ModificationStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [modificationRequest, setModificationRequest] = useState<string>('');
@@ -95,6 +97,13 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   const requestModifications = useCallback(async (request: string, immediate = false) => {
     if (!request.trim()) return;
 
+    // Fail fast if no authentication
+    if (!session) {
+      setError('Authentication required to modify recipes');
+      setStatus('error');
+      return;
+    }
+
     // cancel previous
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
@@ -112,10 +121,9 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       setError(null);
 
       // get session token
-      const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        setError('Not authorized');
+        setError('Authentication required');
         setStatus('error');
         return;
       }
@@ -142,7 +150,9 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         abortControllerRef.current = null;
 
         if (response.error) {
-          if (response.error.status === 404 || response.error.message?.includes('Not Found')) {
+          if (response.error.status === 401) {
+            throw new Error('Authentication required to modify recipes');
+          } else if (response.error.status === 404 || response.error.message?.includes('Not Found')) {
             setStatus('not-deployed');
             setError('Modification service not deployed');
           } else {
@@ -179,7 +189,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     } else {
       requestTimerRef.current = window.setTimeout(executeRequest, 800);
     }
-  }, [modifiedRecipe, modificationHistory]);
+  }, [modifiedRecipe, modificationHistory, session]);
 
   const applyModifications = useCallback(() => {
     if (!modifications || status !== 'success') return;
