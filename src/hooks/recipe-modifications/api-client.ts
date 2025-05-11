@@ -14,8 +14,16 @@ export async function requestRecipeModifications(
   console.log('Requesting recipe modifications:', userRequest);
   
   try {
-    // Use the callSupabaseFunction utility instead of direct fetch
-    const response = await callSupabaseFunction<
+    // Register abort handler to throw an AbortError if the controller aborts
+    // This allows us to catch and handle it properly below
+    const abortPromise = new Promise<never>((_, reject) => {
+      abortController.signal.addEventListener('abort', () => {
+        reject(new DOMException('Request aborted', 'AbortError'));
+      });
+    });
+    
+    // Race the function call against abort
+    const responsePromise = callSupabaseFunction<
       { recipe: QuickRecipe; userRequest: string; modificationHistory: any[] },
       RecipeModifications
     >('modify-quick-recipe', {
@@ -28,6 +36,9 @@ export async function requestRecipeModifications(
       token,
       debugTag: 'recipe-modification'
     });
+    
+    // This will either resolve with the function response or reject if aborted
+    const response = await Promise.race([responsePromise, abortPromise]);
 
     // Check for errors in the response
     if (response.error) {
