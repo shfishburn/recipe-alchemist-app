@@ -8,10 +8,14 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
   const [progress, setProgress] = useState(0);
   const progressTimerRef = useRef<number | null>(null);
   const completionTimerRef = useRef<number | null>(null);
+  const isMounted = useRef(true);
   
-  // Clear any existing timers when component unmounts
+  // Clean up any existing timers when component unmounts
   useEffect(() => {
+    isMounted.current = true;
+    
     return () => {
+      isMounted.current = false;
       if (progressTimerRef.current) {
         clearInterval(progressTimerRef.current);
       }
@@ -37,11 +41,13 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
       
       // Initial progress jump to give feeling of responsiveness
       setTimeout(() => {
+        if (!isMounted.current) return;
         setProgress(30);
       }, 50);
       
       // Progress timer with a more reliable implementation
       progressTimerRef.current = window.setInterval(() => {
+        if (!isMounted.current) return;
         setProgress(prev => {
           if (prev >= 90) return prev;
           // More linear, predictable progress
@@ -50,7 +56,11 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
       }, 200);
       
       // Force completion after a reasonable timeout (3 seconds)
-      completionTimerRef.current = window.setTimeout(completeLoading, 3000);
+      completionTimerRef.current = window.setTimeout(() => {
+        if (isMounted.current) {
+          completeLoading();
+        }
+      }, 3000);
     };
     
     const completeLoading = () => {
@@ -64,7 +74,9 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
       setProgress(100);
       
       setTimeout(() => {
-        setIsLoading(false);
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
       }, 300);
     };
 
@@ -96,15 +108,17 @@ export const LoadingIndicator = memo(function LoadingIndicator() {
 
   return (
     <div 
-      className="nprogress-container" 
+      className="fixed top-0 left-0 right-0 z-50 h-1" 
       aria-hidden="true" 
       role="presentation"
     >
       <div 
-        className="nprogress-bar hw-accelerated" 
+        className="h-full bg-recipe-green hw-accelerated" 
         style={{ 
           transform: `translateX(${progress - 100}%)`,
-          transition: 'transform 0.2s ease-out'
+          transition: 'transform 0.2s ease-out',
+          minWidth: '5%',
+          boxShadow: '0 0 8px rgba(76, 175, 80, 0.5)'
         }}
       />
     </div>

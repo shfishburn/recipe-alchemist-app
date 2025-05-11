@@ -28,7 +28,9 @@ const QuickRecipePage: React.FC = () => {
 
   // Clean up any stale loading UI on mount and unmount
   useEffect(() => {
-    console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
+    }
     
     // Only clean up if we're not loading or retrying
     if (!isLoading && !isRetrying) {
@@ -39,7 +41,9 @@ const QuickRecipePage: React.FC = () => {
     const cleanupInterval = setInterval(checkAndCleanupLoadingUI, 5000);
     
     return () => {
-      console.log('QuickRecipePage unmounted');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('QuickRecipePage unmounted');
+      }
       clearInterval(cleanupInterval);
       
       // Only clean up if we're not loading or retrying
@@ -69,7 +73,7 @@ const QuickRecipePage: React.FC = () => {
         />
 
         {isDirectNavigation ? (
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-6">
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
             <QuickRecipeFormContainer />
           </div>
         ) : error ? (

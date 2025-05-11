@@ -24,6 +24,9 @@ export function useLoadingProgress() {
   const timeoutWarningRef = useRef<NodeJS.Timeout | null>(null);
   const [showTimeout, setShowTimeout] = useState(false);
   const [showFinalAnimation, setShowFinalAnimation] = useState(false);
+  
+  // Track whether the hook is mounted to prevent state updates after unmounting
+  const isMounted = useRef(true);
 
   // Clean up all timers on unmount
   const cleanupAllTimers = () => {
@@ -45,7 +48,16 @@ export function useLoadingProgress() {
     }
   };
 
-  // Update progress every 100ms - FIXED: Removed loadingState.percentComplete from dependencies to avoid recreating timers
+  // Set up mount/unmount tracking
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      cleanupAllTimers();
+    };
+  }, []);
+
+  // Update progress - FIXED: Only depends on estimatedTimeRemaining to avoid recreating timers
   useEffect(() => {
     // Clear any existing timers first
     cleanupAllTimers();
@@ -53,7 +65,10 @@ export function useLoadingProgress() {
     // Set a default estimated time if not provided
     const initialEstimate = loadingState.estimatedTimeRemaining || 15;
     
-    console.log('Setting up progress timer with estimate:', initialEstimate);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Setting up progress timer with estimate:', initialEstimate);
+    }
+    
     const startTime = Date.now();
     
     // Initialize with at least 5% to show something immediately
@@ -64,6 +79,8 @@ export function useLoadingProgress() {
     }
     
     progressTimerRef.current = setInterval(() => {
+      if (!isMounted.current) return;
+      
       const elapsed = (Date.now() - startTime) / 1000;
       const remaining = Math.max(0, initialEstimate - elapsed);
       const percent = Math.min(99, Math.floor(((initialEstimate - remaining) / initialEstimate) * 100));
@@ -78,7 +95,10 @@ export function useLoadingProgress() {
       
       // If almost done, show completion animation
       if (remaining <= 0.5 && !completedLoading) {
-        console.log('Progress timer: showing completion animation');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Progress timer: showing completion animation');
+        }
+        
         setCompletedLoading(true);
         // Show final animation
         setShowFinalAnimation(true);
@@ -92,7 +112,6 @@ export function useLoadingProgress() {
     }, 100);
     
     return cleanupAllTimers;
-    // FIXED: Removed loadingState.percentComplete from dependencies to avoid recreating timers on every update
   }, [loadingState.estimatedTimeRemaining, updateLoadingState, completedLoading, setCompletedLoading]);
   
   // Cycle through loading steps
@@ -111,9 +130,12 @@ export function useLoadingProgress() {
     }
     
     stepTimerRef.current = setInterval(() => {
+      if (!isMounted.current) return;
+      
+      const nextStep = (loadingState.step + 1) % LOADING_STEPS.length;
       updateLoadingState({
-        step: (loadingState.step + 1) % LOADING_STEPS.length,
-        stepDescription: LOADING_STEPS[(loadingState.step + 1) % LOADING_STEPS.length]
+        step: nextStep,
+        stepDescription: LOADING_STEPS[nextStep]
       });
     }, 3000);
     
@@ -123,7 +145,7 @@ export function useLoadingProgress() {
         stepTimerRef.current = null;
       }
     };
-  }, [loadingState.step, updateLoadingState, loadingState.stepDescription]);
+  }, [loadingState.step, updateLoadingState]);
 
   // Set a timeout warning and timeout error
   useEffect(() => {
@@ -133,7 +155,12 @@ export function useLoadingProgress() {
     
     // Show a timeout warning after a few seconds
     timeoutWarningRef.current = setTimeout(() => {
-      console.log("Timeout warning triggered");
+      if (!isMounted.current) return;
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Timeout warning triggered");
+      }
+      
       if (!completedLoading) {
         setShowTimeout(true);
       }
@@ -141,6 +168,8 @@ export function useLoadingProgress() {
     
     // Set a timeout to prevent infinite loading state
     timeoutTimerRef.current = setTimeout(() => {
+      if (!isMounted.current) return;
+      
       if (!completedLoading) {
         console.error("Recipe generation timeout after", MAX_LOADING_TIME, "seconds");
         setError("Recipe generation timed out. Please try again.");

@@ -73,7 +73,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="icon" 

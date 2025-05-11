@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 interface LoadingInterstitialProps {
   isOpen: boolean;
@@ -20,9 +20,11 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
     if (isOpen && !error) {
       // Show timeout warning after a few seconds (reduced for testing)
       const timeoutId = setTimeout(() => {
-        console.log("LoadingInterstitial timeout message triggered");
+        if (process.env.NODE_ENV !== 'production') {
+          console.log("LoadingInterstitial timeout message triggered");
+        }
         setShowTimeoutMessage(true);
-      }, 2000); // Reduced for testing
+      }, 2000);
       
       // Progress animation
       let progressInterval: NodeJS.Timeout;
@@ -50,18 +52,16 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
     }
   }, [isOpen, error]);
 
-  // For debugging
-  useEffect(() => {
-    console.log("LoadingInterstitial mounted", { isOpen, error });
-    return () => console.log("LoadingInterstitial unmounted");
-  }, []);
-
   // Always render the dialog content, even if there's an error
   const hasExplicitError = !!error;
   
   return (
-    <Dialog open={isOpen} modal={true}>
-      <DialogContent className="sm:max-w-md flex flex-col items-center justify-center p-10 gap-6">
+    <LoadingOverlay
+      isOpen={isOpen}
+      onCancel={onCancel}
+      isError={hasExplicitError}
+    >
+      <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6">
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">
           <div 
@@ -70,6 +70,11 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
               width: `${progress}%`,
               boxShadow: `0 0 8px rgba(76, 175, 80, 0.5)`
             }}
+            role="progressbar"
+            aria-label="Loading progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
           />
         </div>
         
@@ -93,8 +98,12 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
               : "Our culinary AI is crafting your perfect recipe..."}
           </p>
           
-          {/* Always render the container but conditionally show content */}
-          <div className={`mt-4 p-3 ${showTimeoutMessage && !hasExplicitError ? 'bg-amber-50 dark:bg-amber-900/10' : 'hidden'} rounded-lg text-sm text-amber-700 dark:text-amber-300`}>
+          {/* Timeout warning */}
+          <div 
+            className={`mt-4 p-3 rounded-lg text-sm ${showTimeoutMessage && !hasExplicitError ? 
+              'bg-amber-50 dark:bg-amber-900/10 text-amber-700 dark:text-amber-300' : 'hidden'}`}
+            aria-live="polite"
+          >
             {showTimeoutMessage && !hasExplicitError && (
               <>
                 <div className="flex items-center gap-2 mb-2">
@@ -109,8 +118,12 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
             )}
           </div>
           
-          {/* Always render error message container */}
-          <div className={`mt-4 p-3 ${hasExplicitError ? 'bg-red-50 dark:bg-red-900/10' : 'hidden'} rounded-lg text-sm text-red-700 dark:text-red-300`}>
+          {/* Error message */}
+          <div 
+            className={`mt-4 p-3 rounded-lg text-sm ${hasExplicitError ? 
+              'bg-red-50 dark:bg-red-900/10 text-red-700 dark:text-red-300' : 'hidden'}`}
+            aria-live="assertive"
+          >
             {hasExplicitError && (
               <>
                 <div className="flex items-center gap-2 mb-2">
@@ -149,8 +162,8 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </LoadingOverlay>
   );
 };
 

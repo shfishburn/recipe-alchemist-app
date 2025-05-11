@@ -14,6 +14,34 @@
   100% { opacity: 0; transform: translateY(-15px) translateX(6px) scale(1.2); }
 }
 
+@keyframes progress-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Essential animation classes */
 .animateCookingPot {
   animation: cooking-pot 2s ease-in-out infinite;
@@ -47,62 +75,24 @@
   animation-delay: 1.2s;
 }
 
-/* Progress bar minimum width */
-.minW5 {
-  min-width: 5%;
-}
-
-/* Progress bar animation - pulsing effect */
-@keyframes progress-pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
+/* Progress bar animation */
 .animateProgressPulse {
   animation: progress-pulse 2s ease-in-out infinite;
 }
 
-/* Add additional helper classes for loading states */
-.loadingOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
+/* Loading UI helper classes */
+.fadeIn {
+  animation: fade-in 0.3s ease-out forwards;
 }
 
-.loadingContainer {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 24px;
-  max-width: 400px;
-  margin: 0 auto;
-  width: 100%;
+.scaleIn {
+  animation: scale-in 0.2s ease-out forwards;
 }
 
+/* Hardware-accelerated animations */
 .hwAccelerated {
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
   will-change: transform, opacity;
-}
-
-/* Animation for loading container */
-.animateFadeIn {
-  animation: fade-in 0.3s ease-in-out forwards;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
