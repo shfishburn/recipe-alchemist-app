@@ -5,7 +5,7 @@ import { StructuredOutputParser } from "https://esm.sh/@langchain/core/output_pa
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
 import { recipeModificationsSchema } from "./schema.ts";
-import { corsHeaders, getCorsHeadersWithOrigin } from "../_shared/cors.ts";
+import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
 // Retry mechanism with exponential backoff
 async function withRetry(fn, maxRetries = 3, initialDelay = 500) {
@@ -153,11 +153,11 @@ function validateRecipe(recipe) {
 
 // Main handler function
 serve(async (req) => {
-  // Handle CORS preflight requests - CRITICAL FIX
+  // Handle CORS preflight requests - UPDATED FOR CONSISTENT CREDENTIALS HANDLING
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      status: 204, // Correct status code for preflight
-      headers: corsHeaders // Use shared headers
+      status: 204, 
+      headers: getCorsHeadersWithOrigin(req) // Use dynamic origin consistently
     });
   }
 

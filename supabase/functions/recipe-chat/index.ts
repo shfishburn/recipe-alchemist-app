@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { corsHeaders, getCorsHeadersWithOrigin } from "../_shared/cors.ts";
+import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
 // Define circuit breaker to prevent cascading failures
 class CircuitBreaker {
@@ -248,11 +248,11 @@ function extractScienceNotesFromText(text: string): string[] {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests - CRITICAL FIX
+  // Handle CORS preflight requests - UPDATED FOR CONSISTENT CREDENTIALS HANDLING
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      status: 204, // Correct status code for preflight
-      headers: corsHeaders // Use shared headers 
+      status: 204, 
+      headers: getCorsHeadersWithOrigin(req) // Use dynamic origin consistently
     });
   }
 
@@ -430,15 +430,13 @@ serve(async (req) => {
       }
 
       // Use getCorsHeadersWithOrigin for proper credentials handling
-      const responseHeaders = {
-        ...getCorsHeadersWithOrigin(req),
-        'Content-Type': 'application/json',
-      };
-
       return new Response(
         JSON.stringify(responseData),
         {
-          headers: responseHeaders,
+          headers: {
+            ...getCorsHeadersWithOrigin(req),
+            'Content-Type': 'application/json',
+          },
         }
       );
     } catch (aiError) {
