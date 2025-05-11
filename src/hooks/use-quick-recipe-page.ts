@@ -115,7 +115,6 @@ export function useQuickRecipePage() {
   }, [isDirectNavigation, isLoading, reset, isResumingGeneration]);
 
   // Only redirect if NOT direct navigation AND not loading AND no recipe AND no error AND no form data
-  // MODIFIED: Less aggressive redirection logic
   useEffect(() => {
     const shouldRedirect = !isDirectNavigation && 
                            !isLoading && 

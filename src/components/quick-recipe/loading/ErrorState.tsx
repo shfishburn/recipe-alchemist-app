@@ -2,7 +2,6 @@
 import React from 'react';
 import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import styles from '@/styles/loading.module.css';
 
 interface ErrorStateProps {
   error: string | null;

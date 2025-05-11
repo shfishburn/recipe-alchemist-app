@@ -5,28 +5,6 @@ import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe'
 import { NavigateFunction } from 'react-router-dom';
 
 /**
- * Interface for the loading state
- */
-interface LoadingState {
-  step: number;
-  stepDescription: string;
-  percentComplete: number;
-  estimatedTimeRemaining: number;
-  isStalled?: boolean;
-}
-
-/**
- * Initial loading state
- */
-const initialLoadingState: LoadingState = {
-  step: 0,
-  stepDescription: "Analyzing your ingredients...",
-  percentComplete: 0,
-  estimatedTimeRemaining: 30,
-  isStalled: false
-};
-
-/**
  * Interface for the quick recipe store
  */
 interface QuickRecipeState {
@@ -37,8 +15,6 @@ interface QuickRecipeState {
   isLoading: boolean;
   navigate: NavigateFunction | null;
   hasTimeoutError: boolean;
-  loadingState: LoadingState;
-  completedLoading: boolean;
   
   // Actions
   setRecipe: (recipe: QuickRecipe) => void;
@@ -47,8 +23,6 @@ interface QuickRecipeState {
   setLoading: (isLoading: boolean) => void;
   setNavigate: (navigate: NavigateFunction) => void;
   setHasTimeoutError: (hasTimeoutError: boolean) => void;
-  updateLoadingState: (state: Partial<LoadingState>) => void;
-  setCompletedLoading: (value: boolean) => void;
   reset: () => void;
   
   // Helper functions
@@ -69,12 +43,10 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         isLoading: false,
         navigate: null,
         hasTimeoutError: false,
-        loadingState: { ...initialLoadingState },
-        completedLoading: false,
         
         // Actions
         setRecipe: (recipe) => {
-          // FIX: Properly check for error conditions to distinguish between error and valid recipe
+          // Check for error conditions to distinguish between error and valid recipe
           if (recipe && (recipe.isError === true || recipe.error_message)) {
             console.log('Recipe contains an error:', recipe.error_message || recipe.error || 'Unknown error');
             set({ 
@@ -89,10 +61,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           } else {
             // Only set the recipe if it's valid
             if (get().isRecipeValid(recipe)) {
-              // Wait to ensure loading animation completes
-              setTimeout(() => {
-                set({ recipe, isLoading: false, error: null });
-              }, 500);
+              set({ recipe, isLoading: false, error: null });
             } else {
               // Invalid recipe format
               set({ 
@@ -115,13 +84,9 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         setLoading: (isLoading) => {
           // If switching to loading state, reset error
           if (isLoading) {
-            set({ isLoading, error: null, completedLoading: false, loadingState: { ...initialLoadingState } });
+            set({ isLoading, error: null });
           } else {
-            // FIX: Don't immediately set isLoading false, let the animation complete
-            // Only set isLoading false if we're already done loading
-            if (get().completedLoading) {
-              set({ isLoading });
-            }
+            set({ isLoading });
           }
         },
         
@@ -129,32 +94,14 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
         
-        updateLoadingState: (state) => 
-          set((prev) => ({ 
-            loadingState: { ...prev.loadingState, ...state } 
-          })),
-        
-        setCompletedLoading: (value) => {
-          set({ completedLoading: value });
-          // If completed loading and not already set to false
-          if (value && get().isLoading) {
-            // Add a slight delay before removing loading state to ensure animation completes
-            setTimeout(() => {
-              set({ isLoading: false });
-            }, 800);
-          }
-        },
-        
         reset: () => set({ 
           recipe: null, 
           error: null, 
           isLoading: false,
-          hasTimeoutError: false,
-          completedLoading: false,
-          loadingState: { ...initialLoadingState }
+          hasTimeoutError: false
         }),
         
-        // More strict validation function
+        // Recipe validation function
         isRecipeValid: (recipe) => {
           if (!recipe) return false;
           

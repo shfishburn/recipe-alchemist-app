@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -9,7 +9,6 @@ import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmp
 import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
-import { forceCleanupUI, checkAndCleanupLoadingUI } from '@/utils/dom-cleanup';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -25,34 +24,6 @@ const QuickRecipePage: React.FC = () => {
     toggleDebugMode,
     debugMode,
   } = useQuickRecipePage();
-
-  // Clean up any stale loading UI on mount and unmount
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('QuickRecipePage mounted', { isLoading, isRetrying, error });
-    }
-    
-    // Only clean up if we're not loading or retrying
-    if (!isLoading && !isRetrying) {
-      forceCleanupUI();
-    }
-    
-    // Set up periodic checks for orphaned loading UI
-    const cleanupInterval = setInterval(checkAndCleanupLoadingUI, 5000);
-    
-    return () => {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('QuickRecipePage unmounted');
-      }
-      clearInterval(cleanupInterval);
-      
-      // Only clean up if we're not loading or retrying
-      // This prevents cleaning up when navigating while loading
-      if (!isLoading && !isRetrying) {
-        forceCleanupUI();
-      }
-    };
-  }, [isLoading, isRetrying]);
                             
   const renderErrorContent = () => {
     return (
@@ -70,13 +41,14 @@ const QuickRecipePage: React.FC = () => {
 
   return (
     <>
-      {/* Loading/Retrying Overlay - Moved outside PageContainer to ensure full screen coverage */}
+      {/* Simplified Loading/Retrying Overlay */}
       {(isLoading || isRetrying) && (
         <FullScreenLoading
           key="loading-overlay"
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}
+          isRetrying={isRetrying}
         />
       )}
       

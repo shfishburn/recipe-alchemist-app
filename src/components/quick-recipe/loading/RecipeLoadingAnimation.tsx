@@ -1,10 +1,10 @@
 
 import React from 'react';
-import styles from '@/styles/loading.module.css';
 
 export function RecipeLoadingAnimation() {
+  // Completely simplified animation with no CSS modules or complex logic
   return (
-    <div className={`${styles.animateCookingPot} ${styles.hwAccelerated}`} aria-hidden="true">
+    <div className="relative" aria-hidden="true">
       <svg 
         width="96" 
         height="96" 
@@ -13,7 +13,7 @@ export function RecipeLoadingAnimation() {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
         role="img"
-        className={styles.hwAccelerated}
+        className="animate-pulse"
       >
         {/* Pot body */}
         <path d="M72 40H24V72C24 75.3137 26.6863 78 30 78H66C69.3137 78 72 75.3137 72 72V40Z" fill="#D1D5DB" />
@@ -23,15 +23,12 @@ export function RecipeLoadingAnimation() {
         <path d="M48 28C48 21.3726 42.6274 16 36 16C29.3726 16 24 21.3726 24 28" stroke="#4CAF50" strokeWidth="4" strokeLinecap="round" />
         {/* Right handle */}
         <path d="M48 28C48 21.3726 53.3726 16 60 16C66.6274 16 72 21.3726 72 28" stroke="#4CAF50" strokeWidth="4" strokeLinecap="round" />
-        {/* X in pot */}
-        <path d="M42 54L54 66" stroke="white" strokeWidth="2" strokeLinecap="round" />
-        <path d="M54 54L42 66" stroke="white" strokeWidth="2" strokeLinecap="round" />
       </svg>
       
-      {/* Steam particles with CSS module classes */}
-      <div className={`${styles.steam} ${styles.steam1}`} aria-hidden="true"></div>
-      <div className={`${styles.steam} ${styles.steam2}`} aria-hidden="true"></div>
-      <div className={`${styles.steam} ${styles.steam3}`} aria-hidden="true"></div>
+      {/* Simple steam particles with standard Tailwind animations */}
+      <div className="absolute -top-2 left-1/4 w-2 h-2 bg-white/80 rounded-full animate-ping opacity-75 delay-75"></div>
+      <div className="absolute -top-3 left-1/2 w-2 h-2 bg-white/80 rounded-full animate-ping opacity-75 delay-150"></div>
+      <div className="absolute -top-4 left-3/4 w-2 h-2 bg-white/80 rounded-full animate-ping opacity-75 delay-300"></div>
     </div>
   );
 }
