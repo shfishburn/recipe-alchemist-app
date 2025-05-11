@@ -11,8 +11,8 @@ export async function requestRecipeModifications(
   token: string,
   abortController: AbortController
 ): Promise<RecipeModifications> {
-  // Get Supabase URL from client
-  const SUPABASE_URL = supabase.supabaseUrl;
+  // Get Supabase URL from environment
+  const SUPABASE_URL = "https://zjyfumqfrtppleftpzjd.supabase.co";
   
   if (!SUPABASE_URL) {
     throw new Error('Supabase URL configuration missing');
