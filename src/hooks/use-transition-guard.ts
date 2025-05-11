@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { UNSAFE_NavigationContext as NavigationContext } from 'react-router-dom';
 import { useContext } from 'react';
+import type { To, NavigateOptions } from 'react-router-dom';
 
 /**
  * Hook to guard against navigation until a condition is met
@@ -13,7 +14,7 @@ export function useTransitionGuard(
   onNavigate: () => Promise<boolean>
 ) {
   const navigator = useContext(NavigationContext).navigator;
-  const originalPushRef = useRef<Function | null>(null);
+  const originalPushRef = useRef<((to: To, state?: any, opts?: NavigateOptions) => void) | null>(null);
   
   useEffect(() => {
     // Only set up the guard when shouldBlock is true
@@ -25,14 +26,14 @@ export function useTransitionGuard(
     }
     
     // Create a new guarded push function
-    const guardedPush = async (...args: any[]) => {
+    const guardedPush = async (to: To, state?: any, opts?: NavigateOptions) => {
       try {
         // Call the callback to determine if navigation should proceed
         const canNavigate = await onNavigate();
         
         // Only navigate if the callback resolves to true
         if (canNavigate && originalPushRef.current) {
-          originalPushRef.current.apply(navigator, args);
+          originalPushRef.current(to, state, opts);
         }
       } catch (err) {
         console.error("Error during navigation guard:", err);
