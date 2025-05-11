@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
@@ -16,6 +16,7 @@ export function useLoadingPage() {
     hasTimeoutError,
     setLoading,
     setError,
+    isRecipeValid
   } = useQuickRecipeStore();
   
   const { generateQuickRecipe } = useQuickRecipe();
@@ -24,21 +25,25 @@ export function useLoadingPage() {
   const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [animateExit, setAnimateExit] = useState(false);
+  const [ready, setReady] = useState(true);
   
   // Redirect back to quick-recipe if loading is complete or we have a recipe
   useEffect(() => {
-    if (!isLoading && recipe) {
+    if (!isLoading && recipe && isRecipeValid(recipe)) {
+      console.log("Loading complete, recipe valid, preparing for navigation");
+      
       // Set animateExit to true to trigger exit animation
       setAnimateExit(true);
       
       // Delay navigation to allow for exit animation
       const timeout = setTimeout(() => {
+        console.log("Navigation timeout triggered, navigating to /quick-recipe");
         navigate('/quick-recipe', { state: { fromLoading: true } });
-      }, 200); // Match this to transition duration
+      }, 400); // Increased from 200ms to 400ms for smoother transitions
       
       return () => clearTimeout(timeout);
     }
-  }, [isLoading, recipe, navigate]);
+  }, [isLoading, recipe, navigate, isRecipeValid]);
 
   // Handle timeout warning display
   useEffect(() => {
@@ -70,14 +75,14 @@ export function useLoadingPage() {
       }, 750);
       
       return () => clearInterval(interval);
-    } else {
-      // Complete the progress when loading finishes
+    } else if (recipe && isRecipeValid(recipe)) {
+      // Only complete the progress when loading finishes with a valid recipe
       setProgress(100);
     }
-  }, [isLoading, error]);
+  }, [isLoading, error, recipe, isRecipeValid]);
 
   // Define cancel handler that will reset state and navigate home
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     reset();
     // Set animateExit to true to trigger exit animation
     setAnimateExit(true);
@@ -85,11 +90,11 @@ export function useLoadingPage() {
     // Delay navigation to allow for exit animation
     setTimeout(() => {
       navigate('/', { replace: true });
-    }, 200); // Match this to transition duration
-  };
+    }, 400); // Increased from 200ms to 400ms
+  }, [navigate, reset]);
 
-  // Handle retry attempts
-  const handleRetry = async () => {
+  // Handle retry attempts with improved error handling
+  const handleRetry = useCallback(async () => {
     if (formData) {
       try {
         setIsRetrying(true);
@@ -105,15 +110,16 @@ export function useLoadingPage() {
       } catch (error: any) {
         console.error("Error during retry:", error);
         setIsRetrying(false);
+        setError(error.message || "An unexpected error occurred during retry");
       }
     } else {
       // If no form data is available, go back to quick recipe page
       setAnimateExit(true);
       setTimeout(() => {
         navigate('/quick-recipe');
-      }, 200);
+      }, 400); // Increased from 200ms to 400ms
     }
-  };
+  }, [formData, generateQuickRecipe, navigate, setError, setLoading]);
 
   return {
     error,
@@ -125,6 +131,7 @@ export function useLoadingPage() {
     hasTimeoutError,
     isRetrying,
     animateExit,
+    ready,
     handleCancel,
     handleRetry,
     setAnimateExit

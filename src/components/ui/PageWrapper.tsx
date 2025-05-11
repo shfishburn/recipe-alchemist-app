@@ -7,19 +7,24 @@ interface PageWrapperProps {
   children: React.ReactNode;
   className?: string;
   isLoading?: boolean;
+  ready?: boolean;
 }
 
 export function PageWrapper({ 
   children, 
   className = '',
-  isLoading = false
+  isLoading = false,
+  ready = true
 }: PageWrapperProps) {
   const location = useLocation();
   const [transitionClass, setTransitionClass] = useState(isLoading ? 'loading-page-enter' : 'page-enter');
 
-  // Update transition class on location change
+  // Update transition class on location change or when ready changes
   useEffect(() => {
-    // Skip transition if this is a loading page
+    // Skip transition if component isn't ready yet
+    if (!ready) return;
+    
+    // Set initial transition class
     setTransitionClass(isLoading ? 'loading-page-enter' : 'page-enter');
     
     // Use requestAnimationFrame to ensure proper class application
@@ -28,7 +33,7 @@ export function PageWrapper({
     });
     
     return () => cancelAnimationFrame(frame);
-  }, [location.pathname, isLoading]);
+  }, [location.pathname, isLoading, ready]);
 
   return (
     <div 

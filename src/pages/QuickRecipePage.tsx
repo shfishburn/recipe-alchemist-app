@@ -9,6 +9,7 @@ import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeErr
 import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
+import { useTransitionController } from '@/hooks/use-transition-controller';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -25,8 +26,26 @@ const QuickRecipePage: React.FC = () => {
     debugMode,
   } = useQuickRecipePage();
   
+  // Use the transition controller for smoother page transitions
+  const { isReady, setIsReady } = useTransitionController({
+    initialReady: !isLoading && !isRetrying,
+  });
+  
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Set page as ready when data is available
+  useEffect(() => {
+    // If we're coming from loading page, delay being ready briefly to ensure animation
+    if (location.state?.fromLoading) {
+      const timeout = setTimeout(() => {
+        setIsReady(true);
+      }, 50);
+      return () => clearTimeout(timeout);
+    } else {
+      setIsReady(!isLoading && !isRetrying);
+    }
+  }, [isLoading, isRetrying, location.state, setIsReady]);
   
   // If loading or retrying, redirect to the loading page with smooth transition
   useEffect(() => {

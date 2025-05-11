@@ -18,24 +18,13 @@ const LoadingPage: React.FC = () => {
     isRetrying,
     animateExit,
     handleCancel,
-    handleRetry
+    handleRetry,
+    ready
   } = useLoadingPage();
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 transition-opacity duration-200 ${animateExit ? 'opacity-0' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 transition-opacity duration-400 ${animateExit ? 'opacity-0' : 'opacity-100'}`}>
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
-        {/* Progress bar at the top */}
-        <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">
-          <div 
-            className="h-full bg-recipe-green transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress}
-          />
-        </div>
-
         {error ? (
           <LoadingError 
             error={error}
