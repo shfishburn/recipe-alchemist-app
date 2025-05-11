@@ -47,6 +47,7 @@ const QuickRecipePage: React.FC = () => {
       clearInterval(cleanupInterval);
       
       // Only clean up if we're not loading or retrying
+      // This prevents cleaning up when navigating while loading
       if (!isLoading && !isRetrying) {
         forceCleanupUI();
       }
@@ -69,7 +70,7 @@ const QuickRecipePage: React.FC = () => {
 
   return (
     <>
-      {/* Simple Loading/Error Overlay - positioned above everything */}
+      {/* Loading/Retrying Overlay - Moved outside PageContainer to ensure full screen coverage */}
       {(isLoading || isRetrying) && (
         <FullScreenLoading
           key="loading-overlay"

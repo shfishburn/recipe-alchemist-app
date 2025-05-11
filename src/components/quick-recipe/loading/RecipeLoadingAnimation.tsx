@@ -1,9 +1,10 @@
 
 import React from 'react';
+import styles from '@/styles/loading.module.css';
 
 export function RecipeLoadingAnimation() {
   return (
-    <div className="relative" aria-hidden="true">
+    <div className={`${styles.animateCookingPot} ${styles.hwAccelerated}`} aria-hidden="true">
       <svg 
         width="96" 
         height="96" 
@@ -12,7 +13,7 @@ export function RecipeLoadingAnimation() {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
         role="img"
-        style={{ animation: 'simple-cooking-pot 2s ease-in-out infinite' }}
+        className={styles.hwAccelerated}
       >
         {/* Pot body */}
         <path d="M72 40H24V72C24 75.3137 26.6863 78 30 78H66C69.3137 78 72 75.3137 72 72V40Z" fill="#D1D5DB" />
@@ -27,65 +28,10 @@ export function RecipeLoadingAnimation() {
         <path d="M54 54L42 66" stroke="white" strokeWidth="2" strokeLinecap="round" />
       </svg>
       
-      {/* Simple steam particles with inline styles */}
-      <div 
-        className="steam-particle" 
-        style={{
-          position: 'absolute',
-          top: '-5px',
-          left: '5px',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.8)',
-          filter: 'blur(3px)',
-          animation: 'simple-steam 2s ease-in-out 0.2s infinite'
-        }}
-      />
-      <div 
-        className="steam-particle" 
-        style={{
-          position: 'absolute',
-          top: '-5px',
-          left: '15px',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.8)',
-          filter: 'blur(3px)',
-          animation: 'simple-steam 2s ease-in-out 0.6s infinite'
-        }}
-      />
-      <div 
-        className="steam-particle" 
-        style={{
-          position: 'absolute',
-          top: '-5px',
-          left: '25px',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.8)',
-          filter: 'blur(3px)',
-          animation: 'simple-steam 2s ease-in-out 1.2s infinite'
-        }}
-      />
-      
-      <style jsx>{`
-        @keyframes simple-cooking-pot {
-          0% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-3px) rotate(-1deg); }
-          50% { transform: translateY(-6px) rotate(0deg); }
-          75% { transform: translateY(-3px) rotate(1deg); }
-          100% { transform: translateY(0) rotate(0deg); }
-        }
-        
-        @keyframes simple-steam {
-          0% { opacity: 0; transform: translateY(0) translateX(0) scale(0.5); }
-          50% { opacity: 0.8; transform: translateY(-10px) translateX(3px) scale(0.9); }
-          100% { opacity: 0; transform: translateY(-15px) translateX(6px) scale(1.2); }
-        }
-      `}</style>
+      {/* Steam particles with CSS module classes */}
+      <div className={`${styles.steam} ${styles.steam1}`} aria-hidden="true"></div>
+      <div className={`${styles.steam} ${styles.steam2}`} aria-hidden="true"></div>
+      <div className={`${styles.steam} ${styles.steam3}`} aria-hidden="true"></div>
     </div>
   );
 }
