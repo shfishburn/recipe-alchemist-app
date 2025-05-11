@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { ChatOpenAI } from "https://esm.sh/langchain/chat_models/openai";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
 import { StructuredOutputParser } from "https://esm.sh/@langchain/output_parsers";
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
