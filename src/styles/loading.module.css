@@ -46,6 +46,7 @@
 .animateCookingPot {
   animation: cooking-pot 2s ease-in-out infinite;
   position: relative;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 .steam {
@@ -57,6 +58,7 @@
   border-radius: 50%;
   filter: blur(3px);
   background-color: rgba(255, 255, 255, 0.8);
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 /* Steam particles positioning with classes instead of inline styles */
@@ -78,15 +80,18 @@
 /* Progress bar animation */
 .animateProgressPulse {
   animation: progress-pulse 2s ease-in-out infinite;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 /* Loading UI helper classes */
 .fadeIn {
   animation: fade-in 0.3s ease-out forwards;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 .scaleIn {
   animation: scale-in 0.2s ease-out forwards;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 /* Hardware-accelerated animations */

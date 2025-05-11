@@ -4,7 +4,7 @@ import styles from '@/styles/loading.module.css';
 
 export function RecipeLoadingAnimation() {
   return (
-    <div className={styles.animateCookingPot} aria-hidden="true">
+    <div className={`${styles.animateCookingPot} ${styles.hwAccelerated}`} aria-hidden="true">
       <svg 
         width="96" 
         height="96" 
@@ -13,6 +13,7 @@ export function RecipeLoadingAnimation() {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
         role="img"
+        className={styles.hwAccelerated}
       >
         <path d="M72 40H24V72C24 75.3137 26.6863 78 30 78H66C69.3137 78 72 75.3137 72 72V40Z" fill="#D1D5DB" />
         <path d="M66 40H30C26.6863 40 24 37.3137 24 34C24 30.6863 26.6863 28 30 28H66C69.3137 28 72 30.6863 72 34C72 37.3137 69.3137 40 66 40Z" fill="#4CAF50" />
@@ -22,7 +23,7 @@ export function RecipeLoadingAnimation() {
         <path d="M54 54L42 66" stroke="white" strokeWidth="2" strokeLinecap="round" />
       </svg>
       
-      {/* Steam particles with CSS module classes instead of inline styles */}
+      {/* Steam particles with CSS module classes for better animation */}
       <div className={`${styles.steam} ${styles.steam1}`}></div>
       <div className={`${styles.steam} ${styles.steam2}`}></div>
       <div className={`${styles.steam} ${styles.steam3}`}></div>

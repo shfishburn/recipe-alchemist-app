@@ -10,7 +10,6 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 import { forceCleanupUI, checkAndCleanupLoadingUI } from '@/utils/dom-cleanup';
-import { ErrorDisplay } from '@/components/ui/error-display';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -71,9 +70,10 @@ const QuickRecipePage: React.FC = () => {
 
   return (
     <PageContainer>
-      {/* Loading/Retrying Overlay - Always show when isLoading or isRetrying is true */}
+      {/* Loading/Retrying Overlay - Use key to preserve instance during animations */}
       {(isLoading || isRetrying) && (
         <FullScreenLoading
+          key="loading-overlay"
           onCancel={handleCancel}
           onRetry={error ? handleRetry : undefined}
           error={error}

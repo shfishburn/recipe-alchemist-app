@@ -1,7 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { QuickRecipeLoading } from './QuickRecipeLoading';
 import { ErrorState } from './loading/ErrorState';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { useIsMobile } from '@/hooks/use-mobile';
+import styles from '@/styles/loading.module.css';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -12,6 +15,7 @@ interface FullScreenLoadingProps {
 export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadingProps) {
   const { isLoading, completedLoading } = useQuickRecipeStore();
   const [isRetrying, setIsRetrying] = useState(false);
+  const isMobile = useIsMobile();
   
   // Track if the component should stay visible
   const [isVisible, setIsVisible] = useState(true);
@@ -46,12 +50,12 @@ export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadin
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      className={`${styles.hwAccelerated} fixed inset-0 z-[100] flex items-center justify-center w-full h-screen bg-background/95 backdrop-blur-sm`}
       aria-modal="true"
       role="dialog"
       aria-labelledby="loading-title"
     >
-      <div className="w-full max-w-2xl p-4 sm:p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 animate-fade-in">
+      <div className={`${styles.scaleIn} w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg p-4 sm:p-6 m-4 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800`}>
         {hasError ? (
           <ErrorState
             error={error}
