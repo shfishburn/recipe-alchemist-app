@@ -4,14 +4,19 @@ import { Button } from '@/components/ui/button';
 import { CookingPot, ArrowRight, PartyPopper } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 interface SubmitButtonProps {
-  isLoading: boolean;
+  isLoading?: boolean;
   disabled?: boolean;
 }
 
-export function SubmitButton({ isLoading, disabled }: SubmitButtonProps) {
+export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitButtonProps) {
   const isMobile = useIsMobile();
+  const { isLoading: storeIsLoading } = useQuickRecipeStore();
+  
+  // Use either the prop value or the store value
+  const isLoading = parentIsLoading || storeIsLoading;
   
   return (
     <Button 

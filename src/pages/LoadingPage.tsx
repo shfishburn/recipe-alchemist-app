@@ -1,9 +1,11 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, XCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 
 /**
  * Standalone loading page that displays while a recipe is being generated
@@ -16,12 +18,18 @@ const LoadingPage: React.FC = () => {
     error, 
     recipe, 
     isLoading, 
+    formData,
     reset, 
-    hasTimeoutError 
+    hasTimeoutError,
+    setLoading,
+    setError,
   } = useQuickRecipeStore();
+  
+  const { generateQuickRecipe } = useQuickRecipe();
   
   const [progress, setProgress] = React.useState(10);
   const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
+  const [isRetrying, setIsRetrying] = React.useState(false);
   
   // Redirect back to quick-recipe if loading is complete or we have a recipe
   useEffect(() => {
@@ -67,9 +75,6 @@ const LoadingPage: React.FC = () => {
     }
   }, [isLoading, error]);
 
-  // Get retry and cancel functions from location state if available
-  const onRetry = location.state?.onRetry;
-  
   // Define cancel handler that will reset state and navigate home
   const handleCancel = () => {
     reset();
@@ -77,12 +82,25 @@ const LoadingPage: React.FC = () => {
   };
 
   // Handle retry attempts
-  const handleRetry = () => {
-    if (onRetry && typeof onRetry === 'function') {
-      onRetry();
-      // The retry function should handle setting loading state
+  const handleRetry = async () => {
+    if (formData) {
+      try {
+        setIsRetrying(true);
+        setError(null);
+        setLoading(true);
+        
+        console.log("Retrying recipe generation with formData:", formData);
+        
+        // Start a new generation with the existing form data
+        await generateQuickRecipe(formData);
+        
+        setIsRetrying(false);
+      } catch (error: any) {
+        console.error("Error during retry:", error);
+        setIsRetrying(false);
+      }
     } else {
-      // If no retry function is provided, just go back to quick recipe page
+      // If no form data is available, go back to quick recipe page
       navigate('/quick-recipe');
     }
   };
@@ -135,12 +153,13 @@ const LoadingPage: React.FC = () => {
                 Start Over
               </Button>
               
-              {onRetry && (
+              {formData && (
                 <Button 
                   onClick={handleRetry}
+                  disabled={isRetrying}
                   className="flex items-center gap-2"
                 >
-                  <RefreshCw className={`h-4 w-4`} />
+                  <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
                   Try Again
                 </Button>
               )}

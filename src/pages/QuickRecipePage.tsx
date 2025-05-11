@@ -33,25 +33,15 @@ const QuickRecipePage: React.FC = () => {
     if ((isLoading || isRetrying) && location.pathname !== '/loading') {
       console.log("Redirecting to loading page from QuickRecipePage due to loading state");
       
-      // Define retry function that can be passed to the loading page
-      const retryFunction = async () => {
-        if (formData) {
-          console.log("Retrying recipe generation with formData:", formData);
-          handleRetry();
-          return true;
-        }
-        return false;
-      };
-      
+      // Navigate to loading page with necessary state
       navigate('/loading', { 
         state: { 
           fromQuickRecipePage: true,
-          onRetry: formData ? retryFunction : undefined,
-          error: error
+          timestamp: Date.now()
         }
       });
     }
-  }, [isLoading, isRetrying, navigate, location.pathname, formData, handleRetry, error]);
+  }, [isLoading, isRetrying, navigate, location.pathname]);
   
   // If loading is happening, don't render anything so we don't see a flash
   // Let the redirect to loading page handle it

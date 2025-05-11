@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -79,27 +78,12 @@ export function useQuickRecipeForm() {
         formData: processedFormData
       }));
       
-      // Define retry function that can be passed to the loading page
-      const retryFunction = async () => {
-        console.log("Retrying recipe generation");
-        setLoading(true);
-        try {
-          const generatedRecipe = await generateQuickRecipe(processedFormData);
-          // The generated recipe will be handled by the useQuickRecipePage hook
-          return generatedRecipe;
-        } catch (error: any) {
-          console.error("Retry failed:", error);
-          return null;
-        }
-      };
-      
+      // FIXED: Don't pass functions in state, they can't be serialized
       // Navigate to the loading page INSTEAD of quick recipe page
-      // This ensures we show a full-screen loading experience
       navigate('/loading', { 
         state: { 
           fromForm: true, 
-          timestamp: Date.now(),
-          onRetry: retryFunction
+          timestamp: Date.now()
         }
       });
       
