@@ -14,8 +14,15 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     console.log("Generating quick recipe with form data:", formData);
     
     if (!formData.mainIngredient) {
-      const errorResponse = await processErrorResponse(new Error("Please provide a main ingredient"));
-      return errorResponse as QuickRecipe;
+      // Create a minimal recipe with error info instead of throwing
+      const errorRecipe = normalizeRecipeResponse({
+        title: "Missing Ingredient",
+        description: "Please provide a main ingredient",
+        ingredients: [],
+        steps: ["Please enter at least one main ingredient to generate a recipe."],
+        error_message: "Please provide a main ingredient"
+      });
+      return errorRecipe;
     }
     
     // Format the request body
@@ -39,9 +46,14 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       
       if (response.error) {
         console.error("Supabase function error:", response.error);
-        // Return the error response instead of throwing
-        const errorObj = await processErrorResponse(new Error(response.error));
-        return errorObj;
+        // Return a recipe with embedded error info
+        return normalizeRecipeResponse({
+          title: "Recipe Generation Issue",
+          description: response.error,
+          ingredients: [],
+          steps: ["There was an issue creating your recipe: " + response.error],
+          error_message: response.error
+        });
       }
       
       console.log("Supabase function response:", response);
@@ -60,18 +72,20 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     console.log("Race completed, data received:", data ? "data exists" : "no data");
     
-    // Simplified error handling - less aggressive checks
+    // Handle missing data
     if (!data) {
       console.error('No data returned from recipe generation');
-      const errorObj = await processErrorResponse(new Error('No recipe data returned. Please try again.'));
-      return errorObj as QuickRecipe;
+      // Create a minimal recipe with error info
+      return normalizeRecipeResponse({
+        title: "Recipe Generation Failed",
+        description: "No recipe data returned",
+        ingredients: [],
+        steps: ["No recipe data could be generated. Please try again."],
+        error_message: "No recipe data returned. Please try again."
+      });
     }
     
-    // Check for error or isError flag in data
-    if (typeof data === 'object' && data !== null && 'isError' in data && data.isError) {
-      console.log("Received error object from processing:", data);
-      return data as QuickRecipe;
-    }
+    // REMOVED: Check for isError flag
     
     // Normalize the recipe data with more forgiving validation
     const normalizedRecipe = normalizeRecipeResponse(data);
@@ -82,8 +96,13 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     
-    // Return an error recipe object instead of throwing
-    const errorObj = await processErrorResponse(error);
-    return errorObj as QuickRecipe;
+    // Create a recipe with error information embedded instead of throwing
+    return normalizeRecipeResponse({
+      title: "Recipe Generation Error",
+      description: error.message || "Unknown error occurred",
+      ingredients: [],
+      steps: ["An error occurred while generating the recipe: " + (error.message || "Unknown error")],
+      error_message: error.message || "Unknown error occurred"
+    });
   }
 };

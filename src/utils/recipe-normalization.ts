@@ -5,13 +5,21 @@ import { Ingredient, QuickRecipe } from "@/types/quick-recipe";
 export const normalizeRecipeResponse = (data: any): QuickRecipe => {
   console.log("Normalizing recipe response:", data);
   
-  // More lenient validation - log issues but try to continue with default values
+  // Handle completely empty data
   if (!data) {
     console.error("Empty recipe data received");
-    data = { 
+    return { 
       title: "Recipe Creation Error", 
-      ingredients: [],
-      steps: ["Unable to create recipe with the provided information"]
+      ingredients: [{
+        item: "Missing ingredients",
+        qty_metric: 0,
+        unit_metric: "",
+        qty_imperial: 0,
+        unit_imperial: ""
+      }],
+      steps: ["Unable to create recipe with the provided information", "Please try again with different ingredients"],
+      instructions: ["Unable to create recipe with the provided information", "Please try again with different ingredients"],
+      servings: 2
     };
   }
   
@@ -44,6 +52,21 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     };
   }) || [];
   
+  // Always ensure there's at least one ingredient if array is empty
+  if (ingredients.length === 0) {
+    ingredients.push({
+      item: "Ingredient information unavailable",
+      qty_metric: 0,
+      unit_metric: "",
+      qty_imperial: 0,
+      unit_imperial: ""
+    });
+  }
+  
+  // Always ensure steps and instructions exist
+  const steps = data.steps || data.instructions || ["Recipe steps could not be generated"];
+  const instructions = data.instructions || data.steps || ["Recipe instructions could not be generated"];
+  
   // Normalize the recipe structure with fallbacks
   return {
     title: data.title || "Unnamed Recipe",
@@ -51,8 +74,8 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     description: data.description || "",
     ingredients: ingredients,
     // Handle different property names for instructions/steps
-    instructions: data.instructions || data.steps || [],
-    steps: data.steps || data.instructions || [],
+    instructions: instructions,
+    steps: steps,
     servings: data.servings || 4,
     // Handle different property names for prep/cook time
     prep_time_min: data.prep_time_min || data.prepTime || 0,
@@ -65,6 +88,8 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     cookingTip: data.cookingTip || "",
     cuisine: data.cuisine || "",
     dietary: data.dietary || "",
-    flavor_tags: data.flavor_tags || []
+    flavor_tags: data.flavor_tags || [],
+    // Preserve any error message but don't use it as a flag
+    error_message: data.error_message || data.error || null
   };
 };

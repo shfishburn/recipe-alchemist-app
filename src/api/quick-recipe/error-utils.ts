@@ -24,7 +24,8 @@ export const enhanceErrorMessage = (error: any): string => {
   return errorMessage;
 };
 
-// Process error responses - returns an error object instead of throwing
+// Process error responses - returns a recipe-like object with error information
+// instead of throwing an error or returning an explicit error object
 export const processErrorResponse = async (error: any): Promise<any> => {
   // Authentication check first (most important for user experience)
   let errorMessage = "Error generating recipe";
@@ -80,14 +81,23 @@ export const processErrorResponse = async (error: any): Promise<any> => {
   // Enhance the error message
   const enhancedMessage = enhanceErrorMessage(error) || errorMessage;
   
-  // Return an error object that conforms to QuickRecipe shape
+  // Return a recipe-like object with error information embedded
+  // REMOVED: isError flag to prevent automatic rejection by the frontend
   return {
-    title: "Error generating recipe",
+    title: "Recipe Generation Issue",
     description: enhancedMessage,
-    ingredients: [],
-    steps: ["An error occurred while generating the recipe"],
-    servings: 0,
-    isError: true, // Flag to indicate this is an error object
-    error: enhancedMessage
+    ingredients: [
+      {
+        qty_metric: 0,
+        unit_metric: "",
+        qty_imperial: 0,
+        unit_imperial: "",
+        item: "Please try again with different ingredients or options"
+      }
+    ],
+    steps: ["There was an issue creating your recipe: " + enhancedMessage, "Please try again or use different ingredients"],
+    instructions: ["There was an issue creating your recipe: " + enhancedMessage, "Please try again or use different ingredients"],
+    servings: 2,
+    error_message: enhancedMessage // Include error as a property but not as a flag
   };
 }

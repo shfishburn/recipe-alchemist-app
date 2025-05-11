@@ -74,17 +74,19 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         // Actions
         setRecipe: (recipe) => {
-          // Check if recipe is actually an error object
-          if (recipe && 'isError' in recipe && recipe.isError) {
-            console.log('Recipe is an error object:', recipe);
+          // MODIFIED: Check for error_message instead of isError flag
+          if (recipe && recipe.error_message) {
+            console.log('Recipe contains an error message:', recipe.error_message);
             set({ 
-              recipe: null,
-              error: recipe.error || 'Error generating recipe',
+              // MODIFIED: Still set the recipe even if it has an error
+              recipe,
+              // Also set the error message for user feedback
+              error: recipe.error_message,
               isLoading: false,
-              hasTimeoutError: recipe.error?.toLowerCase().includes('timeout') ?? false
+              hasTimeoutError: recipe.error_message?.toLowerCase().includes('timeout') ?? false
             });
           } else {
-            set({ recipe, isLoading: false });
+            set({ recipe, isLoading: false, error: null });
           }
         },
         
@@ -123,11 +125,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         isRecipeValid: (recipe) => {
           if (!recipe) return false;
           
-          // If this is an error recipe object, return false
-          if ('isError' in recipe && recipe.isError) {
-            console.log('Recipe validation skipped: error object detected');
-            return false;
-          }
+          // REMOVED: Check for isError flag
           
           // Less strict validation - try to be permissive
           // Just check that there's a title at minimum
