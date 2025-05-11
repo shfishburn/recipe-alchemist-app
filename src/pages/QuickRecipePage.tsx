@@ -39,7 +39,8 @@ const QuickRecipePage: React.FC = () => {
     );
   };
 
-  // If loading or retrying, only show the full screen loading overlay
+  // If loading or retrying, ONLY show the full screen loading overlay
+  // This is important - we return JUST the loading component with no other layout elements
   if (isLoading || isRetrying) {
     return (
       <FullScreenLoading

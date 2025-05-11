@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, XCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -12,9 +12,29 @@ interface FullScreenLoadingProps {
 }
 
 export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false }: FullScreenLoadingProps) {
+  const [progress, setProgress] = useState(10);
+  
+  // Simulate progress movement
+  useEffect(() => {
+    if (error) return;
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        // Progress moves quickly to 60%, then slows down
+        if (prev < 60) {
+          return Math.min(prev + 5, 60);
+        } else {
+          return Math.min(prev + 0.5, 95); // Never quite reaches 100%
+        }
+      });
+    }, 750);
+    
+    return () => clearInterval(interval);
+  }, [error]);
+
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white"
+      className="fixed inset-0 z-[100] flex items-center justify-center w-full h-screen bg-white"
       aria-modal="true"
       role="dialog"
     >
@@ -52,8 +72,8 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center space-y-8 w-full">
-            {/* Simple gift box icon */}
-            <div className="relative">
+            {/* Gift box SVG icon */}
+            <div className="relative animate-gift-bounce">
               <svg 
                 width="120" 
                 height="120" 
@@ -64,7 +84,7 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
               >
                 <rect x="30" y="45" width="60" height="60" rx="4" fill="#D1D5DB" />
                 <path d="M30 49a4 4 0 014-4h52a4 4 0 014 4v10H30V49z" fill="#4CAF50" />
-                <path d="M60 45V30M50 37.5C50 32.8 54.5 25 60 30c5.5 5 10 2.5 10 7.5S65.5 45 60 45s-10-2.8-10-7.5z" stroke="#4CAF50" strokeWidth="4" />
+                <path d="M60 45V30M50 37.5C50 32.8 54.5 25 60 30c5.5 5 10 2.5 10 7.5S65 45 60 45s-10-2.8-10-7.5z" stroke="#4CAF50" strokeWidth="3" />
               </svg>
             </div>
             
@@ -72,9 +92,9 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
             
             {/* Progress bar with animation */}
             <Progress 
-              value={60}
+              value={progress}
               className="w-full" 
-              indicatorClassName="animate-pulse" 
+              indicatorClassName="animate-progress-pulse" 
               indicatorColor="#4CAF50" 
             />
             
