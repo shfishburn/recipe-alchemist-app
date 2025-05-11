@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { DefaultSeo } from "@/components/seo/DefaultSeo";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,7 +12,6 @@ import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation } from "react-router-dom";
-import PageWrapper from "@/components/ui/PageWrapper";
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
@@ -26,9 +26,7 @@ export const AppLayout = () => {
     const LoadingPage = React.lazy(() => import("@/pages/LoadingPage"));
     return (
       <React.Suspense fallback={<div className="fixed inset-0 bg-white dark:bg-gray-950" />}>
-        <PageWrapper isLoading={true}>
-          <LoadingPage />
-        </PageWrapper>
+        <LoadingPage />
       </React.Suspense>
     );
   }
@@ -54,9 +52,9 @@ export const AppLayout = () => {
         <LoadingIndicator />
         <Navbar />
         <main className="flex-1">
-          <PageWrapper>
+          <PageTransition>
             <AppRoutes />
-          </PageWrapper>
+          </PageTransition>
         </main>
         <FooterWrapper />
         <Toaster />

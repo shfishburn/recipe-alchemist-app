@@ -33,10 +33,17 @@ export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitBut
       aria-disabled={isLoading || disabled}
       aria-busy={isLoading}
     >
-      <div className={cn(
-        "transition-opacity duration-300",
-        isLoading ? "opacity-0" : "opacity-100"
-      )}>
+      {isLoading ? (
+        <div className="flex items-center justify-center">
+          <CookingPot className={cn(
+            "mr-2 animate-bounce",
+            isMobile ? "h-6 w-6" : "h-6 w-6" // Increased icon size for desktop
+          )} />
+          <span className={isMobile ? "font-medium" : "font-medium"}>
+            Creating Your Recipe...
+          </span>
+        </div>
+      ) : (
         <div className="flex items-center justify-center">
           <span className={isMobile ? "font-medium" : "font-medium"}>
             Create My Recipe
@@ -50,21 +57,7 @@ export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitBut
             isMobile ? "h-5 w-5" : "h-5 w-5" // Increased icon size for desktop
           )} />
         </div>
-      </div>
-      
-      {/* Loading state with absolute positioning to smoothly transition */}
-      <div className={cn(
-        "absolute inset-0 flex items-center justify-center transition-opacity duration-300",
-        isLoading ? "opacity-100" : "opacity-0"
-      )}>
-        <CookingPot className={cn(
-          "mr-2 animate-bounce",
-          isMobile ? "h-6 w-6" : "h-6 w-6" // Increased icon size for desktop
-        )} />
-        <span className={isMobile ? "font-medium" : "font-medium"}>
-          Creating Your Recipe...
-        </span>
-      </div>
+      )}
       
       {/* Animated gradient background */}
       <span className="absolute inset-0 -z-10 bg-gradient-to-r from-recipe-blue via-recipe-green to-recipe-blue bg-[length:200%_100%] animate-gradient-x"></span>
