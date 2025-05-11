@@ -11,6 +11,8 @@ import { ModificationHistory } from './modifier/ModificationHistory';
 import { ModifiedRecipeDisplay } from './modifier/ModifiedRecipeDisplay';
 import { StatusDisplay } from './modifier/StatusDisplay';
 import { AuthOverlay } from './modifier/AuthOverlay';
+import { ErrorDisplay } from '@/components/ui/error-display';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
@@ -20,8 +22,10 @@ interface QuickRecipeModifierProps {
 export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe, onModifiedRecipe }) => {
   const [request, setRequest] = useState('');
   const [immediate, setImmediate] = useState(false);
+  const [edgeFunctionError, setEdgeFunctionError] = useState<Error | null>(null);
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
+  const { setError } = useQuickRecipeStore();
   
   // Check for saved request in localStorage
   useEffect(() => {
@@ -58,6 +62,18 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     resetToOriginal
   } = useRecipeModifications(recipe);
 
+  // Add error handling for edge function failures
+  useEffect(() => {
+    if (error && (
+      error.message?.includes('Failed to send a request to the Edge Function') || 
+      error.message?.includes('Edge Function') ||
+      error.message?.includes('FunctionsFetchError')
+    )) {
+      console.error("Edge Function Error detected:", error);
+      setEdgeFunctionError(new Error("The recipe modification service is currently unavailable. Our team has been notified."));
+    }
+  }, [error]);
+
   // Handle for auth-related errors by reopening the auth drawer
   useEffect(() => {
     if (status === 'not-authenticated') {
@@ -87,8 +103,43 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
       return;
     }
     
-    requestModifications(request, immediate);
+    try {
+      requestModifications(request, immediate);
+    } catch (err: any) {
+      console.error("Error requesting modifications:", err);
+      setEdgeFunctionError(err);
+      // Show friendly error toast
+      toast.error("Unable to connect to recipe service", {
+        description: "Our AI modification service is temporarily unavailable. Please try again later."
+      });
+    }
   }, [request, immediate, requestModifications, session, openAuthDrawer]);
+
+  // If there's an edge function error, show a dedicated error state
+  if (edgeFunctionError) {
+    return (
+      <div className="space-y-6">
+        <ErrorDisplay
+          error={edgeFunctionError}
+          title="Recipe Modification Unavailable"
+          variant="destructive"
+          onRetry={() => {
+            setEdgeFunctionError(null);
+            // Try to clear the error state
+            cancelRequest();
+          }}
+        />
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-sm">
+          <p className="font-medium mb-2">You can still use the recipe as is:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Check out the recipe in the "Recipe" tab</li>
+            <li>Try generating a new recipe if needed</li>
+            <li>Our team has been notified of this issue</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

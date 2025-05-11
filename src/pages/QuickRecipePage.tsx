@@ -10,6 +10,7 @@ import { FullScreenLoading } from '@/components/quick-recipe/FullScreenLoading';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 import { forceCleanupUI, checkAndCleanupLoadingUI } from '@/utils/dom-cleanup';
+import { ErrorDisplay } from '@/components/ui/error-display';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -53,6 +54,46 @@ const QuickRecipePage: React.FC = () => {
       }
     };
   }, [isLoading, isRetrying]);
+  
+  // Error handling for edge function failures specifically
+  const isEdgeFunctionError = error?.includes('Edge Function') || 
+                              error?.includes('Failed to send a request') ||
+                              error?.includes('FunctionsFetchError');
+                              
+  const renderErrorContent = () => {
+    if (isEdgeFunctionError) {
+      return (
+        <div className="space-y-6">
+          <ErrorDisplay 
+            error="Recipe generation service is currently unavailable" 
+            title="Service Temporarily Unavailable"
+            onRetry={handleRetry}
+            variant="destructive"
+          />
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-sm">
+            <p className="font-medium mb-2">You can still:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Try again in a few minutes</li>
+              <li>Use a simpler recipe request</li>
+              <li>Our team has been notified of this issue</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <QuickRecipeError
+        error={error}
+        hasTimeoutError={hasTimeoutError}
+        debugMode={debugMode}
+        formData={formData}
+        onCancel={handleCancel}
+        onRetry={handleRetry}
+        isRetrying={isRetrying}
+      />
+    );
+  };
 
   return (
     <PageContainer>
@@ -77,15 +118,7 @@ const QuickRecipePage: React.FC = () => {
             <QuickRecipeFormContainer />
           </div>
         ) : error ? (
-          <QuickRecipeError
-            error={error}
-            hasTimeoutError={hasTimeoutError}
-            debugMode={debugMode}
-            formData={formData}
-            onCancel={handleCancel}
-            onRetry={handleRetry}
-            isRetrying={isRetrying}
-          />
+          renderErrorContent()
         ) : recipe ? (
           <div className="space-y-8">
             <QuickRecipeDisplay recipe={recipe} />

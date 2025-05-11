@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
+import { isEdgeFunctionAvailable, markEdgeFunctionUnavailable } from '@/utils/edge-function-health';
 
 // Helper function to get authentication token
 export const getAuthToken = async (): Promise<string> => {
@@ -72,6 +73,8 @@ export const fetchFromEdgeFunction = async (payload: any) => {
     return await response.json();
   } catch (error) {
     console.error('Error calling edge function directly:', error);
+    // Mark generate-quick-recipe as unavailable if we encounter an error
+    markEdgeFunctionUnavailable('generate-quick-recipe');
     throw error;
   }
 };
