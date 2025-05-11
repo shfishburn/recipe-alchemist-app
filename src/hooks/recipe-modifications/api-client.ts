@@ -14,13 +14,6 @@ export async function requestRecipeModifications(
   console.log('Requesting recipe modifications:', userRequest);
   
   try {
-    // Create a promise that rejects when aborted
-    const abortPromise = new Promise<never>((_, reject) => {
-      abortController.signal.addEventListener('abort', () => {
-        reject(new DOMException('Request aborted', 'AbortError'));
-      });
-    });
-    
     // Create the actual function call
     const functionPromise = callSupabaseFunction<
       { recipe: QuickRecipe; userRequest: string; modificationHistory: any[] },
@@ -33,11 +26,17 @@ export async function requestRecipeModifications(
         modificationHistory
       },
       token,
-      debugTag: 'recipe-modification'
+      debugTag: 'recipe-modification',
+      signal: abortController.signal // Pass the abort signal directly to the function call
     });
     
-    // Race the two promises - either we get a response or the request is aborted
-    const response = await Promise.race([functionPromise, abortPromise]);
+    // Add event listener for abort signal
+    abortController.signal.addEventListener('abort', () => {
+      console.log('Request aborted by controller');
+    });
+    
+    // Wait for the response
+    const response = await functionPromise;
 
     // Check for errors in the response
     if (response.error) {
@@ -59,7 +58,7 @@ export async function requestRecipeModifications(
     return recipeModificationsSchema.parse(response.data);
   } catch (err: any) {
     // Check if this is an AbortError from the AbortController
-    if (err.name === 'AbortError') {
+    if (err.name === 'AbortError' || err.message?.includes('aborted')) {
       console.log('Request was canceled');
       throw err;
     }
