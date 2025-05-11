@@ -1,102 +1,59 @@
 
 /**
- * Utility functions for cleaning up DOM elements that might be left behind
- * due to routing or component unmounting issues
+ * Helper functions to safely clean up stale UI elements that might be left behind during navigation
+ * This helps prevent DOM errors when trying to manipulate elements that no longer exist
  */
 
-// Find all loading overlays in the document
-const findLoadingOverlays = (): NodeListOf<Element> => {
-  return document.querySelectorAll('.loading-overlay, #fullscreen-loading-overlay');
-};
-
-// Check if an overlay is stale (not attached to a mounted component)
-const isStaleOverlay = (overlay: Element): boolean => {
-  // If it has the active-loading class, it's not stale
-  if (overlay.classList.contains('active-loading')) {
-    return false;
+/**
+ * Force cleanup of any loading UI elements that might be left in the DOM
+ */
+export function forceCleanupUI() {
+  try {
+    console.info('Forcing cleanup of UI elements');
+    
+    // Safe removal function that checks if element exists first
+    const safeRemove = (selector: string) => {
+      const elements = document.querySelectorAll(selector);
+      if (elements.length > 0) {
+        elements.forEach(el => {
+          try {
+            if (el && el.parentNode) {
+              el.parentNode.removeChild(el);
+            }
+          } catch (e) {
+            console.warn(`Failed to remove ${selector}:`, e);
+          }
+        });
+      }
+    };
+    
+    // Clean up potential loading overlays
+    safeRemove('.loading-overlay');
+    safeRemove('.progress-indicator');
+    safeRemove('.fullscreen-loader');
+    
+    // Reset body styles that might have been set
+    document.body.style.overflow = '';
+  } catch (err) {
+    console.warn('Error during UI cleanup:', err);
   }
-  
-  // If it's in the React root and not marked as active, it might be stale
-  return true;
-};
+}
 
-// Force cleanup of all loading UI elements
-export const forceCleanupUI = () => {
-  console.log("Forcing cleanup of UI elements");
-  
-  // Find all overlays
-  const overlays = findLoadingOverlays();
-  
-  if (overlays.length === 0) {
-    return; // No overlays found
-  }
-  
-  let removedCount = 0;
-  
-  // Remove all overlays except those marked as active
-  overlays.forEach(overlay => {
-    if (!overlay.classList.contains('active-loading')) {
-      console.log("Removing stale loading overlay");
-      overlay.remove();
-      removedCount++;
+/**
+ * Check for any orphaned loading UI and remove it
+ * This helps clean up UI elements that might be left behind if 
+ * a component unmounts unexpectedly
+ */
+export function checkAndCleanupLoadingUI() {
+  try {
+    const isInActiveLoadingState = document.body.classList.contains('loading-active') ||
+                                   document.querySelector('.loading-active');
+    
+    // Only clean up if we're not actively loading
+    if (!isInActiveLoadingState) {
+      forceCleanupUI();
     }
-  });
-  
-  if (removedCount === 0) {
-    console.log("No stale loading overlays found");
-  } else {
-    console.log(`Removed ${removedCount} stale loading overlays`);
+  } catch (err) {
+    console.warn('Error checking for loading UI:', err);
   }
-};
-
-// Check for orphaned loading UI and clean up if needed
-export const checkAndCleanupLoadingUI = () => {
-  const overlays = findLoadingOverlays();
-  
-  if (overlays.length === 0) {
-    return; // No overlays found
-  }
-  
-  let staleCount = 0;
-  
-  // Check each overlay to see if it's stale
-  overlays.forEach(overlay => {
-    if (isStaleOverlay(overlay)) {
-      staleCount++;
-      console.log("Removing stale loading overlay");
-      overlay.remove();
-    }
-  });
-  
-  if (staleCount > 0) {
-    console.log(`Cleaned up ${staleCount} stale loading overlays`);
-  }
-};
-
-// Mark an element as the active loading overlay
-export const markActiveLoading = (element: HTMLElement | null) => {
-  if (!element) return;
-  element.classList.add('active-loading');
-};
-
-// Clear the active loading mark
-export const clearActiveLoading = (element: HTMLElement | null) => {
-  if (!element) return;
-  element.classList.remove('active-loading');
-};
-
-// Export fixed functions that were missing
-export const cleanupUIState = () => {
-  console.log("Cleaning up UI state");
-  forceCleanupUI();
-};
-
-export const setupRouteChangeCleanup = () => {
-  console.log("Setting up route change cleanup");
-  // This function is called from AppLayout to set up cleanup on route changes
-  // For now, it's implemented as a no-op function that just logs
-  return () => {
-    console.log("Route change cleanup triggered");
-    checkAndCleanupLoadingUI();
-  };
-};
+}
