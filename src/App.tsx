@@ -2,6 +2,7 @@
 import React, { Suspense, lazy, StrictMode } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import "./styles/loading.css";
+import "./styles/transitions.css"; // Import the transitions CSS
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProfileProvider } from "@/contexts/ProfileContext";

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -29,12 +30,20 @@ const LoadingPage: React.FC = () => {
   const [progress, setProgress] = React.useState(10);
   const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
   const [isRetrying, setIsRetrying] = React.useState(false);
+  const [animateExit, setAnimateExit] = React.useState(false);
   
   // Redirect back to quick-recipe if loading is complete or we have a recipe
   useEffect(() => {
     if (!isLoading && recipe) {
-      // Loading finished with success - redirect to quick recipe page
-      navigate('/quick-recipe', { state: { fromLoading: true } });
+      // Set animateExit to true to trigger exit animation
+      setAnimateExit(true);
+      
+      // Delay navigation to allow for exit animation
+      const timeout = setTimeout(() => {
+        navigate('/quick-recipe', { state: { fromLoading: true } });
+      }, 200); // Match this to transition duration
+      
+      return () => clearTimeout(timeout);
     }
   }, [isLoading, recipe, navigate]);
 
@@ -77,7 +86,13 @@ const LoadingPage: React.FC = () => {
   // Define cancel handler that will reset state and navigate home
   const handleCancel = () => {
     reset();
-    navigate('/', { replace: true });
+    // Set animateExit to true to trigger exit animation
+    setAnimateExit(true);
+    
+    // Delay navigation to allow for exit animation
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 200); // Match this to transition duration
   };
 
   // Handle retry attempts
@@ -100,12 +115,15 @@ const LoadingPage: React.FC = () => {
       }
     } else {
       // If no form data is available, go back to quick recipe page
-      navigate('/quick-recipe');
+      setAnimateExit(true);
+      setTimeout(() => {
+        navigate('/quick-recipe');
+      }, 200);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950">
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 transition-opacity duration-200 ${animateExit ? 'opacity-0' : 'opacity-100'}`}>
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
         {/* Progress bar at the top */}
         <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">

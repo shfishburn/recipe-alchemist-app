@@ -28,7 +28,7 @@ const QuickRecipePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // If loading or retrying, redirect to the loading page to prevent flicker
+  // If loading or retrying, redirect to the loading page with smooth transition
   useEffect(() => {
     if ((isLoading || isRetrying) && location.pathname !== '/loading') {
       console.log("Redirecting to loading page from QuickRecipePage due to loading state");
@@ -51,7 +51,7 @@ const QuickRecipePage: React.FC = () => {
   
   return (
     <PageContainer>
-      <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
+      <div className="space-y-10 py-6 md:py-10">
         <QuickRecipeHero
           hasRecipe={!!recipe}
           toggleDebugMode={toggleDebugMode}
