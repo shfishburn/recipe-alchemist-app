@@ -1,9 +1,10 @@
+
 /**
  * Utility to help debug transitions and identify race conditions
  */
 
 // Enable or disable debug logging
-const DEBUG_ENABLED = false;
+const DEBUG_ENABLED = true;
 
 // Stack to track transition operations
 const transitionStack: string[] = [];

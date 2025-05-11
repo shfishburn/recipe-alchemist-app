@@ -4,6 +4,7 @@ import { LoadingError } from '@/components/loading/LoadingError';
 import { LoadingState } from '@/components/loading/LoadingState';
 import { useLoadingPage } from '@/hooks/use-loading-page';
 import { PageWrapper } from '@/components/ui/PageWrapper';
+import { logTransition } from '@/utils/transition-debugger';
 
 /**
  * Standalone loading page that completely replaces the app layout
@@ -22,6 +23,29 @@ const LoadingPage: React.FC = () => {
     handleRetry,
     ready
   } = useLoadingPage();
+  
+  // Log initial render and key state changes
+  useEffect(() => {
+    logTransition('LoadingPage', 'Page mounted', { 
+      hasError: !!error, 
+      progress, 
+      hasFormData: !!formData 
+    });
+    
+    return () => {
+      logTransition('LoadingPage', 'Page unmounted');
+    };
+  }, []);
+  
+  // Log significant state changes
+  useEffect(() => {
+    if (error) {
+      logTransition('LoadingPage', 'Error state detected', { error });
+    }
+    if (animateExit) {
+      logTransition('LoadingPage', 'Exit animation triggered');
+    }
+  }, [error, animateExit]);
 
   return (
     <PageWrapper

@@ -11,6 +11,7 @@ import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 import { useTransitionController } from '@/hooks/use-transition-controller';
 import { PageWrapper } from '@/components/ui/PageWrapper';
+import { logTransition } from '@/utils/transition-debugger';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -30,6 +31,7 @@ const QuickRecipePage: React.FC = () => {
   // Use the transition controller for smoother page transitions
   const { isReady, setIsReady } = useTransitionController({
     initialReady: !isLoading && !isRetrying,
+    debug: true
   });
   
   const navigate = useNavigate();
@@ -39,26 +41,30 @@ const QuickRecipePage: React.FC = () => {
   useEffect(() => {
     // If we're coming from loading page, delay being ready briefly to ensure animation
     if (location.state?.fromLoading) {
+      logTransition('QuickRecipePage', 'Transitioning from loading page');
       const timeout = setTimeout(() => {
         setIsReady(true);
+        logTransition('QuickRecipePage', 'Ready state set to true after loading transition');
       }, 100);
       return () => clearTimeout(timeout);
     } else {
       setIsReady(!isLoading && !isRetrying);
+      logTransition('QuickRecipePage', `Ready state: ${!isLoading && !isRetrying}`);
     }
   }, [isLoading, isRetrying, location.state, setIsReady]);
   
   // If loading or retrying, redirect to the loading page with smooth transition
   useEffect(() => {
     if ((isLoading || isRetrying) && location.pathname !== '/loading') {
-      console.log("Redirecting to loading page from QuickRecipePage due to loading state");
+      logTransition('QuickRecipePage', "Redirecting to loading page due to loading state");
       
       // Navigate to loading page with necessary state
       navigate('/loading', { 
         state: { 
           fromQuickRecipePage: true,
           timestamp: Date.now()
-        }
+        },
+        replace: true // Use replace to avoid back button issues
       });
     }
   }, [isLoading, isRetrying, navigate, location.pathname]);
@@ -66,8 +72,11 @@ const QuickRecipePage: React.FC = () => {
   // If loading is happening, don't render anything so we don't see a flash
   // Let the redirect to loading page handle it
   if (isLoading || isRetrying) {
+    logTransition('QuickRecipePage', "Page in loading/retrying state, returning null");
     return null;
   }
+  
+  logTransition('QuickRecipePage', `Rendering with recipe: ${!!recipe}, error: ${!!error}`);
   
   return (
     <PageWrapper ready={isReady}>

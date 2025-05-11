@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { useTransitionController } from '@/hooks/use-transition-controller';
+import { logTransition } from '@/utils/transition-debugger';
 
 // Request queue to prevent multiple simultaneous requests
 let isGenerationInProgress = false;
@@ -32,17 +33,24 @@ export function useLoadingPage() {
   const [animateExit, setAnimateExit] = useState(false);
   const [ready, setReady] = useState(false);
   
-  // Use transition controller for coordinated animations
-  const { isReady, setIsReady, withBlockedNavigation } = useTransitionController({
+  // Simplified transition controller usage
+  const { 
+    isReady, 
+    setIsReady, 
+    withBlockedNavigation 
+  } = useTransitionController({
     initialReady: false,
-    blockByDefault: true
+    blockByDefault: true,
+    debug: true // Enable debugging for transitions
   });
   
   // Set component as ready after a brief delay
   useEffect(() => {
+    logTransition('LoadingPage', 'Setting up initial ready state');
     const readyTimer = setTimeout(() => {
       setReady(true);
       setIsReady(true);
+      logTransition('LoadingPage', 'Component marked as ready');
     }, 100);
     
     return () => clearTimeout(readyTimer);
@@ -57,13 +65,14 @@ export function useLoadingPage() {
       const generateRecipe = async () => {
         try {
           isGenerationInProgress = true;
-          console.log("Starting recipe generation from Loading Page");
+          logTransition('LoadingPage', 'Starting recipe generation');
           
           // Start with min progress of 10%
           setProgress(10);
           
           // Generate the recipe
           const result = await generateQuickRecipe(formData);
+          logTransition('LoadingPage', 'Recipe generation completed');
           
           // Set progress to 100% on success
           setProgress(100);
@@ -71,10 +80,12 @@ export function useLoadingPage() {
           // Allow a small delay for animations to complete
           setTimeout(() => {
             isGenerationInProgress = false;
+            logTransition('LoadingPage', 'Generation process complete');
           }, 500);
           
         } catch (err: any) {
           console.error("Recipe generation error in loading page:", err);
+          logTransition('LoadingPage', `Generation error: ${err.message || 'Unknown error'}`);
           setError(err.message || "An unexpected error occurred");
           isGenerationInProgress = false;
         }
@@ -87,15 +98,23 @@ export function useLoadingPage() {
   // Redirect back to quick-recipe if loading is complete or we have a recipe
   useEffect(() => {
     if (!isLoading && recipe && isRecipeValid(recipe) && !animateExit) {
-      console.log("Loading complete, recipe valid, preparing for navigation");
+      logTransition('LoadingPage', 'Recipe valid, preparing navigation');
       
       // Set animateExit to trigger exit animation
       setAnimateExit(true);
       
       // Delay navigation to allow for exit animation
       const timeout = setTimeout(() => {
-        console.log("Navigation timeout triggered, navigating to /quick-recipe");
-        navigate('/quick-recipe', { state: { fromLoading: true } });
+        logTransition('LoadingPage', 'Navigation timeout triggered');
+        
+        // Force navigation without transition guards for reliability
+        navigate('/quick-recipe', { 
+          state: { 
+            fromLoading: true,
+            timestamp: Date.now() // Add timestamp to ensure state is unique
+          },
+          replace: true // Use replace to avoid back button issues
+        });
       }, 400);
       
       return () => clearTimeout(timeout);
@@ -108,6 +127,7 @@ export function useLoadingPage() {
       // Show timeout warning after 15 seconds
       const timeoutId = setTimeout(() => {
         setShowTimeoutMessage(true);
+        logTransition('LoadingPage', 'Displaying timeout message');
       }, 15000);
       
       return () => clearTimeout(timeoutId);
@@ -138,56 +158,52 @@ export function useLoadingPage() {
     }
   }, [isLoading, error, recipe, isRecipeValid]);
 
-  // Define cancel handler that will reset state and navigate home
+  // Define cancel handler with simplified navigation
   const handleCancel = useCallback(() => {
-    withBlockedNavigation(async () => {
-      reset();
-      // Set animateExit to true to trigger exit animation
-      setAnimateExit(true);
-      
-      // Delay navigation to allow for exit animation
-      await new Promise(resolve => setTimeout(resolve, 400));
+    logTransition('LoadingPage', 'Cancel requested');
+    // Reset state
+    reset();
+    setAnimateExit(true);
+    
+    // Simple timeout then navigate approach
+    setTimeout(() => {
+      logTransition('LoadingPage', 'Navigating after cancel');
       navigate('/', { replace: true });
-      return true;
-    });
-  }, [navigate, reset, withBlockedNavigation]);
+    }, 400);
+  }, [navigate, reset]);
 
-  // Handle retry attempts with improved error handling
+  // Handle retry attempts with simplified error handling
   const handleRetry = useCallback(async () => {
     if (formData && !isGenerationInProgress) {
-      await withBlockedNavigation(async () => {
-        try {
-          setIsRetrying(true);
-          setError(null);
-          setLoading(true);
-          isGenerationInProgress = true;
-          
-          console.log("Retrying recipe generation with formData:", formData);
-          
-          // Start a new generation with the existing form data
-          await generateQuickRecipe(formData);
-          
-          isGenerationInProgress = false;
-          setIsRetrying(false);
-          return true;
-        } catch (error: any) {
-          console.error("Error during retry:", error);
-          setIsRetrying(false);
-          isGenerationInProgress = false;
-          setError(error.message || "An unexpected error occurred during retry");
-          return false;
-        }
-      });
+      logTransition('LoadingPage', 'Retry requested');
+      
+      try {
+        setIsRetrying(true);
+        setError(null);
+        setLoading(true);
+        isGenerationInProgress = true;
+        
+        // Start a new generation with the existing form data
+        await generateQuickRecipe(formData);
+        
+        isGenerationInProgress = false;
+        setIsRetrying(false);
+      } catch (error: any) {
+        console.error("Error during retry:", error);
+        logTransition('LoadingPage', `Retry error: ${error.message || 'Unknown error'}`);
+        setIsRetrying(false);
+        isGenerationInProgress = false;
+        setError(error.message || "An unexpected error occurred during retry");
+      }
     } else {
       // If no form data is available, go back to quick recipe page
-      withBlockedNavigation(async () => {
-        setAnimateExit(true);
-        await new Promise(resolve => setTimeout(resolve, 400));
+      logTransition('LoadingPage', 'No form data for retry, returning to recipe page');
+      setAnimateExit(true);
+      setTimeout(() => {
         navigate('/quick-recipe');
-        return true;
-      });
+      }, 400);
     }
-  }, [formData, generateQuickRecipe, navigate, setError, setLoading, withBlockedNavigation]);
+  }, [formData, generateQuickRecipe, navigate, setError, setLoading]);
 
   return {
     error,
