@@ -2,7 +2,7 @@
 import React from 'react';
 import { Loader2, CookingPot, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import styles from '@/styles/loading.module.css';
+import '@/styles/loading.css';
 
 export function RecipeDetailLoading() {
   return (
@@ -17,18 +17,17 @@ export function RecipeDetailLoading() {
             <div className={cn(
               "relative bg-white/90 dark:bg-gray-800/90 p-4 sm:p-8 rounded-xl shadow-lg",
               "border border-gray-100 dark:border-gray-700 flex flex-col items-center",
-              "w-full sm:w-auto max-w-sm sm:max-w-md",
-              styles.hwAccelerated
+              "w-full sm:w-auto max-w-sm sm:max-w-md"
             )}>
               <div className="relative mb-4 sm:mb-6">
                 <div className="relative">
-                  <CookingPot className={cn("h-12 w-12 sm:h-16 sm:w-16 text-recipe-green", styles.animateCookingPot)} />
+                  <CookingPot className="h-12 w-12 sm:h-16 sm:w-16 text-recipe-green animate-cooking-pot" />
                   <Utensils className="absolute -bottom-1 -right-3 h-6 w-6 sm:h-8 sm:w-8 text-gray-600 rotate-45 opacity-70" />
                   
                   {/* Steam effects - mobile responsive */}
-                  <div className={`${styles.steam} ${styles.steam1}`}></div>
-                  <div className={`${styles.steam} ${styles.steam2}`}></div>
-                  <div className={`${styles.steam} ${styles.steam3}`}></div>
+                  <div className="steam steam-1"></div>
+                  <div className="steam steam-2"></div>
+                  <div className="steam steam-3"></div>
                 </div>
                 <div className="absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 bg-recipe-green rounded-full animate-pulse" />
               </div>
@@ -40,7 +39,7 @@ export function RecipeDetailLoading() {
               
               {/* Enhanced progress bar with animation - mobile responsive */}
               <div className="mt-4 sm:mt-6 w-36 sm:w-48 h-1.5 sm:h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                <div className={`h-full bg-gradient-to-r from-recipe-green to-recipe-blue ${styles.animateProgressPulse} rounded-full`} />
+                <div className="h-full bg-gradient-to-r from-recipe-green to-recipe-blue animate-progress-pulse rounded-full" />
               </div>
             </div>
           </div>
