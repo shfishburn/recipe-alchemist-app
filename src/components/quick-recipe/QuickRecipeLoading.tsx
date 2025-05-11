@@ -40,7 +40,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
     <div className="flex flex-col items-center justify-center w-full">
       {/* Top progress bar that shows loading progress */}
       <div 
-        className="fixed top-0 left-0 right-0 h-1 z-[101]"
+        className="fixed top-0 left-0 right-0 h-1 z-[10000]"
         role="progressbar" 
         aria-label="Loading progress"
         aria-valuemin={0} 
@@ -55,6 +55,7 @@ export function QuickRecipeLoading({ onCancel }: QuickRecipeLoadingProps) {
             minWidth: '5%',
             transformOrigin: 'left',
             willChange: 'width, transform',
+            transition: 'width 0.5s ease-out'
           }}
         />
       </div>
