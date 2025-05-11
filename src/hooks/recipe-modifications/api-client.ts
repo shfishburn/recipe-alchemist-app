@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
 import { RecipeModifications } from './types';
 import { recipeModificationsSchema } from './validation';
 import { QuickRecipe } from '@/types/quick-recipe';
@@ -11,51 +11,50 @@ export async function requestRecipeModifications(
   token: string,
   abortController: AbortController
 ): Promise<RecipeModifications> {
-  // Get Supabase URL from environment
-  const SUPABASE_URL = "https://zjyfumqfrtppleftpzjd.supabase.co";
-  
-  if (!SUPABASE_URL) {
-    throw new Error('Supabase URL configuration missing');
-  }
-
   console.log('Requesting recipe modifications:', userRequest);
   
-  // Use direct fetch with proper URL construction
-  const functionUrl = `${SUPABASE_URL}/functions/v1/modify-quick-recipe`;
-  
-  console.log('Calling edge function at URL:', functionUrl);
-  
-  const response = await fetch(functionUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      recipe,
-      userRequest,
-      modificationHistory
-    }),
-    signal: abortController.signal
-  });
+  try {
+    // Use the callSupabaseFunction utility instead of direct fetch
+    const response = await callSupabaseFunction<
+      { recipe: QuickRecipe; userRequest: string; modificationHistory: any[] },
+      RecipeModifications
+    >('modify-quick-recipe', {
+      method: 'POST',
+      payload: {
+        recipe,
+        userRequest,
+        modificationHistory
+      },
+      token,
+      debugTag: 'recipe-modification'
+    });
 
-  if (!response.ok) {
-    // Handle authentication errors
-    if (response.status === 401) {
-      throw new Error('Authentication required to modify recipes');
-    } else if (response.status === 404) {
-      throw new Error('Modification service not deployed');
-    } else {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    // Check for errors in the response
+    if (response.error) {
+      // Handle authentication errors
+      if (response.status === 401) {
+        throw new Error('Authentication required to modify recipes');
+      } else if (response.status === 404) {
+        throw new Error('Modification service not deployed');
+      } else {
+        throw new Error(response.error || `HTTP error ${response.status}`);
+      }
     }
+    
+    if (!response.data) {
+      throw new Error('No data returned');
+    }
+    
+    // Use Zod to validate the response data
+    return recipeModificationsSchema.parse(response.data);
+  } catch (err) {
+    // Check if this is an AbortError from the AbortController
+    if (err.name === 'AbortError') {
+      console.log('Request was canceled');
+      throw err;
+    }
+    
+    console.error('Error modifying recipe:', err);
+    throw err;
   }
-  
-  const data = await response.json();
-  
-  if (!data) {
-    throw new Error('No data returned');
-  }
-  
-  return recipeModificationsSchema.parse(data);
 }
