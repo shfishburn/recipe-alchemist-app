@@ -11,21 +11,21 @@ interface FullScreenLoadingProps {
 }
 
 export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false }: FullScreenLoadingProps) {
-  // Simplified component with no dependencies on complex hooks or CSS modules
+  // Clean, simplified component with no header
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-background/95 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white"
       aria-modal="true"
       role="dialog"
     >
-      <div className="w-full max-w-md p-6 m-4 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 animate-fade-in">
+      <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
         {error ? (
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <AlertCircle className="w-12 h-12 text-red-500" />
             <h2 className="text-xl font-semibold">Recipe Generation Failed</h2>
             <p className="text-muted-foreground">{error}</p>
             
-            <div className="flex flex-row gap-3 pt-2">
+            <div className="flex flex-row gap-3 pt-4">
               {onCancel && (
                 <Button 
                   variant="outline" 
@@ -51,49 +51,44 @@ export function FullScreenLoading({ onCancel, onRetry, error, isRetrying = false
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-6">
-            <div className="relative flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center space-y-8">
+            {/* Simple gift box icon - similar to what's shown in screenshot */}
+            <div className="relative">
               <svg 
-                width="80" 
-                height="80" 
-                viewBox="0 0 80 80" 
-                className="animate-pulse"
+                width="120" 
+                height="120" 
+                viewBox="0 0 120 120" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
               >
-                <path d="M60 33.33H20V60C20 62.76 22.24 65 25 65H55C57.76 65 60 62.76 60 60V33.33Z" fill="#D1D5DB" />
-                <path d="M55 33.33H25C22.24 33.33 20 31.09 20 28.33C20 25.57 22.24 23.33 25 23.33H55C57.76 23.33 60 25.57 60 28.33C60 31.09 57.76 33.33 55 33.33Z" fill="#4CAF50" />
-                <path d="M40 23.33C40 17.81 35.52 13.33 30 13.33C24.48 13.33 20 17.81 20 23.33" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" />
-                <path d="M40 23.33C40 17.81 44.48 13.33 50 13.33C55.52 13.33 60 17.81 60 23.33" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" />
+                <rect x="30" y="45" width="60" height="60" rx="4" fill="#D1D5DB" />
+                <path d="M30 49a4 4 0 014-4h52a4 4 0 014 4v10H30V49z" fill="#4CAF50" />
+                <path d="M60 45V30M50 37.5C50 32.8 54.5 25 60 30c5.5 5 10 2.5 10 7.5S65.5 45 60 45s-10-2.8-10-7.5z" stroke="#4CAF50" strokeWidth="4" />
               </svg>
-              
-              {/* Simple animated elements instead of complex steam animations */}
-              <div className="absolute -top-2 left-1/4 w-2 h-2 bg-white rounded-full animate-ping opacity-75 delay-75" />
-              <div className="absolute -top-3 left-1/2 w-2 h-2 bg-white rounded-full animate-ping opacity-75 delay-150" />
-              <div className="absolute -top-4 left-3/4 w-2 h-2 bg-white rounded-full animate-ping opacity-75 delay-300" />
             </div>
             
-            <h2 className="text-lg font-semibold">Creating your recipe...</h2>
+            <h2 className="text-2xl font-semibold">Creating your recipe...</h2>
             
-            {/* Simple progress bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-              <div className="bg-recipe-green h-2.5 rounded-full animate-pulse" style={{ width: '70%' }}></div>
+            {/* Simple progress bar - similar to what's in screenshot */}
+            <div className="w-full h-2 bg-gray-100 rounded-full">
+              <div className="bg-recipe-green h-2 rounded-full" style={{ width: '60%' }}></div>
             </div>
             
-            {/* Tip card */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 w-full">
-              <h4 className="text-base font-semibold mb-2">Chef's Tip</h4>
-              <p className="text-sm text-muted-foreground">
+            {/* Tip card - styled to match screenshot */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 w-full">
+              <h4 className="text-lg font-semibold mb-2">Chef's Tip</h4>
+              <p className="text-gray-600">
                 Patience is key in cooking. The best flavors take time to develop, just like your recipe is taking shape now.
               </p>
             </div>
             
-            {/* Cancel button */}
+            {/* Cancel button - styled to match screenshot */}
             {onCancel && (
               <Button 
                 variant="ghost" 
                 onClick={onCancel} 
-                className="text-muted-foreground hover:text-foreground"
+                className="text-gray-500"
               >
                 Cancel
               </Button>
