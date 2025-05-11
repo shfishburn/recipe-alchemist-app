@@ -73,7 +73,20 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         completedLoading: false,
         
         // Actions
-        setRecipe: (recipe) => set({ recipe, isLoading: false }),
+        setRecipe: (recipe) => {
+          // Check if recipe is actually an error object
+          if (recipe && ('isError' in recipe || (recipe.error && typeof recipe.error === 'string'))) {
+            console.log('Recipe is an error object:', recipe);
+            set({ 
+              recipe: null,
+              error: recipe.error || 'Error generating recipe',
+              isLoading: false,
+              hasTimeoutError: recipe.error?.toLowerCase().includes('timeout') ?? false
+            });
+          } else {
+            set({ recipe, isLoading: false });
+          }
+        },
         
         setFormData: (formData) => set({ formData }),
         
@@ -109,6 +122,12 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         // Helper function to validate recipe data
         isRecipeValid: (recipe) => {
           if (!recipe) return false;
+          
+          // If this is an error recipe object, return false
+          if ('isError' in recipe && recipe.isError) {
+            console.log('Recipe validation skipped: error object detected');
+            return false;
+          }
           
           const requiredFields = ['title', 'ingredients', 'steps'];
           

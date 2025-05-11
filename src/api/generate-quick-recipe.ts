@@ -14,7 +14,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     console.log("Generating quick recipe with form data:", formData);
     
     if (!formData.mainIngredient) {
-      throw new Error("Please provide a main ingredient");
+      const errorResponse = await processErrorResponse(new Error("Please provide a main ingredient"));
+      return errorResponse as QuickRecipe;
     }
     
     // Format the request body
@@ -38,7 +39,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       
       if (response.error) {
         console.error("Supabase function error:", response.error);
-        throw new Error(response.error);
+        // Return the error response instead of throwing
+        return processErrorResponse(new Error(response.error));
       }
       
       console.log("Supabase function response:", response);
@@ -60,13 +62,22 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Check for error in data
     if (!data) {
       console.error('No data returned from recipe generation');
-      throw new Error('No recipe data returned. Please try again.');
+      return processErrorResponse(new Error('No recipe data returned. Please try again.')) as QuickRecipe;
     }
     
-    // Type guard for checking if data has an error property
-    if (typeof data === 'object' && data !== null && 'error' in data && data.error) {
-      console.error('Error in recipe data:', data.error);
-      throw new Error(typeof data.error === 'string' ? data.error : 'Error generating recipe');
+    // Check for error or isError flag in data (for our error objects)
+    if (typeof data === 'object' && data !== null) {
+      if ('isError' in data && data.isError) {
+        console.log("Received error object from processing:", data);
+        return data as QuickRecipe;
+      }
+      
+      if ('error' in data && data.error) {
+        console.error('Error in recipe data:', data.error);
+        return processErrorResponse(
+          typeof data.error === 'string' ? new Error(data.error) : new Error('Error generating recipe')
+        ) as QuickRecipe;
+      }
     }
     
     // Normalize the recipe data to ensure it matches our expected structure
@@ -78,6 +89,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     
-    return processErrorResponse(error);
+    // Return an error recipe object instead of throwing
+    return processErrorResponse(error) as QuickRecipe;
   }
 };

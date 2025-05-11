@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -99,6 +98,21 @@ export function useQuickRecipeForm() {
         
         // Generate the recipe - authentication check removed
         const generatedRecipe = await generateQuickRecipe(processedFormData);
+        
+        // Check if generatedRecipe is an error object
+        if (generatedRecipe && 'isError' in generatedRecipe && generatedRecipe.isError) {
+          console.error('Recipe generation returned error:', generatedRecipe.error);
+          setError(generatedRecipe.error || 'Error generating recipe');
+          
+          // Keep error toast only
+          toast({
+            title: "Recipe generation failed",
+            description: generatedRecipe.error || 'Error generating recipe',
+            variant: "destructive",
+          });
+          
+          return null;
+        }
         
         // Validate the recipe structure before setting it
         if (!isRecipeValid(generatedRecipe)) {

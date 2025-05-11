@@ -1,4 +1,3 @@
-
 // Error handling utilities for recipe generation API calls
 
 export const enhanceErrorMessage = (error: any): string => {
@@ -39,15 +38,17 @@ export const enhanceErrorMessage = (error: any): string => {
   return errorMessage;
 };
 
-// Process error responses
-export const processErrorResponse = async (error: any): Promise<never> => {
+// Process error responses - MODIFIED to return an error object instead of throwing
+export const processErrorResponse = async (error: any): Promise<any> => {
   // Authentication check first (most important for user experience)
+  let errorMessage = "Error generating recipe";
+  
   if (error.status === 401 || 
       (error.message && (error.message.includes('401') || 
                         error.message.includes('auth') || 
                         error.message.includes('sign in')))) {
     // CHANGED: Don't prevent unauthenticated users from generating recipes
-    throw new Error("Error generating recipe. Try again or sign in for enhanced features.");
+    errorMessage = "Error generating recipe. Try again or sign in for enhanced features.";
   }
   
   // Check if the error is from Supabase Functions with response data
@@ -75,14 +76,14 @@ export const processErrorResponse = async (error: any): Promise<never> => {
         
         // Use the error message from the response body if available
         if (errorResponseBody.error) {
-          throw new Error(errorResponseBody.error);
+          errorMessage = errorResponseBody.error;
         }
       } catch (parseError) {
         console.error("Could not parse error response:", parseError);
         
         // If we couldn't parse as JSON but have text, use the text
         if (errorResponseText && errorResponseText.length < 500) {
-          throw new Error(`Server error: ${errorResponseText}`);
+          errorMessage = `Server error: ${errorResponseText}`;
         }
       }
     } catch (e) {
@@ -90,12 +91,23 @@ export const processErrorResponse = async (error: any): Promise<never> => {
       
       // If the error has a status code, include it in the message
       if (error.context.response.status) {
-        throw new Error(`Server error with status code: ${error.context.response.status}`);
+        errorMessage = `Server error with status code: ${error.context.response.status}`;
       }
     }
   }
   
-  // Enhance the error message and throw
-  const enhancedMessage = enhanceErrorMessage(error);
-  throw new Error(enhancedMessage);
-};
+  // Enhance the error message
+  const enhancedMessage = enhanceErrorMessage(error) || errorMessage;
+  
+  // Instead of throwing, return an error object that conforms to QuickRecipe shape
+  // but includes error information
+  return {
+    title: "Error generating recipe",
+    description: enhancedMessage,
+    ingredients: [],
+    steps: ["An error occurred while generating the recipe"],
+    servings: 0,
+    isError: true, // Flag to indicate this is an error object
+    error: enhancedMessage
+  };
+}
