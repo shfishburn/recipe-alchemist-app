@@ -248,13 +248,19 @@ function extractScienceNotesFromText(text: string): string[] {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests - UPDATED FOR CONSISTENT CREDENTIALS HANDLING
+  // Handle CORS preflight requests with dynamic origin support for credentials
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204, 
-      headers: getCorsHeadersWithOrigin(req) // Use dynamic origin consistently
+      headers: getCorsHeadersWithOrigin(req)
     });
   }
+
+  // Prepare consistent headers with content type for all responses
+  const headers = {
+    ...getCorsHeadersWithOrigin(req),
+    'Content-Type': 'application/json'
+  };
 
   try {
     const requestData = await req.json();
@@ -429,16 +435,8 @@ serve(async (req) => {
         }
       }
 
-      // Use getCorsHeadersWithOrigin for proper credentials handling
-      return new Response(
-        JSON.stringify(responseData),
-        {
-          headers: {
-            ...getCorsHeadersWithOrigin(req),
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return new Response(JSON.stringify(responseData), { headers });
+      
     } catch (aiError) {
       console.error("Error with OpenAI request:", aiError);
       throw new Error(`OpenAI request failed: ${aiError.message}`);
@@ -449,10 +447,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       {
         status: 400,
-        headers: {
-          ...getCorsHeadersWithOrigin(req),
-          'Content-Type': 'application/json',
-        },
+        headers
       }
     );
   }

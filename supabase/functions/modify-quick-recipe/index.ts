@@ -153,11 +153,17 @@ function validateRecipe(recipe) {
 
 // Main handler function
 serve(async (req) => {
-  // Handle CORS preflight requests - UPDATED FOR CONSISTENT CREDENTIALS HANDLING
+  // Prepare consistent headers for all responses
+  const headers = {
+    ...getCorsHeadersWithOrigin(req),
+    'Content-Type': 'application/json'
+  };
+
+  // Handle CORS preflight requests with dynamic origin support for credentials
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204, 
-      headers: getCorsHeadersWithOrigin(req) // Use dynamic origin consistently
+      headers: getCorsHeadersWithOrigin(req)
     });
   }
 
@@ -178,10 +184,7 @@ serve(async (req) => {
           error: "Invalid recipe data", 
           details: validationError.message 
         }),
-        { 
-          status: 400, 
-          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
-        }
+        { status: 400, headers }
       );
     }
 
@@ -249,10 +252,7 @@ serve(async (req) => {
           error: errorMessage, 
           details: errorDetails
         }),
-        { 
-          status: statusCode, 
-          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
-        }
+        { status: statusCode, headers }
       );
     }
 
@@ -269,10 +269,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify(parsed),
-        { 
-          status: 200,
-          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' } 
-        }
+        { status: 200, headers }
       );
     } catch (parseError) {
       console.error("Schema validation error:", parseError);
@@ -281,10 +278,7 @@ serve(async (req) => {
           error: "Invalid AI response format",
           details: "The generated modifications did not match the expected format."
         }),
-        { 
-          status: 422, 
-          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
-        }
+        { status: 422, headers }
       );
     }
   } catch (error) {
@@ -295,10 +289,7 @@ serve(async (req) => {
         error: "Unexpected error occurred",
         details: error.message || "Unknown error"
       }),
-      { 
-        status: 500, 
-        headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
-      }
+      { status: 500, headers }
     );
   }
 });
