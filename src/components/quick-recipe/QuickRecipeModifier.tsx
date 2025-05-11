@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { useRecipeModifications, ModificationStatus } from '@/hooks/use-recipe-modifications';
+import { useRecipeModifications, ModificationStatus } from '@/hooks/recipe-modifications';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { IngredientList } from './ingredient/IngredientList';
 import { StepList } from './step/StepList';
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { LogIn, UserPlus } from 'lucide-react';
+import { getStoredModificationRequest, saveModificationRequest } from '@/hooks/recipe-modifications/storage-utils';
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
@@ -33,34 +34,16 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   
   // Check for saved request in localStorage
   useEffect(() => {
-    const savedRequest = localStorage.getItem('recipe_modification_request');
+    const savedRequest = getStoredModificationRequest();
     if (savedRequest) {
-      setRequest(savedRequest);
-      
-      // Also restore immediate setting
-      const savedImmediate = localStorage.getItem('recipe_modification_immediate');
-      if (savedImmediate) {
-        setImmediate(savedImmediate === 'true');
-      }
-      
-      // Clear the saved request to prevent it from showing up on every load
-      localStorage.removeItem('recipe_modification_request');
-      localStorage.removeItem('recipe_modification_immediate');
+      setRequest(savedRequest.request);
+      setImmediate(savedRequest.immediate);
     }
   }, []);
 
-  // Save request to localStorage when user is not authenticated and tries to submit
-  const saveRequestToLocalStorage = () => {
-    if (request.trim()) {
-      localStorage.setItem('recipe_modification_request', request);
-      localStorage.setItem('recipe_modification_page', window.location.pathname);
-      localStorage.setItem('recipe_modification_immediate', String(immediate));
-    }
-  };
-
   // Handle auth flow
   const handleLogin = () => {
-    saveRequestToLocalStorage();
+    saveModificationRequest(request, immediate);
     openAuthDrawer();
   };
 
@@ -118,11 +101,11 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   useEffect(() => {
     if (status === 'not-authenticated') {
       // Save the current state
-      saveRequestToLocalStorage();
+      saveModificationRequest(request, immediate);
       // Open the auth drawer
       openAuthDrawer();
     }
-  }, [status, openAuthDrawer]);
+  }, [status, openAuthDrawer, request, immediate]);
 
   // Add a callback to notify parent component when modifications are applied
   const handleApplyModifications = useCallback(() => {
@@ -138,7 +121,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   // Handle submitting modifications
   const handleRequestModifications = useCallback(() => {
     if (!session) {
-      saveRequestToLocalStorage();
+      saveModificationRequest(request, immediate);
       openAuthDrawer();
       return;
     }
