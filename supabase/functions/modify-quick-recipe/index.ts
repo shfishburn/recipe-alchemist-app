@@ -5,7 +5,7 @@ import { StructuredOutputParser } from "https://esm.sh/@langchain/core/output_pa
 import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
 import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
 import { recipeModificationsSchema } from "./schema.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders, getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
 // Retry mechanism with exponential backoff
 async function withRetry(fn, maxRetries = 3, initialDelay = 500) {
@@ -180,7 +180,7 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
         }
       );
     }
@@ -251,7 +251,7 @@ serve(async (req) => {
         }),
         { 
           status: statusCode, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
         }
       );
     }
@@ -271,7 +271,7 @@ serve(async (req) => {
         JSON.stringify(parsed),
         { 
           status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' } 
         }
       );
     } catch (parseError) {
@@ -283,7 +283,7 @@ serve(async (req) => {
         }),
         { 
           status: 422, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
         }
       );
     }
@@ -297,7 +297,7 @@ serve(async (req) => {
       }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...getCorsHeadersWithOrigin(req), 'Content-Type': 'application/json' }
       }
     );
   }

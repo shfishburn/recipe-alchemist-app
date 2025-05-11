@@ -1,12 +1,57 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { corsHeaders, getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
-// Define CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Define circuit breaker to prevent cascading failures
+class CircuitBreaker {
+  private failureCount = 0;
+  private lastFailureTime: number | null = null;
+  private isOpen = false;
+
+  constructor(
+    private maxFailures = 5,
+    private resetTimeout = 30000 // 30 seconds
+  ) {}
+
+  async execute(fn) {
+    if (this.isOpen) {
+      if (Date.now() - (this.lastFailureTime || 0) > this.resetTimeout) {
+        this.reset();
+      } else {
+        throw new Error("Circuit is open, request rejected");
+      }
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+
+  private onSuccess() {
+    this.failureCount = 0;
+  }
+
+  private onFailure() {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+    
+    if (this.failureCount >= this.maxFailures) {
+      this.isOpen = true;
+    }
+  }
+
+  private reset() {
+    this.failureCount = 0;
+    this.isOpen = false;
+    this.lastFailureTime = null;
+  }
+}
 
 // Function to validate and process the AI response
 function validateRecipeChanges(rawResponse) {
@@ -204,8 +249,12 @@ function extractScienceNotesFromText(text: string): string[] {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests - CRITICAL FIX
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { 
+      status: 204, // Must be a 2xx status for preflight to succeed
+      headers: corsHeaders 
+    });
   }
 
   try {
@@ -381,13 +430,16 @@ serve(async (req) => {
         }
       }
 
+      // Use getCorsHeadersWithOrigin for proper credentials handling
+      const responseHeaders = {
+        ...getCorsHeadersWithOrigin(req),
+        'Content-Type': 'application/json',
+      };
+
       return new Response(
         JSON.stringify(responseData),
         {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
+          headers: responseHeaders,
         }
       );
     } catch (aiError) {
@@ -401,7 +453,7 @@ serve(async (req) => {
       {
         status: 400,
         headers: {
-          ...corsHeaders,
+          ...getCorsHeadersWithOrigin(req),
           'Content-Type': 'application/json',
         },
       }
