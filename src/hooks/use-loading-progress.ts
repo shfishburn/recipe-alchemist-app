@@ -57,8 +57,11 @@ export function useLoadingProgress() {
     };
   }, []);
 
-  // Update progress - FIXED: Only depends on estimatedTimeRemaining to avoid recreating timers
+  // Update progress - ensure we run this effect when loading state changes
   useEffect(() => {
+    // Don't set up timers if we've already completed loading
+    if (completedLoading) return;
+    
     // Clear any existing timers first
     cleanupAllTimers();
     
@@ -83,30 +86,25 @@ export function useLoadingProgress() {
       
       const elapsed = (Date.now() - startTime) / 1000;
       const remaining = Math.max(0, initialEstimate - elapsed);
-      const percent = Math.min(99, Math.floor(((initialEstimate - remaining) / initialEstimate) * 100));
+      // Make sure we never reach 100% until explicitly completed
+      const percent = Math.min(92, Math.floor(((initialEstimate - remaining) / initialEstimate) * 100));
       
-      // Only update if the percent is actually changing
-      if (percent !== loadingState.percentComplete) {
-        updateLoadingState({ 
-          estimatedTimeRemaining: remaining,
-          percentComplete: percent 
-        });
-      }
+      // Update the loading state with new percentage
+      updateLoadingState({ 
+        estimatedTimeRemaining: remaining,
+        percentComplete: percent 
+      });
       
-      // If almost done, show completion animation
-      if (remaining <= 0.5 && !completedLoading) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Progress timer: showing completion animation');
-        }
-        
-        setCompletedLoading(true);
-        // Show final animation
-        setShowFinalAnimation(true);
-        
-        // Clear interval
-        if (progressTimerRef.current) {
-          clearInterval(progressTimerRef.current);
-          progressTimerRef.current = null;
+      // If we're near the end, prepare for completion
+      if (percent > 90 && remaining <= 1) {
+        // Only trigger completion once
+        if (!completedLoading) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Progress timer: preparing completion animation');
+          }
+          
+          // Don't show final animation yet - we'll do that when the recipe or error is set
+          setShowFinalAnimation(false);
         }
       }
     }, 100);
@@ -173,6 +171,10 @@ export function useLoadingProgress() {
       if (!completedLoading) {
         console.error("Recipe generation timeout after", MAX_LOADING_TIME, "seconds");
         setError("Recipe generation timed out. Please try again.");
+        
+        // Force completion of loading animation
+        setCompletedLoading(true);
+        setShowFinalAnimation(true);
       }
     }, MAX_LOADING_TIME * 1000);
     
@@ -186,7 +188,20 @@ export function useLoadingProgress() {
         timeoutTimerRef.current = null;
       }
     };
-  }, [completedLoading, setError]);
+  }, [completedLoading, setError, setCompletedLoading]);
+  
+  // Show animation when loading completes or error is set
+  useEffect(() => {
+    if (completedLoading && !showFinalAnimation) {
+      setShowFinalAnimation(true);
+      
+      // Update to 100% when complete
+      updateLoadingState({
+        percentComplete: 100,
+        estimatedTimeRemaining: 0
+      });
+    }
+  }, [completedLoading, showFinalAnimation, updateLoadingState]);
 
   return {
     loadingState,

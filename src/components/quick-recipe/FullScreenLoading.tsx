@@ -1,9 +1,7 @@
-
-import React from 'react';
-import { ErrorState } from './loading/ErrorState';
+import React, { useEffect, useState } from 'react';
 import { QuickRecipeLoading } from './QuickRecipeLoading';
-import { LoadingOverlay } from '@/components/ui/loading-overlay';
-import { markActiveLoading, clearActiveLoading } from '@/utils/dom-cleanup';
+import { ErrorState } from './loading/ErrorState';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 interface FullScreenLoadingProps {
   onCancel?: () => void;
@@ -11,47 +9,62 @@ interface FullScreenLoadingProps {
   error?: string | null;
 }
 
-export const FullScreenLoading = React.memo(function FullScreenLoading({ 
-  onCancel, 
-  onRetry, 
-  error 
-}: FullScreenLoadingProps) {
-  const isErrorState = !!error;
-  const containerRef = React.useRef<HTMLDivElement>(null);
+export function FullScreenLoading({ onCancel, onRetry, error }: FullScreenLoadingProps) {
+  const { isLoading, completedLoading } = useQuickRecipeStore();
+  const [isRetrying, setIsRetrying] = useState(false);
   
-  // Mark and clear active loading state for DOM cleanup utility
-  React.useEffect(() => {
-    if (containerRef.current) {
-      markActiveLoading(containerRef.current);
+  // Track if the component should stay visible
+  const [isVisible, setIsVisible] = useState(true);
+  
+  // Track if we have an error
+  const hasError = !!error;
+  
+  // Handle retry action
+  const handleRetry = () => {
+    if (onRetry) {
+      setIsRetrying(true);
+      // Add a small delay to show retry animation
+      setTimeout(() => {
+        onRetry();
+        setIsRetrying(false);
+      }, 300);
     }
-    
-    return () => {
-      if (containerRef.current) {
-        clearActiveLoading(containerRef.current);
-      }
-    };
-  }, []);
+  };
   
+  // Track loading state changes to maintain visibility
+  useEffect(() => {
+    // Keep visible when loading or when we have an error
+    if (isLoading || hasError) {
+      setIsVisible(true);
+    }
+  }, [isLoading, hasError]);
+
+  // Prevent hiding when still loading
+  if (!isVisible && !hasError) {
+    return null;
+  }
+
   return (
-    <LoadingOverlay
-      onCancel={onCancel}
-      isError={isErrorState}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="loading-title"
     >
-      <div ref={containerRef} id="fullscreen-loading-content">
-        {isErrorState ? (
-          <ErrorState 
+      <div className="w-full max-w-2xl p-4 sm:p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 animate-fade-in">
+        {hasError ? (
+          <ErrorState
             error={error}
             onCancel={onCancel}
             onRetry={onRetry}
+            isRetrying={isRetrying}
           />
         ) : (
-          <QuickRecipeLoading 
-            onCancel={onCancel}
-          />
+          <QuickRecipeLoading onCancel={onCancel} />
         )}
       </div>
-    </LoadingOverlay>
+    </div>
   );
-});
+}
 
 export default FullScreenLoading;

@@ -54,11 +54,8 @@ const QuickRecipePage: React.FC = () => {
       }
     };
   }, [isLoading, isRetrying]);
-  
-  // REMOVED: Edge function error handling specifically
-                              
+                            
   const renderErrorContent = () => {
-    // Simplified error display without edge function specific handling
     return (
       <QuickRecipeError
         error={error}
@@ -74,7 +71,7 @@ const QuickRecipePage: React.FC = () => {
 
   return (
     <PageContainer>
-      {/* Loading/Retrying Overlay */}
+      {/* Loading/Retrying Overlay - Always show when isLoading or isRetrying is true */}
       {(isLoading || isRetrying) && (
         <FullScreenLoading
           onCancel={handleCancel}

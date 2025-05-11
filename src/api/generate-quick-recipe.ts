@@ -15,13 +15,15 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     if (!formData.mainIngredient) {
       // Create a minimal recipe with error info instead of throwing
-      const errorRecipe = normalizeRecipeResponse({
+      const errorRecipe = {
         title: "Missing Ingredient",
         description: "Please provide a main ingredient",
         ingredients: [],
         steps: ["Please enter at least one main ingredient to generate a recipe."],
-        error_message: "Please provide a main ingredient"
-      });
+        error_message: "Please provide a main ingredient",
+        isError: true,
+        servings: 2
+      };
       return errorRecipe;
     }
     
@@ -47,13 +49,15 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       if (response.error) {
         console.error("Supabase function error:", response.error);
         // Return a recipe with embedded error info
-        return normalizeRecipeResponse({
+        return {
           title: "Recipe Generation Issue",
           description: response.error,
           ingredients: [],
           steps: ["There was an issue creating your recipe: " + response.error],
-          error_message: response.error
-        });
+          error_message: response.error,
+          isError: true,
+          servings: 2
+        };
       }
       
       console.log("Supabase function response:", response);
@@ -76,16 +80,25 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     if (!data) {
       console.error('No data returned from recipe generation');
       // Create a minimal recipe with error info
-      return normalizeRecipeResponse({
+      return {
         title: "Recipe Generation Failed",
         description: "No recipe data returned",
         ingredients: [],
         steps: ["No recipe data could be generated. Please try again."],
-        error_message: "No recipe data returned. Please try again."
-      });
+        error_message: "No recipe data returned. Please try again.",
+        isError: true,
+        servings: 2
+      };
     }
     
-    // REMOVED: Check for isError flag
+    // Explicitly check for error flags in response
+    if (data.isError === true || data.error || data.error_message) {
+      console.log("Response contains error flags:", data.error || data.error_message);
+      return {
+        ...data,
+        isError: true // Ensure isError flag is set
+      };
+    }
     
     // Normalize the recipe data with more forgiving validation
     const normalizedRecipe = normalizeRecipeResponse(data);
@@ -96,13 +109,15 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     
-    // Create a recipe with error information embedded instead of throwing
-    return normalizeRecipeResponse({
+    // Create a recipe with error information embedded
+    return {
       title: "Recipe Generation Error",
       description: error.message || "Unknown error occurred",
       ingredients: [],
       steps: ["An error occurred while generating the recipe: " + (error.message || "Unknown error")],
-      error_message: error.message || "Unknown error occurred"
-    });
+      error_message: error.message || "Unknown error occurred",
+      isError: true,
+      servings: 2
+    };
   }
 };

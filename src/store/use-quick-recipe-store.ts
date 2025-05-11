@@ -74,19 +74,33 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         // Actions
         setRecipe: (recipe) => {
-          // MODIFIED: Check for error_message instead of isError flag
-          if (recipe && recipe.error_message) {
-            console.log('Recipe contains an error message:', recipe.error_message);
+          // FIX: Properly check for error conditions to distinguish between error and valid recipe
+          if (recipe && (recipe.isError === true || recipe.error_message)) {
+            console.log('Recipe contains an error:', recipe.error_message || recipe.error || 'Unknown error');
             set({ 
-              // MODIFIED: Still set the recipe even if it has an error
-              recipe,
-              // Also set the error message for user feedback
-              error: recipe.error_message,
+              // Don't set the recipe if it's an error
+              recipe: null,
+              // Set the error message for user feedback
+              error: recipe.error_message || recipe.error || 'Unknown error',
               isLoading: false,
-              hasTimeoutError: recipe.error_message?.toLowerCase().includes('timeout') ?? false
+              hasTimeoutError: (recipe.error_message || recipe.error || '')
+                                .toLowerCase().includes('timeout') ?? false
             });
           } else {
-            set({ recipe, isLoading: false, error: null });
+            // Only set the recipe if it's valid
+            if (get().isRecipeValid(recipe)) {
+              // Wait to ensure loading animation completes
+              setTimeout(() => {
+                set({ recipe, isLoading: false, error: null });
+              }, 500);
+            } else {
+              // Invalid recipe format
+              set({ 
+                recipe: null,
+                error: "The recipe format is not valid. Please try again.",
+                isLoading: false 
+              });
+            }
           }
         },
         
@@ -98,7 +112,18 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           hasTimeoutError: error?.toLowerCase().includes('timeout') ?? false
         }),
         
-        setLoading: (isLoading) => set({ isLoading }),
+        setLoading: (isLoading) => {
+          // If switching to loading state, reset error
+          if (isLoading) {
+            set({ isLoading, error: null, completedLoading: false, loadingState: { ...initialLoadingState } });
+          } else {
+            // FIX: Don't immediately set isLoading false, let the animation complete
+            // Only set isLoading false if we're already done loading
+            if (get().completedLoading) {
+              set({ isLoading });
+            }
+          }
+        },
         
         setNavigate: (navigate) => set({ navigate }),
         
@@ -109,8 +134,16 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
             loadingState: { ...prev.loadingState, ...state } 
           })),
         
-        setCompletedLoading: (value) => 
-          set({ completedLoading: value }),
+        setCompletedLoading: (value) => {
+          set({ completedLoading: value });
+          // If completed loading and not already set to false
+          if (value && get().isLoading) {
+            // Add a slight delay before removing loading state to ensure animation completes
+            setTimeout(() => {
+              set({ isLoading: false });
+            }, 800);
+          }
+        },
         
         reset: () => set({ 
           recipe: null, 
@@ -121,26 +154,35 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           loadingState: { ...initialLoadingState }
         }),
         
-        // More lenient validation function
+        // More strict validation function
         isRecipeValid: (recipe) => {
           if (!recipe) return false;
           
-          // REMOVED: Check for isError flag
+          // Explicitly check for error flags
+          if (recipe.isError === true || recipe.error || recipe.error_message) {
+            console.log('Recipe validation: has error flags');
+            return false;
+          }
           
-          // Less strict validation - try to be permissive
-          // Just check that there's a title at minimum
+          // Check for title
           if (!recipe.title) {
             console.log('Recipe validation: missing title');
             return false;
           }
           
-          // Consider valid if we have either ingredients, steps or instructions
+          // Require ingredients array
           const hasIngredients = Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0;
+          if (!hasIngredients) {
+            console.log('Recipe validation: missing ingredients');
+            return false;
+          }
+          
+          // Require steps or instructions
           const hasSteps = Array.isArray(recipe.steps) && recipe.steps.length > 0;
           const hasInstructions = Array.isArray(recipe.instructions) && recipe.instructions.length > 0;
           
-          if (!hasIngredients && !hasSteps && !hasInstructions) {
-            console.log('Recipe validation: missing content (no ingredients, steps, or instructions)');
+          if (!hasSteps && !hasInstructions) {
+            console.log('Recipe validation: missing steps/instructions');
             return false;
           }
           

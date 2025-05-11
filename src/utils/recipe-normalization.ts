@@ -19,7 +19,33 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
       }],
       steps: ["Unable to create recipe with the provided information", "Please try again with different ingredients"],
       instructions: ["Unable to create recipe with the provided information", "Please try again with different ingredients"],
-      servings: 2
+      servings: 2,
+      isError: true,
+      error_message: "Empty recipe data received"
+    };
+  }
+  
+  // Check for error flags in the original data and preserve them
+  const hasError = data.isError === true || data.error || data.error_message;
+  
+  // If data has error flags, return it with minimal processing
+  if (hasError) {
+    console.warn("Recipe data contains error flags:", data.error || data.error_message);
+    return {
+      title: data.title || "Recipe Generation Issue",
+      description: data.description || data.error || data.error_message || "An error occurred generating your recipe",
+      ingredients: data.ingredients || [{
+        item: "Error generating ingredients",
+        qty_metric: 0,
+        unit_metric: "",
+        qty_imperial: 0,
+        unit_imperial: ""
+      }],
+      steps: data.steps || ["There was an issue creating your recipe."],
+      instructions: data.instructions || data.steps || ["There was an issue creating your recipe."],
+      servings: data.servings || 2,
+      isError: true,
+      error_message: data.error_message || data.error || "Unknown error occurred"
     };
   }
   
@@ -89,7 +115,8 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     cuisine: data.cuisine || "",
     dietary: data.dietary || "",
     flavor_tags: data.flavor_tags || [],
-    // Preserve any error message but don't use it as a flag
-    error_message: data.error_message || data.error || null
+    // Preserve any error message but explicitly set isError to false
+    error_message: null,
+    isError: false
   };
 };
