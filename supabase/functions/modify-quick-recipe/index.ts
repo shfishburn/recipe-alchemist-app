@@ -156,8 +156,8 @@ serve(async (req) => {
   // Handle CORS preflight requests - CRITICAL FIX
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      status: 204, // Must be a 2xx status for preflight to succeed
-      headers: corsHeaders 
+      status: 204, // Correct status code for preflight
+      headers: corsHeaders // Use shared headers
     });
   }
 

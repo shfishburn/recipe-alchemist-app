@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders, getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -252,8 +251,8 @@ serve(async (req) => {
   // Handle CORS preflight requests - CRITICAL FIX
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      status: 204, // Must be a 2xx status for preflight to succeed
-      headers: corsHeaders 
+      status: 204, // Correct status code for preflight
+      headers: corsHeaders // Use shared headers 
     });
   }
 
