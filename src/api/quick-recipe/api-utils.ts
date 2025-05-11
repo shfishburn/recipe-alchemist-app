@@ -33,14 +33,11 @@ const validateRequestPayload = (payload: any): boolean => {
 // Helper function to fetch from edge function directly
 export const fetchFromEdgeFunction = async (payload: any) => {
   try {
-    // Get Supabase URL from the client
-    const supabaseUrl = supabase.functions.url;
-    if (!supabaseUrl) {
-      throw new Error('Could not determine Supabase URL for edge function');
-    }
+    // Instead of accessing the protected url property, construct the URL properly
+    // Use the Supabase project URL and append the function name
+    const supabaseProjectUrl = "https://zjyfumqfrtppleftpzjd.supabase.co";
+    const url = `${supabaseProjectUrl}/functions/v1/generate-quick-recipe`;
     
-    // Build edge function URL
-    const url = `${supabaseUrl}/generate-quick-recipe`;
     console.log(`Fetching directly from edge function: ${url}`);
     
     // Validate the payload before sending
