@@ -9,7 +9,7 @@ import { RecipeSectionHeader } from './card/RecipeSectionHeader';
 import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 
 interface QuickRecipeDisplayProps {
   recipe: Recipe;
@@ -40,18 +40,28 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
     );
   }
   
+  // Check if recipe has instructions or steps
   const hasInstructions = Boolean(
-    (recipe.instructions && recipe.instructions.length > 0) || 
-    (recipe.steps && recipe.steps.length > 0)
+    (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) || 
+    (Array.isArray(recipe.steps) && recipe.steps.length > 0)
   );
   
-  const hasIngredients = Boolean(recipe.ingredients && recipe.ingredients.length > 0);
+  // Check if recipe has ingredients
+  const hasIngredients = Boolean(
+    Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
+  );
+
+  // Determine which instructions/steps to display
+  const instructionsToDisplay = 
+    (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) ? recipe.instructions :
+    (Array.isArray(recipe.steps) && recipe.steps.length > 0) ? recipe.steps :
+    [];
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
       <div className="p-6 md:p-8">
         <div className="space-y-6">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{recipe.title}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{recipe.title || 'Untitled Recipe'}</h2>
           
           {recipe.tagline && (
             <p className="text-gray-600 dark:text-gray-300 italic">{recipe.tagline}</p>
@@ -91,7 +101,7 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
             <div>
               <RecipeSectionHeader title="Instructions" />
               {hasInstructions ? (
-                <RecipeSteps steps={recipe.instructions || recipe.steps || []} />
+                <RecipeSteps steps={instructionsToDisplay} />
               ) : (
                 <Alert className="mt-2 bg-amber-50 dark:bg-amber-900/10">
                   <AlertTriangle className="h-4 w-4" />
@@ -103,6 +113,16 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
               )}
             </div>
           </div>
+          
+          {!hasInstructions && !hasIngredients && (
+            <Alert className="bg-blue-50 dark:bg-blue-900/10 border-blue-200">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Incomplete Recipe</AlertTitle>
+              <AlertDescription>
+                This recipe is missing both ingredients and instructions. You may want to try generating a new recipe.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <RecipeActionButtons 
             onSave={onSave}

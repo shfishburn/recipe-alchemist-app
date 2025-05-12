@@ -1,10 +1,9 @@
 
-import React, { memo, useEffect, useRef, useCallback } from 'react';
+import React, { memo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 /**
  * Props interface for the RecipeActionButtons component
@@ -42,6 +41,8 @@ interface RecipeActionButtonsProps {
   
   /**
    * The slug or ID to navigate to after successful save
+   * This is not used for navigation directly in this component anymore
+   * since navigation is handled by the parent component
    */
   savedSlug?: string;
 }
@@ -55,32 +56,27 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   isSaving = false,
   saveSuccess = false,
   recipe,
-  onResetSaveSuccess,
-  savedSlug
+  onResetSaveSuccess
 }: RecipeActionButtonsProps) {
-  // Reference to track if component is mounted to avoid state updates after unmount
-  const isMounted = useRef(true);
-  
-  // Access the toast functionality and navigation
+  // Access the toast functionality
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Effect to cleanup references when component unmounts
+  
+  // Effect to automatically reset success state after delay
   useEffect(() => {
+    let resetTimer: NodeJS.Timeout | null = null;
+    
+    if (saveSuccess && onResetSaveSuccess) {
+      resetTimer = setTimeout(() => {
+        onResetSaveSuccess();
+      }, 5000); // 5 seconds
+    }
+    
     return () => {
-      // Mark component as unmounted to prevent state updates
-      isMounted.current = false;
+      if (resetTimer) {
+        clearTimeout(resetTimer);
+      }
     };
-  }, []);
-
-  /**
-   * Reset save success state with proper lifecycle management
-   * Using useCallback to memoize function reference
-   */
-  const handleResetSaveSuccess = useCallback(() => {
-    if (!isMounted.current || !onResetSaveSuccess) return;
-    onResetSaveSuccess();
-  }, [onResetSaveSuccess]);
+  }, [saveSuccess, onResetSaveSuccess]);
   
   /**
    * Handles the save button click
@@ -98,8 +94,8 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
     }
     
     // Reset save success state if we're trying to save again
-    if (saveSuccess) {
-      handleResetSaveSuccess();
+    if (saveSuccess && onResetSaveSuccess) {
+      onResetSaveSuccess();
     }
     
     if (!onSave) {
@@ -139,30 +135,6 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
       });
     }
   };
-  
-  // Effect to navigate to recipe detail page after successful save
-  useEffect(() => {
-    if (savedSlug && isMounted.current && saveSuccess) {
-      const navigationTimer = setTimeout(() => {
-        navigate(`/recipes/${savedSlug}`);
-      }, 1000); // Slight delay to ensure user sees the success state
-      
-      return () => clearTimeout(navigationTimer);
-    }
-  }, [savedSlug, saveSuccess, navigate]);
-  
-  // Effect to automatically reset success state after delay
-  useEffect(() => {
-    if (saveSuccess && onResetSaveSuccess) {
-      const resetTimer = setTimeout(() => {
-        if (isMounted.current) {
-          handleResetSaveSuccess();
-        }
-      }, 5000); // 5 seconds
-      
-      return () => clearTimeout(resetTimer);
-    }
-  }, [saveSuccess, handleResetSaveSuccess, onResetSaveSuccess]);
   
   return (
     <div className="pt-5 w-full flex flex-col gap-2">

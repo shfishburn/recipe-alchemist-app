@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -9,6 +10,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { toast } from 'sonner';
 import LoadingOverlay from '@/components/ui/loading-overlay';
+import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -18,16 +20,19 @@ const RecipePreviewPage: React.FC = () => {
   const storeSetError = useQuickRecipeStore(state => state.setError);
   
   const navigate = useNavigate();
-  const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
+  const { saveRecipe, isSaving: isSavingRecipe } = useQuickRecipeSave();
   const [debugMode, setDebugMode] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [isSavingLocal, setIsSavingLocal] = useState(false);
-  const [savedSlug, setSavedSlug] = useState<string | undefined>(undefined);
-
-  // Reset save success state
-  const resetSaveSuccess = useCallback(() => {
-    setSaveSuccess(false);
-  }, []);
+  
+  // Use our centralized save state management hook
+  const {
+    isSaving,
+    setIsSaving,
+    saveSuccess,
+    setSaveSuccess,
+    resetSaveSuccess,
+    savedSlug,
+    navigateToSavedRecipe
+  } = useRecipeSaveState();
 
   const handleSaveRecipe = async () => {
     if (!recipe) {
@@ -35,32 +40,29 @@ const RecipePreviewPage: React.FC = () => {
       return;
     }
 
-    // Set local saving state to true
-    setIsSavingLocal(true);
+    // Set saving state to true
+    setIsSaving(true);
 
     try {
       // Validate recipe has required fields
       if (!recipe.title || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
         toast.error("Cannot save: Recipe is missing required information");
-        setIsSavingLocal(false);
+        setIsSaving(false);
         return;
       }
 
       const savedData = await saveRecipe(recipe);
       
       if (savedData && savedData.id && savedData.slug) {
-        setSaveSuccess(true);
-        setSavedSlug(savedData.slug);
+        // Use the centralized state management
+        setSaveSuccess(savedData.slug);
         
-        // Show success toast with 2000ms duration and navigation on dismiss
+        // Show success toast with navigation action button
         toast.success("Recipe saved successfully!", {
-          duration: 2000,
-          onDismiss: () => {
-            navigate(`/recipes/${savedData.slug}`);
-          },
+          duration: 3000,
           action: {
             label: "View Recipe",
-            onClick: () => navigate(`/recipes/${savedData.slug}`)
+            onClick: navigateToSavedRecipe
           }
         });
       } else {
@@ -82,7 +84,7 @@ const RecipePreviewPage: React.FC = () => {
       resetSaveSuccess();
     } finally {
       // Always reset saving state when done
-      setIsSavingLocal(false);
+      setIsSaving(false);
     }
   };
 
@@ -140,7 +142,7 @@ const RecipePreviewPage: React.FC = () => {
   }
   
   // Determine if we should show loading overlay (either store saving state or local saving state)
-  const showLoadingOverlay = isSaving || isSavingLocal;
+  const showLoadingOverlay = isSavingRecipe || isSaving;
   
   return (
     <PageContainer>
