@@ -1,90 +1,52 @@
-# A string used to distinguish different Supabase projects on the same host. Defaults to the project reference.
+
+# A string used to distinguish different Supabase projects on the same host. Defaults to the working
+# directory name when running `supabase init`.
 project_id = "zjyfumqfrtppleftpzjd"
 
 [api]
-enabled = true
 # Port to use for the API URL.
 port = 54321
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
 # endpoints. public and storage are always included.
-schemas = ["public", "storage", "graphql_public"]
+schemas = ["public", "storage", "extensions"]
 # Extra schemas to add to the search_path of every request. public is always included.
-extra_search_path = ["public", "extensions"]
-# Maximum rows to return from a view, table, or stored procedure. Limits payload size for accidental
-# or malicious requests.
+extra_search_path = ["extensions"]
+# The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
+# for accidental or malicious requests.
 max_rows = 1000
 
 [db]
 # Port to use for the local database URL.
 port = 54322
-# Port used by db diff command to initialize the shadow database.
-shadow_port = 54320
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW
 # server_version;` on the remote database to check.
 major_version = 15
 
-[db.pooler]
-enabled = false
-# Port to use for the local connection pooler.
-port = 54329
-# Specifies when a server connection can be reused by other clients.
-# Configure this option the same as remote connection pooler to use server_lifetime correctly.
-# For certain hosted databases like AWS RDS, there are more aggressive timeouts upstream and a lower value is desired.
-pool_mode = "transaction"
-# Time server connection is kept alive before being recycled
-# Default: 28800s (8 hours)
-# Adjust this time to be less than the database's idle_in_transaction_session_timeout which defaults to 1 day
-default_pool_size = 15
-# Maximum number of server connections
-max_client_conn = 100
-# Maximum time in seconds a connection can stay idle before it's closed
-server_lifetime = 3600
-# Maximum time in seconds to wait when all connections are busy
-# before throwing an error. 0 = unlimited wait
-server_idle_timeout = 600
-# Connection pool management settings
-connection_lifetime = 3600
-connection_idle_lifetime = 600
-# Maximum time to wait when all connections are busy
-# before throwing an error. 0 = unlimited wait
-pool_timeout = 0
-
 [studio]
-enabled = true
 # Port to use for Supabase Studio.
 port = 54323
-# External URL to access Supabase Studio from a browser
-# ONLY set if absolutely required
-# This will be used as the SITE_URL and will adjust the cookies domain to match this URL
-# site_url = "https://supabase.example.com"
 
+# Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
+# are monitored, and you can view the emails that would have been sent from the web interface.
 [inbucket]
-enabled = true
 # Port to use for the email testing server web interface.
 port = 54324
-# Uncomment to expose additional ports for testing user applications that send emails.
-# smtp_port = 54325
-# pop3_port = 54326
+smtp_port = 54325
+pop3_port = 54326
 
 [storage]
-enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
 [auth]
-enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = ["https://localhost:3000"]
-# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
+# How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 seconds (one
+# week).
 jwt_expiry = 3600
-# If disabled, the refresh token will never expire.
-enable_refresh_token_rotation = true
-# Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
-# Requires enable_refresh_token_rotation = true.
-refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
 enable_signup = true
 
@@ -97,381 +59,55 @@ double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
 enable_confirmations = false
 
-[auth.sms]
-# Allow/disallow new user signups via SMS to your project.
-enable_signup = true
-# If enabled, users need to confirm their phone number before signing in.
-enable_confirmations = false
-
-[auth.oauth.apple]
-enabled = false
-# Provider client id.
-client_id = ""
-# Provider secret.
-secret = ""
-# Endpoint that returns JWKs for the Apple cert.
-authorization_endpoint = ""
-# Endpoint that returns JWKs for the Apple cert.
-jwks_endpoint = ""
-# Recommended to use redirect_to_provider when possible. If not, a custom flow needs to be 
-# implemented to redirect users to this endpoint
-redirect_endpoint = ""
-# Endpoint used to revoke OAuth refresh tokens for a given user
-revocation_endpoint = ""
-# Endpoint used to refresh an expired OAuth access token
-token_endpoint = ""
-# Provide scopes to request from provider
-scopes = []
-# Authenticate via mobile devices.
-use_pkce = false
-
-[auth.oauth.azure]
+# Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
+# `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,
+# `twitter`, `slack`, `spotify`, `workos`, `zoom`.
+[auth.external.apple]
 enabled = false
 client_id = ""
 secret = ""
-url = "common"
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.bitbucket]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.discord]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.facebook]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.figma]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.github]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.gitlab]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.google]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.hubspot]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.kakao]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.keycloak]
-enabled = false
-client_id = ""
-secret = ""
-# Keycloak URL. This can be discovered in Realm Settings -> General -> Endpoints -> OpenID endpoint configuration
-base_url = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.linkedin]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.microsoft]
-enabled = false
-client_id = ""
-secret = ""
-url = "common"
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.notion]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.odc]
-enabled = false
-client_id = ""
-secret = ""
-# The base URL and realm for the authorization server
+# Overrides the default auth redirectUrl.
+redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
+# or any other third-party OIDC providers.
 url = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-# OpenID scopes. openid and profile are included by default.
-scopes = []
-use_pkce = false
-
-[auth.oauth.okta]
-enabled = false
-client_id = ""
-secret = ""
-url = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.reddit]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.salesforce]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.slack]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.spotify]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.tiktok]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.twitch]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.twitter]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.workos]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
-
-[auth.oauth.zoom]
-enabled = false
-client_id = ""
-secret = ""
-authorization_endpoint = ""
-jwks_endpoint = ""
-redirect_endpoint = ""
-revocation_endpoint = ""
-token_endpoint = ""
-scopes = []
-use_pkce = false
 
 [analytics]
 enabled = false
 port = 54327
 vector_port = 54328
-# Configure one of these backends
-backend = "postgres"
-
-# Postgres backend for analytics
-[analytics.backends.postgres]
-# Connection string to connect to Postgres
-connection_string = "postgresql://supabase:supabase@localhost:54322/postgres"
-enabled = true
-# Pooler configuration
-max_connections = 10
-min_connections = 1
-
-# ClickHouse backend for analytics
-[analytics.backends.clickhouse]
-# Connection string to connect to ClickHouse
-connection_string = "http://localhost:8123/default"
+# Setup BigQuery for analytics.
+[analytics.big_query]
 enabled = false
-# The database within ClickHouse to use
-database = "default"
+# The JSON key for your service account.
+service_account = "bq-service-account.json"
+# The BigQuery project ID to write analytics events to.
+project_id = ""
+# The BigQuery dataset ID to write analytics events to.
+dataset_id = ""
 
 [experimental]
+# Enable experimental features. These features are unstable and may change or be removed at any time.
 
-# Experimental features may change behavior in the future.
-# These features show potential and are getting closer to stabilizing.
+# Configures Supabase to run on Fly.io.
+fly_alloc_max_memory = ""
+# Configures Supabase to run in Replicated mode.
+replicated_mode = false
 
-[experimental.functions]
-enable_hooks = false
-
-# Deprecated features that will be removed in a future release.
-# These features show either have a replacement or are no longer a priority.
-
-[experimental.emissions]
-enabled = false
-
-[functions]
-# Explicitly set JWT verification for generate-quick-recipe to true
-[functions.generate-quick-recipe]
+[edge_functions]
+[edge_functions."analyze-reactions"]
+verify_jwt = true
+[edge_functions."fuse-nutrition"]
+verify_jwt = true
+[edge_functions."generate-quick-recipe"]
+verify_jwt = false
+[edge_functions."generate-recipe-image"]
+verify_jwt = true
+[edge_functions."generate-shopping-list"]
+verify_jwt = true
+[edge_functions."modify-quick-recipe"]
+verify_jwt = false
+[edge_functions."proxy-image"]
+verify_jwt = true
+[edge_functions."recipe-chat"]
 verify_jwt = true

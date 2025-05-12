@@ -34,6 +34,13 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
     debugTag = 'default'
   } = options;
 
+  // Validate authentication token if present
+  if (token === '') {
+    console.warn('Empty authentication token provided to callSupabaseFunction');
+    // CHANGED: Don't return an error for empty token
+    // We'll continue with the request without authentication
+  }
+
   try {
     console.log(`Calling Supabase function "${functionName}" with:`, {
       method,
@@ -42,7 +49,10 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
       payloadKeys: payload ? Object.keys(payload) : 'no payload'
     });
     
-    // Use the Supabase functions.invoke method with proper authentication
+    // REMOVED: Function existence check which was causing build errors
+    // The listFunctions method no longer exists in the Supabase JS client v2.49.4
+    
+    // Use the Supabase functions.invoke method rather than direct fetch
     const response = await supabase.functions.invoke<TOutput>(functionName, {
       method,
       body: payload,

@@ -15,7 +15,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     if (!formData.mainIngredient) {
       // Create a minimal recipe with error info instead of throwing
-      return {
+      const errorRecipe = {
         title: "Missing Ingredient",
         description: "Please provide a main ingredient",
         ingredients: [],
@@ -24,6 +24,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         isError: true,
         servings: 2
       };
+      return errorRecipe;
     }
     
     // Format the request body
@@ -34,12 +35,11 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     // Set a timeout for the request (120 seconds)
     const timeoutPromise = createTimeoutPromise(120000);
     
-    // Get auth token first
-    const token = await getAuthToken();
-    console.log("Got auth token:", token ? "token exists" : "no token");
-    
     // Create a function to call using our utility
     const callWithSupabaseFunctionClient = async () => {
+      const token = await getAuthToken();
+      console.log("Got auth token:", token ? "token exists" : "no token");
+      
       const response = await callSupabaseFunction<typeof requestBody, any>('generate-quick-recipe', {
         payload: requestBody,
         token,

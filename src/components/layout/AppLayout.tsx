@@ -46,13 +46,18 @@ export const AppLayout = () => {
     };
   }, []);
   
-  // If we're on the loading route, render only the LoadingPage without Navbar and other elements
+  // If we're on the loading route, render only the LoadingPage with smooth transition
   if (isLoadingRoute) {
+    const LoadingPage = React.lazy(() => import("@/pages/LoadingPage"));
     return (
-      <React.Suspense fallback={<div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>}>
-        <AppRoutes />
+      <React.Suspense fallback={
+        <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center overflow-x-hidden">
+          <div className="loading-pulse-ring w-20 h-20 border-4 border-recipe-green opacity-30"></div>
+          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-blue opacity-20" 
+               style={{ animationDelay: '-0.5s' }}></div>
+        </div>
+      }>
+        <LoadingPage />
       </React.Suspense>
     );
   }
