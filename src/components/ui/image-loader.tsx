@@ -65,7 +65,8 @@ export function ImageLoader({
         loading={priority ? 'eager' : loading}
         onLoad={handleLoad}
         onError={handleError}
-        fetchpriority={priority ? 'high' : 'auto'}
+        // Remove fetchPriority prop and use data-fetch-priority instead
+        data-fetch-priority={priority ? 'high' : 'auto'}
         // Add performance optimizations
         decoding="async"
         {...props}
