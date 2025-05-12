@@ -8,7 +8,13 @@ import { fetchFromEdgeFunction, fetchFromSupabaseFunctions, getAuthToken } from 
 import { processErrorResponse } from './quick-recipe/error-utils';
 import { callSupabaseFunction } from './supabaseFunctionClient';
 
-// Function to generate a quick recipe
+/**
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: This function is critical to the recipe generation flow and has been
+ * extensively tested to handle various edge cases, timeout scenarios, and
+ * fallback logic. Any changes could impact user experience significantly.
+ */
 export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promise<QuickRecipe> => {
   try {
     console.log("Generating quick recipe with form data:", formData);

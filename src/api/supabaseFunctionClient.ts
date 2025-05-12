@@ -18,9 +18,12 @@ interface SupabaseFunctionResponse<TOutput> {
 }
 
 /**
- * Type-safe fetch to a Supabase Edge Function with optional payload, auth, and debugging
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: This function handles critical authentication and error-handling logic
+ * for all Supabase Edge Function calls, with built-in fallback mechanisms.
  * 
- * NOTE: DO NOT MODIFY THIS FUNCTION - it contains important fallback logic for the recipe generation system
+ * Type-safe fetch to a Supabase Edge Function with optional payload, auth, and debugging
  */
 export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
   functionName: string,

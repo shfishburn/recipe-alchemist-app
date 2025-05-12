@@ -2,7 +2,12 @@
 import { supabase } from '@/integrations/supabase/client';
 import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
 
-// Helper function to get authentication token
+/**
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: Critical authentication helper that interfaces with Supabase
+ * session management and token retrieval.
+ */
 export const getAuthToken = async (): Promise<string> => {
   const { data } = await supabase.auth.getSession();
   if (!data.session?.access_token) {
@@ -11,7 +16,12 @@ export const getAuthToken = async (): Promise<string> => {
   return data.session?.access_token || '';
 };
 
-// Validate payload before sending to edge function
+/**
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: Validation logic that ensures request payloads are properly formatted
+ * before sending to edge functions.
+ */
 const validateRequestPayload = (payload: any): boolean => {
   // Check if payload exists and has the required fields
   if (!payload) return false;
@@ -30,7 +40,12 @@ const validateRequestPayload = (payload: any): boolean => {
   return true;
 };
 
-// Helper function to fetch from edge function directly
+/**
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: Direct edge function fetching fallback mechanism with error handling
+ * and validation. Critical for recipe generation reliability.
+ */
 export const fetchFromEdgeFunction = async (payload: any) => {
   try {
     // Instead of accessing the protected url property, construct the URL properly
@@ -77,7 +92,11 @@ export const fetchFromEdgeFunction = async (payload: any) => {
   }
 };
 
-// Helper function to fetch from Supabase Functions
+/**
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: Helper function for authenticated edge function calls.
+ */
 export const fetchFromSupabaseFunctions = async (payload: any, token: string) => {
   return callSupabaseFunction('generate-quick-recipe', {
     payload,

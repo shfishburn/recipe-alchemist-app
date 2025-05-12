@@ -9,9 +9,28 @@ interface QuickRecipeLoadingProps {
   timeoutWarning?: boolean;
 }
 
+/**
+ * @locked
+ * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
+ * Reason: Critical loading component that needs to maintain consistent UI and behaviors.
+ */
 export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRecipeLoadingProps) {
+  // Prevent body scrolling when loading component is mounted
+  React.useEffect(() => {
+    // Save the original overflow style
+    const originalStyle = document.body.style.overflow;
+    
+    // Prevent scrolling
+    document.body.style.overflow = 'hidden';
+    
+    // Restore original style when component unmounts
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
+    <div className="flex flex-col items-center justify-center w-full overflow-hidden">
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
         {/* Gift box icon */}
         <div className="relative" aria-hidden="true">
