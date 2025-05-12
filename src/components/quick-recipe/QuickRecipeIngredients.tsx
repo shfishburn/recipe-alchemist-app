@@ -14,7 +14,7 @@ export function QuickRecipeIngredients({ ingredients }: QuickRecipeIngredientsPr
           <li key={index} className="text-gray-700 dark:text-gray-300">
             {typeof ingredient === 'string' 
               ? ingredient 
-              : `${ingredient.amount || ''} ${ingredient.unit || ''} ${ingredient.name}`.trim()}
+              : `${ingredient.qty || ''} ${ingredient.unit || ''} ${typeof ingredient.item === 'string' ? ingredient.item : 'Ingredient'}`.trim()}
           </li>
         ))}
       </ul>
