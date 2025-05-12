@@ -20,6 +20,36 @@ const outputPath = process.env.ANALYSIS_OUTPUT_PATH || 'openai_analysis.txt';
 const openaiApiKey = process.env.OPENAI_API_KEY;
 
 /**
+ * Writes analysis output asynchronously
+ */
+async function writeAnalysis(content) {
+  await fs.promises.writeFile(outputPath, content);
+}
+
+/**
+ * Redacts API key from errors for safe logging
+ */
+function sanitizeErrorForLogging(error) {
+  const msg = error instanceof Error ? error.toString() : JSON.stringify(error);
+  return openaiApiKey
+    ? msg.replace(new RegExp(openaiApiKey, 'g'), '[REDACTED]')
+    : msg;
+}
+
+/**
+ * Categorizes errors for decision-making
+ */
+function categorizeError(error) {
+  if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+    return { type: 'network', retryable: true };
+  }
+  if (error.response && error.response.status === 401) {
+    return { type: 'auth', retryable: false };
+  }
+  return { type: 'unknown', retryable: false };
+}
+
+/**
  * Test connectivity to OpenAI API before analysis
  */
 async function testOpenAiConnection() {
@@ -45,7 +75,9 @@ async function testOpenAiConnection() {
   }
 }
 
-// Truncates diff content to respect token limits
+/**
+ * Truncates diff content to respect token limits
+ */
 function truncateDiff(diff) {
   if (diff.length <= config.diff.maxLength) {
     return diff;
@@ -53,67 +85,46 @@ function truncateDiff(diff) {
   return diff.slice(0, config.diff.maxLength) + '\n\n[Diff truncated due to size limits]';
 }
 
-// Constructs the system prompt for OpenAI
+/**
+ * Constructs the system prompt for OpenAI
+ */
 function buildSystemPrompt() {
-  return `You are a code review assistant analyzing git diffs. Provide a concise, helpful analysis that includes:
+  return `You are a code review assistant analyzing git diffs. Provide a balanced, actionable analysis that includes:
 
 ### 1. Summary of the overall changes
-- A high-level overview of what's been added, removed, or modified.
+- High-level overview of added, removed, or modified code.
 
 ### 2. Potential issues or bugs
 - Tag each issue with a severity label: **critical**, **warning**, or **style**.
-- Cite exact diff line numbers for each (e.g. “(lines 12–15)”).
+- Cite exact diff line numbers (e.g. "(lines 12–15)").
 
-### 3. Security concerns if any
-- Same formatting: severity + line-number references.
+### 3. Security concerns
+- Same formatting: severity + line references.
 
 ### 4. Suggestions for improvement
-- For each suggestion, include a minimal code snippet showing the fix.
-- Reference the affected lines.
+- For each suggestion, include a minimal code snippet or unified diff showing the fix.
+- Reference affected lines.
 
 ### 5. Code quality observations
-- Style, formatting, or architectural notes with severity labels and line refs.
+- Architectural or style notes with severity and line refs.
 
-### 6. AI Developer Prompt
+### 6. Minor enhancements
+- Even if no critical issues are found, list up to 5 minor style, documentation, or readability improvements.
+
+### 7. AI Developer Prompt
 - Provide a copy-and-paste prompt that:
-  1. First assesses whether any code smells or anti-patterns exist; if none are found, respond with **"No changes recommended."**
-  2. Only proposes a change if it can cite a concrete benefit (e.g., reduces cyclomatic complexity, closes a security gap).
-  3. Includes a brief justification of why each change improves maintainability, performance, or security.
-  4. Requests or generates minimal code snippets or a unified diff for each fix.
-  5. Requests corresponding unit-test stubs or test scenarios (mentioning the test framework) for each change.
-  6. Rates each suggestion's impact and confidence on a simple scale.
-- Ensure suggestions map to actionable improvements, not generic advice.
-- Reference your project's style guide or coding standards for any style-rule violations.
-- End with **"No changes recommended"** if no issues are detected.
+  1. Summarizes each finding with severity and line references.
+  2. Includes brief justifications for maintainability, performance, or security benefits.
+  3. Requests corresponding unit-test stubs or test scenarios (mentioning the framework) for each change.
+  4. Rates each suggestion's impact and confidence on a simple scale.
+- Reference your project's style guide for any style-rule violations.
 
-**Output format** must be valid Markdown with headings, numbered lists, and fenced code blocks.`;
+**Output format**: valid Markdown with headings, numbered lists, and fenced code blocks.`;
 }
 
-// Writes analysis output asynchronously
-async function writeAnalysis(content) {
-  await fs.promises.writeFile(outputPath, content);
-}
-
-// Redacts API key from errors for safe logging
-function sanitizeErrorForLogging(error) {
-  const msg = error instanceof Error ? error.toString() : JSON.stringify(error);
-  return openaiApiKey
-    ? msg.replace(new RegExp(openaiApiKey, 'g'), '[REDACTED]')
-    : msg;
-}
-
-// Categorizes errors for decision-making
-function categorizeError(error) {
-  if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
-    return { type: 'network', retryable: true };
-  }
-  if (error.response && error.response.status === 401) {
-    return { type: 'auth', retryable: false };
-  }
-  return { type: 'unknown', retryable: false };
-}
-
-// Generates a simple fallback analysis if OpenAI fails
+/**
+ * Generates a simple fallback analysis if OpenAI fails
+ */
 function generateFallbackAnalysis(diff) {
   const additions = (diff.match(/^\+/gm) || []).length;
   const removals = (diff.match(/^- /gm) || []).length;
@@ -124,7 +135,9 @@ ${additions} lines added, ${removals} lines removed.
 *API-based analysis failed.*`;
 }
 
-// Main analysis function
+/**
+ * Main analysis function
+ */
 async function analyzeCodeWithOpenAI() {
   // Test API connectivity before proceeding
   const apiTestResult = await testOpenAiConnection();
@@ -176,7 +189,9 @@ async function analyzeCodeWithOpenAI() {
   }
 }
 
-// Requests analysis from OpenAI with fallback and logging
+/**
+ * Requests analysis from OpenAI with fallback and logging
+ */
 async function makeApiRequestWithFallback(prompt, truncatedDiff, fullDiff) {
   for (const model of config.api.models) {
     try {
@@ -200,7 +215,9 @@ async function makeApiRequestWithFallback(prompt, truncatedDiff, fullDiff) {
   return fallback;
 }
 
-// Sends the chat completion request to OpenAI
+/**
+ * Sends the chat completion request to OpenAI
+ */
 async function makeOpenAiRequest(model, prompt, truncatedDiff) {
   let attempts = 0;
   let lastError;
