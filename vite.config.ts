@@ -56,4 +56,6 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     target: 'esnext',
   },
+  // Add base configuration to ensure proper asset resolution
+  base: mode === 'development' ? '/' : './',
 }));
