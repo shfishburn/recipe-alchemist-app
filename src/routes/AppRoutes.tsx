@@ -1,7 +1,7 @@
 
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { PrivateRoute } from '@/components/PrivateRoute';
+import PrivateRoute from '@/components/PrivateRoute';
 import * as LazyRoutes from '@/routes/LazyRoutes';
 import { useAuth } from '@/hooks/use-auth';
 
