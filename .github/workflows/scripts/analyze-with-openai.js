@@ -80,13 +80,19 @@ function categorizeError(error) {
 
 /**
  * Test connectivity to OpenAI API before analysis
- * Includes improved API key validation
+ * Includes improved API key validation and dependency check
  */
 async function testOpenAiConnection() {
   try {
     // Validate API key before attempting to use it
     if (!openaiApiKey || typeof openaiApiKey !== 'string' || openaiApiKey.trim() === '') {
       console.error('Invalid API key: API key is missing or empty');
+      return false;
+    }
+
+    // Check for axios availability - helpful for dependency issues    
+    if (typeof axios !== 'function' && (!axios || !axios.post)) {
+      console.error('Axios dependency not available or improperly loaded');
       return false;
     }
     
@@ -288,7 +294,7 @@ ${additions} lines added, ${removals} lines removed.${filesList}
 }
 
 /**
- * Main analysis function with improved file handling
+ * Main analysis function with improved file handling and dependency checking
  */
 async function analyzeCodeWithOpenAI() {
   // Test API connectivity before proceeding
