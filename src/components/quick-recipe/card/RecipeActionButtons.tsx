@@ -1,5 +1,5 @@
 
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
@@ -61,14 +61,14 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   // Reference to track if component is mounted to avoid state updates after unmount
   const isMounted = useRef(true);
   
-  // Track whether the reset function has been called to prevent multiple invocations
-  const [resetCalled, setResetCalled] = useState<boolean>(false);
+  // Reference to track if the reset function has been called
+  const resetCalledRef = useRef(false);
   
   // Access the toast functionality and navigation
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Effect to cleanup references and timers when component unmounts
+  // Effect to cleanup references when component unmounts
   useEffect(() => {
     return () => {
       // Mark component as unmounted to prevent state updates
@@ -80,11 +80,11 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
    * Reset save success state with proper lifecycle management
    */
   const handleResetSaveSuccess = () => {
-    if (!isMounted.current) return;
+    if (!isMounted.current || resetCalledRef.current) return;
     
-    if (onResetSaveSuccess && !resetCalled) {
+    if (onResetSaveSuccess) {
       onResetSaveSuccess();
-      setResetCalled(true);
+      resetCalledRef.current = true;
     }
   };
   
@@ -93,8 +93,18 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
    * If saveSuccess is true and onResetSaveSuccess is provided, resets the success state before saving
    */
   const handleSave = async () => {
+    // Validate recipe data before attempting to save
+    if (recipe && (!recipe.title || !recipe.ingredients || recipe.ingredients.length === 0)) {
+      toast({
+        title: "Validation Error",
+        description: "Recipe is missing required information (title or ingredients)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Reset save success state if we're trying to save again
-    if (saveSuccess && onResetSaveSuccess && !resetCalled) {
+    if (saveSuccess) {
       handleResetSaveSuccess();
     }
     
@@ -109,10 +119,7 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
       });
       
       // Reset resetCalled state for the default implementation
-      if (resetCalled) {
-        setResetCalled(false);
-      }
-      
+      resetCalledRef.current = false;
       return;
     }
     
@@ -126,13 +133,13 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
       }
       
       // Reset the resetCalled state after successful save
-      if (resetCalled && isMounted.current) {
-        setResetCalled(false);
+      if (isMounted.current) {
+        resetCalledRef.current = false;
       }
       
       // If we have a savedSlug, navigate to the recipe detail page
       if (savedSlug && isMounted.current && saveSuccess) {
-        console.log("Navigating to recipe:", savedSlug);
+        // Add a slight delay to ensure state updates have completed
         navigate(`/recipes/${savedSlug}`);
       }
     } catch (error) {
@@ -150,36 +157,37 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
         variant: "destructive"
       });
       
-      // Reset the resetCalled state on error
+      // Reset the resetCalled state on error only if needed
       if (isMounted.current) {
-        setResetCalled(false);
+        resetCalledRef.current = false;
       }
     }
   };
   
   /**
    * Effect hook to manage automatic resetting of success state
+   * This replaces the setTimeout approach with a more reliable effect hook
    */
   useEffect(() => {
-    // Reset the resetCalled state when saveSuccess changes to false
-    if (!saveSuccess && resetCalled) {
-      setResetCalled(false);
+    // Reset the resetCalled ref when saveSuccess changes to false
+    if (!saveSuccess && resetCalledRef.current) {
+      resetCalledRef.current = false;
     }
     
     // Only set up a reset if save was successful and we have a reset function
-    if (saveSuccess && typeof onResetSaveSuccess === 'function' && !resetCalled) {
-      // Reset the success state after 5 seconds to allow saving again
+    if (saveSuccess && typeof onResetSaveSuccess === 'function' && !resetCalledRef.current) {
+      // Set a timer to automatically reset the success state after some time
       const resetTimer = setTimeout(() => {
         if (isMounted.current) {
           onResetSaveSuccess();
-          setResetCalled(true);
+          resetCalledRef.current = true;
         }
       }, 5000); // 5 seconds
       
       // Clean up timer when dependencies change
       return () => clearTimeout(resetTimer);
     }
-  }, [saveSuccess, onResetSaveSuccess, resetCalled]);
+  }, [saveSuccess, onResetSaveSuccess]);
   
   return (
     <div className="pt-5 w-full flex flex-col gap-2">

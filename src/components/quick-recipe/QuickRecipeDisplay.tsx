@@ -46,14 +46,14 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
             highlights={recipe.highlights}
             cuisine={recipe.cuisine}
             dietary={recipe.dietary}
-            flavors={recipe.flavors}
-            nutritionHighlight={recipe.nutrition_highlight}
-            cookingTip={recipe.cooking_tip}
+            flavors={recipe.flavor_tags} // Fix: use flavor_tags instead of flavors
+            nutritionHighlight={recipe.nutritionHighlight} // Fix: use correct property name
+            cookingTip={recipe.cookingTip} // Fix: use correct property name
           />
           
           <RecipeTimeInfo 
-            prepTime={recipe.prep_time_min} 
-            cookTime={recipe.cook_time_min} 
+            prepTime={recipe.prep_time_min || recipe.prepTime} // Handle both naming conventions
+            cookTime={recipe.cook_time_min || recipe.cookTime} // Handle both naming conventions
             servings={recipe.servings} 
           />
           
@@ -65,7 +65,7 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
             
             <div>
               <RecipeSectionHeader title="Instructions" />
-              <RecipeSteps steps={recipe.instructions} />
+              <RecipeSteps steps={recipe.instructions || recipe.steps || []} />
             </div>
           </div>
           

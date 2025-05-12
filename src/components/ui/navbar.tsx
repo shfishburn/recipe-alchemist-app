@@ -8,6 +8,7 @@ import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { User, LogOut } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Global navigation bar with horizontal layout
@@ -16,6 +17,10 @@ export function Navbar({ className = '' }: { className?: string }) {
   const { session, signOut } = useAuth();
   const { isOpen, open, close } = useAuthDrawer();
   const location = useLocation();
+  const { toast } = useToast();
+  
+  // Local state to track logout process
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Hide on scroll down, show on scroll up
   const [hidden, setHidden] = useState(false);
@@ -41,10 +46,27 @@ export function Navbar({ className = '' }: { className?: string }) {
   );
 
   const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple logout attempts
+    
+    setIsLoggingOut(true);
+    
     try {
       await signOut();
+      toast({
+        title: "Success",
+        description: "You have been logged out successfully",
+        variant: "success",
+      });
     } catch (error) {
-      console.error('Error signing out:', error);
+      // Safe error handling without exposing sensitive information
+      console.error("Logout error:", error instanceof Error ? error.message : "Unknown error");
+      toast({
+        title: "Logout failed",
+        description: "There was an issue signing you out. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -111,9 +133,10 @@ export function Navbar({ className = '' }: { className?: string }) {
                   size="sm" 
                   className="flex items-center gap-2"
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
+                  <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
                 </Button>
               </>
             ) : (
