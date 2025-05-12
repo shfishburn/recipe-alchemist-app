@@ -1,5 +1,5 @@
 
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 import { validateRequestBody } from "./validation.ts";
 import { generateRecipeWithOpenAI } from "./openai-client.ts";
 import { buildOpenAIPrompt } from "./prompt-builder.ts";
@@ -31,7 +31,7 @@ export async function handleRequest(
         error: "Content-Type must be application/json",
         debugInfo: debugInfo
       }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
     );
   }
 
@@ -46,7 +46,7 @@ export async function handleRequest(
           details: "Missing API configuration - please try again later",
           debugInfo: debugInfo
         }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
       );
     }
     
@@ -61,7 +61,7 @@ export async function handleRequest(
           error: "Empty request body after parsing", 
           debugInfo: debugInfo
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
       );
     }
     
@@ -85,8 +85,8 @@ export async function handleRequest(
     console.log("Final prompt construction - length:", prompt.length);
     console.log("Final prompt snippet (first 300 chars):", prompt.substring(0, 300));
     
-    // Generate recipe using OpenAI
-    const response = await generateRecipeWithOpenAI(apiKey, prompt, processedParams, corsHeaders, debugInfo);
+    // Generate recipe using OpenAI - update to use dynamic CORS headers
+    const response = await generateRecipeWithOpenAI(apiKey, prompt, processedParams, getCorsHeadersWithOrigin(req), debugInfo);
     
     // Validate cuisine_category in response if it's a successful response
     if (response.status === 200) {
@@ -102,10 +102,10 @@ export async function handleRequest(
             // Modify the response to set a valid category
             responseBody.cuisine_category = "Global";
             
-            // Return the modified response
+            // Return the modified response with dynamic CORS headers
             return new Response(
               JSON.stringify(responseBody),
-              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              { status: 200, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
             );
           }
         }
@@ -125,7 +125,7 @@ export async function handleRequest(
         details: error.message || "An unexpected error occurred",
         debugInfo: debugInfo
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } },
     );
   }
 }

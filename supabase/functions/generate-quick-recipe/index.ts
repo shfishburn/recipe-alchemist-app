@@ -1,16 +1,18 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleRequest } from "./request-handler.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
 // Main entry point for the edge function
 serve(async (req) => {
   console.log("Edge function called: generate-quick-recipe");
   
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests with origin-aware headers
   if (req.method === "OPTIONS") {
     console.log("Handling OPTIONS request");
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: getCorsHeadersWithOrigin(req) 
+    });
   }
   
   try {
@@ -33,7 +35,7 @@ serve(async (req) => {
           }),
           { 
             status: 400, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
           }
         );
       }
@@ -50,7 +52,7 @@ serve(async (req) => {
           }),
           { 
             status: 400, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
           }
         );
       }
@@ -63,7 +65,7 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
         }
       );
     }
@@ -79,7 +81,7 @@ serve(async (req) => {
         }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
         }
       );
     }
@@ -108,7 +110,7 @@ serve(async (req) => {
         details: errorDetails,
         debugInfo: "error-handler"
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } },
     );
   }
 });

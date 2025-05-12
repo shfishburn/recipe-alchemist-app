@@ -1,198 +1,148 @@
 
-import OpenAI from "https://esm.sh/openai@4.0.0";
-
-// OpenAI API interaction function
+// Function to generate a recipe using OpenAI
 export async function generateRecipeWithOpenAI(
   apiKey: string,
   prompt: string,
   params: any,
-  corsHeaders: Record<string, string>,
+  corsHeaders: HeadersInit,
   debugInfo: string
 ): Promise<Response> {
+  const startTime = Date.now();
+  
   try {
-    // Create OpenAI client
-    const openai = new OpenAI({ apiKey });
-    
-    // Log the inputs and prompt for debugging
-    console.log("Starting quick recipe generation with inputs:", { 
-      cuisine: params.safeCuisine, 
-      dietary: params.safeDiet, 
-      mainIngredient: params.safeMain, 
-      servings: params.safeServings, 
-      maxCalories: params.maxCalories, 
-      flavorTags: params.safeTags 
-    });
-    console.log("Using model: gpt-4o");
-    
     console.log("Sending request to OpenAI API...");
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Use the powerful model for better recipes
-      response_format: { type: "json_object" },
-      temperature: 0.5,
-      max_tokens: 4000,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are Kenji López-Alt, renowned culinary scientist creating detailed, scientifically-grounded recipes. YOUR PRIMARY STRENGTH is writing EXTREMELY THOROUGH, DETAILED recipe steps that explain the science behind each technique. Each step must include exact temperatures (both °F and °C), precise timing, and scientific explanations for why this method produces superior results. NEVER REDUCE THE NUMBER OF STEPS - separate distinct actions into individual steps. ABSOLUTELY REFUSE to produce simplified or vague instructions. MANDATORY: Include AT LEAST 10-15 necessary detailed steps. If you fail to provide the required level of scientific detail in EVERY step, your response will be rejected and regenerated.",
-        },
-        { role: "user", content: prompt },
-      ],
-    });
     
-    console.log("OpenAI API response received");
+    // Configure the API request with a timeout
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), 60000); // 60 second timeout
     
-    if (!response.choices || !response.choices[0]?.message?.content) {
-      console.error("Invalid response from OpenAI:", response);
-      // Return a recipe with error information instead of throwing
-      const errorRecipe = {
-        title: "Recipe Generation Error",
-        description: "Invalid response from OpenAI API",
-        ingredients: [
-          { 
-            item: "Recipe generation failed", 
-            qty_imperial: 0, 
-            unit_imperial: "", 
-            qty_metric: 0, 
-            unit_metric: ""
+    // Make the request to OpenAI
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // Updated to use latest available model
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional chef and recipe developer. Your task is to generate a complete recipe in JSON format following the user's instructions exactly."
+          },
+          {
+            role: "user",
+            content: prompt
           }
         ],
-        steps: ["Failed to generate a recipe. Please try again with different ingredients."],
-        error_message: "Invalid response from OpenAI API"
-      };
+        temperature: 0.7,
+        max_tokens: 2000,
+        response_format: { type: "json_object" }
+      }),
+      signal: abortController.signal
+    });
+    
+    // Clear the timeout since the request completed
+    clearTimeout(timeoutId);
+    
+    const completionTime = Date.now() - startTime;
+    console.log(`OpenAI API request completed in ${completionTime}ms with status: ${response.status}`);
+    
+    // Handle non-successful responses
+    if (!response.ok) {
+      let errorText;
+      try {
+        const errorData = await response.json();
+        errorText = JSON.stringify(errorData);
+      } catch (e) {
+        errorText = await response.text();
+      }
       
-      return new Response(JSON.stringify(errorRecipe), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error(`OpenAI API error: ${response.status} - ${errorText}`);
+      
+      return new Response(
+        JSON.stringify({
+          error: "Recipe generation service error",
+          details: `OpenAI API returned status ${response.status}: ${errorText}`,
+          status: response.status,
+          debug_info: debugInfo
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
-    const json = response.choices[0].message.content;
-    console.log("OpenAI raw response length:", json.length);
-    console.log("OpenAI raw response preview (first 300 chars):", json.substring(0, 300));
+    // Parse the response
+    const data = await response.json();
     
-    // Validate the returned JSON
+    if (!data.choices || data.choices.length === 0 || !data.choices[0].message || !data.choices[0].message.content) {
+      console.error("Unexpected OpenAI API response format:", data);
+      return new Response(
+        JSON.stringify({
+          error: "Invalid response from recipe generation service",
+          details: "The AI service returned an invalid response format",
+          debug_info: debugInfo
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Extract and parse the recipe JSON
+    const recipeJson = data.choices[0].message.content;
+    console.log("OpenAI API returned recipe JSON (first 200 chars):", recipeJson.substring(0, 200));
+    
     let recipe;
     try {
-      recipe = JSON.parse(json);
-    } catch (parseError) {
-      console.error("Error parsing OpenAI response as JSON:", parseError);
-      // Return a recipe with error information instead of throwing
-      const errorRecipe = {
-        title: "Recipe Format Error",
-        description: "Could not parse recipe format",
-        ingredients: [
-          { 
-            item: "Recipe formatting failed", 
-            qty_imperial: 0, 
-            unit_imperial: "", 
-            qty_metric: 0, 
-            unit_metric: ""
-          }
-        ],
-        steps: ["Failed to parse the recipe format. Please try again."],
-        error_message: "Invalid JSON returned from OpenAI API"
-      };
+      recipe = JSON.parse(recipeJson);
+    } catch (err) {
+      console.error("Error parsing recipe JSON:", err);
+      console.log("Raw recipe text:", recipeJson);
       
-      return new Response(JSON.stringify(errorRecipe), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Invalid recipe format",
+          details: "Could not parse the generated recipe as valid JSON",
+          raw_recipe: recipeJson.substring(0, 500) + "...",
+          debug_info: debugInfo
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
-    // Simple validation with fallbacks for missing fields
-    if (!recipe.title) {
-      recipe.title = `${params.safeMain} Recipe`;
+    // Add metadata to the recipe
+    recipe.generated_at = new Date().toISOString();
+    recipe.generation_time_ms = completionTime;
+    recipe.servings = params.servings || 2;
+    
+    // Return the recipe as JSON
+    return new Response(
+      JSON.stringify(recipe),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+    
+  } catch (error: any) {
+    const completionTime = Date.now() - startTime;
+    console.error(`Error generating recipe with OpenAI after ${completionTime}ms:`, error);
+    
+    // Check if it's an abort error
+    if (error.name === "AbortError") {
+      return new Response(
+        JSON.stringify({
+          error: "Recipe generation timed out",
+          details: "The recipe generation request took too long and was aborted",
+          debug_info: debugInfo
+        }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
     
-    if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-      recipe.ingredients = [
-        { 
-          item: params.safeMain || "Main ingredient",
-          qty_imperial: 1, 
-          unit_imperial: "serving", 
-          qty_metric: 1, 
-          unit_metric: "serving"
-        }
-      ];
-    }
-    
-    if (!Array.isArray(recipe.steps) || recipe.steps.length < 3) {
-      recipe.steps = [
-        "Prepare the ingredients according to your preference",
-        "Combine ingredients using your preferred cooking method",
-        "Serve and enjoy!"
-      ];
-    }
-    
-    // Normalize fields to ensure consistency between old and new formats
-    recipe.instructions = recipe.steps; // Add instructions alias for Build compatibility
-    recipe.tagline = recipe.description; // Add tagline alias for Build compatibility
-    recipe.prep_time_min = recipe.prepTime; // Ensure both time formats exist
-    recipe.cook_time_min = recipe.cookTime; // Ensure both time formats exist
-    recipe.servings = params.safeServings || 4;
-    
-    // Log number of tokens used for debugging
-    if (response.usage) {
-      console.log("Token usage:", {
-        prompt_tokens: response.usage.prompt_tokens,
-        completion_tokens: response.usage.completion_tokens,
-        total_tokens: response.usage.total_tokens
-      });
-    }
-    
-    return new Response(JSON.stringify(recipe), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-    
-  } catch (openaiError: any) {
-    console.error("OpenAI API error:", openaiError);
-    
-    // Create a usable recipe with error information embedded
-    let errorMessage = "Error generating recipe";
-    let errorDetails = openaiError.message || "Unknown OpenAI error";
-    
-    // Check for common OpenAI error patterns
-    if (errorDetails.includes("401")) {
-      errorMessage = "Recipe service configuration error";
-      errorDetails = "API authentication error";
-    } else if (errorDetails.includes("429")) {
-      errorMessage = "Recipe service is busy";
-      errorDetails = "Our AI is experiencing high demand. Please try again in a few minutes.";
-    } else if (errorDetails.includes("500")) {
-      errorMessage = "Recipe service error";
-      errorDetails = "Internal service error. Please try again later.";
-    } else if (errorDetails.includes("400")) {
-      errorMessage = "Invalid recipe request";
-      errorDetails = "There was an issue with your recipe request. Please simplify and try again.";
-    }
-    
-    const errorRecipe = {
-      title: "Recipe Generation Issue",
-      description: errorMessage,
-      ingredients: [
-        { 
-          item: "Recipe generation failed", 
-          qty_imperial: 0, 
-          unit_imperial: "", 
-          qty_metric: 0, 
-          unit_metric: ""
-        }
-      ],
-      steps: [
-        "There was a technical issue while generating your recipe: " + errorMessage,
-        "Please try again with different ingredients or later"
-      ],
-      instructions: [
-        "There was a technical issue while generating your recipe: " + errorMessage,
-        "Please try again with different ingredients or later"
-      ],
-      error_message: errorMessage,
-      servings: 2
-    };
-    
-    return new Response(JSON.stringify(errorRecipe), {
-      // Return with status 200 so frontend can handle it more gracefully
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Handle general errors
+    return new Response(
+      JSON.stringify({
+        error: "Recipe generation failed",
+        details: error.message || String(error),
+        debug_info: debugInfo
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 }
