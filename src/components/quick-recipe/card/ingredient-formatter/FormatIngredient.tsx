@@ -34,8 +34,11 @@ export const formatIngredientWithMarkdown = (ingredient: Ingredient, unitSystem:
     
     // Find and highlight the item text
     if (itemText) {
-      // Make sure we don't replace partial words
-      const regex = new RegExp(`\\b${itemText}\\b`, 'i');
+      // Escape special regex characters before creating the regex
+      const safeItemText = itemText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Make sure we don't replace partial words by using word boundaries
+      const regex = new RegExp(`\\b${safeItemText}\\b`, 'i');
       const result = formatted.replace(regex, `**${itemText}**`);
       return result;
     }
