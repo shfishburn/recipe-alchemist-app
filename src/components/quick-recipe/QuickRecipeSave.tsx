@@ -11,7 +11,6 @@ const FIELD_MAPPINGS = {
   prepTime: 'prep_time_min',
   cookTime: 'cook_time_min',
   cookingTip: 'cooking_tip',
-  nutritionHighlight: 'nutrition_highlight',
   flavorTags: 'flavor_tags',
   scienceNotes: 'science_notes',
   steps: 'instructions', // Map steps to instructions (they're the same content)
@@ -35,8 +34,6 @@ const VALID_DB_FIELDS = [
   'dietary',
   'flavor_tags',
   'science_notes',
-  'nutritionHighlight',
-  'nutrition_highlight',
   'chef_notes',
   'image_url',
   'reasoning',
