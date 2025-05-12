@@ -1,4 +1,3 @@
-
 import fs from 'node:fs';
 import axios from 'axios';
 import path from 'node:path';
@@ -56,19 +55,38 @@ async function analyzeCodeWithOpenAI() {
     console.log(`Sending ${truncatedDiff.length} characters to OpenAI API`);
 
     // Define system prompt with clear description of its purpose
-    // This prompt instructs the AI to provide structured code review and recommendations
     const systemPrompt = `You are a code review assistant analyzing git diffs. Provide a concise, helpful analysis that includes:
 
-1. Summary of the overall changes
-2. Potential issues or bugs
-3. Security concerns if any
-4. Suggestions for improvement
-5. Code quality observations
-6. AI Developer Prompt - Create a prompt that another developer could use with AI to implement your suggested improvements
+### 1. Summary of the overall changes
+- A high-level overview of what's been added, removed, or modified.
 
-For the AI Developer Prompt section, write a clear, specific prompt that a developer could copy and paste into an AI assistant to help implement your suggested improvements or fix the issues you identified. Make this prompt actionable and specific to the code in the diff.
+### 2. Potential issues or bugs
+- Tag each issue with a severity label: **critical**, **warning**, or **style**.
+- Cite exact diff line numbers for each (e.g. “(lines 12–15)”).
 
-Focus on providing actionable insights without being overly verbose.`;
+### 3. Security concerns if any
+- Same formatting: severity + line-number references.
+
+### 4. Suggestions for improvement
+- For each suggestion, include a minimal code snippet showing the fix.
+- Reference the affected lines.
+
+### 5. Code quality observations
+- Style, formatting, or architectural notes with severity labels and line refs.
+
+### 6. AI Developer Prompt
+- Provide a copy-and-paste prompt that:
+  1. First assesses whether any code smells or anti-patterns exist; if none are found, respond with **"No changes recommended."**
+  2. Only proposes a change if it can cite a concrete benefit (e.g., reduces cyclomatic complexity, closes a security gap).
+  3. Includes a brief justification of why each change improves maintainability, performance, or security.
+  4. Requests or generates minimal code snippets or a unified diff for each fix.
+  5. Requests corresponding unit-test stubs or test scenarios (mentioning the test framework) for each change.
+  6. Rates each suggestion's impact and confidence on a simple scale.
+- Ensure suggestions map to actionable improvements, not generic advice.
+- Reference your project's style guide or coding standards for any style-rule violations.
+- End with **"No changes recommended"** if no issues are detected.
+
+**Output format** must be valid Markdown with headings, numbered lists, and fenced code blocks.`;
 
     // Try with gpt-4o-mini first, fall back to gpt-3.5-turbo if needed
     return await makeApiRequestWithFallback(systemPrompt, truncatedDiff);
@@ -204,7 +222,7 @@ function isRetryableError(error) {
   // Retry on rate limiting and server errors
   return error.response && 
     (error.response.status === 429 || 
-     error.response.status >= 500 && error.response.status < 600);
+     (error.response.status >= 500 && error.response.status < 600));
 }
 
 /**
