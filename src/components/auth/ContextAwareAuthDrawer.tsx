@@ -1,156 +1,132 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { AuthForm } from '@/components/auth/AuthForm';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { useAuthContext } from '@/hooks/use-auth-context';
-import { useToast } from '@/hooks/use-toast';
-import { useMobile } from '@/hooks/use-mobile';
+import { BookOpen, ChefHat, LogIn, UserPlus } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 
-/**
- * ContextAwareAuthDrawer provides a responsive authentication interface
- * that adapts to different contexts (recipe saving, general login, etc.)
- * and device types (mobile vs desktop)
- */
-export const ContextAwareAuthDrawer: React.FC = () => {
-  const [showAuth, setShowAuth] = useState(false);
-  const { toast } = useToast();
-  const isMobile = useMobile();
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Access auth context information
-  const {
-    context,
-    returnPath,
-    formData,
-    recipe,
-    clearContext
-  } = useAuthContext();
+export function ContextAwareAuthPrompt() {
+  const { open, toggle } = useAuthDrawer();
+  const { context, clearContext } = useAuthContext();
+  const [showDialog, setShowDialog] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
-  // Show auth interface when context is set
-  useEffect(() => {
-    if (context) {
-      setShowAuth(true);
-    }
-  }, [context]);
-
-  // Handle closing of the auth interface
-  const handleClose = () => {
-    setShowAuth(false);
-    clearContext();
-  };
-
-  // Handle successful authentication
-  const handleAuthSuccess = () => {
-    // Close the auth interface
-    setShowAuth(false);
-    
-    // Redirect or perform context-specific actions
-    if (returnPath) {
-      navigate(returnPath);
-    }
-    
-    // Show success toast based on context
-    if (context === 'recipe-save') {
-      toast({
-        title: "Authentication successful!",
-        description: "You can now save your recipe.",
-        variant: "success"
-      });
-    } else {
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
-        variant: "success"
-      });
-    }
-    
-    // Clear the context after processing
-    clearContext();
-  };
-
-  // Handle "Continue as Guest" option
-  const handleContinueAsGuest = () => {
-    setShowAuth(false);
-    
-    toast({
-      title: "Continuing as guest",
-      description: context === 'recipe-save' 
-        ? "Your recipe won't be saved to your account." 
-        : "You can sign in later from your profile.",
-      variant: "default"
-    });
-    
-    clearContext();
-  };
-
-  // If there's no context, don't render anything
+  // Only show if we have an auth context set
   if (!context) {
     return null;
   }
 
-  // Content common to both Dialog and Drawer
-  const authContent = (
-    <div className="flex flex-col space-y-6 py-2">
-      {/* Context-aware heading */}
-      <div className="flex flex-col space-y-2 text-center">
-        <h2 className="text-xl font-semibold tracking-tight">
-          {context === 'recipe-save'
-            ? "Sign in to save your recipe"
-            : "Welcome to Recipe Alchemy"}
-        </h2>
-        <p className="text-muted-foreground">
-          {context === 'recipe-save'
-            ? "Your account lets you save recipes, create shopping lists, and more."
-            : "Sign in to access all features including saved recipes and meal plans."}
-        </p>
-      </div>
-      
-      {/* Auth form with success callback */}
-      <AuthForm onAuthSuccess={handleAuthSuccess} />
-      
-      {/* Continue as guest option */}
-      {context === 'recipe-save' && (
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or
-            </span>
-          </div>
-        </div>
-      )}
-      
-      {context === 'recipe-save' && (
-        <Button 
-          variant="outline" 
-          onClick={handleContinueAsGuest}
-        >
-          Continue as guest
-        </Button>
-      )}
-    </div>
-  );
+  const handleLogin = () => {
+    // Close the dialog/drawer and open the auth drawer
+    setShowDialog(false);
+    open();
+  };
+
+  const handleContinueAsGuest = () => {
+    // Clear the auth context and close the dialog/drawer
+    clearContext();
+    setShowDialog(false);
+  };
+
+  // Different content based on context
+  const getContextContent = () => {
+    switch (context) {
+      case 'recipe-save':
+        return {
+          title: "Sign In to Save Your Recipe",
+          description: "Create an account to save recipes, get personalized recommendations, and access all features.",
+          icon: <ChefHat className="h-12 w-12 text-recipe-green mb-4" />,
+        };
+      default:
+        return {
+          title: "Sign In to Continue",
+          description: "Create an account or sign in to access all features.",
+          icon: <BookOpen className="h-12 w-12 text-primary mb-4" />,
+        };
+    }
+  };
+
+  const { title, description, icon } = getContextContent();
 
   // Use Dialog for desktop and Drawer for mobile
-  return isMobile ? (
-    <Drawer open={showAuth} onOpenChange={setShowAuth}>
-      <DrawerContent className="px-4 pb-6">
-        {authContent}
-      </DrawerContent>
-    </Drawer>
-  ) : (
-    <Dialog open={showAuth} onOpenChange={setShowAuth}>
-      <DialogContent className="sm:max-w-[425px]">
-        {authContent}
-      </DialogContent>
-    </Dialog>
-  );
-};
+  if (isMobile) {
+    return (
+      <>
+        <Drawer open={showDialog} onOpenChange={setShowDialog}>
+          <DrawerContent className="px-4">
+            <DrawerHeader className="text-center">
+              <div className="flex justify-center">{icon}</div>
+              <DrawerTitle>{title}</DrawerTitle>
+              <DrawerDescription>{description}</DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4">
+              <div className="flex flex-col gap-3">
+                <Button onClick={handleLogin} className="w-full flex items-center justify-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  <span>Sign In</span>
+                </Button>
+                <Button onClick={handleLogin} variant="outline" className="w-full flex items-center justify-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  <span>Create Account</span>
+                </Button>
+              </div>
+            </div>
+            <DrawerFooter>
+              <Button variant="ghost" onClick={handleContinueAsGuest}>
+                Continue as Guest
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+        <AuthDrawer open={open} setOpen={toggle} />
+      </>
+    );
+  }
 
-export default ContextAwareAuthDrawer;
+  return (
+    <>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center">{icon}</div>
+            <DialogTitle className="text-center">{title}</DialogTitle>
+            <DialogDescription className="text-center">
+              {description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button onClick={handleLogin} className="w-full flex items-center justify-center gap-2">
+              <LogIn className="h-4 w-4" />
+              <span>Sign In</span>
+            </Button>
+            <Button onClick={handleLogin} variant="outline" className="w-full flex items-center justify-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              <span>Create Account</span>
+            </Button>
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button variant="ghost" onClick={handleContinueAsGuest}>
+              Continue as Guest
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <AuthDrawer open={open} setOpen={toggle} />
+    </>
+  );
+}
+
+export function showAuthPrompt(context: 'recipe-save' | 'general' = 'general', options = {}) {
+  // Get auth context store
+  const { setContext } = useAuthContext.getState();
+  
+  // Set the context
+  setContext(context, options);
+  
+  // Show dialog/drawer after setting context
+  document.dispatchEvent(new CustomEvent('show-auth-prompt'));
+}
