@@ -14,10 +14,20 @@ interface ScienceNotesProps {
 }
 
 export function ScienceNotes({ recipe, isOpen, onToggle }: ScienceNotesProps) {
-  const hasNotes = recipe.science_notes && Array.isArray(recipe.science_notes) && recipe.science_notes.length > 0;
+  // More robust check for science notes availability
+  const hasNotes = recipe.science_notes && 
+                  Array.isArray(recipe.science_notes) && 
+                  recipe.science_notes.length > 0 &&
+                  recipe.science_notes.some(note => typeof note === 'string' && note.trim() !== '');
+                  
   const [expanded, setExpanded] = useState<boolean>(false);
   
   if (!hasNotes) return null;
+
+  // Filter out any invalid notes
+  const validNotes = recipe.science_notes.filter(note => 
+    typeof note === 'string' && note.trim() !== ''
+  );
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
@@ -48,25 +58,27 @@ export function ScienceNotes({ recipe, isOpen, onToggle }: ScienceNotesProps) {
         </CardHeader>
         <CollapsibleContent>
           <CardContent>
-            {expanded ? (
+            {validNotes.length === 0 ? (
+              <p className="text-muted-foreground italic">No science notes available</p>
+            ) : expanded ? (
               <ul className="list-disc pl-4 space-y-2">
-                {recipe.science_notes.map((note, index) => (
+                {validNotes.map((note, index) => (
                   <li key={index} className="text-muted-foreground">{note}</li>
                 ))}
               </ul>
             ) : (
               <ul className="list-disc pl-4 space-y-2">
-                {recipe.science_notes.slice(0, 3).map((note, index) => (
+                {validNotes.slice(0, 3).map((note, index) => (
                   <li key={index} className="text-muted-foreground">{note}</li>
                 ))}
-                {recipe.science_notes.length > 3 && (
+                {validNotes.length > 3 && (
                   <li className="text-sm mt-2">
                     <Button 
                       variant="link" 
                       onClick={() => setExpanded(true)}
                       className="p-0 h-auto"
                     >
-                      Show {recipe.science_notes.length - 3} more notes...
+                      Show {validNotes.length - 3} more notes...
                     </Button>
                   </li>
                 )}

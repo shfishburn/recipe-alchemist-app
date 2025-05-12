@@ -9,13 +9,17 @@ import { isValidUUID } from '@/utils/slug-utils';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { BreadcrumbNav, type BreadcrumbItem } from '@/components/ui/breadcrumb-nav';
 import { PageContainer } from '@/components/ui/containers';
+import { toast } from 'sonner';
 
 const RecipeDetail = () => {
-  const { id: recipeIdOrSlug } = useParams();
+  // Use slug instead of id as parameter name to match route definition
+  const { slug: recipeIdOrSlug } = useParams();
   const navigate = useNavigate();
   
   // Extract ID based on whether it's a UUID or slug
   const isUuid = recipeIdOrSlug ? isValidUUID(recipeIdOrSlug) : false;
+  
+  console.log('Recipe detail page loaded with parameter:', recipeIdOrSlug, 'isUUID:', isUuid);
   
   // Fetch recipe data using the ID or slug
   const { data: recipe, isLoading, error, refetch } = useRecipeDetail(recipeIdOrSlug);
@@ -23,6 +27,7 @@ const RecipeDetail = () => {
   // Redirect to the slug URL if we have a recipe but accessed via UUID
   useEffect(() => {
     if (recipe?.slug && isUuid && recipeIdOrSlug !== recipe.slug) {
+      console.log('Redirecting from UUID to slug URL:', recipe.slug);
       navigate(`/recipes/${recipe.slug}`, { replace: true });
     }
   }, [recipe, isUuid, recipeIdOrSlug, navigate]);
@@ -37,7 +42,7 @@ const RecipeDetail = () => {
     };
   }, [recipe]);
   
-  console.log('Recipe Detail rendering:', {
+  console.log('Recipe Detail rendering state:', {
     isLoading,
     hasError: !!error,
     recipe: recipe ? recipe.id : null,
@@ -47,6 +52,13 @@ const RecipeDetail = () => {
   // Generic error handler for unexpected errors
   const handleError = () => {
     console.log('Recipe detail page error:', error);
+    
+    // Show error toast
+    if (error instanceof Error) {
+      toast.error(`Failed to load recipe: ${error.message}`);
+    } else {
+      toast.error('Failed to load recipe');
+    }
     
     // Handle React.Children.only errors specifically
     if (error instanceof Error && error.message.includes('React.Children.only')) {

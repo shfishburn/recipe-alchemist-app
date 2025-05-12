@@ -9,6 +9,7 @@ import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import type { Recipe } from '@/types/recipe';
 import { isValidUUID } from '@/utils/slug-utils';
+import { toast } from 'sonner';
 
 interface RecipeDetailContentProps {
   recipe: Recipe;
@@ -30,7 +31,7 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   
   const [localRecipe, setLocalRecipe] = useState<Recipe>(recipe);
   // Fix: Pass the complete recipe ID without splitting it
-  const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id) ? id : '');
+  const { updateRecipe } = useRecipeUpdates(id && isValidUUID(id) ? id : recipe.id);
   const { hasAnalysisData, scienceNotes, refetch: refetchScience } = useRecipeScience(recipe);
 
   // Add effect to sync recipe data
@@ -44,6 +45,8 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     const hasNewScienceNotes = hasAnalysisData && 
       scienceNotes.length > 0 && 
       (!recipe.science_notes || 
+        !Array.isArray(recipe.science_notes) ||
+        recipe.science_notes.length !== scienceNotes.length ||
         JSON.stringify(recipe.science_notes) !== JSON.stringify(scienceNotes));
     
     if (hasNewScienceNotes) {
@@ -55,10 +58,12 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
         {
           onSuccess: () => {
             console.log('Science notes successfully persisted');
+            toast.success('Recipe analysis updated');
             refetch();
           },
           onError: (error) => {
             console.error('Failed to persist science notes:', error);
+            toast.error('Failed to update recipe analysis');
           }
         }
       );
@@ -66,11 +71,18 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
   }, [hasAnalysisData, scienceNotes, recipe.science_notes, updateRecipe, refetch]);
 
   // Unified recipe update handler
-  const handleRecipeUpdate = (updatedRecipe: Recipe) => {
-    setLocalRecipe({
+  const handleRecipeUpdate = (updatedRecipe: Partial<Recipe>) => {
+    // Create a new recipe object with the updates
+    const newRecipe = {
       ...localRecipe,
-      ...updatedRecipe
-    });
+      ...updatedRecipe,
+      // Ensure science_notes is always an array
+      science_notes: Array.isArray(updatedRecipe.science_notes) 
+        ? updatedRecipe.science_notes 
+        : localRecipe.science_notes
+    };
+    
+    setLocalRecipe(newRecipe);
     
     // Only update fields that have changed to avoid unnecessary updates
     const changedFields: Partial<Recipe> = {};
@@ -89,11 +101,17 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
     
     // Only update if there are changes
     if (Object.keys(changedFields).length > 0) {
+      console.log('Updating recipe with fields:', Object.keys(changedFields));
       updateRecipe.mutate(changedFields, {
         onSuccess: () => {
+          toast.success('Recipe updated successfully');
           refetch();
           // Also refresh science data to ensure it's up to date
           refetchScience();
+        },
+        onError: (error) => {
+          toast.error('Failed to update recipe');
+          console.error('Recipe update error:', error);
         }
       });
     }
