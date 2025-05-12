@@ -1,68 +1,99 @@
 
-import React, { useState } from 'react';
-import { QuickRecipe } from '@/types/quick-recipe';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RecipeActionButtons } from '@/components/quick-recipe/card/RecipeActionButtons';
-import { QuickRecipeIngredients } from '@/components/quick-recipe/QuickRecipeIngredients';
-import { QuickRecipeInstructions } from '@/components/quick-recipe/QuickRecipeInstructions';
+import React, { useState, useEffect } from 'react';
+import { QuickRecipe } from '@/hooks/use-quick-recipe';
+import { QuickRecipeCard } from '@/components/quick-recipe/QuickRecipeCard';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
-import { toast } from '@/hooks/use-toast';
+import { QuickRecipeModifier } from '@/components/quick-recipe/QuickRecipeModifier'; 
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Utensils, MessagesSquare } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
 }
 
 export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
-  const [activeTab, setActiveTab] = useState('ingredients');
   const { saveRecipe, isSaving } = useQuickRecipeSave();
+  const [currentRecipe, setCurrentRecipe] = useState<QuickRecipe>(recipe);
+  const [activeTab, setActiveTab] = useState<string>('recipe');
+  const { session } = useAuth();
   
-  const handleSave = async () => {
-    try {
-      await saveRecipe(recipe);
-    } catch (error) {
-      // Error handling is done in the hook
+  // Check for URL hash to determine initial tab and handle hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      // If URL has #modify, open the modify tab
+      if (window.location.hash === '#modify') {
+        setActiveTab('modify');
+      }
+    };
+    
+    // Set initial tab based on hash
+    handleHashChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
+  // Update URL hash when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    // Update URL hash without triggering a page reload
+    if (value === 'modify') {
+      window.history.replaceState(null, '', `${window.location.pathname}#modify`);
+    } else {
+      window.history.replaceState(null, '', window.location.pathname);
     }
   };
 
+  const handleSave = async () => {
+    toast("Saving your recipe...");
+    await saveRecipe(currentRecipe);
+  };
+
+  const handleModifiedRecipe = (modifiedRecipe: QuickRecipe) => {
+    setCurrentRecipe(modifiedRecipe);
+  };
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-2xl font-serif text-center">
-          {recipe.title}
-        </CardTitle>
+    <div className="space-y-4">
+      <Tabs 
+        defaultValue="recipe" 
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="recipe" className="flex items-center gap-1.5">
+            <Utensils className="h-4 w-4" />
+            Recipe
+          </TabsTrigger>
+          <TabsTrigger value="modify" className="flex items-center gap-1.5">
+            <MessagesSquare className="h-4 w-4" />
+            Modify Recipe
+          </TabsTrigger>
+        </TabsList>
         
-        {recipe.description && (
-          <p className="text-sm text-muted-foreground text-center mt-1">
-            {recipe.description}
-          </p>
-        )}
-      </CardHeader>
-      
-      <CardContent>
-        <Tabs 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="ingredients">Ingredients</TabsTrigger>
-            <TabsTrigger value="instructions">Instructions</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="ingredients" className="mt-4">
-            <QuickRecipeIngredients ingredients={recipe.ingredients} />
-          </TabsContent>
-          
-          <TabsContent value="instructions" className="mt-4">
-            <QuickRecipeInstructions 
-              instructions={recipe.instructions || recipe.steps}
-            />
-          </TabsContent>
-        </Tabs>
+        <TabsContent value="recipe" className="pt-4">
+          <QuickRecipeCard
+            recipe={currentRecipe}
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
+        </TabsContent>
         
-        <RecipeActionButtons onSave={handleSave} isSaving={isSaving} />
-      </CardContent>
-    </Card>
+        <TabsContent value="modify" className="pt-4">
+          <QuickRecipeModifier 
+            recipe={recipe}
+            onModifiedRecipe={handleModifiedRecipe}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

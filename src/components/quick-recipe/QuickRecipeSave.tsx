@@ -25,20 +25,8 @@ export function useQuickRecipeSave() {
         user_id: session.user.id
       };
       
-      // Map fields to match database schema
-      // Transform prepTime/cookTime to prep_time_min/cook_time_min
-      const transformedRecipe = {
-        ...recipeWithUser,
-        // Map the time fields to database column names
-        prep_time_min: recipeWithUser.prepTime || recipeWithUser.prep_time_min,
-        cook_time_min: recipeWithUser.cookTime || recipeWithUser.cook_time_min,
-        // Remove fields that don't exist in the database schema
-        prepTime: undefined,
-        cookTime: undefined,
-      };
-      
       // Serialize the recipe to handle complex objects and ensure JSON compatibility
-      const serializedRecipe = JSON.parse(JSON.stringify(transformedRecipe));
+      const serializedRecipe = JSON.parse(JSON.stringify(recipeWithUser));
       
       // Implement robust circuit-breaker style retry logic
       const maxRetries = 3;
