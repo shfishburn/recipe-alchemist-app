@@ -6,20 +6,13 @@ import { RecipeTimeInfo } from './card/RecipeTimeInfo';
 import { RecipeIngredients } from './card/RecipeIngredients';
 import { RecipeSteps } from './card/RecipeSteps';
 import { RecipeHighlights } from './card/RecipeHighlights';
-import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
 
 interface QuickRecipeCardProps {
   recipe: QuickRecipe;
-  onSave: () => void;
-  isSaving?: boolean;
 }
 
-export function QuickRecipeCard({ 
-  recipe, 
-  onSave, 
-  isSaving = false 
-}: QuickRecipeCardProps) {
+export function QuickRecipeCard({ recipe }: QuickRecipeCardProps) {
   return (
     <Card className="w-full border-2 border-recipe-green/20">
       <CardHeader className="pb-2">
@@ -44,15 +37,6 @@ export function QuickRecipeCard({
           nutritionHighlight={recipe.nutritionHighlight} 
           cookingTip={recipe.cookingTip} 
         />
-        
-        {/* Action buttons */}
-        <RecipeActionButtons 
-          onSave={onSave}
-          isSaving={isSaving}
-        />
-        
-        {/* Debug JSON Section */}
-        <RecipeDebugSection recipe={recipe} />
       </CardContent>
     </Card>
   );

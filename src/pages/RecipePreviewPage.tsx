@@ -1,5 +1,4 @@
-
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
@@ -19,11 +18,21 @@ const RecipePreviewPage: React.FC = () => {
   
   const navigate = useNavigate();
   const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
+  const [debugMode, setDebugMode] = useState(false); // Add state for debug mode
 
   const handleSaveRecipe = async () => {
-    if (!recipe) return;
+    if (!recipe) {
+      toast.error("Cannot save: Recipe data is missing");
+      return;
+    }
 
     try {
+      // Validate recipe has required fields
+      if (!recipe.title || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+        toast.error("Cannot save: Recipe is missing required information");
+        return;
+      }
+
       const savedData = await saveRecipe(recipe);
       
       if (savedData) {
@@ -33,10 +42,19 @@ const RecipePreviewPage: React.FC = () => {
           // Optional: navigate to the saved recipe detail page
           // navigate(`/recipes/${savedData.slug}`);
         }
+      } else {
+        // Handle case where savedData is falsy but no error was thrown
+        toast.warning("Recipe was not saved properly. Please try again.");
       }
     } catch (error) {
       console.error("Failed to save recipe:", error);
-      toast.error("Failed to save recipe. Please try again.");
+      // More detailed error feedback based on error type
+      if (error instanceof Error) {
+        // Use actual error message if available
+        toast.error(`Failed to save recipe: ${error.message || "Please try again."}`);
+      } else {
+        toast.error("Failed to save recipe. Please try again.");
+      }
     }
   };
 
@@ -81,6 +99,9 @@ const RecipePreviewPage: React.FC = () => {
     }
   }, [isLoading, navigate]);
   
+  // Toggle debug mode function
+  const toggleDebugMode = () => setDebugMode(prev => !prev);
+  
   const handleBackToForm = () => {
     navigate('/quick-recipe');
   };
@@ -102,7 +123,17 @@ const RecipePreviewPage: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to Recipe Form
           </Button>
-          <h1 className="text-2xl font-bold">Your Generated Recipe</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">Your Generated Recipe</h1>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={toggleDebugMode} 
+              className="text-xs"
+            >
+              {debugMode ? 'Hide Debug' : 'Show Debug'}
+            </Button>
+          </div>
         </div>
       
         <div className="space-y-8">
@@ -110,6 +141,7 @@ const RecipePreviewPage: React.FC = () => {
             recipe={recipe} 
             onSave={handleSaveRecipe}
             isSaving={isSaving}
+            debugMode={debugMode}
           />
           <QuickRecipeRegeneration 
             formData={formData} 
