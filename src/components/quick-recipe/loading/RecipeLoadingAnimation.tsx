@@ -6,10 +6,22 @@ interface RecipeLoadingAnimationProps {
   progress?: number;
 }
 
+/**
+ * Recipe loading animation component
+ * @param {object} props - Component props
+ * @param {number} [props.progress=0] - Loading progress (0-100)
+ * @returns {JSX.Element} Recipe loading animation
+ */
 export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationProps) {
+  // Validate the progress range
+  const validProgress = Math.max(0, Math.min(100, progress));
+  if (progress !== validProgress) {
+    console.warn(`Progress should be between 0 and 100, received: ${progress}. Clamping to ${validProgress}.`);
+  }
+  
   // Create bubbles with deterministic properties
   const numBubbles = 6;
-  const showBubbles = progress > 30;
+  const showBubbles = validProgress > 30;
   
   const bubbles = Array.from({ length: numBubbles }).map((_, index) => {
     // Use deterministic calculations for consistent but varied bubbles
@@ -53,7 +65,7 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
           <path 
             d="M72 40H24V72C24 75.3137 26.6863 78 30 78H66C69.3137 78 72 75.3137 72 72V40Z" 
             fill="#D1D5DB" 
-            className={progress > 10 ? "animate-pulse" : ""}
+            className={validProgress > 10 ? "animate-pulse" : ""}
           />
           
           {/* Pot rim */}
@@ -103,11 +115,11 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
       </div>
       
       {/* Progress indicator */}
-      {progress > 0 && (
+      {validProgress > 0 && (
         <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
           <div 
             className="bg-recipe-green h-1.5 rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${validProgress}%` }}
           />
         </div>
       )}
