@@ -24,7 +24,10 @@ export function useRecipeSaveState() {
    */
   const navigateToSavedRecipe = useCallback(() => {
     if (savedSlug) {
+      console.log('Navigating to saved recipe:', savedSlug);
       navigate(`/recipes/${savedSlug}`);
+    } else {
+      console.warn('Cannot navigate: No saved slug available');
     }
   }, [navigate, savedSlug]);
 
@@ -35,6 +38,7 @@ export function useRecipeSaveState() {
     setSaveSuccess(true);
     if (slug) {
       setSavedSlug(slug);
+      console.log('Recipe saved with slug:', slug);
     }
   }, []);
 

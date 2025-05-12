@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -34,6 +33,19 @@ const RecipePreviewPage: React.FC = () => {
     navigateToSavedRecipe
   } = useRecipeSaveState();
 
+  // Add automatic navigation effect when save is successful
+  useEffect(() => {
+    if (saveSuccess && savedSlug) {
+      // Add a small delay to allow the user to see the success state
+      const navigationTimer = setTimeout(() => {
+        console.log('Auto-navigating to saved recipe:', savedSlug);
+        navigateToSavedRecipe();
+      }, 800); // 800ms delay for better UX
+      
+      return () => clearTimeout(navigationTimer);
+    }
+  }, [saveSuccess, savedSlug, navigateToSavedRecipe]);
+
   const handleSaveRecipe = async () => {
     if (!recipe) {
       toast.error("Cannot save: Recipe data is missing");
@@ -57,7 +69,7 @@ const RecipePreviewPage: React.FC = () => {
         // Use the centralized state management
         setSaveSuccess(savedData.slug);
         
-        // Show success toast with navigation action button
+        // Show success toast with navigation action button (as backup for automatic navigation)
         toast.success("Recipe saved successfully!", {
           duration: 3000,
           action: {

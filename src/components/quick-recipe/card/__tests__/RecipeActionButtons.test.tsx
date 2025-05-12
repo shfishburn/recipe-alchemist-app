@@ -98,25 +98,4 @@ describe('RecipeActionButtons', () => {
       expect(mockOnSave).toHaveBeenCalledTimes(1);
     });
   });
-  
-  it('automatically resets saveSuccess after a delay', async () => {
-    jest.useFakeTimers();
-    
-    render(
-      <RecipeActionButtons 
-        recipe={mockRecipe} 
-        onSave={mockOnSave}
-        saveSuccess={true}
-        onResetSaveSuccess={mockResetSaveSuccess}
-      />
-    );
-    
-    jest.advanceTimersByTime(5000);
-    
-    await waitFor(() => {
-      expect(mockResetSaveSuccess).toHaveBeenCalledTimes(1);
-    });
-    
-    jest.useRealTimers();
-  });
 });

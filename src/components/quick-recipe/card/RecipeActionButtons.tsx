@@ -1,5 +1,5 @@
 
-import React, { memo, useEffect, useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
@@ -60,23 +60,6 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
 }: RecipeActionButtonsProps) {
   // Access the toast functionality
   const { toast } = useToast();
-  
-  // Effect to automatically reset success state after delay
-  useEffect(() => {
-    let resetTimer: NodeJS.Timeout | null = null;
-    
-    if (saveSuccess && onResetSaveSuccess) {
-      resetTimer = setTimeout(() => {
-        onResetSaveSuccess();
-      }, 5000); // 5 seconds
-    }
-    
-    return () => {
-      if (resetTimer) {
-        clearTimeout(resetTimer);
-      }
-    };
-  }, [saveSuccess, onResetSaveSuccess]);
   
   /**
    * Handles the save button click
