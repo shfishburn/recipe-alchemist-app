@@ -19,6 +19,32 @@ const diffFilePath = process.env.CHANGES_DIFF || './changes.diff';
 const outputPath = process.env.ANALYSIS_OUTPUT_PATH || 'openai_analysis.txt';
 const openaiApiKey = process.env.OPENAI_API_KEY;
 
+/**
+ * Test connectivity to OpenAI API before analysis
+ */
+async function testOpenAiConnection() {
+  try {
+    console.log('Testing OpenAI API connection...');
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'user', content: 'Respond with "OpenAI API connection successful."' }
+        ],
+        temperature: 0.3,
+        max_tokens: 20
+      },
+      { headers: { Authorization: `Bearer ${openaiApiKey}` } }
+    );
+    console.log('API Test Response:', response.data?.choices?.[0]?.message?.content);
+    return true;
+  } catch (error) {
+    console.error('API Test Error:', sanitizeErrorForLogging(error));
+    return false;
+  }
+}
+
 // Truncates diff content to respect token limits
 function truncateDiff(diff) {
   if (diff.length <= config.diff.maxLength) {
@@ -100,6 +126,15 @@ ${additions} lines added, ${removals} lines removed.
 
 // Main analysis function
 async function analyzeCodeWithOpenAI() {
+  // Test API connectivity before proceeding
+  const apiTestResult = await testOpenAiConnection();
+  if (!apiTestResult) {
+    const msg = 'OpenAI API connection test failed. Check your API key and network connection.';
+    console.error(msg);
+    await writeAnalysis(msg);
+    return msg;
+  }
+
   let diffContent = '';
   try {
     if (!openaiApiKey) {
@@ -124,9 +159,9 @@ async function analyzeCodeWithOpenAI() {
       return 'No significant changes detected to analyze.';
     }
 
-    console.log(`Diff file size: ${diffContent.length} characters`);
+    console.log({ 'Diff size': diffContent.length });
     const truncated = truncateDiff(diffContent);
-    console.log(`Sending ${truncated.length} characters to OpenAI API`);
+    console.log({ 'Truncated length': truncated.length });
 
     const prompt = buildSystemPrompt();
     return await makeApiRequestWithFallback(prompt, truncated, diffContent);
@@ -155,7 +190,7 @@ async function makeApiRequestWithFallback(prompt, truncatedDiff, fullDiff) {
       const category = categorizeError(error);
       console.error(`Model ${model} error (${category.type}): ${sanitized}`);
       if (!category.retryable) throw error;
-      console.log(`Retryable error, trying next model...`);
+      console.log('Retryable error, trying next model...');
     }
   }
 
@@ -172,24 +207,18 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
 
   while (attempts <= config.api.maxRetries) {
     try {
-      if (attempts > 0) {
-        await new Promise(res => setTimeout(res, config.api.retryDelay));
-      }
+      if (attempts > 0) await new Promise(res => setTimeout(res, config.api.retryDelay));
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
-        {
-          model,
-          messages: [
+        { model, messages: [
             { role: 'system', content: prompt },
             { role: 'user', content: `Analyze this git diff and provide a code review:\n\n${truncatedDiff}` }
-          ],
-          temperature: 0.3,
-          max_tokens: 2000
+          ], temperature: 0.3, max_tokens: 2000
         },
         { headers: { Authorization: `Bearer ${openaiApiKey}` } }
       );
 
-      const content = response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message && response.data.choices[0].message.content;
+      const content = response.data?.choices?.[0]?.message?.content;
       if (!content) throw new Error('Unexpected response structure from OpenAI API');
       return content;
     } catch (error) {
