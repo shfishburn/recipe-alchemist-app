@@ -4,11 +4,16 @@ import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
 
 // Helper function to get authentication token
 export const getAuthToken = async (): Promise<string> => {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session?.access_token) {
-    console.warn('No auth token found. User may not be logged in.');
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) {
+      console.warn('No auth token found. User may not be logged in.');
+    }
+    return data.session?.access_token || '';
+  } catch (err) {
+    console.error('Error getting auth token:', err);
+    return '';
   }
-  return data.session?.access_token || '';
 };
 
 // Validate payload before sending to edge function
@@ -33,7 +38,6 @@ const validateRequestPayload = (payload: any): boolean => {
 // Helper function to fetch from edge function directly
 export const fetchFromEdgeFunction = async (payload: any) => {
   try {
-    // Instead of accessing the protected url property, construct the URL properly
     // Use the Supabase project URL and append the function name
     const supabaseProjectUrl = "https://zjyfumqfrtppleftpzjd.supabase.co";
     const url = `${supabaseProjectUrl}/functions/v1/generate-quick-recipe`;
@@ -45,12 +49,16 @@ export const fetchFromEdgeFunction = async (payload: any) => {
       throw new Error('Invalid payload for recipe generation');
     }
     
-    // Call the edge function directly
+    // Get auth token for authenticated requests
+    const token = await getAuthToken();
+    
+    // Call the edge function directly with proper auth headers
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Debug-Info': `direct-fetch-${Date.now()}`,
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
       body: JSON.stringify(payload),
     });
@@ -72,7 +80,6 @@ export const fetchFromEdgeFunction = async (payload: any) => {
     return await response.json();
   } catch (error) {
     console.error('Error calling edge function directly:', error);
-    // REMOVED: markEdgeFunctionUnavailable calls
     throw error;
   }
 };

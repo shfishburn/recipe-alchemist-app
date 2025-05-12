@@ -1,4 +1,3 @@
-
 # A string used to distinguish different Supabase projects on the same host. Defaults to the project reference.
 project_id = "zjyfumqfrtppleftpzjd"
 
@@ -473,6 +472,6 @@ enable_hooks = false
 enabled = false
 
 [functions]
-[functions.modify-quick-recipe]
+# Explicitly set JWT verification for generate-quick-recipe to true
+[functions.generate-quick-recipe]
 verify_jwt = true
-
