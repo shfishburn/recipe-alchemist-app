@@ -123,7 +123,7 @@ export const useRecipeDetail = (idOrSlug?: string) => {
           const recipe: Recipe = {
             id: data.id,
             title: data.title || 'Untitled Recipe',
-            description: data.description || '', // Fix: Use optional chaining
+            description: '', // Field doesn't exist in DB response, set default empty string
             ingredients: ingredients as Ingredient[],
             instructions: Array.isArray(data.instructions) 
               ? data.instructions 
@@ -136,11 +136,11 @@ export const useRecipeDetail = (idOrSlug?: string) => {
             image_url: data.image_url || '',
             cuisine: data.cuisine || '',
             cuisine_category: data.cuisine_category || "Global",
-            tags: data.tags || [], // Fix: Provide default empty array
+            tags: [], // Field doesn't exist in DB response, set default empty array
             user_id: data.user_id,
             created_at: data.created_at || new Date().toISOString(),
             updated_at: data.updated_at || new Date().toISOString(),
-            original_request: data.original_request || '', // Fix: Provide default empty string
+            original_request: '', // Field doesn't exist in DB response, set default empty string
             reasoning: data.reasoning || '',
             tagline: data.tagline || '',
             version_number: data.version_number || 1,
