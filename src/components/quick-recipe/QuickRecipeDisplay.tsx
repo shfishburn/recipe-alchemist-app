@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
-import { QuickRecipeCard } from './QuickRecipeCard'; // Fixed import 
+import { QuickRecipeCard } from './QuickRecipeCard'; 
 import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
 
@@ -9,14 +9,16 @@ interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
   onSave?: () => void;
   isSaving?: boolean;
-  debugMode?: boolean; // Re-added debug mode prop
+  saveSuccess?: boolean;
+  debugMode?: boolean;
 }
 
 export function QuickRecipeDisplay({ 
   recipe, 
   onSave,
   isSaving = false,
-  debugMode = false // Default to false
+  saveSuccess = false,
+  debugMode = false
 }: QuickRecipeDisplayProps) {
   // Enhanced null check and validation
   if (!recipe || typeof recipe !== 'object' || !recipe.title || !Array.isArray(recipe.ingredients)) {
@@ -36,9 +38,9 @@ export function QuickRecipeDisplay({
         recipe={recipe} 
         onSave={onSave} 
         isSaving={isSaving}
+        saveSuccess={saveSuccess}
       />
       
-      {/* Re-added debug section with conditional rendering */}
       {debugMode && <RecipeDebugSection recipe={recipe} />}
     </div>
   );

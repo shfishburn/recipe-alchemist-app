@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -18,7 +19,8 @@ const RecipePreviewPage: React.FC = () => {
   
   const navigate = useNavigate();
   const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
-  const [debugMode, setDebugMode] = useState(false); // Add state for debug mode
+  const [debugMode, setDebugMode] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleSaveRecipe = async () => {
     if (!recipe) {
@@ -36,12 +38,16 @@ const RecipePreviewPage: React.FC = () => {
       const savedData = await saveRecipe(recipe);
       
       if (savedData) {
+        setSaveSuccess(true);
         toast.success("Recipe saved successfully!");
-        // If we have a recipe ID and slug, we could navigate to the detailed view
-        if (savedData.id && savedData.slug) {
-          // Optional: navigate to the saved recipe detail page
-          // navigate(`/recipes/${savedData.slug}`);
-        }
+        
+        // Add a short delay before navigation to allow the toast to be seen
+        setTimeout(() => {
+          // Navigate to the saved recipe detail page if we have id and slug
+          if (savedData.id && savedData.slug) {
+            navigate(`/recipes/${savedData.slug}`);
+          }
+        }, 800); // 800ms delay gives time for the toast to be visible
       } else {
         // Handle case where savedData is falsy but no error was thrown
         toast.warning("Recipe was not saved properly. Please try again.");
@@ -141,6 +147,7 @@ const RecipePreviewPage: React.FC = () => {
             recipe={recipe} 
             onSave={handleSaveRecipe}
             isSaving={isSaving}
+            saveSuccess={saveSuccess}
             debugMode={debugMode}
           />
           <QuickRecipeRegeneration 

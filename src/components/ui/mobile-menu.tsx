@@ -42,7 +42,7 @@ export function MobileMenu() {
 
   return (
     <Sheet>
-      <SheetTrigger>
+      <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="mr-2 p-2 h-10 w-10">
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
@@ -84,12 +84,12 @@ export function MobileMenu() {
           {session ? (
             <>
               <SheetClose asChild>
-                <Button variant="outline" asChild>
-                  <Link to="/profile" className="w-full h-12 justify-start flex items-center">
+                <Link to="/profile" className="w-full">
+                  <Button variant="outline" className="w-full h-12 justify-start">
                     <User className="h-5 w-5 mr-3" />
                     <span>Profile</span>
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </SheetClose>
               <Button 
                 variant="outline" 
