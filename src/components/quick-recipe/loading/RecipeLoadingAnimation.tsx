@@ -33,11 +33,12 @@ export function RecipeLoadingAnimation({ stage = 0, progress = 0 }: RecipeLoadin
   });
   
   // Generate bubbles that appear when cooking progresses
+  // Using deterministic values based on index instead of Math.random()
   const bubbles = Array(6).fill(0).map((_, index) => {
-    const size = 4 + Math.random() * 6;
-    const leftPosition = 30 + (Math.random() * 40);
+    const size = 4 + (index % 3) * 2; // Deterministic size based on index
+    const leftPosition = 30 + (index % 4) * 10; // Deterministic position based on index
     const delay = index * 0.4;
-    const duration = 1.5 + Math.random();
+    const duration = 1.5 + (index % 3) * 0.2; // Deterministic duration based on index
     
     return showBubbles ? (
       <div
