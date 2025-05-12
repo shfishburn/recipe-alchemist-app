@@ -18,13 +18,13 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
   // Reset states and manage loading progress on open/close
   useEffect(() => {
     if (isOpen && !error) {
-      // Show timeout warning after a few seconds (reduced for testing)
+      // Show timeout warning after 37 seconds (updated from 2 seconds for testing)
       const timeoutId = setTimeout(() => {
         if (process.env.NODE_ENV !== 'production') {
           console.log("LoadingInterstitial timeout message triggered");
         }
         setShowTimeoutMessage(true);
-      }, 2000);
+      }, 37000);
       
       // Progress animation
       let progressInterval: NodeJS.Timeout;
@@ -59,7 +59,8 @@ const LoadingInterstitial = ({ isOpen, onCancel, onRetry, error }: LoadingInters
     <LoadingOverlay
       isOpen={isOpen}
       onCancel={onCancel}
-      isError={hasExplicitError}
+      isError={!!error}
+      className="overflow-x-hidden"
     >
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6">
         {/* Progress bar */}

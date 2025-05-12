@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -64,10 +63,10 @@ const LoadingPage: React.FC = () => {
   // Handle timeout warning display
   useEffect(() => {
     if (isLoading && !error) {
-      // Show timeout warning after 15 seconds
+      // Show timeout warning after 37 seconds (changed from 15 seconds)
       const timeoutId = setTimeout(() => {
         setShowTimeoutMessage(true);
-      }, 15000);
+      }, 37000);
       
       return () => clearTimeout(timeoutId);
     }
@@ -157,7 +156,7 @@ const LoadingPage: React.FC = () => {
   }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading, setIsRetrying]);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 overflow-x-hidden">
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
         {/* Progress bar at the top */}
         <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">

@@ -1,6 +1,23 @@
 
 import { useState, useEffect } from 'react';
 
+// Define the NetworkInformation API interface since TypeScript doesn't include it by default
+interface NetworkInformation {
+  readonly type?: string;
+  readonly effectiveType?: string;
+  readonly downlink?: number;
+  readonly downlinkMax?: number;
+  readonly rtt?: number;
+  readonly saveData?: boolean;
+  addEventListener(type: string, listener: EventListener): void;
+  removeEventListener(type: string, listener: EventListener): void;
+}
+
+// Extended Navigator interface to include connection property
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 interface NetworkStatus {
   isOnline: boolean;
   connectionType: string | null;
@@ -50,8 +67,7 @@ export const useNetworkStatus = () => {
     // Network Information API if available
     const updateNetworkInfo = () => {
       if ('connection' in navigator) {
-        // @ts-ignore - The Navigator.connection property is experimental
-        const connection = navigator.connection;
+        const connection = (navigator as NavigatorWithConnection).connection;
         
         if (connection) {
           setStatus({
@@ -73,8 +89,8 @@ export const useNetworkStatus = () => {
     // Try to add connection change listener if available
     if ('connection' in navigator) {
       try {
-        // @ts-ignore - The Navigator.connection property is experimental
-        navigator.connection?.addEventListener('change', updateNetworkInfo);
+        const connection = (navigator as NavigatorWithConnection).connection;
+        connection?.addEventListener('change', updateNetworkInfo);
         
         // Initial update
         updateNetworkInfo();
@@ -89,8 +105,8 @@ export const useNetworkStatus = () => {
       
       if ('connection' in navigator) {
         try {
-          // @ts-ignore - The Navigator.connection property is experimental
-          navigator.connection?.removeEventListener('change', updateNetworkInfo);
+          const connection = (navigator as NavigatorWithConnection).connection;
+          connection?.removeEventListener('change', updateNetworkInfo);
         } catch (error) {
           // Silent catch - API might not be fully supported
         }

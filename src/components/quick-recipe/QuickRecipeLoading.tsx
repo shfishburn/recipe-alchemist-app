@@ -11,7 +11,7 @@ interface QuickRecipeLoadingProps {
 
 export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRecipeLoadingProps) {
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
         {/* Gift box icon */}
         <div className="relative" aria-hidden="true">

@@ -3,6 +3,23 @@
  * Performance utilities for better user experience
  */
 
+// Define the NetworkInformation API interface
+interface NetworkInformation {
+  readonly type?: string;
+  readonly effectiveType?: string;
+  readonly downlink?: number;
+  readonly downlinkMax?: number;
+  readonly rtt?: number;
+  readonly saveData?: boolean;
+  addEventListener(type: string, listener: EventListener): void;
+  removeEventListener(type: string, listener: EventListener): void;
+}
+
+// Extended Navigator interface to include connection property
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 /**
  * Prefetch assets for better performance
  * 
@@ -90,18 +107,17 @@ export const measurePerformance = (label: string) => {
 export const detectSlowNetwork = (): boolean => {
   // Check if the Network Information API is available
   if ('connection' in navigator) {
-    // @ts-ignore - The Navigator.connection property is experimental
-    const connection = navigator.connection;
+    const connection = (navigator as NavigatorWithConnection).connection;
     
     // Check for slow network conditions
     if (connection) {
       // 4G is about 4 Mbps minimum, so anything less is considered slow
-      const isEffectiveTypeSlow = ['slow-2g', '2g', '3g'].includes(connection.effectiveType);
-      const isDownlinkSlow = connection.downlink < 1.0; // Less than 1 Mbps
-      const isHighLatency = connection.rtt > 500; // More than 500ms round-trip time
+      const isEffectiveTypeSlow = ['slow-2g', '2g', '3g'].includes(connection.effectiveType || '');
+      const isDownlinkSlow = (connection.downlink || 0) < 1.0; // Less than 1 Mbps
+      const isHighLatency = (connection.rtt || 0) > 500; // More than 500ms round-trip time
       
       // Return true if any of the conditions indicate a slow network
-      return isEffectiveTypeSlow || isDownlinkSlow || isHighLatency || connection.saveData;
+      return isEffectiveTypeSlow || isDownlinkSlow || isHighLatency || !!connection.saveData;
     }
   }
   
