@@ -141,7 +141,7 @@ const RecipePreviewPage: React.FC = () => {
     }
   }, [isLoading, navigate]);
   
-  // Toggle debug mode function
+  // Toggle debug mode function - keeping function but removing UI button
   const toggleDebugMode = () => setDebugMode(prev => !prev);
   
   const handleBackToForm = () => {
@@ -179,18 +179,14 @@ const RecipePreviewPage: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             Back to Recipe Form
           </Button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Your Generated Recipe</h1>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={toggleDebugMode} 
-              className="text-xs"
-              disabled={showLoadingOverlay}
-            >
-              {debugMode ? 'Hide Debug' : 'Show Debug'}
-            </Button>
-          </div>
+          
+          {/* Centered Recipe Preview heading - removed debug button */}
+          <h1 className="text-2xl font-bold text-center absolute left-1/2 transform -translate-x-1/2">
+            Recipe Preview
+          </h1>
+          
+          {/* This div helps balance the layout with the back button */}
+          <div className="w-[150px]"></div>
         </div>
       
         <div className="space-y-8">

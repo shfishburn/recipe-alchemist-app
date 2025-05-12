@@ -14,7 +14,7 @@ export function RecipeSteps({ steps }: RecipeStepsProps) {
   if (!hasSteps) {
     return (
       <div>
-        <RecipeSectionHeader title="Quick Steps" />
+        <RecipeSectionHeader title="Instructions" />
         <p className="text-muted-foreground">No steps available</p>
       </div>
     );
@@ -22,7 +22,7 @@ export function RecipeSteps({ steps }: RecipeStepsProps) {
   
   return (
     <div>
-      <RecipeSectionHeader title="Quick Steps" />
+      <RecipeSectionHeader title="Instructions" />
       <ol className="list-decimal pl-5 space-y-2">
         {steps.map((step, index) => (
           <li key={index} className="py-1">
