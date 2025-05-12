@@ -25,8 +25,20 @@ export function useQuickRecipeSave() {
         user_id: session.user.id
       };
       
+      // Transform frontend property names to match database column names
+      const transformedRecipe = {
+        ...recipeWithUser,
+        // Map frontend property names to database column names
+        prep_time_min: recipeWithUser.prepTime,
+        cook_time_min: recipeWithUser.cookTime,
+      };
+      
+      // Remove frontend-specific properties to avoid database column mismatch
+      if ('prepTime' in transformedRecipe) delete transformedRecipe.prepTime;
+      if ('cookTime' in transformedRecipe) delete transformedRecipe.cookTime;
+      
       // Serialize the recipe to handle complex objects and ensure JSON compatibility
-      const serializedRecipe = JSON.parse(JSON.stringify(recipeWithUser));
+      const serializedRecipe = JSON.parse(JSON.stringify(transformedRecipe));
       
       // Implement robust circuit-breaker style retry logic
       const maxRetries = 3;
@@ -42,7 +54,8 @@ export function useQuickRecipeSave() {
             .single();
           
           if (error) {
-            throw error;
+            console.error("Database error:", error);
+            throw new Error(`Database error: ${error.message}`);
           }
           
           // Success!
@@ -50,8 +63,9 @@ export function useQuickRecipeSave() {
           toast.success("Recipe saved successfully!");
           return data;
           
-        } catch (err) {
+        } catch (err: any) {
           retries++;
+          console.error(`Save attempt ${retries} failed:`, err);
           
           if (retries >= maxRetries) {
             throw err;
