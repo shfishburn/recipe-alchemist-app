@@ -1,5 +1,7 @@
-import React, { useEffect, useCallback } from 'react';
+
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, XCircle, RefreshCw } from 'lucide-react';
@@ -34,6 +36,15 @@ const LoadingPage: React.FC = () => {
   const [hasNetworkIssue, setHasNetworkIssue] = React.useState(false);
   const MAX_RETRIES = 3;
   
+  // Use a single ref to store all timeout and interval IDs
+  const timers = useRef<(NodeJS.Timeout | number)[]>([]);
+  
+  // Add a timeout/interval to the ref for tracking
+  const addTimer = (id: NodeJS.Timeout | number) => {
+    timers.current.push(id);
+    return id;
+  };
+  
   // Check network status
   useEffect(() => {
     const handleNetworkChange = () => {
@@ -63,22 +74,22 @@ const LoadingPage: React.FC = () => {
   // Handle timeout warning display
   useEffect(() => {
     if (isLoading && !error) {
-      // Show timeout warning after 37 seconds (changed from 15 seconds)
-      const timeoutId = setTimeout(() => {
+      // Show timeout warning after 37 seconds
+      const timeoutId = addTimer(setTimeout(() => {
         setShowTimeoutMessage(true);
-      }, 37000);
+      }, 37000));
       
       return () => clearTimeout(timeoutId);
     }
   }, [isLoading, error]);
 
-  // Simulate progress movement with more dynamic steps
+  // Consolidated progress movement with more dynamic steps
   useEffect(() => {
     if (isLoading && !error) {
       // Reset progress when loading starts
       setProgress(10);
       
-      // More realistic progress steps
+      // More realistic progress steps with ref-tracked timeouts
       const progressSteps = [
         { target: 20, time: 1000 },  // Quick initial progress
         { target: 35, time: 2000 },  // Analyzing ingredients
@@ -89,25 +100,31 @@ const LoadingPage: React.FC = () => {
       
       // Create a series of timeouts for each progress step
       progressSteps.forEach(step => {
-        const timeoutId = setTimeout(() => {
+        const timeoutId = addTimer(setTimeout(() => {
           setProgress(prev => Math.max(prev, step.target));
-        }, step.time);
-        
-        return () => clearTimeout(timeoutId);
+        }, step.time));
       });
       
       // Slow progress after initial steps
-      const slowProgressInterval = setInterval(() => {
+      const slowProgressInterval = addTimer(setInterval(() => {
         setProgress(prev => {
           if (prev >= 80) {
             return Math.min(prev + 0.2, 95); // Very slow progress up to 95%
           }
           return prev;
         });
-      }, 1000);
+      }, 1000));
       
       return () => {
-        clearInterval(slowProgressInterval);
+        // Clear all stored timers on cleanup
+        timers.current.forEach(id => {
+          if (typeof id === 'number') {
+            clearInterval(id);
+          } else {
+            clearTimeout(id);
+          }
+        });
+        timers.current = [];
       };
     } else {
       // Complete the progress when loading finishes
@@ -153,25 +170,18 @@ const LoadingPage: React.FC = () => {
       // If no form data is available, go back to quick recipe page
       navigate('/quick-recipe');
     }
-  }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading, setIsRetrying]);
+  }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading]);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 overflow-x-hidden">
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
-        {/* Progress bar at the top */}
-        <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">
-          <div 
-            className="h-full bg-recipe-green transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress}
-          />
-        </div>
-
         {error || hasNetworkIssue ? (
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center space-y-4 text-center"
+          >
             <AlertCircle className="w-12 h-12 text-red-500 animate-pulse" />
             <h2 className="text-xl font-semibold">
               {hasNetworkIssue ? "Network Connection Lost" : "Recipe Generation Failed"}
@@ -223,11 +233,16 @@ const LoadingPage: React.FC = () => {
                 </Button>
               )}
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-8 w-full">
-            {/* Gift box SVG icon with enhanced animation */}
-            <div className="relative animate-gift-bounce">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center space-y-8 w-full"
+          >
+            {/* Gift box SVG icon */}
+            <div className="relative">
               <svg 
                 width="120" 
                 height="120" 
@@ -252,7 +267,7 @@ const LoadingPage: React.FC = () => {
               Creating your recipe...
             </h2>
             
-            {/* Progress bar with animation */}
+            {/* Progress bar with animation - consolidated into single Progress component */}
             <div className="w-full space-y-1">
               <Progress 
                 value={progress}
@@ -278,14 +293,6 @@ const LoadingPage: React.FC = () => {
               </div>
             )}
             
-            {/* Tip card - Simplified to a single tip */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-5 w-full">
-              <h4 className="text-lg font-semibold mb-2">Chef's Tip</h4>
-              <p className="text-gray-600 dark:text-gray-300">
-                Patience is key in cooking. The best flavors take time to develop, just like your recipe is taking shape now.
-              </p>
-            </div>
-            
             {/* Cancel button */}
             <Button 
               variant="ghost" 
@@ -294,7 +301,7 @@ const LoadingPage: React.FC = () => {
             >
               Cancel
             </Button>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
