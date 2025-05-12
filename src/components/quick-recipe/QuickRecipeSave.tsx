@@ -31,11 +31,14 @@ export function useQuickRecipeSave() {
         // Map frontend property names to database column names
         prep_time_min: recipeWithUser.prepTime,
         cook_time_min: recipeWithUser.cookTime,
+        cooking_tip: recipeWithUser.cookingTip,
       };
       
       // Remove frontend-specific properties to avoid database column mismatch
       if ('prepTime' in transformedRecipe) delete transformedRecipe.prepTime;
       if ('cookTime' in transformedRecipe) delete transformedRecipe.cookTime;
+      if ('cookingTip' in transformedRecipe) delete transformedRecipe.cookingTip;
+      if ('nutritionHighlight' in transformedRecipe) delete transformedRecipe.nutritionHighlight;
       
       // Serialize the recipe to handle complex objects and ensure JSON compatibility
       const serializedRecipe = JSON.parse(JSON.stringify(transformedRecipe));
