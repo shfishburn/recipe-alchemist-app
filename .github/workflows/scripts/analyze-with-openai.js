@@ -50,8 +50,9 @@ function sanitizeErrorForLogging(error, apiKey) {
     return error instanceof Error ? error.toString() : JSON.stringify(error);
   }
   
-  // Convert error to string representation
-  const msg = error instanceof Error ? error.toString() : JSON.stringify(error);
+  // Convert error to string representation - protect against null/undefined
+  const msg = error instanceof Error ? error.toString() : 
+              (error ? JSON.stringify(error) : 'Unknown error');
   
   try {
     // Escape special regex characters in the API key with CORRECT balanced brackets
@@ -72,6 +73,11 @@ function sanitizeErrorForLogging(error, apiKey) {
  * Categorizes errors for decision-making
  */
 function categorizeError(error) {
+  // Handle null/undefined errors
+  if (!error) {
+    return { type: 'unknown', retryable: false };
+  }
+  
   if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
     return { type: 'network', retryable: true };
   }
@@ -294,23 +300,26 @@ ${additions} lines added, ${removals} lines removed.${filesList}
  * Main analysis function with improved file handling
  */
 async function analyzeCodeWithOpenAI() {
-  // Test API connectivity before proceeding
-  const apiTestResult = await testOpenAiConnection();
-  if (!apiTestResult) {
-    const msg = 'OpenAI API connection test failed. Check your API key and network connection.';
-    console.error(msg);
-    await writeAnalysis(msg);
-    return msg;
-  }
-  let diffContent = '';
   try {
+    // Test API connectivity before proceeding
+    const apiTestResult = await testOpenAiConnection();
+    if (!apiTestResult) {
+      const msg = 'OpenAI API connection test failed. Check your API key and network connection.';
+      console.error(msg);
+      await writeAnalysis(msg);
+      return msg;
+    }
+    
+    let diffContent = '';
+    
     if (!openaiApiKey) {
       const msg = 'OpenAI API Key is not provided. Please add OPENAI_API_KEY to your repository secrets.';
       console.error(msg);
       await writeAnalysis(msg);
       return msg;
     }
-    // Use the new readDiffFile function
+    
+    // Use the readDiffFile function with proper error handling
     try {
       diffContent = await readDiffFile(diffFilePath);
       console.log({ 'Diff size': diffContent.length });
@@ -320,17 +329,28 @@ async function analyzeCodeWithOpenAI() {
       await writeAnalysis(`No analysis performed: ${msg}`);
       return msg;
     }
+    
     const truncated = truncateDiff(diffContent);
     console.log({ 'Truncated length': truncated.length });
     const prompt = buildSystemPrompt();
     return await makeApiRequestWithFallback(prompt, truncated, diffContent);
   } catch (error) {
+    // Ensure error is safely handled and logged
     const sanitized = sanitizeErrorForLogging(error, openaiApiKey);
     const category = categorizeError(error);
     console.error(`Error (${category.type}): ${sanitized}`);
-    const fallback = generateFallbackAnalysis(diffContent);
-    await writeAnalysis(fallback);
-    return fallback;
+    
+    // Generate fallback analysis even when errors occur
+    try {
+      const fallback = generateFallbackAnalysis(diffContent || '');
+      await writeAnalysis(fallback);
+      return fallback;
+    } catch (fallbackError) {
+      // Last resort error handling
+      const basicMessage = 'Critical error in analysis. See logs for details.';
+      await writeAnalysis(basicMessage);
+      return basicMessage;
+    }
   }
 }
 /**
@@ -404,10 +424,14 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
   }
   throw lastError;
 }
-// Entry point
+// Entry point with improved error handling
 analyzeCodeWithOpenAI()
   .then(res => console.log('Analysis completed successfully'))
   .catch(err => { 
-    console.error('Uncaught error:', sanitizeErrorForLogging(err, openaiApiKey)); 
+    try {
+      console.error('Uncaught error:', sanitizeErrorForLogging(err, openaiApiKey)); 
+    } catch (loggingError) {
+      console.error('Failed to log error safely');
+    }
     process.exit(1); 
   });
