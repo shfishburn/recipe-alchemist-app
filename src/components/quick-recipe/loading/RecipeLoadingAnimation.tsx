@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Spoon, ChefHat } from 'lucide-react';
+import { ChefHat, Utensils } from 'lucide-react';
 import '@/styles/loading.css'; // Import animation styles
 
 interface RecipeLoadingAnimationProps {
@@ -134,10 +134,10 @@ export function RecipeLoadingAnimation({ stage = 0, progress = 0 }: RecipeLoadin
           />
         </svg>
 
-        {/* Animated spoon that stirs the pot */}
+        {/* Animated utensils that stirs the pot - replacing Spoon with Utensils */}
         {progress >= 30 && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-[-40%] animate-stir">
-            <Spoon size={24} className="text-gray-600" />
+            <Utensils size={24} className="text-gray-600" />
           </div>
         )}
         
@@ -175,4 +175,3 @@ export function RecipeLoadingAnimation({ stage = 0, progress = 0 }: RecipeLoadin
     </div>
   );
 }
-
