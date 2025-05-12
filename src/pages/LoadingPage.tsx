@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RecipeLoadingAnimation } from '@/components/quick-recipe/loading/RecipeLoadingAnimation';
 import { ErrorState } from '@/components/quick-recipe/loading/ErrorState';
@@ -25,6 +25,10 @@ const LoadingPage: React.FC = () => {
     isLoading 
   } = useQuickRecipeStore();
   
+  // State to track progress animation
+  const [progress, setProgress] = useState(0);
+  const [loadingStage, setLoadingStage] = useState(0);
+  
   // Check if we came from the QuickRecipePage or RecipePreviewPage
   const { 
     fromQuickRecipePage = false, 
@@ -43,13 +47,86 @@ const LoadingPage: React.FC = () => {
     }
   }, [fromQuickRecipePage, fromRecipePreview, navigate]);
   
+  // Progressive loading animation
+  useEffect(() => {
+    if (isLoading && !displayError) {
+      // Start with quick initial progress
+      setProgress(5);
+      
+      // Fast initial progress (0-60%)
+      const fastProgressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 60) {
+            if (prev >= 20 && prev < 25) setLoadingStage(1);
+            return Math.min(prev + 3, 60);
+          }
+          return prev;
+        });
+      }, 700);
+      
+      // Medium progress (60-85%)
+      const mediumProgressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 60 && prev < 85) {
+            if (prev >= 60 && prev < 65) setLoadingStage(2);
+            return Math.min(prev + 1, 85);
+          }
+          return prev;
+        });
+      }, 1200);
+      
+      // Slow progress (85-95%)
+      const slowProgressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 85 && prev < 95) {
+            if (prev >= 85 && prev < 90) setLoadingStage(3);
+            return Math.min(prev + 0.5, 95);
+          }
+          return prev;
+        });
+      }, 1800);
+      
+      return () => {
+        clearInterval(fastProgressInterval);
+        clearInterval(mediumProgressInterval);
+        clearInterval(slowProgressInterval);
+      };
+    } else if (recipe && !displayError) {
+      // Complete the progress bar when recipe is ready
+      setProgress(100);
+      setLoadingStage(4);
+    } else if (displayError) {
+      // Reset progress when there's an error
+      setProgress(0);
+    }
+  }, [isLoading, recipe, displayError]);
+  
+  // Get loading message based on progress
+  const getLoadingMessage = () => {
+    switch (loadingStage) {
+      case 0:
+        return "Gathering recipe ideas...";
+      case 1:
+        return "Selecting best ingredients...";
+      case 2:
+        return "Crafting the perfect combination...";
+      case 3:
+        return "Finalizing your recipe...";
+      case 4:
+        return "Recipe ready!";
+      default:
+        return "Creating your recipe...";
+    }
+  };
+  
   // Handle redirection based on recipe generation state
   useEffect(() => {
     // Log state for debugging
     console.log("LoadingPage - Current state:", {
       recipeExists: !!recipe,
       isLoading,
-      displayError
+      displayError,
+      progress
     });
     
     // If there's an error, go back to quick recipe page after showing error
@@ -98,7 +175,7 @@ const LoadingPage: React.FC = () => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [recipe, isLoading, displayError, navigate, formData]);
+  }, [recipe, isLoading, displayError, navigate, formData, progress]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -113,12 +190,20 @@ const LoadingPage: React.FC = () => {
             <RecipeLoadingAnimation />
             <div className="space-y-2 text-center">
               <h2 className="text-xl font-semibold text-gray-800">Crafting Your Recipe</h2>
-              <p className="text-sm text-gray-500">We're creating the perfect recipe with your ingredients...</p>
+              <p className="text-sm text-gray-500">{getLoadingMessage()}</p>
             </div>
             
             <div className="w-full max-w-xs mt-6">
               <div className="h-1 w-full bg-gray-200 rounded overflow-hidden">
-                <div className="h-full bg-recipe-green animate-pulse w-full"></div>
+                <div 
+                  className="h-full bg-recipe-green transition-all duration-500 ease-out"
+                  style={{ width: `${progress}%` }}
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progress}
+                  aria-label="Recipe generation progress"
+                />
               </div>
             </div>
             
