@@ -72,24 +72,22 @@ export const fetchFromEdgeFunction = async (payload: any) => {
       console.log(`[REQUEST END] ${new Date().toISOString()} - Response received in ${requestEndTime - requestStartTime}ms with status ${response.status}`);
       
       if (!response.ok) {
-        // Try to extract error message from response
+        // Try to extract error message from response - FIX: only try to read response once
         let errorMessage = `Edge function returned status ${response.status}`;
+        
+        // Create a clone of the response to safely read the body
+        const responseClone = response.clone();
+        
         try {
-          const errorData = await response.json();
-          console.error('[ERROR RESPONSE]', errorData);
+          const errorData = await responseClone.json();
           if (errorData && errorData.error) {
             errorMessage = errorData.error;
           }
         } catch (e) {
-          console.error('[ERROR PARSING ERROR]', e);
-          // Try getting text if JSON parse fails
-          try {
-            const errorText = await response.text();
-            console.error('[ERROR RESPONSE TEXT]', errorText);
-          } catch (textError) {
-            console.error('[ERROR GETTING TEXT]', textError);
-          }
+          console.error('[ERROR PARSING RESPONSE]', e);
+          // No need to attempt a second read, just use the default error message
         }
+        
         throw new Error(errorMessage);
       }
       
