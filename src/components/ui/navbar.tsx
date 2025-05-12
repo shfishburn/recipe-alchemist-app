@@ -6,12 +6,14 @@ import { AuthDrawer } from '@/components/auth/AuthDrawer';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { User, LogOut } from 'lucide-react';
 
 /**
  * Global navigation bar with horizontal layout
  */
 export function Navbar({ className = '' }: { className?: string }) {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
   const { isOpen, open, close } = useAuthDrawer();
   const location = useLocation();
 
@@ -37,6 +39,14 @@ export function Navbar({ className = '' }: { className?: string }) {
   const displayedLinks = navigationLinks.filter(
     link => !link.requiresAuth || session
   );
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <header
@@ -86,8 +96,37 @@ export function Navbar({ className = '' }: { className?: string }) {
             })}
           </nav>
 
-          {/* Empty div to maintain layout */}
-          <div className="hidden md:block w-32"></div>
+          {/* Auth buttons (hidden on mobile as they are in the mobile menu) */}
+          <div className="hidden md:flex items-center gap-2">
+            {session ? (
+              <>
+                <Link to="/profile">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>Profile</span>
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-2"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={open}>
+                  Log in
+                </Button>
+                <Button size="sm" onClick={open}>
+                  Sign up
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

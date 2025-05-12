@@ -42,11 +42,18 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
             <p className="text-gray-600 dark:text-gray-300 italic">{recipe.tagline}</p>
           )}
           
-          <RecipeHighlights recipe={recipe} />
+          <RecipeHighlights 
+            highlights={recipe.highlights}
+            cuisine={recipe.cuisine}
+            dietary={recipe.dietary}
+            flavors={recipe.flavors}
+            nutritionHighlight={recipe.nutrition_highlight}
+            cookingTip={recipe.cooking_tip}
+          />
           
           <RecipeTimeInfo 
-            prepTimeMin={recipe.prep_time_min} 
-            cookTimeMin={recipe.cook_time_min} 
+            prepTime={recipe.prep_time_min} 
+            cookTime={recipe.cook_time_min} 
             servings={recipe.servings} 
           />
           
