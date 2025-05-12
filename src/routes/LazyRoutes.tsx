@@ -21,5 +21,8 @@ export const Favorites = lazy(() => import("@/pages/Favorites"));
 export const DataImport = lazy(() => import("@/pages/DataImport"));
 export const NotFound = lazy(() => import("@/pages/NotFound"));
 
-// New loading page route
+// Loading page route
 export const LoadingPage = lazy(() => import("@/pages/LoadingPage"));
+
+// New Recipe Preview page route
+export const RecipePreviewPage = lazy(() => import("@/pages/RecipePreviewPage"));

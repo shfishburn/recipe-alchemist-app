@@ -155,15 +155,7 @@ export function useQuickRecipeForm() {
         // Success message in console
         console.log("Recipe created successfully!");
         
-        // Navigate back to quick recipe page with the recipe
-        navigate('/quick-recipe', {
-          state: { 
-            fromLoading: true,
-            timestamp: Date.now()
-          },
-          replace: true
-        });
-        
+        // The LoadingPage will handle the navigation to RecipePreviewPage
         return generatedRecipe;
       } catch (error: any) {
         console.error('Error generating recipe:', error);

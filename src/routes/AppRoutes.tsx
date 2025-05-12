@@ -15,6 +15,7 @@ export const AppRoutes = () => {
       <Route path="/recipes" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Recipes /></Suspense>} />
       <Route path="/recipes/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.RecipeDetail /></Suspense>} />
       <Route path="/quick-recipe" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.QuickRecipePage /></Suspense>} />
+      <Route path="/recipe-preview" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.RecipePreviewPage /></Suspense>} />
       <Route path="/loading" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.LoadingPage /></Suspense>} />
       <Route path="/auth" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Auth /></Suspense>} />
       <Route path="/how-it-works" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.HowItWorks /></Suspense>} />

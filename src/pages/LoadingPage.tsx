@@ -7,6 +7,7 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 interface LocationState {
   fromQuickRecipePage?: boolean;
+  fromRecipePreview?: boolean;
   error?: string;
   formData?: any;
   timestamp?: number;
@@ -24,18 +25,23 @@ const LoadingPage: React.FC = () => {
     isLoading 
   } = useQuickRecipeStore();
   
-  // Check if we came from the QuickRecipePage
-  const { fromQuickRecipePage = false, error = null, formData = null } = state;
+  // Check if we came from the QuickRecipePage or RecipePreviewPage
+  const { 
+    fromQuickRecipePage = false, 
+    fromRecipePreview = false,
+    error = null, 
+    formData = null 
+  } = state;
   
   // Combine errors from state and store
   const displayError = error || storeError;
   
-  // If not coming from QuickRecipePage, redirect to home
+  // If not coming from QuickRecipePage or RecipePreviewPage, redirect to home
   useEffect(() => {
-    if (!fromQuickRecipePage) {
+    if (!fromQuickRecipePage && !fromRecipePreview) {
       navigate('/', { replace: true });
     }
-  }, [fromQuickRecipePage, navigate]);
+  }, [fromQuickRecipePage, fromRecipePreview, navigate]);
   
   // Handle redirection based on recipe generation state
   useEffect(() => {
@@ -62,14 +68,13 @@ const LoadingPage: React.FC = () => {
       return () => clearTimeout(timer);
     }
     
-    // If recipe is ready (not loading and we have recipe data), go to recipe page
+    // If recipe is ready (not loading and we have recipe data), go to recipe preview page
     if (!isLoading && recipe) {
-      console.log("Recipe is ready, navigating to quick recipe page with recipe:", recipe.title);
-      navigate('/quick-recipe', { 
+      console.log("Recipe is ready, navigating to recipe preview page with recipe:", recipe.title);
+      navigate('/recipe-preview', { 
         state: { 
           timestamp: Date.now(),
           fromLoading: true,
-          hasRecipe: true
         },
         replace: true 
       });

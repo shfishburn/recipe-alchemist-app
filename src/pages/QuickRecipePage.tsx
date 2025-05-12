@@ -3,16 +3,13 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeHero } from '@/components/quick-recipe/hero/QuickRecipeHero';
 import { QuickRecipeFormContainer } from '@/components/quick-recipe/QuickRecipeFormContainer';
-import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
-import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeError';
-import { QuickRecipeEmpty } from '@/components/quick-recipe/empty/QuickRecipeEmpty';
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
+import { Button } from '@/components/ui/button';
 
 const QuickRecipePage: React.FC = () => {
   const {
-    recipe,
     isLoading,
     isRetrying,
     error,
@@ -43,16 +40,15 @@ const QuickRecipePage: React.FC = () => {
     }
   }, [isLoading, isRetrying, navigate, location.pathname]);
   
-  // Log recipe state for debugging
+  // Log state for debugging
   useEffect(() => {
     console.log("QuickRecipePage - Current state:", { 
-      hasRecipe: !!recipe, 
+      hasError: !!error, 
       isLoading, 
       error, 
       isDirectNavigation,
-      recipeTitle: recipe?.title || 'No recipe'
     });
-  }, [recipe, isLoading, error, isDirectNavigation]);
+  }, [isLoading, error, isDirectNavigation]);
   
   // If loading is happening, don't render anything so we don't see a flash
   // Let the redirect to loading page handle it
@@ -60,26 +56,21 @@ const QuickRecipePage: React.FC = () => {
     return null;
   }
   
+  // Go to view recipe if we have a stored recipe
+  const handleViewExistingRecipe = () => {
+    navigate('/recipe-preview');
+  };
+  
   return (
     <PageContainer>
       <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
         <QuickRecipeHero
-          hasRecipe={!!recipe}
+          hasRecipe={false}
           toggleDebugMode={toggleDebugMode}
           debugMode={debugMode}
         />
 
-        {/* Changed the rendering priority to check for recipe first */}
-        {recipe ? (
-          <div className="space-y-8">
-            <QuickRecipeDisplay recipe={recipe} debugMode={debugMode} />
-            <QuickRecipeRegeneration 
-              formData={formData} 
-              isLoading={isLoading} 
-              onRetry={handleRetry} 
-            />
-          </div>
-        ) : error ? (
+        {error ? (
           <QuickRecipeError
             error={error}
             hasTimeoutError={hasTimeoutError}
@@ -89,12 +80,27 @@ const QuickRecipePage: React.FC = () => {
             onRetry={handleRetry}
             isRetrying={isRetrying}
           />
-        ) : isDirectNavigation ? (
+        ) : (
           <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
+            {/* If we have a form submission in progress, show button to view recipe */}
+            {formData && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-medium">You have a recipe ready to view</h3>
+                    <p className="text-sm text-gray-500">You can view your generated recipe or start a new one.</p>
+                  </div>
+                  <Button 
+                    onClick={handleViewExistingRecipe}
+                    className="bg-recipe-green hover:bg-recipe-green/90"
+                  >
+                    View Recipe
+                  </Button>
+                </div>
+              </div>
+            )}
             <QuickRecipeFormContainer />
           </div>
-        ) : (
-          <QuickRecipeEmpty />
         )}
       </div>
     </PageContainer>
