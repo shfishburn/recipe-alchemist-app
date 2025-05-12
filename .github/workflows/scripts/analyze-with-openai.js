@@ -32,12 +32,31 @@ async function writeAnalysis(content) {
 
 /**
  * Redacts API key from errors for safe logging
- * Uses properly balanced regex character class
+ * Uses properly balanced regex character class and ensures no null values
  */
 function sanitizeErrorForLogging(error) {
+  // If no API key exists, just return the error message
+  if (!openaiApiKey) {
+    return error instanceof Error ? error.toString() : JSON.stringify(error);
+  }
+  
+  // Convert error to string representation
   const msg = error instanceof Error ? error.toString() : JSON.stringify(error);
-  const key = openaiApiKey ? openaiApiKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
-  return key ? msg.replace(new RegExp(key, 'g'), '[REDACTED]') : msg;
+  
+  try {
+    // Escape special regex characters in the API key with CORRECT balanced brackets
+    const escapedKey = openaiApiKey.replace(/[.*+?^${}()|\[\]\\]/g, '\\$&');
+    
+    // Create a regex that will match the API key
+    const keyRegex = new RegExp(escapedKey, 'g');
+    
+    // Replace any instances of the API key with [REDACTED]
+    return msg.replace(keyRegex, '[REDACTED]');
+  } catch (e) {
+    // If something goes wrong with the regex, still redact without the error
+    console.warn('Error in sanitizing logs, returning safer version');
+    return 'Error occurred: [Details redacted for security]';
+  }
 }
 
 /**
@@ -50,14 +69,27 @@ function categorizeError(error) {
   if (error.response && error.response.status === 401) {
     return { type: 'auth', retryable: false };
   }
+  if (error.response && error.response.status === 429) {
+    return { type: 'rate-limit', retryable: true };
+  }
+  if (error.response && error.response.status >= 500 && error.response.status < 600) {
+    return { type: 'server', retryable: true };
+  }
   return { type: 'unknown', retryable: false };
 }
 
 /**
  * Test connectivity to OpenAI API before analysis
+ * Includes improved API key validation
  */
 async function testOpenAiConnection() {
   try {
+    // Validate API key before attempting to use it
+    if (!openaiApiKey || typeof openaiApiKey !== 'string' || openaiApiKey.trim() === '') {
+      console.error('Invalid API key: API key is missing or empty');
+      return false;
+    }
+    
     console.log('Testing OpenAI API connection...');
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -71,6 +103,7 @@ async function testOpenAiConnection() {
       },
       { headers: { Authorization: `Bearer ${openaiApiKey}` } }
     );
+    
     console.log('API Test Response:', response.data?.choices?.[0]?.message?.content);
     return true;
   } catch (error) {
@@ -80,9 +113,49 @@ async function testOpenAiConnection() {
 }
 
 /**
+ * Validates path and reads diff file with proper error handling
+ */
+async function readDiffFile(filePath) {
+  try {
+    // Validate filePath is a string
+    if (typeof filePath !== 'string' || filePath.trim() === '') {
+      throw new Error('Invalid file path provided');
+    }
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Diff file not found at path: ${filePath}`);
+    }
+    
+    // Check if we have read permissions
+    try {
+      await fs.promises.access(filePath, fs.constants.R_OK);
+    } catch (err) {
+      throw new Error(`No read permission for diff file at: ${filePath}`);
+    }
+    
+    // Read the file content
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    
+    // Validate content
+    if (!content || content.trim().length < config.diff.minLength) {
+      throw new Error('Diff content is too small or empty');
+    }
+    
+    return content;
+  } catch (error) {
+    throw error; // Rethrow to be handled by the caller
+  }
+}
+
+/**
  * Truncates diff content to respect token limits
  */
 function truncateDiff(diff) {
+  if (!diff || typeof diff !== 'string') {
+    return '';
+  }
+  
   if (diff.length <= config.diff.maxLength) {
     return diff;
   }
@@ -90,10 +163,10 @@ function truncateDiff(diff) {
 }
 
 /**
- * Constructs the system prompt for OpenAI
+ * Constructs the system prompt for OpenAI with ALL backticks properly escaped
  */
 function buildSystemPrompt() {
-  return `Do NOT include the prompt text itself in your response—only return the analysis sections described.
+  return `You are strictly forbidden from repeating any instruction text in your reply. Do **not** include any of these instructions in your response.
 
 You are a code review assistant analyzing git diffs. Provide a balanced, actionable analysis that includes:
 
@@ -134,7 +207,7 @@ You are a code review assistant analyzing git diffs. Provide a balanced, actiona
   - If no issues are found after analysis, simply write "No changes recommended."
 
 Example format (replace with actual issues and content):
-\`\`\`markdown
+\\\`\\\`\\\`markdown
 # AI Developer Prompt
 Please assess the following code issues and provide solutions:
 
@@ -151,26 +224,26 @@ Please assess the following code issues and provide solutions:
 **Problem**: User input is directly concatenated into SQL query without sanitization
 
 **Fix**: 
-\`\`\`diff
+\\\`\\\`\\\`diff
 - const query = "SELECT * FROM users WHERE username = '" + username + "'";
 + const query = "SELECT * FROM users WHERE username = ?";
 + db.query(query, [username]);
-\`\`\`
+\\\`\\\`\\\`
 
 **Benefit**: Prevents SQL injection attacks by properly parameterizing queries
 
 **Test**: 
-\`\`\`javascript
+\\\`\\\`\\\`javascript
 test('should safely handle special characters in username', () => {
   const result = getUserByName("Robert'); DROP TABLE users;--");
   expect(result).toEqual(null);
   // Verify users table still exists
 });
-\`\`\`
+\\\`\\\`\\\`
 
 ### 2. Optimize Inefficient Loop
 ...etc...
-\`\`\`
+\\\`\\\`\\\`
 
 **Output format**: valid Markdown with headings, numbered lists, and fenced code blocks.`;
 }
@@ -179,17 +252,43 @@ test('should safely handle special characters in username', () => {
  * Generates a simple fallback analysis if OpenAI fails
  */
 function generateFallbackAnalysis(diff) {
-  const additions = (diff.match(/^\+/gm) || []).length;
-  const removals = (diff.match(/^- /gm) || []).length;
-  return `# Basic Diff Analysis
+  if (!diff || typeof diff !== 'string') {
+    return '# Analysis Failed\n\nCould not analyze: Invalid diff content provided.';
+  }
+  
+  try {
+    const additions = (diff.match(/^\+/gm) || []).length;
+    const removals = (diff.match(/^- /gm) || []).length;
+    
+    // Try to extract filenames from the diff
+    const changedFiles = new Set();
+    const fileMatches = diff.match(/^diff --git a\/(.*) b\/(.*)/gm);
+    if (fileMatches) {
+      fileMatches.forEach(match => {
+        const parts = match.split(' b/');
+        if (parts.length > 1) {
+          changedFiles.add(parts[1]);
+        }
+      });
+    }
+    
+    let filesList = '';
+    if (changedFiles.size > 0) {
+      filesList = '\n\nChanged files:\n' + Array.from(changedFiles).map(f => `- ${f}`).join('\n');
+    }
+    
+    return `# Basic Diff Analysis
 
-${additions} lines added, ${removals} lines removed.
+${additions} lines added, ${removals} lines removed.${filesList}
 
-*API-based analysis failed.*`;
+*API-based analysis failed. See logs for details.*`;
+  } catch (error) {
+    return '# Analysis Failed\n\nCould not analyze diff content due to an error.';
+  }
 }
 
 /**
- * Main analysis function
+ * Main analysis function with improved file handling
  */
 async function analyzeCodeWithOpenAI() {
   // Test API connectivity before proceeding
@@ -210,22 +309,17 @@ async function analyzeCodeWithOpenAI() {
       return msg;
     }
 
-    if (!fs.existsSync(diffFilePath)) {
-      const msg = `Diff file not found at path: ${diffFilePath}`;
+    // Use the new readDiffFile function
+    try {
+      diffContent = await readDiffFile(diffFilePath);
+      console.log({ 'Diff size': diffContent.length });
+    } catch (error) {
+      const msg = error.message || 'Error reading diff file';
       console.error(msg);
-      await writeAnalysis('No diff file available for analysis.');
-      return 'No diff file available for analysis.';
+      await writeAnalysis(`No analysis performed: ${msg}`);
+      return msg;
     }
 
-    diffContent = await fs.promises.readFile(diffFilePath, 'utf8');
-    if (!diffContent || diffContent.trim().length < config.diff.minLength) {
-      const msg = 'Diff content is too small or empty, no meaningful changes to analyze';
-      console.log(msg);
-      await writeAnalysis('No significant changes detected to analyze.');
-      return 'No significant changes detected to analyze.';
-    }
-
-    console.log({ 'Diff size': diffContent.length });
     const truncated = truncateDiff(diffContent);
     console.log({ 'Truncated length': truncated.length });
 
@@ -250,6 +344,12 @@ async function makeApiRequestWithFallback(prompt, truncatedDiff, fullDiff) {
     try {
       console.log(`Attempting analysis with ${model} model...`);
       const result = await makeOpenAiRequest(model, prompt, truncatedDiff);
+      
+      // Verify we got a valid response
+      if (!result || typeof result !== 'string' || result.trim().length === 0) {
+        throw new Error('Empty or invalid response received from OpenAI');
+      }
+      
       await writeAnalysis(result);
       console.log(`Analysis succeeded with ${model}`);
       return result;
@@ -277,7 +377,13 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
 
   while (attempts <= config.api.maxRetries) {
     try {
-      if (attempts > 0) await new Promise(res => setTimeout(res, config.api.retryDelay));
+      if (attempts > 0) {
+        // Exponential backoff
+        const delay = config.api.retryDelay * Math.pow(2, attempts - 1);
+        console.log(`Retry attempt ${attempts}, waiting ${delay}ms before retrying...`);
+        await new Promise(res => setTimeout(res, delay));
+      }
+      
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         { model, messages: [
@@ -285,7 +391,10 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
             { role: 'user', content: `Analyze this git diff and provide a code review:\n\n${truncatedDiff}` }
           ], temperature: 0.3, max_tokens: 2000
         },
-        { headers: { Authorization: `Bearer ${openaiApiKey}` } }
+        { 
+          headers: { Authorization: `Bearer ${openaiApiKey}` },
+          timeout: 60000 // 60 second timeout
+        }
       );
 
       const content = response.data?.choices?.[0]?.message?.content;
@@ -303,5 +412,8 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
 
 // Entry point
 analyzeCodeWithOpenAI()
-  .then(res => console.log('Analysis completed:', res))
-  .catch(err => { console.error('Uncaught error:', sanitizeErrorForLogging(err)); process.exit(1); });
+  .then(res => console.log('Analysis completed successfully'))
+  .catch(err => { 
+    console.error('Uncaught error:', sanitizeErrorForLogging(err)); 
+    process.exit(1); 
+  });
