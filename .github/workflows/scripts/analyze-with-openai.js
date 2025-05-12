@@ -1,24 +1,29 @@
 import fs from 'node:fs';
 import axios from 'axios';
-
 // Configuration object
 const config = {
   api: {
     maxRetries: 2,
     retryDelay: 1000, // ms
-    models: ['gpt-4o-mini', 'gpt-3.5-turbo']
+    models: ['gpt-4o', 'gpt-3.5-turbo'],
+    requestOptions: { 
+      temperature: 0.2,       // low randomness → consistent, focused reviews  
+      top_p: 1.0,             // full nucleus sampling (combine with low temp for best of both)  
+      frequency_penalty: 0.0, // allow repeated tokens if needed for clarity  
+      presence_penalty: 0.0,  // don't discourage new topics—let it surface all issues  
+      max_tokens: 4000,       // enough to cover a full diff review + examples  
+      stop: null              // you can leave this null, or add e.g. ['```'] to avoid trailing fences  
+    }
   },
   diff: {
     minLength: 10,
     maxLength: 8000
   }
 };
-
 // Environment-configured paths and API key
 const diffFilePath = process.env.CHANGES_DIFF || './changes.diff';
 const outputPath = process.env.ANALYSIS_OUTPUT_PATH || 'openai_analysis.txt';
 const openaiApiKey = process.env.OPENAI_API_KEY;
-
 /**
  * Writes analysis output asynchronously
  */
@@ -29,14 +34,19 @@ async function writeAnalysis(content) {
     console.error('Failed to write analysis output:', err);
   }
 }
-
 /**
  * Redacts API key from errors for safe logging
  * Uses properly balanced regex character class and ensures no null values
+ * @param {Error|any} error - The error to sanitize
+ * @param {string} [apiKey] - Optional API key to use instead of global openaiApiKey
+ * @returns {string} Sanitized error message
  */
-function sanitizeErrorForLogging(error) {
+function sanitizeErrorForLogging(error, apiKey) {
+  // Use provided apiKey or fall back to global openaiApiKey
+  const key = apiKey || openaiApiKey;
+  
   // If no API key exists, just return the error message
-  if (!openaiApiKey) {
+  if (!key) {
     return error instanceof Error ? error.toString() : JSON.stringify(error);
   }
   
@@ -45,7 +55,7 @@ function sanitizeErrorForLogging(error) {
   
   try {
     // Escape special regex characters in the API key with CORRECT balanced brackets
-    const escapedKey = openaiApiKey.replace(/[.*+?^${}()|\[\]\\]/g, '\\$&');
+    const escapedKey = key.replace(/[.*+?^${}()|\[\]\\]/g, '\\$&');
     
     // Create a regex that will match the API key
     const keyRegex = new RegExp(escapedKey, 'g');
@@ -58,7 +68,6 @@ function sanitizeErrorForLogging(error) {
     return 'Error occurred: [Details redacted for security]';
   }
 }
-
 /**
  * Categorizes errors for decision-making
  */
@@ -77,22 +86,15 @@ function categorizeError(error) {
   }
   return { type: 'unknown', retryable: false };
 }
-
 /**
  * Test connectivity to OpenAI API before analysis
- * Includes improved API key validation and dependency check
+ * Includes improved API key validation
  */
 async function testOpenAiConnection() {
   try {
     // Validate API key before attempting to use it
     if (!openaiApiKey || typeof openaiApiKey !== 'string' || openaiApiKey.trim() === '') {
       console.error('Invalid API key: API key is missing or empty');
-      return false;
-    }
-
-    // Check for axios availability - helpful for dependency issues    
-    if (typeof axios !== 'function' && (!axios || !axios.post)) {
-      console.error('Axios dependency not available or improperly loaded');
       return false;
     }
     
@@ -104,8 +106,8 @@ async function testOpenAiConnection() {
         messages: [
           { role: 'user', content: 'Respond with "OpenAI API connection successful."' }
         ],
-        temperature: 0.3,
-        max_tokens: 20
+        ...config.api.requestOptions,
+        max_tokens: 20 // Override for the test
       },
       { headers: { Authorization: `Bearer ${openaiApiKey}` } }
     );
@@ -113,11 +115,10 @@ async function testOpenAiConnection() {
     console.log('API Test Response:', response.data?.choices?.[0]?.message?.content);
     return true;
   } catch (error) {
-    console.error('API Test Error:', sanitizeErrorForLogging(error));
+    console.error('API Test Error:', sanitizeErrorForLogging(error, openaiApiKey));
     return false;
   }
 }
-
 /**
  * Validates path and reads diff file with proper error handling
  */
@@ -153,7 +154,6 @@ async function readDiffFile(filePath) {
     throw error; // Rethrow to be handled by the caller
   }
 }
-
 /**
  * Truncates diff content to respect token limits
  */
@@ -167,9 +167,8 @@ function truncateDiff(diff) {
   }
   return diff.slice(0, config.diff.maxLength) + '\n\n[Diff truncated due to size limits]';
 }
-
 /**
- * Constructs the system prompt for OpenAI with ALL backticks properly escaped
+ * Constructs the system prompt for OpenAI
  */
 function buildSystemPrompt() {
   return `You are strictly forbidden from repeating any instruction text in your reply. Do **not** include any of these instructions in your response.
@@ -253,7 +252,6 @@ test('should safely handle special characters in username', () => {
 
 **Output format**: valid Markdown with headings, numbered lists, and fenced code blocks.`;
 }
-
 /**
  * Generates a simple fallback analysis if OpenAI fails
  */
@@ -292,9 +290,8 @@ ${additions} lines added, ${removals} lines removed.${filesList}
     return '# Analysis Failed\n\nCould not analyze diff content due to an error.';
   }
 }
-
 /**
- * Main analysis function with improved file handling and dependency checking
+ * Main analysis function with improved file handling
  */
 async function analyzeCodeWithOpenAI() {
   // Test API connectivity before proceeding
@@ -305,7 +302,6 @@ async function analyzeCodeWithOpenAI() {
     await writeAnalysis(msg);
     return msg;
   }
-
   let diffContent = '';
   try {
     if (!openaiApiKey) {
@@ -314,7 +310,6 @@ async function analyzeCodeWithOpenAI() {
       await writeAnalysis(msg);
       return msg;
     }
-
     // Use the new readDiffFile function
     try {
       diffContent = await readDiffFile(diffFilePath);
@@ -325,15 +320,12 @@ async function analyzeCodeWithOpenAI() {
       await writeAnalysis(`No analysis performed: ${msg}`);
       return msg;
     }
-
     const truncated = truncateDiff(diffContent);
     console.log({ 'Truncated length': truncated.length });
-
     const prompt = buildSystemPrompt();
     return await makeApiRequestWithFallback(prompt, truncated, diffContent);
-
   } catch (error) {
-    const sanitized = sanitizeErrorForLogging(error);
+    const sanitized = sanitizeErrorForLogging(error, openaiApiKey);
     const category = categorizeError(error);
     console.error(`Error (${category.type}): ${sanitized}`);
     const fallback = generateFallbackAnalysis(diffContent);
@@ -341,7 +333,6 @@ async function analyzeCodeWithOpenAI() {
     return fallback;
   }
 }
-
 /**
  * Requests analysis from OpenAI with fallback and logging
  */
@@ -360,27 +351,24 @@ async function makeApiRequestWithFallback(prompt, truncatedDiff, fullDiff) {
       console.log(`Analysis succeeded with ${model}`);
       return result;
     } catch (error) {
-      const sanitized = sanitizeErrorForLogging(error);
+      const sanitized = sanitizeErrorForLogging(error, openaiApiKey);
       const category = categorizeError(error);
       console.error(`Model ${model} error (${category.type}): ${sanitized}`);
       if (!category.retryable) throw error;
       console.log('Retryable error, trying next model...');
     }
   }
-
   console.warn('All models failed, generating fallback analysis.');
   const fallback = generateFallbackAnalysis(fullDiff);
   await writeAnalysis(fallback);
   return fallback;
 }
-
 /**
  * Sends the chat completion request to OpenAI
  */
 async function makeOpenAiRequest(model, prompt, truncatedDiff) {
   let attempts = 0;
   let lastError;
-
   while (attempts <= config.api.maxRetries) {
     try {
       if (attempts > 0) {
@@ -392,17 +380,19 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
       
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
-        { model, messages: [
+        { 
+          model, 
+          messages: [
             { role: 'system', content: prompt },
             { role: 'user', content: `Analyze this git diff and provide a code review:\n\n${truncatedDiff}` }
-          ], temperature: 0.3, max_tokens: 2000
+          ],
+          ...config.api.requestOptions
         },
         { 
           headers: { Authorization: `Bearer ${openaiApiKey}` },
           timeout: 60000 // 60 second timeout
         }
       );
-
       const content = response.data?.choices?.[0]?.message?.content;
       if (!content) throw new Error('Unexpected response structure from OpenAI API');
       return content;
@@ -412,14 +402,12 @@ async function makeOpenAiRequest(model, prompt, truncatedDiff) {
       attempts++;
     }
   }
-
   throw lastError;
 }
-
 // Entry point
 analyzeCodeWithOpenAI()
   .then(res => console.log('Analysis completed successfully'))
   .catch(err => { 
-    console.error('Uncaught error:', sanitizeErrorForLogging(err)); 
+    console.error('Uncaught error:', sanitizeErrorForLogging(err, openaiApiKey)); 
     process.exit(1); 
   });
