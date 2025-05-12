@@ -6,14 +6,37 @@ import { Recipe } from '@/types/quick-recipe';
 
 /**
  * Props interface for the RecipeActionButtons component
- * Provides proper TypeScript validation for all props
  */
 interface RecipeActionButtonsProps {
-  onSave?: () => void;          // Optional callback for save action
-  isSaving?: boolean;           // Flag indicating if save is in progress
-  saveSuccess?: boolean;        // Flag indicating if save was successful
-  recipe?: Recipe;              // The recipe data
-  onResetSaveSuccess?: () => void; // Optional callback to reset the success state
+  /** 
+   * Callback triggered when user wants to save a recipe.
+   * Used to persist recipe data to user's saved collection.
+   */
+  onSave?: () => void;          
+  
+  /** 
+   * Indicates an in-progress save operation to prevent duplicate submissions
+   * and provide visual feedback to the user.
+   */
+  isSaving?: boolean;           
+  
+  /** 
+   * Tracks whether a save operation completed successfully to
+   * show appropriate success UI and prevent duplicate saves.
+   */
+  saveSuccess?: boolean;        
+  
+  /** 
+   * The recipe data being saved, useful for logging or 
+   * implementing default save behavior when no onSave is provided.
+   */
+  recipe?: Recipe;              
+  
+  /** 
+   * Callback to reset the saveSuccess state after a delay or user action.
+   * Critical for allowing users to save again after a successful operation.
+   */
+  onResetSaveSuccess?: () => void; 
 }
 
 /**
@@ -39,12 +62,36 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
    */
   const handleSave = () => {
     if (onSave) {
-      // Reset save success state if we're trying to save again
-      if (saveSuccess && onResetSaveSuccess && !resetCalled) {
-        onResetSaveSuccess();
-        setResetCalled(true); // Mark reset as called to prevent multiple invocations
+      try {
+        // Reset save success state if we're trying to save again
+        if (saveSuccess && onResetSaveSuccess && !resetCalled) {
+          onResetSaveSuccess();
+          setResetCalled(true); // Mark reset as called to prevent multiple invocations
+        }
+        
+        // Call the onSave function provided by parent
+        onSave();
+        
+        // Reset the resetCalled state after the save operation completes
+        // This allows tracking future reset calls correctly
+        if (resetCalled) {
+          // Small timeout ensures this happens after the save operation
+          setTimeout(() => {
+            setResetCalled(false);
+          }, 100);
+        }
+      } catch (error) {
+        // Handle potential errors during the save process
+        console.error("Error saving recipe:", error);
+        // Reset the resetCalled state if an error occurred
+        setResetCalled(false);
+        
+        // If there was an error and we previously reset the success state,
+        // we may need to restore it (optional, depends on UX needs)
+        if (resetCalled && saveSuccess && onResetSaveSuccess) {
+          // This is a no-op if the error is handled elsewhere and saveSuccess is managed by parent
+        }
       }
-      onSave();
     } else {
       // Default implementation for when no onSave callback is provided
       console.log("Saving recipe:", recipe?.title);
