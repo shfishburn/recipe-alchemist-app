@@ -1,37 +1,37 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCcw } from 'lucide-react';
-import { QuickRecipeFormData } from '@/types/quick-recipe';
+import { RefreshCw } from 'lucide-react';
 
-export interface QuickRecipeRegenerationProps {
-  formData: QuickRecipeFormData;
+interface QuickRecipeRegenerationProps {
+  formData: any;
   isLoading: boolean;
-  onRetry?: () => void;
+  onRetry: () => void;
 }
 
-export function QuickRecipeRegeneration({ 
+export const QuickRecipeRegeneration: React.FC<QuickRecipeRegenerationProps> = ({ 
   formData, 
   isLoading, 
   onRetry 
-}: QuickRecipeRegenerationProps) {
-  // Don't show regeneration if there's no form data
+}) => {
   if (!formData) return null;
-  
+
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-gray-100">
-      <h3 className="text-xl font-semibold mb-4">Not quite what you wanted?</h3>
-      <p className="mb-4 text-muted-foreground">
-        You can regenerate this recipe with the same ingredients and preferences.
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
+      <h2 className="text-lg font-semibold mb-3">Not quite right?</h2>
+      <p className="text-muted-foreground text-sm mb-4">
+        You can generate another recipe with the same ingredients
       </p>
       <Button 
-        onClick={onRetry} 
+        onClick={onRetry}
         disabled={isLoading}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 bg-recipe-green hover:bg-recipe-green/90"
       >
-        <RefreshCcw className="h-4 w-4" />
-        Regenerate Recipe
+        <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        {isLoading ? 'Generating...' : 'Generate Another Recipe'}
       </Button>
     </div>
   );
-}
+};
+
+export default QuickRecipeRegeneration;
