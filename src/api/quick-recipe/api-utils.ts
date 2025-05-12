@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { callSupabaseFunction } from '../supabaseFunctionClient';
 
 // Helper function to get authentication token
 export const getAuthToken = async (): Promise<string> => {
@@ -59,7 +60,7 @@ export const fetchFromEdgeFunction = async (payload: any) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Debug-Info': `direct-fetch-${Date.now()}`,
+          // REMOVED: 'X-Debug-Info' header that was causing CORS issues
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
