@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardWrapper } from '@/components/ui/card-wrapper';
-import { RefreshCw, FlaskRound, Share, Printer } from 'lucide-react';
+import { RefreshCw, FlaskRound, Share, Printer, Trash2 } from 'lucide-react';
 import type { Recipe } from '@/types/recipe';
 import { useRecipeScience } from '@/hooks/use-recipe-science';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
+import { useNavigate } from 'react-router-dom';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface UtilitiesTabContentProps {
   recipe: Recipe;
@@ -15,6 +18,9 @@ interface UtilitiesTabContentProps {
 export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
   const { refetch, isLoading: isAnalyzing } = useRecipeScience(recipe);
   const { toast } = useToast();
+  const { mutate: deleteRecipe, isDeleting } = useDeleteRecipe();
+  const navigate = useNavigate();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleForceRegenerate = () => {
     toast({
@@ -46,6 +52,32 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
         title: "Share",
         description: "Sharing is not supported in this browser",
         duration: 3000
+      });
+    }
+  };
+  
+  // Handler for deleting a recipe
+  const handleDelete = () => {
+    if (recipe && recipe.id) {
+      deleteRecipe(recipe.id, {
+        onSuccess: () => {
+          toast({
+            title: "Recipe deleted",
+            description: "Your recipe has been moved to trash",
+            duration: 3000
+          });
+          // Navigate back to the recipes list
+          navigate('/recipes');
+        },
+        onError: (error) => {
+          console.error('Delete recipe error:', error);
+          toast({
+            title: "Error",
+            description: "Failed to delete recipe. Please try again.",
+            variant: "destructive",
+            duration: 5000
+          });
+        }
       });
     }
   };
@@ -134,6 +166,47 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
               <Printer className="h-3.5 w-3.5 mr-1" />
               Print
             </Button>
+          </div>
+
+          <Separator className="my-4" />
+          
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-medium">Delete Recipe</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Move this recipe to trash. It can be restored later from the trash.
+              </p>
+            </div>
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-1 whitespace-nowrap text-destructive border-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                  Delete Recipe
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure you want to delete this recipe?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This recipe will be moved to trash. You can restore it later from the trash if needed.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDelete} 
+                    disabled={isDeleting}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete Recipe'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </CardWrapper>
