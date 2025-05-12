@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -60,12 +61,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           percentComplete: 0
         },
         
-        /**
-         * @locked
-         * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
-         * Reason: Critical state management logic that handles validation,
-         * error categorization, and state transitions for recipe generation.
-         */
+        // Actions
         setRecipe: (recipe) => {
           // Check for error conditions to distinguish between error and valid recipe
           if (recipe && (recipe.isError === true || recipe.error_message)) {
@@ -96,11 +92,6 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         setFormData: (formData) => set({ formData }),
         
-        /**
-         * @locked
-         * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
-         * Reason: Error handling logic that includes timeout detection.
-         */
         setError: (error) => set({ 
           error, 
           isLoading: false,
@@ -134,12 +125,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           hasTimeoutError: false
         }),
         
-        /**
-         * @locked
-         * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
-         * Reason: Critical validation logic that ensures only valid recipes are
-         * accepted and displayed to users.
-         */
+        // Recipe validation function
         isRecipeValid: (recipe) => {
           if (!recipe) return false;
           

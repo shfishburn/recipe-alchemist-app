@@ -1,11 +1,9 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { showAuthPrompt } from '@/components/auth/ContextAwareAuthDrawer';
 
 export function useQuickRecipeForm() {
   const navigate = useNavigate();
@@ -29,12 +27,7 @@ export function useQuickRecipeForm() {
     setNavigate(navigate);
   }, [navigate, setNavigate]);
   
-  /**
-   * @locked
-   * DO NOT MODIFY WITHOUT APPROVAL — S. Fishburn, 2025-05-12
-   * Reason: Core form submission logic with authentication flow,
-   * error handling, and recipe generation sequence.
-   */
+  // Handle form submission
   const handleSubmit = useCallback(async (formData: QuickRecipeFormData) => {
     try {
       console.log("useQuickRecipeForm - Handling form submission with data:", formData);
@@ -139,18 +132,6 @@ export function useQuickRecipeForm() {
         console.log("Recipe generation successful:", generatedRecipe);
         setRecipe(generatedRecipe);
         
-        // If user is not authenticated, show auth prompt to save recipe
-        if (!session && generatedRecipe) {
-          setTimeout(() => {
-            // Use the context-aware auth prompt with recipe-save context
-            showAuthPrompt('recipe-save', {
-              returnPath: '/quick-recipe',
-              recipe: generatedRecipe,
-              formData: processedFormData
-            });
-          }, 1000);
-        }
-        
         // Success message in console instead of toast
         console.log("Recipe created successfully!");
         
@@ -198,7 +179,7 @@ export function useQuickRecipeForm() {
       setError(error.message || "Failed to submit recipe request. Please try again.");
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError, updateLoadingState, session]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError, updateLoadingState]);
 
   return {
     handleSubmit,

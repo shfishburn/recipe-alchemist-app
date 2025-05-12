@@ -155,22 +155,8 @@ const LoadingPage: React.FC = () => {
     }
   }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading, setIsRetrying]);
 
-  // Prevent body scrolling when loading page is active
-  useEffect(() => {
-    // Save the original overflow style
-    const originalStyle = document.body.style.overflow;
-    
-    // Prevent scrolling
-    document.body.style.overflow = 'hidden';
-    
-    // Restore original style when component unmounts
-    return () => {
-      document.body.style.overflow = originalStyle;
-    };
-  }, []);
-
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 overflow-x-hidden">
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
         {/* Progress bar at the top */}
         <div className="absolute top-0 left-0 right-0 h-1 overflow-hidden">
