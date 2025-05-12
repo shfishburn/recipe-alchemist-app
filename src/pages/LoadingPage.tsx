@@ -7,7 +7,7 @@
  * during recipe generation, API calls, and other intensive operations.
  */
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -37,11 +37,12 @@ const LoadingPage: React.FC = () => {
   
   const { generateQuickRecipe } = useQuickRecipe();
   
-  const [progress, setProgress] = React.useState(10);
-  const [showTimeoutMessage, setShowTimeoutMessage] = React.useState(false);
-  const [isRetrying, setIsRetrying] = React.useState(false);
-  const [retryCount, setRetryCount] = React.useState(0);
-  const [hasNetworkIssue, setHasNetworkIssue] = React.useState(false);
+  const [progress, setProgress] = useState(10);
+  const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [hasNetworkIssue, setHasNetworkIssue] = useState(false);
+  const [forcedError, setForcedError] = useState<string | null>(null);
   const MAX_RETRIES = 3;
   
   // Use a single ref to store all timeout and interval IDs
@@ -70,6 +71,27 @@ const LoadingPage: React.FC = () => {
       window.removeEventListener('offline', handleNetworkChange);
     };
   }, []);
+  
+  // Add a safety fallback for state that gets stuck at high progress
+  useEffect(() => {
+    if (isLoading && !error && progress >= 90) {
+      // If we're stuck at high progress for too long (30 seconds), show an error message
+      const safetyTimeoutId = addTimer(setTimeout(() => {
+        console.log("[SAFETY FALLBACK] Loading has been stuck at high progress for too long");
+        setForcedError("Recipe generation is taking too long. The request may be stuck or failed silently.");
+        setLoading(false); // Stop loading state to allow retry
+      }, 30000)); // 30 seconds
+      
+      return () => clearTimeout(safetyTimeoutId);
+    }
+  }, [isLoading, error, progress, setLoading]);
+  
+  // Handle forced errors the same way as regular errors
+  useEffect(() => {
+    if (forcedError && !error) {
+      setError(forcedError);
+    }
+  }, [forcedError, setError, error]);
   
   // Redirect back to quick-recipe if loading is complete or we have a recipe
   useEffect(() => {
@@ -117,7 +139,7 @@ const LoadingPage: React.FC = () => {
       const slowProgressInterval = addTimer(setInterval(() => {
         setProgress(prev => {
           if (prev >= 80) {
-            return Math.min(prev + 0.2, 95); // Very slow progress up to 95%
+            return Math.min(prev + 0.2, 93); // Very slow progress up to 93% - don't go to 100% automatically
           }
           return prev;
         });
@@ -161,29 +183,55 @@ const LoadingPage: React.FC = () => {
       try {
         setIsRetrying(true);
         setError(null);
+        setForcedError(null); // Clear any forced errors
         setLoading(true);
         setRetryCount(prev => prev + 1);
+        setProgress(10); // Reset progress
         
-        console.log("Retrying recipe generation with formData:", formData);
+        console.log(`[RETRY ATTEMPT ${retryCount + 1}] Retrying recipe generation with formData:`, formData);
         
-        // Start a new generation with the existing form data
-        await generateQuickRecipe(formData);
+        // Add network request monitoring
+        const timeoutPromise = new Promise((_, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error("Recipe generation timed out after 120 seconds. Please try again."));
+          }, 120000); // 2 minute timeout
+          
+          // Store the timeout ID for cleanup
+          addTimer(timeoutId);
+        });
+        
+        try {
+          // Race the recipe generation against a timeout
+          await Promise.race([
+            generateQuickRecipe(formData),
+            timeoutPromise
+          ]);
+        } catch (error: any) {
+          console.error("[RECIPE GENERATION ERROR]", error);
+          throw error;
+        }
         
         setIsRetrying(false);
       } catch (error: any) {
         console.error("Error during retry:", error);
+        toast({
+          title: "Recipe generation failed",
+          description: error.message || "Please try again with different ingredients.",
+          variant: "destructive",
+        });
         setIsRetrying(false);
+        setLoading(false);
       }
     } else {
       // If no form data is available, go back to quick recipe page
       navigate('/quick-recipe');
     }
-  }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading]);
+  }, [formData, generateQuickRecipe, navigate, retryCount, setError, setLoading, addTimer]);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center w-full h-screen bg-white dark:bg-gray-950 overflow-x-hidden">
       <div className="w-full max-w-md p-4 sm:p-6 flex flex-col items-center">
-        {error || hasNetworkIssue ? (
+        {error || hasNetworkIssue || forcedError ? (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -197,7 +245,7 @@ const LoadingPage: React.FC = () => {
             <p className="text-muted-foreground">
               {hasNetworkIssue 
                 ? "Please check your internet connection and try again."
-                : error}
+                : error || forcedError || "An unknown error occurred"}
             </p>
             
             {/* Timeout message */}

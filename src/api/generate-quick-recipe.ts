@@ -32,80 +32,128 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     
     console.log("Sending request to edge function with body:", JSON.stringify(requestBody));
     
-    // Set a timeout for the request (120 seconds)
-    const timeoutPromise = createTimeoutPromise(120000);
-    
-    // Create a function to call using our utility
-    const callWithSupabaseFunctionClient = async () => {
-      const token = await getAuthToken();
-      console.log("Got auth token:", token ? "token exists" : "no token");
-      
-      const response = await callSupabaseFunction<typeof requestBody, any>('generate-quick-recipe', {
-        payload: requestBody,
-        token,
-        debugTag: 'direct-fetch-production'
-      });
-      
-      if (response.error) {
-        console.error("Supabase function error:", response.error);
-        // Return a recipe with embedded error info
-        return {
-          title: "Recipe Generation Issue",
-          description: response.error,
-          ingredients: [],
-          steps: ["There was an issue creating your recipe: " + response.error],
-          error_message: response.error,
-          isError: true,
-          servings: 2
-        };
-      }
-      
-      console.log("Supabase function response:", response);
-      return response.data;
-    };
-    
-    // Race both approaches against the timeout
-    console.log("Starting race with timeout");
-    const data = await Promise.race([
-      callWithSupabaseFunctionClient().catch(async err => {
-        console.warn("Supabase function client failed, falling back to direct fetch:", err);
-        return fetchFromEdgeFunction(requestBody);
-      }),
-      timeoutPromise
-    ]);
-    
-    console.log("Race completed, data received:", data ? "data exists" : "no data");
-    
-    // Handle missing data
-    if (!data) {
-      console.error('No data returned from recipe generation');
-      // Create a minimal recipe with error info
+    // Network status check before making request
+    if (!navigator.onLine) {
+      console.error("Network is offline");
       return {
-        title: "Recipe Generation Failed",
-        description: "No recipe data returned",
+        title: "Network Error",
+        description: "You appear to be offline. Please check your internet connection and try again.",
         ingredients: [],
-        steps: ["No recipe data could be generated. Please try again."],
-        error_message: "No recipe data returned. Please try again.",
+        steps: ["Please check your internet connection and try again."],
+        error_message: "You appear to be offline. Please check your internet connection and try again.",
         isError: true,
         servings: 2
       };
     }
     
-    // Explicitly check for error flags in response
-    if (data.isError === true || data.error || data.error_message) {
-      console.log("Response contains error flags:", data.error || data.error_message);
+    // Set a timeout for the request (120 seconds)
+    const timeoutPromise = createTimeoutPromise(120000);
+    
+    // Create a function to call using our utility
+    const callWithSupabaseFunctionClient = async () => {
+      try {
+        const token = await getAuthToken();
+        console.log("Got auth token:", token ? "token exists" : "no token");
+        
+        const response = await callSupabaseFunction<typeof requestBody, any>('generate-quick-recipe', {
+          payload: requestBody,
+          token,
+          debugTag: 'direct-fetch-production'
+        });
+        
+        if (response.error) {
+          console.error("Supabase function error:", response.error);
+          // Return a recipe with embedded error info
+          return {
+            title: "Recipe Generation Issue",
+            description: response.error,
+            ingredients: [],
+            steps: ["There was an issue creating your recipe: " + response.error],
+            error_message: response.error,
+            isError: true,
+            servings: 2
+          };
+        }
+        
+        console.log("Supabase function response:", response);
+        return response.data;
+      } catch (err) {
+        console.error("Error in callWithSupabaseFunctionClient:", err);
+        throw err;
+      }
+    };
+    
+    // Race both approaches against the timeout
+    console.log("Starting race with timeout");
+    
+    try {
+      const data = await Promise.race([
+        callWithSupabaseFunctionClient().catch(async err => {
+          console.warn("Supabase function client failed, falling back to direct fetch:", err);
+          return fetchFromEdgeFunction(requestBody);
+        }),
+        timeoutPromise
+      ]);
+      
+      console.log("Race completed, data received:", data ? "data exists" : "no data");
+      
+      // Handle missing data
+      if (!data) {
+        console.error('No data returned from recipe generation');
+        // Create a minimal recipe with error info
+        return {
+          title: "Recipe Generation Failed",
+          description: "No recipe data returned",
+          ingredients: [],
+          steps: ["No recipe data could be generated. Please try again."],
+          error_message: "No recipe data returned. Please try again.",
+          isError: true,
+          servings: 2
+        };
+      }
+      
+      // Explicitly check for error flags in response
+      if (data.isError === true || data.error || data.error_message) {
+        console.log("Response contains error flags:", data.error || data.error_message);
+        return {
+          ...data,
+          isError: true // Ensure isError flag is set
+        };
+      }
+      
+      // Normalize the recipe data with more forgiving validation
+      const normalizedRecipe = normalizeRecipeResponse(data);
+      
+      console.log('Normalized recipe:', normalizedRecipe);
+      
+      return normalizedRecipe;
+    } catch (raceError) {
+      console.error("Race error:", raceError);
+      
+      // Check if it's a timeout error
+      if (raceError.message && raceError.message.includes("timeout")) {
+        return {
+          title: "Recipe Generation Timed Out",
+          description: "The request took too long to complete. Please try again.",
+          ingredients: [],
+          steps: ["The recipe generation process timed out. This could be due to high server load or complexity of the recipe. Please try again with simpler ingredients."],
+          error_message: raceError.message,
+          isError: true,
+          servings: 2
+        };
+      }
+      
+      // General error handler
       return {
-        ...data,
-        isError: true // Ensure isError flag is set
+        title: "Recipe Generation Error",
+        description: raceError.message || "An error occurred during recipe generation",
+        ingredients: [],
+        steps: ["There was an error generating your recipe: " + (raceError.message || "Unknown error")],
+        error_message: raceError.message || "Unknown error occurred",
+        isError: true,
+        servings: 2
       };
     }
-    
-    // Normalize the recipe data with more forgiving validation
-    const normalizedRecipe = normalizeRecipeResponse(data);
-    
-    console.log('Normalized recipe:', normalizedRecipe);
-    
-    return normalizedRecipe;
   } catch (error: any) {
     console.error('Error in generateQuickRecipe:', error);
     

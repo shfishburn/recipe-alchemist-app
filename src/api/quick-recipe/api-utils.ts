@@ -33,8 +33,7 @@ const validateRequestPayload = (payload: any): boolean => {
 // Helper function to fetch from edge function directly
 export const fetchFromEdgeFunction = async (payload: any) => {
   try {
-    // Instead of accessing the protected url property, construct the URL properly
-    // Use the Supabase project URL and append the function name
+    // Build the URL properly using the Supabase project URL 
     const supabaseProjectUrl = "https://zjyfumqfrtppleftpzjd.supabase.co";
     const url = `${supabaseProjectUrl}/functions/v1/generate-quick-recipe`;
     
@@ -45,43 +44,86 @@ export const fetchFromEdgeFunction = async (payload: any) => {
       throw new Error('Invalid payload for recipe generation');
     }
     
-    // Call the edge function directly
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Info': `direct-fetch-${Date.now()}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    // Additional logging to track network requests
+    const requestStartTime = Date.now();
+    console.log(`[REQUEST START] ${new Date().toISOString()} - Sending request to ${url}`);
     
-    if (!response.ok) {
-      // Try to extract error message from response
-      let errorMessage = `Edge function returned status ${response.status}`;
-      try {
-        const errorData = await response.json();
-        if (errorData && errorData.error) {
-          errorMessage = errorData.error;
+    // Add request timeout with clear error message
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+    
+    try {
+      // Call the edge function directly with timeout
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Debug-Info': `direct-fetch-${Date.now()}`,
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      
+      // Clear the timeout since the request completed
+      clearTimeout(timeoutId);
+      
+      const requestEndTime = Date.now();
+      console.log(`[REQUEST END] ${new Date().toISOString()} - Response received in ${requestEndTime - requestStartTime}ms with status ${response.status}`);
+      
+      if (!response.ok) {
+        // Try to extract error message from response
+        let errorMessage = `Edge function returned status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // Ignore parse error and use default message
         }
-      } catch (e) {
-        // Ignore parse error and use default message
+        throw new Error(errorMessage);
       }
-      throw new Error(errorMessage);
+      
+      const data = await response.json();
+      console.log(`[RESPONSE DATA] Successfully parsed response data`);
+      return data;
+      
+    } catch (fetchError) {
+      // Clear the timeout if it was an error
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.error(`[REQUEST TIMEOUT] Request to ${url} timed out after 120 seconds`);
+        throw new Error('Recipe generation request timed out. Please try again.');
+      }
+      
+      console.error(`[REQUEST ERROR] ${fetchError.message}`);
+      throw fetchError;
     }
-    
-    return await response.json();
   } catch (error) {
     console.error('Error calling edge function directly:', error);
-    // REMOVED: markEdgeFunctionUnavailable calls
     throw error;
   }
 };
 
 // Helper function to fetch from Supabase Functions
 export const fetchFromSupabaseFunctions = async (payload: any, token: string) => {
-  return callSupabaseFunction('generate-quick-recipe', {
-    payload,
-    token,
-    debugTag: 'fetch-from-functions'
-  });
+  try {
+    console.log(`[SUPABASE FUNCTION] Starting request with token: ${token ? "token exists" : "no token"}`);
+    const requestStartTime = Date.now();
+    
+    const result = await callSupabaseFunction('generate-quick-recipe', {
+      payload,
+      token,
+      debugTag: 'fetch-from-functions'
+    });
+    
+    const requestEndTime = Date.now();
+    console.log(`[SUPABASE FUNCTION] Response received in ${requestEndTime - requestStartTime}ms with success: ${!result.error}`);
+    
+    return result;
+  } catch (error) {
+    console.error('[SUPABASE FUNCTION ERROR]', error);
+    throw error;
+  }
 };
