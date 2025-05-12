@@ -58,7 +58,7 @@ export async function callSupabaseFunction<TInput = unknown, TOutput = unknown>(
       body: payload,
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        'X-Debug-Info': `${debugTag}-${Date.now()}`,
+        'x-debug-info': `${debugTag}-${Date.now()}`, // Use lowercase header to match CORS configuration
         ...headers
       }
     });

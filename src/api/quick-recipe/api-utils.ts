@@ -54,13 +54,19 @@ export const fetchFromEdgeFunction = async (payload: any) => {
     const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
     
     try {
+      // Get authentication token
+      const token = await getAuthToken();
+      
       // Call the edge function directly with timeout
       // IMPORTANT: Added credentials: 'omit' to prevent sending auth cookies/headers
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // REMOVED: 'X-Debug-Info' header that was causing CORS issues
+          // Using lowercase header name to match CORS configuration
+          'x-debug-info': `direct-fetch-${Date.now()}`,
+          // Add explicit Authorization header with token
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
