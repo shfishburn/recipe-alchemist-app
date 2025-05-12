@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
@@ -20,6 +20,8 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   recipe,
   onResetSaveSuccess
 }: RecipeActionButtonsProps) {
+  // Use useRef for timer to ensure proper cleanup
+  const timerRef = useRef<number | undefined>();
   
   const handleSave = () => {
     if (onSave) {
@@ -35,18 +37,27 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   };
   
   // If successful, set up a timer to reset the success state
-  React.useEffect(() => {
-    let timer: number | undefined;
+  useEffect(() => {
+    // Clear any existing timer first to prevent multiple timers
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = undefined;
+    }
     
-    if (saveSuccess && onResetSaveSuccess) {
+    if (saveSuccess && typeof onResetSaveSuccess === 'function') {
       // Reset the success state after 5 seconds to allow saving again
-      timer = window.setTimeout(() => {
+      timerRef.current = window.setTimeout(() => {
         onResetSaveSuccess();
+        timerRef.current = undefined; // Clear the ref after execution
       }, 5000); // 5 seconds
     }
     
+    // Clean up timer on component unmount
     return () => {
-      if (timer) clearTimeout(timer);
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = undefined;
+      }
     };
   }, [saveSuccess, onResetSaveSuccess]);
   

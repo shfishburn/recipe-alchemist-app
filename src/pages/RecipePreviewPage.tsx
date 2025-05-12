@@ -158,6 +158,7 @@ const RecipePreviewPage: React.FC = () => {
             isSaving={isSaving}
             saveSuccess={saveSuccess}
             debugMode={debugMode}
+            onResetSaveSuccess={resetSaveSuccess}
           />
           <QuickRecipeRegeneration 
             formData={formData} 
