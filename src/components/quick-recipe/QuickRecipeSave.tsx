@@ -11,7 +11,10 @@ const FIELD_MAPPINGS = {
   prepTime: 'prep_time_min',
   cookTime: 'cook_time_min',
   cookingTip: 'cooking_tip',
-  // Add any other camelCase to snake_case mappings here
+  nutritionHighlight: 'nutrition_highlight',
+  flavorTags: 'flavor_tags',
+  scienceNotes: 'science_notes',
+  steps: 'instructions', // Map steps to instructions (they're the same content)
 };
 
 // Define a whitelist of valid database column names
@@ -19,18 +22,34 @@ const VALID_DB_FIELDS = [
   'id',
   'title',
   'description',
+  'tagline',
   'ingredients',
-  'steps',
   'instructions',
+  'steps', // This will be transformed to instructions
   'servings',
   'prep_time_min',
   'cook_time_min',
+  'nutrition',
   'cooking_tip',
   'cuisine',
   'dietary',
   'flavor_tags',
-  'user_id',
-  // Add any other valid database columns here
+  'science_notes',
+  'nutritionHighlight',
+  'nutrition_highlight',
+  'chef_notes',
+  'image_url',
+  'reasoning',
+  'original_request',
+  'version_number',
+  'previous_version_id',
+  'deleted_at',
+  'created_at',
+  'updated_at',
+  'slug',
+  'nutri_score',
+  'cuisine_category',
+  'user_id'
 ];
 
 export function useQuickRecipeSave() {
@@ -113,6 +132,7 @@ export function useQuickRecipeSave() {
  * Transforms a recipe object from frontend format to database format:
  * 1. Maps camelCase properties to snake_case database columns
  * 2. Removes properties that don't exist in the database
+ * 3. Handles special cases like arrays and nested objects
  */
 function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
@@ -135,6 +155,13 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
     result[key] = value;
   }
   
+  // Handle special transformations for arrays and objects
+  if (result.steps && !result.instructions) {
+    // Ensure steps get properly mapped to instructions (if not already)
+    result.instructions = result.steps;
+    delete result.steps; // Remove the duplicate after mapping
+  }
+  
   // Filter out any properties not in our database whitelist
   const finalResult: Record<string, any> = {};
   for (const dbField of VALID_DB_FIELDS) {
@@ -146,6 +173,16 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
   // Always ensure user_id is preserved
   if ('user_id' in recipe) {
     finalResult.user_id = recipe.user_id;
+  }
+  
+  // Ensure arrays are properly formatted
+  if (finalResult.flavor_tags && typeof finalResult.flavor_tags === 'string') {
+    finalResult.flavor_tags = [finalResult.flavor_tags];
+  }
+  
+  // Handle science_notes - ensure it's an array
+  if (finalResult.science_notes && !Array.isArray(finalResult.science_notes)) {
+    finalResult.science_notes = [finalResult.science_notes];
   }
   
   console.log("Original recipe:", recipe);
