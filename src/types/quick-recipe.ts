@@ -37,6 +37,7 @@ export interface QuickRecipe {
   flavor_tags?: string[];
   user_id?: string;
   id?: string;
+  slug?: string;  // Added slug property
   // Error-related properties
   error?: string;
   error_message?: string;
