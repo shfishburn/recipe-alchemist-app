@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -45,10 +44,15 @@ const RecipePreviewPage: React.FC = () => {
       if (savedData) {
         setSaveSuccess(true);
         
-        // Immediately navigate to the recipe detail page after a successful save
+        // Show toast with dismissal navigation instead of immediate navigation
         if (savedData.id && savedData.slug) {
-          toast.success("Recipe saved successfully!");
-          navigate(`/recipes/${savedData.slug}`);
+          // Show success toast with 2000ms duration and navigation on dismiss
+          toast.success("Recipe saved successfully!", {
+            duration: 2000,
+            onDismiss: () => {
+              navigate(`/recipes/${savedData.slug}`);
+            }
+          });
         }
       } else {
         // Handle case where savedData is falsy but no error was thrown
