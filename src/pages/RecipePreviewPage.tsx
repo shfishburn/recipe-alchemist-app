@@ -45,16 +45,11 @@ const RecipePreviewPage: React.FC = () => {
       if (savedData) {
         setSaveSuccess(true);
         
-        // Use toast with onDismiss callback for better UX
-        toast.success("Recipe saved successfully!", {
-          onDismiss: () => {
-            // Navigate to the saved recipe detail page after toast is dismissed
-            if (savedData.id && savedData.slug) {
-              navigate(`/recipes/${savedData.slug}`);
-            }
-          },
-          duration: 2000, // 2 seconds is enough for users to see the toast
-        });
+        // Immediately navigate to the recipe detail page after a successful save
+        if (savedData.id && savedData.slug) {
+          toast.success("Recipe saved successfully!");
+          navigate(`/recipes/${savedData.slug}`);
+        }
       } else {
         // Handle case where savedData is falsy but no error was thrown
         toast.warning("Recipe was not saved properly. Please try again.");
