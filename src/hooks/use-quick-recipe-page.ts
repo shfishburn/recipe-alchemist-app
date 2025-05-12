@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -78,19 +77,28 @@ export function useQuickRecipePage() {
             // Start an async generation
             try {
               await generateQuickRecipe(recipeData.formData);
-            } catch (err: any) {
-              console.error("Error resuming recipe generation from location state:", err);
-              setError(err.message || "Failed to resume recipe generation. Please try again.");
+            } catch (e: unknown) {
+              const message = e instanceof Error ? e.message : "Failed to resume recipe generation. Please try again.";
+              console.error("Error resuming recipe generation from location state:", e);
+              setError(message);
               setLoading(false);
             }
           } else if (recipeData.recipe) {
-            // We already have a generated recipe, just display it
-            console.log("Using already generated recipe from location state");
-            setRecipe(recipeData.recipe);
+            // We already have a generated recipe in location.state
+            // Only set it if it's not already the current recipe in the store,
+            // or if the store's recipe is null/undefined.
+            // Assuming recipes have a unique 'id' property.
+            if (!recipe || (recipe && recipeData.recipe.id !== recipe.id)) {
+              console.log("Setting/updating recipe from location state:", recipeData.recipe.title);
+              setRecipe(recipeData.recipe);
+            } else {
+              console.log("Recipe from location state is same as current store recipe or already set, not re-setting.");
+            }
           }
-        } catch (err: any) {
-          console.error("Error resuming recipe generation from location state:", err);
-          setError(err.message || "Failed to resume recipe generation. Please try again.");
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : "Failed to resume recipe generation. Please try again.";
+          console.error("Error resuming recipe generation from location state:", e);
+          setError(message);
           setLoading(false);
         }
         
@@ -128,14 +136,17 @@ export function useQuickRecipePage() {
               try {
                 // Start an async generation
                 await generateQuickRecipe(parsedData.formData);
-              } catch (err: any) {
-                console.error("Error resuming recipe generation from session storage:", err);
-                setError(err.message || "Failed to resume recipe generation. Please try again.");
+              } catch (e: unknown) {
+                const message = e instanceof Error ? e.message : "Failed to resume recipe generation. Please try again.";
+                console.error("Error resuming recipe generation from session storage:", e);
+                setError(message);
                 setLoading(false);
               }
             }
-          } catch (err: any) {
-            console.error("Error parsing stored recipe data:", err);
+          } catch (e: unknown) {
+            // For this catch, only console.error was used, so direct usage of 'e' is fine.
+            // If err.message were used, we'd need to process 'e' as above.
+            console.error("Error parsing stored recipe data:", e);
             sessionStorage.removeItem('recipeGenerationSource');
           }
         }
@@ -203,13 +214,14 @@ export function useQuickRecipePage() {
         await generateQuickRecipe(formData);
         
         setIsRetrying(false);
-      } catch (err: any) {
-        console.error("Error retrying recipe generation:", err);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "Please try again later.";
+        console.error("Error retrying recipe generation:", e);
         setIsRetrying(false);
         setLoading(false);
         toast({
           title: "Recipe generation failed",
-          description: err.message || "Please try again later.",
+          description: message,
           variant: "destructive",
         });
       }
