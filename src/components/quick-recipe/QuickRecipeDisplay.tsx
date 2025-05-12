@@ -8,16 +8,34 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Utensils, MessagesSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
 }
 
 export function QuickRecipeDisplay({ recipe }: QuickRecipeDisplayProps) {
-  const { saveRecipe, isSaving } = useQuickRecipeSave();
+  const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
   const [currentRecipe, setCurrentRecipe] = useState<QuickRecipe>(recipe);
   const [activeTab, setActiveTab] = useState<string>('recipe');
   const { session } = useAuth();
+  const navigate = useNavigate();
+  
+  // Effect to handle successful save with navigation
+  useEffect(() => {
+    if (savedRecipe && savedRecipe.id) {
+      console.log("Recipe saved, redirecting to:", savedRecipe);
+      // Update current recipe to the saved one
+      setCurrentRecipe(savedRecipe);
+      
+      // Navigate to the recipe detail page if we have a slug
+      if (savedRecipe.slug) {
+        navigate(`/recipes/${savedRecipe.slug}`);
+      } else if (savedRecipe.id) {
+        navigate(`/recipes/${savedRecipe.id}`);
+      }
+    }
+  }, [savedRecipe, navigate]);
   
   // Check for URL hash to determine initial tab and handle hash changes
   useEffect(() => {

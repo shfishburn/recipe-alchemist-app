@@ -1,9 +1,9 @@
-
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
 
 // Define which fields are valid in the database and their mappings
 const FIELD_MAPPINGS = {
@@ -51,7 +51,9 @@ const VALID_DB_FIELDS = [
 
 export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
+  const [savedRecipe, setSavedRecipe] = useState<QuickRecipe | null>(null);
   const { session } = useAuth();
+  const navigate = useNavigate();
 
   const saveRecipe = useCallback(async (recipe: QuickRecipe) => {
     try {
@@ -86,7 +88,7 @@ export function useQuickRecipeSave() {
           const { data, error } = await supabase
             .from('recipes')
             .insert(serializedRecipe)
-            .select('id')
+            .select('id, title, slug')
             .single();
           
           if (error) {
@@ -96,7 +98,33 @@ export function useQuickRecipeSave() {
           
           // Success!
           success = true;
-          toast.success("Recipe saved successfully!");
+          
+          // Load the saved recipe
+          if (data) {
+            const { data: savedRecipeData, error: fetchError } = await supabase
+              .from('recipes')
+              .select('*')
+              .eq('id', data.id)
+              .single();
+              
+            if (fetchError) {
+              console.error("Error fetching saved recipe:", fetchError);
+              // Still show success even if we couldn't fetch the complete recipe
+              toast.success("Recipe saved successfully!");
+            } else {
+              console.log("Saved recipe loaded:", savedRecipeData);
+              setSavedRecipe(savedRecipeData as unknown as QuickRecipe);
+              toast.success("Recipe saved successfully!", {
+                action: {
+                  label: "View Recipe",
+                  onClick: () => navigate(`/recipes/${savedRecipeData.slug || savedRecipeData.id}`),
+                },
+              });
+            }
+          } else {
+            toast.success("Recipe saved successfully!");
+          }
+          
           return data;
           
         } catch (err: any) {
@@ -120,9 +148,9 @@ export function useQuickRecipeSave() {
     } finally {
       setIsSaving(false);
     }
-  }, [session]);
+  }, [session, navigate]);
   
-  return { saveRecipe, isSaving };
+  return { saveRecipe, isSaving, savedRecipe };
 }
 
 /**
