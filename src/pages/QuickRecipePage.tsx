@@ -49,7 +49,8 @@ const QuickRecipePage: React.FC = () => {
       hasRecipe: !!recipe, 
       isLoading, 
       error, 
-      isDirectNavigation
+      isDirectNavigation,
+      recipeTitle: recipe?.title || 'No recipe'
     });
   }, [recipe, isLoading, error, isDirectNavigation]);
   
@@ -68,9 +69,15 @@ const QuickRecipePage: React.FC = () => {
           debugMode={debugMode}
         />
 
-        {isDirectNavigation ? (
-          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
-            <QuickRecipeFormContainer />
+        {/* Changed the rendering priority to check for recipe first */}
+        {recipe ? (
+          <div className="space-y-8">
+            <QuickRecipeDisplay recipe={recipe} debugMode={debugMode} />
+            <QuickRecipeRegeneration 
+              formData={formData} 
+              isLoading={isLoading} 
+              onRetry={handleRetry} 
+            />
           </div>
         ) : error ? (
           <QuickRecipeError
@@ -82,14 +89,9 @@ const QuickRecipePage: React.FC = () => {
             onRetry={handleRetry}
             isRetrying={isRetrying}
           />
-        ) : recipe ? (
-          <div className="space-y-8">
-            <QuickRecipeDisplay recipe={recipe} />
-            <QuickRecipeRegeneration 
-              formData={formData} 
-              isLoading={isLoading} 
-              onRetry={handleRetry} 
-            />
+        ) : isDirectNavigation ? (
+          <div className="bg-white/50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-6">
+            <QuickRecipeFormContainer />
           </div>
         ) : (
           <QuickRecipeEmpty />

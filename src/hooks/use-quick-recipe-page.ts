@@ -26,11 +26,27 @@ export function useQuickRecipePage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   
-  // Check if we're navigating from navbar (no state)
-  const isDirectNavigation = !location.state || (location.state && !location.state.fromForm && !location.state.fromLoading);
+  // Check if we're coming from the loading page
+  const isFromLoadingPage = location.state?.fromLoading === true;
+  
+  // More accurately determine if this is a direct navigation
+  const isDirectNavigation = !isFromLoadingPage && 
+                            !location.state?.fromForm && 
+                            !recipe;
   
   // Check if we're resuming a recipe generation after login
   const isResumingGeneration = location.state?.resumingGeneration || false;
+  
+  // Log navigation state for debugging
+  useEffect(() => {
+    console.log("QuickRecipePage navigation state:", {
+      isFromLoadingPage,
+      isDirectNavigation,
+      hasRecipe: !!recipe,
+      locationState: location.state || 'no state',
+      formData: !!formData
+    });
+  }, [isFromLoadingPage, isDirectNavigation, recipe, location.state, formData]);
   
   // Check if we need to resume recipe generation after login
   useEffect(() => {

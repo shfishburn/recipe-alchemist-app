@@ -39,11 +39,22 @@ const LoadingPage: React.FC = () => {
   
   // Handle redirection based on recipe generation state
   useEffect(() => {
+    // Log state for debugging
+    console.log("LoadingPage - Current state:", {
+      recipeExists: !!recipe,
+      isLoading,
+      displayError
+    });
+    
     // If there's an error, go back to quick recipe page after showing error
     if (displayError) {
       const timer = setTimeout(() => {
         navigate('/quick-recipe', { 
-          state: { error: displayError, formData },
+          state: { 
+            error: displayError, 
+            formData,
+            fromLoading: true
+          },
           replace: true 
         });
       }, 1500);
@@ -53,11 +64,12 @@ const LoadingPage: React.FC = () => {
     
     // If recipe is ready (not loading and we have recipe data), go to recipe page
     if (!isLoading && recipe) {
-      console.log("Recipe is ready, navigating to quick recipe page");
+      console.log("Recipe is ready, navigating to quick recipe page with recipe:", recipe.title);
       navigate('/quick-recipe', { 
         state: { 
           timestamp: Date.now(),
-          fromLoading: true
+          fromLoading: true,
+          hasRecipe: true
         },
         replace: true 
       });
@@ -71,7 +83,8 @@ const LoadingPage: React.FC = () => {
         state: { 
           error: "Recipe generation timed out. Please try again.",
           formData,
-          hasTimeoutError: true
+          hasTimeoutError: true,
+          fromLoading: true
         },
         replace: true 
       });
