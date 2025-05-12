@@ -1,3 +1,4 @@
+
 import fs from 'node:fs';
 import axios from 'axios';
 // Configuration object
@@ -50,9 +51,8 @@ function sanitizeErrorForLogging(error, apiKey) {
     return error instanceof Error ? error.toString() : JSON.stringify(error);
   }
   
-  // Convert error to string representation - protect against null/undefined
-  const msg = error instanceof Error ? error.toString() : 
-              (error ? JSON.stringify(error) : 'Unknown error');
+  // Simplified ternary operator for better readability
+  const msg = error ? (error instanceof Error ? error.toString() : JSON.stringify(error)) : 'Unknown error';
   
   try {
     // Escape special regex characters in the API key with CORRECT balanced brackets
@@ -310,7 +310,8 @@ async function analyzeCodeWithOpenAI() {
       return msg;
     }
     
-    let diffContent = '';
+    // Only declare diffContent where it's used
+    let diffContent;
     
     if (!openaiApiKey) {
       const msg = 'OpenAI API Key is not provided. Please add OPENAI_API_KEY to your repository secrets.';
@@ -330,8 +331,11 @@ async function analyzeCodeWithOpenAI() {
       return msg;
     }
     
+    // Truncate diff to respect token limits
     const truncated = truncateDiff(diffContent);
     console.log({ 'Truncated length': truncated.length });
+    
+    // Build prompt and request analysis
     const prompt = buildSystemPrompt();
     return await makeApiRequestWithFallback(prompt, truncated, diffContent);
   } catch (error) {
@@ -346,6 +350,10 @@ async function analyzeCodeWithOpenAI() {
       await writeAnalysis(fallback);
       return fallback;
     } catch (fallbackError) {
+      // Properly sanitize the fallback error
+      const sanitizedFallbackError = sanitizeErrorForLogging(fallbackError, openaiApiKey);
+      console.error('Error generating fallback analysis:', sanitizedFallbackError);
+      
       // Last resort error handling
       const basicMessage = 'Critical error in analysis. See logs for details.';
       await writeAnalysis(basicMessage);
