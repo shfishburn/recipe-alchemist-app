@@ -22,6 +22,11 @@ const RecipePreviewPage: React.FC = () => {
   const [debugMode, setDebugMode] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Reset save success state
+  const resetSaveSuccess = useCallback(() => {
+    setSaveSuccess(false);
+  }, []);
+
   const handleSaveRecipe = async () => {
     if (!recipe) {
       toast.error("Cannot save: Recipe data is missing");
@@ -39,15 +44,17 @@ const RecipePreviewPage: React.FC = () => {
       
       if (savedData) {
         setSaveSuccess(true);
-        toast.success("Recipe saved successfully!");
         
-        // Add a short delay before navigation to allow the toast to be seen
-        setTimeout(() => {
-          // Navigate to the saved recipe detail page if we have id and slug
-          if (savedData.id && savedData.slug) {
-            navigate(`/recipes/${savedData.slug}`);
-          }
-        }, 800); // 800ms delay gives time for the toast to be visible
+        // Use toast with onDismiss callback for better UX
+        toast.success("Recipe saved successfully!", {
+          onDismiss: () => {
+            // Navigate to the saved recipe detail page after toast is dismissed
+            if (savedData.id && savedData.slug) {
+              navigate(`/recipes/${savedData.slug}`);
+            }
+          },
+          duration: 2000, // 2 seconds is enough for users to see the toast
+        });
       } else {
         // Handle case where savedData is falsy but no error was thrown
         toast.warning("Recipe was not saved properly. Please try again.");
@@ -61,6 +68,8 @@ const RecipePreviewPage: React.FC = () => {
       } else {
         toast.error("Failed to save recipe. Please try again.");
       }
+      // Reset save success state on error
+      resetSaveSuccess();
     }
   };
 

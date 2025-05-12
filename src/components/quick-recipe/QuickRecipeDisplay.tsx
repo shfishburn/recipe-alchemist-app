@@ -11,6 +11,7 @@ interface QuickRecipeDisplayProps {
   isSaving?: boolean;
   saveSuccess?: boolean;
   debugMode?: boolean;
+  onResetSaveSuccess?: () => void; // New prop for reset functionality
 }
 
 export function QuickRecipeDisplay({ 
@@ -18,7 +19,8 @@ export function QuickRecipeDisplay({
   onSave,
   isSaving = false,
   saveSuccess = false,
-  debugMode = false
+  debugMode = false,
+  onResetSaveSuccess
 }: QuickRecipeDisplayProps) {
   // Enhanced null check and validation
   if (!recipe || typeof recipe !== 'object' || !recipe.title || !Array.isArray(recipe.ingredients)) {
@@ -39,6 +41,7 @@ export function QuickRecipeDisplay({
         onSave={onSave} 
         isSaving={isSaving}
         saveSuccess={saveSuccess}
+        onResetSaveSuccess={onResetSaveSuccess}
       />
       
       {debugMode && <RecipeDebugSection recipe={recipe} />}
