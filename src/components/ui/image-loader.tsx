@@ -65,7 +65,7 @@ export function ImageLoader({
         loading={priority ? 'eager' : loading}
         onLoad={handleLoad}
         onError={handleError}
-        fetchPriority={priority ? 'high' : 'auto'}
+        fetchpriority={priority ? 'high' : 'auto'}
         // Add performance optimizations
         decoding="async"
         {...props}
