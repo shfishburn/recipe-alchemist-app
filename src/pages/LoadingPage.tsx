@@ -1,9 +1,9 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, CookingPot } from 'lucide-react';
 import { RecipeLoadingAnimation } from '@/components/quick-recipe/loading/RecipeLoadingAnimation';
 import { ErrorState } from '@/components/quick-recipe/loading/ErrorState';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 interface LocationState {
   fromQuickRecipePage?: boolean;
@@ -17,20 +17,33 @@ const LoadingPage: React.FC = () => {
   const location = useLocation();
   const state = location.state as LocationState || {};
   
+  // Get recipe generation state from the store
+  const { 
+    recipe, 
+    error: storeError,
+    isLoading 
+  } = useQuickRecipeStore();
+  
   // Check if we came from the QuickRecipePage
-  const { fromQuickRecipePage = false, error = null, formData = null, timestamp = Date.now() } = state;
+  const { fromQuickRecipePage = false, error = null, formData = null } = state;
+  
+  // Combine errors from state and store
+  const displayError = error || storeError;
   
   // If not coming from QuickRecipePage, redirect to home
   useEffect(() => {
     if (!fromQuickRecipePage) {
       navigate('/', { replace: true });
     }
-    
+  }, [fromQuickRecipePage, navigate]);
+  
+  // Handle redirection based on recipe generation state
+  useEffect(() => {
     // If there's an error, go back to quick recipe page after showing error
-    if (error) {
+    if (displayError) {
       const timer = setTimeout(() => {
         navigate('/quick-recipe', { 
-          state: { error, formData },
+          state: { error: displayError, formData },
           replace: true 
         });
       }, 1500);
@@ -38,7 +51,20 @@ const LoadingPage: React.FC = () => {
       return () => clearTimeout(timer);
     }
     
-    // Auto-refresh effect - if loading takes too long, go back
+    // If recipe is ready (not loading and we have recipe data), go to recipe page
+    if (!isLoading && recipe) {
+      console.log("Recipe is ready, navigating to quick recipe page");
+      navigate('/quick-recipe', { 
+        state: { 
+          timestamp: Date.now(),
+          fromLoading: true
+        },
+        replace: true 
+      });
+      return;
+    }
+    
+    // Auto-redirect if loading takes too long (safety fallback)
     const maxLoadingTime = 45000; // 45 seconds max loading time
     const timeoutId = setTimeout(() => {
       navigate('/quick-recipe', { 
@@ -51,40 +77,17 @@ const LoadingPage: React.FC = () => {
       });
     }, maxLoadingTime);
     
-    // Poll the quick-recipe page status every few seconds
-    const pollInterval = 2000; // 2 seconds
-    const pollId = setInterval(() => {
-      // We use the timestamp to avoid caching issues
-      fetch(`/api/quick-recipe/status?t=${Date.now()}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'completed' || data.status === 'error') {
-            clearInterval(pollId);
-            clearTimeout(timeoutId);
-            navigate('/quick-recipe', { 
-              state: { 
-                timestamp: Date.now(),
-                ...(data.status === 'error' && { error: data.message || 'An error occurred' })
-              },
-              replace: true 
-            });
-          }
-        })
-        .catch(err => console.error('Error polling recipe status:', err));
-    }, pollInterval);
-    
     return () => {
       clearTimeout(timeoutId);
-      clearInterval(pollId);
     };
-  }, [navigate, fromQuickRecipePage, error, formData]);
+  }, [recipe, isLoading, displayError, navigate, formData]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 space-y-6">
-        {error ? (
+        {displayError ? (
           <ErrorState 
-            error={error} 
+            error={displayError} 
             isRetrying={false}
           />
         ) : (

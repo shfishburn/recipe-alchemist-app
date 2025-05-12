@@ -78,11 +78,10 @@ export function useQuickRecipeForm() {
         formData: processedFormData
       }));
       
-      // FIXED: Don't pass functions in state, they can't be serialized
-      // Navigate to the loading page INSTEAD of quick recipe page
+      // Navigate to the loading page
       navigate('/loading', { 
         state: { 
-          fromForm: true, 
+          fromQuickRecipePage: true, 
           timestamp: Date.now()
         }
       });
@@ -99,7 +98,7 @@ export function useQuickRecipeForm() {
         // Add a small delay to ensure navigation completes
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Generate the recipe - authentication check removed
+        // Generate the recipe
         const generatedRecipe = await generateQuickRecipe(processedFormData);
         
         // Check if generatedRecipe is an error object
@@ -114,12 +113,33 @@ export function useQuickRecipeForm() {
             variant: "destructive",
           });
           
+          // Navigate back to quick recipe page with error
+          navigate('/quick-recipe', {
+            state: { 
+              error: generatedRecipe.error || 'Error generating recipe',
+              formData: processedFormData
+            },
+            replace: true
+          });
+          
           return null;
         }
         
         // Validate the recipe structure before setting it
         if (!isRecipeValid(generatedRecipe)) {
-          throw new Error("The recipe format returned from the API was invalid. Please try again.");
+          const errorMsg = "The recipe format returned from the API was invalid. Please try again.";
+          setError(errorMsg);
+          
+          // Navigate back to quick recipe page with error
+          navigate('/quick-recipe', {
+            state: { 
+              error: errorMsg,
+              formData: processedFormData
+            },
+            replace: true
+          });
+          
+          throw new Error(errorMsg);
         }
         
         // Ensure recipe has valid cuisine value
@@ -132,8 +152,17 @@ export function useQuickRecipeForm() {
         console.log("Recipe generation successful:", generatedRecipe);
         setRecipe(generatedRecipe);
         
-        // Success message in console instead of toast
+        // Success message in console
         console.log("Recipe created successfully!");
+        
+        // Navigate back to quick recipe page with the recipe
+        navigate('/quick-recipe', {
+          state: { 
+            fromLoading: true,
+            timestamp: Date.now()
+          },
+          replace: true
+        });
         
         return generatedRecipe;
       } catch (error: any) {
@@ -171,12 +200,32 @@ export function useQuickRecipeForm() {
           variant: "destructive",
         });
         
+        // Navigate back to quick recipe page with error
+        navigate('/quick-recipe', {
+          state: { 
+            error: errorMessage,
+            formData: processedFormData,
+            hasTimeoutError: isTimeout
+          },
+          replace: true
+        });
+        
         return null;
       }
     } catch (error: any) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
       setError(error.message || "Failed to submit recipe request. Please try again.");
+      
+      // Navigate back to quick recipe page with error
+      navigate('/quick-recipe', {
+        state: { 
+          error: error.message || "Failed to submit recipe request. Please try again.",
+          formData: formData
+        },
+        replace: true
+      });
+      
       return null;
     }
   }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError, updateLoadingState]);

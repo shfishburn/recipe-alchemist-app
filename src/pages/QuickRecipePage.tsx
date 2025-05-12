@@ -43,6 +43,16 @@ const QuickRecipePage: React.FC = () => {
     }
   }, [isLoading, isRetrying, navigate, location.pathname]);
   
+  // Log recipe state for debugging
+  useEffect(() => {
+    console.log("QuickRecipePage - Current state:", { 
+      hasRecipe: !!recipe, 
+      isLoading, 
+      error, 
+      isDirectNavigation
+    });
+  }, [recipe, isLoading, error, isDirectNavigation]);
+  
   // If loading is happening, don't render anything so we don't see a flash
   // Let the redirect to loading page handle it
   if (isLoading || isRetrying) {
