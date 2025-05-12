@@ -3,6 +3,7 @@ import React, { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Props interface for the RecipeActionButtons component
@@ -12,7 +13,7 @@ interface RecipeActionButtonsProps {
    * Callback triggered when user wants to save a recipe.
    * Used to persist recipe data to user's saved collection.
    */
-  onSave?: () => void;          
+  onSave?: () => void | Promise<void>;          
   
   /** 
    * Indicates an in-progress save operation to prevent duplicate submissions
@@ -60,41 +61,54 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
    * Handles the save button click
    * If saveSuccess is true and onResetSaveSuccess is provided, resets the success state before saving
    */
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Reset save success state if we're trying to save again
+    if (saveSuccess && onResetSaveSuccess && !resetCalled) {
+      onResetSaveSuccess();
+      setResetCalled(true); // Mark reset as called to prevent multiple invocations
+    }
+    
     if (onSave) {
       try {
-        // Reset save success state if we're trying to save again
-        if (saveSuccess && onResetSaveSuccess && !resetCalled) {
-          onResetSaveSuccess();
-          setResetCalled(true); // Mark reset as called to prevent multiple invocations
+        // Call the onSave function provided by parent
+        // Handle both synchronous and asynchronous onSave functions
+        const result = onSave();
+        
+        // If onSave returns a Promise, wait for it to complete
+        if (result instanceof Promise) {
+          await result;
         }
         
-        // Call the onSave function provided by parent
-        onSave();
-        
-        // Reset the resetCalled state after the save operation completes
-        // This allows tracking future reset calls correctly
+        // Reset the resetCalled state after the save operation completes successfully
         if (resetCalled) {
-          // Small timeout ensures this happens after the save operation
-          setTimeout(() => {
-            setResetCalled(false);
-          }, 100);
+          setResetCalled(false);
         }
       } catch (error) {
-        // Handle potential errors during the save process
+        // Provide user feedback when save operation fails
         console.error("Error saving recipe:", error);
+        toast({
+          title: "Save failed",
+          description: error instanceof Error ? error.message : "Failed to save recipe",
+          variant: "destructive"
+        });
+        
         // Reset the resetCalled state if an error occurred
         setResetCalled(false);
-        
-        // If there was an error and we previously reset the success state,
-        // we may need to restore it (optional, depends on UX needs)
-        if (resetCalled && saveSuccess && onResetSaveSuccess) {
-          // This is a no-op if the error is handled elsewhere and saveSuccess is managed by parent
-        }
       }
     } else {
       // Default implementation for when no onSave callback is provided
-      console.log("Saving recipe:", recipe?.title);
+      // Provide user feedback about the missing save functionality
+      console.log("Default save action for recipe:", recipe?.title);
+      toast({
+        title: "Save functionality not implemented",
+        description: "This is just a preview. Full save functionality will be available in the complete version.",
+        variant: "default"
+      });
+      
+      // Reset the resetCalled state for the default implementation as well
+      if (resetCalled) {
+        setResetCalled(false);
+      }
     }
   };
   
