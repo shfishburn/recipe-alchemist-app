@@ -22,7 +22,7 @@ export function FormattedIngredientText({ text }: FormattedIngredientTextProps) 
     
     // Always wrap the result in a span to ensure we return a single React element
     // This ensures compatibility with components that expect a single child
-    return <span className="ingredient-text" aria-live="polite">{formattedContent}</span>;
+    return <span className="ingredient-text">{formattedContent}</span>;
   } catch (error) {
     console.error("Error formatting ingredient text:", error);
     // Return the original text as fallback

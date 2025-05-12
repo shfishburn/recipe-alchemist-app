@@ -25,7 +25,7 @@ export function processInlineFormatting(text: string): React.ReactNode[] {
       if (currentText) {
         if (boldActive) {
           parts.push(
-            React.createElement('strong', { key: `bold-${i}`, className: "text-recipe-blue" },
+            React.createElement('strong', { key: `bold-${i}` },
               italicActive ? React.createElement('em', null, currentText) : currentText
             )
           );
