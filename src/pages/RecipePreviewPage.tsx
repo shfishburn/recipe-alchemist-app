@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -5,9 +6,10 @@ import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRe
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { PageContainer } from '@/components/ui/containers';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { toast } from 'sonner';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -20,6 +22,7 @@ const RecipePreviewPage: React.FC = () => {
   const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
   const [debugMode, setDebugMode] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSavingLocal, setIsSavingLocal] = useState(false); // Additional local saving state for UI feedback
 
   // Reset save success state
   const resetSaveSuccess = useCallback(() => {
@@ -32,34 +35,40 @@ const RecipePreviewPage: React.FC = () => {
       return;
     }
 
+    // Set local saving state to true
+    setIsSavingLocal(true);
+
     try {
       // Validate recipe has required fields
       if (!recipe.title || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
         toast.error("Cannot save: Recipe is missing required information");
+        setIsSavingLocal(false);
         return;
       }
 
       const savedData = await saveRecipe(recipe);
       
-      if (savedData) {
+      if (savedData && savedData.id && savedData.slug) {
         setSaveSuccess(true);
         
-        // Show toast with dismissal navigation instead of immediate navigation
-        if (savedData.id && savedData.slug) {
-          // Show success toast with 2000ms duration and navigation on dismiss
-          toast.success("Recipe saved successfully!", {
-            duration: 2000,
-            onDismiss: () => {
-              navigate(`/recipes/${savedData.slug}`);
-            }
-          });
-        }
+        // Show success toast with 2000ms duration and navigation on dismiss
+        toast.success("Recipe saved successfully!", {
+          duration: 2000,
+          onDismiss: () => {
+            navigate(`/recipes/${savedData.slug}`);
+          },
+          action: {
+            label: "View Recipe",
+            onClick: () => navigate(`/recipes/${savedData.slug}`)
+          }
+        });
       } else {
         // Handle case where savedData is falsy but no error was thrown
         toast.warning("Recipe was not saved properly. Please try again.");
       }
     } catch (error) {
       console.error("Failed to save recipe:", error);
+      
       // More detailed error feedback based on error type
       if (error instanceof Error) {
         // Use actual error message if available
@@ -67,8 +76,12 @@ const RecipePreviewPage: React.FC = () => {
       } else {
         toast.error("Failed to save recipe. Please try again.");
       }
+      
       // Reset save success state on error
       resetSaveSuccess();
+    } finally {
+      // Always reset saving state when done
+      setIsSavingLocal(false);
     }
   };
 
@@ -125,14 +138,24 @@ const RecipePreviewPage: React.FC = () => {
     return null;
   }
   
+  // Determine if we should show loading overlay (either store saving state or local saving state)
+  const showLoadingOverlay = isSaving || isSavingLocal;
+  
   return (
     <PageContainer>
+      {showLoadingOverlay && (
+        <LoadingOverlay 
+          message="Saving your recipe..." 
+          description="Please wait while we save your delicious creation."
+        />
+      )}
       <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
         <div className="flex justify-between items-center">
           <Button 
             variant="outline" 
             onClick={handleBackToForm}
             className="flex items-center gap-2"
+            disabled={showLoadingOverlay}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Recipe Form
@@ -144,6 +167,7 @@ const RecipePreviewPage: React.FC = () => {
               size="sm"
               onClick={toggleDebugMode} 
               className="text-xs"
+              disabled={showLoadingOverlay}
             >
               {debugMode ? 'Hide Debug' : 'Show Debug'}
             </Button>
@@ -154,7 +178,7 @@ const RecipePreviewPage: React.FC = () => {
           <QuickRecipeDisplay 
             recipe={recipe} 
             onSave={handleSaveRecipe}
-            isSaving={isSaving}
+            isSaving={showLoadingOverlay}
             saveSuccess={saveSuccess}
             debugMode={debugMode}
             onResetSaveSuccess={resetSaveSuccess}
