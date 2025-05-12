@@ -1,4 +1,3 @@
-
 name: Summarize Changes and Detect Issues
 
 on:
@@ -51,8 +50,10 @@ jobs:
       - name: Summarize code changes
         id: summarize_changes
         run: |
-          BEFORE=${{ github.event.before || '0000000000000000000000000000000000000000' }}
-          AFTER=${{ github.event.after }}
+          BEFORE=${{ github.event.before || github.event.pull_request.base.sha || '0000000000000000000000000000000000000000' }}
+          AFTER=${{ github.event.after || github.event.pull_request.head.sha }}
+
+          echo "Comparing changes between $BEFORE and $AFTER"
 
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
             git diff-tree --name-status -r $AFTER > changes_summary.txt
@@ -69,6 +70,11 @@ jobs:
             echo "No changes detected" > changes.diff
           fi
 
+          # Output the first few lines of the diff for debugging
+          echo "First 10 lines of diff file:"
+          head -n 10 changes.diff || echo "Cannot display diff content"
+          echo "Diff file size: $(wc -c < changes.diff) bytes"
+
           # Generate detailed highlights of added, removed, or modified lines
           if command -v diff2html >/dev/null 2>&1; then
             diff2html --summary --input-file changes.diff --output-format line-by-line > detailed_summary.html || echo "diff2html generation failed"
@@ -83,6 +89,14 @@ jobs:
           name: full-diff
           path: changes.diff
 
+      - name: Verify OpenAI API key
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::warning::OPENAI_API_KEY is not set. OpenAI analysis will be skipped."
+          else
+            echo "OpenAI API key is properly configured."
+          fi
+
       - name: Generate OpenAI code analysis
         id: openai_analysis
         run: |
@@ -91,12 +105,22 @@ jobs:
             echo "No OpenAI analysis available - API key not configured" > openai_analysis.txt
           else
             echo "Generating AI code analysis..."
-            node ./.github/workflows/scripts/analyze-with-openai.js || echo "OpenAI analysis failed, continuing workflow"
+            node ./.github/workflows/scripts/analyze-with-openai.js
+            
+            # Check if the script succeeded
+            if [ $? -ne 0 ]; then
+              echo "::warning::OpenAI analysis script failed with an error"
+            fi
             
             # Create fallback file if analysis failed
             if [ ! -f openai_analysis.txt ]; then
-              echo "OpenAI analysis did not generate output file" > openai_analysis.txt
+              echo "::warning::OpenAI analysis did not generate output file"
+              echo "OpenAI analysis failed to generate output" > openai_analysis.txt
             fi
+
+            # Output the first few lines of the analysis for debugging
+            echo "First few lines of OpenAI analysis:"
+            head -n 5 openai_analysis.txt || echo "Cannot display analysis content"
           fi
         env:
           CHANGES_DIFF: ${{ github.workspace }}/changes.diff
@@ -104,8 +128,8 @@ jobs:
 
       - name: Analyze changes for suggestions
         run: |
-          BEFORE=${{ github.event.before || '0000000000000000000000000000000000000000' }}
-          AFTER=${{ github.event.after }}
+          BEFORE=${{ github.event.before || github.event.pull_request.base.sha || '0000000000000000000000000000000000000000' }}
+          AFTER=${{ github.event.after || github.event.pull_request.head.sha }}
           
           CHANGED_FILES=$(git diff --name-only $BEFORE $AFTER | grep -E "\.(js|ts|jsx|tsx)$" || true)
           if [ -z "$CHANGED_FILES" ]; then
@@ -126,8 +150,8 @@ jobs:
       - name: Lint JavaScript/TypeScript files
         id: linting
         run: |
-          BEFORE=${{ github.event.before || '0000000000000000000000000000000000000000' }}
-          AFTER=${{ github.event.after }}
+          BEFORE=${{ github.event.before || github.event.pull_request.base.sha || '0000000000000000000000000000000000000000' }}
+          AFTER=${{ github.event.after || github.event.pull_request.head.sha }}
           
           CHANGED_FILES=$(git diff --name-only $BEFORE $AFTER | grep -E "\.(js|ts|jsx|tsx)$" || true)
           if [ -z "$CHANGED_FILES" ]; then
