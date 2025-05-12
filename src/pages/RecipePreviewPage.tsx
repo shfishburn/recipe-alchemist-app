@@ -4,8 +4,7 @@ import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { PageContainer } from '@/components/ui/containers';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { toast } from 'sonner';
 import LoadingOverlay from '@/components/ui/loading-overlay';
@@ -144,10 +143,6 @@ const RecipePreviewPage: React.FC = () => {
   // Toggle debug mode function - keeping function but removing UI button
   const toggleDebugMode = () => setDebugMode(prev => !prev);
   
-  const handleBackToForm = () => {
-    navigate('/quick-recipe');
-  };
-  
   // If no recipe, show nothing (will redirect in useEffect)
   if (!recipe) {
     return null;
@@ -169,24 +164,11 @@ const RecipePreviewPage: React.FC = () => {
         </LoadingOverlay>
       )}
       <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
-        <div className="flex justify-between items-center">
-          <Button 
-            variant="outline" 
-            onClick={handleBackToForm}
-            className="flex items-center gap-2"
-            disabled={showLoadingOverlay}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Recipe Form
-          </Button>
-          
-          {/* Centered Recipe Preview heading - removed debug button */}
-          <h1 className="text-2xl font-bold text-center absolute left-1/2 transform -translate-x-1/2">
+        <div className="flex justify-center items-center">
+          {/* Centered Recipe Preview heading */}
+          <h1 className="text-2xl font-bold text-center">
             Recipe Preview
           </h1>
-          
-          {/* This div helps balance the layout with the back button */}
-          <div className="w-[150px]"></div>
         </div>
       
         <div className="space-y-8">
