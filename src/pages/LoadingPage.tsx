@@ -1,15 +1,19 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RecipeLoadingAnimation } from '@/components/quick-recipe/loading/RecipeLoadingAnimation';
 import { ErrorState } from '@/components/quick-recipe/loading/ErrorState';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import './loading.css'; // Import the CSS file directly
+
+// Constants
+const MAX_LOADING_TIME_MS = 45000; // 45 seconds max loading time
+const ERROR_DISPLAY_TIME_MS = 1500; // Time to display error before redirecting
 
 interface LocationState {
   fromQuickRecipePage?: boolean;
   fromRecipePreview?: boolean;
   error?: string;
-  formData?: Record<string, unknown>; // Fixed the 'any' type with a more specific type
+  formData?: Record<string, unknown>;
   timestamp?: number;
   isRetrying?: boolean;
 }
@@ -21,6 +25,15 @@ interface ProgressStage {
   interval: number;   // Milliseconds between updates
   message: string;    // Message to display during this stage
 }
+
+// Define progress stages outside component to prevent recreation on each render
+const PROGRESS_STAGES: ProgressStage[] = [
+  { limit: 20, increment: 3, interval: 600, message: "Gathering recipe ideas..." },
+  { limit: 60, increment: 2, interval: 700, message: "Selecting best ingredients..." },
+  { limit: 85, increment: 1, interval: 1200, message: "Crafting the perfect combination..." },
+  { limit: 95, increment: 0.5, interval: 1800, message: "Finalizing your recipe..." },
+  { limit: 100, increment: 5, interval: 300, message: "Recipe ready!" }
+];
 
 const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +51,9 @@ const LoadingPage: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [loadingStage, setLoadingStage] = useState(0);
   
+  // Reference to store interval ID for proper cleanup
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Check if we came from the QuickRecipePage or RecipePreviewPage
   const { 
     fromQuickRecipePage = false, 
@@ -50,65 +66,66 @@ const LoadingPage: React.FC = () => {
   // Combine errors from state and store
   const displayError = error || storeError;
   
-  // Define progress stages with their properties
-  const progressStages: ProgressStage[] = [
-    { limit: 20, increment: 3, interval: 600, message: "Gathering recipe ideas..." },        // Stage 0: Initial loading
-    { limit: 60, increment: 2, interval: 700, message: "Selecting best ingredients..." },    // Stage 1: Ingredient selection  
-    { limit: 85, increment: 1, interval: 1200, message: "Crafting the perfect combination..." }, // Stage 2: Combination crafting
-    { limit: 95, increment: 0.5, interval: 1800, message: "Finalizing your recipe..." },     // Stage 3: Finalization
-    { limit: 100, increment: 5, interval: 300, message: "Recipe ready!" }                    // Stage 4: Completion
-  ];
-  
-  // If not coming from QuickRecipePage or RecipePreviewPage, redirect to home
-  useEffect(() => {
+  // Memoized navigation functions to avoid unnecessary re-renders
+  const redirectHome = useCallback(() => {
     if (!fromQuickRecipePage && !fromRecipePreview) {
       navigate('/', { replace: true });
     }
   }, [fromQuickRecipePage, fromRecipePreview, navigate]);
   
-  // More efficient progressive loading animation using a single interval
+  // If not coming from QuickRecipePage or RecipePreviewPage, redirect to home
   useEffect(() => {
+    redirectHome();
+  }, [redirectHome]);
+  
+  // Function to create interval with proper stage timing - memoized to prevent recreations
+  const createProgressInterval = useCallback((stageIndex: number) => {
+    return setInterval(() => {
+      setProgress(prev => {
+        const currentStage = PROGRESS_STAGES[stageIndex];
+        
+        // If we're below the limit for current stage
+        if (prev < currentStage.limit) {
+          // Check if we're crossing to next stage
+          if (stageIndex < PROGRESS_STAGES.length - 1 && 
+              prev + currentStage.increment >= currentStage.limit) {
+            // Update stage index and message
+            setLoadingStage(stageIndex + 1);
+            
+            // Fix interval cleanup race: create new interval first, then clear old one
+            if (intervalRef.current) {
+              const nextInterval = createProgressInterval(stageIndex + 1);
+              clearInterval(intervalRef.current);
+              intervalRef.current = nextInterval;
+            }
+            
+            return currentStage.limit; // Return exact limit value
+          }
+          
+          // Normal progress increment
+          return Math.min(prev + currentStage.increment, currentStage.limit);
+        }
+        
+        return prev;
+      });
+    }, PROGRESS_STAGES[stageIndex].interval);
+  }, []);
+  
+  // Fixed progressive loading animation using a ref-based interval system
+  useEffect(() => {
+    // Clear any existing interval when dependencies change
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
     if (isLoading && !displayError) {
       // Start with a small initial progress
       setProgress(5);
+      setLoadingStage(0);
       
-      // Current stage tracking
-      let currentStageIndex = 0;
-      
-      // Single interval for all progress updates
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          // Get current stage configuration
-          const currentStage = progressStages[currentStageIndex];
-          
-          // If we're below the limit for current stage
-          if (prev < currentStage.limit) {
-            // If we're crossing a stage boundary, update the loading stage for message display
-            if (currentStageIndex < progressStages.length - 1 && 
-                prev + currentStage.increment >= progressStages[currentStageIndex].limit) {
-              setLoadingStage(currentStageIndex + 1);
-              currentStageIndex++;
-            }
-            
-            // Increase by current stage's increment, but don't exceed the limit
-            return Math.min(prev + currentStage.increment, currentStage.limit);
-          }
-          
-          // Move to next stage if available
-          if (currentStageIndex < progressStages.length - 1) {
-            currentStageIndex++;
-            // Get new interval timing for next stage
-            clearInterval(progressInterval);
-            return prev;
-          }
-          
-          return prev;
-        });
-      }, progressStages[currentStageIndex].interval);
-      
-      return () => {
-        clearInterval(progressInterval);
-      };
+      // Create initial interval
+      intervalRef.current = createProgressInterval(0);
     } else if (recipe && !displayError) {
       // Complete the progress bar when recipe is ready
       setProgress(100);
@@ -117,70 +134,85 @@ const LoadingPage: React.FC = () => {
       // Reset progress when there's an error
       setProgress(0);
     }
-  }, [isLoading, recipe, displayError, progressStages]);
+    
+    // Cleanup function
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isLoading, recipe, displayError, createProgressInterval]);
   
   // Get loading message based on current stage
-  const getLoadingMessage = () => {
-    return progressStages[loadingStage]?.message || "Creating your recipe...";
-  };
+  const getLoadingMessage = useCallback(() => {
+    return PROGRESS_STAGES[loadingStage]?.message || "Creating your recipe...";
+  }, [loadingStage]);
+  
+  // Memoized navigation handlers
+  const navigateToQuickRecipe = useCallback((errorMessage: string, hasTimeoutError = false) => {
+    navigate('/quick-recipe', { 
+      state: { 
+        error: errorMessage, 
+        formData,
+        hasTimeoutError,
+        fromLoading: true
+      },
+      replace: true 
+    });
+  }, [navigate, formData]);
+  
+  const navigateToRecipePreview = useCallback(() => {
+    navigate('/recipe-preview', { 
+      state: { 
+        timestamp: Date.now(),
+        fromLoading: true,
+      },
+      replace: true 
+    });
+  }, [navigate]);
   
   // Handle redirection based on recipe generation state
   useEffect(() => {
-    // Log state for debugging
-    console.log("LoadingPage - Current state:", {
-      recipeExists: !!recipe,
-      isLoading,
-      displayError,
-      progress
-    });
+    // Log state for debugging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log("LoadingPage - Current state:", {
+        recipeExists: !!recipe,
+        isLoading,
+        displayError,
+        progress,
+        currentStage: loadingStage
+      });
+    }
     
     // If there's an error, go back to quick recipe page after showing error
     if (displayError) {
       const timer = setTimeout(() => {
-        navigate('/quick-recipe', { 
-          state: { 
-            error: displayError, 
-            formData,
-            fromLoading: true
-          },
-          replace: true 
-        });
-      }, 1500);
+        navigateToQuickRecipe(displayError);
+      }, ERROR_DISPLAY_TIME_MS);
       
       return () => clearTimeout(timer);
     }
     
     // If recipe is ready (not loading and we have recipe data), go to recipe preview page
     if (!isLoading && recipe) {
-      console.log("Recipe is ready, navigating to recipe preview page with recipe:", recipe.title);
-      navigate('/recipe-preview', { 
-        state: { 
-          timestamp: Date.now(),
-          fromLoading: true,
-        },
-        replace: true 
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Recipe is ready, navigating to recipe preview page with recipe:", recipe.title);
+      }
+      navigateToRecipePreview();
       return;
     }
     
     // Auto-redirect if loading takes too long (safety fallback)
-    const maxLoadingTime = 45000; // 45 seconds max loading time
     const timeoutId = setTimeout(() => {
-      navigate('/quick-recipe', { 
-        state: { 
-          error: "Recipe generation timed out. Please try again.",
-          formData,
-          hasTimeoutError: true,
-          fromLoading: true
-        },
-        replace: true 
-      });
-    }, maxLoadingTime);
+      navigateToQuickRecipe("Recipe generation timed out. Please try again.", true);
+    }, MAX_LOADING_TIME_MS);
     
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [recipe, isLoading, displayError, navigate, formData, progress]);
+  }, [recipe, isLoading, displayError, navigateToQuickRecipe, navigateToRecipePreview]);
+  // ^ Note: progress and loadingStage are intentionally omitted as they're only used in dev logging
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -192,7 +224,9 @@ const LoadingPage: React.FC = () => {
           />
         ) : (
           <div className="flex flex-col items-center justify-center space-y-4 py-8">
-            <RecipeLoadingAnimation />
+            <div role="status" aria-label="Recipe is being created">
+              <RecipeLoadingAnimation aria-hidden="true" />
+            </div>
             <div className="space-y-2 text-center">
               <h2 className="text-xl font-semibold text-gray-800">Crafting Your Recipe</h2>
               <p 
@@ -217,7 +251,7 @@ const LoadingPage: React.FC = () => {
               </div>
             </div>
             
-            <p className="text-xs text-gray-400 mt-2">This may take up to 45 seconds</p>
+            <p className="text-xs text-gray-400 mt-2">This may take up to {MAX_LOADING_TIME_MS/1000} seconds</p>
           </div>
         )}
       </div>
