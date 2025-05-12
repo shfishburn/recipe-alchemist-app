@@ -8,9 +8,13 @@ interface RecipeLoadingAnimationProps {
 
 /**
  * Recipe loading animation component
+ * Displays an animation indicating the loading progress of a recipe.
+ * The component renders a cooking pot with bubbles and steam effects that
+ * change based on the progress value.
+ * 
  * @param {object} props - Component props
  * @param {number} [props.progress=0] - Loading progress (0-100)
- * @returns {JSX.Element} Recipe loading animation
+ * @returns {JSX.Element} Recipe loading animation with visual feedback
  */
 export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationProps) {
   // Validate the progress range
