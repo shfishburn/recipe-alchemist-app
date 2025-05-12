@@ -60,9 +60,19 @@ class ErrorBoundary extends React.Component<
           <p className="mb-4">The application encountered an unexpected error.</p>
           <button
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              // Clear any recipe-related state from storage that might be causing issues
+              try {
+                sessionStorage.removeItem('recipeGenerationSource');
+                localStorage.removeItem('recipeGenerationData');
+              } catch (e) {
+                // Ignore storage errors
+              }
+              // Reload the page
+              window.location.href = '/';
+            }}
           >
-            Reload App
+            Return to Home
           </button>
         </div>
       );

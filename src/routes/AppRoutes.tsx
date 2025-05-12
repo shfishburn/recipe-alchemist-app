@@ -1,5 +1,6 @@
+
 import React, { Suspense } from 'react';
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
 import PrivateRoute from "@/components/PrivateRoute";
 import * as LazyRoutes from "@/routes/LazyRoutes";
@@ -28,10 +29,9 @@ export const AppRoutes = () => {
           <LazyRoutes.QuickRecipePage />
         </Suspense>
       } />
+      {/* Make the loading route higher priority and always accessible */}
       <Route path="/loading" element={
-        <Suspense fallback={<PageLoadingFallback />}>
-          <LazyRoutes.LoadingPage />
-        </Suspense>
+        <LazyRoutes.LoadingPage />
       } />
       <Route path="/auth" element={
         <Suspense fallback={<PageLoadingFallback />}>
@@ -128,6 +128,7 @@ export const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+      {/* Catch all route */}
       <Route path="*" element={
         <Suspense fallback={<PageLoadingFallback />}>
           <LazyRoutes.NotFound />
