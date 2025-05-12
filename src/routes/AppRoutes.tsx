@@ -13,7 +13,10 @@ export const AppRoutes = () => {
       {/* Public Routes */}
       <Route path="/" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Index /></Suspense>} />
       <Route path="/recipes" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Recipes /></Suspense>} />
-      <Route path="/recipes/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.RecipeDetail /></Suspense>} />
+      
+      {/* Redirect old recipe detail route to quick recipe page */}
+      <Route path="/recipes/:slug" element={<Navigate to="/quick-recipe" replace />} />
+      
       <Route path="/quick-recipe" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.QuickRecipePage /></Suspense>} />
       <Route path="/recipe-preview" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.RecipePreviewPage /></Suspense>} />
       <Route path="/loading" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.LoadingPage /></Suspense>} />
