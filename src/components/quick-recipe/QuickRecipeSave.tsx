@@ -114,12 +114,8 @@ export function useQuickRecipeSave() {
             } else {
               console.log("Saved recipe loaded:", savedRecipeData);
               setSavedRecipe(savedRecipeData as unknown as QuickRecipe);
-              toast.success("Recipe saved successfully!", {
-                action: {
-                  label: "View Recipe",
-                  onClick: () => navigate(`/recipes/${savedRecipeData.slug || savedRecipeData.id}`),
-                },
-              });
+              // Show success toast without the action button
+              toast.success("Recipe saved successfully!");
             }
           } else {
             toast.success("Recipe saved successfully!");
