@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
 
 // Helper function to get authentication token
 export const getAuthToken = async (): Promise<string> => {
