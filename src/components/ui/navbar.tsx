@@ -53,7 +53,7 @@ export function Navbar({ className = '' }: { className?: string }) {
     try {
       await signOut();
       toast({
-        title: "Success",
+        title: "Logout Successful",
         description: "You have been logged out successfully",
         variant: "success",
       });
@@ -61,7 +61,7 @@ export function Navbar({ className = '' }: { className?: string }) {
       // Safe error handling without exposing sensitive information
       console.error("Logout error:", error instanceof Error ? error.message : "Unknown error");
       toast({
-        title: "Logout failed",
+        title: "Logout Failed",
         description: "There was an issue signing you out. Please try again.",
         variant: "destructive"
       });
@@ -118,14 +118,14 @@ export function Navbar({ className = '' }: { className?: string }) {
             })}
           </nav>
 
-          {/* Auth buttons (hidden on mobile as they are in the mobile menu) */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Auth buttons (consistent on desktop and mobile) */}
+          <div className="flex items-center gap-2">
             {session ? (
               <>
                 <Link to="/profile">
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    <span>Profile</span>
+                    <span className="hidden sm:inline">Profile</span>
                   </Button>
                 </Link>
                 <Button 
@@ -136,7 +136,7 @@ export function Navbar({ className = '' }: { className?: string }) {
                   disabled={isLoggingOut}
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+                  <span className="hidden sm:inline">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
                 </Button>
               </>
             ) : (

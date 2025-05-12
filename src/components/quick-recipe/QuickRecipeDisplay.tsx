@@ -8,6 +8,8 @@ import { RecipeTimeInfo } from './card/RecipeTimeInfo';
 import { RecipeSectionHeader } from './card/RecipeSectionHeader';
 import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface QuickRecipeDisplayProps {
   recipe: Recipe;
@@ -29,8 +31,21 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
   savedSlug
 }) => {
   if (!recipe) {
-    return null;
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>No recipe data available. Please try again.</AlertDescription>
+      </Alert>
+    );
   }
+  
+  const hasInstructions = Boolean(
+    (recipe.instructions && recipe.instructions.length > 0) || 
+    (recipe.steps && recipe.steps.length > 0)
+  );
+  
+  const hasIngredients = Boolean(recipe.ingredients && recipe.ingredients.length > 0);
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -43,29 +58,49 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
           )}
           
           <RecipeHighlights 
-            highlights={recipe.highlights}
-            cuisine={recipe.cuisine}
-            dietary={recipe.dietary}
-            flavors={recipe.flavor_tags} // Fix: use flavor_tags instead of flavors
-            nutritionHighlight={recipe.nutritionHighlight} // Fix: use correct property name
-            cookingTip={recipe.cookingTip} // Fix: use correct property name
+            highlights={recipe.highlights || []}
+            cuisine={recipe.cuisine || ''}
+            dietary={recipe.dietary || []}
+            flavors={recipe.flavor_tags || []}
+            nutritionHighlight={recipe.nutritionHighlight || ''}
+            cookingTip={recipe.cookingTip || ''}
           />
           
           <RecipeTimeInfo 
-            prepTime={recipe.prep_time_min || recipe.prepTime} // Handle both naming conventions
-            cookTime={recipe.cook_time_min || recipe.cookTime} // Handle both naming conventions
-            servings={recipe.servings} 
+            prepTime={recipe.prep_time_min || recipe.prepTime || 0}
+            cookTime={recipe.cook_time_min || recipe.cookTime || 0}
+            servings={recipe.servings || 0}
           />
           
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <RecipeSectionHeader title="Ingredients" />
-              <RecipeIngredients ingredients={recipe.ingredients} />
+              {hasIngredients ? (
+                <RecipeIngredients ingredients={recipe.ingredients || []} />
+              ) : (
+                <Alert className="mt-2 bg-amber-50 dark:bg-amber-900/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Missing Ingredients</AlertTitle>
+                  <AlertDescription>
+                    This recipe doesn't have any ingredients listed.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
             
             <div>
               <RecipeSectionHeader title="Instructions" />
-              <RecipeSteps steps={recipe.instructions || recipe.steps || []} />
+              {hasInstructions ? (
+                <RecipeSteps steps={recipe.instructions || recipe.steps || []} />
+              ) : (
+                <Alert className="mt-2 bg-amber-50 dark:bg-amber-900/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Missing Instructions</AlertTitle>
+                  <AlertDescription>
+                    This recipe doesn't have any cooking instructions.
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           </div>
           
