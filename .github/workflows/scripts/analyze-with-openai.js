@@ -15,24 +15,20 @@ const config = {
 };
 
 // Environment-configured paths and API key
-type Env = string | undefined;
-const diffFilePath: Env = process.env.CHANGES_DIFF ?? './changes.diff';
-const outputPath: Env = process.env.ANALYSIS_OUTPUT_PATH ?? 'openai_analysis.txt';
-const openaiApiKey: Env = process.env.OPENAI_API_KEY;
+const diffFilePath = process.env.CHANGES_DIFF || './changes.diff';
+const outputPath = process.env.ANALYSIS_OUTPUT_PATH || 'openai_analysis.txt';
+const openaiApiKey = process.env.OPENAI_API_KEY;
 
-/**
- * Truncates diff content to respect token limits
- */
-function truncateDiff(diff: string): string {
-  return diff.length <= config.diff.maxLength
-    ? diff
-    : diff.slice(0, config.diff.maxLength) + '\n\n[Diff truncated due to size limits]';
+// Truncates diff content to respect token limits
+function truncateDiff(diff) {
+  if (diff.length <= config.diff.maxLength) {
+    return diff;
+  }
+  return diff.slice(0, config.diff.maxLength) + '\n\n[Diff truncated due to size limits]';
 }
 
-/**
- * Constructs the system prompt for OpenAI
- */
-function buildSystemPrompt(): string {
+// Constructs the system prompt for OpenAI
+function buildSystemPrompt() {
   return `You are a code review assistant analyzing git diffs. Provide a concise, helpful analysis that includes:
 
 ### 1. Summary of the overall changes
@@ -67,40 +63,32 @@ function buildSystemPrompt(): string {
 **Output format** must be valid Markdown with headings, numbered lists, and fenced code blocks.`;
 }
 
-/**
- * Writes analysis output asynchronously
- */
-async function writeAnalysis(content: string): Promise<void> {
-  await fs.promises.writeFile(outputPath as string, content);
+// Writes analysis output asynchronously
+async function writeAnalysis(content) {
+  await fs.promises.writeFile(outputPath, content);
 }
 
-/**
- * Redacts API key from errors for safe logging
- */
-function sanitizeErrorForLogging(error: any): string {
+// Redacts API key from errors for safe logging
+function sanitizeErrorForLogging(error) {
   const msg = error instanceof Error ? error.toString() : JSON.stringify(error);
   return openaiApiKey
     ? msg.replace(new RegExp(openaiApiKey, 'g'), '[REDACTED]')
     : msg;
 }
 
-/**
- * Categorizes errors for decision-making
- */
-function categorizeError(error: any): { type: string; retryable: boolean } {
+// Categorizes errors for decision-making
+function categorizeError(error) {
   if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
     return { type: 'network', retryable: true };
   }
-  if (error.response?.status === 401) {
+  if (error.response && error.response.status === 401) {
     return { type: 'auth', retryable: false };
   }
   return { type: 'unknown', retryable: false };
 }
 
-/**
- * Generates a simple fallback analysis if OpenAI fails
- */
-function generateFallbackAnalysis(diff: string): string {
+// Generates a simple fallback analysis if OpenAI fails
+function generateFallbackAnalysis(diff) {
   const additions = (diff.match(/^\+/gm) || []).length;
   const removals = (diff.match(/^- /gm) || []).length;
   return `# Basic Diff Analysis
@@ -110,10 +98,8 @@ ${additions} lines added, ${removals} lines removed.
 *API-based analysis failed.*`;
 }
 
-/**
- * Main analysis function
- */
-async function analyzeCodeWithOpenAI(): Promise<string> {
+// Main analysis function
+async function analyzeCodeWithOpenAI() {
   let diffContent = '';
   try {
     if (!openaiApiKey) {
@@ -123,14 +109,14 @@ async function analyzeCodeWithOpenAI(): Promise<string> {
       return msg;
     }
 
-    if (!fs.existsSync(diffFilePath as string)) {
+    if (!fs.existsSync(diffFilePath)) {
       const msg = `Diff file not found at path: ${diffFilePath}`;
       console.error(msg);
       await writeAnalysis('No diff file available for analysis.');
       return 'No diff file available for analysis.';
     }
 
-    diffContent = await fs.promises.readFile(diffFilePath as string, 'utf8');
+    diffContent = await fs.promises.readFile(diffFilePath, 'utf8');
     if (!diffContent || diffContent.trim().length < config.diff.minLength) {
       const msg = 'Diff content is too small or empty, no meaningful changes to analyze';
       console.log(msg);
@@ -155,14 +141,8 @@ async function analyzeCodeWithOpenAI(): Promise<string> {
   }
 }
 
-/**
- * Requests analysis from OpenAI with fallback and logging
- */
-async function makeApiRequestWithFallback(
-  prompt: string,
-  truncatedDiff: string,
-  fullDiff: string
-): Promise<string> {
+// Requests analysis from OpenAI with fallback and logging
+async function makeApiRequestWithFallback(prompt, truncatedDiff, fullDiff) {
   for (const model of config.api.models) {
     try {
       console.log(`Attempting analysis with ${model} model...`);
@@ -185,16 +165,10 @@ async function makeApiRequestWithFallback(
   return fallback;
 }
 
-/**
- * Sends the chat completion request to OpenAI
- */
-async function makeOpenAiRequest(
-  model: string,
-  prompt: string,
-  truncatedDiff: string
-): Promise<string> {
+// Sends the chat completion request to OpenAI
+async function makeOpenAiRequest(model, prompt, truncatedDiff) {
   let attempts = 0;
-  let lastError: any;
+  let lastError;
 
   while (attempts <= config.api.maxRetries) {
     try {
@@ -215,7 +189,7 @@ async function makeOpenAiRequest(
         { headers: { Authorization: `Bearer ${openaiApiKey}` } }
       );
 
-      const content = response.data?.choices?.[0]?.message?.content;
+      const content = response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message && response.data.choices[0].message.content;
       if (!content) throw new Error('Unexpected response structure from OpenAI API');
       return content;
     } catch (error) {
