@@ -1,13 +1,14 @@
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RecipeActionButtons } from '../RecipeActionButtons';
 import { Recipe } from '@/types/quick-recipe';
+import '@testing-library/jest-dom';
 
 // Mock the useToast hook
-vi.mock('@/hooks/use-toast', () => ({
+jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
-    toast: vi.fn()
+    toast: jest.fn()
   })
 }));
 
@@ -19,11 +20,11 @@ describe('RecipeActionButtons', () => {
     servings: 2
   };
   
-  const mockOnSave = vi.fn().mockResolvedValue(undefined);
-  const mockResetSaveSuccess = vi.fn();
+  const mockOnSave = jest.fn().mockResolvedValue(undefined);
+  const mockResetSaveSuccess = jest.fn();
   
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('renders the save button in default state', () => {
@@ -99,7 +100,7 @@ describe('RecipeActionButtons', () => {
   });
   
   it('automatically resets saveSuccess after a delay', async () => {
-    vi.useFakeTimers();
+    jest.useFakeTimers();
     
     render(
       <RecipeActionButtons 
@@ -110,12 +111,12 @@ describe('RecipeActionButtons', () => {
       />
     );
     
-    vi.advanceTimersByTime(5000);
+    jest.advanceTimersByTime(5000);
     
     await waitFor(() => {
       expect(mockResetSaveSuccess).toHaveBeenCalledTimes(1);
     });
     
-    vi.useRealTimers();
+    jest.useRealTimers();
   });
 });
