@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -6,6 +7,8 @@ import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { PageContainer } from '@/components/ui/containers';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
+import { toast } from 'sonner';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -15,6 +18,27 @@ const RecipePreviewPage: React.FC = () => {
   const storeSetError = useQuickRecipeStore(state => state.setError);
   
   const navigate = useNavigate();
+  const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
+
+  const handleSaveRecipe = async () => {
+    if (!recipe) return;
+
+    try {
+      const savedData = await saveRecipe(recipe);
+      
+      if (savedData) {
+        toast.success("Recipe saved successfully!");
+        // If we have a recipe ID and slug, we could navigate to the detailed view
+        if (savedData.id && savedData.slug) {
+          // Optional: navigate to the saved recipe detail page
+          // navigate(`/recipes/${savedData.slug}`);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to save recipe:", error);
+      toast.error("Failed to save recipe. Please try again.");
+    }
+  };
 
   const handleRetry = useCallback(async () => {
     if (formData) {
@@ -82,7 +106,11 @@ const RecipePreviewPage: React.FC = () => {
         </div>
       
         <div className="space-y-8">
-          <QuickRecipeDisplay recipe={recipe} />
+          <QuickRecipeDisplay 
+            recipe={recipe} 
+            onSave={handleSaveRecipe}
+            isSaving={isSaving}
+          />
           <QuickRecipeRegeneration 
             formData={formData} 
             isLoading={isLoading} 
