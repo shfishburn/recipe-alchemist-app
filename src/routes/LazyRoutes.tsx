@@ -4,7 +4,6 @@ import { lazy } from "react";
 // Pre-existing lazy routes
 export const Index = lazy(() => import("@/pages/Index"));
 export const Recipes = lazy(() => import("@/pages/Recipes"));
-export const RecipeDetail = lazy(() => import("@/pages/RecipeDetail"));
 export const QuickRecipePage = lazy(() => import("@/pages/QuickRecipePage"));
 export const Auth = lazy(() => import("@/pages/Auth"));
 export const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
@@ -24,5 +23,5 @@ export const NotFound = lazy(() => import("@/pages/NotFound"));
 // Loading page route
 export const LoadingPage = lazy(() => import("@/pages/LoadingPage"));
 
-// New Recipe Preview page route
+// Recipe Preview page route
 export const RecipePreviewPage = lazy(() => import("@/pages/RecipePreviewPage"));
