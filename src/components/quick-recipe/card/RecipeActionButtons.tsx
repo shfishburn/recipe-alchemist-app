@@ -1,18 +1,25 @@
 
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
 
+/**
+ * Props interface for the RecipeActionButtons component
+ * Provides proper TypeScript validation for all props
+ */
 interface RecipeActionButtonsProps {
-  onSave?: () => void;
-  isSaving?: boolean;
-  saveSuccess?: boolean;
-  recipe?: Recipe;
-  onResetSaveSuccess?: () => void; // New prop for resetting the success state
+  onSave?: () => void;          // Optional callback for save action
+  isSaving?: boolean;           // Flag indicating if save is in progress
+  saveSuccess?: boolean;        // Flag indicating if save was successful
+  recipe?: Recipe;              // The recipe data
+  onResetSaveSuccess?: () => void; // Optional callback to reset the success state
 }
 
-// Use memo to prevent unnecessary re-renders
+/**
+ * Recipe action buttons component for handling save operations
+ * Uses memo to prevent unnecessary re-renders
+ */
 export const RecipeActionButtons = memo(function RecipeActionButtons({
   onSave,
   isSaving = false,
@@ -20,46 +27,64 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   recipe,
   onResetSaveSuccess
 }: RecipeActionButtonsProps) {
-  // Use useRef for timer to ensure proper cleanup
+  // Reference to store the timer ID for proper cleanup
   const timerRef = useRef<number | undefined>();
   
+  // Track whether the reset function has been called to prevent multiple invocations
+  const [resetCalled, setResetCalled] = useState<boolean>(false);
+  
+  /**
+   * Handles the save button click
+   * If saveSuccess is true and onResetSaveSuccess is provided, resets the success state before saving
+   */
   const handleSave = () => {
     if (onSave) {
       // Reset save success state if we're trying to save again
-      if (saveSuccess && onResetSaveSuccess) {
+      if (saveSuccess && onResetSaveSuccess && !resetCalled) {
         onResetSaveSuccess();
+        setResetCalled(true); // Mark reset as called to prevent multiple invocations
       }
       onSave();
     } else {
-      // Default implementation
+      // Default implementation for when no onSave callback is provided
       console.log("Saving recipe:", recipe?.title);
     }
   };
   
-  // If successful, set up a timer to reset the success state
+  /**
+   * Effect hook to manage the timer for automatically resetting the success state
+   * Sets up a timer when saveSuccess becomes true and cleans it up appropriately
+   */
   useEffect(() => {
+    // Reset the resetCalled state when saveSuccess changes
+    if (!saveSuccess) {
+      setResetCalled(false);
+    }
+    
     // Clear any existing timer first to prevent multiple timers
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
       timerRef.current = undefined;
     }
     
-    if (saveSuccess && typeof onResetSaveSuccess === 'function') {
+    // Only set up a timer if save was successful and we have a reset function
+    if (saveSuccess && typeof onResetSaveSuccess === 'function' && !resetCalled) {
       // Reset the success state after 5 seconds to allow saving again
       timerRef.current = window.setTimeout(() => {
         onResetSaveSuccess();
         timerRef.current = undefined; // Clear the ref after execution
+        setResetCalled(true); // Mark reset as called to prevent multiple invocations
       }, 5000); // 5 seconds
     }
     
-    // Clean up timer on component unmount
+    // Clean up timer on component unmount or when dependencies change
     return () => {
       if (timerRef.current) {
         window.clearTimeout(timerRef.current);
         timerRef.current = undefined;
       }
     };
-  }, [saveSuccess, onResetSaveSuccess]);
+  }, [saveSuccess, onResetSaveSuccess, resetCalled]);
   
   return (
     <div className="pt-5 w-full flex flex-col gap-2">

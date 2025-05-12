@@ -5,13 +5,16 @@ import { QuickRecipeCard } from './QuickRecipeCard';
 import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
 
+/**
+ * Props interface for the QuickRecipeDisplay component with proper TypeScript validation
+ */
 interface QuickRecipeDisplayProps {
   recipe: QuickRecipe;
   onSave?: () => void;
   isSaving?: boolean;
   saveSuccess?: boolean;
   debugMode?: boolean;
-  onResetSaveSuccess?: () => void; // New prop for reset functionality
+  onResetSaveSuccess?: () => void; // Function to reset the save success state
 }
 
 export function QuickRecipeDisplay({ 
