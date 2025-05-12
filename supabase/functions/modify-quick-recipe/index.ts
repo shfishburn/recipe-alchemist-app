@@ -1,9 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { ChatOpenAI } from "https://esm.sh/@langchain/openai";
-import { StructuredOutputParser } from "https://esm.sh/@langchain/output_parsers";
-import { RunnableSequence } from "https://esm.sh/@langchain/core/runnables";
-import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core/prompts";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
+import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
+import { RunnableSequence } from "https://esm.sh/@langchain/core@0.1.5/runnables";
+import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core@0.1.5/prompts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { recipeModificationsSchema } from "./schema.ts";
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
