@@ -1,3 +1,12 @@
+/*
+ * DO NOT MODIFY THIS FILE DIRECTLY
+ * Last updated: 2025-05-12T18:00:00Z
+ * 
+ * This file manages the recipe generation edge function with proper CORS handling.
+ * It uses dynamic origin detection for proper cross-origin resource sharing.
+ * Any changes should be carefully tested to ensure proper API connectivity.
+ */
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleRequest } from "./request-handler.ts";
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -109,7 +118,7 @@ serve(async (req) => {
         details: errorDetails,
         debugInfo: "error-handler"
       }),
-      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } },
+      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
     );
   }
 });
