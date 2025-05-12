@@ -12,7 +12,31 @@ import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation } from "react-router-dom";
-import { prefetchAssets } from '@/utils/performance';
+
+// Updated utility function to prefetch assets that actually exist in production
+const prefetchAssets = (urls: string[]) => {
+  // Only run in production and only for actual CSS/JS files
+  if (process.env.NODE_ENV !== 'development') {
+    urls.forEach(url => {
+      // Skip if the URL is a source file path that won't exist in production
+      if (url.includes('/src/')) {
+        console.log(`Skipping prefetch of source file: ${url}`);
+        return;
+      }
+      
+      try {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        link.as = url.endsWith('.css') ? 'style' : 'script';
+        document.head.appendChild(link);
+        console.log(`Prefetched: ${url}`);
+      } catch (err) {
+        console.warn(`Failed to prefetch: ${url}`, err);
+      }
+    });
+  }
+};
 
 export const AppLayout = () => {
   // Apply scroll restoration hook
@@ -22,13 +46,13 @@ export const AppLayout = () => {
   // Check if we're on the loading page
   const isLoadingRoute = location.pathname === '/loading';
 
-  // Prefetch critical assets for better performance
+  // Prefetch critical assets for better performance - using actual production asset paths
   useEffect(() => {
+    // Only prefetch actual bundled assets, not source files
     prefetchAssets([
-      // Critical scripts and styles for the loading experience
-      '/src/components/quick-recipe/QuickRecipeDisplay.tsx',
-      '/src/components/quick-recipe/QuickRecipeFormContainer.tsx',
-      '/src/styles/loading.css',
+      // Main bundled assets rather than source files
+      '/assets/index-KAloV5gI.js',
+      '/assets/index-KAloV5gI.css',
     ]);
   }, []);
   
