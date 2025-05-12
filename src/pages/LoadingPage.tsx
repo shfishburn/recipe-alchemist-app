@@ -9,8 +9,17 @@ interface LocationState {
   fromQuickRecipePage?: boolean;
   fromRecipePreview?: boolean;
   error?: string;
-  formData?: any;
+  formData?: Record<string, unknown>; // Fixed the 'any' type with a more specific type
   timestamp?: number;
+  isRetrying?: boolean;
+}
+
+// Define progress stages for better code organization
+interface ProgressStage {
+  limit: number;      // Upper limit for this stage
+  increment: number;  // How much to increment per interval
+  interval: number;   // Milliseconds between updates
+  message: string;    // Message to display during this stage
 }
 
 const LoadingPage: React.FC = () => {
@@ -34,11 +43,21 @@ const LoadingPage: React.FC = () => {
     fromQuickRecipePage = false, 
     fromRecipePreview = false,
     error = null, 
-    formData = null 
+    formData = null,
+    isRetrying = false
   } = state;
   
   // Combine errors from state and store
   const displayError = error || storeError;
+  
+  // Define progress stages with their properties
+  const progressStages: ProgressStage[] = [
+    { limit: 20, increment: 3, interval: 600, message: "Gathering recipe ideas..." },        // Stage 0: Initial loading
+    { limit: 60, increment: 2, interval: 700, message: "Selecting best ingredients..." },    // Stage 1: Ingredient selection  
+    { limit: 85, increment: 1, interval: 1200, message: "Crafting the perfect combination..." }, // Stage 2: Combination crafting
+    { limit: 95, increment: 0.5, interval: 1800, message: "Finalizing your recipe..." },     // Stage 3: Finalization
+    { limit: 100, increment: 5, interval: 300, message: "Recipe ready!" }                    // Stage 4: Completion
+  ];
   
   // If not coming from QuickRecipePage or RecipePreviewPage, redirect to home
   useEffect(() => {
@@ -47,76 +66,62 @@ const LoadingPage: React.FC = () => {
     }
   }, [fromQuickRecipePage, fromRecipePreview, navigate]);
   
-  // Progressive loading animation
+  // More efficient progressive loading animation using a single interval
   useEffect(() => {
     if (isLoading && !displayError) {
-      // Start with quick initial progress
+      // Start with a small initial progress
       setProgress(5);
       
-      // Fast initial progress (0-60%)
-      const fastProgressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev < 60) {
-            if (prev >= 20 && prev < 25) setLoadingStage(1);
-            return Math.min(prev + 3, 60);
-          }
-          return prev;
-        });
-      }, 700);
+      // Current stage tracking
+      let currentStageIndex = 0;
       
-      // Medium progress (60-85%)
-      const mediumProgressInterval = setInterval(() => {
+      // Single interval for all progress updates
+      const progressInterval = setInterval(() => {
         setProgress(prev => {
-          if (prev >= 60 && prev < 85) {
-            if (prev >= 60 && prev < 65) setLoadingStage(2);
-            return Math.min(prev + 1, 85);
+          // Get current stage configuration
+          const currentStage = progressStages[currentStageIndex];
+          
+          // If we're below the limit for current stage
+          if (prev < currentStage.limit) {
+            // If we're crossing a stage boundary, update the loading stage for message display
+            if (currentStageIndex < progressStages.length - 1 && 
+                prev + currentStage.increment >= progressStages[currentStageIndex].limit) {
+              setLoadingStage(currentStageIndex + 1);
+              currentStageIndex++;
+            }
+            
+            // Increase by current stage's increment, but don't exceed the limit
+            return Math.min(prev + currentStage.increment, currentStage.limit);
           }
+          
+          // Move to next stage if available
+          if (currentStageIndex < progressStages.length - 1) {
+            currentStageIndex++;
+            // Get new interval timing for next stage
+            clearInterval(progressInterval);
+            return prev;
+          }
+          
           return prev;
         });
-      }, 1200);
-      
-      // Slow progress (85-95%)
-      const slowProgressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 85 && prev < 95) {
-            if (prev >= 85 && prev < 90) setLoadingStage(3);
-            return Math.min(prev + 0.5, 95);
-          }
-          return prev;
-        });
-      }, 1800);
+      }, progressStages[currentStageIndex].interval);
       
       return () => {
-        clearInterval(fastProgressInterval);
-        clearInterval(mediumProgressInterval);
-        clearInterval(slowProgressInterval);
+        clearInterval(progressInterval);
       };
     } else if (recipe && !displayError) {
       // Complete the progress bar when recipe is ready
       setProgress(100);
-      setLoadingStage(4);
+      setLoadingStage(4); // Final stage
     } else if (displayError) {
       // Reset progress when there's an error
       setProgress(0);
     }
-  }, [isLoading, recipe, displayError]);
+  }, [isLoading, recipe, displayError, progressStages]);
   
-  // Get loading message based on progress
+  // Get loading message based on current stage
   const getLoadingMessage = () => {
-    switch (loadingStage) {
-      case 0:
-        return "Gathering recipe ideas...";
-      case 1:
-        return "Selecting best ingredients...";
-      case 2:
-        return "Crafting the perfect combination...";
-      case 3:
-        return "Finalizing your recipe...";
-      case 4:
-        return "Recipe ready!";
-      default:
-        return "Creating your recipe...";
-    }
+    return progressStages[loadingStage]?.message || "Creating your recipe...";
   };
   
   // Handle redirection based on recipe generation state
@@ -183,14 +188,19 @@ const LoadingPage: React.FC = () => {
         {displayError ? (
           <ErrorState 
             error={displayError} 
-            isRetrying={false}
+            isRetrying={isRetrying}
           />
         ) : (
           <div className="flex flex-col items-center justify-center space-y-4 py-8">
             <RecipeLoadingAnimation />
             <div className="space-y-2 text-center">
               <h2 className="text-xl font-semibold text-gray-800">Crafting Your Recipe</h2>
-              <p className="text-sm text-gray-500">{getLoadingMessage()}</p>
+              <p 
+                className="text-sm text-gray-500"
+                aria-live="polite"
+              >
+                {getLoadingMessage()}
+              </p>
             </div>
             
             <div className="w-full max-w-xs mt-6">
