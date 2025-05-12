@@ -5,9 +5,10 @@ import { Clock, CookingPot } from 'lucide-react';
 interface RecipeTimeInfoProps {
   prepTime: number;
   cookTime: number;
+  servings?: number; // Added servings prop
 }
 
-export function RecipeTimeInfo({ prepTime, cookTime }: RecipeTimeInfoProps) {
+export function RecipeTimeInfo({ prepTime, cookTime, servings }: RecipeTimeInfoProps) {
   const totalTime = prepTime + cookTime;
   
   return (
@@ -36,6 +37,15 @@ export function RecipeTimeInfo({ prepTime, cookTime }: RecipeTimeInfoProps) {
           {totalTime} min
         </div>
       </div>
+      
+      {servings && (
+        <div className="text-center flex-1">
+          <div className="text-xs text-muted-foreground mb-1">Servings</div>
+          <div className="font-medium">
+            {servings}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,9 @@ export interface Ingredient {
   shop_size_unit?: string;
 }
 
+// Rename/alias QuickRecipe as Recipe for backward compatibility
+export type Recipe = QuickRecipe;
+
 export interface QuickRecipe {
   title: string;
   tagline?: string;
@@ -35,6 +38,7 @@ export interface QuickRecipe {
   cuisine?: string[] | string;
   dietary?: string[] | string;
   flavor_tags?: string[];
+  highlights?: string[]; // Added for RecipeHighlights component
   user_id?: string;
   id?: string;
   slug?: string;  // Added slug property
