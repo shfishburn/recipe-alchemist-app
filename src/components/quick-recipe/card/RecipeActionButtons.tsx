@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Props interface for the RecipeActionButtons component
@@ -38,6 +39,11 @@ interface RecipeActionButtonsProps {
    * Critical for allowing users to save again after a successful operation.
    */
   onResetSaveSuccess?: () => void; 
+  
+  /**
+   * The slug or ID to navigate to after successful save
+   */
+  savedSlug?: string;
 }
 
 /**
@@ -49,17 +55,39 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   isSaving = false,
   saveSuccess = false,
   recipe,
-  onResetSaveSuccess
+  onResetSaveSuccess,
+  savedSlug
 }: RecipeActionButtonsProps) {
-  // Reference to store the timer ID for proper cleanup
-  const timerRef = useRef<number | undefined>();
+  // Reference to track if component is mounted to avoid state updates after unmount
+  const isMounted = useRef(true);
   
   // Track whether the reset function has been called to prevent multiple invocations
   const [resetCalled, setResetCalled] = useState<boolean>(false);
   
-  // Access the toast functionality
+  // Access the toast functionality and navigation
   const { toast } = useToast();
+  const navigate = useNavigate();
 
+  // Effect to cleanup references and timers when component unmounts
+  useEffect(() => {
+    return () => {
+      // Mark component as unmounted to prevent state updates
+      isMounted.current = false;
+    };
+  }, []);
+
+  /**
+   * Reset save success state with proper lifecycle management
+   */
+  const handleResetSaveSuccess = () => {
+    if (!isMounted.current) return;
+    
+    if (onResetSaveSuccess && !resetCalled) {
+      onResetSaveSuccess();
+      setResetCalled(true);
+    }
+  };
+  
   /**
    * Handles the save button click
    * If saveSuccess is true and onResetSaveSuccess is provided, resets the success state before saving
@@ -67,49 +95,11 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   const handleSave = async () => {
     // Reset save success state if we're trying to save again
     if (saveSuccess && onResetSaveSuccess && !resetCalled) {
-      onResetSaveSuccess();
-      setResetCalled(true); // Mark reset as called to prevent multiple invocations
+      handleResetSaveSuccess();
     }
     
-    if (onSave) {
-      try {
-        // Call the onSave function provided by parent
-        // Handle both synchronous and asynchronous onSave functions
-        const result = onSave();
-        
-        // If onSave returns a Promise, wait for it to complete
-        if (result instanceof Promise) {
-          await result;
-        }
-        
-        // Reset the resetCalled state ONLY after the save operation completes successfully
-        // Use a slight delay to ensure state changes don't collide
-        setTimeout(() => {
-          if (resetCalled) {
-            setResetCalled(false);
-          }
-        }, 100);
-      } catch (error) {
-        // Provide user feedback when save operation fails
-        console.error("Error saving recipe:", error);
-        
-        // Safely extract error message with proper type checking
-        const errorMessage = error instanceof Error 
-          ? error.message 
-          : "Failed to save recipe";
-          
-        toast({
-          title: "Save failed",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        
-        // Reset the resetCalled state immediately on error to allow retry
-        setResetCalled(false);
-      }
-    } else {
+    if (!onSave) {
       // Default implementation for when no onSave callback is provided
-      // Provide user feedback about the missing save functionality
       console.log("Default save action for recipe:", recipe?.title);
       
       toast({
@@ -118,49 +108,77 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
         variant: "default"
       });
       
-      // Reset the resetCalled state for the default implementation as well
-      // Use a short timeout to ensure state updates don't conflict
-      setTimeout(() => {
-        if (resetCalled) {
-          setResetCalled(false);
-        }
-      }, 100);
+      // Reset resetCalled state for the default implementation
+      if (resetCalled) {
+        setResetCalled(false);
+      }
+      
+      return;
+    }
+    
+    try {
+      // Call the onSave function provided by parent
+      const result = onSave();
+      
+      // If onSave returns a Promise, wait for it to complete
+      if (result instanceof Promise) {
+        await result;
+      }
+      
+      // Reset the resetCalled state after successful save
+      if (resetCalled && isMounted.current) {
+        setResetCalled(false);
+      }
+      
+      // If we have a savedSlug, navigate to the recipe detail page
+      if (savedSlug && isMounted.current && saveSuccess) {
+        console.log("Navigating to recipe:", savedSlug);
+        navigate(`/recipes/${savedSlug}`);
+      }
+    } catch (error) {
+      // Provide user feedback when save operation fails
+      console.error("Error saving recipe:", error);
+      
+      // Safely extract error message with proper type checking
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to save recipe";
+        
+      toast({
+        title: "Save failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
+      // Reset the resetCalled state on error
+      if (isMounted.current) {
+        setResetCalled(false);
+      }
     }
   };
   
   /**
-   * Effect hook to manage the timer for automatically resetting the success state
-   * Sets up a timer when saveSuccess becomes true and cleans it up appropriately
+   * Effect hook to manage automatic resetting of success state
    */
   useEffect(() => {
-    // Reset the resetCalled state when saveSuccess changes
-    if (!saveSuccess) {
+    // Reset the resetCalled state when saveSuccess changes to false
+    if (!saveSuccess && resetCalled) {
       setResetCalled(false);
     }
     
-    // Clear any existing timer first to prevent multiple timers
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = undefined;
-    }
-    
-    // Only set up a timer if save was successful and we have a reset function
+    // Only set up a reset if save was successful and we have a reset function
     if (saveSuccess && typeof onResetSaveSuccess === 'function' && !resetCalled) {
       // Reset the success state after 5 seconds to allow saving again
-      timerRef.current = window.setTimeout(() => {
-        onResetSaveSuccess();
-        timerRef.current = undefined; // Clear the ref after execution
-        setResetCalled(true); // Mark reset as called to prevent multiple invocations
+      const resetTimer = setTimeout(() => {
+        if (isMounted.current) {
+          onResetSaveSuccess();
+          setResetCalled(true);
+        }
       }, 5000); // 5 seconds
+      
+      // Clean up timer when dependencies change
+      return () => clearTimeout(resetTimer);
     }
-    
-    // Clean up timer on component unmount or when dependencies change
-    return () => {
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = undefined;
-      }
-    };
   }, [saveSuccess, onResetSaveSuccess, resetCalled]);
   
   return (

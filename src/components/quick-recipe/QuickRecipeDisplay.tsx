@@ -1,53 +1,79 @@
 
 import React from 'react';
-import { QuickRecipe } from '@/hooks/use-quick-recipe';
-import { QuickRecipeCard } from './QuickRecipeCard'; 
+import { Recipe } from '@/types/quick-recipe';
+import { RecipeIngredients } from './card/RecipeIngredients';
+import { RecipeSteps } from './card/RecipeSteps';
+import { RecipeHighlights } from './card/RecipeHighlights';
+import { RecipeTimeInfo } from './card/RecipeTimeInfo';
+import { RecipeSectionHeader } from './card/RecipeSectionHeader';
 import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
 
-/**
- * Props interface for the QuickRecipeDisplay component with proper TypeScript validation
- */
 interface QuickRecipeDisplayProps {
-  recipe: QuickRecipe;
-  onSave?: () => void;
+  recipe: Recipe;
+  onSave?: () => Promise<void>;
   isSaving?: boolean;
   saveSuccess?: boolean;
   debugMode?: boolean;
-  onResetSaveSuccess?: () => void; // Function to reset the save success state
+  onResetSaveSuccess?: () => void;
+  savedSlug?: string;
 }
 
-export function QuickRecipeDisplay({ 
-  recipe, 
+export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({ 
+  recipe,
   onSave,
   isSaving = false,
   saveSuccess = false,
   debugMode = false,
-  onResetSaveSuccess
-}: QuickRecipeDisplayProps) {
-  // Enhanced null check and validation
-  if (!recipe || typeof recipe !== 'object' || !recipe.title || !Array.isArray(recipe.ingredients)) {
-    console.error('Invalid recipe object provided to QuickRecipeDisplay:', recipe);
-    return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-red-600">Error: Recipe data is invalid or incomplete.</p>
-      </div>
-    );
+  onResetSaveSuccess,
+  savedSlug
+}) => {
+  if (!recipe) {
+    return null;
   }
   
   return (
-    <div className="flex flex-col gap-4">
-      <QuickRecipeCard recipe={recipe} />
-      
-      <RecipeActionButtons 
-        recipe={recipe} 
-        onSave={onSave} 
-        isSaving={isSaving}
-        saveSuccess={saveSuccess}
-        onResetSaveSuccess={onResetSaveSuccess}
-      />
-      
-      {debugMode && <RecipeDebugSection recipe={recipe} />}
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+      <div className="p-6 md:p-8">
+        <div className="space-y-6">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{recipe.title}</h2>
+          
+          {recipe.tagline && (
+            <p className="text-gray-600 dark:text-gray-300 italic">{recipe.tagline}</p>
+          )}
+          
+          <RecipeHighlights recipe={recipe} />
+          
+          <RecipeTimeInfo 
+            prepTimeMin={recipe.prep_time_min} 
+            cookTimeMin={recipe.cook_time_min} 
+            servings={recipe.servings} 
+          />
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <RecipeSectionHeader title="Ingredients" />
+              <RecipeIngredients ingredients={recipe.ingredients} />
+            </div>
+            
+            <div>
+              <RecipeSectionHeader title="Instructions" />
+              <RecipeSteps steps={recipe.instructions} />
+            </div>
+          </div>
+          
+          <RecipeActionButtons 
+            onSave={onSave}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+            recipe={recipe}
+            onResetSaveSuccess={onResetSaveSuccess}
+            savedSlug={savedSlug}
+          />
+          
+          {debugMode && <RecipeDebugSection recipe={recipe} />}
+        </div>
+      </div>
     </div>
   );
-}
+};

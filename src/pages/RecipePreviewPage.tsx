@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { toast } from 'sonner';
-import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import LoadingOverlay from '@/components/ui/loading-overlay';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -22,7 +21,8 @@ const RecipePreviewPage: React.FC = () => {
   const { saveRecipe, isSaving, savedRecipe } = useQuickRecipeSave();
   const [debugMode, setDebugMode] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [isSavingLocal, setIsSavingLocal] = useState(false); // Additional local saving state for UI feedback
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
+  const [savedSlug, setSavedSlug] = useState<string | undefined>(undefined);
 
   // Reset save success state
   const resetSaveSuccess = useCallback(() => {
@@ -50,6 +50,7 @@ const RecipePreviewPage: React.FC = () => {
       
       if (savedData && savedData.id && savedData.slug) {
         setSaveSuccess(true);
+        setSavedSlug(savedData.slug);
         
         // Show success toast with 2000ms duration and navigation on dismiss
         toast.success("Recipe saved successfully!", {
@@ -144,10 +145,14 @@ const RecipePreviewPage: React.FC = () => {
   return (
     <PageContainer>
       {showLoadingOverlay && (
-        <LoadingOverlay 
-          message="Saving your recipe..." 
-          description="Please wait while we save your delicious creation."
-        />
+        <LoadingOverlay isOpen={showLoadingOverlay}>
+          <div className="p-6 flex flex-col items-center gap-4 text-center">
+            <h3 className="text-lg font-semibold">Saving your recipe...</h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              Please wait while we save your delicious creation.
+            </p>
+          </div>
+        </LoadingOverlay>
       )}
       <div className="space-y-10 py-6 md:py-10 animate-fadeIn">
         <div className="flex justify-between items-center">
@@ -182,6 +187,7 @@ const RecipePreviewPage: React.FC = () => {
             saveSuccess={saveSuccess}
             debugMode={debugMode}
             onResetSaveSuccess={resetSaveSuccess}
+            savedSlug={savedSlug}
           />
           <QuickRecipeRegeneration 
             formData={formData} 
