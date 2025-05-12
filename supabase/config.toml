@@ -475,3 +475,6 @@ enabled = false
 [functions]
 [functions.modify-quick-recipe]
 verify_jwt = true
+
+[functions.generate-quick-recipe]
+verify_jwt = false
