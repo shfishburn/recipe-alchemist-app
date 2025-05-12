@@ -1,4 +1,12 @@
 
+/**
+ * DO NOT MODIFY: This is a critical component that handles loading states throughout the application.
+ * Modifications may break the loading experience or cause unintended side effects.
+ * 
+ * This component provides a standalone loading page that completely replaces the app layout
+ * during recipe generation, API calls, and other intensive operations.
+ */
+
 import React, { useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
