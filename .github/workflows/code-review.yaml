@@ -237,7 +237,7 @@ jobs:
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Code Review for commit ${context.sha.substring(0,7)}`,
+              title: `${process.env.COMMIT_MSG} (${context.sha.substring(0,7)})`,
               body: issueBody,
               labels: ['automated-review']
             });
