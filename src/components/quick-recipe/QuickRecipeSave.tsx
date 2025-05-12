@@ -15,14 +15,14 @@ const FIELD_MAPPINGS = {
   flavorTags: 'flavor_tags',
   scienceNotes: 'science_notes',
   steps: 'instructions', // Map steps to instructions (they're the same content)
+  description: 'tagline', // Map description to tagline since description doesn't exist in DB
 };
 
 // Define a whitelist of valid database column names
 const VALID_DB_FIELDS = [
   'id',
   'title',
-  'description',
-  'tagline',
+  'tagline', // Only tagline exists in DB, not description
   'ingredients',
   'instructions',
   'steps', // This will be transformed to instructions
@@ -144,6 +144,15 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
     }
   }
   
+  // Handle the description/tagline special case
+  if (recipe.description !== undefined) {
+    result.tagline = recipe.description;
+  }
+  // If both tagline and description exist, prioritize tagline
+  if (recipe.tagline !== undefined) {
+    result.tagline = recipe.tagline;
+  }
+  
   // Next, copy all other properties that don't need mapping
   for (const [key, value] of Object.entries(recipe)) {
     // Skip keys we've already mapped
@@ -165,7 +174,7 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
   // Filter out any properties not in our database whitelist
   const finalResult: Record<string, any> = {};
   for (const dbField of VALID_DB_FIELDS) {
-    if (dbField in result) {
+    if (dbField in result && result[dbField] !== undefined) {
       finalResult[dbField] = result[dbField];
     }
   }
