@@ -5,8 +5,11 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 // Main entry point for the edge function
 serve(async (req) => {
+  console.log("Edge function called: generate-quick-recipe");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
   
@@ -60,6 +63,22 @@ serve(async (req) => {
         }),
         { 
           status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
+    // Check if OpenAI API key is available
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      console.error("OPENAI_API_KEY environment variable not set");
+      return new Response(
+        JSON.stringify({
+          error: "API configuration error",
+          details: "OpenAI API key is not configured"
+        }),
+        { 
+          status: 500, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );

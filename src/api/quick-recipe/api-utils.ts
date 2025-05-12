@@ -47,6 +47,7 @@ export const fetchFromEdgeFunction = async (payload: any) => {
     // Additional logging to track network requests
     const requestStartTime = Date.now();
     console.log(`[REQUEST START] ${new Date().toISOString()} - Sending request to ${url}`);
+    console.log('Request payload:', JSON.stringify(payload));
     
     // Add request timeout with clear error message
     const controller = new AbortController();
@@ -75,11 +76,19 @@ export const fetchFromEdgeFunction = async (payload: any) => {
         let errorMessage = `Edge function returned status ${response.status}`;
         try {
           const errorData = await response.json();
+          console.error('[ERROR RESPONSE]', errorData);
           if (errorData && errorData.error) {
             errorMessage = errorData.error;
           }
         } catch (e) {
-          // Ignore parse error and use default message
+          console.error('[ERROR PARSING ERROR]', e);
+          // Try getting text if JSON parse fails
+          try {
+            const errorText = await response.text();
+            console.error('[ERROR RESPONSE TEXT]', errorText);
+          } catch (textError) {
+            console.error('[ERROR GETTING TEXT]', textError);
+          }
         }
         throw new Error(errorMessage);
       }
@@ -110,6 +119,7 @@ export const fetchFromEdgeFunction = async (payload: any) => {
 export const fetchFromSupabaseFunctions = async (payload: any, token: string) => {
   try {
     console.log(`[SUPABASE FUNCTION] Starting request with token: ${token ? "token exists" : "no token"}`);
+    console.log('[SUPABASE FUNCTION] Request payload:', JSON.stringify(payload));
     const requestStartTime = Date.now();
     
     const result = await callSupabaseFunction('generate-quick-recipe', {
@@ -120,6 +130,10 @@ export const fetchFromSupabaseFunctions = async (payload: any, token: string) =>
     
     const requestEndTime = Date.now();
     console.log(`[SUPABASE FUNCTION] Response received in ${requestEndTime - requestStartTime}ms with success: ${!result.error}`);
+    
+    if (result.error) {
+      console.error('[SUPABASE FUNCTION ERROR]', result.error);
+    }
     
     return result;
   } catch (error) {
