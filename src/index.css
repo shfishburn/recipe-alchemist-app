@@ -7,7 +7,7 @@
 @import './styles/clock.css';
 @import './styles/carousel/index.css';
 @import './styles/scientific-content.css';
-@import 'react-clock/dist/Clock.css';
+/* Remove react-clock CSS import as it was causing issues */
 
 /* Enhanced scientific content styling */
 .scientific-content {
