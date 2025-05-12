@@ -44,6 +44,20 @@ async function analyzeCodeWithOpenAI() {
 
     console.log(`Sending ${truncatedDiff.length} characters to OpenAI API`);
 
+    // Define system prompt with AI developer prompt generation
+    const systemPrompt = `You are a code review assistant analyzing git diffs. Provide a concise, helpful analysis that includes:
+
+1. Summary of the overall changes
+2. Potential issues or bugs
+3. Security concerns if any
+4. Suggestions for improvement
+5. Code quality observations
+6. AI Developer Prompt - Create a prompt that another developer could use with AI to implement your suggested improvements
+
+For the AI Developer Prompt section, write a clear, specific prompt that a developer could copy and paste into an AI assistant to help implement your suggested improvements or fix the issues you identified. Make this prompt actionable and specific to the code in the diff.
+
+Focus on providing actionable insights without being overly verbose.`;
+
     // Try with gpt-4o-mini first, fall back to gpt-3.5-turbo if needed
     let model = 'gpt-4o-mini';
 
@@ -54,15 +68,7 @@ async function analyzeCodeWithOpenAI() {
         messages: [
           {
             role: 'system',
-            content: `You are a code review assistant analyzing git diffs. Provide a concise, helpful analysis that includes:
-
-            1. Summary of the overall changes
-            2. Potential issues or bugs
-            3. Security concerns if any
-            4. Suggestions for improvement
-            5. Code quality observations
-
-            Focus on providing actionable insights without being overly verbose.`
+            content: systemPrompt
           },
           {
             role: 'user',
@@ -104,15 +110,7 @@ async function analyzeCodeWithOpenAI() {
           messages: [
             {
               role: 'system',
-              content: `You are a code review assistant analyzing git diffs. Provide a concise, helpful analysis that includes:
-
-              1. Summary of the overall changes
-              2. Potential issues or bugs
-              3. Security concerns if any
-              4. Suggestions for improvement
-              5. Code quality observations
-
-              Focus on providing actionable insights without being overly verbose.`
+              content: systemPrompt
             },
             {
               role: 'user',
