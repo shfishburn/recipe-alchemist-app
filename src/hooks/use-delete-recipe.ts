@@ -12,6 +12,11 @@ export const useDeleteRecipe = () => {
   return {
     ...useMutation({
       mutationFn: async (recipeId: string) => {
+        // Validate recipe ID
+        if (!recipeId) {
+          throw new Error("Recipe ID is undefined or empty");
+        }
+        
         setIsDeleting(true);
         const { error } = await supabase
           .from('recipes')
@@ -37,9 +42,15 @@ export const useDeleteRecipe = () => {
       },
       onError: (error) => {
         console.error('Error deleting recipe:', error);
+        
+        // Provide more detailed error feedback
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : "Failed to delete the recipe. Please try again.";
+          
         toast({
           title: "Error",
-          description: "Failed to delete the recipe. Please try again.",
+          description: errorMessage,
           variant: "destructive"
         });
         

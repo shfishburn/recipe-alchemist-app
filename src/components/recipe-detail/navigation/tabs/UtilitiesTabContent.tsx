@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardWrapper } from '@/components/ui/card-wrapper';
@@ -58,28 +57,37 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
   
   // Handler for deleting a recipe
   const handleDelete = () => {
-    if (recipe && recipe.id) {
-      deleteRecipe(recipe.id, {
-        onSuccess: () => {
-          toast({
-            title: "Recipe deleted",
-            description: "Your recipe has been moved to trash",
-            duration: 3000
-          });
-          // Navigate back to the recipes list
-          navigate('/recipes');
-        },
-        onError: (error) => {
-          console.error('Delete recipe error:', error);
-          toast({
-            title: "Error",
-            description: "Failed to delete recipe. Please try again.",
-            variant: "destructive",
-            duration: 5000
-          });
-        }
+    // Improved validation for recipe ID
+    if (!recipe?.id) {
+      toast({
+        title: "Error",
+        description: "Cannot delete recipe: Recipe ID is missing",
+        variant: "destructive",
+        duration: 5000
       });
+      return;
     }
+    
+    deleteRecipe(recipe.id, {
+      onSuccess: () => {
+        toast({
+          title: "Recipe deleted",
+          description: "Your recipe has been moved to trash",
+          duration: 3000
+        });
+        // Navigate back to the recipes list
+        navigate('/recipes');
+      },
+      onError: (error) => {
+        console.error('Delete recipe error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete recipe. Please try again.",
+          variant: "destructive",
+          duration: 5000
+        });
+      }
+    });
   };
   
   return (
