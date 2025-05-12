@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
@@ -9,31 +8,33 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 const RecipePreviewPage: React.FC = () => {
-  const { recipe, formData, isLoading, handleRetry } = useQuickRecipeStore(state => ({
-    recipe: state.recipe,
-    formData: state.formData,
-    isLoading: state.isLoading,
-    handleRetry: async () => {
-      if (state.formData) {
-        state.setLoading(true);
-        try {
-          // Retry will go through the loading page
-          navigate('/loading', { 
-            state: { 
-              fromQuickRecipePage: true,
-              isRetrying: true,
-            }
-          });
-        } catch (err) {
-          console.error("Error retrying recipe generation:", err);
-          state.setLoading(false);
-          state.setError("Failed to retry recipe generation");
-        }
-      }
-    }
-  }));
+  const recipe = useQuickRecipeStore(state => state.recipe);
+  const formData = useQuickRecipeStore(state => state.formData);
+  const isLoading = useQuickRecipeStore(state => state.isLoading);
+  const storeSetLoading = useQuickRecipeStore(state => state.setLoading);
+  const storeSetError = useQuickRecipeStore(state => state.setError);
   
   const navigate = useNavigate();
+
+  const handleRetry = useCallback(async () => {
+    if (formData) {
+      storeSetLoading(true);
+      try {
+        // Retry will go through the loading page
+        navigate('/loading', { 
+          state: { 
+            fromQuickRecipePage: true,
+            isRetrying: true,
+          }
+        });
+      } catch (e: unknown) {
+        console.error("Error retrying recipe generation:", e);
+        storeSetLoading(false);
+        const message = e instanceof Error ? e.message : "Failed to retry recipe generation";
+        storeSetError(message);
+      }
+    }
+  }, [formData, navigate, storeSetLoading, storeSetError]);
   
   // If there's no recipe, redirect to quick-recipe page
   useEffect(() => {
