@@ -3,7 +3,7 @@ import React, { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bookmark, Check } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Props interface for the RecipeActionButtons component
@@ -57,6 +57,9 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
   // Track whether the reset function has been called to prevent multiple invocations
   const [resetCalled, setResetCalled] = useState<boolean>(false);
   
+  // Access the toast functionality
+  const { toast } = useToast();
+
   /**
    * Handles the save button click
    * If saveSuccess is true and onResetSaveSuccess is provided, resets the success state before saving
@@ -79,36 +82,49 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
           await result;
         }
         
-        // Reset the resetCalled state after the save operation completes successfully
-        if (resetCalled) {
-          setResetCalled(false);
-        }
+        // Reset the resetCalled state ONLY after the save operation completes successfully
+        // Use a slight delay to ensure state changes don't collide
+        setTimeout(() => {
+          if (resetCalled) {
+            setResetCalled(false);
+          }
+        }, 100);
       } catch (error) {
         // Provide user feedback when save operation fails
         console.error("Error saving recipe:", error);
+        
+        // Safely extract error message with proper type checking
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : "Failed to save recipe";
+          
         toast({
           title: "Save failed",
-          description: error instanceof Error ? error.message : "Failed to save recipe",
+          description: errorMessage,
           variant: "destructive"
         });
         
-        // Reset the resetCalled state if an error occurred
+        // Reset the resetCalled state immediately on error to allow retry
         setResetCalled(false);
       }
     } else {
       // Default implementation for when no onSave callback is provided
       // Provide user feedback about the missing save functionality
       console.log("Default save action for recipe:", recipe?.title);
+      
       toast({
-        title: "Save functionality not implemented",
+        title: "Save info",
         description: "This is just a preview. Full save functionality will be available in the complete version.",
         variant: "default"
       });
       
       // Reset the resetCalled state for the default implementation as well
-      if (resetCalled) {
-        setResetCalled(false);
-      }
+      // Use a short timeout to ensure state updates don't conflict
+      setTimeout(() => {
+        if (resetCalled) {
+          setResetCalled(false);
+        }
+      }, 100);
     }
   };
   
