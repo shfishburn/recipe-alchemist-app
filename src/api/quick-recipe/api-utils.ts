@@ -55,6 +55,7 @@ export const fetchFromEdgeFunction = async (payload: any) => {
     
     try {
       // Call the edge function directly with timeout
+      // IMPORTANT: Added credentials: 'omit' to prevent sending auth cookies/headers
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -62,7 +63,8 @@ export const fetchFromEdgeFunction = async (payload: any) => {
           'X-Debug-Info': `direct-fetch-${Date.now()}`,
         },
         body: JSON.stringify(payload),
-        signal: controller.signal
+        signal: controller.signal,
+        credentials: 'omit' // Explicitly tell browser not to send credentials
       });
       
       // Clear the timeout since the request completed
@@ -102,6 +104,12 @@ export const fetchFromEdgeFunction = async (payload: any) => {
       if (fetchError.name === 'AbortError') {
         console.error(`[REQUEST TIMEOUT] Request to ${url} timed out after 120 seconds`);
         throw new Error('Recipe generation request timed out. Please try again.');
+      }
+      
+      // Add specific handling for CORS errors
+      if (fetchError.message && fetchError.message.includes('CORS')) {
+        console.error('[CORS ERROR] Cross-origin request failed:', fetchError);
+        throw new Error('Network error: Unable to connect to recipe service due to CORS restrictions. Please try again later.');
       }
       
       console.error(`[REQUEST ERROR] ${fetchError.message}`);

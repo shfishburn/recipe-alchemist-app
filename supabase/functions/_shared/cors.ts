@@ -1,3 +1,4 @@
+
 // Helper function to get CORS headers with origin
 export function getCorsHeadersWithOrigin(req: Request): HeadersInit {
   const origin = req.headers.get('origin') || '*';

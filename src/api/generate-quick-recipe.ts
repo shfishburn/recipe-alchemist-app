@@ -143,6 +143,19 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         };
       }
       
+      // CORS specific error handling
+      if (raceError.message && raceError.message.includes("CORS")) {
+        return {
+          title: "Connection Error",
+          description: "We're having trouble connecting to our recipe service.",
+          ingredients: [],
+          steps: ["There was a network error connecting to our recipe service. Please try again later."],
+          error_message: "CORS error: Unable to connect to recipe service. This is likely a temporary issue.",
+          isError: true,
+          servings: 2
+        };
+      }
+      
       // General error handler
       return {
         title: "Recipe Generation Error",
