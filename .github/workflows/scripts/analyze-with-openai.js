@@ -86,7 +86,7 @@ function truncateDiff(diff) {
 }
 
 /**
- * Constructs the system prompt for OpenAI
+ * Constructs the system prompt for OpenAI with improved AI Developer Prompt section
  */
 function buildSystemPrompt() {
   return `You are a code review assistant analyzing git diffs. Provide a balanced, actionable analysis that includes:
@@ -112,12 +112,33 @@ function buildSystemPrompt() {
 - Even if no critical issues are found, list up to 5 minor style, documentation, or readability improvements.
 
 ### 7. AI Developer Prompt
-- Provide a copy-and-paste prompt that:
-  1. Summarizes each finding with severity and line references.
-  2. Includes brief justifications for maintainability, performance, or security benefits.
-  3. Requests corresponding unit-test stubs or test scenarios (mentioning the framework) for each change.
-  4. Rates each suggestion's impact and confidence on a simple scale.
-- Reference your project's style guide for any style-rule violations.
+- At the end of your review, include this section:
+  \`\`\`
+  # AI Developer Prompt
+  Please assess the following code issues and provide solutions:
+  
+  ## Issues Summary
+  [For each issue found above, add one bullet point with format:]
+  - [SEVERITY] (lines X-Y): Brief description of issue
+  
+  ## For Each Issue
+  [For each issue listed above, add numbered sections with this structure:]
+  
+  ### 1. [Issue Title]
+  **Impact**: [HIGH/MEDIUM/LOW] - [Brief justification]
+  **Confidence**: [HIGH/MEDIUM/LOW]
+  
+  **Problem**: [Concise description of the issue]
+  
+  **Fix**: [Specific code solution as a unified diff or code snippet]
+  
+  **Benefit**: [How this fix improves maintainability/performance/security]
+  
+  **Test**: [A test stub or scenario that validates the fix works]
+  
+  ## If No Issues Found
+  If after careful analysis no issues are detected, write "No changes recommended."
+  \`\`\`
 
 **Output format**: valid Markdown with headings, numbered lists, and fenced code blocks.`;
 }
