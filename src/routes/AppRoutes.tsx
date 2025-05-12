@@ -19,6 +19,8 @@ export const AppRoutes = () => {
       <Route path="/loading" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.LoadingPage /></Suspense>} />
       <Route path="/auth" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Auth /></Suspense>} />
       <Route path="/how-it-works" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.HowItWorks /></Suspense>} />
+      {/* Add new route for article detail pages */}
+      <Route path="/how-it-works/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.ArticleDetail /></Suspense>} />
       <Route path="/articles/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.ArticleDetail /></Suspense>} />
       <Route path="/faq" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.FAQ /></Suspense>} />
       <Route path="/about" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.About /></Suspense>} />
@@ -30,6 +32,8 @@ export const AppRoutes = () => {
       {/* Protected Routes */}
       <Route path="/profile" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.Profile /></Suspense></PrivateRoute>} />
       <Route path="/shopping-lists" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.ShoppingLists /></Suspense></PrivateRoute>} />
+      {/* Add new route for shopping list details */}
+      <Route path="/shopping-lists/:id" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.ShoppingLists /></Suspense></PrivateRoute>} />
       <Route path="/favorites" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.Favorites /></Suspense></PrivateRoute>} />
       <Route path="/import" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.DataImport /></Suspense></PrivateRoute>} />
       
