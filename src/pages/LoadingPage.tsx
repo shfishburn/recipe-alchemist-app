@@ -51,8 +51,10 @@ const LoadingPage: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [loadingStage, setLoadingStage] = useState(0);
   
-  // Reference to store interval ID for proper cleanup
+  // References to store interval and stage index for proper state management
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const stageIndexRef = useRef(0);
+  const effectRunCountRef = useRef(0);
   
   // Check if we came from the QuickRecipePage or RecipePreviewPage
   const { 
@@ -78,54 +80,93 @@ const LoadingPage: React.FC = () => {
     redirectHome();
   }, [redirectHome]);
   
-  // Function to create interval with proper stage timing - memoized to prevent recreations
-  const createProgressInterval = useCallback((stageIndex: number) => {
-    return setInterval(() => {
-      setProgress(prev => {
-        const currentStage = PROGRESS_STAGES[stageIndex];
-        
-        // If we're below the limit for current stage
-        if (prev < currentStage.limit) {
-          // Check if we're crossing to next stage
-          if (stageIndex < PROGRESS_STAGES.length - 1 && 
-              prev + currentStage.increment >= currentStage.limit) {
-            // Update stage index and message
-            setLoadingStage(stageIndex + 1);
-            
-            // Fix interval cleanup race: create new interval first, then clear old one
-            if (intervalRef.current) {
-              const nextInterval = createProgressInterval(stageIndex + 1);
-              clearInterval(intervalRef.current);
-              intervalRef.current = nextInterval;
-            }
-            
-            return currentStage.limit; // Return exact limit value
-          }
-          
-          // Normal progress increment
-          return Math.min(prev + currentStage.increment, currentStage.limit);
-        }
-        
-        return prev;
-      });
-    }, PROGRESS_STAGES[stageIndex].interval);
-  }, []);
-  
-  // Fixed progressive loading animation using a ref-based interval system
-  useEffect(() => {
-    // Clear any existing interval when dependencies change
+  // Clear any existing interval - extracted as a function for reuse
+  const clearProgressInterval = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+  }, []);
+  
+  // Fixed progressive loading animation with stable refs to avoid re-creating intervals
+  useEffect(() => {
+    // Track effect runs to debug re-rendering issues
+    effectRunCountRef.current += 1;
     
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Loading progress effect run #${effectRunCountRef.current}`);
+    }
+    
+    // Clean up any existing interval
+    clearProgressInterval();
+    
+    // Only set up interval if we're loading and don't have an error
     if (isLoading && !displayError) {
-      // Start with a small initial progress
+      // Start with a small initial progress and reset stage
       setProgress(5);
       setLoadingStage(0);
+      stageIndexRef.current = 0;
       
-      // Create initial interval
-      intervalRef.current = createProgressInterval(0);
+      // Single interval function that handles all progress stages internally
+      intervalRef.current = setInterval(() => {
+        // Get the current stage configuration using the ref to avoid closure issues
+        const currentStageIndex = stageIndexRef.current;
+        const currentStage = PROGRESS_STAGES[currentStageIndex];
+        
+        // Use a functional update to ensure we always have the latest progress value
+        setProgress(prevProgress => {
+          // If we're below the limit for current stage
+          if (prevProgress < currentStage.limit) {
+            // Check if this update will cross a stage boundary
+            const nextProgress = Math.min(prevProgress + currentStage.increment, currentStage.limit);
+            
+            // If we're reaching the stage limit and there are more stages
+            if (nextProgress >= currentStage.limit && currentStageIndex < PROGRESS_STAGES.length - 1) {
+              // Prepare for next stage
+              const nextStageIndex = currentStageIndex + 1;
+              stageIndexRef.current = nextStageIndex;
+              setLoadingStage(nextStageIndex);
+              
+              // Update interval timing for the next stage
+              clearProgressInterval();
+              intervalRef.current = setInterval(() => {
+                // Reuse the same logic but with updated refs
+                setProgress(p => {
+                  const stageIdx = stageIndexRef.current;
+                  const stage = PROGRESS_STAGES[stageIdx];
+                  
+                  if (p < stage.limit) {
+                    const next = Math.min(p + stage.increment, stage.limit);
+                    
+                    if (next >= stage.limit && stageIdx < PROGRESS_STAGES.length - 1) {
+                      // Move to next stage
+                      stageIndexRef.current = stageIdx + 1;
+                      setLoadingStage(stageIdx + 1);
+                      
+                      // Recursively update interval for the next stage
+                      clearProgressInterval();
+                      const nextStage = PROGRESS_STAGES[stageIdx + 1];
+                      intervalRef.current = setInterval(
+                        // Same callback but we avoid nesting further for clarity
+                        () => setProgress(prev => Math.min(prev + nextStage.increment, nextStage.limit)),
+                        nextStage.interval
+                      );
+                    }
+                    
+                    return next;
+                  }
+                  
+                  return p;
+                });
+              }, PROGRESS_STAGES[nextStageIndex].interval);
+            }
+            
+            return nextProgress;
+          }
+          
+          return prevProgress;
+        });
+      }, PROGRESS_STAGES[0].interval);
     } else if (recipe && !displayError) {
       // Complete the progress bar when recipe is ready
       setProgress(100);
@@ -135,14 +176,9 @@ const LoadingPage: React.FC = () => {
       setProgress(0);
     }
     
-    // Cleanup function
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [isLoading, recipe, displayError, createProgressInterval]);
+    // Cleanup function to clear interval on unmount or deps change
+    return clearProgressInterval;
+  }, [isLoading, recipe, displayError, clearProgressInterval]);
   
   // Get loading message based on current stage
   const getLoadingMessage = useCallback(() => {
@@ -181,7 +217,8 @@ const LoadingPage: React.FC = () => {
         isLoading,
         displayError,
         progress,
-        currentStage: loadingStage
+        currentStage: loadingStage,
+        effectRuns: effectRunCountRef.current
       });
     }
     
