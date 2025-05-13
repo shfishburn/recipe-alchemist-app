@@ -5,6 +5,7 @@ import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-reci
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 
 export function useQuickRecipeForm() {
   const navigate = useNavigate();
@@ -72,12 +73,14 @@ export function useQuickRecipeForm() {
       // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");
       
-      // Save current path and form data to session storage in case user needs to log in
-      // This will allow us to resume the recipe generation after login
-      sessionStorage.setItem('recipeGenerationSource', JSON.stringify({
-        path: location.pathname,
-        formData: processedFormData
-      }));
+      // If user is not authenticated, store the generation data for resumption
+      if (!session) {
+        authStateManager.queueAction({
+          type: 'generate-recipe',
+          data: { formData: processedFormData },
+          sourceUrl: location.pathname
+        });
+      }
       
       // Navigate to the loading page
       navigate('/loading', { 
@@ -109,7 +112,7 @@ export function useQuickRecipeForm() {
       
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setError, location.pathname, updateLoadingState]);
+  }, [navigate, reset, setLoading, setFormData, setError, location.pathname, updateLoadingState, session]);
 
   return {
     handleSubmit,

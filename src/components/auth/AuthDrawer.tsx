@@ -4,12 +4,11 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ButtonWrapper } from "@/components/ui/button-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { cleanupUIState } from "@/utils/dom-cleanup";
 import { toast } from "sonner";
-import { QuickRecipe } from '@/types/quick-recipe';
+import { authStateManager } from "@/lib/auth/auth-state-manager";
 
 // For desktop
 import {
@@ -36,102 +35,79 @@ interface AuthDrawerProps {
   setOpen: (open: boolean) => void;
 }
 
-// Define type for pending save data
-interface PendingSave {
-  recipe: QuickRecipe;
-  sourceUrl: string;
-  timestamp: number;
-}
-
-/**
- * Validates if the data is a valid PendingSave object
- */
-function isValidPendingSave(data: any): data is PendingSave {
-  return (
-    data && 
-    typeof data.sourceUrl === 'string' && 
-    typeof data.timestamp === 'number' &&
-    data.recipe !== undefined
-  );
-}
-
 export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   const { session } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
-  
-  // Check for pending actions on mount and when auth state changes
-  const checkPendingActions = useCallback(() => {
-    try {
-      const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
-      if (pendingSaveData) {
-        try {
-          const parsedData = JSON.parse(pendingSaveData);
-          if (isValidPendingSave(parsedData)) {
-            setPendingSave(parsedData);
-            console.log("Found pending save:", parsedData.sourceUrl);
-          } else {
-            console.error("Invalid pending save data format:", parsedData);
-            sessionStorage.removeItem('pendingSaveRecipe');
-          }
-        } catch (error) {
-          console.error("Error parsing pending save data:", error);
-          sessionStorage.removeItem('pendingSaveRecipe');
-        }
-      }
-    } catch (error) {
-      console.error("Error checking for pending actions:", error);
-    }
-  }, []);
   
   // Close drawer and navigate on successful auth
   const handleAuthSuccess = useCallback(() => {
     setOpen(false);
     cleanupUIState(); // Clean up UI state before navigating
     
-    // Check if there's a pending recipe save
-    try {
-      const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
-      if (pendingSaveData) {
-        try {
-          const parsedData = JSON.parse(pendingSaveData);
-          if (isValidPendingSave(parsedData)) {
-            const { recipe, sourceUrl } = parsedData;
-            
-            // If we have a valid source URL to return to, use it
-            if (sourceUrl) {
-              toast.success("Successfully signed in! Returning to your recipe...");
-              
-              // Navigate after a brief delay to allow toast to show
-              // Using requestAnimationFrame for smoother transitions
-              requestAnimationFrame(() => {
-                navigate(sourceUrl, { 
-                  state: { 
-                    pendingSave: true,
-                    resumingAfterAuth: true 
-                  }
-                });
-              });
-              return;
+    // Check if there's a pending action
+    const nextAction = authStateManager.getNextPendingAction();
+    if (nextAction && !nextAction.executed) {
+      const { type, sourceUrl, data } = nextAction;
+      
+      // Mark the action as executed
+      authStateManager.markActionExecuted(nextAction.id);
+      
+      if (type === 'save-recipe' && sourceUrl) {
+        toast.success("Successfully signed in! Returning to your recipe...");
+        
+        // Navigate after a brief delay to allow toast to show
+        // Using requestAnimationFrame for smoother transitions
+        requestAnimationFrame(() => {
+          navigate(sourceUrl, { 
+            state: { 
+              pendingSave: true,
+              resumingAfterAuth: true 
             }
-          } else {
-            console.error("Invalid pending save data format");
-            sessionStorage.removeItem('pendingSaveRecipe');
-          }
-        } catch (error) {
-          console.error("Error parsing pending save data:", error);
-          sessionStorage.removeItem('pendingSaveRecipe');
-        }
+          });
+        });
+        return;
+      } else if (type === 'generate-recipe' && data.formData) {
+        toast.success("Successfully signed in! Resuming recipe generation...");
+        
+        // Navigate based on the saved path
+        requestAnimationFrame(() => {
+          navigate(sourceUrl || '/quick-recipe', { 
+            state: { 
+              resumingGeneration: true,
+              recipeData: {
+                formData: data.formData,
+                path: sourceUrl
+              }
+            }
+          });
+        });
+        return;
       }
-      
-      // Default navigation if no pending action
-      navigate("/");
-      
-    } catch (error) {
-      console.error("Error handling post-auth actions:", error);
-      navigate("/"); // Default navigation on error
     }
+    
+    // Handle regular redirect if no pending actions
+    const redirectData = authStateManager.getRedirectAfterAuth();
+    if (redirectData) {
+      let redirectTo = redirectData.pathname;
+      
+      // Add search params and hash if they exist
+      if (redirectData.search) redirectTo += redirectData.search;
+      if (redirectData.hash) redirectTo += redirectData.hash;
+      
+      // Navigate with any stored state
+      navigate(redirectTo, { 
+        state: redirectData.state,
+        replace: true
+      });
+      
+      // Clear the redirect after using it
+      authStateManager.clearRedirectAfterAuth();
+      return;
+    }
+    
+    // Default navigation if no pending redirect
+    navigate("/");
   }, [setOpen, navigate]);
 
   // If user is already authenticated, close drawer
@@ -139,18 +115,8 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     if (session && open) {
       setOpen(false);
       cleanupUIState();
-      
-      // Look for pending actions whenever we close due to being authenticated
-      checkPendingActions();
     }
-  }, [session, open, setOpen, checkPendingActions]);
-  
-  // Check for pending actions when drawer opens
-  useEffect(() => {
-    if (open) {
-      checkPendingActions();
-    }
-  }, [open, checkPendingActions]);
+  }, [session, open, setOpen]);
 
   // When the drawer closes, ensure UI state is cleaned up
   useEffect(() => {

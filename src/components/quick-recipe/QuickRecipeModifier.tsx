@@ -5,7 +5,6 @@ import { QuickRecipe } from '@/types/quick-recipe';
 import { toast } from "sonner";
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { getStoredModificationRequest, saveModificationRequest } from '@/hooks/recipe-modifications/storage-utils';
 import { ModificationRequest } from './modifier/ModificationRequest';
 import { ModificationHistory } from './modifier/ModificationHistory';
 import { ModifiedRecipeDisplay } from './modifier/ModifiedRecipeDisplay';
@@ -13,6 +12,7 @@ import { StatusDisplay } from './modifier/StatusDisplay';
 import { AuthOverlay } from './modifier/AuthOverlay';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
@@ -22,23 +22,20 @@ interface QuickRecipeModifierProps {
 export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe, onModifiedRecipe }) => {
   const [request, setRequest] = useState('');
   const [immediate, setImmediate] = useState(false);
-  const [edgeFunctionError, setEdgeFunctionError] = useState<Error | null>(null);
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
   const { setError } = useQuickRecipeStore();
   
-  // Check for saved request in localStorage
-  useEffect(() => {
-    const savedRequest = getStoredModificationRequest();
-    if (savedRequest) {
-      setRequest(savedRequest.request);
-      setImmediate(savedRequest.immediate);
-    }
-  }, []);
-
   // Handle auth flow
   const handleLogin = () => {
-    saveModificationRequest(request, immediate);
+    // Store the modification request for later execution
+    authStateManager.queueAction({
+      type: 'modify-recipe',
+      data: { request, immediate, recipe },
+      sourceUrl: window.location.pathname
+    });
+    
+    // Open auth drawer
     openAuthDrawer();
   };
 
@@ -62,17 +59,20 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     resetToOriginal
   } = useRecipeModifications(recipe);
 
-  // REMOVED: Edge function error detection logic
-
   // Handle for auth-related errors by reopening the auth drawer
   useEffect(() => {
     if (status === 'not-authenticated') {
       // Save the current state
-      saveModificationRequest(request, immediate);
+      authStateManager.queueAction({
+        type: 'modify-recipe',
+        data: { request, immediate, recipe },
+        sourceUrl: window.location.pathname
+      });
+      
       // Open the auth drawer
       openAuthDrawer();
     }
-  }, [status, openAuthDrawer, request, immediate]);
+  }, [status, openAuthDrawer, request, immediate, recipe]);
 
   // Add a callback to notify parent component when modifications are applied
   const handleApplyModifications = useCallback(() => {
@@ -88,7 +88,13 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   // Handle submitting modifications
   const handleRequestModifications = useCallback(() => {
     if (!session) {
-      saveModificationRequest(request, immediate);
+      // Store the request for after authentication
+      authStateManager.queueAction({
+        type: 'modify-recipe',
+        data: { request, immediate, recipe },
+        sourceUrl: window.location.pathname
+      });
+      
       openAuthDrawer();
       return;
     }
@@ -102,9 +108,9 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
         description: "Please try again later."
       });
     }
-  }, [request, immediate, requestModifications, session, openAuthDrawer]);
+  }, [request, immediate, requestModifications, session, openAuthDrawer, recipe]);
 
-  // SIMPLIFIED: Error display - only show regular error state, not special edge function error
+  // Display error if there is one
   if (error) {
     return (
       <div className="space-y-6">

@@ -1,9 +1,9 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthDrawer } from '@/hooks/use-auth-drawer';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 
 export interface Profile {
   id: string;
@@ -21,6 +21,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -29,7 +30,29 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => null,
 });
+
+/**
+ * Fetches user profile data from Supabase
+ * @param userId The user ID to fetch profile data for
+ * @returns The profile data or null if not found
+ */
+async function fetchUserProfile(userId: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    return null;
+  }
+}
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -38,112 +61,158 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const signOut = async () => {
+  // Refresh profile function that can be called from any component
+  const refreshProfile = useCallback(async (): Promise<Profile | null> => {
+    if (!user?.id) return null;
+    
+    try {
+      const profileData = await fetchUserProfile(user.id);
+      if (profileData) {
+        setProfile(profileData);
+      }
+      return profileData;
+    } catch (error) {
+      console.error('Failed to refresh profile:', error);
+      return null;
+    }
+  }, [user?.id]);
+
+  const signOut = useCallback(async () => {
     try {
       await supabase.auth.signOut();
       setSession(null);
       setUser(null);
       setProfile(null);
+      
+      // Clear auth state when signing out
+      authStateManager.clearState();
+      
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const handleTokenRefreshError = () => {
+  // Handle token refresh errors
+  const handleTokenRefreshError = useCallback(() => {
     // Clear auth state when token refresh fails
     setSession(null);
     setUser(null);
     setProfile(null);
     setLoading(false);
-  };
+    
+    // Clear stored auth state
+    authStateManager.clearState();
+  }, []);
+
+  // Profile fetching function that avoids Supabase deadlocks
+  const safelyFetchProfile = useCallback(async (userId: string) => {
+    try {
+      // Use the existing function to fetch profile
+      const profileData = await fetchUserProfile(userId);
+      if (profileData) {
+        setProfile(profileData);
+      }
+    } catch (error) {
+      console.error('Error in safelyFetchProfile:', error);
+    }
+  }, []);
 
   useEffect(() => {
-    // Set up the auth state change listener first
+    // Create a flag to track component mount state
+    let isMounted = true;
+    
+    // First, set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        if (!isMounted) return;
+        
         console.log('Auth state changed:', event);
         
         if (event === 'SIGNED_OUT') {
+          // Handle sign out
           setSession(null);
           setUser(null);
           setProfile(null);
-        } else {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
           
-          // Defer profile fetching to avoid Supabase deadlocks
-          if (currentSession?.user) {
-            setTimeout(async () => {
-              try {
-                const { data: profileData } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', currentSession.user.id)
-                  .single();
-                
-                setProfile(profileData);
-              } catch (error) {
-                console.error('Error fetching profile:', error);
+          // Clear auth state
+          authStateManager.clearState();
+        } else if (currentSession) {
+          // Update session and user immediately
+          setSession(currentSession);
+          setUser(currentSession.user ?? null);
+          
+          // Fetch profile in a separate tick to avoid Supabase deadlocks
+          if (currentSession.user) {
+            // Using Promise instead of setTimeout for better control
+            Promise.resolve().then(() => {
+              if (isMounted && currentSession.user) {
+                safelyFetchProfile(currentSession.user.id);
               }
-            }, 0);
+            });
           }
         }
-
-        setLoading(false);
+        
+        if (event !== 'INITIAL_SESSION') {
+          // Only set loading to false for non-initial events
+          setLoading(false);
+        }
       }
     );
 
     // Then check for existing session
-    supabase.auth.getSession()
-      .then(({ data: { session: currentSession }, error }) => {
+    const checkSession = async () => {
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error('Error getting session:', error);
           handleTokenRefreshError();
           return;
         }
         
+        if (!isMounted) return;
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          try {
-            // Fixed: Use async/await properly instead of Promise.catch
-            (async () => {
-              try {
-                const { data: profileData } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', currentSession.user.id)
-                  .single();
-                
-                setProfile(profileData);
-              } catch (error) {
-                console.error('Error fetching profile:', error);
-              } finally {
-                setLoading(false);
-              }
-            })();
-          } catch (error) {
-            console.error('Error setting up profile fetch:', error);
-            setLoading(false);
-          }
-        } else {
-          setLoading(false);
+          // Fetch profile using Promise to avoid Supabase deadlocks
+          Promise.resolve().then(() => {
+            if (isMounted && currentSession.user) {
+              safelyFetchProfile(currentSession.user.id);
+            }
+          });
         }
-      })
-      .catch((err: any) => {
+        
+        setLoading(false);
+      } catch (err) {
         console.error('Error in getSession:', err);
-        handleTokenRefreshError();
-      });
+        if (isMounted) {
+          handleTokenRefreshError();
+        }
+      }
+    };
+    
+    // Execute the session check
+    checkSession();
 
+    // Cleanup function to prevent state updates after unmount
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [handleTokenRefreshError, safelyFetchProfile]);
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      profile, 
+      loading, 
+      signOut,
+      refreshProfile
+    }}>
       {children}
     </AuthContext.Provider>
   );

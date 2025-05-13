@@ -4,21 +4,47 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { cleanupUIState } from '@/utils/dom-cleanup';
 import { toast } from 'sonner';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 
-// List of routes that don't require authentication
-const PUBLIC_ROUTES = [
-  '/quick-recipe',  // Recipe creation is now public
-  '/'               // Home page is public
+interface RouteConfig {
+  path: string;
+  public: boolean;
+}
+
+// Definition of routes and their authentication requirements
+const ROUTE_CONFIG: RouteConfig[] = [
+  { path: '/quick-recipe', public: true },
+  { path: '/', public: true },
+  { path: '/recipes', public: true },
+  { path: '/recipe/', public: true },
+  { path: '/recipe-preview', public: true },
+  { path: '/loading', public: true },
+  { path: '/auth', public: true },
+  { path: '/how-it-works', public: true },
+  { path: '/articles/', public: true },
+  { path: '/faq', public: true },
+  { path: '/about', public: true },
+  { path: '/contact', public: true },
+  { path: '/privacy', public: true },
+  { path: '/terms', public: true },
+  { path: '/cookies', public: true },
 ];
+
+/**
+ * Check if the given path is a public route
+ */
+function isPublicRoute(path: string): boolean {
+  return ROUTE_CONFIG.some(route => 
+    route.public && (path === route.path || path.startsWith(route.path))
+  );
+}
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, loading } = useAuth();
   const location = useLocation();
 
   // Check if the current route is public
-  const isPublicRoute = PUBLIC_ROUTES.some(route => 
-    location.pathname.startsWith(route)
-  );
+  const currentRouteIsPublic = isPublicRoute(location.pathname);
 
   // Clean up UI state when this component mounts, but don't remove active loading overlays
   useEffect(() => {
@@ -40,7 +66,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   // If route is public or user is authenticated, render children
-  if (isPublicRoute || session) {
+  if (currentRouteIsPublic || session) {
     return <>{children}</>;
   }
 
@@ -57,25 +83,22 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     console.log("Not authenticated, redirecting to login from:", location.pathname);
     
     // Check if we're on a protected resource page that requires auth
-    const isProtectedResource = location.pathname.startsWith('/recipes') ||
-                              location.pathname.startsWith('/recipe/');
+    const isProtectedResource = location.pathname.startsWith('/profile') ||
+                               location.pathname.startsWith('/shopping-lists') ||
+                               location.pathname.startsWith('/favorites') ||
+                               location.pathname.startsWith('/import');
     
     // Only show the auth toast for protected resources
     if (isProtectedResource) {
       toast.error("Please sign in to access this page");
     }
     
-    // Store any form data that was being processed
-    const recipeGenerationData = sessionStorage.getItem('recipeGenerationSource');
-    
-    // Store route with current navigation state to restore after login
-    sessionStorage.setItem('redirectAfterAuth', JSON.stringify({
-      pathname: location.pathname,
+    // Store the current location for redirect after authentication
+    authStateManager.setRedirectAfterAuth(location.pathname, {
       search: location.search,
       hash: location.hash,
-      state: location.state,
-      recipeGenerationData: recipeGenerationData ? JSON.parse(recipeGenerationData) : null
-    }));
+      state: location.state
+    });
     
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
