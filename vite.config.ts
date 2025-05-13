@@ -10,16 +10,17 @@ export default defineConfig(({ mode }) => ({
     // Use a more flexible host configuration
     host: "0.0.0.0", // Allow connections from all network interfaces
     port: 8080,
-    // Add historyApiFallback to handle client-side routing
-    historyApiFallback: true,
+    // Add historyApiFallback for SPA routing
+    hmr: {
+      protocol: 'ws',
+    },
     // Add explicit CORS support
     cors: true,
     // Allow requests from Lovable sandbox host - include multiple patterns
     allowedHosts: [
       "all", 
       "localhost",
-      "*.lovableproject.com",
-      "9da91218-18b0-4fc0-991c-29a180c2ef2e.lovableproject.com"
+      "*.lovableproject.com"
     ],
     // Add proxy configuration for potential API requests
     proxy: {
@@ -38,8 +39,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -83,7 +83,7 @@ export default defineConfig(({ mode }) => ({
     }
   },
   // Add base configuration to ensure proper asset resolution
-  base: mode === 'development' ? '/' : './',
+  base: '/',
   // Configure optimization splitting so dynamic imports work properly
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query']

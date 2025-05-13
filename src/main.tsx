@@ -7,6 +7,14 @@ import { HelmetProvider } from 'react-helmet-async';
 
 // Function to safely initialize the app
 const initializeApp = () => {
+  // Clean up any debug/test UI elements that might be showing
+  const debugElements = document.querySelectorAll('.debug-overlay, .test-output, .sandbox-debug');
+  debugElements.forEach(el => {
+    if (el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+  });
+
   // Make sure DOM is ready before mounting
   const rootElement = document.getElementById('root');
 
@@ -26,14 +34,6 @@ const initializeApp = () => {
         </HelmetProvider>
       </React.StrictMode>
     );
-
-    // Clear any debug/test UI that might be showing
-    const debugElements = document.querySelectorAll('.debug-overlay, .test-output, .sandbox-debug');
-    debugElements.forEach(el => {
-      if (el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
   } catch (error) {
     console.error('Failed to render application:', error);
     
