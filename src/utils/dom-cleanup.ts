@@ -60,12 +60,12 @@ export function cleanupUIState() {
  * @param navigate - The navigate function from useNavigate() hook
  * @returns A cleanup function to be called when the component unmounts
  */
-export function setupRouteChangeCleanup(navigate: any): () => void {
+export function setupRouteChangeCleanup(navigate: unknown): () => void {
   // Store the original navigate function
-  const originalNavigate = navigate;
+  const originalNavigate = navigate as Function;
   
   // Wrap the navigate function to perform cleanup before navigation
-  const wrappedNavigate = (...args: any[]) => {
+  const wrappedNavigate = (...args: unknown[]) => {
     // Run cleanup before navigating
     cleanupUIState();
     
@@ -74,7 +74,7 @@ export function setupRouteChangeCleanup(navigate: any): () => void {
   };
   
   // Replace the navigate function with our wrapped version
-  Object.assign(navigate, wrappedNavigate);
+  Object.assign(navigate as object, wrappedNavigate);
   
   // Return a cleanup function
   return () => {

@@ -268,10 +268,10 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
         console.log("Auth success - redirecting to:", redirectTo);
       }
       
-      // Navigate with any stored state - simplified using optional chaining
-      const navigationState = redirectData.state ? 
-        { ...redirectData.state, resumingAfterAuth: true } : 
-        { resumingAfterAuth: true };
+      // Fixed spread type issue with proper type checking
+      const navigationState = redirectData.state && typeof redirectData.state === 'object' 
+        ? { ...redirectData.state, resumingAfterAuth: true } 
+        : { resumingAfterAuth: true };
       
       navigate(redirectTo, { 
         state: navigationState,

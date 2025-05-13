@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,6 +32,13 @@ import AuthForm from "@/components/auth/AuthForm";
 interface AuthDrawerProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+}
+
+/**
+ * Helper function to extract error message from unknown errors
+ */
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "An error occurred";
 }
 
 export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
@@ -99,10 +105,10 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
         console.log("Auth success - redirecting to:", redirectTo);
       }
       
-      // Navigate with any stored state - simplified using optional chaining
-      const navigationState = redirectData.state ? 
-        { ...redirectData.state, resumingAfterAuth: true } : 
-        { resumingAfterAuth: true };
+      // Navigate with any stored state - fixed the spread type issue
+      const navigationState = redirectData.state && typeof redirectData.state === 'object' 
+        ? { ...redirectData.state, resumingAfterAuth: true } 
+        : { resumingAfterAuth: true };
       
       navigate(redirectTo, { 
         state: navigationState,

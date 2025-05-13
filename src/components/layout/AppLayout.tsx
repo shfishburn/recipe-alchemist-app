@@ -9,7 +9,7 @@ import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
-import { cleanupUIState } from '@/utils/dom-cleanup';
+import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation, useNavigate } from "react-router-dom";
 import '@/styles/loading.css';
 
