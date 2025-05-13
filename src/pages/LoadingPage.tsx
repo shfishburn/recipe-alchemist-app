@@ -80,18 +80,11 @@ const LoadingPage: React.FC = () => {
           throw new Error(generatedRecipe.error_message || "Error generating recipe");
         }
         
-        // Set the recipe in the store
+        // Set the recipe
         setRecipe(generatedRecipe);
         
-        // Important fix: Pass the generated recipe in navigation state to avoid race condition
-        // when the store update hasn't completed before navigation
-        navigate('/recipe-preview', { 
-          replace: true,
-          state: {
-            fromLoading: true,
-            recipe: generatedRecipe
-          }
-        });
+        // Navigate to the recipe preview
+        navigate('/recipe-preview', { replace: true });
       } catch (error: unknown) {
         console.error("Error generating recipe:", error);
         
