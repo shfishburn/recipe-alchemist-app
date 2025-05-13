@@ -8,33 +8,24 @@ import { QuickRecipeFormData } from '@/types/quick-recipe';
 export const formatRequestBody = (formData: QuickRecipeFormData) => {
   // Extract values from form data with defaults
   const {
-    ingredients: rawIngredients,
+    mainIngredient,
     cuisine = ['any'],
     dietary = [],
     servings = 2,
     maxCalories,
-    mainIngredient,
   } = formData;
   
-  // Process ingredients - accept string or array input
+  // Process ingredients - we now use mainIngredient since ingredients doesn't exist in the type
   let ingredients: string[] = [];
   
   if (mainIngredient) {
     // If we have a specific mainIngredient field, use it
-    ingredients.push(mainIngredient);
-  }
-  
-  // Add regular ingredients if they exist
-  if (rawIngredients) {
-    if (typeof rawIngredients === 'string') {
-      // Single string ingredient
-      if (!ingredients.includes(rawIngredients)) {
-        ingredients.push(rawIngredients);
-      }
-    } else if (Array.isArray(rawIngredients)) {
-      // Array of ingredients - filter out duplicates and empty strings
-      rawIngredients.forEach(item => {
-        if (item && typeof item === 'string' && !ingredients.includes(item)) {
+    if (typeof mainIngredient === 'string') {
+      ingredients.push(mainIngredient);
+    } else if (Array.isArray(mainIngredient)) {
+      // If it's an array, add all items
+      mainIngredient.forEach(item => {
+        if (item && typeof item === 'string') {
           ingredients.push(item);
         }
       });
