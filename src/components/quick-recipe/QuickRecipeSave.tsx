@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
+import { useNavigate } from 'react-router-dom';
 
 // Define which fields are valid in the database and their mappings
 const FIELD_MAPPINGS: Record<string, string> = {
@@ -95,6 +96,7 @@ export function useQuickRecipeSave() {
   const [savedRecipe, setSavedRecipe] = useState<QuickRecipe | null>(null);
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
+  const navigate = useNavigate();
 
   const saveRecipe = useCallback(async (recipe: QuickRecipe, bypassAuth = false) => {
     try {
@@ -122,6 +124,7 @@ export function useQuickRecipeSave() {
             state: { 
               pendingSave: true,
               resumingAfterAuth: true,
+              recipeData: recipe, // Include recipe directly in state
               timestamp: Date.now()
             }
           });
@@ -184,6 +187,13 @@ export function useQuickRecipeSave() {
           // Clear any fallbacks since save succeeded
           authStateManager.clearRecipeDataFallback();
           
+          // Mark any pending actions as executed
+          const pendingActions = authStateManager.getPendingActions();
+          const saveActions = pendingActions.filter(a => a.type === SAVE_RECIPE_ACTION);
+          saveActions.forEach(action => {
+            authStateManager.markActionExecuted(action.id);
+          });
+          
           // Load the saved recipe
           setSavedRecipe(recipe);
           
@@ -210,7 +220,7 @@ export function useQuickRecipeSave() {
     } finally {
       setIsSaving(false);
     }
-  }, [session, openAuthDrawer]);
+  }, [session, openAuthDrawer, navigate]);
 
   return {
     saveRecipe,

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -12,6 +11,7 @@ import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 import { useAuth } from '@/hooks/use-auth';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
 import { QuickRecipe } from '@/types/quick-recipe';
+import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -40,58 +40,64 @@ const RecipePreviewPage: React.FC = () => {
     clearPendingRecipe
   } = useRecipeSaveState();
   
+  // Use our new recipe recovery hook
+  const { 
+    recipeRecoveryStatus,
+    attemptRecipeRecovery,
+    isValidQuickRecipe
+  } = useRecipeDataRecovery();
+  
   // Check if we're resuming from authentication
   const isResuming = location.state?.resumingAfterAuth === true;
   const hasPendingSave = location.state?.pendingSave === true;
   const hasRecipeData = location.state?.recipeData || null;
 
-  // Helper function to validate QuickRecipe
-  function isValidQuickRecipe(recipe: unknown): recipe is QuickRecipe {
-    if (!recipe || typeof recipe !== 'object') return false;
-    
-    const r = recipe as Partial<QuickRecipe>;
-    return (
-      typeof r.title === 'string' && 
-      Array.isArray(r.ingredients) && 
-      typeof r.servings === 'number'
-    );
-  }
-
   // Check for recipe data in location state - this is important for recipe restoration
   useEffect(() => {
+    // Log the current recovery conditions for debugging
+    console.log("Recipe recovery conditions:", {
+      hasRecipeData,
+      isResuming,
+      hasPendingSave,
+      recipeExists: !!recipe
+    });
+    
     // If we have recipe data in location state AND we don't have a recipe in the store,
     // restore the recipe
     if (hasRecipeData && !recipe) {
       if (isValidQuickRecipe(hasRecipeData)) {
         console.log("Restoring recipe from location state", hasRecipeData);
         setRecipe(hasRecipeData as QuickRecipe);
+        
+        // Ensure we back up this recipe for additional safety
+        authStateManager.storeRecipeDataFallback(hasRecipeData as QuickRecipe);
+      }
+    } else if (isResuming && !recipe) {
+      // If we're resuming after auth but don't have recipe data or a recipe,
+      // attempt recovery using our new hook
+      const recovered = attemptRecipeRecovery();
+      
+      if (!recovered) {
+        // If recovery failed and we're resuming, we need to handle the failure
+        console.warn("Recipe recovery failed after authentication");
+        
+        // Show a toast notification
+        toast.error("We couldn't recover your recipe. Please try again.");
       }
     }
-    
-    // Also check for recipe data in localStorage fallback if we're resuming after auth
-    if (isResuming && !recipe && !hasRecipeData) {
-      const recipeBackup = authStateManager.getRecipeDataFallback();
-      if (recipeBackup && recipeBackup.recipe && isValidQuickRecipe(recipeBackup.recipe)) {
-        console.log("Restoring recipe from localStorage backup", recipeBackup);
-        setRecipe(recipeBackup.recipe as QuickRecipe);
-        // Clear the backup after successful restoration
-        // We wait until the recipe is set to prevent race conditions
-        setTimeout(() => {
-          authStateManager.clearRecipeDataFallback();
-        }, 500);
-      }
-    }
-  }, [hasRecipeData, recipe, isResuming, setRecipe]);
+  }, [hasRecipeData, recipe, isResuming, setRecipe, attemptRecipeRecovery, isValidQuickRecipe]);
 
   // Handle post-authentication actions
   useEffect(() => {
     const handlePostAuthActions = async () => {
-      // First check for an action in authStateManager
-      const nextAction = authStateManager.getNextPendingAction();
+      // Don't proceed if recipe recovery failed
+      if (recipeRecoveryStatus === 'failed') {
+        return;
+      }
       
       // Only proceed if we either have a pending action or we're resuming after auth
       if ((isResuming && hasPendingSave && session) || 
-          (nextAction && nextAction.type === 'save-recipe' && !nextAction.executed && session)) {
+          (isResuming && recipe && session)) {
         
         try {
           // Mark the start of handling auth actions for debugging
@@ -99,7 +105,8 @@ const RecipePreviewPage: React.FC = () => {
           let pendingData;
           
           // First priority: check for action from authStateManager
-          if (nextAction && nextAction.type === 'save-recipe') {
+          const nextAction = authStateManager.getNextPendingAction();
+          if (nextAction && nextAction.type === 'save-recipe' && !nextAction.executed) {
             pendingData = {
               recipe: nextAction.data.recipe,
               timestamp: nextAction.timestamp,
@@ -114,7 +121,7 @@ const RecipePreviewPage: React.FC = () => {
             console.log("Checked for legacy pending save recipe:", pendingData ? "found" : "not found");
           }
           
-          // If we still don't have recipe data, check localStorage backup
+          // If we still don't have recipe data, check current recipe
           if (!pendingData?.recipe && recipe) {
             pendingData = {
               recipe: recipe,
@@ -181,7 +188,8 @@ const RecipePreviewPage: React.FC = () => {
     };
     
     handlePostAuthActions();
-  }, [isResuming, hasPendingSave, session, getPendingRecipe, saveRecipe, clearPendingRecipe, setSaveSuccess, setIsSaving, recipe, setRecipe]);
+  }, [isResuming, hasPendingSave, session, getPendingRecipe, saveRecipe, clearPendingRecipe, 
+      setSaveSuccess, setIsSaving, recipe, setRecipe, isValidQuickRecipe, recipeRecoveryStatus]);
 
   // Add automatic navigation effect when save is successful
   useEffect(() => {
@@ -282,32 +290,25 @@ const RecipePreviewPage: React.FC = () => {
   
   // If there's no recipe, check if we need to restore it from localStorage or pending actions
   useEffect(() => {
-    if (!recipe && !isLoading) {
-      // Try to restore from localStorage fallback
-      const recipeBackup = authStateManager.getRecipeDataFallback();
-      if (recipeBackup && recipeBackup.recipe && isValidQuickRecipe(recipeBackup.recipe)) {
-        console.log("Restoring recipe from localStorage backup", recipeBackup);
-        setRecipe(recipeBackup.recipe as QuickRecipe);
+    if (!recipe && !isLoading && recipeRecoveryStatus !== 'pending') {
+      // If recovery already failed, don't try again
+      if (recipeRecoveryStatus === 'failed') {
+        console.log("Recipe recovery previously failed, not attempting again");
         return;
       }
       
-      // Try to restore from pending actions
-      const nextAction = authStateManager.getNextPendingAction();
-      if (nextAction && nextAction.type === 'save-recipe' && 
-          nextAction.data.recipe && isValidQuickRecipe(nextAction.data.recipe)) {
-        console.log("Restoring recipe from pending action", nextAction);
-        setRecipe(nextAction.data.recipe as QuickRecipe);
-        return;
-      }
+      // Try to recover using our new hook
+      const recovered = attemptRecipeRecovery();
       
-      // If we're not resuming from auth and we can't restore the recipe,
-      // only then redirect to home
-      if (!isResuming && !hasPendingSave) {
+      // If recovery didn't succeed and we're not resuming from auth,
+      // redirect to home
+      if (!recovered && !isResuming && !hasPendingSave) {
         console.log("No recipe data available and not resuming, redirecting to home");
         navigate('/', { replace: true });
       }
     }
-  }, [recipe, isLoading, isResuming, hasPendingSave, setRecipe, navigate]);
+  }, [recipe, isLoading, isResuming, hasPendingSave, attemptRecipeRecovery, 
+      navigate, recipeRecoveryStatus]);
   
   // If we're loading, redirect to the loading page
   useEffect(() => {
@@ -324,6 +325,41 @@ const RecipePreviewPage: React.FC = () => {
   
   // Toggle debug mode function - keeping function but removing UI button
   const toggleDebugMode = () => setDebugMode(prev => !prev);
+  
+  // Show loading state during recipe recovery
+  if (recipeRecoveryStatus === 'pending') {
+    return (
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-gray-500">Recovering recipe data...</p>
+        </div>
+      </PageContainer>
+    );
+  }
+  
+  // Show error state if recovery failed
+  if (recipeRecoveryStatus === 'failed' && !recipe) {
+    return (
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 space-y-4">
+          <div className="rounded-full bg-red-100 p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold">Recipe Recovery Failed</h2>
+          <p className="text-gray-600 text-center">We couldn't recover your recipe data after login.</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Return to Homepage
+          </button>
+        </div>
+      </PageContainer>
+    );
+  }
   
   // If no recipe, try to render with a loading state instead of redirecting
   if (!recipe) {
