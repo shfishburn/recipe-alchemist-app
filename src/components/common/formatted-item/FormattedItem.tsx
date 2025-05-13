@@ -19,12 +19,10 @@ export function FormattedItem({ item, options = {}, className }: FormattedItemPr
   // Use the item formatter to generate markdown text
   const formattedText = formatItem(item, options);
   
-  // Apply additional class names if provided
-  const combinedClassName = cn(
-    className,
-    options.className,
-    options.strikethrough && 'text-muted-foreground'
-  );
+  // Apply additional class names if provided - using the improved object syntax
+  const combinedClassName = cn(className, options.className, {
+    'text-muted-foreground': options.strikethrough
+  });
   
   // Use the existing FormattedIngredientText component to handle the markdown
   return (

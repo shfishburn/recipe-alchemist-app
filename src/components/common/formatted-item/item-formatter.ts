@@ -105,7 +105,11 @@ export function formatItem(
     
     return formattedText;
   } catch (error) {
-    console.error("Error formatting item:", error);
+    // Improved error logging - only log in development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("Error formatting item:", error);
+    }
+    
     // Provide a safe fallback
     return typeof item === 'object' && item !== null
       ? JSON.stringify(item)
