@@ -82,17 +82,25 @@ function safelyStoreRedirect(pathname: string, options: {
 }): void {
   // Only store internal paths (no protocol/domain/etc) and prevent path traversal
   if (pathname.startsWith('/') && !pathname.includes('..')) {
-    // Enhanced path normalization to prevent path traversal patterns
-    // Normalize the path to prevent other path traversal patterns
-    const normalizedPath = pathname
-      .replace(/\/+/g, '/') // Replace multiple slashes with single slash
-      .replace(/\.\//g, '/') // Replace "./" with just "/"
-      .split('/')
-      .filter(segment => segment !== '.' && segment !== '') // Remove "." and empty segments
-      .join('/');
+    // Comprehensive path normalization to prevent path traversal patterns
     
-    const finalPath = normalizedPath ? `/${normalizedPath}` : '/';
+    // Step 1: Replace multiple consecutive slashes with a single slash
+    let normalizedPath = pathname.replace(/\/+/g, '/');
     
+    // Step 2: Replace "./" patterns with "/"
+    normalizedPath = normalizedPath.replace(/\.\//g, '/');
+    
+    // Step 3: Split by slashes and filter out problematic segments
+    const segments = normalizedPath.split('/');
+    const filteredSegments = segments.filter(segment => {
+      // Remove empty segments and "." segments
+      return segment !== '' && segment !== '.';
+    });
+    
+    // Step 4: Reconstruct the path and ensure it starts with a slash
+    const finalPath = '/' + filteredSegments.join('/');
+    
+    // Final safety check - ensure the path still starts with a slash
     if (finalPath.startsWith('/')) {
       authStateManager.setRedirectAfterAuth(finalPath, options);
       console.log("Storing redirect location:", finalPath);
