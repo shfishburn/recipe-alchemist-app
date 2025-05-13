@@ -59,10 +59,10 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Split vendor code into separate chunks
+          // Split vendor code into separate chunks - referencing specific modules instead of directories
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-components': ['@/components/ui'],
-          'recipe-components': ['@/components/recipe-detail', '@/components/quick-recipe'],
+          'ui-components': ['@/components/ui/button', '@/components/ui/dialog', '@/components/ui/form'],
+          'recipe-components': ['@/components/recipe-detail/RecipeDetailContent', '@/components/quick-recipe/QuickRecipeGenerator']
         }
       }
     },
