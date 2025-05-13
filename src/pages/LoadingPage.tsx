@@ -11,7 +11,6 @@ const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cancelClicked, setCancelClicked] = useState(false);
-  const [loadingStartTime] = useState(Date.now());
   
   // Get store state and actions
   const { 
@@ -19,15 +18,13 @@ const LoadingPage: React.FC = () => {
     setError, 
     setLoading, 
     formData, 
-    isLoading, 
-    setHasTimeoutError,
     loadingState,
+    setHasTimeoutError,
     updateLoadingState
   } = useQuickRecipeStore();
   
   // Get navigation state
   const fromQuickRecipePage = location.state?.fromQuickRecipePage === true;
-  const timestamp = location.state?.timestamp || Date.now();
   const formDataFromState = location.state?.formData;
   const isRetrying = location.state?.isRetrying === true;
   
@@ -39,10 +36,10 @@ const LoadingPage: React.FC = () => {
       formData,
       formDataFromState,
       fromQuickRecipePage,
-      isRetrying,
-      timestamp
+      isRetrying
     });
     
+    // Determine which form data to use - prioritize from state if available
     const effectiveFormData = formDataFromState || formData;
     
     if (!effectiveFormData) {
@@ -80,10 +77,10 @@ const LoadingPage: React.FC = () => {
           throw new Error(generatedRecipe.error_message || "Error generating recipe");
         }
         
-        // Set the recipe
+        // Set the recipe in the store
         setRecipe(generatedRecipe);
         
-        // Navigate to the recipe preview
+        // Navigate to the recipe preview - use replace to prevent back navigation to loading
         navigate('/recipe-preview', { replace: true });
       } catch (error: any) {
         console.error("Error generating recipe:", error);

@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -34,9 +34,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 /**
- * Fetches user profile data from Supabase
- * @param userId The user ID to fetch profile data for
- * @returns The profile data or null if not found
+ * Fetches user profile data from Supabase with error handling
  */
 async function fetchUserProfile(userId: string): Promise<Profile | null> {
   try {
@@ -46,10 +44,13 @@ async function fetchUserProfile(userId: string): Promise<Profile | null> {
       .eq('id', userId)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
     return data;
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error('Unexpected error fetching profile:', error);
     return null;
   }
 }
@@ -62,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   // Refresh profile function that can be called from any component
-  const refreshProfile = useCallback(async (): Promise<Profile | null> => {
+  const refreshProfile = async (): Promise<Profile | null> => {
     if (!user?.id) return null;
     
     try {
@@ -75,121 +76,102 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Failed to refresh profile:', error);
       return null;
     }
-  }, [user?.id]);
+  };
 
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      
+      // Clear state
       setSession(null);
       setUser(null);
       setProfile(null);
       
       // Clear auth state when signing out
       authStateManager.clearState();
-      
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
     }
-  }, []);
-
-  // Handle token refresh errors
-  const handleTokenRefreshError = useCallback(() => {
-    // Clear auth state when token refresh fails
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setLoading(false);
-    
-    // Clear stored auth state
-    authStateManager.clearState();
-  }, []);
-
-  // Profile fetching function that avoids Supabase deadlocks
-  const safelyFetchProfile = useCallback(async (userId: string) => {
-    try {
-      // Use the existing function to fetch profile
-      const profileData = await fetchUserProfile(userId);
-      if (profileData) {
-        setProfile(profileData);
-      }
-    } catch (error) {
-      console.error('Error in safelyFetchProfile:', error);
-    }
-  }, []);
+  };
 
   useEffect(() => {
     // Create a flag to track component mount state
     let isMounted = true;
     
-    // First, set up the auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        if (!isMounted) return;
+    // First set up the auth state change listener - this MUST happen before checking session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!isMounted) return;
+      
+      console.log('Auth state changed:', event);
+      
+      if (currentSession) {
+        setSession(currentSession);
+        setUser(currentSession.user);
         
-        console.log('Auth state changed:', event);
-        
-        if (event === 'SIGNED_OUT') {
-          // Handle sign out
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          
-          // Clear auth state
-          authStateManager.clearState();
-        } else if (currentSession) {
-          // Update session and user immediately
-          setSession(currentSession);
-          setUser(currentSession.user ?? null);
-          
-          // Fetch profile in a separate tick to avoid Supabase deadlocks
-          if (currentSession.user) {
-            // Using Promise instead of setTimeout for better control
-            Promise.resolve().then(() => {
-              if (isMounted && currentSession.user) {
-                safelyFetchProfile(currentSession.user.id);
-              }
-            });
-          }
+        // Fetch profile separately to avoid Supabase deadlocks
+        if (currentSession.user) {
+          // Use setTimeout to avoid Supabase deadlocks
+          setTimeout(() => {
+            if (isMounted && currentSession.user) {
+              fetchUserProfile(currentSession.user.id).then(data => {
+                if (isMounted && data) {
+                  setProfile(data);
+                }
+              });
+            }
+          }, 0);
         }
-        
-        if (event !== 'INITIAL_SESSION') {
-          // Only set loading to false for non-initial events
-          setLoading(false);
-        }
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        authStateManager.clearState();
       }
-    );
-
+      
+      // Only update loading state for events after initialization
+      if (event !== 'INITIAL_SESSION') {
+        setLoading(false);
+      }
+    });
+    
     // Then check for existing session
     const checkSession = async () => {
       try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting session:', error);
-          handleTokenRefreshError();
+          setLoading(false);
           return;
         }
         
         if (!isMounted) return;
         
+        const currentSession = data.session;
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Fetch profile using Promise to avoid Supabase deadlocks
-          Promise.resolve().then(() => {
-            if (isMounted && currentSession.user) {
-              safelyFetchProfile(currentSession.user.id);
+          // Use setTimeout to avoid Supabase deadlocks
+          setTimeout(async () => {
+            if (isMounted) {
+              const profileData = await fetchUserProfile(currentSession.user.id);
+              if (isMounted && profileData) {
+                setProfile(profileData);
+              }
+              if (isMounted) {
+                setLoading(false);
+              }
             }
-          });
+          }, 0);
+        } else {
+          setLoading(false);
         }
-        
-        setLoading(false);
       } catch (err) {
         console.error('Error in getSession:', err);
         if (isMounted) {
-          handleTokenRefreshError();
+          setLoading(false);
         }
       }
     };
@@ -202,7 +184,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [handleTokenRefreshError, safelyFetchProfile]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 

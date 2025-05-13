@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,10 +30,10 @@ interface ProfileContextType {
 export const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, refreshProfile: refreshAuthProfile } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   // Extract nutrition preferences with fallbacks to defaults
@@ -54,6 +55,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchProfile = async () => {
+    // Don't attempt to fetch if no user
     if (!user?.id) return;
     
     try {
@@ -66,7 +68,9 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         .eq('id', user.id)
         .single();
         
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        throw fetchError;
+      }
       
       // Parse JSON nutrition preferences if needed
       const parsedData: Profile = {
@@ -140,9 +144,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   };
   
   const refreshProfile = async () => {
+    // Use the auth refreshProfile to ensure both are updated consistently
+    await refreshAuthProfile();
     await fetchProfile();
   };
   
+  // Fetch profile when user changes
   useEffect(() => {
     if (user?.id) {
       fetchProfile();
