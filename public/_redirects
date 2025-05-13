@@ -1,2 +1,6 @@
 
 /* /index.html 200
+
+# Set proper MIME types for JavaScript modules
+/*.js application/javascript
+/*.mjs application/javascript

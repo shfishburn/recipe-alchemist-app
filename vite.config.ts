@@ -29,6 +29,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
       }
+    },
+    // Ensure proper MIME types are set
+    headers: {
+      'Content-Type': 'application/javascript',
+      'X-Content-Type-Options': 'nosniff'
     }
   },
   plugins: [
@@ -63,7 +68,11 @@ export default defineConfig(({ mode }) => ({
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-components': ['@/components/ui/button', '@/components/ui/dialog', '@/components/ui/form'],
           'recipe-components': ['@/components/recipe-detail/RecipeDetailContent', '@/components/quick-recipe/QuickRecipeGenerator']
-        }
+        },
+        // Ensure proper MIME types for generated assets
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
     // Set chunkSizeWarningLimit to a higher value
