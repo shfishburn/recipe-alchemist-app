@@ -4,6 +4,16 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from '@/components/PrivateRoute';
 import * as LazyRoutes from '@/routes/LazyRoutes';
 import { useAuth } from '@/hooks/use-auth';
+import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
+
+// Custom suspense component that includes a timeout message
+function CustomSuspense({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoadingFallback />}>
+      {children}
+    </Suspense>
+  );
+}
 
 export const AppRoutes = () => {
   const { session } = useAuth();
@@ -11,34 +21,34 @@ export const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Index /></Suspense>} />
-      <Route path="/recipes" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Recipes /></Suspense>} />
-      <Route path="/recipes/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.RecipeDetail /></Suspense>} />
-      <Route path="/quick-recipe" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.QuickRecipePage /></Suspense>} />
-      <Route path="/recipe-preview" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.RecipePreviewPage /></Suspense>} />
-      <Route path="/loading" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.LoadingPage /></Suspense>} />
-      <Route path="/auth" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Auth /></Suspense>} />
-      <Route path="/how-it-works" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.HowItWorks /></Suspense>} />
+      <Route path="/" element={<CustomSuspense><LazyRoutes.Index /></CustomSuspense>} />
+      <Route path="/recipes" element={<CustomSuspense><LazyRoutes.Recipes /></CustomSuspense>} />
+      <Route path="/recipes/:slug" element={<CustomSuspense><LazyRoutes.RecipeDetail /></CustomSuspense>} />
+      <Route path="/quick-recipe" element={<CustomSuspense><LazyRoutes.QuickRecipePage /></CustomSuspense>} />
+      <Route path="/recipe-preview" element={<CustomSuspense><LazyRoutes.RecipePreviewPage /></CustomSuspense>} />
+      <Route path="/loading" element={<CustomSuspense><LazyRoutes.LoadingPage /></CustomSuspense>} />
+      <Route path="/auth" element={<CustomSuspense><LazyRoutes.Auth /></CustomSuspense>} />
+      <Route path="/how-it-works" element={<CustomSuspense><LazyRoutes.HowItWorks /></CustomSuspense>} />
       {/* Add new route for article detail pages */}
-      <Route path="/how-it-works/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.ArticleDetail /></Suspense>} />
-      <Route path="/articles/:slug" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.ArticleDetail /></Suspense>} />
-      <Route path="/faq" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.FAQ /></Suspense>} />
-      <Route path="/about" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.About /></Suspense>} />
-      <Route path="/contact" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Contact /></Suspense>} />
-      <Route path="/privacy" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Privacy /></Suspense>} />
-      <Route path="/terms" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Terms /></Suspense>} />
-      <Route path="/cookies" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.Cookies /></Suspense>} />
+      <Route path="/how-it-works/:slug" element={<CustomSuspense><LazyRoutes.ArticleDetail /></CustomSuspense>} />
+      <Route path="/articles/:slug" element={<CustomSuspense><LazyRoutes.ArticleDetail /></CustomSuspense>} />
+      <Route path="/faq" element={<CustomSuspense><LazyRoutes.FAQ /></CustomSuspense>} />
+      <Route path="/about" element={<CustomSuspense><LazyRoutes.About /></CustomSuspense>} />
+      <Route path="/contact" element={<CustomSuspense><LazyRoutes.Contact /></CustomSuspense>} />
+      <Route path="/privacy" element={<CustomSuspense><LazyRoutes.Privacy /></CustomSuspense>} />
+      <Route path="/terms" element={<CustomSuspense><LazyRoutes.Terms /></CustomSuspense>} />
+      <Route path="/cookies" element={<CustomSuspense><LazyRoutes.Cookies /></CustomSuspense>} />
       
       {/* Protected Routes */}
-      <Route path="/profile" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.Profile /></Suspense></PrivateRoute>} />
-      <Route path="/shopping-lists" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.ShoppingLists /></Suspense></PrivateRoute>} />
+      <Route path="/profile" element={<PrivateRoute><CustomSuspense><LazyRoutes.Profile /></CustomSuspense></PrivateRoute>} />
+      <Route path="/shopping-lists" element={<PrivateRoute><CustomSuspense><LazyRoutes.ShoppingLists /></CustomSuspense></PrivateRoute>} />
       {/* Add new route for shopping list details */}
-      <Route path="/shopping-lists/:id" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.ShoppingLists /></Suspense></PrivateRoute>} />
-      <Route path="/favorites" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.Favorites /></Suspense></PrivateRoute>} />
-      <Route path="/import" element={<PrivateRoute><Suspense fallback={<div>Loading...</div>}><LazyRoutes.DataImport /></Suspense></PrivateRoute>} />
+      <Route path="/shopping-lists/:id" element={<PrivateRoute><CustomSuspense><LazyRoutes.ShoppingLists /></CustomSuspense></PrivateRoute>} />
+      <Route path="/favorites" element={<PrivateRoute><CustomSuspense><LazyRoutes.Favorites /></CustomSuspense></PrivateRoute>} />
+      <Route path="/import" element={<PrivateRoute><CustomSuspense><LazyRoutes.DataImport /></CustomSuspense></PrivateRoute>} />
       
       {/* Fallback Routes */}
-      <Route path="*" element={<Suspense fallback={<div>Loading...</div>}><LazyRoutes.NotFound /></Suspense>} />
+      <Route path="*" element={<CustomSuspense><LazyRoutes.NotFound /></CustomSuspense>} />
     </Routes>
   );
 };

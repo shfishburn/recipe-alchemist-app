@@ -131,3 +131,6 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
     </div>
   );
 }
+
+// Export default for compatibility with lazy loading
+export default RecipeLoadingAnimation;

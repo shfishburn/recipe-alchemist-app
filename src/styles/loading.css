@@ -104,6 +104,21 @@
   transform-origin: center bottom;
 }
 
+/* Bubble animation for cooking effects */
+@keyframes bubble {
+  0% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-15px);
+    opacity: 0;
+  }
+}
+
 /* Hardware acceleration class */
 .hw-accelerated {
   transform: translateZ(0);

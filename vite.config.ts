@@ -55,7 +55,28 @@ export default defineConfig(({ mode }) => ({
     minify: true,
     sourcemap: true,
     target: 'esnext',
+    // Add module splitting to improve loading performance
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor code into separate chunks
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-components': ['@/components/ui'],
+          'recipe-components': ['@/components/recipe-detail', '@/components/quick-recipe'],
+        }
+      }
+    },
+    // Set chunkSizeWarningLimit to a higher value
+    chunkSizeWarningLimit: 1000,
+    // Improve module resolution and caching
+    modulePreload: {
+      polyfill: true,
+    }
   },
   // Add base configuration to ensure proper asset resolution
   base: mode === 'development' ? '/' : './',
+  // Configure optimization splitting so dynamic imports work properly
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query']
+  },
 }));
