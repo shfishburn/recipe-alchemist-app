@@ -26,24 +26,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   const { open: openAuthDrawer } = useAuthDrawer();
   const { setError } = useQuickRecipeStore();
   
-  // Handle auth flow
-  const handleLogin = () => {
-    // Store the modification request for later execution
-    authStateManager.queueAction({
-      type: 'modify-recipe',
-      data: { request, immediate, recipe },
-      sourceUrl: window.location.pathname
-    });
-    
-    // Open auth drawer
-    openAuthDrawer();
-  };
-
-  // If user is not authenticated, show auth overlay
-  if (!session) {
-    return <AuthOverlay onLogin={handleLogin} />;
-  }
-
+  // Initialize these values to avoid conditional hook calls
   const {
     status,
     error,
@@ -58,6 +41,19 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     cancelRequest,
     resetToOriginal
   } = useRecipeModifications(recipe);
+  
+  // Handle auth flow
+  const handleLogin = useCallback(() => {
+    // Store the modification request for later execution
+    authStateManager.queueAction({
+      type: 'modify-recipe',
+      data: { request, immediate, recipe },
+      sourceUrl: window.location.pathname
+    });
+    
+    // Open auth drawer
+    openAuthDrawer();
+  }, [request, immediate, recipe, openAuthDrawer]);
 
   // Handle for auth-related errors by reopening the auth drawer
   useEffect(() => {
@@ -101,7 +97,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     
     try {
       requestModifications(request, immediate);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error requesting modifications:", err);
       // Simplified error handling - just log the error
       toast.error("Unable to process recipe modifications", {
@@ -109,6 +105,11 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
       });
     }
   }, [request, immediate, requestModifications, session, openAuthDrawer, recipe]);
+
+  // If user is not authenticated, show auth overlay
+  if (!session) {
+    return <AuthOverlay onLogin={handleLogin} />;
+  }
 
   // Display error if there is one
   if (error) {

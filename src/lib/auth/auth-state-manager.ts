@@ -15,7 +15,7 @@ export type PendingActionType =
 export interface PendingAction {
   type: PendingActionType;
   timestamp: number;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   sourceUrl: string;
   id: string; // Unique id to prevent duplicate execution
   executed: boolean;
@@ -27,7 +27,7 @@ export interface AuthState {
     pathname: string;
     search?: string;
     hash?: string;
-    state?: any;
+    state?: unknown;
   };
   pendingActions: PendingAction[];
   lastActiveTimestamp: number;
@@ -239,7 +239,7 @@ export class AuthStateManager {
   public setRedirectAfterAuth(pathname: string, options?: { 
     search?: string, 
     hash?: string, 
-    state?: any
+    state?: unknown
   }): void {
     this.state.redirectAfterAuth = {
       pathname,

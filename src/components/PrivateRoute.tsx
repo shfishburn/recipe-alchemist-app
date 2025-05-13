@@ -30,6 +30,14 @@ const ROUTE_CONFIG: RouteConfig[] = [
   { path: '/cookies', public: true },
 ];
 
+// Protected resource paths that require authentication
+const PROTECTED_PATHS = [
+  '/profile',
+  '/shopping-lists',
+  '/favorites',
+  '/import'
+];
+
 /**
  * Check if the given path is a public route
  */
@@ -37,6 +45,33 @@ function isPublicRoute(path: string): boolean {
   return ROUTE_CONFIG.some(route => 
     route.public && (path === route.path || path.startsWith(route.path))
   );
+}
+
+/**
+ * Check if the given path is a protected resource
+ */
+function isProtectedResource(path: string): boolean {
+  return PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath));
+}
+
+/**
+ * Safely store redirect information with validation
+ * to prevent open redirect vulnerabilities
+ */
+function safelyStoreRedirect(pathname: string, options: {
+  search?: string, 
+  hash?: string, 
+  state?: unknown
+}): void {
+  // Only store internal paths (no protocol/domain/etc)
+  if (pathname.startsWith('/')) {
+    authStateManager.setRedirectAfterAuth(pathname, options);
+    console.log("Storing redirect location:", pathname);
+  } else {
+    console.warn("Attempted to store potentially unsafe redirect:", pathname);
+    // Default to home page for safety
+    authStateManager.setRedirectAfterAuth('/', options);
+  }
 }
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -83,18 +118,15 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     console.log("Not authenticated, redirecting to login from:", location.pathname);
     
     // Check if we're on a protected resource page that requires auth
-    const isProtectedResource = location.pathname.startsWith('/profile') ||
-                               location.pathname.startsWith('/shopping-lists') ||
-                               location.pathname.startsWith('/favorites') ||
-                               location.pathname.startsWith('/import');
+    const pathRequiresAuth = isProtectedResource(location.pathname);
     
     // Only show the auth toast for protected resources
-    if (isProtectedResource) {
+    if (pathRequiresAuth) {
       toast.error("Please sign in to access this page");
     }
     
     // Store the current location for redirect after authentication
-    authStateManager.setRedirectAfterAuth(location.pathname, {
+    safelyStoreRedirect(location.pathname, {
       search: location.search,
       hash: location.hash,
       state: location.state

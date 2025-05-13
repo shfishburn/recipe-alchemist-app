@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -93,13 +92,16 @@ export function useQuickRecipeForm() {
       // Return the processed form data
       return processedFormData;
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
-      setError(error.message || "Failed to submit recipe request. Please try again.");
       
-      // Retain form data on error
-      const errorMessage = error.message || "Failed to submit recipe request. Please try again.";
+      // Safe error message extraction
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to submit recipe request. Please try again.";
+      
+      setError(errorMessage);
       
       // Navigate back to home page with error but retain form data
       navigate('/', {
