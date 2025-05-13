@@ -7,12 +7,32 @@ import { cleanupUIState } from '@/utils/dom-cleanup';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
+// Define interface for custom location state to fix TypeScript errors
+interface NavigationState {
+  from?: {
+    pathname: string;
+    search?: string;
+    hash?: string;
+    state?: Record<string, unknown>;
+  };
+  returnTo?: string;
+  pendingSave?: boolean;
+  resumingAfterAuth?: boolean;
+  resumingGeneration?: boolean;
+  recipeData?: unknown;
+  timestamp?: number;
+  [key: string]: unknown; // Allow for other properties
+}
+
 const Auth = () => {
   const { session, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = useQuickRecipeStore(state => state.recipe);
-  const from = location.state?.from?.pathname || '/';
+  
+  // Get the state with proper typing
+  const locationState = location.state as NavigationState | null;
+  const from = locationState?.from?.pathname || '/';
   
   // Store the complete referring location on component mount
   useEffect(() => {
@@ -23,38 +43,40 @@ const Auth = () => {
       console.log('Stored recipe backup from Auth page:', recipe.title);
     }
 
-    if (location.state?.from) {
+    if (locationState?.from) {
       // Store the full location object with path, search params and any state
       authStateManager.setRedirectAfterAuth(
-        location.state.from.pathname,
+        locationState.from.pathname,
         {
-          search: location.state.from.search || '',
-          hash: location.state.from.hash || '',
+          search: locationState.from.search || '',
+          hash: locationState.from.hash || '',
           state: {
-            ...(location.state.from.state || {}),
+            ...(locationState.from.state || {}),
             // Add additional state flags for recipe recovery
             resumingAfterAuth: true,
-            pendingSave: location.state.pendingSave || false,
+            pendingSave: locationState.pendingSave || false,
             timestamp: Date.now()
           }
         }
       );
-      console.log('Stored redirect location with enhanced state:', location.state.from.pathname);
-    } else if (location.state?.returnTo) {
+      console.log('Stored redirect location with enhanced state:', locationState.from.pathname);
+    } else if (locationState?.returnTo) {
       // Support for direct returnTo path specification
       authStateManager.setRedirectAfterAuth(
-        location.state.returnTo,
+        locationState.returnTo,
         {
           state: {
-            ...(location.state || {}),
+            // Create a new object for state rather than trying to spread locationState
             resumingAfterAuth: true,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            // Include other properties if needed
+            ...(locationState || {})
           }
         }
       );
-      console.log('Stored redirect from returnTo with enhanced state:', location.state.returnTo);
+      console.log('Stored redirect from returnTo with enhanced state:', locationState.returnTo);
     }
-  }, [location.state, recipe]);
+  }, [locationState, recipe]);
 
   // Show a loader while checking auth state
   if (loading) {
@@ -96,7 +118,7 @@ const Auth = () => {
     // Get the stored redirect data
     const redirectData = authStateManager.getRedirectAfterAuth();
     let redirectTo = from;
-    let redirectState = { timestamp: Date.now() };
+    let redirectState: Record<string, unknown> = { timestamp: Date.now() };
     
     if (redirectData) {
       redirectTo = redirectData.pathname;
@@ -109,7 +131,7 @@ const Auth = () => {
       if (redirectData.state) {
         redirectState = {
           ...redirectState,
-          ...redirectData.state,
+          ...(redirectData.state as Record<string, unknown>),
           resumingAfterAuth: true // Always add this flag
         };
       }
