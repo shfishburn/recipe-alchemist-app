@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -89,15 +88,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       } else if (type === 'generate-recipe' && data.formData) {
         toast.success("Successfully signed in! Resuming recipe generation...");
         
-        // Navigate based on the saved path
+        // Navigate to loading page for generation - this is critical
         requestAnimationFrame(() => {
-          navigate(sourceUrl || '/quick-recipe', { 
+          navigate('/loading', { 
             state: { 
               resumingGeneration: true,
-              recipeData: {
-                formData: data.formData,
-                path: sourceUrl
-              },
+              formData: data.formData,
+              fromQuickRecipePage: true,
               timestamp: Date.now() // Add timestamp to force navigation
             },
             replace: true

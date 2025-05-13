@@ -1,125 +1,169 @@
+import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
-/*
- * DO NOT MODIFY THIS FILE DIRECTLY
- * Last updated: 2025-05-12T18:00:00Z
- * 
- * This file manages the recipe generation edge function with proper CORS handling.
- * It uses dynamic origin detection for proper cross-origin resource sharing.
- * Any changes should be carefully tested to ensure proper API connectivity.
- */
+// Define timeout duration in milliseconds (2 minutes)
+const TIMEOUT_DURATION = 120000;
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handleRequest } from "./request-handler.ts";
-import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
-
-// Main entry point for the edge function
 serve(async (req) => {
-  console.log("Edge function called: generate-quick-recipe");
-  
-  // Handle CORS preflight requests with origin-aware headers
-  if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request");
-    return new Response(null, { 
-      headers: getCorsHeadersWithOrigin(req) 
-    });
+  // Handle CORS for browser requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
   
   try {
-    // Get debug info from headers if present
-    const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
-    console.log(`Request received with debug info: ${debugInfo}`);
+    // Parse request body
+    const requestData = await req.json();
     
-    // Read the request body ONCE and parse it
-    let requestBody;
-    try {
-      const bodyText = await req.text();
-      
-      if (!bodyText || bodyText.trim() === '') {
-        console.log("Raw request body: EMPTY REQUEST BODY");
-        console.error("Empty request body received");
-        return new Response(
-          JSON.stringify({
-            error: "Empty request body",
-            details: "Request body is empty or missing"
-          }),
-          { 
-            status: 400, 
-            headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
-          }
-        );
+    // Store user id if available for authentication
+    const userId = requestData.user_id;
+    
+    // For resuming after auth - store metadata
+    const authContext = {
+      resumable: true,
+      formData: requestData,
+      timestamp: Date.now()
+    };
+    
+    // Generate response with timeout logic
+    const responseData = await generateWithTimeout(requestData);
+    
+    // Return the generated recipe
+    return new Response(
+      JSON.stringify({
+        ...responseData,
+        auth_context: authContext
+      }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: 200
       }
-      
-      try {
-        requestBody = JSON.parse(bodyText);
-        console.log("Parsed request body:", JSON.stringify(requestBody).substring(0, 100) + "...");
-      } catch (parseError) {
-        console.error("Error parsing request body:", parseError);
-        return new Response(
-          JSON.stringify({
-            error: "Invalid request format: Could not parse JSON body",
-            details: String(parseError)
-          }),
-          { 
-            status: 400, 
-            headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
-          }
-        );
-      }
-    } catch (bodyError) {
-      console.error("Error reading request body:", bodyError);
-      return new Response(
-        JSON.stringify({
-          error: "Could not read request body",
-          details: String(bodyError)
-        }),
-        { 
-          status: 400, 
-          headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
-        }
-      );
-    }
-    
-    // Check if OpenAI API key is available
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) {
-      console.error("OPENAI_API_KEY environment variable not set");
-      return new Response(
-        JSON.stringify({
-          error: "API configuration error",
-          details: "OpenAI API key is not configured"
-        }),
-        { 
-          status: 500, 
-          headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
-        }
-      );
-    }
-    
-    // Extract embedding model from request body
-    const embeddingModel = requestBody?.embeddingModel || "text-embedding-ada-002"; // Default model
-    console.log(`Using embedding model: ${embeddingModel}`);
-    
-    // Pass the parsed body to handleRequest instead of the original request
-    return await handleRequest(req, requestBody, debugInfo, embeddingModel);
-  } catch (err) {
-    console.error("Quick recipe generation error:", err);
-    
-    // Create user-friendly error message
-    let errorMessage = "Unexpected error occurred while generating recipe";
-    let errorDetails = String(err);
-    
-    if (err instanceof Error) {
-      errorMessage = err.message || errorMessage;
-      errorDetails = err.stack || errorDetails;
-    }
+    );
+  } catch (error) {
+    // Handle errors
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const statusCode = errorMessage.includes('timeout') ? 408 : 500;
     
     return new Response(
       JSON.stringify({
         error: errorMessage,
-        details: errorDetails,
-        debugInfo: "error-handler"
+        isError: true,
+        status: statusCode
       }),
-      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: statusCode
+      }
     );
   }
 });
+
+// Helper function to generate recipe with timeout protection
+async function generateWithTimeout(requestData) {
+  const { ingredients, max_calories, allowed_time } = requestData;
+
+  // Construct the prompt
+  let prompt = `Generate a quick recipe based on the following ingredients: ${ingredients.join(', ')}.`;
+  if (max_calories) {
+    prompt += ` The recipe should have no more than ${max_calories} calories.`;
+  }
+  prompt += " Provide the recipe title, a list of ingredients with quantities, and numbered steps to prepare the dish.";
+
+  // Set up the request to OpenAI
+  const openaiUrl = 'https://api.openai.com/v1/chat/completions';
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+
+  if (!openaiApiKey) {
+    throw new Error('OpenAI API key is missing.');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.log('Timeout occurred');
+    controller.abort();
+  }, allowed_time || TIMEOUT_DURATION);
+
+  try {
+    const openaiResponse = await fetch(openaiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 1000,
+        n: 1,
+        stop: null,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!openaiResponse.ok) {
+      console.error('OpenAI API error:', openaiResponse.status, openaiResponse.statusText);
+      const errorDetails = await openaiResponse.text();
+      throw new Error(`OpenAI API request failed with status ${openaiResponse.status}: ${errorDetails}`);
+    }
+
+    const openaiData = await openaiResponse.json();
+
+    if (!openaiData.choices || openaiData.choices.length === 0) {
+      throw new Error('No recipe generated by OpenAI.');
+    }
+
+    const recipeText = openaiData.choices[0].message.content.trim();
+
+    // Parse the generated recipe text
+    const recipe = parseRecipe(recipeText);
+    
+    // Return the generated recipe
+    return recipe;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('Error generating recipe:', error);
+    throw error;
+  }
+}
+
+function parseRecipe(recipeText: string) {
+    const recipe: { title: string; ingredients: string[]; steps: string[] } = {
+        title: '',
+        ingredients: [],
+        steps: []
+    };
+
+    const lines = recipeText.split('\n').map(line => line.trim()).filter(line => line !== '');
+
+    let i = 0;
+
+    // Extract title
+    if (i < lines.length) {
+        recipe.title = lines[i++];
+    }
+
+    // Extract ingredients
+    while (i < lines.length && !lines[i].toLowerCase().startsWith('step')) {
+        recipe.ingredients.push(lines[i++]);
+    }
+
+    // Extract steps
+    while (i < lines.length) {
+        if (lines[i].toLowerCase().startsWith('step')) {
+            recipe.steps.push(lines[i]);
+            i++;
+        } else {
+            i++;
+        }
+    }
+
+    return recipe;
+}
