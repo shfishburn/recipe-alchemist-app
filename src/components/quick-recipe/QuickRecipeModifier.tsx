@@ -98,13 +98,20 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     try {
       requestModifications(request, immediate);
     } catch (err: unknown) {
-      console.error("Error requesting modifications:", err);
-      // Simplified error handling - just log the error
+      // Improved error handling with type checking
+      if (err instanceof Error) {
+        console.error("Error requesting modifications:", err.message);
+        setError(err.message);
+      } else {
+        console.error("Unknown error requesting modifications");
+        setError("An unknown error occurred while processing your request");
+      }
+      
       toast.error("Unable to process recipe modifications", {
         description: "Please try again later."
       });
     }
-  }, [request, immediate, requestModifications, session, openAuthDrawer, recipe]);
+  }, [request, immediate, requestModifications, session, openAuthDrawer, recipe, setError]);
 
   // If user is not authenticated, show auth overlay
   if (!session) {

@@ -1,4 +1,3 @@
-
 import { Session, User } from '@supabase/supabase-js';
 
 // Version the state schema to allow for future migrations

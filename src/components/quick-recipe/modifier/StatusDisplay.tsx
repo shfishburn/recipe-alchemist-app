@@ -17,6 +17,10 @@ export const StatusDisplay: React.FC<StatusDisplayProps> = ({ status, error }) =
     return <Badge variant="destructive">Service Not Deployed: {error}</Badge>;
   }
 
+  if (status === 'not-authenticated') {
+    return <Badge variant="destructive">Authentication Required</Badge>;
+  }
+
   if (status === 'canceled') {
     return <Badge variant="secondary">Request Canceled</Badge>;
   }

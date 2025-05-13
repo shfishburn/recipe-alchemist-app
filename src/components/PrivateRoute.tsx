@@ -39,19 +39,30 @@ const PROTECTED_PATHS = [
 ];
 
 /**
+ * Check if the given path matches a specific route type (public or protected)
+ */
+function isRouteType(path: string, type: 'public' | 'protected'): boolean {
+  if (type === 'public') {
+    return ROUTE_CONFIG.some(route => 
+      route.public && (path === route.path || path.startsWith(route.path))
+    );
+  } else {
+    return PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath));
+  }
+}
+
+/**
  * Check if the given path is a public route
  */
 function isPublicRoute(path: string): boolean {
-  return ROUTE_CONFIG.some(route => 
-    route.public && (path === route.path || path.startsWith(route.path))
-  );
+  return isRouteType(path, 'public');
 }
 
 /**
  * Check if the given path is a protected resource
  */
 function isProtectedResource(path: string): boolean {
-  return PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath));
+  return isRouteType(path, 'protected');
 }
 
 /**
@@ -63,8 +74,8 @@ function safelyStoreRedirect(pathname: string, options: {
   hash?: string, 
   state?: unknown
 }): void {
-  // Only store internal paths (no protocol/domain/etc)
-  if (pathname.startsWith('/')) {
+  // Only store internal paths (no protocol/domain/etc) and prevent path traversal
+  if (pathname.startsWith('/') && !pathname.includes('..')) {
     authStateManager.setRedirectAfterAuth(pathname, options);
     console.log("Storing redirect location:", pathname);
   } else {
