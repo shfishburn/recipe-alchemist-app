@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { FormatIngredient } from './FormatIngredient';
-import { Ingredient } from '@/hooks/use-quick-recipe';
+import { Ingredient } from '@/types/quick-recipe';
 
 interface IngredientListProps {
   ingredients: Ingredient[];
 }
 
 export function IngredientList({ ingredients }: IngredientListProps) {
+  // Handle edge cases
   if (!ingredients || ingredients.length === 0) {
     return <div className="text-muted-foreground italic">No ingredients listed</div>;
   }
@@ -16,7 +17,12 @@ export function IngredientList({ ingredients }: IngredientListProps) {
     <ul className="list-disc pl-5 space-y-1.5">
       {ingredients.map((ingredient, index) => (
         <li key={index} className="pb-0.5">
-          <FormatIngredient ingredient={ingredient} />
+          {/* Add extra safeguard for invalid ingredient data */}
+          {ingredient ? (
+            <FormatIngredient ingredient={ingredient} />
+          ) : (
+            <span className="text-muted-foreground">Unknown ingredient</span>
+          )}
         </li>
       ))}
     </ul>

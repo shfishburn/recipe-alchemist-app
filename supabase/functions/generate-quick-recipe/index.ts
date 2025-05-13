@@ -194,7 +194,7 @@ function parseRecipe(recipeText) {
 
     // Extract title - usually the first line
     if (i < lines.length) {
-        recipe.title = lines[i].replace(/^#*\s*/, ''); // Remove any markdown heading symbols
+        recipe.title = lines[i].replace(/^#*\s*|Recipe Title:|\s*$/gi, ''); // Remove any markdown heading symbols and "Recipe Title:" prefix
         i++;
     }
 
@@ -219,7 +219,32 @@ function parseRecipe(recipeText) {
             // Strip out bullets, numbers, etc.
             const cleanedLine = line.replace(/^[-*•]|\d+\.\s+/, '').trim();
             if (cleanedLine) {
-                recipe.ingredients.push(cleanedLine);
+                // Parse ingredients into structured format
+                // Try to extract quantity, unit, and item name
+                const match = cleanedLine.match(/^([\d./]+)?\s*([a-zA-Z]+)?\s*(.+)$/);
+                
+                if (match) {
+                    const [, qty, unit, item] = match;
+                    recipe.ingredients.push({
+                        qty: qty ? parseFloat(qty) : null,
+                        unit: unit || '',
+                        item: item || cleanedLine,
+                        // Add metric and imperial units (same as original)
+                        qty_metric: qty ? parseFloat(qty) : null,
+                        unit_metric: unit || '',
+                        qty_imperial: qty ? parseFloat(qty) : null,
+                        unit_imperial: unit || ''
+                    });
+                } else {
+                    // If parsing fails, use the whole string as the item
+                    recipe.ingredients.push({
+                        item: cleanedLine,
+                        qty_metric: null,
+                        unit_metric: '',
+                        qty_imperial: null,
+                        unit_imperial: ''
+                    });
+                }
             }
         } else if (currentSection === 'steps') {
             // Strip out numbers if present, but not from the content
@@ -231,7 +256,31 @@ function parseRecipe(recipeText) {
             // If we haven't identified a section but line starts with a bullet or number,
             // assume it's an ingredient
             const cleanedLine = line.replace(/^[-*•]|\d+\.\s+/, '').trim();
-            recipe.ingredients.push(cleanedLine);
+            // Parse ingredients into structured format
+            const match = cleanedLine.match(/^([\d./]+)?\s*([a-zA-Z]+)?\s*(.+)$/);
+            
+            if (match) {
+                const [, qty, unit, item] = match;
+                recipe.ingredients.push({
+                    qty: qty ? parseFloat(qty) : null,
+                    unit: unit || '',
+                    item: item || cleanedLine,
+                    // Add metric and imperial units (same as original)
+                    qty_metric: qty ? parseFloat(qty) : null,
+                    unit_metric: unit || '',
+                    qty_imperial: qty ? parseFloat(qty) : null,
+                    unit_imperial: unit || ''
+                });
+            } else {
+                // If parsing fails, use the whole string as the item
+                recipe.ingredients.push({
+                    item: cleanedLine,
+                    qty_metric: null,
+                    unit_metric: '',
+                    qty_imperial: null,
+                    unit_imperial: ''
+                });
+            }
         }
         
         i++;
@@ -266,9 +315,19 @@ function parseRecipe(recipeText) {
                 continue;
             }
             
-            if (ingredientsSection && !recipe.ingredients.includes(line) && 
-                !line.toLowerCase().includes('ingredients') && line !== recipe.title) {
-                recipe.steps.push(line);
+            if (ingredientsSection && !line.toLowerCase().includes('ingredients') && line !== recipe.title) {
+                // Check if this line isn't actually describing an ingredient
+                let isIngredientLine = false;
+                for (const ingredient of recipe.ingredients) {
+                    if (typeof ingredient.item === 'string' && line.includes(ingredient.item)) {
+                        isIngredientLine = true;
+                        break;
+                    }
+                }
+                
+                if (!isIngredientLine) {
+                    recipe.steps.push(line);
+                }
             }
         }
     }

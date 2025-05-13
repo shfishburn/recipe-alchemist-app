@@ -56,6 +56,36 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
   
   // Handle different response formats
   const ingredients = data.ingredients?.map((ingredient: any) => {
+    // If the ingredient is a string, convert it to proper format
+    if (typeof ingredient === 'string') {
+      // Try to extract quantity, unit and item
+      const parts = ingredient.trim().match(/^([\d./]+)?\s*([a-zA-Z]+)?\s*(.+)$/);
+      
+      if (parts) {
+        const [, qty, unit, itemName] = parts;
+        return {
+          qty: qty ? parseFloat(qty) : null,
+          unit: unit || '',
+          qty_metric: qty ? parseFloat(qty) : null,
+          unit_metric: unit || '',
+          qty_imperial: qty ? parseFloat(qty) : null,
+          unit_imperial: unit || '',
+          item: itemName || ingredient
+        };
+      } else {
+        // Just use the string as the item name
+        return {
+          qty: null,
+          unit: '',
+          qty_metric: null,
+          unit_metric: '',
+          qty_imperial: null,
+          unit_imperial: '',
+          item: ingredient
+        };
+      }
+    }
+    
     // If already in the correct format with metric/imperial units
     if (ingredient.qty_metric !== undefined || ingredient.qty_imperial !== undefined) {
       return ingredient;
@@ -71,7 +101,7 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
       // Add imperial units (same as original if not specified)
       qty_imperial: ingredient.qty,
       unit_imperial: ingredient.unit,
-      item: ingredient.item,
+      item: ingredient.item || "Unknown ingredient",
       notes: ingredient.notes,
       shop_size_qty: ingredient.shop_size_qty,
       shop_size_unit: ingredient.shop_size_unit
