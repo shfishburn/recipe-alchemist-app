@@ -22,9 +22,9 @@ export const formatRequestBody = (formData: QuickRecipeFormData) => {
     // If we have a specific mainIngredient field, use it
     if (typeof mainIngredient === 'string') {
       ingredients.push(mainIngredient);
-    } else if (Array.isArray(mainIngredient)) {
+    } else if (mainIngredient && Array.isArray(mainIngredient)) {
       // If it's an array, add all items
-      mainIngredient.forEach(item => {
+      (mainIngredient as string[]).forEach(item => {
         if (item && typeof item === 'string') {
           ingredients.push(item);
         }
