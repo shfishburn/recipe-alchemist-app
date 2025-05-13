@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChefHat } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -16,8 +17,14 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inputError, setInputError] = useState('');
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  // Debug effect to ensure the component is mounting properly
+  useEffect(() => {
+    console.log('QuickRecipeGenerator mounted');
+  }, []);
+
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with values:', { mainIngredient, cuisines, dietaryPreferences, servings });
 
     if (!mainIngredient.trim()) {
       setInputError('Please enter an ingredient');
@@ -53,9 +60,7 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
         description: 'Failed to generate recipe. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      // Keep isSubmitting true since the page will navigate away
-      // The loading state will be managed by the store
+      setIsSubmitting(false); // Reset submit state on error
     }
   };
 

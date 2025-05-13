@@ -18,6 +18,11 @@ export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitBut
   // Use either the prop value or the store value
   const isLoading = parentIsLoading || storeIsLoading;
   
+  // Debug log on rendering
+  React.useEffect(() => {
+    console.log('SubmitButton rendered with props:', { parentIsLoading, disabled, storeIsLoading });
+  }, [parentIsLoading, disabled, storeIsLoading]);
+  
   return (
     <Button 
       type="submit" 
@@ -32,6 +37,10 @@ export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitBut
       disabled={isLoading || disabled}
       aria-disabled={isLoading || disabled}
       aria-busy={isLoading}
+      onClick={(e) => {
+        console.log('Submit button clicked');
+        // Don't prevent default, let it submit the form
+      }}
     >
       {isLoading ? (
         <div className="flex items-center justify-center">

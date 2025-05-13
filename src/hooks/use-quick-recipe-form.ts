@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
@@ -81,138 +82,27 @@ export function useQuickRecipeForm() {
       // Navigate to the loading page
       navigate('/loading', { 
         state: { 
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          formData: processedFormData // Explicitly pass formData in navigation state
         }
       });
       
-      // Start generating the recipe immediately after navigation
-      try {
-        console.log("Starting recipe generation with payload:", {
-          cuisine: processedFormData.cuisine,
-          dietary: processedFormData.dietary,
-          mainIngredient: processedFormData.mainIngredient,
-          servings: processedFormData.servings || 2 // Ensure servings has a default value
-        });
-        
-        // Add a small delay to ensure navigation completes
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Generate the recipe
-        const generatedRecipe = await generateQuickRecipe(processedFormData);
-        
-        // Check if generatedRecipe is an error object
-        if (generatedRecipe && 'isError' in generatedRecipe && generatedRecipe.isError === true) {
-          console.error('Recipe generation returned error:', generatedRecipe.error);
-          setError(generatedRecipe.error || 'Error generating recipe');
-          
-          // Keep error toast only
-          toast({
-            title: "Recipe generation failed",
-            description: generatedRecipe.error || 'Error generating recipe',
-            variant: "destructive",
-          });
-          
-          // Navigate back to home page with error
-          navigate('/', {
-            state: { 
-              error: generatedRecipe.error || 'Error generating recipe',
-              formData: null // Don't persist form data on error
-            },
-            replace: true
-          });
-          
-          return null;
-        }
-        
-        // Validate the recipe structure before setting it
-        if (!isRecipeValid(generatedRecipe)) {
-          const errorMsg = "The recipe format returned from the API was invalid. Please try again.";
-          setError(errorMsg);
-          
-          // Navigate back to home page with error
-          navigate('/', {
-            state: { 
-              error: errorMsg,
-              formData: null // Don't persist form data on error
-            },
-            replace: true
-          });
-          
-          throw new Error(errorMsg);
-        }
-        
-        // Ensure recipe has valid cuisine value
-        if (!generatedRecipe.cuisine || 
-            (typeof generatedRecipe.cuisine === 'string' && generatedRecipe.cuisine.trim() === '')) {
-          console.log("Setting default cuisine for recipe as it was missing");
-          generatedRecipe.cuisine = "any";
-        }
-        
-        console.log("Recipe generation successful:", generatedRecipe);
-        setRecipe(generatedRecipe);
-        
-        // Success message in console
-        console.log("Recipe created successfully!");
-        
-        // The LoadingPage will handle the navigation to RecipePreviewPage
-        return generatedRecipe;
-      } catch (error: any) {
-        console.error('Error generating recipe:', error);
-        setLoading(false);
-        
-        // More specific error message based on the error type
-        let errorMessage = error.message || "Failed to generate recipe. Please try again.";
-        let isTimeout = false;
-        
-        if (error.message?.includes('timeout')) {
-          errorMessage = "Recipe generation timed out. Please try again with a simpler recipe request.";
-          isTimeout = true;
-          setHasTimeoutError(true);
-        } else if (error.status === 400) {
-          errorMessage = "Invalid recipe request. Please check your inputs and try again.";
-        } else if (error.message?.includes('Edge Function')) {
-          errorMessage = "We're having trouble connecting to our recipe service. Please try again shortly.";
-        } else if (error.message?.includes('OpenAI API key')) {
-          errorMessage = "There's an issue with our AI service configuration. Our team has been notified.";
-          // Log specifically for API key issues
-          console.error("CRITICAL: OpenAI API key issue detected");
-        } else if (error.message?.includes('Empty request body')) {
-          errorMessage = "The recipe request couldn't be sent correctly. Please try again.";
-          console.error("CRITICAL: Empty request body detected");
-        }
-        
-        // Set descriptive error with timeout flag
-        setError(errorMessage);
-        
-        // Keep error toast only
-        toast({
-          title: "Recipe generation failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        
-        // Navigate back to home page with error
-        navigate('/', {
-          state: { 
-            error: errorMessage,
-            formData: null, // Don't persist form data on error
-            hasTimeoutError: isTimeout
-          },
-          replace: true
-        });
-        
-        return null;
-      }
+      // Return early - the loading page will handle the API call
+      return processedFormData;
+      
     } catch (error: any) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
       setError(error.message || "Failed to submit recipe request. Please try again.");
       
-      // Navigate back to home page with error
+      // Retain form data on error
+      const errorMessage = error.message || "Failed to submit recipe request. Please try again.";
+      
+      // Navigate back to home page with error but retain form data
       navigate('/', {
         state: { 
-          error: error.message || "Failed to submit recipe request. Please try again.",
-          formData: null // Don't persist form data on error
+          error: errorMessage,
+          formData: formData // Keep the form data on error
         },
         replace: true
       });

@@ -1,9 +1,9 @@
 
 // path: src/components/landing/Hero.tsx
 // file: Hero.tsx
-// updated: 2025-05-10
+// updated: 2025-05-13
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
@@ -43,8 +43,9 @@ const Hero: React.FC = memo(() => {
   const { open: openAuthDrawer } = useAuthDrawer();
   const { handleSubmit } = useQuickRecipeForm();
 
-  const handleFormSubmit = (formData: any) => {
-    console.log('Form submitted:', formData);
+  // Create a memoized handler to prevent unnecessary re-renders
+  const handleFormSubmit = useCallback((formData: any) => {
+    console.log('Hero - Form submitted:', formData);
     
     // Validate the form data before submitting
     if (!formData.ingredients || !formData.ingredients.trim()) {
@@ -64,9 +65,11 @@ const Hero: React.FC = memo(() => {
       servings: Number(formData.servings) || 4
     };
     
+    console.log('Hero - Calling handleSubmit with formatted data:', recipeFormData);
+    
     // Call the recipe generation function
     handleSubmit(recipeFormData);
-  };
+  }, [handleSubmit]);
 
   return (
     <section className="py-6 md:py-12 lg:py-16 content-visibility-auto hero-section w-full max-w-full overflow-hidden">
