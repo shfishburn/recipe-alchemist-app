@@ -1,110 +1,122 @@
 
 /* Loading animation styles */
 .loading-pulse-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   border-radius: 50%;
-  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  animation: loading-pulse 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
-@keyframes pulse-ring {
+@keyframes loading-pulse {
   0% {
-    transform: translate(-50%, -50%) scale(0.7);
-    opacity: 1;
+    transform: scale(0.6);
+    opacity: 0.8;
   }
   50% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.5;
+    transform: scale(1);
+    opacity: 0.3;
   }
   100% {
-    transform: translate(-50%, -50%) scale(0.7);
-    opacity: 1;
+    transform: scale(0.6);
+    opacity: 0.8;
   }
 }
 
-/* Steam animation for cooking pot */
+/* Steam animations for cooking pot */
 .steam {
   position: absolute;
-  height: 5px;
-  width: 5px;
+  height: 6px;
+  width: 6px;
   border-radius: 50%;
-  background-color: white;
-  margin: -10px 0 0 0;
+  background-color: #e0e0e0;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
   opacity: 0;
-  animation: steam 2s ease-out infinite;
+  animation: steam 4s ease-out infinite;
 }
 
 .steam-1 {
   top: -10px;
-  left: 25%;
-  animation-delay: 0.2s;
+  animation-delay: 0.25s;
 }
 
 .steam-2 {
   top: -14px;
-  left: 50%;
-  animation-delay: 0.6s;
+  left: 6px;
+  animation-delay: 0.5s;
 }
 
 .steam-3 {
   top: -18px;
-  left: 75%;
-  animation-delay: 0.9s;
+  left: -8px;
+  animation-delay: 0.75s;
 }
 
 @keyframes steam {
-  0% { transform: translateY(0) scale(1); opacity: 0; }
-  15% { opacity: 0.8; }
-  50% { transform: translateY(-10px) scale(1.2); opacity: 0.3; }
-  95% { opacity: 0; }
-  100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
-}
-
-/* Bubble animation */
-@keyframes bubble {
   0% {
-    transform: translateY(0) scale(1);
-    opacity: 0.7;
+    transform: translateY(0) scale(0.25);
+    opacity: 0.1;
   }
-  50% {
-    opacity: 0.5;
+  20% {
+    opacity: 0.8;
   }
   100% {
-    transform: translateY(-20px) scale(0.8);
+    transform: translateY(-15px) scale(1);
     opacity: 0;
   }
 }
 
-/* Loading progress animation */
-.animate-progress-pulse {
-  animation: progress-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Progress bar animation */
+@keyframes progress-pulse {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-@keyframes progress-pulse {
-  0% { width: 0%; opacity: 0.7; }
-  50% { width: 70%; opacity: 1; }
-  70% { width: 85%; opacity: 0.8; }
-  100% { width: 95%; opacity: 0.7; }
+.animate-progress-pulse {
+  background-size: 200% 100%;
+  animation: progress-pulse 2s ease infinite;
 }
 
 /* Cooking pot animation */
+@keyframes cooking-pot {
+  0% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+  100% {
+    transform: rotate(-2deg);
+  }
+}
+
 .animate-cooking-pot {
   animation: cooking-pot 2s ease-in-out infinite;
+  transform-origin: center bottom;
 }
 
-@keyframes cooking-pot {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+/* Hardware acceleration class */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
-/* Fade in animation */
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-in-out;
+/* Touch target optimization for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-@keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+.tap-highlight {
+  -webkit-tap-highlight-color: transparent;
 }
