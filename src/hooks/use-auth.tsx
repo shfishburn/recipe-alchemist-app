@@ -5,12 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { QuickRecipe } from '@/types/quick-recipe';
 
 export interface Profile {
   id: string;
   username?: string;
   avatar_url?: string;
-  nutrition_preferences?: any;
+  nutrition_preferences?: unknown;
   weight_goal_type?: string;
   weight_goal_deficit?: number;
   created_at?: string;
@@ -112,21 +113,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const nextAction = authStateManager.getNextPendingAction();
       if (nextAction && nextAction.type === 'save-recipe' && nextAction.data.recipe) {
         console.log("Found pending recipe in authStateManager:", nextAction.data.recipe);
-        setRecipe(nextAction.data.recipe);
-        return;
+        // Type check the recipe data before setting it
+        const recipeData = nextAction.data.recipe;
+        if (isValidQuickRecipe(recipeData)) {
+          setRecipe(recipeData);
+          return;
+        }
       }
       
       // Then check localStorage backup
       const recipeBackup = authStateManager.getRecipeDataFallback();
       if (recipeBackup && recipeBackup.recipe) {
         console.log("Found recipe backup in localStorage:", recipeBackup.recipe);
-        setRecipe(recipeBackup.recipe);
-        return;
+        // Type check the recipe data before setting it
+        if (isValidQuickRecipe(recipeBackup.recipe)) {
+          setRecipe(recipeBackup.recipe);
+          return;
+        }
       }
     } catch (error) {
       console.error("Error checking pending recipe data:", error);
     }
   };
+  
+  // Helper function to validate QuickRecipe
+  function isValidQuickRecipe(recipe: unknown): recipe is QuickRecipe {
+    if (!recipe || typeof recipe !== 'object') return false;
+    
+    const r = recipe as Partial<QuickRecipe>;
+    return (
+      typeof r.title === 'string' && 
+      Array.isArray(r.ingredients) && 
+      typeof r.servings === 'number'
+    );
+  }
 
   useEffect(() => {
     // Create a flag to track component mount state
@@ -233,7 +253,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (authCompletedOnce && session?.user) {
       checkPendingRecipeAfterAuth();
     }
-  }, [authCompletedOnce, session?.user]);
+  }, [authCompletedOnce, session?.user, checkPendingRecipeAfterAuth]);
 
   return (
     <AuthContext.Provider value={{ 

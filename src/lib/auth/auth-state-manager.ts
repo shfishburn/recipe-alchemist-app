@@ -1,5 +1,6 @@
 
 import { Session, User } from '@supabase/supabase-js';
+import { QuickRecipe } from '@/types/quick-recipe';
 
 // Version the state schema to allow for future migrations
 const AUTH_STATE_VERSION = '1.0.0';
@@ -31,6 +32,13 @@ export interface AuthState {
   };
   pendingActions: PendingAction[];
   lastActiveTimestamp: number;
+}
+
+// Type for the recipe backup in localStorage
+export interface RecipeBackup {
+  recipe: QuickRecipe;
+  timestamp: number;
+  sourceUrl: string;
 }
 
 /**
@@ -366,7 +374,7 @@ export class AuthStateManager {
    * This helps with scenarios where sessionStorage might be cleared
    * @param recipeData - The recipe data to store
    */
-  public storeRecipeDataFallback(recipeData: any): void {
+  public storeRecipeDataFallback(recipeData: QuickRecipe): void {
     try {
       localStorage.setItem('recipe_backup', JSON.stringify({
         recipe: recipeData,
@@ -383,11 +391,11 @@ export class AuthStateManager {
    * Retrieve recipe data from localStorage fallback
    * @returns The stored recipe data or null if none exists
    */
-  public getRecipeDataFallback(): { recipe: any, timestamp: number, sourceUrl: string } | null {
+  public getRecipeDataFallback(): RecipeBackup | null {
     try {
       const storedData = localStorage.getItem('recipe_backup');
       if (storedData) {
-        return JSON.parse(storedData);
+        return JSON.parse(storedData) as RecipeBackup;
       }
     } catch (error) {
       console.error('Failed to retrieve recipe backup:', error);

@@ -11,6 +11,7 @@ import LoadingOverlay from '@/components/ui/loading-overlay';
 import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 import { useAuth } from '@/hooks/use-auth';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
+import { QuickRecipe } from '@/types/quick-recipe';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -44,21 +45,35 @@ const RecipePreviewPage: React.FC = () => {
   const hasPendingSave = location.state?.pendingSave === true;
   const hasRecipeData = location.state?.recipeData || null;
 
+  // Helper function to validate QuickRecipe
+  function isValidQuickRecipe(recipe: unknown): recipe is QuickRecipe {
+    if (!recipe || typeof recipe !== 'object') return false;
+    
+    const r = recipe as Partial<QuickRecipe>;
+    return (
+      typeof r.title === 'string' && 
+      Array.isArray(r.ingredients) && 
+      typeof r.servings === 'number'
+    );
+  }
+
   // Check for recipe data in location state - this is important for recipe restoration
   useEffect(() => {
     // If we have recipe data in location state AND we don't have a recipe in the store,
     // restore the recipe
     if (hasRecipeData && !recipe) {
-      console.log("Restoring recipe from location state", hasRecipeData);
-      setRecipe(hasRecipeData);
+      if (isValidQuickRecipe(hasRecipeData)) {
+        console.log("Restoring recipe from location state", hasRecipeData);
+        setRecipe(hasRecipeData as QuickRecipe);
+      }
     }
     
     // Also check for recipe data in localStorage fallback if we're resuming after auth
     if (isResuming && !recipe && !hasRecipeData) {
       const recipeBackup = authStateManager.getRecipeDataFallback();
-      if (recipeBackup && recipeBackup.recipe) {
+      if (recipeBackup && recipeBackup.recipe && isValidQuickRecipe(recipeBackup.recipe)) {
         console.log("Restoring recipe from localStorage backup", recipeBackup);
-        setRecipe(recipeBackup.recipe);
+        setRecipe(recipeBackup.recipe as QuickRecipe);
         // Clear the backup after successful restoration
         // We wait until the recipe is set to prevent race conditions
         setTimeout(() => {
@@ -121,19 +136,19 @@ const RecipePreviewPage: React.FC = () => {
               console.log("Found recipe in localStorage backup");
               
               // Also restore recipe to store if needed
-              if (!recipe) {
-                setRecipe(recipeBackup.recipe);
+              if (!recipe && isValidQuickRecipe(recipeBackup.recipe)) {
+                setRecipe(recipeBackup.recipe as QuickRecipe);
               }
             }
           }
           
-          if (pendingData?.recipe) {
+          if (pendingData?.recipe && isValidQuickRecipe(pendingData.recipe)) {
             // We have a recipe to save
             toast.loading("Saving your recipe after login...");
             setIsSaving(true);
             
             try {
-              const savedData = await saveRecipe(pendingData.recipe);
+              const savedData = await saveRecipe(pendingData.recipe as QuickRecipe);
               
               if (savedData && savedData.slug) {
                 // Use the centralized state management
@@ -270,17 +285,18 @@ const RecipePreviewPage: React.FC = () => {
     if (!recipe && !isLoading) {
       // Try to restore from localStorage fallback
       const recipeBackup = authStateManager.getRecipeDataFallback();
-      if (recipeBackup && recipeBackup.recipe) {
+      if (recipeBackup && recipeBackup.recipe && isValidQuickRecipe(recipeBackup.recipe)) {
         console.log("Restoring recipe from localStorage backup", recipeBackup);
-        setRecipe(recipeBackup.recipe);
+        setRecipe(recipeBackup.recipe as QuickRecipe);
         return;
       }
       
       // Try to restore from pending actions
       const nextAction = authStateManager.getNextPendingAction();
-      if (nextAction && nextAction.type === 'save-recipe' && nextAction.data.recipe) {
+      if (nextAction && nextAction.type === 'save-recipe' && 
+          nextAction.data.recipe && isValidQuickRecipe(nextAction.data.recipe)) {
         console.log("Restoring recipe from pending action", nextAction);
-        setRecipe(nextAction.data.recipe);
+        setRecipe(nextAction.data.recipe as QuickRecipe);
         return;
       }
       
