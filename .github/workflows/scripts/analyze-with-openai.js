@@ -203,11 +203,10 @@ You are a code review assistant and architect analyzing an AI recipe generation 
 
 ### 7. Feature Improvement Observations
 - Brainstorm and present ideas for feature improvements based on your context and code review
-+ - Brainstorm 2-3 specific feature improvements relevant to a recipe generation app
-+ - For each idea, briefly explain:
-+   * How it would enhance user experience
-+   * How it might be implemented at a high level
-+   * Any dependencies or considerations
++ - Based on the specific code changes in this diff, suggest natural feature extensions or improvements
++ - Prioritize suggestions that build upon the code that was just modified
++ - Explain how each suggestion relates to the current implementation and changes
++ - Consider architectural implications within the Vite SPA and Supabase backend context
 
 ### 8. AI Developer Prompt
 - At the end of your review, include a section titled "# AI Developer Prompt" formatted as follows:
