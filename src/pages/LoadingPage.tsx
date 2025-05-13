@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ const LoadingPage: React.FC = () => {
   const location = useLocation();
   const [cancelClicked, setCancelClicked] = useState(false);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  const [generationAttempt, setGenerationAttempt] = useState(0);
   
   // Get store state and actions
   const { 
@@ -31,6 +33,8 @@ const LoadingPage: React.FC = () => {
   const isResumingGeneration = location.state?.resumingGeneration === true;
   
   useEffect(() => {
+    console.log("LoadingPage mounted");
+    
     // First, ensure we're in loading state
     setLoading(true);
     
@@ -76,6 +80,9 @@ const LoadingPage: React.FC = () => {
       setHasAttemptedLoad(true);
     }
     
+    return () => {
+      console.log("LoadingPage unmounting");
+    };
   }, [isResumingGeneration]);
   
   // Function to generate recipe with specific form data
@@ -92,7 +99,16 @@ const LoadingPage: React.FC = () => {
       
       // Generate the recipe
       console.log("Starting recipe generation with data:", recipeFormData);
-      const generatedRecipe = await generateQuickRecipe(recipeFormData);
+      
+      // Convert single string ingredient to array if needed
+      const formattedData = { 
+        ...recipeFormData,
+        ingredients: typeof recipeFormData.ingredients === 'string' 
+          ? [recipeFormData.ingredients] 
+          : recipeFormData.ingredients
+      };
+      
+      const generatedRecipe = await generateQuickRecipe(formattedData);
       
       clearInterval(progressInterval);
       
@@ -112,6 +128,20 @@ const LoadingPage: React.FC = () => {
     } catch (error) {
       console.error("Error generating recipe:", error);
       
+      // Check if we should retry (only once)
+      if (generationAttempt === 0) {
+        console.log("First attempt failed, retrying once...");
+        setGenerationAttempt(1);
+        
+        // Small delay before retry
+        setTimeout(() => {
+          generateRecipeWithData(recipeFormData);
+        }, 1000);
+        
+        return;
+      }
+      
+      // After retry or if it's already a retry, show the error
       // Specific timeout error handling
       let errorMessage = error.message || "Failed to generate recipe";
       let isTimeout = errorMessage.toLowerCase().includes('timeout');
@@ -122,6 +152,13 @@ const LoadingPage: React.FC = () => {
       }
       
       setError(errorMessage);
+      
+      // Show toast for better user experience
+      toast({
+        title: "Recipe generation failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
       
       // Navigate back to home with error and form data for retry
       navigate('/', { 
