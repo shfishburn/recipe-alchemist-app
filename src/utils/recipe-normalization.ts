@@ -1,3 +1,4 @@
+
 import { Ingredient, QuickRecipe } from "@/types/quick-recipe";
 
 // Function to normalize recipe response from edge function
@@ -53,10 +54,29 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     console.warn("Recipe data missing required fields:", data);
   }
   
-  // Enhanced ingredient processing with better validation
-  const ingredients = Array.isArray(data.ingredients) 
-    ? data.ingredients.map((ingredient: any) => normalizeIngredient(ingredient))
-    : [];
+  // Handle different response formats
+  const ingredients = data.ingredients?.map((ingredient: any) => {
+    // If already in the correct format with metric/imperial units
+    if (ingredient.qty_metric !== undefined || ingredient.qty_imperial !== undefined) {
+      return ingredient;
+    }
+    
+    // Otherwise normalize to our expected format
+    return {
+      qty: ingredient.qty,
+      unit: ingredient.unit,
+      // Add metric units (same as original if not specified)
+      qty_metric: ingredient.qty,
+      unit_metric: ingredient.unit,
+      // Add imperial units (same as original if not specified)
+      qty_imperial: ingredient.qty,
+      unit_imperial: ingredient.unit,
+      item: ingredient.item,
+      notes: ingredient.notes,
+      shop_size_qty: ingredient.shop_size_qty,
+      shop_size_unit: ingredient.shop_size_unit
+    };
+  }) || [];
   
   // Always ensure there's at least one ingredient if array is empty
   if (ingredients.length === 0) {
@@ -100,80 +120,3 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     isError: false
   };
 };
-
-// Helper function to normalize a single ingredient
-function normalizeIngredient(ingredient: any): Ingredient {
-  // Handle string ingredient
-  if (typeof ingredient === 'string') {
-    // Try to extract quantity, unit and item
-    const match = ingredient.trim().match(/^([\d./]+)?\s*([a-zA-Z]+)?\s*(.+)$/);
-    
-    if (match) {
-      const [, qty, unit, itemName] = match;
-      return {
-        qty: qty ? parseFloat(qty) : null,
-        unit: unit || '',
-        qty_metric: qty ? parseFloat(qty) : null,
-        unit_metric: unit || '',
-        qty_imperial: qty ? parseFloat(qty) : null,
-        unit_imperial: unit || '',
-        item: itemName || ingredient
-      };
-    } else {
-      // Just use the string as the item name
-      return {
-        qty: null,
-        unit: '',
-        qty_metric: null,
-        unit_metric: '',
-        qty_imperial: null,
-        unit_imperial: '',
-        item: ingredient
-      };
-    }
-  }
-  
-  // If null or undefined, return a default object
-  if (!ingredient) {
-    return {
-      item: "Unknown ingredient",
-      qty_metric: null,
-      unit_metric: "",
-      qty_imperial: null,
-      unit_imperial: ""
-    };
-  }
-  
-  // If already in the correct format with metric/imperial units
-  if (ingredient.qty_metric !== undefined || ingredient.qty_imperial !== undefined) {
-    // Still ensure all required fields exist
-    return {
-      item: ingredient.item || "Unknown ingredient",
-      qty: ingredient.qty,
-      unit: ingredient.unit || '',
-      qty_metric: ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty,
-      unit_metric: ingredient.unit_metric || ingredient.unit || '',
-      qty_imperial: ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty,
-      unit_imperial: ingredient.unit_imperial || ingredient.unit || '',
-      notes: ingredient.notes,
-      shop_size_qty: ingredient.shop_size_qty,
-      shop_size_unit: ingredient.shop_size_unit
-    };
-  }
-  
-  // Otherwise normalize to our expected format
-  return {
-    qty: ingredient.qty,
-    unit: ingredient.unit || '',
-    // Add metric units (same as original if not specified)
-    qty_metric: ingredient.qty,
-    unit_metric: ingredient.unit || '',
-    // Add imperial units (same as original if not specified)
-    qty_imperial: ingredient.qty,
-    unit_imperial: ingredient.unit || '',
-    item: ingredient.item || "Unknown ingredient",
-    notes: ingredient.notes,
-    shop_size_qty: ingredient.shop_size_qty,
-    shop_size_unit: ingredient.shop_size_unit
-  };
-}

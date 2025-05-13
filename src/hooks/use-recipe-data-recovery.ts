@@ -56,7 +56,6 @@ export function useRecipeDataRecovery() {
   
   /**
    * Stores recipe data with an ID in localStorage
-   * Returns the ID used for storage or null if storage failed
    */
   const storeRecipeWithId = useCallback((recipe: QuickRecipe, id?: string) => {
     try {
@@ -164,22 +163,11 @@ export function useRecipeDataRecovery() {
   
   /**
    * Ensures a recipe has an ID and is properly stored
-   * @param recipe The recipe to ensure has an ID
-   * @returns The recipe ID or a fallback generated ID if storage fails
    */
-  const ensureRecipeHasId = useCallback((recipe: QuickRecipe): string => {
-    // Try to store the recipe and get its ID
-    const storedId = storeRecipeWithId(recipe);
-    
-    // If storage failed, generate and return a new ID as fallback
-    // This ensures we always return a valid string ID
-    if (!storedId) {
-      console.warn('Recipe storage failed, using fallback ID generation');
-      return generateRecipeId();
-    }
-    
-    return storedId;
-  }, [storeRecipeWithId, generateRecipeId]);
+  const ensureRecipeHasId = useCallback((recipe: QuickRecipe): string | null => {
+    // Generate and store a new ID if one doesn't exist
+    return storeRecipeWithId(recipe);
+  }, [storeRecipeWithId]);
   
   // Return all the functions and state
   return {

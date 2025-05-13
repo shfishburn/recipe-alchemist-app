@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,7 +10,6 @@ import { cleanupUIState } from "@/utils/dom-cleanup";
 import { toast } from "sonner";
 import { authStateManager } from "@/lib/auth/auth-state-manager";
 import { useQuickRecipeStore } from "@/store/use-quick-recipe-store";
-import { QuickRecipe } from "@/types/quick-recipe";
 
 // For desktop
 import {
@@ -61,8 +61,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     // If we have a recipe in the store, make sure to use the backup
     // mechanism to ensure it survives page refreshes
     if (recipe) {
-      // Type assertion to ensure recipe is treated as a proper QuickRecipe
-      authStateManager.storeRecipeDataFallback(recipe as QuickRecipe);
+      authStateManager.storeRecipeDataFallback(recipe);
     }
     
     if (nextAction && !nextAction.executed) {
@@ -90,13 +89,15 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       } else if (type === 'generate-recipe' && data.formData) {
         toast.success("Successfully signed in! Resuming recipe generation...");
         
-        // Navigate to loading page for generation - this is critical
+        // Navigate based on the saved path
         requestAnimationFrame(() => {
-          navigate('/loading', { 
+          navigate(sourceUrl || '/quick-recipe', { 
             state: { 
               resumingGeneration: true,
-              formData: data.formData,
-              fromQuickRecipePage: true,
+              recipeData: {
+                formData: data.formData,
+                path: sourceUrl
+              },
               timestamp: Date.now() // Add timestamp to force navigation
             },
             replace: true
@@ -109,8 +110,8 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       const recipeBackup = authStateManager.getRecipeDataFallback();
       if (recipeBackup && recipeBackup.recipe) {
         console.log("Found recipe backup in localStorage", recipeBackup);
-        // Restore recipe to store - cast to QuickRecipe to fix type error
-        setRecipe(recipeBackup.recipe as QuickRecipe);
+        // Restore recipe to store
+        setRecipe(recipeBackup.recipe);
         
         // Navigate to recipe preview
         toast.success("Successfully signed in! Returning to your recipe...");

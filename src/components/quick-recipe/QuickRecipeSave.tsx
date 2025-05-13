@@ -8,11 +8,89 @@ import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
-import { transformRecipeForDB } from './utils/recipe-transform';
-import { useSaveRecipeState } from './hooks/use-save-recipe-state';
+
+// Define which fields are valid in the database and their mappings
+const FIELD_MAPPINGS: Record<string, string> = {
+  // Frontend camelCase to database snake_case mappings
+  prepTime: 'prep_time_min',
+  cookTime: 'cook_time_min',
+  cookingTip: 'cooking_tip',
+  flavorTags: 'flavor_tags',
+  scienceNotes: 'science_notes',
+  steps: 'instructions', // Map steps to instructions (they're the same content)
+  description: 'tagline', // Map description to tagline since description doesn't exist in DB
+};
+
+// Define a whitelist of valid database column names
+const VALID_DB_FIELDS = [
+  'id',
+  'title',
+  'tagline', // Only tagline exists in DB, not description
+  'ingredients',
+  'instructions',
+  'steps', // This will be transformed to instructions
+  'servings',
+  'prep_time_min',
+  'cook_time_min',
+  'nutrition',
+  'cooking_tip',
+  'cuisine',
+  'dietary',
+  'flavor_tags',
+  'science_notes',
+  'chef_notes',
+  'image_url',
+  'reasoning',
+  'original_request',
+  'version_number',
+  'previous_version_id',
+  'deleted_at',
+  'created_at',
+  'updated_at',
+  'slug',
+  'nutri_score',
+  'cuisine_category',
+  'user_id'
+];
 
 // Define the save-recipe action type
 const SAVE_RECIPE_ACTION: PendingActionType = 'save-recipe';
+
+/**
+ * Helper function to transform recipe data to match database schema
+ */
+function transformRecipeForDB(recipe: QuickRecipe): Record<string, unknown> {
+  const transformedRecipe: Record<string, unknown> = {};
+  
+  // Process all keys from the recipe
+  for (const key in recipe) {
+    // Skip null or undefined values
+    if (recipe[key as keyof QuickRecipe] === null || recipe[key as keyof QuickRecipe] === undefined) {
+      continue;
+    }
+    
+    // Skip functions and unsupported types
+    const value = recipe[key as keyof QuickRecipe];
+    if (typeof value === 'function' || typeof value === 'symbol') {
+      continue;
+    }
+    
+    // Check if we need to remap this field
+    const remappedKey = FIELD_MAPPINGS[key] || key;
+    
+    // Only include fields that are valid in the database
+    if (VALID_DB_FIELDS.includes(remappedKey)) {
+      // Special case: handle steps -> instructions mapping
+      if (key === 'steps' && Array.isArray(recipe[key as keyof QuickRecipe])) {
+        transformedRecipe['instructions'] = recipe[key as keyof QuickRecipe];
+      } else {
+        transformedRecipe[remappedKey] = recipe[key as keyof QuickRecipe];
+      }
+    }
+  }
+  
+  return transformedRecipe;
+}
 
 export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
@@ -22,7 +100,6 @@ export function useQuickRecipeSave() {
   const navigate = useNavigate();
   const location = useLocation();
   const { storeRecipeWithId, ensureRecipeHasId, getRecipeIdFromUrl } = useRecipeDataRecovery();
-  const { storeRecipeForAuth, clearStoredRecipes } = useSaveRecipeState();
 
   const saveRecipe = useCallback(async (recipe: QuickRecipe, bypassAuth = false) => {
     try {
@@ -30,22 +107,71 @@ export function useQuickRecipeSave() {
       
       // Check if user is logged in
       if (!session?.user && !bypassAuth) {
-        // Handle auth flow
-        const recipeId = ensureRecipeHasId(recipe);
-        storeRecipeForAuth(recipe, recipeId, location.pathname);
-        
-        toast.info("Please sign in to save your recipe", { 
-          duration: 4000,
-          action: {
-            label: "Sign In",
-            onClick: openAuthDrawer
+        // Store the current recipe in authStateManager before redirecting to auth
+        try {
+          // Ensure recipe has an ID
+          const recipeId = ensureRecipeHasId(recipe);
+          
+          // Queue the action using authStateManager
+          const actionId = authStateManager.queueAction({
+            type: SAVE_RECIPE_ACTION,
+            data: { recipe, recipeId },
+            sourceUrl: location.pathname
+          });
+          
+          // Also store in localStorage with ID for more reliable recovery
+          if (recipeId) {
+            storeRecipeWithId(recipe, recipeId);
+            console.log("Stored recipe with ID for auth:", recipeId);
           }
-        });
-        
-        // Open auth drawer
-        openAuthDrawer();
-        setIsSaving(false);
-        return null;
+          
+          // Also use traditional fallback
+          authStateManager.storeRecipeDataFallback(recipe);
+          
+          console.log("Stored recipe save request with action ID:", actionId);
+          
+          // Store the current URL for more robust state preservation
+          // If we have a recipe ID, include it in the path
+          let currentUrl = location.pathname;
+          const urlRecipeId = getRecipeIdFromUrl() || recipeId;
+          
+          // If current path doesn't already have the ID and we have one, use it
+          if (urlRecipeId && !currentUrl.includes(`/recipe-preview/${urlRecipeId}`)) {
+            // Check if we're on the recipe-preview base path
+            if (currentUrl === '/recipe-preview') {
+              currentUrl = `/recipe-preview/${urlRecipeId}`;
+            }
+          }
+          
+          authStateManager.setRedirectAfterAuth(currentUrl, {
+            state: { 
+              pendingSave: true,
+              resumingAfterAuth: true,
+              recipeId: urlRecipeId,
+              recipeData: recipe, // Include recipe directly in state
+              timestamp: Date.now()
+            }
+          });
+          
+          toast.info("Please sign in to save your recipe", { 
+            duration: 4000,
+            action: {
+              label: "Sign In",
+              onClick: openAuthDrawer
+            }
+          });
+          
+          // Open auth drawer
+          openAuthDrawer();
+          
+          setIsSaving(false);
+          return null;
+        } catch (err) {
+          console.error("Error storing recipe for auth:", err);
+          toast.error("Unable to prepare recipe for saving");
+          setIsSaving(false);
+          return null;
+        }
       }
       
       // Add user ID to the recipe
@@ -82,8 +208,21 @@ export function useQuickRecipeSave() {
           // Success!
           success = true;
           
-          // Clear data after successful save
-          clearStoredRecipes();
+          // Clear any fallbacks since save succeeded
+          authStateManager.clearRecipeDataFallback();
+          
+          // Mark any pending actions as executed
+          const pendingActions = authStateManager.getPendingActions();
+          const saveActions = pendingActions.filter(a => a.type === SAVE_RECIPE_ACTION);
+          saveActions.forEach(action => {
+            authStateManager.markActionExecuted(action.id);
+          });
+          
+          // Also clear any recipe-specific cached data
+          const recipeId = getRecipeIdFromUrl();
+          if (recipeId) {
+            localStorage.removeItem(`recipe_${recipeId}`);
+          }
           
           // Load the saved recipe
           setSavedRecipe(recipe);
@@ -111,8 +250,7 @@ export function useQuickRecipeSave() {
     } finally {
       setIsSaving(false);
     }
-  }, [session, openAuthDrawer, ensureRecipeHasId, storeRecipeWithId, getRecipeIdFromUrl, 
-      storeRecipeForAuth, clearStoredRecipes]);
+  }, [session, openAuthDrawer, navigate, location, ensureRecipeHasId, storeRecipeWithId, getRecipeIdFromUrl]);
 
   return {
     saveRecipe,

@@ -46,7 +46,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   const handleLogin = useCallback(() => {
     // Store the modification request for later execution
     authStateManager.queueAction({
-      type: 'modify-recipe' as 'other', // Type cast to a valid PendingActionType
+      type: 'modify-recipe',
       data: { request, immediate, recipe },
       sourceUrl: window.location.pathname
     });
@@ -60,7 +60,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     if (status === 'not-authenticated') {
       // Save the current state
       authStateManager.queueAction({
-        type: 'modify-recipe' as 'other', // Type cast to a valid PendingActionType
+        type: 'modify-recipe',
         data: { request, immediate, recipe },
         sourceUrl: window.location.pathname
       });
@@ -86,7 +86,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     if (!session) {
       // Store the request for after authentication
       authStateManager.queueAction({
-        type: 'modify-recipe' as 'other', // Type cast to a valid PendingActionType
+        type: 'modify-recipe',
         data: { request, immediate, recipe },
         sourceUrl: window.location.pathname
       });

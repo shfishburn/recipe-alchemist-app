@@ -1,429 +1,125 @@
 
-import { serve } from "https://deno.land/std@0.131.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+/*
+ * DO NOT MODIFY THIS FILE DIRECTLY
+ * Last updated: 2025-05-12T18:00:00Z
+ * 
+ * This file manages the recipe generation edge function with proper CORS handling.
+ * It uses dynamic origin detection for proper cross-origin resource sharing.
+ * Any changes should be carefully tested to ensure proper API connectivity.
+ */
 
-// Define timeout duration in milliseconds (2 minutes)
-const TIMEOUT_DURATION = 120000;
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { handleRequest } from "./request-handler.ts";
+import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 
+// Main entry point for the edge function
 serve(async (req) => {
-  // Handle CORS for browser requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  console.log("Edge function called: generate-quick-recipe");
+  
+  // Handle CORS preflight requests with origin-aware headers
+  if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
+    return new Response(null, { 
+      headers: getCorsHeadersWithOrigin(req) 
+    });
   }
   
   try {
-    // Parse request body
-    const requestData = await req.json();
-    console.log("Received request data:", JSON.stringify(requestData));
+    // Get debug info from headers if present
+    const debugInfo = req.headers.get("x-debug-info") || "no-debug-info";
+    console.log(`Request received with debug info: ${debugInfo}`);
     
-    // Store user id if available for authentication
-    const userId = requestData.user_id;
-    
-    // For resuming after auth - store metadata
-    const authContext = {
-      resumable: true,
-      formData: requestData,
-      timestamp: Date.now()
-    };
-
-    // Check if OpenAI API key is available
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      console.error("Missing OPENAI_API_KEY environment variable");
+    // Read the request body ONCE and parse it
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.log("Raw request body: EMPTY REQUEST BODY");
+        console.error("Empty request body received");
+        return new Response(
+          JSON.stringify({
+            error: "Empty request body",
+            details: "Request body is empty or missing"
+          }),
+          { 
+            status: 400, 
+            headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
+          }
+        );
+      }
+      
+      try {
+        requestBody = JSON.parse(bodyText);
+        console.log("Parsed request body:", JSON.stringify(requestBody).substring(0, 100) + "...");
+      } catch (parseError) {
+        console.error("Error parsing request body:", parseError);
+        return new Response(
+          JSON.stringify({
+            error: "Invalid request format: Could not parse JSON body",
+            details: String(parseError)
+          }),
+          { 
+            status: 400, 
+            headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
+          }
+        );
+      }
+    } catch (bodyError) {
+      console.error("Error reading request body:", bodyError);
       return new Response(
         JSON.stringify({
-          error: "Configuration error: OpenAI API key is missing",
-          isError: true,
-          status: 500,
-          auth_context: authContext
+          error: "Could not read request body",
+          details: String(bodyError)
         }),
         { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-          status: 500
+          status: 400, 
+          headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
         }
       );
     }
     
-    // Generate response with timeout logic
-    const responseData = await generateWithTimeout(requestData);
+    // Check if OpenAI API key is available
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      console.error("OPENAI_API_KEY environment variable not set");
+      return new Response(
+        JSON.stringify({
+          error: "API configuration error",
+          details: "OpenAI API key is not configured"
+        }),
+        { 
+          status: 500, 
+          headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } 
+        }
+      );
+    }
     
-    // Return the generated recipe
-    return new Response(
-      JSON.stringify({
-        ...responseData,
-        auth_context: authContext
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-debug-info',
-        },
-        status: 200
-      }
-    );
-  } catch (error) {
-    // Handle errors with more detailed logging
-    console.error("Error in edge function:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const statusCode = errorMessage.includes('timeout') ? 408 : 500;
+    // Extract embedding model from request body
+    const embeddingModel = requestBody?.embeddingModel || "text-embedding-ada-002"; // Default model
+    console.log(`Using embedding model: ${embeddingModel}`);
+    
+    // Pass the parsed body to handleRequest instead of the original request
+    return await handleRequest(req, requestBody, debugInfo, embeddingModel);
+  } catch (err) {
+    console.error("Quick recipe generation error:", err);
+    
+    // Create user-friendly error message
+    let errorMessage = "Unexpected error occurred while generating recipe";
+    let errorDetails = String(err);
+    
+    if (err instanceof Error) {
+      errorMessage = err.message || errorMessage;
+      errorDetails = err.stack || errorDetails;
+    }
     
     return new Response(
       JSON.stringify({
         error: errorMessage,
-        isError: true,
-        status: statusCode,
-        details: "An error occurred while generating the recipe. Please try again."
+        details: errorDetails,
+        debugInfo: "error-handler"
       }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-debug-info',
-        },
-        status: statusCode
-      }
+      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
     );
   }
 });
-
-// Helper function to generate recipe with timeout protection
-async function generateWithTimeout(requestData) {
-  const { ingredients, max_calories, allowed_time } = requestData;
-
-  // Validate input data
-  if (!ingredients) {
-    console.error("Missing ingredients");
-    throw new Error('Missing ingredients. Please provide at least one ingredient.');
-  }
-
-  // Enhanced input validation
-  const ingredientsArray = (() => {
-    if (typeof ingredients === 'string') {
-      return ingredients.trim() ? [ingredients.trim()] : null;
-    }
-    if (Array.isArray(ingredients)) {
-      return ingredients.filter(i => typeof i === 'string' && i.trim());
-    }
-    return null;
-  })();
-
-  // Validate after processing
-  if (!ingredientsArray || ingredientsArray.length === 0) {
-    throw new Error('Invalid ingredients format or empty ingredients. Please provide valid ingredients.');
-  }
-
-  // Construct the prompt
-  let prompt = `Generate a quick recipe based on the following ingredients: ${ingredientsArray.join(', ')}.`;
-  if (max_calories) {
-    prompt += ` The recipe should have no more than ${max_calories} calories.`;
-  }
-  prompt += " Provide the recipe title, a list of ingredients with quantities, and numbered steps to prepare the dish.";
-
-  // Set up the request to OpenAI
-  const openaiUrl = 'https://api.openai.com/v1/chat/completions';
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-
-  if (!openaiApiKey) {
-    throw new Error('OpenAI API key is missing.');
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    console.log('Timeout occurred');
-    controller.abort();
-  }, allowed_time || TIMEOUT_DURATION);
-
-  try {
-    console.log("Sending request to OpenAI with prompt:", prompt.substring(0, 100) + "...");
-    
-    const openaiResponse = await fetch(openaiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 1000,
-        n: 1,
-        stop: null,
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!openaiResponse.ok) {
-      console.error('OpenAI API error:', openaiResponse.status, openaiResponse.statusText);
-      let errorDetails;
-      try {
-        errorDetails = await openaiResponse.text();
-      } catch (e) {
-        errorDetails = "Could not read error details";
-      }
-      throw new Error(`OpenAI API request failed with status ${openaiResponse.status}: ${errorDetails}`);
-    }
-
-    const openaiData = await openaiResponse.json();
-    console.log("Received OpenAI response:", JSON.stringify(openaiData).substring(0, 100) + "...");
-
-    if (!openaiData.choices || openaiData.choices.length === 0) {
-      throw new Error('No recipe generated by OpenAI.');
-    }
-
-    const recipeText = openaiData.choices[0].message.content.trim();
-
-    // Parse the generated recipe text
-    const recipe = parseRecipe(recipeText);
-    
-    // Return the generated recipe
-    return recipe;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error('Error generating recipe:', error);
-    throw error;
-  }
-}
-
-function parseRecipe(recipeText) {
-    console.log("Parsing recipe text:", recipeText.substring(0, 100) + "...");
-    
-    const recipe = {
-        title: '',
-        ingredients: [],
-        steps: []
-    };
-
-    const lines = recipeText.split('\n').map(line => line.trim()).filter(line => line !== '');
-
-    let i = 0;
-    let currentSection = null;
-
-    // Extract title - usually the first line
-    if (i < lines.length) {
-        // Clean up title - remove common prefixes and markdown
-        recipe.title = lines[i]
-            .replace(/^#*\s*|Recipe Title:|\s*$/gi, '') // Remove markdown and "Recipe Title:" prefix
-            .replace(/^Title:|\s*$/gi, '')              // Remove "Title:" prefix
-            .trim();
-        i++;
-    }
-
-    // Process the rest of the lines
-    while (i < lines.length) {
-        const line = lines[i];
-        
-        // Check for section headers with more patterns
-        if (line.match(/^ingredients:?\s*$/i) || line.match(/^ingredients\s*list:?\s*$/i)) {
-            currentSection = 'ingredients';
-            i++;
-            continue;
-        } else if (line.match(/^instructions:?\s*$/i) || line.match(/^directions:?\s*$/i) || 
-                  line.match(/^steps:?\s*$/i) || line.match(/^preparation:?\s*$/i) || 
-                  line.match(/^method:?\s*$/i)) {
-            currentSection = 'steps';
-            i++;
-            continue;
-        }
-        
-        // Process content based on current section
-        if (currentSection === 'ingredients') {
-            // Strip out bullets, numbers, etc.
-            const cleanedLine = line.replace(/^[-*•]|\d+[\.\)\]]\s+/, '').trim();
-            if (cleanedLine) {
-                // Enhanced regex for ingredient parsing that handles more unit formats
-                // This handles things like "1 1/2 cups", "2-3 tbsp", "1.5 kg", etc.
-                try {
-                    // More robust regex pattern for parsing ingredients
-                    const match = cleanedLine.match(
-                        /^([\d./\s-]+)?\s*([a-zA-Z.]+\.?|(?:tbsp|tsp|oz|lb|kg|g|ml|l))?\s*(?:of\s+)?(.+)$/i
-                    );
-                    
-                    if (match && match[3]) { // Ensure we have an item name
-                        const [, qtyStr, unit, item] = match;
-                        
-                        // Clean and parse the quantity
-                        let qty = null;
-                        if (qtyStr) {
-                            // Handle ranges like "2-3" by taking average
-                            if (qtyStr.includes('-')) {
-                                const [min, max] = qtyStr.split('-').map(num => parseFloat(num.trim()));
-                                qty = (min + max) / 2;
-                            } else {
-                                // Handle fractions and mixed numbers
-                                qty = qtyStr.includes('/') ? 
-                                    eval(qtyStr.replace(/\s+/g, '')) : // safely evaluate fraction
-                                    parseFloat(qtyStr.trim());
-                            }
-                        }
-                        
-                        recipe.ingredients.push({
-                            qty: qty,
-                            unit: unit ? unit.trim() : '',
-                            item: item.trim(),
-                            // Add metric and imperial units (same as original since we don't convert)
-                            qty_metric: qty,
-                            unit_metric: unit ? unit.trim() : '',
-                            qty_imperial: qty,
-                            unit_imperial: unit ? unit.trim() : ''
-                        });
-                    } else {
-                        // If parsing fails, use the whole string as the item
-                        recipe.ingredients.push({
-                            item: cleanedLine,
-                            qty_metric: null,
-                            unit_metric: '',
-                            qty_imperial: null,
-                            unit_imperial: ''
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error parsing ingredient:", cleanedLine, error);
-                    // Fallback to simple parsing
-                    recipe.ingredients.push({
-                        item: cleanedLine,
-                        qty_metric: null,
-                        unit_metric: '',
-                        qty_imperial: null,
-                        unit_imperial: ''
-                    });
-                }
-            }
-        } else if (currentSection === 'steps') {
-            // Strip out numbers if present, but not from the content
-            const cleanedLine = line.replace(/^\d+[.)\]]\s+/, '').trim();
-            if (cleanedLine) {
-                recipe.steps.push(cleanedLine);
-            }
-        } else if (!currentSection && line.match(/^[-*•]|\d+\.\s+/)) {
-            // If we haven't identified a section but line starts with a bullet or number,
-            // assume it's an ingredient
-            const cleanedLine = line.replace(/^[-*•]|\d+\.\s+/, '').trim();
-            try {
-                const match = cleanedLine.match(
-                    /^([\d./\s-]+)?\s*([a-zA-Z.]+\.?|(?:tbsp|tsp|oz|lb|kg|g|ml|l))?\s*(?:of\s+)?(.+)$/i
-                );
-                
-                if (match && match[3]) {
-                    const [, qtyStr, unit, item] = match;
-                    
-                    // Handle quantity parsing
-                    let qty = null;
-                    if (qtyStr) {
-                        if (qtyStr.includes('-')) {
-                            const [min, max] = qtyStr.split('-').map(num => parseFloat(num.trim()));
-                            qty = (min + max) / 2;
-                        } else {
-                            qty = qtyStr.includes('/') ? 
-                                eval(qtyStr.replace(/\s+/g, '')) :
-                                parseFloat(qtyStr.trim());
-                        }
-                    }
-                    
-                    recipe.ingredients.push({
-                        qty: qty,
-                        unit: unit ? unit.trim() : '',
-                        item: item.trim(),
-                        qty_metric: qty,
-                        unit_metric: unit ? unit.trim() : '',
-                        qty_imperial: qty,
-                        unit_imperial: unit ? unit.trim() : ''
-                    });
-                } else {
-                    recipe.ingredients.push({
-                        item: cleanedLine,
-                        qty_metric: null,
-                        unit_metric: '',
-                        qty_imperial: null,
-                        unit_imperial: ''
-                    });
-                }
-            } catch (error) {
-                console.error("Error parsing implicit ingredient:", cleanedLine, error);
-                recipe.ingredients.push({
-                    item: cleanedLine,
-                    qty_metric: null,
-                    unit_metric: '',
-                    qty_imperial: null,
-                    unit_imperial: ''
-                });
-            }
-        }
-        
-        i++;
-    }
-
-    // If the steps array is empty but we have content that might be steps,
-    // try to extract steps more aggressively
-    if (recipe.steps.length === 0) {
-        // Look for numbered items after ingredients
-        let foundIngredients = false;
-        for (const line of lines) {
-            if (line.toLowerCase().includes('ingredients')) {
-                foundIngredients = true;
-                continue;
-            }
-            
-            if (foundIngredients && line.match(/^\d+\.\s+/)) {
-                const step = line.replace(/^\d+\.\s+/, '').trim();
-                if (step && !recipe.steps.includes(step)) {
-                    recipe.steps.push(step);
-                }
-            }
-        }
-    }
-
-    // Final fallback: if we still have no steps, take any remaining lines after ingredients
-    if (recipe.steps.length === 0 && recipe.ingredients.length > 0) {
-        let ingredientsSection = false;
-        for (const line of lines) {
-            if (line.toLowerCase().includes('ingredients')) {
-                ingredientsSection = true;
-                continue;
-            }
-            
-            if (ingredientsSection && !line.toLowerCase().includes('ingredients') && line !== recipe.title) {
-                // Check if this line isn't actually describing an ingredient
-                let isIngredientLine = false;
-                for (const ingredient of recipe.ingredients) {
-                    if (typeof ingredient.item === 'string' && line.includes(ingredient.item)) {
-                        isIngredientLine = true;
-                        break;
-                    }
-                }
-                
-                if (!isIngredientLine) {
-                    recipe.steps.push(line);
-                }
-            }
-        }
-    }
-
-    // Final validation - ensure all ingredients have required properties
-    recipe.ingredients = recipe.ingredients.map(ingredient => {
-        // Ensure all object properties are present
-        return {
-            item: typeof ingredient.item === 'string' ? ingredient.item : 'Unknown ingredient',
-            qty: ingredient.qty !== undefined ? ingredient.qty : null,
-            unit: ingredient.unit || '',
-            qty_metric: ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty,
-            unit_metric: ingredient.unit_metric || ingredient.unit || '',
-            qty_imperial: ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty,
-            unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
-        };
-    });
-
-    console.log("Parsed recipe:", {
-        title: recipe.title,
-        ingredientsCount: recipe.ingredients.length,
-        stepsCount: recipe.steps.length
-    });
-    
-    return recipe;
-}

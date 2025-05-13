@@ -1,50 +1,132 @@
 
-/**
- * Utility functions for formatting recipe requests
- */
-
 import { QuickRecipeFormData } from '@/types/quick-recipe';
 
-export const formatRequestBody = (formData: QuickRecipeFormData) => {
-  // Extract values from form data with defaults
-  const {
-    mainIngredient,
-    cuisine = ['any'],
-    dietary = [],
-    servings = 2,
-    maxCalories,
-  } = formData;
+// Functions to format and process form data for API requests
+
+// Determine cuisine category from cuisine values - used for API calls only
+export const getCuisineCategory = (cuisineValue: string): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" => {
+  // This function now matches database trigger logic
+  if (!cuisineValue || typeof cuisineValue !== 'string') {
+    return "Global";
+  }
   
-  // Process ingredients - we now use mainIngredient since ingredients doesn't exist in the type
-  let ingredients: string[] = [];
+  const cuisine = cuisineValue.toLowerCase().trim();
   
-  if (mainIngredient) {
-    // If we have a specific mainIngredient field, use it
-    if (typeof mainIngredient === 'string') {
-      ingredients.push(mainIngredient);
-    } else if (mainIngredient && Array.isArray(mainIngredient)) {
-      // If it's an array, add all items
-      (mainIngredient as string[]).forEach(item => {
-        if (item && typeof item === 'string') {
-          ingredients.push(item);
-        }
-      });
+  if (['mexican', 'cajun-creole', 'midwest', 'new-england', 'pacific-northwest', 'southern', 'southwestern', 'tex-mex'].includes(cuisine)) {
+    return "Regional American";
+  } else if (['british-irish', 'eastern-european', 'french', 'german', 'greek', 'italian', 'mediterranean', 'scandinavian-nordic', 'spanish'].includes(cuisine)) {
+    return "European";
+  } else if (['chinese', 'indian', 'japanese', 'korean', 'southeast-asian', 'thai', 'vietnamese'].includes(cuisine)) {
+    return "Asian";
+  } else if (['middle-eastern', 'lebanese', 'turkish', 'persian', 'moroccan'].includes(cuisine)) {
+    return "Middle Eastern";
+  } else if (['gluten-free', 'keto', 'low-fodmap', 'paleo', 'plant-based', 'vegetarian', 'whole30'].includes(cuisine)) {
+    return "Dietary Styles";
+  } else {
+    return "Global";
+  }
+};
+
+// Process cuisine values properly to match database enum values
+export const processCuisineValue = (cuisineValue: string | string[]): string => {
+  // Safety check for null or undefined
+  if (cuisineValue === null || cuisineValue === undefined) {
+    console.log("Cuisine value is null or undefined, defaulting to 'any'");
+    return "any";
+  }
+  
+  if (typeof cuisineValue === 'string') {
+    const trimmedValue = cuisineValue.trim().toLowerCase(); // Always normalize to lowercase
+    
+    if (trimmedValue === '' || trimmedValue.toLowerCase() === 'any') {
+      console.log("Processing cuisine value 'any' or empty string to 'any'");
+      return "any";
+    } else {
+      // Return the normalized value - the database trigger will handle categorization
+      console.log(`Using normalized cuisine value: "${trimmedValue}"`);
+      return trimmedValue;
     }
   }
   
-  // Ensure we have at least one ingredient
-  if (ingredients.length === 0) {
-    ingredients = ['chef\'s choice'];
+  if (Array.isArray(cuisineValue)) {
+    if (cuisineValue.length === 0) {
+      console.log("Empty cuisine array, returning 'any'");
+      return "any";
+    }
+    
+    // Process array of values - take the first valid one or default to "any"
+    const filteredValues = cuisineValue.filter(Boolean).map(v => typeof v === 'string' ? v.trim().toLowerCase() : v);
+    console.log(`Processing array cuisine value with ${filteredValues.length} items:`, filteredValues);
+    
+    // Return the first value from the array
+    if (filteredValues.length > 0) {
+      const firstValue = filteredValues[0];
+      if (typeof firstValue === 'string') {
+        console.log(`Using first value from cuisine array: "${firstValue}"`);
+        return firstValue;
+      }
+    }
+    
+    return "any";
   }
   
-  // Format the request body
+  console.log(`Unknown cuisine value type: ${typeof cuisineValue}, value:`, cuisineValue);
+  return "any";
+};
+
+// Process dietary values properly
+export const processDietaryValue = (dietaryValue: string | string[]): string => {
+  // Safety check for null or undefined
+  if (dietaryValue === null || dietaryValue === undefined) {
+    return "";
+  }
+  
+  if (typeof dietaryValue === 'string') {
+    const trimmedValue = dietaryValue.trim();
+    
+    if (trimmedValue.toLowerCase() === 'any' || trimmedValue === '') {
+      return "";
+    } else if (trimmedValue) {
+      return trimmedValue.split(',').map(d => d.trim()).filter(Boolean).join(', ');
+    }
+    return "";
+  }
+  
+  if (Array.isArray(dietaryValue)) {
+    return dietaryValue.filter(Boolean).map(v => typeof v === 'string' ? v.trim() : v).join(', ');
+  }
+  
+  return "";
+};
+
+// Format request body for the API call
+export const formatRequestBody = (formData: QuickRecipeFormData) => {
+  // Handle array and string formats consistently
+  let cuisineValue = formData.cuisine;
+  console.log("Original cuisine value in formatRequestBody:", cuisineValue);
+  
+  if (Array.isArray(cuisineValue) && cuisineValue.length > 0) {
+    // Use first selected cuisine if it's an array
+    cuisineValue = cuisineValue[0];
+    console.log("Using first value from cuisine array:", cuisineValue);
+  } else if (Array.isArray(cuisineValue) && cuisineValue.length === 0) {
+    cuisineValue = "any";
+    console.log("Empty cuisine array, using 'any'");
+  }
+  
+  const cuisineString = processCuisineValue(cuisineValue);
+  const dietaryString = processDietaryValue(formData.dietary);
+  const cuisineCategory = getCuisineCategory(cuisineString);
+  
+  console.log(`Format request body - cuisine: "${cuisineString}", category: "${cuisineCategory}"`);
+  
+  // Define the request body with properly formatted values
   return {
-    ingredients,
-    cuisine: Array.isArray(cuisine) ? cuisine : [cuisine],
-    dietary: Array.isArray(dietary) ? dietary : [dietary],
-    servings: parseInt(servings as any) || 2,
-    max_calories: maxCalories ? parseInt(maxCalories as any) : undefined,
-    allow_time: 120000, // 2 minutes
-    user_id: null // Will be set by the server if authenticated
+    cuisine: cuisineString || "any",
+    dietary: dietaryString || "",
+    mainIngredient: formData.mainIngredient.trim(),
+    servings: formData.servings || 2,
+    maxCalories: formData.maxCalories,
+    cuisineCategory: cuisineCategory
   };
 };

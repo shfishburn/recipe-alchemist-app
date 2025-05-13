@@ -56,7 +56,6 @@ export const fetchFromEdgeFunction = async (payload: any) => {
     try {
       // Get authentication token
       const token = await getAuthToken();
-      console.log("Got auth token:", token ? "token exists" : "no token");
       
       // Call the edge function directly with timeout
       // IMPORTANT: Added credentials: 'omit' to prevent sending auth cookies/headers
@@ -64,7 +63,8 @@ export const fetchFromEdgeFunction = async (payload: any) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Remove x-debug-info header which is causing CORS issues
+          // Using lowercase header name to match CORS configuration
+          'x-debug-info': `direct-fetch-${Date.now()}`,
           // Add explicit Authorization header with token
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
@@ -137,7 +137,7 @@ export const fetchFromSupabaseFunctions = async (payload: any, token: string) =>
     const result = await callSupabaseFunction('generate-quick-recipe', {
       payload,
       token,
-      // Remove debug tag which is causing CORS issues
+      debugTag: 'fetch-from-functions'
     });
     
     const requestEndTime = Date.now();
