@@ -82,14 +82,22 @@ function safelyStoreRedirect(pathname: string, options: {
 }): void {
   // Only store internal paths (no protocol/domain/etc) and prevent path traversal
   if (pathname.startsWith('/') && !pathname.includes('..')) {
+    // Enhanced path normalization to prevent path traversal patterns
     // Normalize the path to prevent other path traversal patterns
-    const normalizedPath = pathname.replace(/\/+/g, '/');
+    const normalizedPath = pathname
+      .replace(/\/+/g, '/') // Replace multiple slashes with single slash
+      .replace(/\.\//g, '/') // Replace "./" with just "/"
+      .split('/')
+      .filter(segment => segment !== '.' && segment !== '') // Remove "." and empty segments
+      .join('/');
     
-    if (normalizedPath.startsWith('/')) {
-      authStateManager.setRedirectAfterAuth(normalizedPath, options);
-      console.log("Storing redirect location:", normalizedPath);
+    const finalPath = normalizedPath ? `/${normalizedPath}` : '/';
+    
+    if (finalPath.startsWith('/')) {
+      authStateManager.setRedirectAfterAuth(finalPath, options);
+      console.log("Storing redirect location:", finalPath);
     } else {
-      console.warn("Path normalization resulted in unsafe path:", normalizedPath);
+      console.warn("Path normalization resulted in unsafe path:", finalPath);
       authStateManager.setRedirectAfterAuth('/', options);
     }
   } else {
