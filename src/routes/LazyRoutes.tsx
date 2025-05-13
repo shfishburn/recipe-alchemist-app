@@ -41,5 +41,5 @@ export const NotFound = createLazyComponent(() => import("@/pages/NotFound"));
 // Loading page route
 export const LoadingPage = createLazyComponent(() => import("@/pages/LoadingPage"));
 
-// New Recipe Preview page route
+// Recipe Preview page route
 export const RecipePreviewPage = createLazyComponent(() => import("@/pages/RecipePreviewPage"));
