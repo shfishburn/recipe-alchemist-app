@@ -26,6 +26,14 @@ const initializeApp = () => {
         </HelmetProvider>
       </React.StrictMode>
     );
+
+    // Clear any debug/test UI that might be showing
+    const debugElements = document.querySelectorAll('.debug-overlay, .test-output, .sandbox-debug');
+    debugElements.forEach(el => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
   } catch (error) {
     console.error('Failed to render application:', error);
     
