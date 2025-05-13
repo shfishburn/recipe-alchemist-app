@@ -360,6 +360,52 @@ export class AuthStateManager {
       console.log('All pending actions cleared');
     }
   }
+
+  /**
+   * Store recipe data in localStorage as a fallback mechanism
+   * This helps with scenarios where sessionStorage might be cleared
+   * @param recipeData - The recipe data to store
+   */
+  public storeRecipeDataFallback(recipeData: any): void {
+    try {
+      localStorage.setItem('recipe_backup', JSON.stringify({
+        recipe: recipeData,
+        timestamp: Date.now(),
+        sourceUrl: window.location.pathname
+      }));
+      console.log('Recipe backup stored in localStorage');
+    } catch (error) {
+      console.error('Failed to store recipe backup:', error);
+    }
+  }
+
+  /**
+   * Retrieve recipe data from localStorage fallback
+   * @returns The stored recipe data or null if none exists
+   */
+  public getRecipeDataFallback(): { recipe: any, timestamp: number, sourceUrl: string } | null {
+    try {
+      const storedData = localStorage.getItem('recipe_backup');
+      if (storedData) {
+        return JSON.parse(storedData);
+      }
+    } catch (error) {
+      console.error('Failed to retrieve recipe backup:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Clear recipe data from localStorage fallback
+   */
+  public clearRecipeDataFallback(): void {
+    try {
+      localStorage.removeItem('recipe_backup');
+      console.log('Recipe backup cleared from localStorage');
+    } catch (error) {
+      console.error('Failed to clear recipe backup:', error);
+    }
+  }
 }
 
 // Create and export a singleton instance

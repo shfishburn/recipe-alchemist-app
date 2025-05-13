@@ -28,6 +28,9 @@ export function useRecipeSaveState() {
         sourceUrl: window.location.pathname
       });
       
+      // Also store in localStorage as a fallback mechanism
+      authStateManager.storeRecipeDataFallback(recipe);
+      
       console.log("Stored pending recipe with action ID:", actionId);
       return true;
     } catch (error) {
@@ -57,6 +60,16 @@ export function useRecipeSaveState() {
         };
       }
       
+      // Try localStorage fallback if no pending action
+      const recipeBackup = authStateManager.getRecipeDataFallback();
+      if (recipeBackup && recipeBackup.recipe) {
+        return {
+          recipe: recipeBackup.recipe as QuickRecipe,
+          timestamp: recipeBackup.timestamp,
+          sourceUrl: recipeBackup.sourceUrl
+        };
+      }
+      
       return null;
     } catch (error) {
       console.error('Failed to retrieve pending recipe:', error);
@@ -77,6 +90,9 @@ export function useRecipeSaveState() {
       saveActions.forEach(action => {
         authStateManager.markActionExecuted(action.id);
       });
+      
+      // Also clear localStorage backup
+      authStateManager.clearRecipeDataFallback();
       
       console.log(`Cleared ${saveActions.length} pending recipe actions`);
     } catch (error) {
@@ -116,8 +132,20 @@ export function useRecipeSaveState() {
    * Request authentication before saving
    */
   const requestAuthForSave = (recipe: QuickRecipe) => {
+    // Store the current URL as a URL parameter for more robust state preservation
+    const currentUrl = window.location.pathname;
+    
     // Store the recipe for later
     if (savePendingRecipe(recipe)) {
+      // Set the redirect URL for auth return
+      authStateManager.setRedirectAfterAuth(currentUrl, {
+        state: {
+          pendingSave: true,
+          resumingAfterAuth: true,
+          timestamp: Date.now()
+        }
+      });
+      
       toast.info("Please sign in to save your recipe", {
         duration: 4000,
         action: {

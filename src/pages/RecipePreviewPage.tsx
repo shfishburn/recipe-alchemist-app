@@ -18,6 +18,7 @@ const RecipePreviewPage: React.FC = () => {
   const isLoading = useQuickRecipeStore(state => state.isLoading);
   const storeSetLoading = useQuickRecipeStore(state => state.setLoading);
   const storeSetError = useQuickRecipeStore(state => state.setError);
+  const setRecipe = useQuickRecipeStore(state => state.setRecipe);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,6 +42,31 @@ const RecipePreviewPage: React.FC = () => {
   // Check if we're resuming from authentication
   const isResuming = location.state?.resumingAfterAuth === true;
   const hasPendingSave = location.state?.pendingSave === true;
+  const hasRecipeData = location.state?.recipeData || null;
+
+  // Check for recipe data in location state - this is important for recipe restoration
+  useEffect(() => {
+    // If we have recipe data in location state AND we don't have a recipe in the store,
+    // restore the recipe
+    if (hasRecipeData && !recipe) {
+      console.log("Restoring recipe from location state", hasRecipeData);
+      setRecipe(hasRecipeData);
+    }
+    
+    // Also check for recipe data in localStorage fallback if we're resuming after auth
+    if (isResuming && !recipe && !hasRecipeData) {
+      const recipeBackup = authStateManager.getRecipeDataFallback();
+      if (recipeBackup && recipeBackup.recipe) {
+        console.log("Restoring recipe from localStorage backup", recipeBackup);
+        setRecipe(recipeBackup.recipe);
+        // Clear the backup after successful restoration
+        // We wait until the recipe is set to prevent race conditions
+        setTimeout(() => {
+          authStateManager.clearRecipeDataFallback();
+        }, 500);
+      }
+    }
+  }, [hasRecipeData, recipe, isResuming, setRecipe]);
 
   // Handle post-authentication actions
   useEffect(() => {
@@ -73,6 +99,34 @@ const RecipePreviewPage: React.FC = () => {
             console.log("Checked for legacy pending save recipe:", pendingData ? "found" : "not found");
           }
           
+          // If we still don't have recipe data, check localStorage backup
+          if (!pendingData?.recipe && recipe) {
+            pendingData = {
+              recipe: recipe,
+              timestamp: Date.now(),
+              sourceUrl: window.location.pathname
+            };
+            console.log("Using current recipe for save operation");
+          }
+          
+          // Additional fallback - check localStorage
+          if (!pendingData?.recipe) {
+            const recipeBackup = authStateManager.getRecipeDataFallback();
+            if (recipeBackup && recipeBackup.recipe) {
+              pendingData = {
+                recipe: recipeBackup.recipe,
+                timestamp: recipeBackup.timestamp,
+                sourceUrl: recipeBackup.sourceUrl
+              };
+              console.log("Found recipe in localStorage backup");
+              
+              // Also restore recipe to store if needed
+              if (!recipe) {
+                setRecipe(recipeBackup.recipe);
+              }
+            }
+          }
+          
           if (pendingData?.recipe) {
             // We have a recipe to save
             toast.loading("Saving your recipe after login...");
@@ -88,6 +142,9 @@ const RecipePreviewPage: React.FC = () => {
                 
                 // Clear the pending save
                 clearPendingRecipe();
+                
+                // Clear the localStorage backup
+                authStateManager.clearRecipeDataFallback();
                 
                 console.log("Successfully saved recipe after authentication:", savedData.slug);
               }
@@ -109,7 +166,7 @@ const RecipePreviewPage: React.FC = () => {
     };
     
     handlePostAuthActions();
-  }, [isResuming, hasPendingSave, session, getPendingRecipe, saveRecipe, clearPendingRecipe, setSaveSuccess, setIsSaving]);
+  }, [isResuming, hasPendingSave, session, getPendingRecipe, saveRecipe, clearPendingRecipe, setSaveSuccess, setIsSaving, recipe, setRecipe]);
 
   // Add automatic navigation effect when save is successful
   useEffect(() => {
@@ -133,6 +190,10 @@ const RecipePreviewPage: React.FC = () => {
     // Set saving state to true
     setIsSaving(true);
 
+    // Backup recipe to localStorage before attempting to save
+    // This ensures we can recover it if auth redirects us away
+    authStateManager.storeRecipeDataFallback(recipe);
+
     try {
       // Validate recipe has required fields
       if (!recipe.title || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
@@ -146,6 +207,9 @@ const RecipePreviewPage: React.FC = () => {
       if (savedData && savedData.id && savedData.slug) {
         // Use the centralized state management
         setSaveSuccess(savedData.slug);
+        
+        // Clear the localStorage backup since save was successful
+        authStateManager.clearRecipeDataFallback();
         
         // Show success toast with navigation action button (as backup for automatic navigation)
         toast.success("Recipe saved successfully!", {
@@ -201,25 +265,33 @@ const RecipePreviewPage: React.FC = () => {
     }
   }, [formData, navigate, storeSetLoading, storeSetError]);
   
-  // If there's no recipe, redirect to home page, but only if we're not in the middle of 
-  // authentication flow or resuming from a previous state
+  // If there's no recipe, check if we need to restore it from localStorage or pending actions
   useEffect(() => {
-    // Don't redirect if any of these conditions are true:
-    // 1. We have a recipe
-    // 2. We're loading
-    // 3. We're resuming from auth
-    // 4. We have pending save action
-    const shouldStayOnPage = !!recipe || 
-                           isLoading || 
-                           isResuming || 
-                           hasPendingSave ||
-                           !!authStateManager.getNextPendingAction();
-    
-    if (!shouldStayOnPage) {
-      console.log("No recipe or auth state available, redirecting to home page");
-      navigate('/');
+    if (!recipe && !isLoading) {
+      // Try to restore from localStorage fallback
+      const recipeBackup = authStateManager.getRecipeDataFallback();
+      if (recipeBackup && recipeBackup.recipe) {
+        console.log("Restoring recipe from localStorage backup", recipeBackup);
+        setRecipe(recipeBackup.recipe);
+        return;
+      }
+      
+      // Try to restore from pending actions
+      const nextAction = authStateManager.getNextPendingAction();
+      if (nextAction && nextAction.type === 'save-recipe' && nextAction.data.recipe) {
+        console.log("Restoring recipe from pending action", nextAction);
+        setRecipe(nextAction.data.recipe);
+        return;
+      }
+      
+      // If we're not resuming from auth and we can't restore the recipe,
+      // only then redirect to home
+      if (!isResuming && !hasPendingSave) {
+        console.log("No recipe data available and not resuming, redirecting to home");
+        navigate('/', { replace: true });
+      }
     }
-  }, [recipe, isLoading, navigate, isResuming, hasPendingSave]);
+  }, [recipe, isLoading, isResuming, hasPendingSave, setRecipe, navigate]);
   
   // If we're loading, redirect to the loading page
   useEffect(() => {
@@ -237,9 +309,16 @@ const RecipePreviewPage: React.FC = () => {
   // Toggle debug mode function - keeping function but removing UI button
   const toggleDebugMode = () => setDebugMode(prev => !prev);
   
-  // If no recipe, show nothing (will redirect in useEffect)
+  // If no recipe, try to render with a loading state instead of redirecting
   if (!recipe) {
-    return null;
+    return (
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-gray-500">Loading recipe data...</p>
+        </div>
+      </PageContainer>
+    );
   }
   
   // Determine if we should show loading overlay (either store saving state or local saving state)

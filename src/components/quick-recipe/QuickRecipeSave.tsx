@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +54,41 @@ const VALID_DB_FIELDS = [
 // Define the save-recipe action type
 const SAVE_RECIPE_ACTION: PendingActionType = 'save-recipe';
 
+/**
+ * Helper function to transform recipe data to match database schema
+ */
+function transformRecipeForDB(recipe: any): Record<string, any> {
+  const transformedRecipe: Record<string, any> = {};
+  
+  // Process all keys from the recipe
+  for (const key in recipe) {
+    // Skip null or undefined values
+    if (recipe[key] === null || recipe[key] === undefined) {
+      continue;
+    }
+    
+    // Skip functions and unsupported types
+    if (typeof recipe[key] === 'function' || typeof recipe[key] === 'symbol') {
+      continue;
+    }
+    
+    // Check if we need to remap this field
+    const remappedKey = FIELD_MAPPINGS[key as keyof typeof FIELD_MAPPINGS] || key;
+    
+    // Only include fields that are valid in the database
+    if (VALID_DB_FIELDS.includes(remappedKey)) {
+      // Special case: handle steps -> instructions mapping
+      if (key === 'steps' && Array.isArray(recipe[key])) {
+        transformedRecipe['instructions'] = recipe[key];
+      } else {
+        transformedRecipe[remappedKey] = recipe[key];
+      }
+    }
+  }
+  
+  return transformedRecipe;
+}
+
 export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipe, setSavedRecipe] = useState<QuickRecipe | null>(null);
@@ -74,7 +110,20 @@ export function useQuickRecipeSave() {
             sourceUrl: window.location.pathname
           });
           
+          // Also store in localStorage as a fallback mechanism
+          authStateManager.storeRecipeDataFallback(recipe);
+          
           console.log("Stored recipe save request with action ID:", actionId);
+          
+          // Store the current URL for more robust state preservation
+          const currentUrl = window.location.pathname;
+          authStateManager.setRedirectAfterAuth(currentUrl, {
+            state: { 
+              pendingSave: true,
+              resumingAfterAuth: true,
+              timestamp: Date.now()
+            }
+          });
           
           toast.info("Please sign in to save your recipe", { 
             duration: 4000,
@@ -131,124 +180,40 @@ export function useQuickRecipeSave() {
           // Success!
           success = true;
           
+          // Clear any fallbacks since save succeeded
+          authStateManager.clearRecipeDataFallback();
+          
           // Load the saved recipe
-          if (data) {
-            const { data: savedRecipeData, error: fetchError } = await supabase
-              .from('recipes')
-              .select('*')
-              .eq('id', data.id)
-              .single();
-              
-            if (fetchError) {
-              console.error("Error fetching saved recipe:", fetchError);
-              // Still show success even if we couldn't fetch the complete recipe
-              toast.success("Recipe saved successfully!");
-            } else {
-              console.log("Saved recipe loaded:", savedRecipeData);
-              setSavedRecipe(savedRecipeData as unknown as QuickRecipe);
-              // Show success toast without the action button
-              toast.success("Recipe saved successfully!");
-            }
-          } else {
-            toast.success("Recipe saved successfully!");
-          }
+          setSavedRecipe(recipe);
           
+          // Return success data including the slug for navigation
           return data;
-          
-        } catch (err: any) {
+        } catch (err) {
           retries++;
-          console.error(`Save attempt ${retries} failed:`, err);
+          console.error(`Error saving recipe (attempt ${retries}/${maxRetries}):`, err);
           
           if (retries >= maxRetries) {
             throw err;
           }
           
-          // Exponential backoff
-          const delay = Math.pow(2, retries) * 500;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
         }
       }
       
-    } catch (error: any) {
-      console.error("Error saving recipe:", error);
-      toast.error(`Failed to save recipe: ${error.message}`);
-      throw error;
+      // Should never reach here due to success or throw in the loop
+      return null;
+    } catch (error) {
+      console.error("Failed to save recipe:", error);
+      throw error; // Re-throw for the caller to handle
     } finally {
       setIsSaving(false);
     }
   }, [session, openAuthDrawer]);
-  
-  return { saveRecipe, isSaving, savedRecipe };
-}
 
-/**
- * Transforms a recipe object from frontend format to database format:
- * 1. Maps camelCase properties to snake_case database columns
- * 2. Removes properties that don't exist in the database
- * 3. Handles special cases like arrays and nested objects
- */
-function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {};
-  
-  // First, apply all camelCase to snake_case mappings
-  for (const [frontendKey, dbKey] of Object.entries(FIELD_MAPPINGS)) {
-    if (frontendKey in recipe && recipe[frontendKey] !== undefined) {
-      result[dbKey] = recipe[frontendKey];
-    }
-  }
-  
-  // Handle the description/tagline special case
-  if (recipe.description !== undefined) {
-    result.tagline = recipe.description;
-  }
-  // If both tagline and description exist, prioritize tagline
-  if (recipe.tagline !== undefined) {
-    result.tagline = recipe.tagline;
-  }
-  
-  // Next, copy all other properties that don't need mapping
-  for (const [key, value] of Object.entries(recipe)) {
-    // Skip keys we've already mapped
-    if (Object.keys(FIELD_MAPPINGS).includes(key)) {
-      continue;
-    }
-    
-    // For any property not in our mappings, copy it directly
-    result[key] = value;
-  }
-  
-  // Handle special transformations for arrays and objects
-  if (result.steps && !result.instructions) {
-    // Ensure steps get properly mapped to instructions (if not already)
-    result.instructions = result.steps;
-    delete result.steps; // Remove the duplicate after mapping
-  }
-  
-  // Filter out any properties not in our database whitelist
-  const finalResult: Record<string, any> = {};
-  for (const dbField of VALID_DB_FIELDS) {
-    if (dbField in result && result[dbField] !== undefined) {
-      finalResult[dbField] = result[dbField];
-    }
-  }
-  
-  // Always ensure user_id is preserved
-  if ('user_id' in recipe) {
-    finalResult.user_id = recipe.user_id;
-  }
-  
-  // Ensure arrays are properly formatted
-  if (finalResult.flavor_tags && typeof finalResult.flavor_tags === 'string') {
-    finalResult.flavor_tags = [finalResult.flavor_tags];
-  }
-  
-  // Handle science_notes - ensure it's an array
-  if (finalResult.science_notes && !Array.isArray(finalResult.science_notes)) {
-    finalResult.science_notes = [finalResult.science_notes];
-  }
-  
-  console.log("Original recipe:", recipe);
-  console.log("Transformed recipe for DB:", finalResult);
-  
-  return finalResult;
+  return {
+    saveRecipe,
+    isSaving,
+    savedRecipe
+  };
 }

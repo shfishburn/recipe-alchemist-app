@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 
 export interface Profile {
   id: string;
@@ -22,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
+  checkPendingRecipeAfterAuth: () => void; // New function to handle recipe recovery
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -31,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signOut: async () => {},
   refreshProfile: async () => null,
+  checkPendingRecipeAfterAuth: () => {} // Default no-op implementation
 });
 
 /**
@@ -60,7 +63,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authCompletedOnce, setAuthCompletedOnce] = useState(false);
   const { toast } = useToast();
+  const setRecipe = useQuickRecipeStore(state => state.setRecipe);
 
   // Refresh profile function that can be called from any component
   const refreshProfile = async (): Promise<Profile | null> => {
@@ -89,9 +94,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Clear auth state when signing out
       authStateManager.clearState();
+      
+      // Clear any recipe backups
+      authStateManager.clearRecipeDataFallback();
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
+    }
+  };
+
+  // Function to check and restore any pending recipe data after login
+  const checkPendingRecipeAfterAuth = () => {
+    if (!session?.user) return;
+    
+    try {
+      // First check authStateManager for pending actions
+      const nextAction = authStateManager.getNextPendingAction();
+      if (nextAction && nextAction.type === 'save-recipe' && nextAction.data.recipe) {
+        console.log("Found pending recipe in authStateManager:", nextAction.data.recipe);
+        setRecipe(nextAction.data.recipe);
+        return;
+      }
+      
+      // Then check localStorage backup
+      const recipeBackup = authStateManager.getRecipeDataFallback();
+      if (recipeBackup && recipeBackup.recipe) {
+        console.log("Found recipe backup in localStorage:", recipeBackup.recipe);
+        setRecipe(recipeBackup.recipe);
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking pending recipe data:", error);
     }
   };
 
@@ -118,6 +151,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 if (isMounted && data) {
                   setProfile(data);
                 }
+              }).finally(() => {
+                // Mark auth as completed at least once
+                if (isMounted) setAuthCompletedOnce(true);
               });
             }
           }, 0);
@@ -127,6 +163,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setProfile(null);
         authStateManager.clearState();
+        
+        // Mark auth as completed at least once
+        setAuthCompletedOnce(true);
       }
       
       // Only update loading state for events after initialization
@@ -162,16 +201,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               }
               if (isMounted) {
                 setLoading(false);
+                setAuthCompletedOnce(true);
               }
             }
           }, 0);
         } else {
           setLoading(false);
+          setAuthCompletedOnce(true);
         }
       } catch (err) {
         console.error('Error in getSession:', err);
         if (isMounted) {
           setLoading(false);
+          setAuthCompletedOnce(true);
         }
       }
     };
@@ -186,6 +228,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // When auth completes for the first time, check for any pending recipe data
+  useEffect(() => {
+    if (authCompletedOnce && session?.user) {
+      checkPendingRecipeAfterAuth();
+    }
+  }, [authCompletedOnce, session?.user]);
+
   return (
     <AuthContext.Provider value={{ 
       session, 
@@ -193,7 +242,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       profile, 
       loading, 
       signOut,
-      refreshProfile
+      refreshProfile,
+      checkPendingRecipeAfterAuth
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,6 +9,7 @@ import { useCallback, useEffect } from "react";
 import { cleanupUIState } from "@/utils/dom-cleanup";
 import { toast } from "sonner";
 import { authStateManager } from "@/lib/auth/auth-state-manager";
+import { useQuickRecipeStore } from "@/store/use-quick-recipe-store";
 
 // For desktop
 import {
@@ -45,6 +47,8 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   const { session } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const recipe = useQuickRecipeStore(state => state.recipe);
+  const setRecipe = useQuickRecipeStore(state => state.setRecipe);
   
   // Close drawer and navigate on successful auth
   const handleAuthSuccess = useCallback(() => {
@@ -53,6 +57,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     
     // Check if there's a pending action
     const nextAction = authStateManager.getNextPendingAction();
+    
+    // If we have a recipe in the store, make sure to use the backup
+    // mechanism to ensure it survives page refreshes
+    if (recipe) {
+      authStateManager.storeRecipeDataFallback(recipe);
+    }
+    
     if (nextAction && !nextAction.executed) {
       const { type, sourceUrl, data } = nextAction;
 
@@ -65,11 +76,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
         // Navigate after a brief delay to allow toast to show
         // Using requestAnimationFrame for smoother transitions
         requestAnimationFrame(() => {
-          navigate(sourceUrl, { 
+          navigate(sourceUrl || '/recipe-preview', { 
             state: { 
               pendingSave: true,
-              resumingAfterAuth: true 
-            }
+              resumingAfterAuth: true,
+              timestamp: Date.now() // Add timestamp to force navigation
+            },
+            replace: true
           });
         });
         return;
@@ -84,8 +97,32 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
               recipeData: {
                 formData: data.formData,
                 path: sourceUrl
-              }
-            }
+              },
+              timestamp: Date.now() // Add timestamp to force navigation
+            },
+            replace: true
+          });
+        });
+        return;
+      }
+    } else {
+      // Check for fallback recipe data even if no pending action
+      const recipeBackup = authStateManager.getRecipeDataFallback();
+      if (recipeBackup && recipeBackup.recipe) {
+        console.log("Found recipe backup in localStorage", recipeBackup);
+        // Restore recipe to store
+        setRecipe(recipeBackup.recipe);
+        
+        // Navigate to recipe preview
+        toast.success("Successfully signed in! Returning to your recipe...");
+        requestAnimationFrame(() => {
+          navigate(recipeBackup.sourceUrl || '/recipe-preview', {
+            state: {
+              pendingSave: true,
+              resumingAfterAuth: true,
+              timestamp: Date.now()
+            },
+            replace: true
           });
         });
         return;
@@ -122,7 +159,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     
     // Default navigation if no pending redirect
     navigate("/");
-  }, [setOpen, navigate]);
+  }, [setOpen, navigate, recipe, setRecipe]);
 
   // If user is already authenticated, close drawer
   useEffect(() => {
