@@ -202,11 +202,13 @@ You are a code review assistant and architect analyzing an AI recipe generation 
 - Even if no critical issues are found, list up to 5 minor style, documentation, or readability improvements.
 
 ### 7. Feature Improvement Observations
-- Based ONLY on the code visible in the current diff:
-  * Identify 1-2 specific extensions or enhancements that directly build upon the code that was just modified
-  * For each suggestion, reference specific line numbers or functions from the diff
-  * Explain exactly how your suggestion extends functionality that already exists in the changed code
-  * DO NOT suggest generic features unrelated to the code changes in this review
+- ONLY if the code changes indicate substantial new functionality or architecture:
+  * Suggest 1-2 specific extensions that build upon major additions or modifications
+  * Ignore minor parameter adjustments, comment changes, or simple refactorings
+  * For each suggestion, explain why it's a valuable extension of significant new functionality
+  * Reference specific functions or components that could be extended, not just line numbers
+  * Do NOT suggest generic features unrelated to the code changes in this review
+- If the changes are minor or maintenance-focused, write "No significant feature ideas identified for these changes."
 
 ### 8. AI Developer Prompt
 - At the end of your review, include a section titled "# AI Developer Prompt" formatted as follows:
