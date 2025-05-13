@@ -32,12 +32,18 @@ export function useRecipeDataRecovery() {
     // Check for ID in path params (for routes like /recipe-preview/:id)
     const pathParts = location.pathname.split('/');
     if (pathParts.length > 2 && pathParts[1] === 'recipe-preview') {
-      return pathParts[2];
+      const urlId = pathParts[2];
+      if (urlId && urlId.length > 0) {
+        return urlId;
+      }
     }
     
     // Check for ID in query params (for routes like /recipe-preview?id=123)
     const urlParams = new URLSearchParams(location.search);
-    return urlParams.get('id');
+    const paramId = urlParams.get('id');
+    
+    // Return the ID if it exists
+    return paramId;
   }, [location]);
   
   /**
@@ -80,14 +86,24 @@ export function useRecipeDataRecovery() {
    */
   const getRecipeById = useCallback((id: string): QuickRecipe | null => {
     try {
+      if (!id) {
+        console.log("No recipe ID provided for retrieval");
+        return null;
+      }
+      
       const storedData = localStorage.getItem(`recipe_${id}`);
-      if (!storedData) return null;
+      if (!storedData) {
+        console.log(`No stored recipe found for ID: ${id}`);
+        return null;
+      }
       
       const parsedData = JSON.parse(storedData);
       if (isValidQuickRecipe(parsedData.recipe)) {
         console.log(`Retrieved recipe with ID: ${id}`);
         return parsedData.recipe as QuickRecipe;
       }
+      
+      console.log(`Invalid recipe data for ID: ${id}`);
       return null;
     } catch (error) {
       console.error(`Failed to retrieve recipe with ID: ${id}`, error);
@@ -118,12 +134,26 @@ export function useRecipeDataRecovery() {
         
         if (recipeFromId) {
           setRecipe(recipeFromId);
+          console.log("Recipe recovered from URL ID:", recipeFromId.title);
           setRecoveryStatus('success');
           return true;
+        } else {
+          console.log(`No valid recipe found for ID: ${recipeId}`);
         }
       }
       
       // If ID-based approach failed, try fallback strategies
+      
+      // Try getting from location state
+      if (location.state && location.state.recipeData) {
+        const recipeData = location.state.recipeData;
+        if (isValidQuickRecipe(recipeData)) {
+          console.log("Recovered recipe from location state");
+          setRecipe(recipeData as QuickRecipe);
+          setRecoveryStatus('success');
+          return true;
+        }
+      }
       
       // Try getting from pendingActions in authStateManager
       const nextAction = authStateManager.getNextPendingAction();
@@ -159,7 +189,7 @@ export function useRecipeDataRecovery() {
       setRecoveryStatus('failed');
       return false;
     }
-  }, [recipe, setRecipe, getRecipeIdFromUrl, getRecipeById, isValidQuickRecipe]);
+  }, [recipe, setRecipe, getRecipeIdFromUrl, getRecipeById, isValidQuickRecipe, location.state]);
   
   /**
    * Ensures a recipe has an ID and is properly stored

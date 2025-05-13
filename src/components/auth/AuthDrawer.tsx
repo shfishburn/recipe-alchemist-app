@@ -62,10 +62,12 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     // mechanism to ensure it survives page refreshes
     if (recipe) {
       authStateManager.storeRecipeDataFallback(recipe);
+      console.log("Backed up recipe from store on auth success:", recipe.title);
     }
     
     if (nextAction && !nextAction.executed) {
       const { type, sourceUrl, data } = nextAction;
+      console.log("Found pending action on auth success:", type, "for URL:", sourceUrl);
 
       // Don't mark as executed yet - let the destination component handle that
       // This ensures the action is still available if navigation fails
@@ -73,15 +75,30 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       if (type === 'save-recipe' && sourceUrl) {
         toast.success("Successfully signed in! Returning to your recipe...");
         
+        // Log recipe data availability for debugging
+        console.log("Recipe data available for save:", {
+          fromStore: !!recipe,
+          fromAction: !!data.recipe,
+          recipeId: data.recipeId || 'none'
+        });
+        
         // Navigate after a brief delay to allow toast to show
         // Using requestAnimationFrame for smoother transitions
         requestAnimationFrame(() => {
+          // Prepare state object with recipe data from multiple sources
+          const navState = { 
+            pendingSave: true,
+            resumingAfterAuth: true,
+            timestamp: Date.now()
+          };
+          
+          // Include recipeId if available
+          if (data.recipeId) {
+            Object.assign(navState, { recipeId: data.recipeId });
+          }
+          
           navigate(sourceUrl || '/recipe-preview', { 
-            state: { 
-              pendingSave: true,
-              resumingAfterAuth: true,
-              timestamp: Date.now() // Add timestamp to force navigation
-            },
+            state: navState,
             replace: true
           });
         });
@@ -109,7 +126,10 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       // Check for fallback recipe data even if no pending action
       const recipeBackup = authStateManager.getRecipeDataFallback();
       if (recipeBackup && recipeBackup.recipe) {
-        console.log("Found recipe backup in localStorage", recipeBackup);
+        console.log("Found recipe backup in localStorage", {
+          title: recipeBackup.recipe.title,
+          path: recipeBackup.sourceUrl || 'unknown' 
+        });
         // Restore recipe to store
         setRecipe(recipeBackup.recipe);
         

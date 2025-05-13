@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -105,18 +105,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Function to check and restore any pending recipe data after login
-  const checkPendingRecipeAfterAuth = () => {
+  const checkPendingRecipeAfterAuth = useCallback(() => {
     if (!session?.user) return;
     
     try {
+      // Log authentication state for debugging
+      console.log("Checking for pending recipes after authentication");
+      
       // First check authStateManager for pending actions
       const nextAction = authStateManager.getNextPendingAction();
       if (nextAction && nextAction.type === 'save-recipe' && nextAction.data.recipe) {
-        console.log("Found pending recipe in authStateManager:", nextAction.data.recipe);
+        console.log("Found pending recipe in authStateManager:", { 
+          id: nextAction.id,
+          recipeId: nextAction.data.recipeId || 'none',
+          sourceUrl: nextAction.sourceUrl
+        });
+        
         // Type check the recipe data before setting it
         const recipeData = nextAction.data.recipe;
         if (isValidQuickRecipe(recipeData)) {
           setRecipe(recipeData);
+          console.log("Restored recipe from pending action:", recipeData.title);
           return;
         }
       }
@@ -124,17 +133,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Then check localStorage backup
       const recipeBackup = authStateManager.getRecipeDataFallback();
       if (recipeBackup && recipeBackup.recipe) {
-        console.log("Found recipe backup in localStorage:", recipeBackup.recipe);
+        console.log("Found recipe backup in localStorage:", {
+          title: recipeBackup.recipe.title,
+          sourceUrl: recipeBackup.sourceUrl || 'unknown'
+        });
+        
         // Type check the recipe data before setting it
         if (isValidQuickRecipe(recipeBackup.recipe)) {
           setRecipe(recipeBackup.recipe);
+          console.log("Restored recipe from localStorage backup");
           return;
         }
       }
     } catch (error) {
       console.error("Error checking pending recipe data:", error);
     }
-  };
+  }, [session, setRecipe]);
   
   // Helper function to validate QuickRecipe
   function isValidQuickRecipe(recipe: unknown): recipe is QuickRecipe {
@@ -251,6 +265,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // When auth completes for the first time, check for any pending recipe data
   useEffect(() => {
     if (authCompletedOnce && session?.user) {
+      console.log("Auth completed for the first time, checking for pending recipe data");
       checkPendingRecipeAfterAuth();
     }
   }, [authCompletedOnce, session?.user, checkPendingRecipeAfterAuth]);

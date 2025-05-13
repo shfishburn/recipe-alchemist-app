@@ -36,7 +36,7 @@ export function useRecipeSaveState() {
       // Also store in localStorage as a fallback mechanism
       authStateManager.storeRecipeDataFallback(recipe);
       
-      console.log("Stored pending recipe with action ID:", actionId);
+      console.log("Stored pending recipe with action ID:", actionId, "and recipeId:", recipeId);
       return recipeId || true;
     } catch (error) {
       console.error('Failed to store pending recipe:', error);
@@ -58,6 +58,7 @@ export function useRecipeSaveState() {
       );
       
       if (saveAction) {
+        console.log("Found pending recipe action:", saveAction.id, "with recipeId:", saveAction.data.recipeId);
         return {
           recipe: saveAction.data.recipe as QuickRecipe,
           recipeId: saveAction.data.recipeId as string | undefined,
@@ -69,6 +70,7 @@ export function useRecipeSaveState() {
       // Try localStorage fallback if no pending action
       const recipeBackup = authStateManager.getRecipeDataFallback();
       if (recipeBackup && recipeBackup.recipe) {
+        console.log("Found recipe backup in localStorage with path:", recipeBackup.sourceUrl || "unknown");
         return {
           recipe: recipeBackup.recipe as QuickRecipe,
           timestamp: recipeBackup.timestamp,
@@ -171,6 +173,7 @@ export function useRecipeSaveState() {
       
       // Open auth drawer
       openAuthDrawer();
+      console.log("Auth drawer opened with redirect path:", redirectPath);
       return recipeId || true;
     }
     return false;
