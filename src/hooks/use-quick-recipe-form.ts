@@ -33,7 +33,7 @@ export function useQuickRecipeForm() {
     try {
       console.log("useQuickRecipeForm - Handling form submission with data:", formData);
       
-      // Validate that we have mainIngredient, which is required by the API
+      // Validate that we have ingredients, which is required by the API
       if (!formData.mainIngredient || (typeof formData.mainIngredient === 'string' && formData.mainIngredient.trim() === '')) {
         toast({
           title: "Missing ingredient",
@@ -87,7 +87,7 @@ export function useQuickRecipeForm() {
         }
       });
       
-      // Return early - the loading page will handle the API call
+      // Return the processed form data
       return processedFormData;
       
     } catch (error: any) {
@@ -109,7 +109,7 @@ export function useQuickRecipeForm() {
       
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, isRecipeValid, location.pathname, setHasTimeoutError, updateLoadingState]);
+  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, location.pathname, updateLoadingState]);
 
   return {
     handleSubmit,

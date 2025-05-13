@@ -1,8 +1,4 @@
 
-// path: src/components/landing/Hero.tsx
-// file: Hero.tsx
-// updated: 2025-05-13
-
 import React, { memo, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';

@@ -37,10 +37,6 @@ export function SubmitButton({ isLoading: parentIsLoading, disabled }: SubmitBut
       disabled={isLoading || disabled}
       aria-disabled={isLoading || disabled}
       aria-busy={isLoading}
-      onClick={(e) => {
-        console.log('Submit button clicked');
-        // Don't prevent default, let it submit the form
-      }}
     >
       {isLoading ? (
         <div className="flex items-center justify-center">

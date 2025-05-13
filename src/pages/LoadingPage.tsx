@@ -60,11 +60,11 @@ const LoadingPage: React.FC = () => {
       try {
         // Simulate step progress
         const progressInterval = setInterval(() => {
-          updateLoadingState(prevState => ({
-            step: Math.min(prevState.step + 1, 3),
-            stepDescription: getStepDescription(Math.min(prevState.step + 1, 3)),
-            percentComplete: Math.min(prevState.percentComplete + 5, 95)
-          }));
+          updateLoadingState({
+            step: Math.min(loadingState.step + 1, 3),
+            stepDescription: getStepDescription(Math.min(loadingState.step + 1, 3)),
+            percentComplete: Math.min(loadingState.percentComplete + 5, 95)
+          });
         }, 2000);
         
         // Generate the recipe
