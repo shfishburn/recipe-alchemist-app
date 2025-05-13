@@ -9,6 +9,7 @@ import { useUnitSystem } from '@/hooks/use-unit-system';
 import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
 import { groupIngredientsByDepartment, getDepartmentDisplayOrder } from '@/utils/ingredient-department-utils';
 import { IngredientDepartmentHeader } from './ingredients/IngredientDepartmentHeader';
+import { FormattedItem } from '@/components/common/formatted-item/FormattedItem';
 
 interface RecipeIngredientsProps {
   recipe: Recipe;
@@ -68,18 +69,13 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
                           {typeof ingredient === 'string' ? (
                             <span>{ingredient}</span>
                           ) : (
-                            <>
-                              <span className="font-medium">
-                                {unitSystem === 'metric' ? 
-                                  // Use metric values if available
-                                  `${ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty} ${ingredient.unit_metric || ingredient.unit}` : 
-                                  // Use imperial values if available
-                                  `${ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty} ${ingredient.unit_imperial || ingredient.unit}`
-                                }
-                              </span>{' '}
-                              {ingredient.item}
-                              {ingredient.notes && <span className="text-gray-500"> ({ingredient.notes})</span>}
-                            </>
+                            <FormattedItem 
+                              item={ingredient}
+                              options={{
+                                highlight: 'name',
+                                unitSystem
+                              }}
+                            />
                           )}
                         </li>
                       ))}
