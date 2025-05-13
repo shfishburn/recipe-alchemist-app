@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cleanupUIState } from "@/utils/dom-cleanup";
 import { toast } from "sonner";
+import { QuickRecipe } from '@/types/quick-recipe';
 
 // For desktop
 import {
@@ -37,7 +38,7 @@ interface AuthDrawerProps {
 
 // Define type for pending save data
 interface PendingSave {
-  recipe: any; // Keep as any for now since recipe structure is complex
+  recipe: QuickRecipe;
   sourceUrl: string;
   timestamp: number;
 }
