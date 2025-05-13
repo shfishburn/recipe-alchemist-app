@@ -189,6 +189,9 @@ const LoadingPage: React.FC = () => {
       // Complete the progress bar when recipe is ready
       setProgress(100);
       setLoadingStage(4); // Final stage
+      
+      // Add a console log for debugging
+      console.log("Recipe is ready, setting progress to 100%", recipe?.title);
     } else if (displayError) {
       // Reset progress when there's an error
       setProgress(0);
@@ -217,6 +220,13 @@ const LoadingPage: React.FC = () => {
   }, [navigate, formData]);
   
   const navigateToRecipePreview = useCallback(() => {
+    // Add detailed logging for debugging
+    console.log("Navigating to recipe preview with recipe:", {
+      recipeTitle: recipe?.title || "No recipe title",
+      recipeExists: !!recipe,
+      ingredientsCount: recipe?.ingredients?.length || 0
+    });
+    
     navigate('/recipe-preview', { 
       state: { 
         timestamp: Date.now(),
@@ -224,7 +234,7 @@ const LoadingPage: React.FC = () => {
       },
       replace: true 
     });
-  }, [navigate]);
+  }, [navigate, recipe]);
   
   // Handle redirection based on recipe generation state
   useEffect(() => {
@@ -251,11 +261,20 @@ const LoadingPage: React.FC = () => {
     
     // If recipe is ready (not loading and we have recipe data), go to recipe preview page
     if (!isLoading && recipe) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Recipe is ready, navigating to recipe preview page with recipe:", recipe.title);
-      }
-      navigateToRecipePreview();
-      return;
+      // Log more detailed information for debugging
+      console.log("Recipe is ready, navigating to recipe preview page:", {
+        recipeTitle: recipe.title,
+        hasIngredients: Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0,
+        hasSteps: Array.isArray(recipe.steps) && recipe.steps.length > 0,
+        isError: recipe.isError === true
+      });
+      
+      // Added a small timeout to ensure all state changes have been processed
+      const timer = setTimeout(() => {
+        navigateToRecipePreview();
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
     
     // Auto-redirect if loading takes too long (safety fallback)
@@ -266,7 +285,7 @@ const LoadingPage: React.FC = () => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [recipe, isLoading, displayError, navigateToQuickRecipe, navigateToRecipePreview]);
+  }, [recipe, isLoading, displayError, navigateToQuickRecipe, navigateToRecipePreview, loadingStage, progress]);
   
   // Handle cancellation of recipe generation
   const handleCancel = useCallback(() => {

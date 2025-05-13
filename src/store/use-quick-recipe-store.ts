@@ -63,6 +63,14 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         // Actions
         setRecipe: (recipe) => {
+          // Add debugging to track recipe state changes
+          console.log("Setting recipe in store:", recipe ? {
+            title: recipe.title,
+            ingredientsCount: recipe.ingredients?.length,
+            hasSteps: Array.isArray(recipe.steps) && recipe.steps.length > 0,
+            isError: recipe.isError === true
+          } : "null recipe");
+          
           // Check for error conditions to distinguish between error and valid recipe
           if (recipe && (recipe.isError === true || recipe.error_message)) {
             console.log('Recipe contains an error:', recipe.error_message || recipe.error || 'Unknown error');
@@ -79,8 +87,10 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
             // Only set the recipe if it's valid
             if (get().isRecipeValid(recipe)) {
               set({ recipe, isLoading: false, error: null });
+              console.log("Recipe validation passed, recipe set in store:", recipe.title);
             } else {
               // Invalid recipe format
+              console.error("Recipe validation failed:", recipe);
               set({ 
                 recipe: null,
                 error: "The recipe format is not valid. Please try again.",
@@ -102,8 +112,10 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           // If switching to loading state, reset error
           if (isLoading) {
             set({ isLoading, error: null });
+            console.log("Setting loading state to true, cleared errors");
           } else {
             set({ isLoading });
+            console.log("Setting loading state to false");
           }
         },
         
@@ -127,7 +139,10 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         // Recipe validation function
         isRecipeValid: (recipe) => {
-          if (!recipe) return false;
+          if (!recipe) {
+            console.log('Recipe validation: recipe is null or undefined');
+            return false;
+          }
           
           // Explicitly check for error flags
           if (recipe.isError === true || recipe.error || recipe.error_message) {
@@ -157,6 +172,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
             return false;
           }
           
+          console.log('Recipe validation: passed all checks');
           return true;
         }
       }),
