@@ -109,7 +109,7 @@ export function useQuickRecipeForm() {
       
       return null;
     }
-  }, [navigate, reset, setLoading, setFormData, setRecipe, setError, location.pathname, updateLoadingState]);
+  }, [navigate, reset, setLoading, setFormData, setError, location.pathname, updateLoadingState]);
 
   return {
     handleSubmit,
