@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,13 @@ interface AuthFormProps {
 interface FormState {
   email: string;
   password: string;
+}
+
+/**
+ * Helper function to extract error message from unknown errors
+ */
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "An error occurred";
 }
 
 /**
@@ -204,27 +210,33 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     
     // Call onSuccess callback if provided
     if (onSuccess) {
-      console.log("Auth successful, calling onSuccess callback");
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Auth successful, calling onSuccess callback");
+      }
       onSuccess();
       return;
     }
     
     // Otherwise handle navigation and pending actions
-    console.log("Auth successful, checking for pending actions");
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Auth successful, checking for pending actions");
+    }
     
     // Check for pending actions in authStateManager
     const nextAction = authStateManager.getNextPendingAction();
     if (nextAction && !nextAction.executed) {
       const { type, sourceUrl, data } = nextAction;
       
-      console.log("Found pending action:", type, "source:", sourceUrl);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Found pending action:", type, "source:", sourceUrl);
+      }
       
       // Don't mark as executed yet - let the destination component handle that
       
       if (type === 'save-recipe' && sourceUrl) {
         navigate(sourceUrl, { 
           state: { 
-            resumingAfterAuth: true,
+            resumingAfterAuth: true, // Flag to indicate we're returning after auth
             pendingSave: true
           }
         });
@@ -232,7 +244,7 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       } else if (type === 'generate-recipe' && data.formData) {
         navigate(sourceUrl || '/quick-recipe', { 
           state: { 
-            resumingGeneration: true,
+            resumingGeneration: true, // Flag to indicate we're resuming generation
             recipeData: {
               formData: data.formData,
               path: sourceUrl
@@ -252,15 +264,17 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       if (redirectData.search) redirectTo += redirectData.search;
       if (redirectData.hash) redirectTo += redirectData.hash;
       
-      console.log("Auth success - redirecting to:", redirectTo);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Auth success - redirecting to:", redirectTo);
+      }
       
-      // Navigate with any stored state - ensure state is never undefined
-      const stateToUse = typeof redirectData.state === 'object' && redirectData.state !== null
-        ? { ...redirectData.state, resumingAfterAuth: true }
-        : { resumingAfterAuth: true };
-        
+      // Navigate with any stored state - simplified using optional chaining
+      const navigationState = redirectData.state ? 
+        { ...redirectData.state, resumingAfterAuth: true } : 
+        { resumingAfterAuth: true };
+      
       navigate(redirectTo, { 
-        state: stateToUse,
+        state: navigationState,
         replace: true
       });
       
@@ -287,7 +301,7 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     try {
       setLoading(true);
       
-      const { error, data } = await supabase.auth.signInWithPassword({ 
+      const { error } = await supabase.auth.signInWithPassword({ 
         email: loginForm.email, 
         password: loginForm.password 
       });
@@ -306,10 +320,9 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       
     } catch (error: unknown) {
       console.error('Login error:', error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred during login";
       toast({
         title: "Login failed",
-        description: errorMessage,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -331,7 +344,7 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     try {
       setLoading(true);
       
-      const { error, data } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: signupForm.email,
         password: signupForm.password,
       });
@@ -350,10 +363,9 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       
     } catch (error: unknown) {
       console.error('Signup error:', error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred during signup";
       toast({
         title: "Signup failed",
-        description: errorMessage,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     } finally {

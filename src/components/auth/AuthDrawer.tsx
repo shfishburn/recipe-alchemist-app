@@ -95,15 +95,17 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       if (redirectData.search) redirectTo += redirectData.search;
       if (redirectData.hash) redirectTo += redirectData.hash;
       
-      console.log("Auth success - redirecting to:", redirectTo);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("Auth success - redirecting to:", redirectTo);
+      }
       
-      // Navigate with any stored state - ensure state is never undefined
-      const stateToUse = typeof redirectData.state === 'object' && redirectData.state !== null
-        ? { ...redirectData.state, resumingAfterAuth: true }
-        : { resumingAfterAuth: true };
-        
+      // Navigate with any stored state - simplified using optional chaining
+      const navigationState = redirectData.state ? 
+        { ...redirectData.state, resumingAfterAuth: true } : 
+        { resumingAfterAuth: true };
+      
       navigate(redirectTo, { 
-        state: stateToUse,
+        state: navigationState,
         replace: true
       });
       

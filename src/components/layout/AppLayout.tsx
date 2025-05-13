@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -10,8 +9,8 @@ import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
-import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
-import { useLocation } from "react-router-dom";
+import { cleanupUIState } from '@/utils/dom-cleanup';
+import { useLocation, useNavigate } from "react-router-dom";
 import '@/styles/loading.css';
 
 // Updated utility function to prefetch assets that actually exist in production
@@ -43,6 +42,7 @@ export const AppLayout = () => {
   // Apply scroll restoration hook
   useScrollRestoration();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Check if we're on the loading page
   const isLoadingRoute = location.pathname === '/loading';
@@ -62,14 +62,14 @@ export const AppLayout = () => {
     // Clean up any existing issues when app loads
     cleanupUIState();
     
-    // Set up cleanup for future route changes
-    const cleanup = setupRouteChangeCleanup();
+    // Set up cleanup for future route changes - fix by passing the navigate function
+    const cleanup = navigate ? setupRouteChangeCleanup(navigate) : () => {};
     
     return () => {
       cleanup();
       cleanupUIState();
     };
-  }, []);
+  }, [navigate]);
   
   // If we're on the loading route, render only the LoadingPage with smooth transition
   if (isLoadingRoute) {
