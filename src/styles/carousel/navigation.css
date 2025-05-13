@@ -5,12 +5,15 @@
   min-height: 24px; /* Smaller on mobile */
   min-width: 24px;
   opacity: 0.9;
-  position: absolute; /* Ensure absolute positioning is maintained */
-  will-change: opacity; 
+  position: absolute;
+  top: 50%; 
+  transform: translateY(-50%); /* Only vertical centering */
+  will-change: opacity, background-color, color; /* Only properties that should change */
   transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  /* Reset transform and other properties that might cause movement */
-  transform: translateY(-50%);
-  backface-visibility: hidden;
+  
+  /* Prevent ANY transform changes on interaction */
+  transform-style: preserve-3d; /* Stabilize rendering */
+  backface-visibility: hidden; /* Prevent flicker */
 }
 
 @media (min-width: 640px) {
@@ -20,17 +23,15 @@
   }
 }
 
-.carousel-nav-button:hover {
-  opacity: 1;
-  /* No transform on hover */
+/* Prevent any movement on interaction states */
+.carousel-nav-button:hover,
+.carousel-nav-button:active,
+.carousel-nav-button:focus {
+  transform: translateY(-50%) !important; /* Force the same transform with !important */
+  animation: none !important; /* Disable any animations */
 }
 
-.carousel-nav-button:active {
-  /* Prevent any movement on click */
-  transform: translateY(-50%);
-}
-
-/* Better positioning for arrows */
+/* Better positioning for arrows on mobile */
 @media (max-width: 640px) {
   .carousel-nav-button.previous {
     left: -6px;
@@ -41,10 +42,13 @@
   }
 }
 
-/* Fixed positioning for arrows */
-.carousel-nav-button.previous,
-.carousel-nav-button.next {
-  top: 50%;
-  /* Only transform for vertical centering, no other transforms */
-  transform: translateY(-50%);
+/* Desktop arrows positioning */
+@media (min-width: 641px) {
+  .carousel-nav-button.previous {
+    left: 2px;
+  }
+  
+  .carousel-nav-button.next {
+    right: 2px;
+  }
 }

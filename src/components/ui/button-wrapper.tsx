@@ -1,3 +1,4 @@
+
 import React, { forwardRef } from 'react';
 import { Button as ShadcnButton, ButtonProps as ShadcnButtonProps } from '@/components/ui/button';
 import { Slot } from '@radix-ui/react-slot';
@@ -30,6 +31,13 @@ export interface ButtonProps extends ShadcnButtonProps {
    * Icon to display at the end of the button.
    */
   endIcon?: React.ReactNode;
+  
+  /**
+   * Controls the touch/click feedback behavior.
+   * - "default": Standard touch feedback 
+   * - "none": Disables all transform effects on click/touch
+   */
+  touchFeedback?: "default" | "none";
 }
 
 /**
@@ -46,12 +54,18 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
     asChild = false,
     startIcon,
     endIcon,
-    touchFeedback, // Ensure this prop is passed through
+    touchFeedback = "default", // Default to standard feedback unless explicitly disabled
     children,
     ...props
   }, ref) => {
     // Determine if the button should be disabled
     const isDisabled = disabled || isLoading;
+    
+    // Add special class when touchFeedback is set to none
+    const buttonClass = cn(
+      className,
+      touchFeedback === "none" && "touch-feedback-none"
+    );
     
     // Create the button content based on loading state
     const buttonContent = (
@@ -73,7 +87,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
     if (asChild) {
       return (
         <Slot
-          className={cn(className)}
+          className={buttonClass}
           ref={ref as React.Ref<HTMLElement>}
           {...props}
         >
@@ -85,7 +99,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
     // Otherwise use ShadcnButton and pass touchFeedback prop
     return (
       <ShadcnButton
-        className={cn(className)}
+        className={buttonClass}
         variant={variant}
         size={size}
         disabled={isDisabled}
