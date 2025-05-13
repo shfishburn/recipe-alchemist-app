@@ -5,6 +5,7 @@ import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { toast } from 'sonner';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
+import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 // Define the key for recipe actions in authStateManager
 export const RECIPE_ACTION_TYPE: PendingActionType = 'save-recipe';
@@ -15,16 +16,20 @@ export function useRecipeSaveState() {
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
   const { open: openAuthDrawer } = useAuthDrawer();
   const navigate = useNavigate();
+  const { ensureRecipeHasId } = useRecipeDataRecovery();
 
   /**
    * Store recipe for saving after authentication using authStateManager
    */
   const savePendingRecipe = (recipe: QuickRecipe) => {
     try {
-      // Queue the action using authStateManager instead of sessionStorage
+      // Ensure recipe has an ID for reliable recovery
+      const recipeId = ensureRecipeHasId(recipe);
+      
+      // Queue the action using authStateManager
       const actionId = authStateManager.queueAction({
         type: RECIPE_ACTION_TYPE,
-        data: { recipe },
+        data: { recipe, recipeId },
         sourceUrl: window.location.pathname
       });
       
@@ -32,7 +37,7 @@ export function useRecipeSaveState() {
       authStateManager.storeRecipeDataFallback(recipe);
       
       console.log("Stored pending recipe with action ID:", actionId);
-      return true;
+      return recipeId || true;
     } catch (error) {
       console.error('Failed to store pending recipe:', error);
       return false;
@@ -55,6 +60,7 @@ export function useRecipeSaveState() {
       if (saveAction) {
         return {
           recipe: saveAction.data.recipe as QuickRecipe,
+          recipeId: saveAction.data.recipeId as string | undefined,
           timestamp: saveAction.timestamp,
           sourceUrl: saveAction.sourceUrl
         };
@@ -135,13 +141,22 @@ export function useRecipeSaveState() {
     // Store the current URL as a URL parameter for more robust state preservation
     const currentUrl = window.location.pathname;
     
+    // Ensure recipe has an ID for better recovery
+    const recipeId = ensureRecipeHasId(recipe);
+    
     // Store the recipe for later
     if (savePendingRecipe(recipe)) {
       // Set the redirect URL for auth return
-      authStateManager.setRedirectAfterAuth(currentUrl, {
+      // If we have a recipe ID, make sure it's in the return path
+      const redirectPath = recipeId && currentUrl === '/recipe-preview' 
+        ? `/recipe-preview/${recipeId}` 
+        : currentUrl;
+      
+      authStateManager.setRedirectAfterAuth(redirectPath, {
         state: {
           pendingSave: true,
           resumingAfterAuth: true,
+          recipeId,
           timestamp: Date.now()
         }
       });
@@ -156,7 +171,7 @@ export function useRecipeSaveState() {
       
       // Open auth drawer
       openAuthDrawer();
-      return true;
+      return recipeId || true;
     }
     return false;
   };

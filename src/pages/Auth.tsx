@@ -1,11 +1,12 @@
 
 import React, { useEffect } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import { useAuth } from '@/hooks/use-auth';
 import { cleanupUIState } from '@/utils/dom-cleanup';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 // Define interface for custom location state to fix TypeScript errors
 interface NavigationState {
@@ -20,6 +21,7 @@ interface NavigationState {
   resumingAfterAuth?: boolean;
   resumingGeneration?: boolean;
   recipeData?: unknown;
+  recipeId?: string;
   timestamp?: number;
   [key: string]: unknown; // Allow for other properties
 }
@@ -29,16 +31,34 @@ const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = useQuickRecipeStore(state => state.recipe);
+  const { isValidQuickRecipe, storeRecipeWithId } = useRecipeDataRecovery();
   
   // Get the state with proper typing
   const locationState = location.state as NavigationState | null;
   const from = locationState?.from?.pathname || '/';
+  const recipeId = locationState?.recipeId;
   
   // Store the complete referring location on component mount
   useEffect(() => {
     // If we have a recipe in the store, make sure to use the backup
     // mechanism to ensure it survives page refreshes or navigations
     if (recipe) {
+      // Get the recipe ID from the referring URL if it exists
+      let recipeIdFromPath = '';
+      if (locationState?.from?.pathname) {
+        const pathParts = locationState.from.pathname.split('/');
+        if (pathParts.length > 2 && pathParts[1] === 'recipe-preview' && pathParts[2]) {
+          recipeIdFromPath = pathParts[2];
+        }
+      }
+      
+      // Store with explicit ID if available
+      if (recipeId || recipeIdFromPath) {
+        storeRecipeWithId(recipe, recipeId || recipeIdFromPath);
+        console.log('Stored recipe backup from Auth page with ID:', recipeId || recipeIdFromPath);
+      }
+      
+      // Also use traditional fallback
       authStateManager.storeRecipeDataFallback(recipe);
       console.log('Stored recipe backup from Auth page:', recipe.title);
     }
@@ -55,6 +75,7 @@ const Auth = () => {
             // Add additional state flags for recipe recovery
             resumingAfterAuth: true,
             pendingSave: locationState.pendingSave || false,
+            recipeId: recipeId || undefined,
             timestamp: Date.now()
           }
         }
@@ -68,6 +89,7 @@ const Auth = () => {
           state: {
             // Create a new object for state rather than trying to spread locationState
             resumingAfterAuth: true,
+            recipeId: recipeId || undefined,
             timestamp: Date.now(),
             // Include other properties if needed
             ...(locationState || {})
@@ -76,7 +98,7 @@ const Auth = () => {
       );
       console.log('Stored redirect from returnTo with enhanced state:', locationState.returnTo);
     }
-  }, [locationState, recipe]);
+  }, [locationState, recipe, recipeId, storeRecipeWithId, isValidQuickRecipe]);
 
   // Show a loader while checking auth state
   if (loading) {
@@ -101,9 +123,15 @@ const Auth = () => {
     const recipeBackup = authStateManager.getRecipeDataFallback();
     if (recipeBackup && recipeBackup.recipe) {
       console.log("Found recipe backup in localStorage, redirecting to recipe preview", recipeBackup);
+      
+      // If we have a recipeId, include it in the redirect path
+      const redirectPath = recipeId 
+        ? `/recipe-preview/${recipeId}`
+        : '/recipe-preview';
+      
       return (
         <Navigate 
-          to='/recipe-preview'
+          to={redirectPath}
           state={{
             pendingSave: true,
             resumingAfterAuth: true,
@@ -170,9 +198,13 @@ const Auth = () => {
       
       // Clear the redirect after using it
       authStateManager.clearRedirectAfterAuth();
-    } else if (from === '/recipe-preview' && (recipe || recipeBackup?.recipe)) {
+    } else if (from === '/recipe-preview' || from.startsWith('/recipe-preview/')) {
       // Special case for recipe preview - ensure we have data
       const recipeData = recipe || recipeBackup?.recipe;
+      
+      // If we have a recipe ID in the path, use it in the redirect
+      const previewPath = recipeId ? `/recipe-preview/${recipeId}` : '/recipe-preview';
+      
       redirectState = {
         ...redirectState,
         pendingSave: true,
@@ -180,7 +212,9 @@ const Auth = () => {
         recipeData,
         timestamp: Date.now()
       };
-      console.log("Redirecting to recipe-preview with recipe data");
+      
+      redirectTo = previewPath;
+      console.log(`Redirecting to ${previewPath} with recipe data`);
     }
     
     return <Navigate to={redirectTo} state={redirectState} replace />;

@@ -1,5 +1,6 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -23,9 +24,11 @@ const RecipePreviewPage: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams<{ id?: string }>();
   const { saveRecipe, isSaving: isSavingRecipe } = useQuickRecipeSave();
   const [debugMode, setDebugMode] = useState(false);
   const { session } = useAuth();
+  const recipeId = params.id;
   
   // Use our centralized save state management hook
   const {
@@ -44,7 +47,11 @@ const RecipePreviewPage: React.FC = () => {
   const { 
     recipeRecoveryStatus,
     attemptRecipeRecovery,
-    isValidQuickRecipe
+    isValidQuickRecipe,
+    storeRecipeWithId,
+    getRecipeById,
+    ensureRecipeHasId,
+    getRecipeIdFromUrl
   } = useRecipeDataRecovery();
   
   // Check if we're resuming from authentication
@@ -52,25 +59,49 @@ const RecipePreviewPage: React.FC = () => {
   const hasPendingSave = location.state?.pendingSave === true;
   const hasRecipeData = location.state?.recipeData || null;
 
-  // Check for recipe data in location state - this is important for recipe restoration
+  // Get recipe ID from URL if available
   useEffect(() => {
+    const urlRecipeId = recipeId || getRecipeIdFromUrl();
+    
     // Log the current recovery conditions for debugging
     console.log("Recipe recovery conditions:", {
+      urlRecipeId,
+      recipeId,
       hasRecipeData,
       isResuming,
       hasPendingSave,
       recipeExists: !!recipe
     });
     
+    // If we have a recipe ID in the URL but no recipe in the store, 
+    // try to load it from localStorage
+    if (urlRecipeId && !recipe) {
+      const storedRecipe = getRecipeById(urlRecipeId);
+      if (storedRecipe) {
+        console.log("Restored recipe from ID in URL:", urlRecipeId);
+        setRecipe(storedRecipe);
+        return;
+      }
+    }
+    
     // If we have recipe data in location state AND we don't have a recipe in the store,
-    // restore the recipe
+    // restore the recipe and ensure it has an ID
     if (hasRecipeData && !recipe) {
       if (isValidQuickRecipe(hasRecipeData)) {
         console.log("Restoring recipe from location state", hasRecipeData);
         setRecipe(hasRecipeData as QuickRecipe);
         
-        // Ensure we back up this recipe for additional safety
-        authStateManager.storeRecipeDataFallback(hasRecipeData as QuickRecipe);
+        // Ensure recipe has ID and update URL if needed
+        if (!recipeId) {
+          const newId = ensureRecipeHasId(hasRecipeData as QuickRecipe);
+          if (newId) {
+            // Update URL to include recipe ID without triggering a reload
+            navigate(`/recipe-preview/${newId}`, { 
+              replace: true, 
+              state: location.state 
+            });
+          }
+        }
       }
     } else if (isResuming && !recipe) {
       // If we're resuming after auth but don't have recipe data or a recipe,
@@ -85,7 +116,23 @@ const RecipePreviewPage: React.FC = () => {
         toast.error("We couldn't recover your recipe. Please try again.");
       }
     }
-  }, [hasRecipeData, recipe, isResuming, setRecipe, attemptRecipeRecovery, isValidQuickRecipe]);
+  }, [hasRecipeData, recipe, isResuming, setRecipe, attemptRecipeRecovery, isValidQuickRecipe, 
+     recipeId, navigate, location.state, getRecipeById, ensureRecipeHasId, getRecipeIdFromUrl]);
+
+  // Ensure recipe has ID once it's loaded
+  useEffect(() => {
+    // If we have a recipe but no ID in the URL, generate one and update the URL
+    if (recipe && !recipeId) {
+      const newId = ensureRecipeHasId(recipe);
+      if (newId) {
+        console.log("Recipe loaded but no ID in URL, updating URL with ID:", newId);
+        navigate(`/recipe-preview/${newId}`, { 
+          replace: true, 
+          state: location.state 
+        });
+      }
+    }
+  }, [recipe, recipeId, ensureRecipeHasId, navigate, location.state]);
 
   // Handle post-authentication actions
   useEffect(() => {
@@ -213,9 +260,21 @@ const RecipePreviewPage: React.FC = () => {
     // Set saving state to true
     setIsSaving(true);
 
+    // Before attempting to save, ensure recipe has an ID
+    const recipeIdToUse = recipeId || ensureRecipeHasId(recipe);
+
     // Backup recipe to localStorage before attempting to save
     // This ensures we can recover it if auth redirects us away
-    authStateManager.storeRecipeDataFallback(recipe);
+    if (recipeIdToUse) {
+      // Store with specific ID
+      storeRecipeWithId(recipe, recipeIdToUse);
+      
+      // Also backup in authStateManager for legacy support
+      authStateManager.storeRecipeDataFallback(recipe);
+    } else {
+      // Just use the legacy method
+      authStateManager.storeRecipeDataFallback(recipe);
+    }
 
     try {
       // Validate recipe has required fields
@@ -246,6 +305,19 @@ const RecipePreviewPage: React.FC = () => {
         // This means user was redirected to auth - we don't need an error message
         // The auth component will handle the flow
         setIsSaving(false);
+        
+        // Make sure auth redirect includes recipe ID
+        if (recipeIdToUse) {
+          // Store the path with ID for auth redirect
+          const currentUrl = `/recipe-preview/${recipeIdToUse}`;
+          authStateManager.setRedirectAfterAuth(currentUrl, {
+            state: { 
+              pendingSave: true,
+              resumingAfterAuth: true,
+              timestamp: Date.now()
+            }
+          });
+        }
       } else {
         // Handle case where savedData is falsy but no error was thrown
         toast.warning("Recipe was not saved properly. Please try again.");

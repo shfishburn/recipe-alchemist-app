@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 // Define which fields are valid in the database and their mappings
 const FIELD_MAPPINGS: Record<string, string> = {
@@ -97,6 +98,8 @@ export function useQuickRecipeSave() {
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { storeRecipeWithId, ensureRecipeHasId, getRecipeIdFromUrl } = useRecipeDataRecovery();
 
   const saveRecipe = useCallback(async (recipe: QuickRecipe, bypassAuth = false) => {
     try {
@@ -106,24 +109,45 @@ export function useQuickRecipeSave() {
       if (!session?.user && !bypassAuth) {
         // Store the current recipe in authStateManager before redirecting to auth
         try {
+          // Ensure recipe has an ID
+          const recipeId = ensureRecipeHasId(recipe);
+          
           // Queue the action using authStateManager
           const actionId = authStateManager.queueAction({
             type: SAVE_RECIPE_ACTION,
-            data: { recipe },
-            sourceUrl: window.location.pathname
+            data: { recipe, recipeId },
+            sourceUrl: location.pathname
           });
           
-          // Also store in localStorage as a fallback mechanism
+          // Also store in localStorage with ID for more reliable recovery
+          if (recipeId) {
+            storeRecipeWithId(recipe, recipeId);
+            console.log("Stored recipe with ID for auth:", recipeId);
+          }
+          
+          // Also use traditional fallback
           authStateManager.storeRecipeDataFallback(recipe);
           
           console.log("Stored recipe save request with action ID:", actionId);
           
           // Store the current URL for more robust state preservation
-          const currentUrl = window.location.pathname;
+          // If we have a recipe ID, include it in the path
+          let currentUrl = location.pathname;
+          const urlRecipeId = getRecipeIdFromUrl() || recipeId;
+          
+          // If current path doesn't already have the ID and we have one, use it
+          if (urlRecipeId && !currentUrl.includes(`/recipe-preview/${urlRecipeId}`)) {
+            // Check if we're on the recipe-preview base path
+            if (currentUrl === '/recipe-preview') {
+              currentUrl = `/recipe-preview/${urlRecipeId}`;
+            }
+          }
+          
           authStateManager.setRedirectAfterAuth(currentUrl, {
             state: { 
               pendingSave: true,
               resumingAfterAuth: true,
+              recipeId: urlRecipeId,
               recipeData: recipe, // Include recipe directly in state
               timestamp: Date.now()
             }
@@ -194,6 +218,12 @@ export function useQuickRecipeSave() {
             authStateManager.markActionExecuted(action.id);
           });
           
+          // Also clear any recipe-specific cached data
+          const recipeId = getRecipeIdFromUrl();
+          if (recipeId) {
+            localStorage.removeItem(`recipe_${recipeId}`);
+          }
+          
           // Load the saved recipe
           setSavedRecipe(recipe);
           
@@ -220,7 +250,7 @@ export function useQuickRecipeSave() {
     } finally {
       setIsSaving(false);
     }
-  }, [session, openAuthDrawer, navigate]);
+  }, [session, openAuthDrawer, navigate, location, ensureRecipeHasId, storeRecipeWithId, getRecipeIdFromUrl]);
 
   return {
     saveRecipe,

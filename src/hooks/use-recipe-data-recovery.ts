@@ -1,128 +1,183 @@
 
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
-import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { useToast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
+import { useLocation } from 'react-router-dom';
+
+// Define type for recipe recovery status
+type RecoveryStatus = 'pending' | 'success' | 'failed' | 'idle';
 
 /**
- * A custom hook that handles recipe data recovery after authentication
- * or other navigation events that might cause data loss
+ * Hook for managing recipe data recovery across navigation and auth flows
  */
 export function useRecipeDataRecovery() {
+  const [recipeRecoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>('idle');
   const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [recipeRecoveryStatus, setRecipeRecoveryStatus] = useState<
-    'idle' | 'pending' | 'success' | 'failed'
-  >('idle');
-  
   const setRecipe = useQuickRecipeStore(state => state.setRecipe);
   const recipe = useQuickRecipeStore(state => state.recipe);
   
-  // Helper function to validate QuickRecipe
-  function isValidQuickRecipe(recipe: unknown): recipe is QuickRecipe {
+  /**
+   * Generates a unique ID for a recipe
+   */
+  const generateRecipeId = useCallback(() => {
+    return uuidv4().slice(0, 8); // Short UUID for URL friendliness
+  }, []);
+  
+  /**
+   * Gets the recipe ID from the URL if present
+   */
+  const getRecipeIdFromUrl = useCallback(() => {
+    // Check for ID in path params (for routes like /recipe-preview/:id)
+    const pathParts = location.pathname.split('/');
+    if (pathParts.length > 2 && pathParts[1] === 'recipe-preview') {
+      return pathParts[2];
+    }
+    
+    // Check for ID in query params (for routes like /recipe-preview?id=123)
+    const urlParams = new URLSearchParams(location.search);
+    return urlParams.get('id');
+  }, [location]);
+  
+  /**
+   * Validates if an object is a valid QuickRecipe
+   */
+  const isValidQuickRecipe = useCallback((recipe: unknown): recipe is QuickRecipe => {
     if (!recipe || typeof recipe !== 'object') return false;
     
     const r = recipe as Partial<QuickRecipe>;
     return (
       typeof r.title === 'string' && 
       Array.isArray(r.ingredients) && 
-      typeof r.servings === 'number'
+      (typeof r.servings === 'number' || r.servings === undefined)
     );
-  }
+  }, []);
   
   /**
-   * Attempt to recover recipe data from multiple sources, using a priority-based approach
+   * Stores recipe data with an ID in localStorage
    */
-  const recoverRecipeData = (): QuickRecipe | null => {
-    // Priority 1: Check location state (highest priority as it's most recent)
-    if (location.state?.recipeData && isValidQuickRecipe(location.state.recipeData)) {
-      console.log('[RECOVERY] Found recipe in navigation state:', location.state.recipeData.title);
-      return location.state.recipeData as QuickRecipe;
-    }
-    
-    // Priority 2: Check AuthStateManager pending actions
-    const pendingActions = authStateManager.getPendingActions();
-    const saveAction = pendingActions.find(a => 
-      a.type === 'save-recipe' && 
-      a.data?.recipe &&
-      !a.executed
-    );
-    
-    if (saveAction?.data.recipe && isValidQuickRecipe(saveAction.data.recipe)) {
-      console.log('[RECOVERY] Found recipe in pending actions:', 
-        (saveAction.data.recipe as QuickRecipe).title);
-      return saveAction.data.recipe as QuickRecipe;
-    }
-    
-    // Priority 3: Check localStorage backup
-    const backup = authStateManager.getRecipeDataFallback();
-    if (backup?.recipe && isValidQuickRecipe(backup.recipe)) {
-      console.log('[RECOVERY] Found recipe in localStorage backup:', backup.recipe.title);
-      return backup.recipe as QuickRecipe;
-    }
-    
-    // Priority 4: Check existing recipe in store (lowest priority)
-    if (recipe && isValidQuickRecipe(recipe)) {
-      console.log('[RECOVERY] Using existing recipe from store:', recipe.title);
-      return recipe;
-    }
-    
-    console.warn('[RECOVERY] No valid recipe found in any storage location');
-    return null;
-  };
-  
-  /**
-   * Try to recover recipe data after authentication or navigation events
-   */
-  const attemptRecipeRecovery = () => {
-    // Only attempt recovery if we're resuming after auth or have a pending save
-    if (location.state?.resumingAfterAuth || location.state?.pendingSave) {
-      console.log('[RECOVERY] Attempting recipe recovery after auth');
-      setRecipeRecoveryStatus('pending');
+  const storeRecipeWithId = useCallback((recipe: QuickRecipe, id?: string) => {
+    try {
+      const recipeId = id || generateRecipeId();
       
-      const recoveredRecipe = recoverRecipeData();
-      if (recoveredRecipe) {
-        setRecipe(recoveredRecipe);
-        setRecipeRecoveryStatus('success');
-        
-        // Clear localStorage backup after successful recovery to prevent duplicates
-        setTimeout(() => {
-          authStateManager.clearRecipeDataFallback();
-        }, 500);
-        
-        console.log('[RECOVERY] Successfully recovered recipe:', recoveredRecipe.title);
-        
-        toast({
-          title: "Recipe Restored",
-          description: "Your recipe has been successfully restored.",
-        });
-        
-        return true;
-      } else {
-        setRecipeRecoveryStatus('failed');
-        
-        console.error('[RECOVERY] Failed to recover recipe data');
-        
-        toast({
-          title: "Recovery Failed",
-          description: "We couldn't recover your recipe data. Please try again.",
-          variant: "destructive",
-        });
-        
-        return false;
+      // Store recipe with ID in localStorage
+      localStorage.setItem(`recipe_${recipeId}`, JSON.stringify({
+        recipe,
+        timestamp: Date.now()
+      }));
+      
+      console.log(`Stored recipe '${recipe.title}' with ID: ${recipeId}`);
+      return recipeId;
+    } catch (error) {
+      console.error('Failed to store recipe with ID:', error);
+      return null;
+    }
+  }, [generateRecipeId]);
+  
+  /**
+   * Retrieves recipe data by ID from localStorage
+   */
+  const getRecipeById = useCallback((id: string): QuickRecipe | null => {
+    try {
+      const storedData = localStorage.getItem(`recipe_${id}`);
+      if (!storedData) return null;
+      
+      const parsedData = JSON.parse(storedData);
+      if (isValidQuickRecipe(parsedData.recipe)) {
+        console.log(`Retrieved recipe with ID: ${id}`);
+        return parsedData.recipe as QuickRecipe;
       }
+      return null;
+    } catch (error) {
+      console.error(`Failed to retrieve recipe with ID: ${id}`, error);
+      return null;
+    }
+  }, [isValidQuickRecipe]);
+  
+  /**
+   * Attempts to recover recipe data from various sources
+   */
+  const attemptRecipeRecovery = useCallback(() => {
+    // Don't attempt recovery if we already have a recipe
+    if (recipe) {
+      console.log('Recipe already exists in store, no need for recovery');
+      return true;
     }
     
-    return false;
-  };
+    setRecoveryStatus('pending');
+    console.log('Attempting recipe recovery...');
+    
+    try {
+      // Check for recipe ID in URL
+      const recipeId = getRecipeIdFromUrl();
+      
+      if (recipeId) {
+        console.log(`Found recipe ID in URL: ${recipeId}`);
+        const recipeFromId = getRecipeById(recipeId);
+        
+        if (recipeFromId) {
+          setRecipe(recipeFromId);
+          setRecoveryStatus('success');
+          return true;
+        }
+      }
+      
+      // If ID-based approach failed, try fallback strategies
+      
+      // Try getting from pendingActions in authStateManager
+      const nextAction = authStateManager.getNextPendingAction();
+      if (nextAction && nextAction.type === 'save-recipe' && nextAction.data.recipe) {
+        const recipeData = nextAction.data.recipe;
+        
+        if (isValidQuickRecipe(recipeData)) {
+          console.log('Recovered recipe from pending action');
+          setRecipe(recipeData as QuickRecipe);
+          authStateManager.markActionExecuted(nextAction.id);
+          setRecoveryStatus('success');
+          return true;
+        }
+      }
+      
+      // Try legacy fallback in localStorage
+      const recipeBackup = authStateManager.getRecipeDataFallback();
+      if (recipeBackup && recipeBackup.recipe) {
+        if (isValidQuickRecipe(recipeBackup.recipe)) {
+          console.log('Recovered recipe from localStorage fallback');
+          setRecipe(recipeBackup.recipe as QuickRecipe);
+          setRecoveryStatus('success');
+          return true;
+        }
+      }
+      
+      // All recovery methods failed
+      console.log('Recipe recovery failed - no valid data found');
+      setRecoveryStatus('failed');
+      return false;
+    } catch (error) {
+      console.error('Error during recipe recovery:', error);
+      setRecoveryStatus('failed');
+      return false;
+    }
+  }, [recipe, setRecipe, getRecipeIdFromUrl, getRecipeById, isValidQuickRecipe]);
   
-  return { 
+  /**
+   * Ensures a recipe has an ID and is properly stored
+   */
+  const ensureRecipeHasId = useCallback((recipe: QuickRecipe): string | null => {
+    // Generate and store a new ID if one doesn't exist
+    return storeRecipeWithId(recipe);
+  }, [storeRecipeWithId]);
+  
+  // Return all the functions and state
+  return {
     recipeRecoveryStatus,
     attemptRecipeRecovery,
-    recoverRecipeData,
-    isValidQuickRecipe
+    generateRecipeId,
+    storeRecipeWithId,
+    getRecipeById,
+    ensureRecipeHasId,
+    isValidQuickRecipe,
+    getRecipeIdFromUrl
   };
 }
