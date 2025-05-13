@@ -60,6 +60,7 @@ serve(async (req) => {
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json',
+          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-debug-info',
         },
         status: 200
       }
@@ -81,6 +82,7 @@ serve(async (req) => {
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json',
+          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-debug-info',
         },
         status: statusCode
       }
@@ -93,15 +95,26 @@ async function generateWithTimeout(requestData) {
   const { ingredients, max_calories, allowed_time } = requestData;
 
   // Validate input data
-  if (!ingredients || !Array.isArray(ingredients) && typeof ingredients !== 'string') {
-    console.error("Invalid ingredients format:", ingredients);
-    throw new Error('Invalid ingredients format. Please provide ingredients as an array or string.');
+  if (!ingredients) {
+    console.error("Missing ingredients");
+    throw new Error('Missing ingredients. Please provide at least one ingredient.');
   }
 
-  // Convert ingredients to array if it's a string
-  const ingredientsArray = typeof ingredients === 'string' 
-    ? [ingredients] 
-    : ingredients;
+  // Enhanced input validation
+  const ingredientsArray = (() => {
+    if (typeof ingredients === 'string') {
+      return ingredients.trim() ? [ingredients.trim()] : null;
+    }
+    if (Array.isArray(ingredients)) {
+      return ingredients.filter(i => typeof i === 'string' && i.trim());
+    }
+    return null;
+  })();
+
+  // Validate after processing
+  if (!ingredientsArray || ingredientsArray.length === 0) {
+    throw new Error('Invalid ingredients format or empty ingredients. Please provide valid ingredients.');
+  }
 
   // Construct the prompt
   let prompt = `Generate a quick recipe based on the following ingredients: ${ingredientsArray.join(', ')}.`;
@@ -194,7 +207,11 @@ function parseRecipe(recipeText) {
 
     // Extract title - usually the first line
     if (i < lines.length) {
-        recipe.title = lines[i].replace(/^#*\s*|Recipe Title:|\s*$/gi, ''); // Remove any markdown heading symbols and "Recipe Title:" prefix
+        // Clean up title - remove common prefixes and markdown
+        recipe.title = lines[i]
+            .replace(/^#*\s*|Recipe Title:|\s*$/gi, '') // Remove markdown and "Recipe Title:" prefix
+            .replace(/^Title:|\s*$/gi, '')              // Remove "Title:" prefix
+            .trim();
         i++;
     }
 
@@ -202,13 +219,14 @@ function parseRecipe(recipeText) {
     while (i < lines.length) {
         const line = lines[i];
         
-        // Check for section headers
-        if (line.toLowerCase().includes('ingredients') || line.match(/^ingredients:?$/i)) {
+        // Check for section headers with more patterns
+        if (line.match(/^ingredients:?\s*$/i) || line.match(/^ingredients\s*list:?\s*$/i)) {
             currentSection = 'ingredients';
             i++;
             continue;
-        } else if (line.toLowerCase().includes('instructions') || line.toLowerCase().includes('directions') || 
-                  line.toLowerCase().includes('steps') || line.match(/^steps:?$/i)) {
+        } else if (line.match(/^instructions:?\s*$/i) || line.match(/^directions:?\s*$/i) || 
+                  line.match(/^steps:?\s*$/i) || line.match(/^preparation:?\s*$/i) || 
+                  line.match(/^method:?\s*$/i)) {
             currentSection = 'steps';
             i++;
             continue;
@@ -217,26 +235,57 @@ function parseRecipe(recipeText) {
         // Process content based on current section
         if (currentSection === 'ingredients') {
             // Strip out bullets, numbers, etc.
-            const cleanedLine = line.replace(/^[-*•]|\d+\.\s+/, '').trim();
+            const cleanedLine = line.replace(/^[-*•]|\d+[\.\)\]]\s+/, '').trim();
             if (cleanedLine) {
-                // Parse ingredients into structured format
-                // Try to extract quantity, unit, and item name
-                const match = cleanedLine.match(/^([\d./]+)?\s*([a-zA-Z]+)?\s*(.+)$/);
-                
-                if (match) {
-                    const [, qty, unit, item] = match;
-                    recipe.ingredients.push({
-                        qty: qty ? parseFloat(qty) : null,
-                        unit: unit || '',
-                        item: item || cleanedLine,
-                        // Add metric and imperial units (same as original)
-                        qty_metric: qty ? parseFloat(qty) : null,
-                        unit_metric: unit || '',
-                        qty_imperial: qty ? parseFloat(qty) : null,
-                        unit_imperial: unit || ''
-                    });
-                } else {
-                    // If parsing fails, use the whole string as the item
+                // Enhanced regex for ingredient parsing that handles more unit formats
+                // This handles things like "1 1/2 cups", "2-3 tbsp", "1.5 kg", etc.
+                try {
+                    // More robust regex pattern for parsing ingredients
+                    const match = cleanedLine.match(
+                        /^([\d./\s-]+)?\s*([a-zA-Z.]+\.?|(?:tbsp|tsp|oz|lb|kg|g|ml|l))?\s*(?:of\s+)?(.+)$/i
+                    );
+                    
+                    if (match && match[3]) { // Ensure we have an item name
+                        const [, qtyStr, unit, item] = match;
+                        
+                        // Clean and parse the quantity
+                        let qty = null;
+                        if (qtyStr) {
+                            // Handle ranges like "2-3" by taking average
+                            if (qtyStr.includes('-')) {
+                                const [min, max] = qtyStr.split('-').map(num => parseFloat(num.trim()));
+                                qty = (min + max) / 2;
+                            } else {
+                                // Handle fractions and mixed numbers
+                                qty = qtyStr.includes('/') ? 
+                                    eval(qtyStr.replace(/\s+/g, '')) : // safely evaluate fraction
+                                    parseFloat(qtyStr.trim());
+                            }
+                        }
+                        
+                        recipe.ingredients.push({
+                            qty: qty,
+                            unit: unit ? unit.trim() : '',
+                            item: item.trim(),
+                            // Add metric and imperial units (same as original since we don't convert)
+                            qty_metric: qty,
+                            unit_metric: unit ? unit.trim() : '',
+                            qty_imperial: qty,
+                            unit_imperial: unit ? unit.trim() : ''
+                        });
+                    } else {
+                        // If parsing fails, use the whole string as the item
+                        recipe.ingredients.push({
+                            item: cleanedLine,
+                            qty_metric: null,
+                            unit_metric: '',
+                            qty_imperial: null,
+                            unit_imperial: ''
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error parsing ingredient:", cleanedLine, error);
+                    // Fallback to simple parsing
                     recipe.ingredients.push({
                         item: cleanedLine,
                         qty_metric: null,
@@ -248,7 +297,7 @@ function parseRecipe(recipeText) {
             }
         } else if (currentSection === 'steps') {
             // Strip out numbers if present, but not from the content
-            const cleanedLine = line.replace(/^\d+[.)\]]?\s+/, '').trim();
+            const cleanedLine = line.replace(/^\d+[.)\]]\s+/, '').trim();
             if (cleanedLine) {
                 recipe.steps.push(cleanedLine);
             }
@@ -256,23 +305,47 @@ function parseRecipe(recipeText) {
             // If we haven't identified a section but line starts with a bullet or number,
             // assume it's an ingredient
             const cleanedLine = line.replace(/^[-*•]|\d+\.\s+/, '').trim();
-            // Parse ingredients into structured format
-            const match = cleanedLine.match(/^([\d./]+)?\s*([a-zA-Z]+)?\s*(.+)$/);
-            
-            if (match) {
-                const [, qty, unit, item] = match;
-                recipe.ingredients.push({
-                    qty: qty ? parseFloat(qty) : null,
-                    unit: unit || '',
-                    item: item || cleanedLine,
-                    // Add metric and imperial units (same as original)
-                    qty_metric: qty ? parseFloat(qty) : null,
-                    unit_metric: unit || '',
-                    qty_imperial: qty ? parseFloat(qty) : null,
-                    unit_imperial: unit || ''
-                });
-            } else {
-                // If parsing fails, use the whole string as the item
+            try {
+                const match = cleanedLine.match(
+                    /^([\d./\s-]+)?\s*([a-zA-Z.]+\.?|(?:tbsp|tsp|oz|lb|kg|g|ml|l))?\s*(?:of\s+)?(.+)$/i
+                );
+                
+                if (match && match[3]) {
+                    const [, qtyStr, unit, item] = match;
+                    
+                    // Handle quantity parsing
+                    let qty = null;
+                    if (qtyStr) {
+                        if (qtyStr.includes('-')) {
+                            const [min, max] = qtyStr.split('-').map(num => parseFloat(num.trim()));
+                            qty = (min + max) / 2;
+                        } else {
+                            qty = qtyStr.includes('/') ? 
+                                eval(qtyStr.replace(/\s+/g, '')) :
+                                parseFloat(qtyStr.trim());
+                        }
+                    }
+                    
+                    recipe.ingredients.push({
+                        qty: qty,
+                        unit: unit ? unit.trim() : '',
+                        item: item.trim(),
+                        qty_metric: qty,
+                        unit_metric: unit ? unit.trim() : '',
+                        qty_imperial: qty,
+                        unit_imperial: unit ? unit.trim() : ''
+                    });
+                } else {
+                    recipe.ingredients.push({
+                        item: cleanedLine,
+                        qty_metric: null,
+                        unit_metric: '',
+                        qty_imperial: null,
+                        unit_imperial: ''
+                    });
+                }
+            } catch (error) {
+                console.error("Error parsing implicit ingredient:", cleanedLine, error);
                 recipe.ingredients.push({
                     item: cleanedLine,
                     qty_metric: null,
@@ -331,6 +404,20 @@ function parseRecipe(recipeText) {
             }
         }
     }
+
+    // Final validation - ensure all ingredients have required properties
+    recipe.ingredients = recipe.ingredients.map(ingredient => {
+        // Ensure all object properties are present
+        return {
+            item: typeof ingredient.item === 'string' ? ingredient.item : 'Unknown ingredient',
+            qty: ingredient.qty !== undefined ? ingredient.qty : null,
+            unit: ingredient.unit || '',
+            qty_metric: ingredient.qty_metric !== undefined ? ingredient.qty_metric : ingredient.qty,
+            unit_metric: ingredient.unit_metric || ingredient.unit || '',
+            qty_imperial: ingredient.qty_imperial !== undefined ? ingredient.qty_imperial : ingredient.qty,
+            unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
+        };
+    });
 
     console.log("Parsed recipe:", {
         title: recipe.title,

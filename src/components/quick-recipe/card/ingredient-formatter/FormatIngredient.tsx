@@ -17,8 +17,8 @@ export function FormatIngredient({ ingredient }: FormatIngredientProps) {
     return <span className="text-red-500">Missing ingredient</span>;
   }
   
-  // Basic check if the ingredient is in the correct format
-  if (typeof ingredient !== 'object') {
+  // Improved type checking - handle arrays and other non-object types
+  if (!ingredient || typeof ingredient !== 'object' || Array.isArray(ingredient)) {
     return <span>{String(ingredient)}</span>;
   }
 

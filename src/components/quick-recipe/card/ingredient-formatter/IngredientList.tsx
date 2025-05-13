@@ -8,8 +8,8 @@ interface IngredientListProps {
 }
 
 export function IngredientList({ ingredients }: IngredientListProps) {
-  // Handle edge cases
-  if (!ingredients || ingredients.length === 0) {
+  // Better handling of edge cases
+  if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
     return <div className="text-muted-foreground italic">No ingredients listed</div>;
   }
   
