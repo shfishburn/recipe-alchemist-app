@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -253,12 +254,13 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       
       console.log("Auth success - redirecting to:", redirectTo);
       
-      // Navigate with any stored state
+      // Navigate with any stored state - ensure state is never undefined
+      const stateToUse = typeof redirectData.state === 'object' && redirectData.state !== null
+        ? { ...redirectData.state, resumingAfterAuth: true }
+        : { resumingAfterAuth: true };
+        
       navigate(redirectTo, { 
-        state: {
-          ...(redirectData.state || {}),
-          resumingAfterAuth: true
-        },
+        state: stateToUse,
         replace: true
       });
       
@@ -302,11 +304,12 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       // Handle success
       handleAuthSuccess();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during login";
       toast({
         title: "Login failed",
-        description: error.message || "An error occurred during login",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -345,11 +348,12 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
       // Handle success
       handleAuthSuccess();
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error:', error);
+      const errorMessage = error instanceof Error ? error.message : "An error occurred during signup";
       toast({
         title: "Signup failed",
-        description: error.message || "An error occurred during signup",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

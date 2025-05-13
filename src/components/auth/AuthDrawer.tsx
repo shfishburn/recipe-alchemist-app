@@ -97,12 +97,13 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       
       console.log("Auth success - redirecting to:", redirectTo);
       
-      // Navigate with any stored state
+      // Navigate with any stored state - ensure state is never undefined
+      const stateToUse = typeof redirectData.state === 'object' && redirectData.state !== null
+        ? { ...redirectData.state, resumingAfterAuth: true }
+        : { resumingAfterAuth: true };
+        
       navigate(redirectTo, { 
-        state: {
-          ...(redirectData.state || {}),
-          resumingAfterAuth: true
-        },
+        state: stateToUse,
         replace: true
       });
       
