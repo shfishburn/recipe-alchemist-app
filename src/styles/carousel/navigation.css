@@ -5,9 +5,11 @@
   min-height: 24px; /* Smaller on mobile */
   min-width: 24px;
   opacity: 0.9;
-  transition: all 0.2s ease;
-  /* Add transform-origin to stabilize positioning */
-  transform-origin: center center;
+  /* Remove transform-origin which can cause positioning issues */
+  position: absolute; /* Ensure absolute positioning is maintained */
+  /* Use will-change for hardware acceleration without side effects */
+  will-change: opacity; 
+  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 @media (min-width: 640px) {
@@ -19,8 +21,7 @@
 
 .carousel-nav-button:hover {
   opacity: 1;
-  /* Change scale to avoid layout jumps */
-  transform: scale(1.05);
+  /* Remove the transform scale that's causing the bounce */
 }
 
 /* Better positioning for arrows */
@@ -32,4 +33,11 @@
   .carousel-nav-button.next {
     right: -6px;
   }
+}
+
+/* Add fixed positioning to buttons to prevent layout shifts */
+.carousel-nav-button.previous,
+.carousel-nav-button.next {
+  top: 50%;
+  transform: translateY(-50%); /* Center vertically only, no hover transform */
 }
