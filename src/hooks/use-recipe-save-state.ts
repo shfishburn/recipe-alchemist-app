@@ -8,6 +8,13 @@ import { QuickRecipe } from '@/types/quick-recipe';
 // Key for storing pending recipe save in sessionStorage
 const PENDING_SAVE_KEY = 'pendingSaveRecipe';
 
+// Define types for pending save data
+interface PendingSaveData {
+  recipe: QuickRecipe;
+  timestamp: number;
+  sourceUrl: string;
+}
+
 export function useRecipeSaveState() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -16,15 +23,29 @@ export function useRecipeSaveState() {
   const navigate = useNavigate();
 
   /**
+   * Validates if the data is a valid PendingSaveData object
+   */
+  const isValidPendingSaveData = (data: any): data is PendingSaveData => {
+    return (
+      data && 
+      typeof data.timestamp === 'number' && 
+      typeof data.sourceUrl === 'string' &&
+      data.recipe !== undefined
+    );
+  };
+
+  /**
    * Store recipe for saving after authentication
    */
   const savePendingRecipe = (recipe: QuickRecipe) => {
     try {
-      sessionStorage.setItem(PENDING_SAVE_KEY, JSON.stringify({
+      const saveData: PendingSaveData = {
         recipe,
         timestamp: Date.now(),
         sourceUrl: window.location.pathname
-      }));
+      };
+      
+      sessionStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(saveData));
       return true;
     } catch (error) {
       console.error('Failed to store pending recipe:', error);
@@ -40,7 +61,14 @@ export function useRecipeSaveState() {
       const savedData = sessionStorage.getItem(PENDING_SAVE_KEY);
       if (!savedData) return null;
       
-      return JSON.parse(savedData);
+      const parsedData = JSON.parse(savedData);
+      if (isValidPendingSaveData(parsedData)) {
+        return parsedData;
+      } else {
+        console.error('Invalid pending recipe data format');
+        sessionStorage.removeItem(PENDING_SAVE_KEY);
+        return null;
+      }
     } catch (error) {
       console.error('Failed to retrieve pending recipe:', error);
       return null;

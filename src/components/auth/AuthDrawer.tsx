@@ -35,18 +35,49 @@ interface AuthDrawerProps {
   setOpen: (open: boolean) => void;
 }
 
+// Define type for pending save data
+interface PendingSave {
+  recipe: any; // Keep as any for now since recipe structure is complex
+  sourceUrl: string;
+  timestamp: number;
+}
+
+/**
+ * Validates if the data is a valid PendingSave object
+ */
+function isValidPendingSave(data: any): data is PendingSave {
+  return (
+    data && 
+    typeof data.sourceUrl === 'string' && 
+    typeof data.timestamp === 'number' &&
+    data.recipe !== undefined
+  );
+}
+
 export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   const { session } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [pendingSave, setPendingSave] = useState<any>(null);
+  const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
   
   // Check for pending actions on mount and when auth state changes
   const checkPendingActions = useCallback(() => {
     try {
       const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
       if (pendingSaveData) {
-        setPendingSave(JSON.parse(pendingSaveData));
+        try {
+          const parsedData = JSON.parse(pendingSaveData);
+          if (isValidPendingSave(parsedData)) {
+            setPendingSave(parsedData);
+            console.log("Found pending save:", parsedData.sourceUrl);
+          } else {
+            console.error("Invalid pending save data format:", parsedData);
+            sessionStorage.removeItem('pendingSaveRecipe');
+          }
+        } catch (error) {
+          console.error("Error parsing pending save data:", error);
+          sessionStorage.removeItem('pendingSaveRecipe');
+        }
       }
     } catch (error) {
       console.error("Error checking for pending actions:", error);
@@ -62,22 +93,34 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     try {
       const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
       if (pendingSaveData) {
-        const { recipe, sourceUrl } = JSON.parse(pendingSaveData);
-        
-        // If we have a valid source URL to return to, use it
-        if (sourceUrl) {
-          toast.success("Successfully signed in! Returning to your recipe...");
-          
-          // Add a small delay to allow toast to show
-          setTimeout(() => {
-            navigate(sourceUrl, { 
-              state: { 
-                pendingSave: true,
-                resumingAfterAuth: true 
-              }
-            });
-          }, 300);
-          return;
+        try {
+          const parsedData = JSON.parse(pendingSaveData);
+          if (isValidPendingSave(parsedData)) {
+            const { recipe, sourceUrl } = parsedData;
+            
+            // If we have a valid source URL to return to, use it
+            if (sourceUrl) {
+              toast.success("Successfully signed in! Returning to your recipe...");
+              
+              // Navigate after a brief delay to allow toast to show
+              // Using requestAnimationFrame for smoother transitions
+              requestAnimationFrame(() => {
+                navigate(sourceUrl, { 
+                  state: { 
+                    pendingSave: true,
+                    resumingAfterAuth: true 
+                  }
+                });
+              });
+              return;
+            }
+          } else {
+            console.error("Invalid pending save data format");
+            sessionStorage.removeItem('pendingSaveRecipe');
+          }
+        } catch (error) {
+          console.error("Error parsing pending save data:", error);
+          sessionStorage.removeItem('pendingSaveRecipe');
         }
       }
       
@@ -124,6 +167,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     <AuthForm onSuccess={handleAuthSuccess} />
   ), [handleAuthSuccess]);
 
+  // Mobile drawer
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={(newOpen) => {
@@ -151,6 +195,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     );
   }
 
+  // Desktop sheet
   return (
     <Sheet open={open} onOpenChange={(newOpen) => {
       setOpen(newOpen);

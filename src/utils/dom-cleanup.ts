@@ -21,3 +21,22 @@ export function cleanupUIState() {
     backdrop.remove();
   });
 }
+
+/**
+ * Sets up a listener for route changes to automatically clean up UI state
+ * Returns a cleanup function that removes the listener
+ */
+export function setupRouteChangeCleanup() {
+  // Function to handle route changes and clean up UI
+  const handleRouteChange = () => {
+    cleanupUIState();
+  };
+
+  // Add event listener for history state changes (route changes)
+  window.addEventListener('popstate', handleRouteChange);
+  
+  // Return cleanup function
+  return () => {
+    window.removeEventListener('popstate', handleRouteChange);
+  };
+}

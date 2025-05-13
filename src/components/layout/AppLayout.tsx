@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -76,8 +77,8 @@ export const AppLayout = () => {
     return (
       <React.Suspense fallback={
         <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center overflow-x-hidden">
-          <div className="loading-pulse-ring w-20 h-20 border-4 border-recipe-green opacity-30"></div>
-          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-blue opacity-20" 
+          <div className="loading-pulse-ring w-20 h-20 border-4 border-gray-200"></div>
+          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-green border-t-transparent animate-spin" 
                style={{ animationDelay: '-0.5s' }}></div>
         </div>
       }>
