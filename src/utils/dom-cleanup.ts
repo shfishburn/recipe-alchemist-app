@@ -51,3 +51,35 @@ export function cleanupUIState() {
     return false;
   }
 }
+
+/**
+ * Setup a cleanup function that runs on route changes
+ * This ensures that when users navigate between routes,
+ * any lingering UI elements are removed properly
+ * 
+ * @param navigate - The navigate function from useNavigate() hook
+ * @returns A cleanup function to be called when the component unmounts
+ */
+export function setupRouteChangeCleanup(navigate: any) {
+  // Store the original navigate function
+  const originalNavigate = navigate;
+  
+  // Wrap the navigate function to perform cleanup before navigation
+  const wrappedNavigate = (...args: any[]) => {
+    // Run cleanup before navigating
+    cleanupUIState();
+    
+    // Call the original navigate function with all arguments
+    return originalNavigate(...args);
+  };
+  
+  // Replace the navigate function with our wrapped version
+  Object.assign(navigate, wrappedNavigate);
+  
+  // Return a cleanup function
+  return () => {
+    // No need to restore the original navigate function
+    // as the component will be remounted with a fresh copy
+    cleanupUIState();
+  };
+}
