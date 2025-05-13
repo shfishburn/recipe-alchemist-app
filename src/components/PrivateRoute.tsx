@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -40,14 +39,21 @@ const PROTECTED_PATHS = [
 
 /**
  * Check if the given path matches a specific route type (public or protected)
+ * 
+ * @param path - The URL path to check
+ * @param type - The type of route to check for ('public' or 'protected')
+ * @returns boolean indicating if the path matches the specified route type
  */
 function isRouteType(path: string, type: 'public' | 'protected'): boolean {
-  if (type === 'public') {
-    return ROUTE_CONFIG.some(route => 
-      route.public && (path === route.path || path.startsWith(route.path))
-    );
-  } else {
-    return PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath));
+  switch (type) {
+    case 'public':
+      return ROUTE_CONFIG.some(route => 
+        route.public && (path === route.path || path.startsWith(route.path))
+      );
+    case 'protected':
+      return PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath));
+    default:
+      return false;
   }
 }
 
@@ -76,8 +82,16 @@ function safelyStoreRedirect(pathname: string, options: {
 }): void {
   // Only store internal paths (no protocol/domain/etc) and prevent path traversal
   if (pathname.startsWith('/') && !pathname.includes('..')) {
-    authStateManager.setRedirectAfterAuth(pathname, options);
-    console.log("Storing redirect location:", pathname);
+    // Normalize the path to prevent other path traversal patterns
+    const normalizedPath = pathname.replace(/\/+/g, '/');
+    
+    if (normalizedPath.startsWith('/')) {
+      authStateManager.setRedirectAfterAuth(normalizedPath, options);
+      console.log("Storing redirect location:", normalizedPath);
+    } else {
+      console.warn("Path normalization resulted in unsafe path:", normalizedPath);
+      authStateManager.setRedirectAfterAuth('/', options);
+    }
   } else {
     console.warn("Attempted to store potentially unsafe redirect:", pathname);
     // Default to home page for safety

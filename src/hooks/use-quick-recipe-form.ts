@@ -101,8 +101,9 @@ export function useQuickRecipeForm() {
       let errorMessage: string;
       
       if (error instanceof Error) {
-        errorMessage = error.message;
-        console.error('Detailed error information:', error);
+        const { message, stack } = error; // Destructure to use const
+        errorMessage = message;
+        console.error('Detailed error information:', { message, stack });
       } else {
         errorMessage = "Failed to submit recipe request. Please try again.";
         console.error('Unknown error type encountered');

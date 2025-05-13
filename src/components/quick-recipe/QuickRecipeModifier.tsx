@@ -100,8 +100,10 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     } catch (err: unknown) {
       // Improved error handling with type checking
       if (err instanceof Error) {
-        console.error("Error requesting modifications:", err.message);
-        setError(err.message);
+        const { message, stack } = err;
+        console.error("Error requesting modifications:", message);
+        console.debug("Error stack trace:", stack);
+        setError(message);
       } else {
         console.error("Unknown error requesting modifications");
         setError("An unknown error occurred while processing your request");

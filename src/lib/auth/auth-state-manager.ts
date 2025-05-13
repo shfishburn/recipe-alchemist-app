@@ -1,3 +1,4 @@
+
 import { Session, User } from '@supabase/supabase-js';
 
 // Version the state schema to allow for future migrations
@@ -59,6 +60,7 @@ export class AuthStateManager {
 
   /**
    * Load auth state from storage, or create default state if none exists
+   * @returns The loaded auth state or a default state if none exists
    */
   private loadState(): AuthState {
     try {
@@ -146,6 +148,7 @@ export class AuthStateManager {
 
   /**
    * Migrate data from legacy storage keys to the new unified format
+   * This ensures backward compatibility with older versions
    */
   private migrateLegacyState(): void {
     try {
@@ -222,6 +225,7 @@ export class AuthStateManager {
 
   /**
    * Clear all authentication-related state
+   * This is typically called during logout to ensure a clean state
    */
   public clearState(): void {
     this.state = {
@@ -234,11 +238,13 @@ export class AuthStateManager {
 
   /**
    * Set the redirect path to use after successful authentication
+   * @param pathname - The path to redirect to after authentication
+   * @param options - Optional parameters like search, hash and state
    */
   public setRedirectAfterAuth(pathname: string, options?: { 
     search?: string, 
     hash?: string, 
-    state?: unknown
+    state?: unknown 
   }): void {
     this.state.redirectAfterAuth = {
       pathname,
@@ -250,6 +256,7 @@ export class AuthStateManager {
 
   /**
    * Get the stored redirect path
+   * @returns The stored redirect path and associated options, or undefined if none exists
    */
   public getRedirectAfterAuth(): AuthState['redirectAfterAuth'] {
     return this.state.redirectAfterAuth;
@@ -268,6 +275,8 @@ export class AuthStateManager {
 
   /**
    * Queue an action that requires authentication
+   * @param action - The action to queue, without id, timestamp, and executed fields
+   * @returns A unique identifier for the queued action
    */
   public queueAction(action: Omit<PendingAction, 'id' | 'timestamp' | 'executed'>): string {
     // Generate a unique ID for this action
@@ -291,6 +300,7 @@ export class AuthStateManager {
 
   /**
    * Get all pending actions
+   * @returns A copy of the array of pending actions
    */
   public getPendingActions(): PendingAction[] {
     return [...this.state.pendingActions];
@@ -298,6 +308,8 @@ export class AuthStateManager {
 
   /**
    * Get a specific pending action by ID
+   * @param id - The unique identifier of the action to find
+   * @returns The pending action with the specified ID, or undefined if not found
    */
   public getPendingActionById(id: string): PendingAction | undefined {
     return this.state.pendingActions.find(action => action.id === id);
@@ -305,6 +317,7 @@ export class AuthStateManager {
 
   /**
    * Get the next pending action that hasn't been executed
+   * @returns The first unexecuted pending action, or undefined if all have been executed
    */
   public getNextPendingAction(): PendingAction | undefined {
     return this.state.pendingActions.find(action => !action.executed);
@@ -312,6 +325,7 @@ export class AuthStateManager {
 
   /**
    * Mark an action as executed
+   * @param id - The unique identifier of the action to mark as executed
    */
   public markActionExecuted(id: string): void {
     const action = this.state.pendingActions.find(a => a.id === id);
@@ -324,6 +338,7 @@ export class AuthStateManager {
 
   /**
    * Remove a pending action
+   * @param id - The unique identifier of the action to remove
    */
   public removePendingAction(id: string): void {
     const initialLength = this.state.pendingActions.length;
