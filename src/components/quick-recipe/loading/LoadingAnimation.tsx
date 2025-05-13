@@ -26,21 +26,9 @@ export function LoadingAnimation({ step, stepDescription, percentComplete }: Loa
         </svg>
       </div>
       
-      {/* Loading text and progress bar */}
+      {/* Loading text and message */}
       <div className="text-center space-y-3 max-w-md">
         <h2 className="text-xl font-semibold tracking-tight">{stepDescription}</h2>
-        
-        {/* Single progress bar with animation */}
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-gradient-to-r from-recipe-green to-recipe-green h-2.5 rounded-full animate-progress-pulse transition-all duration-300"
-            style={{ width: `${percentComplete}%` }}
-            role="progressbar" 
-            aria-valuenow={percentComplete} 
-            aria-valuemin={0} 
-            aria-valuemax={100}
-          />
-        </div>
         
         <p className="text-sm text-gray-500">
           {percentComplete < 50 ? 'This may take a minute...' : 'Almost there...'}
