@@ -1,9 +1,10 @@
+
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import { useNavigate } from 'react-router-dom';
+import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 
 // Define which fields are valid in the database and their mappings
 const FIELD_MAPPINGS = {
@@ -53,22 +54,47 @@ export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipe, setSavedRecipe] = useState<QuickRecipe | null>(null);
   const { session } = useAuth();
-  const navigate = useNavigate();
+  const { open: openAuthDrawer } = useAuthDrawer();
 
-  const saveRecipe = useCallback(async (recipe: QuickRecipe) => {
+  const saveRecipe = useCallback(async (recipe: QuickRecipe, bypassAuth = false) => {
     try {
       setIsSaving(true);
       
       // Check if user is logged in
-      if (!session?.user) {
-        toast.error("You need to be logged in to save recipes");
-        return;
+      if (!session?.user && !bypassAuth) {
+        // Store the current recipe in sessionStorage before redirecting to auth
+        try {
+          sessionStorage.setItem('pendingSaveRecipe', JSON.stringify({
+            recipe,
+            timestamp: Date.now(),
+            sourceUrl: window.location.pathname
+          }));
+          
+          toast.info("Please sign in to save your recipe", { 
+            duration: 4000,
+            action: {
+              label: "Sign In",
+              onClick: openAuthDrawer
+            }
+          });
+          
+          // Open auth drawer
+          openAuthDrawer();
+          
+          setIsSaving(false);
+          return null;
+        } catch (err) {
+          console.error("Error storing recipe for auth:", err);
+          toast.error("Unable to prepare recipe for saving");
+          setIsSaving(false);
+          return null;
+        }
       }
       
       // Add user ID to the recipe
       const recipeWithUser = {
         ...recipe,
-        user_id: session.user.id
+        user_id: session?.user?.id || null  // Allow null for special cases that bypass auth
       };
       
       // Transform recipe for database compatibility
@@ -144,7 +170,7 @@ export function useQuickRecipeSave() {
     } finally {
       setIsSaving(false);
     }
-  }, [session, navigate]);
+  }, [session, openAuthDrawer]);
   
   return { saveRecipe, isSaving, savedRecipe };
 }

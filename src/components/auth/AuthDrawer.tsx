@@ -6,8 +6,9 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ButtonWrapper } from "@/components/ui/button-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { cleanupUIState } from "@/utils/dom-cleanup";
+import { toast } from "sonner";
 
 // For desktop
 import {
@@ -38,12 +39,55 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
   const { session } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const [pendingSave, setPendingSave] = useState<any>(null);
+  
+  // Check for pending actions on mount and when auth state changes
+  const checkPendingActions = useCallback(() => {
+    try {
+      const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
+      if (pendingSaveData) {
+        setPendingSave(JSON.parse(pendingSaveData));
+      }
+    } catch (error) {
+      console.error("Error checking for pending actions:", error);
+    }
+  }, []);
   
   // Close drawer and navigate on successful auth
   const handleAuthSuccess = useCallback(() => {
     setOpen(false);
     cleanupUIState(); // Clean up UI state before navigating
-    navigate("/"); // Navigate to home page after successful auth
+    
+    // Check if there's a pending recipe save
+    try {
+      const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
+      if (pendingSaveData) {
+        const { recipe, sourceUrl } = JSON.parse(pendingSaveData);
+        
+        // If we have a valid source URL to return to, use it
+        if (sourceUrl) {
+          toast.success("Successfully signed in! Returning to your recipe...");
+          
+          // Add a small delay to allow toast to show
+          setTimeout(() => {
+            navigate(sourceUrl, { 
+              state: { 
+                pendingSave: true,
+                resumingAfterAuth: true 
+              }
+            });
+          }, 300);
+          return;
+        }
+      }
+      
+      // Default navigation if no pending action
+      navigate("/");
+      
+    } catch (error) {
+      console.error("Error handling post-auth actions:", error);
+      navigate("/"); // Default navigation on error
+    }
   }, [setOpen, navigate]);
 
   // If user is already authenticated, close drawer
@@ -51,8 +95,18 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     if (session && open) {
       setOpen(false);
       cleanupUIState();
+      
+      // Look for pending actions whenever we close due to being authenticated
+      checkPendingActions();
     }
-  }, [session, open, setOpen]);
+  }, [session, open, setOpen, checkPendingActions]);
+  
+  // Check for pending actions when drawer opens
+  useEffect(() => {
+    if (open) {
+      checkPendingActions();
+    }
+  }, [open, checkPendingActions]);
 
   // When the drawer closes, ensure UI state is cleaned up
   useEffect(() => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -213,46 +214,56 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
         password: loginForm.password 
       });
       
-      if (error) throw error;
-      
-      console.log("Login successful:", data);
-      
-      // Check for recipe modification request in localStorage
-      const modificationPage = localStorage.getItem('recipe_modification_page');
-      if (modificationPage) {
-        // Clear the flag but keep the request text for the component to use
-        localStorage.removeItem('recipe_modification_page');
-        
-        // Navigate back to the modification page with the tab parameter
-        const url = new URL(modificationPage, window.location.origin);
-        url.hash = 'modify'; // Set the hash to open the modify tab
-        navigate(url.toString());
-        return;
+      if (error) {
+        throw error;
       }
       
-      // Check for redirect path in sessionStorage first, then use onSuccess or navigate to home
-      const redirectPath = sessionStorage.getItem('redirectPath');
-      if (redirectPath) {
-        sessionStorage.removeItem('redirectPath');
-        navigate(redirectPath);
-      } else if (onSuccess) {
+      toast({
+        title: "Success",
+        description: "You have successfully logged in",
+      });
+      
+      // Clear form
+      setLoginForm({ email: '', password: '' });
+      
+      // If there's a success callback, call it
+      if (onSuccess) {
         onSuccess();
       } else {
+        // Check for pending actions
+        try {
+          const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
+          if (pendingSaveData) {
+            const { sourceUrl } = JSON.parse(pendingSaveData);
+            if (sourceUrl) {
+              navigate(sourceUrl, { 
+                state: { 
+                  resumingAfterAuth: true,
+                  pendingSave: true
+                } 
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Error checking for pending actions after login:", e);
+        }
+        
+        // Default navigation
         navigate('/');
       }
       
-      // Removed the success toast here
     } catch (error: any) {
-      console.error("Auth error:", error);
+      console.error('Login error:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Login failed",
+        description: error.message || "An error occurred during login",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }, [loginForm, toast, navigate, onSuccess]);
+  }, [loginForm, toast, onSuccess, navigate]);
 
   const handleSignupSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,50 +279,87 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     try {
       setLoading(true);
       
-      const { error } = await supabase.auth.signUp({ 
-        email: signupForm.email, 
-        password: signupForm.password 
+      const { error, data } = await supabase.auth.signUp({
+        email: signupForm.email,
+        password: signupForm.password,
       });
-      
-      if (error) throw error;
+
+      if (error) {
+        throw error;
+      }
+
+      // Clear form
+      setSignupForm({ email: '', password: '' });
       
       toast({
-        title: "Success",
-        description: "Please check your email to confirm your account",
+        title: "Account created",
+        description: "Your account has been successfully created",
       });
+      
+      // If there's a success callback, call it
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        // Check for pending actions
+        try {
+          const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
+          if (pendingSaveData) {
+            const { sourceUrl } = JSON.parse(pendingSaveData);
+            if (sourceUrl) {
+              navigate(sourceUrl, { 
+                state: { 
+                  resumingAfterAuth: true,
+                  pendingSave: true
+                } 
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("Error checking for pending actions after signup:", e);
+        }
+        
+        // Default navigation
+        navigate('/');
+      }
+      
     } catch (error: any) {
-      console.error("Auth error:", error);
+      console.error('Signup error:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Signup failed",
+        description: error.message || "An error occurred during signup",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }, [signupForm, toast]);
+  }, [signupForm, toast, onSuccess, navigate]);
 
-  const content = (
-    <FormContainer
-      loginForm={loginForm}
-      signupForm={signupForm}
-      loading={loading}
-      handleLoginChange={handleLoginChange}
-      handleSignupChange={handleSignupChange}
-      handleLoginSubmit={handleLoginSubmit}
-      handleSignupSubmit={handleSignupSubmit}
-    />
+  // Handle form container styles based on standalone mode
+  const formContainerClasses = standalone
+    ? "w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+    : "";
+
+  return (
+    <div className={formContainerClasses}>
+      {standalone && (
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">Welcome</h2>
+          <p className="text-gray-500 dark:text-gray-400">Login or create an account</p>
+        </div>
+      )}
+      
+      <FormContainer
+        loginForm={loginForm}
+        signupForm={signupForm}
+        loading={loading}
+        handleLoginChange={handleLoginChange}
+        handleSignupChange={handleSignupChange}
+        handleLoginSubmit={handleLoginSubmit}
+        handleSignupSubmit={handleSignupSubmit}
+      />
+    </div>
   );
-
-  if (standalone) {
-    return (
-      <Card className="w-full max-w-md p-6">
-        {content}
-      </Card>
-    );
-  }
-
-  return content;
 };
 
 export default AuthForm;

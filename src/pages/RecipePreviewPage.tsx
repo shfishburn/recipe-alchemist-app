@@ -1,14 +1,15 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
 import { QuickRecipeRegeneration } from '@/components/quick-recipe/QuickRecipeRegeneration';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { PageContainer } from '@/components/ui/containers';
-import { Save } from 'lucide-react';
 import { useQuickRecipeSave } from '@/components/quick-recipe/QuickRecipeSave';
 import { toast } from 'sonner';
 import LoadingOverlay from '@/components/ui/loading-overlay';
 import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
+import { useAuth } from '@/hooks/use-auth';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -18,8 +19,10 @@ const RecipePreviewPage: React.FC = () => {
   const storeSetError = useQuickRecipeStore(state => state.setError);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { saveRecipe, isSaving: isSavingRecipe } = useQuickRecipeSave();
   const [debugMode, setDebugMode] = useState(false);
+  const { session } = useAuth();
   
   // Use our centralized save state management hook
   const {
@@ -29,8 +32,52 @@ const RecipePreviewPage: React.FC = () => {
     setSaveSuccess,
     resetSaveSuccess,
     savedSlug,
-    navigateToSavedRecipe
+    navigateToSavedRecipe,
+    getPendingRecipe,
+    clearPendingRecipe
   } = useRecipeSaveState();
+  
+  // Check if we're resuming from authentication
+  const isResuming = location.state?.resumingAfterAuth === true;
+  const hasPendingSave = location.state?.pendingSave === true;
+
+  // Handle post-authentication actions
+  useEffect(() => {
+    const handlePostAuthActions = async () => {
+      if (isResuming && hasPendingSave && session) {
+        try {
+          const pendingData = getPendingRecipe();
+          if (pendingData?.recipe) {
+            // We have a recipe to save
+            toast.loading("Saving your recipe after login...");
+            setIsSaving(true);
+            
+            try {
+              const savedData = await saveRecipe(pendingData.recipe);
+              
+              if (savedData && savedData.slug) {
+                // Use the centralized state management
+                setSaveSuccess(savedData.slug);
+                toast.success("Recipe saved successfully!");
+                
+                // Clear the pending save
+                clearPendingRecipe();
+              }
+            } catch (error) {
+              console.error("Error saving recipe after authentication:", error);
+              toast.error("Failed to save recipe after login");
+            } finally {
+              setIsSaving(false);
+            }
+          }
+        } catch (error) {
+          console.error("Error handling post-auth save:", error);
+        }
+      }
+    };
+    
+    handlePostAuthActions();
+  }, [isResuming, hasPendingSave, session, getPendingRecipe, saveRecipe, clearPendingRecipe, setSaveSuccess, setIsSaving]);
 
   // Add automatic navigation effect when save is successful
   useEffect(() => {
@@ -76,6 +123,10 @@ const RecipePreviewPage: React.FC = () => {
             onClick: navigateToSavedRecipe
           }
         });
+      } else if (!savedData && !session) {
+        // This means user was redirected to auth - we don't need an error message
+        // The auth component will handle the flow
+        setIsSaving(false);
       } else {
         // Handle case where savedData is falsy but no error was thrown
         toast.warning("Recipe was not saved properly. Please try again.");
