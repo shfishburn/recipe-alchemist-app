@@ -46,6 +46,7 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
           bottom: '32%',
           animation: `bubble ${duration}s ease-in infinite`,
           animationDelay: `${delay}s`,
+          opacity: showBubbles ? 1 : 0,
         }}
         aria-hidden="true"
       />
@@ -53,7 +54,7 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
   });
 
   return (
-    <div className="relative flex flex-col items-center" aria-hidden="true">
+    <div className="relative flex flex-col items-center hw-accelerated" aria-hidden="true">
       <div className="relative">
         {/* Cooking pot SVG */}
         <svg 
@@ -70,7 +71,7 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
           <path 
             d="M72 40H24V72C24 75.3137 26.6863 78 30 78H66C69.3137 78 72 75.3137 72 72V40Z" 
             fill="#D1D5DB" 
-            className={validProgress > 10 ? "animate-pulse" : ""}
+            className={validProgress > 10 ? "animate-cooking-pot" : ""}
           />
           
           {/* Pot rim */}
@@ -105,13 +106,15 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
           />
         </svg>
         
-        {/* Steam particles with tailwind animations */}
-        <div className="absolute -top-2 left-1/4 w-2 h-2 bg-white/80 rounded-full animate-ping opacity-75 delay-75"></div>
-        <div className="absolute -top-3 left-1/2 w-2 h-2 bg-white/80 rounded-full animate-ping opacity-75 delay-150"></div>
-        <div className="absolute -top-4 left-3/4 w-2 h-2 bg-white/80 rounded-full animate-ping opacity-75 delay-300"></div>
+        {/* Steam particles using proper CSS classes */}
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
+          <div className="steam steam-1"></div>
+          <div className="steam steam-2"></div>
+          <div className="steam steam-3"></div>
+        </div>
         
         {/* Bubbles that appear when progress > 30% */}
-        {showBubbles && bubbles}
+        {bubbles}
         
         {/* Chef hat icon beneath pot */}
         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-recipe-green">
@@ -123,7 +126,7 @@ export function RecipeLoadingAnimation({ progress = 0 }: RecipeLoadingAnimationP
       {validProgress > 0 && (
         <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
           <div 
-            className="bg-recipe-green h-1.5 rounded-full transition-all duration-300 ease-out"
+            className="bg-recipe-green h-1.5 rounded-full transition-all duration-300 ease-out animate-progress-pulse"
             style={{ width: `${validProgress}%` }}
           />
         </div>

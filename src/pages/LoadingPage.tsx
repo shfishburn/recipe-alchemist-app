@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RecipeLoadingAnimation } from '@/components/quick-recipe/loading/RecipeLoadingAnimation';
@@ -48,7 +49,7 @@ const LoadingPage: React.FC = () => {
   } = useQuickRecipeStore();
   
   // State to track progress animation
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(5); // Start at 5% for better UX
   const [loadingStage, setLoadingStage] = useState(0);
   
   // References to store interval and stage index for proper state management
@@ -249,8 +250,7 @@ const LoadingPage: React.FC = () => {
       clearTimeout(timeoutId);
     };
   }, [recipe, isLoading, displayError, navigateToQuickRecipe, navigateToRecipePreview]);
-  // ^ Note: progress and loadingStage are intentionally omitted as they're only used in dev logging
-
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 space-y-6">
@@ -262,7 +262,7 @@ const LoadingPage: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center justify-center space-y-4 py-8">
             <div role="status" aria-label="Recipe is being created">
-              <RecipeLoadingAnimation aria-hidden="true" />
+              <RecipeLoadingAnimation progress={progress} aria-hidden="true" />
             </div>
             <div className="space-y-2 text-center">
               <h2 className="text-xl font-semibold text-gray-800">Crafting Your Recipe</h2>
@@ -277,7 +277,7 @@ const LoadingPage: React.FC = () => {
             <div className="w-full max-w-xs mt-6">
               <div className="h-1 w-full bg-gray-200 rounded overflow-hidden">
                 <div 
-                  className="h-full bg-recipe-green transition-all duration-500 ease-out"
+                  className="h-full bg-recipe-green transition-all duration-500 ease-out animate-progress-pulse"
                   style={{ width: `${progress}%` }}
                   role="progressbar"
                   aria-valuemin={0}

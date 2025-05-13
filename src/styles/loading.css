@@ -84,6 +84,7 @@
 .animate-progress-pulse {
   background-size: 200% 100%;
   animation: progress-pulse 2s ease infinite;
+  background-image: linear-gradient(90deg, #4CAF50, #66BB6A, #4CAF50);
 }
 
 /* Cooking pot animation */

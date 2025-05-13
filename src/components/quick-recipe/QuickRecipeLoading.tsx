@@ -15,7 +15,7 @@ export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRe
     <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
         {/* Gift box icon with animations */}
-        <div className="relative animate-gift-float animate-gift-glow" aria-hidden="true">
+        <div className="relative animate-gift-float animate-gift-glow hw-accelerated" aria-hidden="true">
           <svg 
             width="100" 
             height="100" 
@@ -38,7 +38,7 @@ export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRe
         <Progress 
           value={65} 
           className="w-full"
-          indicatorClassName="animate-pulse" 
+          indicatorClassName="animate-progress-pulse" 
           indicatorColor="#4CAF50"
         />
         
