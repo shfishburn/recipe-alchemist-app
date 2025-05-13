@@ -32,7 +32,7 @@ export function CarouselNavigation({
           "w-8 h-8 sm:w-10 sm:h-10"
         )}
         aria-label="Previous slide"
-        // Remove any touch feedback to prevent bouncing
+        // Explicitly disable any touch feedback or transform effects
         touchFeedback="none"
       >
         <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -47,7 +47,7 @@ export function CarouselNavigation({
           "w-8 h-8 sm:w-10 sm:h-10"
         )}
         aria-label="Next slide"
-        // Remove any touch feedback to prevent bouncing
+        // Explicitly disable any touch feedback or transform effects
         touchFeedback="none"
       >
         <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />

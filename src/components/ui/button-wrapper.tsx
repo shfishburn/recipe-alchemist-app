@@ -46,6 +46,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
     asChild = false,
     startIcon,
     endIcon,
+    touchFeedback, // Ensure this prop is passed through
     children,
     ...props
   }, ref) => {
@@ -81,7 +82,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
     
-    // Otherwise use ShadcnButton
+    // Otherwise use ShadcnButton and pass touchFeedback prop
     return (
       <ShadcnButton
         className={cn(className)}
@@ -89,6 +90,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
         size={size}
         disabled={isDisabled}
         ref={ref}
+        touchFeedback={touchFeedback}
         {...props}
       >
         {buttonContent}
