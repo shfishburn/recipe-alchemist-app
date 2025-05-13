@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => ({
     allowedHosts: [
       "all", 
       "localhost",
-      "*.lovableproject.com"
+      "*.lovableproject.com",
+      "9da91218-18b0-4fc0-991c-29a180c2ef2e.lovableproject.com"
     ],
     // Add proxy configuration for potential API requests
     proxy: {
