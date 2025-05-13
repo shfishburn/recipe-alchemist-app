@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Trash2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ShoppingListItem } from '@/types/shopping-list';
+import { FormattedItem } from '@/components/common/formatted-item/FormattedItem';
 import {
   Tooltip,
   TooltipContent,
@@ -23,21 +24,6 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
     e.stopPropagation();
     onDelete();
   };
-  
-  // Format and standardize the notes display
-  const formatNotes = () => {
-    if (!item.notes) return null;
-    
-    // Standardize parentheses format
-    const notes = item.notes.startsWith('(') ? item.notes : `(${item.notes})`;
-    return notes;
-  };
-
-  // Capitalize the first letter of each word in the name
-  const capitalizedName = item.name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 
   return (
     <div 
@@ -50,13 +36,14 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
     >
       <div className="flex-grow min-w-0">
         <div className="flex items-baseline flex-wrap gap-x-1">
-          <span className="font-medium truncate max-w-[200px]">{capitalizedName}</span>
-          
-          <div className="text-sm text-gray-600 truncate max-w-[200px]">
-            {item.quantity && item.unit && (
-              <span className="mr-1">{item.quantity} {item.unit}</span>
-            )}
-          </div>
+          <FormattedItem 
+            item={item}
+            options={{
+              highlight: 'name',
+              strikethrough: item.checked
+            }}
+            className="max-w-[200px] truncate"
+          />
           
           {item.quality_indicators && (
             <TooltipProvider>
@@ -71,12 +58,6 @@ export function ShoppingListItemView({ item, onToggle, onDelete }: ShoppingListI
             </TooltipProvider>
           )}
         </div>
-        
-        {formatNotes() && (
-          <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded inline-block truncate max-w-full">
-            {formatNotes()}
-          </div>
-        )}
         
         {item.package_notes && (
           <div className="mt-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded inline-block truncate max-w-full">

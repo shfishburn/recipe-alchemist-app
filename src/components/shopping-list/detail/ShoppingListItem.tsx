@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Trash2, Info } from 'lucide-react';
 import type { ShoppingListItem } from '@/types/shopping-list';
+import { FormattedItem } from '@/components/common/formatted-item/FormattedItem';
 import { 
   Tooltip, 
   TooltipContent, 
@@ -18,8 +19,6 @@ interface ShoppingItemProps {
 }
 
 export function ShoppingItemComponent({ item, onToggle, onDelete }: ShoppingItemProps) {
-  // Format the display text with proper quantity and unit
-  const displayText = `${item.quantity} ${item.unit} ${item.name}`.trim();
   const hasPackageInfo = item.package_notes || (item.shop_size_qty && item.shop_size_unit);
   const packageInfo = item.package_notes || 
     (item.shop_size_qty && item.shop_size_unit 
@@ -36,14 +35,14 @@ export function ShoppingItemComponent({ item, onToggle, onDelete }: ShoppingItem
       
       <div className="flex-1">
         <div className="flex items-center">
-          <span className={`flex-1 ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
-            {displayText}
-            {item.notes && (
-              <span className="text-muted-foreground text-sm ml-1">
-                ({item.notes})
-              </span>
-            )}
-          </span>
+          <FormattedItem
+            item={item}
+            options={{
+              highlight: 'name',
+              strikethrough: item.checked
+            }}
+            className="flex-1"
+          />
           
           {hasPackageInfo && (
             <TooltipProvider>
