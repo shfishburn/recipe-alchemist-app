@@ -8,7 +8,7 @@ const config = {
     retryDelay: 1000, // ms
     models: ['gpt-4o', 'gpt-3.5-turbo'],
     requestOptions: { 
-      temperature: 0.2,       // low randomness → consistent, focused reviews  
+      temperature: 0.3,       // low randomness → consistent, focused reviews  
       top_p: 1.0,             // full nucleus sampling (combine with low temp for best of both)  
       frequency_penalty: 0.0, // allow repeated tokens if needed for clarity  
       presence_penalty: 0.0,  // don't discourage new topics—let it surface all issues  
@@ -202,11 +202,11 @@ You are a code review assistant and architect analyzing an AI recipe generation 
 - Even if no critical issues are found, list up to 5 minor style, documentation, or readability improvements.
 
 ### 7. Feature Improvement Observations
-- Brainstorm and present ideas for feature improvements based on your context and code review
-+ - Based on the specific code changes in this diff, suggest natural feature extensions or improvements
-+ - Prioritize suggestions that build upon the code that was just modified
-+ - Explain how each suggestion relates to the current implementation and changes
-+ - Consider architectural implications within the Vite SPA and Supabase backend context
+- Based ONLY on the code visible in the current diff:
+  * Identify 1-2 specific extensions or enhancements that directly build upon the code that was just modified
+  * For each suggestion, reference specific line numbers or functions from the diff
+  * Explain exactly how your suggestion extends functionality that already exists in the changed code
+  * DO NOT suggest generic features unrelated to the code changes in this review
 
 ### 8. AI Developer Prompt
 - At the end of your review, include a section titled "# AI Developer Prompt" formatted as follows:
