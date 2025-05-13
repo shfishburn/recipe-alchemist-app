@@ -1,9 +1,8 @@
-
 // Import required modules
 import { v4 as uuidv4 } from 'uuid';
 
 // Define action types that can be pending authentication
-export type PendingActionType = 'save-recipe' | 'generate-recipe' | 'other';
+export type PendingActionType = 'save-recipe' | 'generate-recipe' | 'modify-recipe' | 'other';
 
 // Interface for pending actions
 interface PendingAction {

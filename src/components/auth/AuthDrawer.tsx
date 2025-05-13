@@ -9,6 +9,7 @@ import { cleanupUIState } from "@/utils/dom-cleanup";
 import { toast } from "sonner";
 import { authStateManager } from "@/lib/auth/auth-state-manager";
 import { useQuickRecipeStore } from "@/store/use-quick-recipe-store";
+import { QuickRecipe } from "@/types/quick-recipe";
 
 // For desktop
 import {
@@ -60,7 +61,8 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     // If we have a recipe in the store, make sure to use the backup
     // mechanism to ensure it survives page refreshes
     if (recipe) {
-      authStateManager.storeRecipeDataFallback(recipe);
+      // Type assertion to ensure recipe is treated as a proper QuickRecipe
+      authStateManager.storeRecipeDataFallback(recipe as QuickRecipe);
     }
     
     if (nextAction && !nextAction.executed) {
@@ -107,8 +109,8 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       const recipeBackup = authStateManager.getRecipeDataFallback();
       if (recipeBackup && recipeBackup.recipe) {
         console.log("Found recipe backup in localStorage", recipeBackup);
-        // Restore recipe to store
-        setRecipe(recipeBackup.recipe);
+        // Restore recipe to store - cast to QuickRecipe to fix type error
+        setRecipe(recipeBackup.recipe as QuickRecipe);
         
         // Navigate to recipe preview
         toast.success("Successfully signed in! Returning to your recipe...");
