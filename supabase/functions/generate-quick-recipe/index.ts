@@ -1,6 +1,6 @@
 
-import { serve } from 'https://deno.land/std@0.131.0/http/server.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { serve } from "https://deno.land/std@0.131.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Define timeout duration in milliseconds (2 minutes)
 const TIMEOUT_DURATION = 120000;
