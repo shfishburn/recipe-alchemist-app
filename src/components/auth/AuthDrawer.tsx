@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 import { cleanupUIState } from "@/utils/dom-cleanup";
 import { toast } from "sonner";
 import { authStateManager } from "@/lib/auth/auth-state-manager";
@@ -49,9 +49,9 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     const nextAction = authStateManager.getNextPendingAction();
     if (nextAction && !nextAction.executed) {
       const { type, sourceUrl, data } = nextAction;
-      
-      // Mark the action as executed
-      authStateManager.markActionExecuted(nextAction.id);
+
+      // Don't mark as executed yet - let the destination component handle that
+      // This ensures the action is still available if navigation fails
       
       if (type === 'save-recipe' && sourceUrl) {
         toast.success("Successfully signed in! Returning to your recipe...");
@@ -95,9 +95,14 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
       if (redirectData.search) redirectTo += redirectData.search;
       if (redirectData.hash) redirectTo += redirectData.hash;
       
+      console.log("Auth success - redirecting to:", redirectTo);
+      
       // Navigate with any stored state
       navigate(redirectTo, { 
-        state: redirectData.state,
+        state: {
+          ...(redirectData.state || {}),
+          resumingAfterAuth: true
+        },
         replace: true
       });
       
@@ -129,11 +134,6 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
     }
   }, [open]);
 
-  // Memoize the auth form to prevent unnecessary rerenders
-  const authForm = useMemo(() => (
-    <AuthForm onSuccess={handleAuthSuccess} />
-  ), [handleAuthSuccess]);
-
   // Mobile drawer
   if (isMobile) {
     return (
@@ -155,7 +155,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
             </DrawerClose>
           </DrawerHeader>
           <ScrollArea className="p-6 h-full max-h-[70vh]">
-            {authForm}
+            <AuthForm onSuccess={handleAuthSuccess} />
           </ScrollArea>
         </DrawerContent>
       </Drawer>
@@ -182,7 +182,7 @@ export function AuthDrawer({ open, setOpen }: AuthDrawerProps) {
           </SheetClose>
         </SheetHeader>
         <ScrollArea className="flex-1 p-6 h-full">
-          {authForm}
+          <AuthForm onSuccess={handleAuthSuccess} />
         </ScrollArea>
       </SheetContent>
     </Sheet>

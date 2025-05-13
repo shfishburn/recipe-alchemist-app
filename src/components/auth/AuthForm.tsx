@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -195,6 +195,82 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     setSignupForm(prev => ({ ...prev, [name]: value }));
   }, []);
 
+  // Handle successful authentication
+  const handleAuthSuccess = useCallback(() => {
+    // Clear form data
+    setLoginForm({ email: '', password: '' });
+    setSignupForm({ email: '', password: '' });
+    
+    // Call onSuccess callback if provided
+    if (onSuccess) {
+      console.log("Auth successful, calling onSuccess callback");
+      onSuccess();
+      return;
+    }
+    
+    // Otherwise handle navigation and pending actions
+    console.log("Auth successful, checking for pending actions");
+    
+    // Check for pending actions in authStateManager
+    const nextAction = authStateManager.getNextPendingAction();
+    if (nextAction && !nextAction.executed) {
+      const { type, sourceUrl, data } = nextAction;
+      
+      console.log("Found pending action:", type, "source:", sourceUrl);
+      
+      // Don't mark as executed yet - let the destination component handle that
+      
+      if (type === 'save-recipe' && sourceUrl) {
+        navigate(sourceUrl, { 
+          state: { 
+            resumingAfterAuth: true,
+            pendingSave: true
+          }
+        });
+        return;
+      } else if (type === 'generate-recipe' && data.formData) {
+        navigate(sourceUrl || '/quick-recipe', { 
+          state: { 
+            resumingGeneration: true,
+            recipeData: {
+              formData: data.formData,
+              path: sourceUrl
+            }
+          }
+        });
+        return;
+      }
+    }
+    
+    // Check for redirect after auth
+    const redirectData = authStateManager.getRedirectAfterAuth();
+    if (redirectData) {
+      let redirectTo = redirectData.pathname;
+      
+      // Add search params and hash if they exist
+      if (redirectData.search) redirectTo += redirectData.search;
+      if (redirectData.hash) redirectTo += redirectData.hash;
+      
+      console.log("Auth success - redirecting to:", redirectTo);
+      
+      // Navigate with any stored state
+      navigate(redirectTo, { 
+        state: {
+          ...(redirectData.state || {}),
+          resumingAfterAuth: true
+        },
+        replace: true
+      });
+      
+      // Clear the redirect after using it
+      authStateManager.clearRedirectAfterAuth();
+      return;
+    }
+    
+    // Default navigation if no pending redirect
+    navigate("/");
+  }, [onSuccess, navigate]);
+
   const handleLoginSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginForm.email || !loginForm.password) {
@@ -223,35 +299,8 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
         description: "You have successfully logged in",
       });
       
-      // Clear form
-      setLoginForm({ email: '', password: '' });
-      
-      // If there's a success callback, call it
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        // Check for pending actions
-        try {
-          const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
-          if (pendingSaveData) {
-            const { sourceUrl } = JSON.parse(pendingSaveData);
-            if (sourceUrl) {
-              navigate(sourceUrl, { 
-                state: { 
-                  resumingAfterAuth: true,
-                  pendingSave: true
-                } 
-              });
-              return;
-            }
-          }
-        } catch (e) {
-          console.error("Error checking for pending actions after login:", e);
-        }
-        
-        // Default navigation
-        navigate('/');
-      }
+      // Handle success
+      handleAuthSuccess();
       
     } catch (error: any) {
       console.error('Login error:', error);
@@ -263,7 +312,7 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     } finally {
       setLoading(false);
     }
-  }, [loginForm, toast, onSuccess, navigate]);
+  }, [loginForm, toast, handleAuthSuccess]);
 
   const handleSignupSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -288,40 +337,13 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
         throw error;
       }
 
-      // Clear form
-      setSignupForm({ email: '', password: '' });
-      
       toast({
         title: "Account created",
         description: "Your account has been successfully created",
       });
       
-      // If there's a success callback, call it
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        // Check for pending actions
-        try {
-          const pendingSaveData = sessionStorage.getItem('pendingSaveRecipe');
-          if (pendingSaveData) {
-            const { sourceUrl } = JSON.parse(pendingSaveData);
-            if (sourceUrl) {
-              navigate(sourceUrl, { 
-                state: { 
-                  resumingAfterAuth: true,
-                  pendingSave: true
-                } 
-              });
-              return;
-            }
-          }
-        } catch (e) {
-          console.error("Error checking for pending actions after signup:", e);
-        }
-        
-        // Default navigation
-        navigate('/');
-      }
+      // Handle success
+      handleAuthSuccess();
       
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -333,7 +355,7 @@ const AuthForm = ({ onSuccess, standalone = false }: AuthFormProps) => {
     } finally {
       setLoading(false);
     }
-  }, [signupForm, toast, onSuccess, navigate]);
+  }, [signupForm, toast, handleAuthSuccess]);
 
   // Handle form container styles based on standalone mode
   const formContainerClasses = standalone

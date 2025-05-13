@@ -1,71 +1,53 @@
 
 /**
- * Cleans up any UI state that might be lingering from previous actions.
- * This includes removing loading overlays, modals, etc.
- * 
- * @param options Configuration options for cleanup
+ * Clean up any lingering UI elements like modals, overlays, etc.
+ * This is particularly useful when navigating between pages or after authentication
  */
-export function cleanupUIState(options: {
-  forceCleanLoadingOverlays?: boolean,
-  restoreBodyScroll?: boolean
-} = {}) {
-  const { 
-    forceCleanLoadingOverlays = false,
-    restoreBodyScroll = true
-  } = options;
-
+export function cleanupUIState() {
   try {
-    // Only remove loading overlays if forced or they don't have the active-loading class
-    const loadingOverlays = document.querySelectorAll('.loading-overlay');
-    loadingOverlays.forEach(overlay => {
-      if (forceCleanLoadingOverlays || !overlay.classList.contains('active-loading')) {
-        overlay.classList.remove('active-loading');
-        console.log('Cleaned up loading overlay');
+    // Clean up any debug/test UI elements
+    const debugElements = document.querySelectorAll(
+      '.debug-overlay, .test-output, .sandbox-debug, .loading-overlay:not(.active-loading)'
+    );
+    
+    debugElements.forEach(el => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+        console.log("Removed UI element:", el.className);
       }
     });
-
-    // Force body to be scrollable in case it was disabled by a modal
-    if (restoreBodyScroll) {
+    
+    // Remove any stray backdrop elements
+    const backdropElements = document.querySelectorAll(
+      '[data-state="open"].backdrop, .dialog-backdrop, .modal-backdrop'
+    );
+    
+    backdropElements.forEach(el => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+        console.log("Removed backdrop element:", el.className);
+      }
+    });
+    
+    // Remove any authentication related overlays
+    const authOverlays = document.querySelectorAll('.auth-overlay');
+    
+    authOverlays.forEach(el => {
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+        console.log("Removed auth overlay element:", el.className);
+      }
+    });
+    
+    // Check document for scrollability
+    if (document.body.style.overflow === 'hidden') {
       document.body.style.overflow = '';
+      console.log("Restored body scrolling");
     }
     
-    // Remove any backdrop elements that might have been left behind
-    const backdrops = document.querySelectorAll('.modal-backdrop, .drawer-backdrop');
-    backdrops.forEach(backdrop => {
-      backdrop.remove();
-      console.log('Removed backdrop element');
-    });
-    
-    // Remove any open modal or dialog elements
-    const openModals = document.querySelectorAll('[role="dialog"][aria-hidden="false"]');
-    openModals.forEach(modal => {
-      // We can't directly remove these as they may be controlled by React
-      // But we can set aria-hidden to true to hide them
-      modal.setAttribute('aria-hidden', 'true');
-      console.log('Set aria-hidden on dialog element');
-    });
-    
-    console.log('UI state cleanup complete');
+    return true;
   } catch (error) {
-    console.error('Error during UI state cleanup:', error);
+    console.error("Error cleaning up UI state:", error);
+    return false;
   }
-}
-
-/**
- * Sets up a listener for route changes to automatically clean up UI state
- * Returns a cleanup function that removes the listener
- */
-export function setupRouteChangeCleanup() {
-  // Function to handle route changes and clean up UI
-  const handleRouteChange = () => {
-    cleanupUIState();
-  };
-
-  // Add event listener for history state changes (route changes)
-  window.addEventListener('popstate', handleRouteChange);
-  
-  // Return cleanup function
-  return () => {
-    window.removeEventListener('popstate', handleRouteChange);
-  };
 }

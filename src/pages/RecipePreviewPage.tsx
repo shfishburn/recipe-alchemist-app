@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 import LoadingOverlay from '@/components/ui/loading-overlay';
 import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 import { useAuth } from '@/hooks/use-auth';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -43,9 +45,34 @@ const RecipePreviewPage: React.FC = () => {
   // Handle post-authentication actions
   useEffect(() => {
     const handlePostAuthActions = async () => {
-      if (isResuming && hasPendingSave && session) {
+      // First check for an action in authStateManager
+      const nextAction = authStateManager.getNextPendingAction();
+      
+      // Only proceed if we either have a pending action or we're resuming after auth
+      if ((isResuming && hasPendingSave && session) || 
+          (nextAction && nextAction.type === 'save-recipe' && !nextAction.executed && session)) {
+        
         try {
-          const pendingData = getPendingRecipe();
+          // Mark the start of handling auth actions for debugging
+          console.log("Processing post-authentication recipe save actions");
+          let pendingData;
+          
+          // First priority: check for action from authStateManager
+          if (nextAction && nextAction.type === 'save-recipe') {
+            pendingData = {
+              recipe: nextAction.data.recipe,
+              timestamp: nextAction.timestamp,
+              sourceUrl: nextAction.sourceUrl
+            };
+            // Mark this action as being processed
+            authStateManager.markActionExecuted(nextAction.id);
+            console.log("Found pending save action in authStateManager:", nextAction.id);
+          } else {
+            // Fallback: check for legacy pending recipe in our hook
+            pendingData = getPendingRecipe();
+            console.log("Checked for legacy pending save recipe:", pendingData ? "found" : "not found");
+          }
+          
           if (pendingData?.recipe) {
             // We have a recipe to save
             toast.loading("Saving your recipe after login...");
@@ -61,6 +88,8 @@ const RecipePreviewPage: React.FC = () => {
                 
                 // Clear the pending save
                 clearPendingRecipe();
+                
+                console.log("Successfully saved recipe after authentication:", savedData.slug);
               }
             } catch (error) {
               console.error("Error saving recipe after authentication:", error);
@@ -72,6 +101,10 @@ const RecipePreviewPage: React.FC = () => {
         } catch (error) {
           console.error("Error handling post-auth save:", error);
         }
+      } else if (isResuming && !session) {
+        // If we're supposed to be resuming but there's no session,
+        // that means the authentication probably failed
+        toast.error("Authentication required to save your recipe");
       }
     };
     
@@ -168,13 +201,25 @@ const RecipePreviewPage: React.FC = () => {
     }
   }, [formData, navigate, storeSetLoading, storeSetError]);
   
-  // If there's no recipe, redirect to home page
+  // If there's no recipe, redirect to home page, but only if we're not in the middle of 
+  // authentication flow or resuming from a previous state
   useEffect(() => {
-    if (!recipe && !isLoading) {
-      console.log("No recipe available, redirecting to home page");
+    // Don't redirect if any of these conditions are true:
+    // 1. We have a recipe
+    // 2. We're loading
+    // 3. We're resuming from auth
+    // 4. We have pending save action
+    const shouldStayOnPage = !!recipe || 
+                           isLoading || 
+                           isResuming || 
+                           hasPendingSave ||
+                           !!authStateManager.getNextPendingAction();
+    
+    if (!shouldStayOnPage) {
+      console.log("No recipe or auth state available, redirecting to home page");
       navigate('/');
     }
-  }, [recipe, isLoading, navigate]);
+  }, [recipe, isLoading, navigate, isResuming, hasPendingSave]);
   
   // If we're loading, redirect to the loading page
   useEffect(() => {

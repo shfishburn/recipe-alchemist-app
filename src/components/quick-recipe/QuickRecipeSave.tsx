@@ -1,10 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
+import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
 
 // Define which fields are valid in the database and their mappings
 const FIELD_MAPPINGS = {
@@ -50,6 +50,9 @@ const VALID_DB_FIELDS = [
   'user_id'
 ];
 
+// Define the save-recipe action type
+const SAVE_RECIPE_ACTION: PendingActionType = 'save-recipe';
+
 export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipe, setSavedRecipe] = useState<QuickRecipe | null>(null);
@@ -62,13 +65,16 @@ export function useQuickRecipeSave() {
       
       // Check if user is logged in
       if (!session?.user && !bypassAuth) {
-        // Store the current recipe in sessionStorage before redirecting to auth
+        // Store the current recipe in authStateManager before redirecting to auth
         try {
-          sessionStorage.setItem('pendingSaveRecipe', JSON.stringify({
-            recipe,
-            timestamp: Date.now(),
+          // Queue the action using authStateManager
+          const actionId = authStateManager.queueAction({
+            type: SAVE_RECIPE_ACTION,
+            data: { recipe },
             sourceUrl: window.location.pathname
-          }));
+          });
+          
+          console.log("Stored recipe save request with action ID:", actionId);
           
           toast.info("Please sign in to save your recipe", { 
             duration: 4000,

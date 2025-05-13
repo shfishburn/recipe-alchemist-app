@@ -4,16 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { toast } from 'sonner';
 import { QuickRecipe } from '@/types/quick-recipe';
+import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
 
-// Key for storing pending recipe save in sessionStorage
-const PENDING_SAVE_KEY = 'pendingSaveRecipe';
-
-// Define types for pending save data
-interface PendingSaveData {
-  recipe: QuickRecipe;
-  timestamp: number;
-  sourceUrl: string;
-}
+// Define the key for recipe actions in authStateManager
+export const RECIPE_ACTION_TYPE: PendingActionType = 'save-recipe';
 
 export function useRecipeSaveState() {
   const [isSaving, setIsSaving] = useState(false);
@@ -23,29 +17,18 @@ export function useRecipeSaveState() {
   const navigate = useNavigate();
 
   /**
-   * Validates if the data is a valid PendingSaveData object
-   */
-  const isValidPendingSaveData = (data: any): data is PendingSaveData => {
-    return (
-      data && 
-      typeof data.timestamp === 'number' && 
-      typeof data.sourceUrl === 'string' &&
-      data.recipe !== undefined
-    );
-  };
-
-  /**
-   * Store recipe for saving after authentication
+   * Store recipe for saving after authentication using authStateManager
    */
   const savePendingRecipe = (recipe: QuickRecipe) => {
     try {
-      const saveData: PendingSaveData = {
-        recipe,
-        timestamp: Date.now(),
+      // Queue the action using authStateManager instead of sessionStorage
+      const actionId = authStateManager.queueAction({
+        type: RECIPE_ACTION_TYPE,
+        data: { recipe },
         sourceUrl: window.location.pathname
-      };
+      });
       
-      sessionStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(saveData));
+      console.log("Stored pending recipe with action ID:", actionId);
       return true;
     } catch (error) {
       console.error('Failed to store pending recipe:', error);
@@ -58,17 +41,23 @@ export function useRecipeSaveState() {
    */
   const getPendingRecipe = () => {
     try {
-      const savedData = sessionStorage.getItem(PENDING_SAVE_KEY);
-      if (!savedData) return null;
+      // Get the next pending action of type 'save-recipe'
+      const pendingActions = authStateManager.getPendingActions();
+      const saveAction = pendingActions.find(a => 
+        a.type === RECIPE_ACTION_TYPE && 
+        !a.executed &&
+        a.data?.recipe
+      );
       
-      const parsedData = JSON.parse(savedData);
-      if (isValidPendingSaveData(parsedData)) {
-        return parsedData;
-      } else {
-        console.error('Invalid pending recipe data format');
-        sessionStorage.removeItem(PENDING_SAVE_KEY);
-        return null;
+      if (saveAction) {
+        return {
+          recipe: saveAction.data.recipe as QuickRecipe,
+          timestamp: saveAction.timestamp,
+          sourceUrl: saveAction.sourceUrl
+        };
       }
+      
+      return null;
     } catch (error) {
       console.error('Failed to retrieve pending recipe:', error);
       return null;
@@ -80,7 +69,16 @@ export function useRecipeSaveState() {
    */
   const clearPendingRecipe = () => {
     try {
-      sessionStorage.removeItem(PENDING_SAVE_KEY);
+      // Find any pending recipe actions and remove them
+      const pendingActions = authStateManager.getPendingActions();
+      const saveActions = pendingActions.filter(a => a.type === RECIPE_ACTION_TYPE);
+      
+      // Mark all as executed or remove them
+      saveActions.forEach(action => {
+        authStateManager.markActionExecuted(action.id);
+      });
+      
+      console.log(`Cleared ${saveActions.length} pending recipe actions`);
     } catch (error) {
       console.error('Failed to clear pending recipe:', error);
     }
