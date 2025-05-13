@@ -9,6 +9,7 @@ import '@/styles/loading.css';
 // Constants
 const MAX_LOADING_TIME_MS = 45000; // 45 seconds max loading time
 const ERROR_DISPLAY_TIME_MS = 1500; // Time to display error before redirecting
+const TIMEOUT_WARNING_THRESHOLD = 25000; // Show timeout warning after 25 seconds
 
 interface LocationState {
   fromQuickRecipePage?: boolean;
@@ -51,11 +52,13 @@ const LoadingPage: React.FC = () => {
   // State to track progress animation
   const [progress, setProgress] = useState(5); // Start at 5% for better UX
   const [loadingStage, setLoadingStage] = useState(0);
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
   
   // References to store interval and stage index for proper state management
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const stageIndexRef = useRef(0);
   const effectRunCountRef = useRef(0);
+  const loadingStartTimeRef = useRef<number>(Date.now());
   
   // Check if we came from the QuickRecipePage or RecipePreviewPage
   const { 
@@ -88,6 +91,20 @@ const LoadingPage: React.FC = () => {
       intervalRef.current = null;
     }
   }, []);
+  
+  // Set up timeout warning after threshold is reached
+  useEffect(() => {
+    if (isLoading && !displayError) {
+      loadingStartTimeRef.current = Date.now();
+      
+      const timeoutWarningTimer = setTimeout(() => {
+        setShowTimeoutWarning(true);
+      }, TIMEOUT_WARNING_THRESHOLD);
+      
+      return () => clearTimeout(timeoutWarningTimer);
+    }
+    return undefined;
+  }, [isLoading, displayError]);
   
   // Fixed progressive loading animation with stable refs to avoid re-creating intervals
   useEffect(() => {
@@ -251,6 +268,11 @@ const LoadingPage: React.FC = () => {
     };
   }, [recipe, isLoading, displayError, navigateToQuickRecipe, navigateToRecipePreview]);
   
+  // Handle cancellation of recipe generation
+  const handleCancel = useCallback(() => {
+    navigateToQuickRecipe("Recipe generation cancelled.", false);
+  }, [navigateToQuickRecipe]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6 space-y-6">
@@ -260,9 +282,12 @@ const LoadingPage: React.FC = () => {
             isRetrying={isRetrying}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-4 py-8">
+          <div className="flex flex-col items-center justify-center space-y-6 py-8">
             <div role="status" aria-label="Recipe is being created">
-              <RecipeLoadingAnimation progress={progress} aria-hidden="true" />
+              <RecipeLoadingAnimation 
+                progress={progress} 
+                showChefTip={showTimeoutWarning}
+              />
             </div>
             <div className="space-y-2 text-center">
               <h2 className="text-xl font-semibold text-gray-800">Crafting Your Recipe</h2>
@@ -274,21 +299,27 @@ const LoadingPage: React.FC = () => {
               </p>
             </div>
             
-            <div className="w-full max-w-xs mt-6">
-              <div className="h-1 w-full bg-gray-200 rounded overflow-hidden">
-                <div 
-                  className="h-full bg-recipe-green transition-all duration-500 ease-out animate-progress-pulse"
-                  style={{ width: `${progress}%` }}
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={progress}
-                  aria-label="Recipe generation progress"
-                />
+            {showTimeoutWarning && (
+              <div className="flex items-center justify-center gap-2 text-amber-600 bg-amber-50 py-2 px-4 rounded-lg w-full max-w-xs text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>This is taking longer than usual. Please be patient...</span>
               </div>
-            </div>
+            )}
             
-            <p className="text-xs text-gray-400 mt-2">This may take up to {MAX_LOADING_TIME_MS/1000} seconds</p>
+            <p className="text-xs text-gray-400 mt-2">
+              This may take up to {Math.round(MAX_LOADING_TIME_MS/1000)} seconds
+            </p>
+            
+            <button 
+              onClick={handleCancel}
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors mt-4"
+            >
+              Cancel
+            </button>
           </div>
         )}
       </div>
