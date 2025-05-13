@@ -68,7 +68,7 @@
   }
 }
 
-/* Progress bar animation */
+/* Fixed progress bar animation */
 @keyframes progress-pulse {
   0% {
     background-position: 0% 50%;
@@ -87,7 +87,7 @@
   background-image: linear-gradient(90deg, #4CAF50, #66BB6A, #4CAF50);
 }
 
-/* Cooking pot animation */
+/* Fixed cooking pot animation */
 @keyframes cooking-pot {
   0% {
     transform: rotate(-2deg);
@@ -105,40 +105,7 @@
   transform-origin: center bottom;
 }
 
-/* Gift box animation */
-@keyframes gift-float {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.animate-gift-float {
-  animation: gift-float 3s ease-in-out infinite;
-}
-
-@keyframes gift-glow {
-  0% {
-    filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3));
-  }
-  50% {
-    filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.6));
-  }
-  100% {
-    filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3));
-  }
-}
-
-.animate-gift-glow {
-  animation: gift-glow 2s ease-in-out infinite;
-}
-
-/* Bubble animation for cooking effects */
+/* Fixed bubble animation for cooking effects */
 @keyframes bubble {
   0% {
     transform: translateY(0);
@@ -151,6 +118,39 @@
     transform: translateY(-15px);
     opacity: 0;
   }
+}
+
+/* Fixed Gift Box Animation */
+@keyframes gift-box-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-gift-float {
+  animation: gift-box-float 3s ease-in-out infinite;
+}
+
+@keyframes gift-box-glow {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3));
+  }
+}
+
+.animate-gift-glow {
+  animation: gift-box-glow 2s ease-in-out infinite;
 }
 
 /* Fade-in animation for chef tips */
