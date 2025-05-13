@@ -85,12 +85,12 @@ const LoadingPage: React.FC = () => {
         
         // Navigate to the recipe preview
         navigate('/recipe-preview', { replace: true });
-      } catch (error: unknown) {
+      } catch (error: any) {
         console.error("Error generating recipe:", error);
         
         // Specific timeout error handling
-        let errorMessage = error instanceof Error ? error.message : "Failed to generate recipe";
-        const isTimeout = errorMessage.toLowerCase().includes('timeout');
+        let errorMessage = error.message || "Failed to generate recipe";
+        let isTimeout = errorMessage.toLowerCase().includes('timeout');
         
         if (isTimeout) {
           setHasTimeoutError(true);
@@ -120,11 +120,7 @@ const LoadingPage: React.FC = () => {
       // Cleanup function
       console.log("LoadingPage unmounting");
     };
-  }, [
-    cancelClicked, formData, formDataFromState, fromQuickRecipePage, 
-    isRetrying, loadingState.percentComplete, loadingState.step, navigate, 
-    setError, setHasTimeoutError, setLoading, setRecipe, timestamp, updateLoadingState
-  ]);
+  }, []);
   
   // Get description based on step number
   const getStepDescription = (step: number): string => {
