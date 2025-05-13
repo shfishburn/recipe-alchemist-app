@@ -45,9 +45,6 @@ export function RecipeLoadingAnimation({
   
   // Validate the progress range
   const validProgress = Math.max(0, Math.min(100, progress));
-  if (progress !== validProgress) {
-    console.warn(`Progress should be between 0 and 100, received: ${progress}. Clamping to ${validProgress}.`);
-  }
   
   // Create bubbles with deterministic properties
   const numBubbles = 6;
@@ -82,7 +79,6 @@ export function RecipeLoadingAnimation({
   // Determine animation stages based on progress
   const isStirring = validProgress > 10;
   const isSteaming = validProgress > 20;
-  const isBubbling = validProgress > 30;
   const isNearlyDone = validProgress > 85;
 
   return (

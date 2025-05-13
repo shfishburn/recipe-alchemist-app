@@ -18,7 +18,7 @@ export function LoadingAnimation({ step, stepDescription, percentComplete }: Loa
         
         <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
           <div 
-            className="bg-gradient-to-r from-recipe-blue to-recipe-green h-2.5 rounded-full transition-all duration-300"
+            className="bg-gradient-to-r from-recipe-blue to-recipe-green h-2.5 rounded-full transition-all duration-300 animate-progress-pulse"
             style={{ width: `${percentComplete}%` }}
             role="progressbar" 
             aria-valuenow={percentComplete} 

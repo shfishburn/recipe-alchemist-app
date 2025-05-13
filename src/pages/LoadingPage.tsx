@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';

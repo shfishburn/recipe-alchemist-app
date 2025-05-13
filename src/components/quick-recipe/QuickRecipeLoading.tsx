@@ -15,13 +15,14 @@ export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRe
     <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
         {/* Gift box icon with animations */}
-        <div className="relative animate-gift-float animate-gift-glow hw-accelerated" aria-hidden="true">
+        <div className="relative animate-gift-float hw-accelerated" aria-hidden="true">
           <svg 
             width="100" 
             height="100" 
             viewBox="0 0 100 100" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
+            className="animate-gift-glow"
           >
             <rect x="25" y="37.5" width="50" height="50" rx="4" fill="#D1D5DB" />
             <path d="M25 41.5a4 4 0 014-4h42a4 4 0 014 4v8H25v-8z" fill="#4CAF50" />
