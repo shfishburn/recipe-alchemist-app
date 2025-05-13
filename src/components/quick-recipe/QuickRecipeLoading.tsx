@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle } from 'lucide-react';
+import '@/styles/loading.css';
 
 interface QuickRecipeLoadingProps {
   onCancel?: () => void;
@@ -13,8 +14,8 @@ export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRe
   return (
     <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
-        {/* Gift box icon */}
-        <div className="relative" aria-hidden="true">
+        {/* Gift box icon with animations */}
+        <div className="relative animate-gift-float animate-gift-glow" aria-hidden="true">
           <svg 
             width="100" 
             height="100" 

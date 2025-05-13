@@ -119,6 +119,39 @@
   }
 }
 
+/* Gift Box Animation */
+@keyframes gift-box-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-gift-float {
+  animation: gift-box-float 3s ease-in-out infinite;
+}
+
+@keyframes gift-box-glow {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3));
+  }
+}
+
+.animate-gift-glow {
+  animation: gift-box-glow 2s ease-in-out infinite;
+}
+
 /* Hardware acceleration class */
 .hw-accelerated {
   transform: translateZ(0);
