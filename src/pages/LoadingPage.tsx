@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RecipeLoadingAnimation } from '@/components/quick-recipe/loading/RecipeLoadingAnimation';
 import { ErrorState } from '@/components/quick-recipe/loading/ErrorState';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
+import '@/styles/loading.css';
 
 // Constants
 const MAX_LOADING_TIME_MS = 45000; // 45 seconds max loading time

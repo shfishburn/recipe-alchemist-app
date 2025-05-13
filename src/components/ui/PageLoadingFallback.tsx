@@ -2,6 +2,7 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
+import '@/styles/loading.css';
 
 export function PageLoadingFallback() {
   // This component is used for Suspense fallback, so it should always show loading state

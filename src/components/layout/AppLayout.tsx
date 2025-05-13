@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -12,6 +11,7 @@ import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation } from "react-router-dom";
+import '@/styles/loading.css';
 
 // Updated utility function to prefetch assets that actually exist in production
 const prefetchAssets = (urls: string[]) => {
