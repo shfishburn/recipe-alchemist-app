@@ -41,10 +41,15 @@ export function RecipeLoadingAnimation({
     }, 5000);
     
     return () => clearInterval(tipInterval);
-  }, [showChefTip]);
+  }, [showChefTip, chefTips.length]);
   
   // Validate the progress range
   const validProgress = Math.max(0, Math.min(100, progress));
+  
+  // Log warning if progress value is outside valid range
+  if (progress !== validProgress) {
+    console.error(`Invalid progress value: ${progress}. Clamping to ${validProgress}.`);
+  }
   
   // Create bubbles with deterministic properties
   const numBubbles = 6;
