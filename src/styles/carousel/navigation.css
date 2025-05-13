@@ -6,6 +6,8 @@
   min-width: 24px;
   opacity: 0.9;
   transition: all 0.2s ease;
+  /* Add transform-origin to stabilize positioning */
+  transform-origin: center center;
 }
 
 @media (min-width: 640px) {
@@ -17,6 +19,7 @@
 
 .carousel-nav-button:hover {
   opacity: 1;
+  /* Change scale to avoid layout jumps */
   transform: scale(1.05);
 }
 

@@ -73,15 +73,22 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
     };
 
     // Calculate carousel padding to allow space on sides for center alignment
+    // Modified to ensure first position is never blank on web
     const sideSpacerStyle = React.useMemo(() => {
-      // Add a transparent pseudo-item at the beginning and end to allow center alignment
-      const width = isMobile ? itemWidthMobile : itemWidthDesktop;
-      // Convert percentage string to number (remove the %)
-      const widthNum = parseFloat(width);
-      
-      // Calculate remaining space as percentage
-      const spacerWidth = `${(100 - widthNum) / 2}%`;
-      return { width: spacerWidth, minWidth: spacerWidth };
+      // Only use spacers on mobile or when explicitly needed for specific layouts
+      if (isMobile) {
+        // Add a transparent pseudo-item at the beginning and end to allow center alignment
+        const width = itemWidthMobile;
+        // Convert percentage string to number (remove the %)
+        const widthNum = parseFloat(width);
+        
+        // Calculate remaining space as percentage
+        const spacerWidth = `${(100 - widthNum) / 2}%`;
+        return { width: spacerWidth, minWidth: spacerWidth };
+      } else {
+        // For desktop, we don't want a blank first position, so we return a minimal spacer
+        return { width: '4px', minWidth: '4px' };
+      }
     }, [isMobile, itemWidthMobile, itemWidthDesktop]);
 
     return (
@@ -110,7 +117,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
             aria-live="polite"
             aria-roledescription="carousel"
           >
-            {/* Start spacer for center alignment */}
+            {/* Start spacer for center alignment - minimal on desktop */}
             <div className="carousel-spacer flex-shrink-0" style={sideSpacerStyle} aria-hidden="true" />
             
             {/* Actual carousel items */}
@@ -131,7 +138,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
               </div>
             ))}
             
-            {/* End spacer for center alignment */}
+            {/* End spacer for center alignment - minimal on desktop */}
             <div className="carousel-spacer flex-shrink-0" style={sideSpacerStyle} aria-hidden="true" />
           </div>
           

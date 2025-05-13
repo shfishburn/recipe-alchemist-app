@@ -76,7 +76,7 @@ export function RecipeCarousel() {
               showDots={true}
               showCounter={false}
               itemWidthMobile="85%"
-              itemWidthDesktop="33%"
+              itemWidthDesktop="33%"  
               gap="gap-2 md:gap-3"
               arrowPosition="inside"
               className="w-full max-w-5xl"

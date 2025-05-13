@@ -27,7 +27,7 @@ export function CarouselNavigation({
         size="icon" 
         onClick={onPrevious}
         className={cn(
-          "carousel-nav-button absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
+          "carousel-nav-button previous absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
           effectivePosition === "outside" ? "-left-12 md:-left-16" : "left-1 sm:left-2",
           "w-8 h-8 sm:w-10 sm:h-10"
         )}
@@ -40,7 +40,7 @@ export function CarouselNavigation({
         size="icon" 
         onClick={onNext}
         className={cn(
-          "carousel-nav-button absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
+          "carousel-nav-button next absolute top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-800/80 shadow-sm",
           effectivePosition === "outside" ? "-right-12 md:-right-16" : "right-1 sm:right-2",
           "w-8 h-8 sm:w-10 sm:h-10"
         )}

@@ -50,7 +50,9 @@ export function useCarousel({
     
     // Loop through all items and find the one closest to the center
     for (let i = 0; i < itemCount; i++) {
-      const itemCenterPosition = (i * itemWidthValue) + (itemWidthValue / 2);
+      // For desktop, adjust the itemCenterPosition calculation to account for minimal left spacer
+      const spacerOffset = isMobile ? parseFloat(itemWidthMobile) / 100 * containerWidth / 2 : 4;
+      const itemCenterPosition = spacerOffset + (i * itemWidthValue) + (itemWidthValue / 2);
       const distance = Math.abs(viewportCenter - itemCenterPosition);
       
       if (distance < minDistance) {
@@ -63,7 +65,7 @@ export function useCarousel({
       setActiveIndex(closestIndex);
       if (onSlideChange) onSlideChange(closestIndex);
     }
-  }, [activeIndex, itemCount, itemWidth, onSlideChange]);
+  }, [activeIndex, itemCount, itemWidth, onSlideChange, isMobile, itemWidthMobile]);
 
   // Handle user interaction to stop auto-scrolling
   const handleUserInteraction = useCallback(() => {
@@ -87,6 +89,19 @@ export function useCarousel({
   const handleMouseLeave = useCallback(() => {
     setIsHovering(false);
   }, []);
+
+  // Initial scroll to the first item 
+  useEffect(() => {
+    if (scrollRef.current && initialIndex > 0) {
+      // Ensure first item is in view on mount for desktop
+      if (!isMobile) {
+        // Minimal delay to ensure DOM has rendered
+        setTimeout(() => {
+          scrollToItem(initialIndex);
+        }, 100);
+      }
+    }
+  }, [isMobile]);
 
   // Attach scroll and interaction event listeners
   useEffect(() => {
@@ -141,7 +156,9 @@ export function useCarousel({
       const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
       
       // Calculate position that centers the item in the viewport
-      const itemCenter = (index * itemWidthValue) + (itemWidthValue / 2);
+      // Adjust for desktop to ensure first item is properly positioned
+      const spacerOffset = isMobile ? parseFloat(itemWidth) / 100 * containerWidth / 2 : 4;
+      const itemCenter = spacerOffset + (index * itemWidthValue) + (itemWidthValue / 2);
       const scrollPosition = itemCenter - (containerWidth / 2);
       
       // Temporarily add class to disable smooth scrolling for programmatic changes
@@ -149,7 +166,7 @@ export function useCarousel({
       
       // Scroll to the calculated position
       scrollContainer.scrollTo({
-        left: scrollPosition,
+        left: Math.max(0, scrollPosition),
         behavior: 'smooth'
       });
       
@@ -169,8 +186,9 @@ export function useCarousel({
       try {
         const containerWidth = scrollContainer.clientWidth;
         const itemWidthValue = parseFloat(itemWidth) / 100 * containerWidth;
-        const itemCenter = (index * itemWidthValue) + (itemWidthValue / 2);
-        scrollContainer.scrollLeft = itemCenter - (containerWidth / 2);
+        const spacerOffset = isMobile ? parseFloat(itemWidth) / 100 * containerWidth / 2 : 4;
+        const itemCenter = spacerOffset + (index * itemWidthValue) + (itemWidthValue / 2);
+        scrollContainer.scrollLeft = Math.max(0, itemCenter - (containerWidth / 2));
         
         setActiveIndex(index);
         if (onSlideChange) onSlideChange(index);
@@ -178,7 +196,7 @@ export function useCarousel({
         console.error("Fallback scroll failed:", fallbackError);
       }
     }
-  }, [itemWidth, onSlideChange]);
+  }, [itemWidth, onSlideChange, isMobile]);
 
   return {
     activeIndex,
