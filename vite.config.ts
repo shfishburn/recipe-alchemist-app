@@ -7,8 +7,9 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    // Use a more flexible host configuration
-    host: "0.0.0.0", // Allow connections from all network interfaces
+    // Use localhost instead of 0.0.0.0 for better security
+    // Only allow connections from the local machine
+    host: "localhost", 
     port: 8080,
     // Add historyApiFallback for SPA routing
     hmr: {
