@@ -24,7 +24,8 @@ export const AppRoutes = () => {
       <Route path="/" element={<CustomSuspense><LazyRoutes.Index /></CustomSuspense>} />
       <Route path="/recipes" element={<CustomSuspense><LazyRoutes.Recipes /></CustomSuspense>} />
       <Route path="/recipes/:slug" element={<CustomSuspense><LazyRoutes.RecipeDetail /></CustomSuspense>} />
-      <Route path="/quick-recipe" element={<CustomSuspense><LazyRoutes.QuickRecipePage /></CustomSuspense>} />
+      {/* Redirect /quick-recipe to home page */}
+      <Route path="/quick-recipe" element={<Navigate to="/" replace />} />
       <Route path="/recipe-preview" element={<CustomSuspense><LazyRoutes.RecipePreviewPage /></CustomSuspense>} />
       <Route path="/loading" element={<CustomSuspense><LazyRoutes.LoadingPage /></CustomSuspense>} />
       <Route path="/auth" element={<CustomSuspense><LazyRoutes.Auth /></CustomSuspense>} />

@@ -81,7 +81,6 @@ export function useQuickRecipeForm() {
       // Navigate to the loading page
       navigate('/loading', { 
         state: { 
-          fromQuickRecipePage: true, 
           timestamp: Date.now()
         }
       });
@@ -113,11 +112,11 @@ export function useQuickRecipeForm() {
             variant: "destructive",
           });
           
-          // Navigate back to quick recipe page with error
-          navigate('/quick-recipe', {
+          // Navigate back to home page with error
+          navigate('/', {
             state: { 
               error: generatedRecipe.error || 'Error generating recipe',
-              formData: processedFormData
+              formData: null // Don't persist form data on error
             },
             replace: true
           });
@@ -130,11 +129,11 @@ export function useQuickRecipeForm() {
           const errorMsg = "The recipe format returned from the API was invalid. Please try again.";
           setError(errorMsg);
           
-          // Navigate back to quick recipe page with error
-          navigate('/quick-recipe', {
+          // Navigate back to home page with error
+          navigate('/', {
             state: { 
               error: errorMsg,
-              formData: processedFormData
+              formData: null // Don't persist form data on error
             },
             replace: true
           });
@@ -192,11 +191,11 @@ export function useQuickRecipeForm() {
           variant: "destructive",
         });
         
-        // Navigate back to quick recipe page with error
-        navigate('/quick-recipe', {
+        // Navigate back to home page with error
+        navigate('/', {
           state: { 
             error: errorMessage,
-            formData: processedFormData,
+            formData: null, // Don't persist form data on error
             hasTimeoutError: isTimeout
           },
           replace: true
@@ -209,11 +208,11 @@ export function useQuickRecipeForm() {
       setLoading(false);
       setError(error.message || "Failed to submit recipe request. Please try again.");
       
-      // Navigate back to quick recipe page with error
-      navigate('/quick-recipe', {
+      // Navigate back to home page with error
+      navigate('/', {
         state: { 
           error: error.message || "Failed to submit recipe request. Please try again.",
-          formData: formData
+          formData: null // Don't persist form data on error
         },
         replace: true
       });

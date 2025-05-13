@@ -77,6 +77,8 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
             set({ 
               // Don't set the recipe if it's an error
               recipe: null,
+              // Also clear formData to prevent the "recipe ready to view" message
+              formData: null,
               // Set the error message for user feedback
               error: recipe.error_message || recipe.error || 'Unknown error',
               isLoading: false,
@@ -89,10 +91,11 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
               set({ recipe, isLoading: false, error: null });
               console.log("Recipe validation passed, recipe set in store:", recipe.title);
             } else {
-              // Invalid recipe format
+              // Invalid recipe format - also clear formData to prevent issues
               console.error("Recipe validation failed:", recipe);
               set({ 
                 recipe: null,
+                formData: null,
                 error: "The recipe format is not valid. Please try again.",
                 isLoading: false 
               });
@@ -105,6 +108,8 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         setError: (error) => set({ 
           error, 
           isLoading: false,
+          // Clear formData when there's an error to prevent "recipe ready to view" message
+          formData: error ? null : get().formData,
           hasTimeoutError: error?.toLowerCase().includes('timeout') ?? false
         }),
         
@@ -132,7 +137,8 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
         
         reset: () => set({ 
           recipe: null, 
-          error: null, 
+          error: null,
+          formData: null,  // Also clear formData on reset
           isLoading: false,
           hasTimeoutError: false
         }),
@@ -178,10 +184,9 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
       }),
       {
         name: 'quick-recipe-storage',
-        // Don't persist certain fields that shouldn't be stored between sessions
+        // Only persist recipe, don't persist formData to prevent "recipe ready to view" message on page reload
         partialize: (state) => ({
-          recipe: state.recipe,
-          formData: state.formData
+          recipe: state.recipe
         })
       }
     )

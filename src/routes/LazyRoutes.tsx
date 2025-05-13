@@ -23,7 +23,6 @@ const createLazyComponent = (importFn: () => Promise<any>) => {
 export const Index = createLazyComponent(() => import("@/pages/Index"));
 export const Recipes = createLazyComponent(() => import("@/pages/Recipes"));
 export const RecipeDetail = createLazyComponent(() => import("@/pages/RecipeDetail"));
-export const QuickRecipePage = createLazyComponent(() => import("@/pages/QuickRecipePage"));
 export const Auth = createLazyComponent(() => import("@/pages/Auth"));
 export const HowItWorks = createLazyComponent(() => import("@/pages/HowItWorks"));
 export const ArticleDetail = createLazyComponent(() => import("@/pages/ArticleDetail"));

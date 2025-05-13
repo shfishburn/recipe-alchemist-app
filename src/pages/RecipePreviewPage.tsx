@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -157,7 +156,6 @@ const RecipePreviewPage: React.FC = () => {
         // Retry will go through the loading page
         navigate('/loading', { 
           state: { 
-            fromQuickRecipePage: true,
             isRetrying: true,
           }
         });
@@ -170,11 +168,11 @@ const RecipePreviewPage: React.FC = () => {
     }
   }, [formData, navigate, storeSetLoading, storeSetError]);
   
-  // If there's no recipe, redirect to quick-recipe page
+  // If there's no recipe, redirect to home page
   useEffect(() => {
     if (!recipe && !isLoading) {
-      console.log("No recipe available, redirecting to quick-recipe");
-      navigate('/quick-recipe');
+      console.log("No recipe available, redirecting to home page");
+      navigate('/');
     }
   }, [recipe, isLoading, navigate]);
   

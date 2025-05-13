@@ -60,9 +60,8 @@ const LoadingPage: React.FC = () => {
   const effectRunCountRef = useRef(0);
   const loadingStartTimeRef = useRef<number>(Date.now());
   
-  // Check if we came from the QuickRecipePage or RecipePreviewPage
+  // Check if we came from the RecipePreviewPage
   const { 
-    fromQuickRecipePage = false, 
     fromRecipePreview = false,
     error = null, 
     formData = null,
@@ -74,12 +73,12 @@ const LoadingPage: React.FC = () => {
   
   // Memoized navigation functions to avoid unnecessary re-renders
   const redirectHome = useCallback(() => {
-    if (!fromQuickRecipePage && !fromRecipePreview) {
+    if (!fromRecipePreview) {
       navigate('/', { replace: true });
     }
-  }, [fromQuickRecipePage, fromRecipePreview, navigate]);
+  }, [fromRecipePreview, navigate]);
   
-  // If not coming from QuickRecipePage or RecipePreviewPage, redirect to home
+  // If not coming from RecipePreviewPage, redirect to home
   useEffect(() => {
     redirectHome();
   }, [redirectHome]);
@@ -207,8 +206,8 @@ const LoadingPage: React.FC = () => {
   }, [loadingStage]);
   
   // Memoized navigation handlers
-  const navigateToQuickRecipe = useCallback((errorMessage: string, hasTimeoutError = false) => {
-    navigate('/quick-recipe', { 
+  const navigateToHomePage = useCallback((errorMessage: string, hasTimeoutError = false) => {
+    navigate('/', { 
       state: { 
         error: errorMessage, 
         formData,
@@ -250,10 +249,10 @@ const LoadingPage: React.FC = () => {
       });
     }
     
-    // If there's an error, go back to quick recipe page after showing error
+    // If there's an error, go back to home page after showing error
     if (displayError) {
       const timer = setTimeout(() => {
-        navigateToQuickRecipe(displayError);
+        navigateToHomePage(displayError);
       }, ERROR_DISPLAY_TIME_MS);
       
       return () => clearTimeout(timer);
@@ -279,18 +278,18 @@ const LoadingPage: React.FC = () => {
     
     // Auto-redirect if loading takes too long (safety fallback)
     const timeoutId = setTimeout(() => {
-      navigateToQuickRecipe("Recipe generation timed out. Please try again.", true);
+      navigateToHomePage("Recipe generation timed out. Please try again.", true);
     }, MAX_LOADING_TIME_MS);
     
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [recipe, isLoading, displayError, navigateToQuickRecipe, navigateToRecipePreview, loadingStage, progress]);
+  }, [recipe, isLoading, displayError, navigateToHomePage, navigateToRecipePreview, loadingStage, progress]);
   
   // Handle cancellation of recipe generation
   const handleCancel = useCallback(() => {
-    navigateToQuickRecipe("Recipe generation cancelled.", false);
-  }, [navigateToQuickRecipe]);
+    navigateToHomePage("Recipe generation cancelled.", false);
+  }, [navigateToHomePage]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
