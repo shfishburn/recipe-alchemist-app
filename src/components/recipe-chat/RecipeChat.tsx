@@ -55,8 +55,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       return await rawApplyChanges(recipe, chatMessage);
     } catch (error) {
       handleError(error);
-      toast({
-        title: "Changes couldn't be applied",
+      toast("Changes couldn't be applied", {
         description: "Please try again or modify your request",
         action: (
           <Button 
@@ -99,8 +98,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       await uploadRecipeImage(file);
     } catch (error) {
       handleError(error);
-      toast({
-        title: "Upload failed",
+      toast("Upload failed", {
         description: (
           <div className="flex items-center space-x-2">
             <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -117,8 +115,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       submitRecipeUrl(url);
     } catch (error) {
       handleError(error);
-      toast({
-        title: "URL submission failed",
+      toast("URL submission failed", {
         description: "Please check the URL and try again",
         duration: 5000
       });
@@ -144,8 +141,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
         setTimeout(scrollToBottom, 50);
       } catch (error) {
         handleError(error);
-        toast({
-          title: "Failed to send message",
+        toast("Failed to send message", {
           description: "Please try again",
           action: (
             <Button 
@@ -171,8 +167,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       setIsDialogOpen(false);
     } catch (error) {
       handleError(error);
-      toast({
-        title: "Failed to clear chat history",
+      toast("Failed to clear chat history", {
         description: "Please try again",
         action: (
           <Button 
@@ -199,8 +194,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 8000);
     setRetryCount(prev => prev + 1);
     
-    toast({
-      title: "Retrying...",
+    toast("Retrying...", {
       description: `Attempt ${retryCount + 1}`,
       duration: backoffDelay
     });
@@ -211,14 +205,12 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       } catch (error) {
         handleError(error);
         if (retryCount < 3) {
-          toast({
-            title: "Still having trouble",
+          toast("Still having trouble", {
             description: "We'll try again shortly",
             duration: 3000
           });
         } else {
-          toast({
-            title: "Connection issues",
+          toast("Connection issues", {
             description: "Please check your network or try again later",
             duration: 8000
           });
