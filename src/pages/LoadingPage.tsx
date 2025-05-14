@@ -102,7 +102,7 @@ const LoadingPage: React.FC = () => {
               replace: true
             });
           }
-        } catch (e) {
+        } catch (e: unknown) {
           const message = e instanceof Error ? e.message : "Failed to generate recipe. Please try again.";
           console.error("LoadingPage - Error during recipe generation:", e);
           setError(message);
