@@ -30,18 +30,17 @@ export function MaterialRecipeCard({ recipe, priority = false, className }: Mate
   const totalTime = prepTime + cookTime;
   const timeText = totalTime > 0 ? `${totalTime} min` : 'Quick';
   
-  // Check if recipe is AI generated (optional property)
-  const isAiGenerated = Boolean(
-    (recipe as any).ai_generated || 
-    (recipe as any).generated_by_ai
-  );
+  // Check if recipe is AI generated (by checking flavor_tags)
+  const isAiGenerated = React.useMemo(() => {
+    if (!recipe.flavor_tags) return false;
+    return recipe.flavor_tags.some(tag => 
+      tag.toLowerCase().includes('ai') || 
+      tag.toLowerCase().includes('generated')
+    );
+  }, [recipe.flavor_tags]);
   
   // Check if recipe has nutrition data
-  const hasNutrition = Boolean(
-    recipe.nutrition || 
-    (recipe as any).nutrition_per_serving || 
-    (recipe as any).macros
-  );
+  const hasNutrition = Boolean(recipe.nutrition);
   
   return (
     <Card 

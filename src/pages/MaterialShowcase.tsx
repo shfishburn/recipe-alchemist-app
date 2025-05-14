@@ -7,7 +7,7 @@ import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
 import { Recipe } from '@/types/recipe';
 import '@/styles/material-animations.css';
 
-// Sample recipe data for demonstration
+// Sample recipe data for demonstration with complete Nutrition objects
 const sampleRecipes: Recipe[] = [
   {
     id: '1',
@@ -17,7 +17,18 @@ const sampleRecipes: Recipe[] = [
     prep_time_min: 15,
     cook_time_min: 20,
     cuisine: 'Italian',
-    nutrition: { calories: 450 },
+    nutrition: { 
+      calories: 450,
+      protein: 12,
+      carbs: 65,
+      fat: 15,
+      fiber: 3,
+      sugar: 2,
+      sodium: 620
+    },
+    ingredients: [],
+    instructions: [],
+    science_notes: [],
   },
   {
     id: '2',
@@ -27,7 +38,19 @@ const sampleRecipes: Recipe[] = [
     prep_time_min: 20,
     cook_time_min: 30,
     cuisine: 'Thai',
-    ai_generated: true,
+    nutrition: { 
+      calories: 380,
+      protein: 18,
+      carbs: 42,
+      fat: 20,
+      fiber: 4,
+      sugar: 8,
+      sodium: 850
+    },
+    ingredients: [],
+    instructions: [],
+    science_notes: [],
+    flavor_tags: ['spicy', 'aromatic', 'AI generated']
   },
   {
     id: '3',
@@ -37,7 +60,18 @@ const sampleRecipes: Recipe[] = [
     prep_time_min: 30,
     cook_time_min: 15,
     cuisine: 'Italian',
-    nutrition: { calories: 320 },
+    nutrition: { 
+      calories: 320,
+      protein: 14,
+      carbs: 40,
+      fat: 12,
+      fiber: 2,
+      sugar: 4,
+      sodium: 720
+    },
+    ingredients: [],
+    instructions: [],
+    science_notes: [],
   },
   {
     id: '4',
@@ -47,8 +81,19 @@ const sampleRecipes: Recipe[] = [
     prep_time_min: 10,
     cook_time_min: 15,
     cuisine: 'Asian Fusion',
-    nutrition: { calories: 380 },
-    ai_generated: true,
+    nutrition: { 
+      calories: 380,
+      protein: 25,
+      carbs: 28,
+      fat: 18,
+      fiber: 4,
+      sugar: 6,
+      sodium: 800
+    },
+    ingredients: [],
+    instructions: [],
+    science_notes: [],
+    flavor_tags: ['savory', 'quick', 'AI generated']
   },
 ];
 

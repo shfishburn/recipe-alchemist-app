@@ -13,7 +13,7 @@ const Slot = React.forwardRef<
     return React.cloneElement(
       children,
       {
-        ...mergeProps(props, children.props),
+        ...mergeProps(props as Record<string, any>, children.props),
         ref: mergeRefs([ref, (children as any).ref]),
       }
     );
@@ -40,7 +40,7 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
   };
 }
 
-// Utility function to merge props - fixed to properly handle event handlers and type safety
+// Improved mergeProps with better type safety
 function mergeProps(slotProps: Record<string, any>, childProps: Record<string, any>): Record<string, any> {
   const merged = { ...childProps };
   
@@ -51,8 +51,9 @@ function mergeProps(slotProps: Record<string, any>, childProps: Record<string, a
       const childHandler = childProps[propName];
       
       merged[propName] = function mergedHandler(...args: any[]) {
-        childHandler(...args);
-        slotHandler(...args);
+        // Use void to ignore return values
+        void childHandler(...args);
+        void slotHandler(...args);
       };
     } else if (propName === 'className' && slotProps[propName] && childProps[propName]) {
       // Join classNames
