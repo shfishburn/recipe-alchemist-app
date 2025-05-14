@@ -44,10 +44,10 @@ function mergeRefs<T = any>(refs: Array<React.Ref<T> | undefined | null>): React
 }
 
 // Utility function to merge props with proper typing
-function mergeProps<T extends Record<string, any>>(
+function mergeProps(
   slotProps: React.HTMLAttributes<HTMLElement>,
-  childProps: T
-): T {
+  childProps: Record<string, any>
+): Record<string, any> {
   const merged = { ...childProps };
   
   Object.entries(slotProps).forEach(([propName, slotValue]) => {
