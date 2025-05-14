@@ -10,16 +10,6 @@ import { queryClient } from "@/lib/query-client";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
 import { AppRoutes } from "./app-routes";
 
-// Import AppLayout with lazy loading and error handling
-const AppLayout = lazy(() => 
-  import("@/components/layout/AppLayout")
-    .then(module => ({ default: module.AppLayout }))
-    .catch(err => {
-      console.error("Error loading AppLayout:", err);
-      return { default: () => <FallbackErrorComponent error="Failed to load application layout" /> };
-    })
-);
-
 // Simple fallback error component
 const FallbackErrorComponent = ({ error }: { error: string }) => (
   <div className="flex items-center justify-center min-h-screen flex-col p-4 text-center">

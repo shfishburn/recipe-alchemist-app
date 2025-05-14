@@ -1,157 +1,63 @@
 
 @import './components.css';
-@import './theme.css';
 @import './transitions.css';
-@import './loading.css';
-@import './touch-optimizations.css';
-@import './scientific-content.css';
+@import './theme.css';
+@import './layout.css';
+@import './touch.css';
 
+/* General utility classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Hardware acceleration utility for smoother animations */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+  will-change: transform;
+}
+
+/* Global styling adjustments */
 :root {
-  --recipe-blue: rgb(29, 78, 216);
-  --recipe-blue-hover: rgb(37, 99, 235);
-  --recipe-green: rgb(76, 175, 80);
-  --recipe-green-hover: rgb(67, 160, 71);
-  --recipe-orange: rgb(255, 152, 0);
-  --recipe-orange-hover: rgb(245, 124, 0);
+  --recipe-green: #22c55e;
+  --recipe-blue: #3b82f6;
 }
 
-/* Global focus styles */
-*:focus-visible {
-  outline: 2px solid var(--recipe-blue);
-  outline-offset: 2px;
+body {
+  @apply text-foreground bg-background;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior-y: contain;
 }
 
-/* Custom focus ring for interactive elements */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--recipe-blue);
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-heading;
 }
 
-/* Completely remove the blue rectangle from react-select components */
-.multi-select__control:focus,
-.multi-select__control:focus-within,
-.multi-select__control *:focus,
-.multi-select__control *:focus-visible,
-.multi-select__value-container *:focus,
-.multi-select__value-container *:focus-visible,
-.multi-select__input:focus,
-.multi-select__input:focus-visible,
-.multi-select__multi-value:focus,
-.multi-select__multi-value:focus-visible,
-.multi-select__multi-value__label:focus,
-.multi-select__multi-value__label:focus-visible,
-.multi-select__multi-value__remove:focus,
-.multi-select__multi-value__remove:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: rgb(209, 213, 219) !important;
+h1 {
+  @apply text-3xl sm:text-4xl font-bold tracking-tight;
 }
 
-.multi-select__control--is-focused,
-.multi-select__control--is-focused:hover {
-  border-color: rgb(37, 99, 235) !important;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2) !important;
+h2 {
+  @apply text-2xl sm:text-3xl font-semibold;
 }
 
-/* Fix the multi-value selected items */
-.multi-select__multi-value {
-  align-items: center;
-  background-color: rgb(219, 234, 254) !important;
-  border-radius: 0.375rem !important;
-  margin: 2px 4px 2px 0 !important;
+h3 {
+  @apply text-xl font-semibold;
 }
 
-.multi-select__multi-value__label {
-  color: rgb(37, 99, 235) !important;
-  font-size: 0.875rem !important;
-  padding: 2px 4px 2px 6px !important;
-}
-
-.multi-select__multi-value__remove {
-  color: rgb(37, 99, 235) !important;
-  padding: 0 6px !important;
-  border-radius: 0 0.375rem 0.375rem 0 !important;
-  cursor: pointer;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.multi-select__multi-value__remove:hover {
-  background-color: rgb(191, 219, 254) !important;
-  color: rgb(37, 99, 235) !important;
-}
-
-/* Mobile optimizations for touch */
-@media (max-width: 640px) {
-  .multi-select__control {
-    min-height: 44px !important;
-  }
-  
-  .multi-select__value-container {
-    padding: 2px 8px !important;
-  }
-  
-  .multi-select__multi-value {
-    max-width: calc(100% - 20px) !important;
-  }
-  
-  .multi-select__multi-value__label {
-    max-width: 140px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-}
-
-.container-page {
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 640px) {
-  .container-page {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container-page {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes progress-pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
-}
-
-.animate-progress-pulse {
-  animation: progress-pulse 1.5s ease-in-out infinite;
-}
-
-.animate-pulse {
-  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+/* Link adjustments to match Material Design standards */
+a {
+  @apply transition-colors;
+  text-decoration: none;
 }

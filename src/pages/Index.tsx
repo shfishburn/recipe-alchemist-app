@@ -34,11 +34,7 @@ const Index: React.FC = () => {
   }, []);
 
   return (
-    <PageContainer 
-      className={`index-page ${isTouch ? 'touch-optimized mobile-friendly-container' : ''}`}
-      variant="default"
-      withNavbar={true}
-    >
+    <div className={`index-page w-full ${isTouch ? 'touch-optimized mobile-friendly-container' : ''}`}>
       <div className="w-full max-w-full overflow-hidden">
         {loading ? (
           <PageLoadingFallback />
@@ -48,7 +44,7 @@ const Index: React.FC = () => {
           </Suspense>
         )}
       </div>
-    </PageContainer>
+    </div>
   );
 };
 

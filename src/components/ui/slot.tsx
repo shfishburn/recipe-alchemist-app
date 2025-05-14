@@ -1,6 +1,8 @@
 
 import * as React from "react"
 
+type AnyProps = Record<string, any>;
+
 /**
  * This is a simplified version of Radix UI's Slot component
  */
@@ -13,7 +15,7 @@ const Slot = React.forwardRef<
     return React.cloneElement(
       children,
       {
-        ...mergeProps(props as Record<string, any>, children.props),
+        ...mergeProps(props as AnyProps, children.props as AnyProps),
         ref: mergeRefs([ref, (children as any).ref]),
       }
     );
@@ -27,8 +29,8 @@ const Slot = React.forwardRef<
 });
 Slot.displayName = "Slot";
 
-// Utility function to merge refs
-function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T> | null | undefined>): React.RefCallback<T> {
+// Utility function to merge refs with improved typing
+function mergeRefs<T = any>(refs: Array<React.Ref<T> | null | undefined>): React.RefCallback<T> {
   return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
@@ -41,7 +43,7 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
 }
 
 // Improved mergeProps with better type safety
-function mergeProps(slotProps: Record<string, any>, childProps: Record<string, any>): Record<string, any> {
+function mergeProps(slotProps: AnyProps, childProps: AnyProps): AnyProps {
   const merged = { ...childProps };
   
   for (const propName in slotProps) {

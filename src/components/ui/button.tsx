@@ -23,7 +23,8 @@ const buttonVariants = cva(
         filled: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
         tonal: "bg-secondary/80 text-secondary-foreground hover:bg-secondary/70",
         elevated: "bg-background text-foreground shadow-elevation-1 hover:shadow-elevation-2",
-        text: "bg-transparent text-foreground hover:bg-accent/30"
+        text: "bg-transparent text-foreground hover:bg-accent/30",
+        success: "bg-green-600 text-white hover:bg-green-700"
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -42,15 +43,19 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  asChild?: boolean;
+  touchFeedback?: "default" | "none";
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, touchFeedback = "default", ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          touchFeedback === "none" && "touch-feedback-none"
+        )}
         ref={ref}
         {...props}
       />

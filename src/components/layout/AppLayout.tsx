@@ -1,11 +1,12 @@
+
 import React, { useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { DefaultSeo } from "@/components/seo/DefaultSeo";
 import { Toaster } from "@/components/ui/toaster";
 import { CookieConsent } from "@/components/ui/cookie-consent";
-import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
@@ -89,13 +90,13 @@ export const AppLayout = () => {
   
   return (
     <TooltipProvider>
-      <div className="min-h-screen flex flex-col overflow-x-hidden">
+      <div className="min-h-screen flex flex-col overflow-x-hidden w-full">
         <DefaultSeo />
         <LoadingIndicator />
         <Navbar />
-        <main className="flex-1">
+        <main className="flex-1 mt-16 pt-4">
           <PageTransition>
-            <AppRoutes />
+            <Outlet />
           </PageTransition>
         </main>
         <FooterWrapper />
