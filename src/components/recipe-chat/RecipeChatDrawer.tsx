@@ -54,11 +54,11 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col`} 
+        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col hw-boost`} 
         style={{ zIndex: 50 }} // Lower z-index than shopping list components
         ref={contentRef}
       >
-        <DrawerHeader className="border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10">
+        <DrawerHeader className="border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10 hw-boost">
           <div className="flex items-center gap-2">
             <DrawerTitle className="text-primary font-medium text-base">
               Recipe Chat
@@ -77,7 +77,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full h-8 w-8"
+                    className="rounded-full h-8 w-8 touch-active"
                     onClick={() => !isPending && onOpenChange(false)}
                     disabled={isPending}
                   >
