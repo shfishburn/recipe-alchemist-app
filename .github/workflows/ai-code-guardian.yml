@@ -35,6 +35,12 @@ jobs:
           echo "CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.js$|\.ts$|\.py$|\.java$|\.go$|\.rb$|\.php$|\.jsx$|\.tsx$|\.cs$|\.cpp$|\.c$' | tr '\n' ' ')" >> $GITHUB_ENV
         fi
     
+    # Install necessary npm packages
+    - name: Install dependencies
+      run: |
+        npm init -y
+        npm install axios
+
     - name: OpenAI Code Guardian
       id: code-guardian
       uses: actions/github-script@v6
