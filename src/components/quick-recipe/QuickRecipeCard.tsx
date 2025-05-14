@@ -38,7 +38,7 @@ export function QuickRecipeCard({ recipe }: QuickRecipeCardProps) {
         {/* Time indicators with parsed numeric values */}
         <RecipeTimeInfo prepTime={prepTimeMinutes} cookTime={cookTimeMinutes} />
         
-        {/* Use RecipeIngredients component that can handle string[] or QuickRecipeIngredient[] */}
+        {/* Use updated RecipeIngredients component that can handle both types */}
         <RecipeIngredients ingredients={recipe.ingredients} />
         
         {/* Steps */}

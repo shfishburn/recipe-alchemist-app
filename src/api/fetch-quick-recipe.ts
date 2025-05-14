@@ -57,10 +57,10 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
   };
 
   // Ensure that we have a steps array, derived from instructions if needed
-  const stepsArray = parseStringArray(data.instructions || data.steps || []);
+  const stepsArray = parseStringArray(data.instructions || []);
   
-  // Ensure we have a highlights array
-  const highlightsArray = parseStringArray(data.highlights || []);
+  // Ensure we have a highlights array  
+  const highlightsArray = data.highlights ? parseStringArray(data.highlights) : [];
 
   // Transform to ensure compatibility
   const recipe: QuickRecipe = {

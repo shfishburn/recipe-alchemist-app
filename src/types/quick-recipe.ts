@@ -1,6 +1,6 @@
 
 export interface QuickRecipeIngredient {
-  item: string;
+  item: string | { name?: string; item?: string };
   qty_metric?: number;
   unit_metric?: string;
   qty_imperial?: number;
@@ -17,7 +17,7 @@ export interface QuickRecipe {
   title: string;
   description?: string;
   tagline?: string;
-  ingredients: QuickRecipeIngredient[] | string[];
+  ingredients: (QuickRecipeIngredient | string)[];
   steps: string[];
   instructions?: string[]; // Alias for steps in some components
   servings: number;
@@ -75,7 +75,7 @@ export interface QuickRecipeFormData {
 }
 
 // Re-export Ingredient type for backward compatibility
-export type Ingredient = QuickRecipeIngredient;
+export type Ingredient = QuickRecipeIngredient | string;
 
 // Re-export Recipe type for backward compatibility
 export type Recipe = QuickRecipe;

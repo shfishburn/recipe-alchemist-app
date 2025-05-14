@@ -2,6 +2,7 @@
 import React from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { Card, CardContent } from "@/components/ui/card";
+import { SimpleIngredientDisplay } from './ingredient/SimpleIngredientDisplay';
 
 interface RecipeDisplayProps {
   recipe: QuickRecipe;
@@ -20,15 +21,7 @@ export const RecipeDisplay: React.FC<RecipeDisplayProps> = ({ recipe }) => {
         <div className="space-y-4">
           <div>
             <h4 className="text-sm font-medium mb-1">Ingredients</h4>
-            <ul className="list-disc pl-5 text-sm">
-              {recipe.ingredients.map((ingredient, index) => (
-                <li key={index}>
-                  {ingredient.qty || ''} {ingredient.unit || ''} {typeof ingredient.item === 'string' 
-                    ? ingredient.item 
-                    : ingredient.item.name || 'Ingredient'}
-                </li>
-              ))}
-            </ul>
+            <SimpleIngredientDisplay ingredients={recipe.ingredients} />
           </div>
           
           <div>

@@ -93,7 +93,6 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
           
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              {/* Remove duplicated section header - it's already in RecipeIngredients */}
               {hasIngredients ? (
                 <RecipeIngredients ingredients={recipe.ingredients} />
               ) : (
@@ -108,7 +107,6 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
             </div>
             
             <div>
-              {/* Remove duplicated section header - it's already in RecipeSteps */}
               {hasInstructions ? (
                 <RecipeSteps steps={instructionsToDisplay} />
               ) : (
