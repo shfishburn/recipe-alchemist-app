@@ -1,77 +1,133 @@
 
-/* Touch optimizations for better mobile experience */
+/* Touch optimizations for mobile devices */
 
-/* Basic touch optimizations */
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
-  scrollbar-width: none; /* Firefox */
+.touch-optimized {
+  /* Ensure elements have reasonable touch targets */
+  --touch-target-size: 44px;
 }
 
-.touch-scroll::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+/* Increase opacity feedback for better touch feedback */
+.touch-optimized button:active,
+.touch-optimized .touch-active:active {
+  opacity: 0.7;
+  transform: scale(0.97);
 }
 
-/* Better tap targets for touch devices */
+/* Prevent the double-tap zoom on mobile for interactive elements */
 .touch-optimized button,
 .touch-optimized a,
-.touch-optimized [role="button"],
-.touch-optimized input[type="checkbox"],
-.touch-optimized input[type="radio"],
-.touch-optimized label {
-  min-height: 44px;
-  min-width: 44px;
+.touch-optimized input,
+.touch-optimized textarea,
+.touch-optimized label,
+.touch-optimized [role="button"] {
+  touch-action: manipulation;
 }
 
-/* Touch indicator feedback */
+/* Add visual feedback for touch element */
 .touch-optimized .touch-feedback {
+  -webkit-tap-highlight-color: transparent;
   position: relative;
   overflow: hidden;
 }
 
-.touch-optimized .touch-feedback::after {
-  content: '';
+/* Remove mobile browser styling */
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch ripple effect */
+.touch-ripple {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: currentColor;
+  overflow: hidden;
   border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s;
   pointer-events: none;
 }
 
-.touch-optimized .touch-feedback:active::after {
-  opacity: 0.1;
+.touch-ripple::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
 }
 
-/* Touch-friendly spacing for interactive elements */
-.touch-optimized .touch-friendly-spacing > * {
-  margin-top: 8px;
-  margin-bottom: 8px;
+:active > .touch-ripple::after {
+  opacity: 1;
+  animation: ripple 0.6s linear;
 }
 
-/* Better spacing for tabs on touch devices */
-.touch-optimized .touch-friendly-tabs {
-  overflow-x: auto;
+@keyframes ripple {
+  0% {
+    transform: scale(0) translate(-50%, -50%);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(40) translate(-50%, -50%);
+    opacity: 0;
+  }
+}
+
+/* Scrolling and performance optimizations */
+.touch-scroll {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Add extra padding to touch elements */
-.touch-optimized .touch-target {
-  padding: 0.75rem;
+.hw-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize form elements for touch */
+.touch-optimized input[type="checkbox"],
+.touch-optimized input[type="radio"] {
+  min-width: var(--touch-target-size);
+  min-height: var(--touch-target-size);
+  margin: 0;
+}
+
+/* Better focus styles for touch */
+.touch-optimized :focus {
+  outline: none;
+}
+
+.touch-optimized :focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+/* Prevent long-press text selection */
+.touch-optimized .prevent-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Improve mobile button styles */
+.touch-optimized button,
+.touch-optimized .button {
   min-height: 44px;
 }
 
-/* Optimized list items for touch */
-.touch-optimized li.touch-item {
-  padding-top: 8px;
-  padding-bottom: 8px;
+/* Fix mobile hover issues */
+@media (hover: hover) {
+  .hover-effect:hover {
+    opacity: 0.8;
+  }
 }
 
-/* Utility class to detect completion of loading */
-.completed-loading {
-  /* This class will be used to indicate loading is complete */
+/* Prevent sticky hover on mobile */
+@media (hover: none) {
+  .hover-effect:hover {
+    opacity: 1;
+  }
 }
