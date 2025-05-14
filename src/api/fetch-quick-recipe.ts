@@ -60,7 +60,7 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
   const stepsArray = parseStringArray(data.instructions || []);
   
   // Handle highlights property - it might not exist in older data
-  const highlightsArray = data.highlights ? parseStringArray(data.highlights) : [];
+  const highlightsArray = data.science_notes ? parseStringArray(data.science_notes) : [];
 
   // Transform to ensure compatibility
   const recipe: QuickRecipe = {
