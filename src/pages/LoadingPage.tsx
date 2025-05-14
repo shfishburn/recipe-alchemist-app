@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { generateQuickRecipe } from '@/hooks/use-quick-recipe';
-import { LoadingAnimation } from '@/components/quick-recipe/loading/LoadingAnimation';
+import { MaterialLoadingAnimation } from '@/components/quick-recipe/loading/MaterialLoadingAnimation';
+import { PageContainer } from '@/components/ui/containers';
+import { cn } from '@/lib/utils';
 
 const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -152,23 +154,48 @@ const LoadingPage: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-      <LoadingAnimation 
-        step={loadingState.step}
-        stepDescription={loadingState.stepDescription}
-        percentComplete={loadingState.percentComplete}
-      />
-      
-      <div className="mt-8">
-        <Button 
-          variant="outline" 
-          onClick={handleCancel}
-          className="px-8"
-        >
-          Cancel
-        </Button>
+    <PageContainer>
+      <div className={cn(
+        "flex flex-col items-center justify-center min-h-[70vh] w-full p-6",
+        "animate-fadeIn transition-all duration-500 ease-in-out"
+      )}>
+        {/* Material card container */}
+        <div className={cn(
+          "w-full max-w-md rounded-xl overflow-hidden",
+          "bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm",
+          "border border-gray-100 dark:border-gray-800",
+          "shadow-elevation-1 p-8"
+        )}>
+          <div className="text-center mb-6">
+            <h1 className="text-xl font-medium mb-2">Creating Your Recipe</h1>
+            <p className="text-muted-foreground">
+              {loadingState.stepDescription}
+            </p>
+          </div>
+          
+          <MaterialLoadingAnimation 
+            progress={loadingState.percentComplete}
+            showChefTip={true}
+            variant="secondary"
+          />
+          
+          <div className="mt-8 flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={handleCancel}
+              className={cn(
+                "px-6 py-2 h-auto",
+                "text-gray-600 dark:text-gray-300",
+                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                "transition-all duration-300"
+              )}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 
