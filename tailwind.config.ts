@@ -68,13 +68,13 @@ export default {
 					orange: '#fb923c',
 					green: '#59a52c', // Secondary green color
 					yellow: '#facc15',
-                    purple: '#9b87f5', // Purple color for servings
-                    teal: '#14b8a6', // Teal color for cuisine
-                    amber: '#d97706',  // Amber color for dietary
-                    primaryPurple: '#9b87f5', // Primary Purple
-                    secondaryPurple: '#7E69AB', // Secondary Purple  
-                    tertiaryPurple: '#6E59A5', // Tertiary Purple
-                    darkPurple: '#1A1F2C' // Dark Purple
+					purple: '#9b87f5', // Purple color for servings
+					teal: '#14b8a6', // Teal color for cuisine
+					amber: '#d97706',  // Amber color for dietary
+					primaryPurple: '#9b87f5', // Primary Purple
+					secondaryPurple: '#7E69AB', // Secondary Purple  
+					tertiaryPurple: '#6E59A5', // Tertiary Purple
+					darkPurple: '#1A1F2C' // Dark Purple
 				}
 			},
 			borderRadius: {
@@ -93,6 +93,7 @@ export default {
 			fontFamily: {
 				'sans': ['Roboto', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 				'roboto': ['Roboto', 'sans-serif'],
+				'heading': ['Roboto', 'ui-sans-serif', 'system-ui', 'sans-serif'], // Add the missing font-heading class
 			},
 			keyframes: {
 				'accordion-down': {

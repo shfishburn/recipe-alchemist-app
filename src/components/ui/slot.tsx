@@ -16,8 +16,9 @@ const Slot = React.forwardRef<
       children,
       {
         ...mergeProps(props as AnyProps, children.props as AnyProps),
-        ref: mergeRefs([ref, (children as any).ref]),
-      }
+        // Fix: Ensure we properly merge refs without TypeScript errors
+        ref: mergeRefs([ref, (children as any).ref])
+      } as any // Use type assertion to avoid TypeScript errors
     );
   }
   

@@ -41,7 +41,7 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-heading;
+  @apply font-bold font-sans; /* Changed from font-heading to font-sans with font-bold */
 }
 
 h1 {
