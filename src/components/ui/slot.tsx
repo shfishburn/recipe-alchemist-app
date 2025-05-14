@@ -1,45 +1,45 @@
-
 import * as React from "react"
 
-type SlotProps = {
+export interface SlotProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode
 }
 
-const Slot = React.forwardRef<HTMLElement, SlotProps>(
-  ({ children, ...props }, forwardedRef) => {
-    // This component renders the first child that's a function, providing it with props.
-    if (!children) {
+// A simple implementation of the Slot pattern
+export const Slot = React.forwardRef<HTMLElement, SlotProps>(
+  ({ children, ...props }, ref) => {
+    // If there's no children or a single child that's not a valid element, just return null
+    if (!children || (React.Children.count(children) === 1 && !React.isValidElement(children))) {
       return null
     }
 
-    // Filter out non-functional children
-    const childrenArray = React.Children.toArray(children)
-    const slottableChildren = childrenArray.filter(
-      (child) =>
-        typeof child === "function" &&
-        Boolean(child)
-    )
-
-    if (slottableChildren.length === 0) {
-      // If there are no functional children, render the children as-is
-      return <>{children}</>
-    }
-
-    const slottableChild = slottableChildren[0] as (props: any) => React.ReactElement
-
-    // Improved type safety for merging props
-    const mergeProps = <T,>(slotProps: T): T => {
-      return {
-        ...slotProps,
+    // If there's only one child and it's a valid element, clone it and merge the props
+    if (React.Children.count(children) === 1 && React.isValidElement(children)) {
+      return React.cloneElement(children, {
         ...props,
-        ref: forwardedRef,
-      } as T
+        ...children.props,
+        // Merge refs if the child has a ref
+        ref: (children as any).ref
+          ? mergeRefs([ref, (children as any).ref])
+          : ref,
+      })
     }
 
-    return <>{slottableChild(mergeProps)}</>
+    // Otherwise, render a fragment
+    return <>{children}</>
   }
 )
 
 Slot.displayName = "Slot"
 
-export { Slot }
+// Helper to merge refs
+const mergeRefs = (refs: React.Ref<any>[]) => {
+  return (value: any) => {
+    refs.forEach((ref) => {
+      if (typeof ref === "function") {
+        ref(value)
+      } else if (ref != null) {
+        ;(ref as React.MutableRefObject<any>).current = value
+      }
+    })
+  }
+}
