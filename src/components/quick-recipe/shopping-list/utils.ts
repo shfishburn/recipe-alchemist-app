@@ -1,5 +1,5 @@
 
-import { QuickRecipe } from '@/hooks/use-quick-recipe';
+import { QuickRecipe } from '@/types/quick-recipe';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { ShoppingItem, ShoppingItemsByDepartment } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,11 +35,13 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
   const initialItems: ShoppingItem[] = recipe.ingredients
     .filter(ingredient => {
       // Filter out water
-      const itemName = typeof ingredient.item === 'string' 
-        ? ingredient.item 
-        : (typeof ingredient.item === 'object' && ingredient.item !== null)
-          ? (ingredient.item.item || JSON.stringify(ingredient.item))
-          : 'Unknown item';
+      const itemName = typeof ingredient === 'string' 
+        ? ingredient 
+        : typeof ingredient.item === 'string' 
+          ? ingredient.item 
+          : (typeof ingredient.item === 'object' && ingredient.item !== null)
+            ? (ingredient.item as any).item || JSON.stringify(ingredient.item)
+            : 'Unknown item';
           
       return !itemName.toLowerCase().trim().match(/^water$/);
     })
@@ -48,11 +50,13 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
       console.log("Processing ingredient:", ingredient);
       
       // Extract the item name for better visibility
-      const itemName = typeof ingredient.item === 'string' 
-        ? ingredient.item 
-        : (typeof ingredient.item === 'object' && ingredient.item !== null)
-          ? (ingredient.item.item || JSON.stringify(ingredient.item))
-          : 'Unknown item';
+      const itemName = typeof ingredient === 'string' 
+        ? ingredient 
+        : typeof ingredient.item === 'string' 
+          ? ingredient.item 
+          : (typeof ingredient.item === 'object' && ingredient.item !== null)
+            ? (ingredient.item as any).item || JSON.stringify(ingredient.item)
+            : 'Unknown item';
       
       // Capitalize the item name
       const capitalizedName = itemName
@@ -61,26 +65,28 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
         .join(' ');
           
       // Get the appropriate quantity, filtering out zero values
-      const quantity = ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
+      const quantity = typeof ingredient !== 'string' && ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
         ? ingredient.shop_size_qty
-        : ingredient.qty !== undefined && ingredient.qty > 0
+        : typeof ingredient !== 'string' && ingredient.qty !== undefined && ingredient.qty > 0
           ? ingredient.qty
           : null;
           
       // Create properly structured shopping item that preserves all ingredient data
       return {
-        // Format the text to clearly include the item name
-        text: `${ingredient.qty || ''} ${ingredient.unit || ''} ${capitalizedName}`.trim() + 
-              (ingredient.notes ? ` (${ingredient.notes})` : ''),
+        // Format the text to include the item name
+        text: typeof ingredient === 'string' 
+          ? capitalizedName 
+          : `${ingredient.qty || ''} ${ingredient.unit || ''} ${capitalizedName}`.trim() + 
+            (ingredient.notes ? ` (${ingredient.notes})` : ''),
         checked: false,
         department: getDepartmentForIngredient(capitalizedName),
         // Save the complete original ingredient data to maintain structured information
         ingredientData: ingredient,
         // Extract specific shopping fields for easier access
         quantity: quantity, // Use filtered quantity that's never zero
-        unit: ingredient.shop_size_unit || ingredient.unit,
+        unit: typeof ingredient !== 'string' ? (ingredient.shop_size_unit || ingredient.unit) : '',
         item: capitalizedName,
-        notes: ingredient.notes || ''
+        notes: typeof ingredient !== 'string' ? (ingredient.notes || '') : ''
       };
     });
   

@@ -18,6 +18,44 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     throw error;
   }
 
+  // Parse string arrays if needed
+  const parseStringArray = (field: any): string[] => {
+    if (!field) return [];
+    if (Array.isArray(field)) return field;
+    if (typeof field === 'string') {
+      try {
+        const parsed = JSON.parse(field);
+        return Array.isArray(parsed) ? parsed : [field];
+      } catch (e) {
+        return [field];
+      }
+    }
+    return [];
+  };
+  
+  // Parse nutrition data
+  const parseNutrition = (nutritionData: any) => {
+    if (!nutritionData) return undefined;
+    
+    // Handle string serialized nutrition
+    if (typeof nutritionData === 'string') {
+      try {
+        return JSON.parse(nutritionData);
+      } catch (e) {
+        console.error('Failed to parse nutrition data:', e);
+        return {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0
+        };
+      }
+    }
+    
+    // If it's already an object, return it
+    return nutritionData;
+  };
+
   // Transform to ensure compatibility
   const recipe: QuickRecipe = {
     title: data.title,
@@ -25,19 +63,17 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     // Handle potential JSON string conversion
     ingredients: Array.isArray(data.ingredients) ? data.ingredients : 
                 (typeof data.ingredients === 'string' ? JSON.parse(data.ingredients) : []),
-    instructions: Array.isArray(data.instructions) ? data.instructions :
-                (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []),
-    steps: Array.isArray(data.instructions) ? data.instructions : 
-           (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []), // Ensure both properties are set for compatibility
+    instructions: parseStringArray(data.instructions),
+    steps: parseStringArray(data.instructions || data.steps), // Ensure both properties are set for compatibility
     servings: data.servings,
     prep_time_min: data.prep_time_min,
     cook_time_min: data.cook_time_min,
-    nutrition: data.nutrition,
-    science_notes: Array.isArray(data.science_notes) ? data.science_notes :
-                  (typeof data.science_notes === 'string' ? JSON.parse(data.science_notes) : []),
+    nutrition: parseNutrition(data.nutrition),
+    science_notes: parseStringArray(data.science_notes),
     cuisine: data.cuisine,
-    dietary: data.dietary,
-    flavor_tags: data.flavor_tags,
+    dietary: parseStringArray(data.dietary),
+    flavor_tags: parseStringArray(data.flavor_tags),
+    highlights: parseStringArray(data.highlights),
     user_id: data.user_id,
     id: data.id
   };

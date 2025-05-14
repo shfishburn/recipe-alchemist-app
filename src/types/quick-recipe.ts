@@ -19,7 +19,7 @@ export interface QuickRecipe {
   tagline?: string;
   ingredients: QuickRecipeIngredient[] | string[];
   steps: string[];
-  instructions?: string[];
+  instructions?: string[]; // Alias for steps in some components
   servings: number;
   prepTime?: string | number;
   cookTime?: string | number;
@@ -34,24 +34,29 @@ export interface QuickRecipe {
   cookingTip?: string;
   science_notes?: string[];
   flavor_tags?: string[];
+  highlights?: string[]; // Adding this missing property
   nutrition?: {
     calories?: number;
     protein?: number;
     carbs?: number;
     fat?: number;
+    // Additional nutrition fields
+    fiber_g?: number;
+    sugar_g?: number;
+    sodium_mg?: number;
+    kcal?: number;
+    protein_g?: number;
+    carbs_g?: number;
+    fat_g?: number;
+    vitamin_a_iu?: number;
+    vitamin_c_mg?: number;
+    vitamin_d_iu?: number;
+    calcium_mg?: number;
+    iron_mg?: number;
+    potassium_mg?: number;
+    data_quality?: string;
+    calorie_check_pass?: boolean;
   };
-}
-
-export interface QuickRecipeFormData {
-  mainIngredient?: string;
-  ingredients?: string;
-  cuisine?: string | string[];
-  dietary?: string | string[];
-  servings?: number;
-  maxCalories?: number;
-  url?: string;
-  imgUrl?: string;
-  imageFile?: File | null;
 }
 
 // Re-export Ingredient type for backward compatibility
