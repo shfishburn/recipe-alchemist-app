@@ -8,7 +8,6 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { CookieConsentProvider } from "@/hooks/use-cookie-consent";
 import { queryClient } from "@/lib/query-client";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
-import { AppRoutes } from "./app-routes";
 
 // Import AppLayout with lazy loading and error handling
 const AppLayout = lazy(() => 
@@ -69,7 +68,7 @@ const App = () => (
             <ProfileProvider>
               <CookieConsentProvider>
                 <Suspense fallback={<PageLoadingFallback />}>
-                  <AppRoutes />
+                  <AppLayout />
                 </Suspense>
               </CookieConsentProvider>
             </ProfileProvider>
