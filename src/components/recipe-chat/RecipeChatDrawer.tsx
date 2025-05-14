@@ -99,7 +99,9 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
           </div>
         </DrawerHeader>
         <div className="flex-1 min-h-0 p-2 sm:p-4 overflow-hidden">
-          <RecipeChat recipe={recipe} />
+          <div className="w-full h-full"> {/* Added wrapper with explicit height/width */}
+            <RecipeChat recipe={recipe} />
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

@@ -46,7 +46,7 @@ export function ChatHistory({
   }, [chatHistory, optimisticMessages]);
   
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="flex flex-col space-y-6 w-full">
       {/* Render the combined message history */}
       {combinedMessages.map((chat) => (
         <ChatMessage

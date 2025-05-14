@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ChatLayout } from './ChatLayout';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const { user, session } = useAuth();
@@ -55,17 +56,12 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       return await rawApplyChanges(recipe, chatMessage);
     } catch (error) {
       handleError(error);
-      toast("Changes couldn't be applied", {
+      toast.error("Changes couldn't be applied", {
         description: "Please try again or modify your request",
-        action: (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => applyChanges(chatMessage)}
-          >
-            Retry
-          </Button>
-        )
+        action: {
+          label: "Retry",
+          onClick: () => applyChanges(chatMessage),
+        },
       });
       return false;
     }
@@ -98,14 +94,14 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       await uploadRecipeImage(file);
     } catch (error) {
       handleError(error);
-      toast("Upload failed", {
+      toast.error("Upload failed", {
         description: (
           <div className="flex items-center space-x-2">
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <span>Please try again with a smaller image or different format</span>
           </div>
         ),
-        duration: 5000
+        duration: 5000,
       });
     }
   };
@@ -115,9 +111,9 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       submitRecipeUrl(url);
     } catch (error) {
       handleError(error);
-      toast("URL submission failed", {
+      toast.error("URL submission failed", {
         description: "Please check the URL and try again",
-        duration: 5000
+        duration: 5000,
       });
     }
   };
@@ -141,17 +137,12 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
         setTimeout(scrollToBottom, 50);
       } catch (error) {
         handleError(error);
-        toast("Failed to send message", {
+        toast.error("Failed to send message", {
           description: "Please try again",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSubmit}
-            >
-              Retry
-            </Button>
-          )
+          action: {
+            label: "Retry",
+            onClick: handleSubmit,
+          },
         });
       }
     }
@@ -167,17 +158,12 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       setIsDialogOpen(false);
     } catch (error) {
       handleError(error);
-      toast("Failed to clear chat history", {
+      toast.error("Failed to clear chat history", {
         description: "Please try again",
-        action: (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={confirmClearChat}
-          >
-            Retry
-          </Button>
-        )
+        action: {
+          label: "Retry",
+          onClick: confirmClearChat,
+        },
       });
     }
   };
@@ -194,9 +180,9 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 8000);
     setRetryCount(prev => prev + 1);
     
-    toast("Retrying...", {
+    toast.info("Retrying...", {
       description: `Attempt ${retryCount + 1}`,
-      duration: backoffDelay
+      duration: backoffDelay,
     });
     
     setTimeout(async () => {
@@ -205,14 +191,14 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       } catch (error) {
         handleError(error);
         if (retryCount < 3) {
-          toast("Still having trouble", {
+          toast.info("Still having trouble", {
             description: "We'll try again shortly",
-            duration: 3000
+            duration: 3000,
           });
         } else {
-          toast("Connection issues", {
+          toast.error("Connection issues", {
             description: "Please check your network or try again later",
-            duration: 8000
+            duration: 8000,
           });
         }
       }
@@ -232,64 +218,66 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
   return (
-    <Card className="flex flex-col h-full w-full overflow-hidden bg-white border-slate-100 shadow-sm hw-boost">
-      <CardContent className="p-0 flex flex-col h-full">
-        <div className="flex flex-col h-full">
-          <div className="flex-shrink-0 pt-2 sm:pt-4 px-3 sm:px-5 border-b">
-            <ChatHeader 
-              hasChatHistory={chatHistory.length > 0} 
-              onClearChat={handleClearChat} 
-            />
-          </div>
-          
-          <div className="flex-1 min-h-0 relative overflow-hidden">
-            <ScrollArea 
-              className="h-full scroll-momentum" 
-              ref={scrollAreaRef}
-            >
-              <div className="px-3 sm:px-5 py-3">
-                {/* Show EmptyChatState if there are no messages */}
-                {showEmptyState ? (
-                  <EmptyChatState />
-                ) : (
-                  <div>
-                    <ChatHistory
-                      chatHistory={chatHistory}
-                      optimisticMessages={optimisticMessages}
-                      isSending={isSending}
-                      setMessage={setMessage}
-                      applyChanges={applyChanges}
-                      isApplying={isApplying}
-                      recipe={recipe}
-                      retryMessage={retryMessage}
-                    />
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
+    <ChatLayout>
+      <Card className="flex flex-col h-full w-full overflow-hidden bg-white border-slate-100 shadow-sm hw-boost">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="flex flex-col h-full">
+            <div className="flex-shrink-0 pt-2 sm:pt-4 px-3 sm:px-5 border-b">
+              <ChatHeader 
+                hasChatHistory={chatHistory.length > 0} 
+                onClearChat={handleClearChat} 
+              />
+            </div>
+            
+            <div className="flex-1 min-h-0 relative overflow-hidden">
+              <ScrollArea 
+                className="h-full px-3 sm:px-5 scroll-momentum hw-accelerated-scroll" 
+                ref={scrollAreaRef}
+              >
+                <div className="py-3">
+                  {/* Show EmptyChatState if there are no messages */}
+                  {showEmptyState ? (
+                    <EmptyChatState />
+                  ) : (
+                    <div>
+                      <ChatHistory
+                        chatHistory={chatHistory}
+                        optimisticMessages={optimisticMessages}
+                        isSending={isSending}
+                        setMessage={setMessage}
+                        applyChanges={applyChanges}
+                        isApplying={isApplying}
+                        recipe={recipe}
+                        retryMessage={retryMessage}
+                      />
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
 
-          <div className="flex-shrink-0 border-t pt-2 pb-3 px-3 sm:px-5 bg-white z-10">
-            <RecipeChatInput
-              message={message}
-              setMessage={setMessage}
-              onSubmit={handleSubmit}
-              isSending={isSending}
-              onUpload={handleUpload}
-              onUrlSubmit={handleUrlSubmit}
-              uploadProgress={uploadProgress}
-              isUploading={isUploading}
-            />
+            <div className="flex-shrink-0 border-t pt-2 pb-3 px-3 sm:px-5 bg-white z-10">
+              <RecipeChatInput
+                message={message}
+                setMessage={setMessage}
+                onSubmit={handleSubmit}
+                isSending={isSending}
+                onUpload={handleUpload}
+                onUrlSubmit={handleUrlSubmit}
+                uploadProgress={uploadProgress}
+                isUploading={isUploading}
+              />
+            </div>
           </div>
-        </div>
-      </CardContent>
-      
-      <ClearChatDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-        onConfirm={confirmClearChat}
-      />
-    </Card>
+        </CardContent>
+        
+        <ClearChatDialog 
+          open={isDialogOpen} 
+          onOpenChange={setIsDialogOpen}
+          onConfirm={confirmClearChat}
+        />
+      </Card>
+    </ChatLayout>
   );
 }
