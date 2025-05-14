@@ -87,7 +87,8 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     console.log("Starting race with timeout");
     
     try {
-      const data = await Promise.race([
+      // Fix: Use a mutable variable instead of a constant for data
+      let responseData = await Promise.race([
         callWithSupabaseFunctionClient().catch(async err => {
           console.warn("Supabase function client failed, falling back to direct fetch:", err);
           return fetchFromEdgeFunction(requestBody);
@@ -95,10 +96,10 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         timeoutPromise
       ]);
       
-      console.log("Race completed, data received:", data ? "data exists" : "no data");
+      console.log("Race completed, data received:", responseData ? "data exists" : "no data");
       
       // Handle missing data
-      if (!data) {
+      if (!responseData) {
         console.error('No data returned from recipe generation');
         // Create a minimal recipe with error info
         return {
@@ -113,29 +114,29 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       }
       
       // Explicitly check for error flags in response
-      if (data.isError === true || data.error || data.error_message) {
-        console.log("Response contains error flags:", data.error || data.error_message);
+      if (responseData.isError === true || responseData.error || responseData.error_message) {
+        console.log("Response contains error flags:", responseData.error || responseData.error_message);
         return {
-          ...data,
+          ...responseData,
           isError: true // Ensure isError flag is set
         };
       }
       
       // Quick validation of data structure before normalization
-      if (data.item && data.qty_imperial && !data.title) {
-        console.warn("Received single ingredient instead of complete recipe:", data);
-        data = {
+      if (responseData.item && responseData.qty_imperial && !responseData.title) {
+        console.warn("Received single ingredient instead of complete recipe:", responseData);
+        responseData = {
           title: formData.mainIngredient 
             ? `${formData.mainIngredient.charAt(0).toUpperCase() + formData.mainIngredient.slice(1)} Recipe` 
             : "Recipe",
-          ingredients: [data], // Wrap the single ingredient in an array
+          ingredients: [responseData], // Wrap the single ingredient in an array
           steps: ["Prepare and cook according to your preference."],
           servings: formData.servings || 2
         };
       }
       
       // Normalize the recipe data with more forgiving validation
-      const normalizedRecipe = normalizeRecipeResponse(data);
+      const normalizedRecipe = normalizeRecipeResponse(responseData);
       
       console.log('Normalized recipe:', normalizedRecipe);
       

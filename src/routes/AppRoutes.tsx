@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
@@ -27,9 +26,12 @@ const LazyRoutes = lazy(() => import('./LazyRoutes').then(module => ({
         <Route path="/shopping-lists" element={<ImportedRoutes.ShoppingLists />} />
         <Route path="/favorites" element={<ImportedRoutes.Favorites />} />
         <Route path="/loading" element={<ImportedRoutes.LoadingPage />} />
+        {/* Standardize on /preview route pattern */}
         <Route path="/preview" element={<ImportedRoutes.RecipePreviewPage />} />
-        <Route path="/recipe-preview" element={<ImportedRoutes.RecipePreviewPage />} /> {/* Add this route as a fallback for backward compatibility */}
-        <Route path="/recipe-preview/:id" element={<ImportedRoutes.RecipePreviewPage />} /> {/* Add this route for shared recipes with IDs */}
+        <Route path="/preview/:id" element={<ImportedRoutes.RecipePreviewPage />} />
+        {/* Keep for backward compatibility */}
+        <Route path="/recipe-preview" element={<ImportedRoutes.RecipePreviewPage />} />
+        <Route path="/recipe-preview/:id" element={<ImportedRoutes.RecipePreviewPage />} />
         <Route path="*" element={<ImportedRoutes.NotFound />} />
       </Routes>
     );

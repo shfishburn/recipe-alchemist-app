@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -96,7 +95,7 @@ const RecipePreviewPage: React.FC = () => {
           const newId = ensureRecipeHasId(hasRecipeData as QuickRecipe);
           if (newId) {
             // Update URL to include recipe ID without triggering a reload
-            navigate(`/recipe-preview/${newId}`, { 
+            navigate(`/preview/${newId}`, { 
               replace: true, 
               state: location.state 
             });
@@ -126,7 +125,8 @@ const RecipePreviewPage: React.FC = () => {
       const newId = ensureRecipeHasId(recipe);
       if (newId) {
         console.log("Recipe loaded but no ID in URL, updating URL with ID:", newId);
-        navigate(`/recipe-preview/${newId}`, { 
+        // Update URL consistently to /preview/:id
+        navigate(`/preview/${newId}`, { 
           replace: true, 
           state: location.state 
         });
@@ -309,7 +309,7 @@ const RecipePreviewPage: React.FC = () => {
         // Make sure auth redirect includes recipe ID
         if (recipeIdToUse) {
           // Store the path with ID for auth redirect
-          const currentUrl = `/recipe-preview/${recipeIdToUse}`;
+          const currentUrl = `/preview/${recipeIdToUse}`;
           authStateManager.setRedirectAfterAuth(currentUrl, {
             state: { 
               pendingSave: true,

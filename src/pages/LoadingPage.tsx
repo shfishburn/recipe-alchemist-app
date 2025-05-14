@@ -32,6 +32,9 @@ const LoadingPage: React.FC = () => {
     updateLoadingState
   } = useQuickRecipeStore();
   
+  // Track whether generation has been attempted
+  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
+  
   // Ensure we have form data, either from state or session
   const hasFormData = !!formData || !!location.state?.formData;
   
@@ -45,17 +48,33 @@ const LoadingPage: React.FC = () => {
   
   // If not loading, redirect back to home page
   useEffect(() => {
-    if (!isLoading) {
-      console.warn("Not loading, redirecting to home");
+    if (!isLoading && hasAttemptedGeneration) {
+      console.warn("Not loading after generation attempt, redirecting to home");
       navigate('/');
     }
-  }, [isLoading, navigate]);
+  }, [isLoading, navigate, hasAttemptedGeneration]);
+  
+  // Handler for successful recipe generation
+  const handleSuccessfulGeneration = useCallback((recipe) => {
+    console.log("LoadingPage - Recipe generation successful, navigating to preview page");
+    
+    // Navigate to preview page (with consistent route)
+    navigate('/preview', { 
+      state: { 
+        recipeData: recipe,
+        timestamp: Date.now(),
+        fromLoading: true
+      },
+      replace: true
+    });
+  }, [navigate]);
   
   // Start recipe generation when component mounts and we have form data
   useEffect(() => {
     const generateRecipeOnMount = async () => {
       if (formData) {
         try {
+          setHasAttemptedGeneration(true);
           console.log("LoadingPage - Starting recipe generation with data:", formData);
           
           // Reset timeout error
@@ -69,18 +88,13 @@ const LoadingPage: React.FC = () => {
             console.log("LoadingPage - Recipe generation successful, navigating to recipe preview");
             setRecipe(recipe);
             
-            // Navigate to preview page (fixed route)
-            navigate('/preview', { 
-              state: { 
-                recipeData: recipe,
-                timestamp: Date.now()
-              },
-              replace: true
-            });
+            handleSuccessfulGeneration(recipe);
           } else {
             // If there was an error, set the error and navigate back
             console.error("LoadingPage - Recipe generation failed:", recipe?.error_message);
             setError(recipe?.error_message || "Failed to generate recipe. Please try again.");
+            setLoading(false);
+            
             navigate('/', { 
               state: { 
                 error: recipe?.error_message || "Failed to generate recipe. Please try again.",
@@ -112,10 +126,11 @@ const LoadingPage: React.FC = () => {
     };
     
     // Only start generation if we're actually loading and have form data
-    if (isLoading && formData) {
+    if (isLoading && formData && !hasAttemptedGeneration) {
       generateRecipeOnMount();
     }
-  }, [isLoading, setLoading, setError, setRecipe, formData, navigate, reset, setHasTimeoutError, updateLoadingState]);
+  }, [isLoading, setLoading, setError, setRecipe, formData, navigate, reset, 
+      setHasTimeoutError, hasAttemptedGeneration, setHasAttemptedGeneration, handleSuccessfulGeneration]);
   
   // Simulate loading steps with updated loading state
   useEffect(() => {
@@ -134,7 +149,7 @@ const LoadingPage: React.FC = () => {
             step: loadingState.step + 1,
             stepDescription: messages[nextStep] || "Processing your recipe...",
             percentComplete: Math.min(100, loadingState.percentComplete + increment),
-            estimatedTimeRemaining: loadingState.estimatedTimeRemaining - decrementTime
+            estimatedTimeRemaining: Math.max(0, (loadingState.estimatedTimeRemaining || 30) - decrementTime)
           });
           
           currentStep++;
@@ -157,7 +172,7 @@ const LoadingPage: React.FC = () => {
           </p>
           <Progress value={loadingState.percentComplete} className="h-2" />
           <p className="text-muted-foreground text-sm text-center">
-            Estimated time remaining: {loadingState.estimatedTimeRemaining} seconds
+            Estimated time remaining: {loadingState.estimatedTimeRemaining || 0} seconds
           </p>
         </CardContent>
       </Card>

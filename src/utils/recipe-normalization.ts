@@ -1,3 +1,4 @@
+
 import { Ingredient, QuickRecipe } from "@/types/quick-recipe";
 
 // Function to normalize recipe response from edge function
@@ -194,6 +195,7 @@ function createErrorRecipe(errorMessage: string, partialIngredients?: any[]): Qu
     cook_time_min: 0,
     prepTime: 0,
     cookTime: 0,
+    // Fix: Convert string to array
     science_notes: [],
     nutrition: null,
     nutritionHighlight: "",

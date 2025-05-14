@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -20,7 +19,9 @@ export function useQuickRecipePage() {
     setLoading, 
     hasTimeoutError, 
     setError, 
-    setRecipe 
+    setRecipe,
+    generationInProgress,
+    setGenerationInProgress
   } = useQuickRecipeStore();
   const { generateQuickRecipe } = useQuickRecipe();
   const { session } = useAuth();
@@ -46,10 +47,19 @@ export function useQuickRecipePage() {
       isDirectNavigation,
       hasRecipe: !!recipe,
       locationState: location.state || 'no state',
-      formData: !!formData
+      formData: !!formData,
+      isLoading
     });
-  }, [isFromLoadingPage, isDirectNavigation, recipe, location.state, formData]);
+  }, [isFromLoadingPage, isDirectNavigation, recipe, location.state, formData, isLoading]);
   
+  // Reset loading state if navigating directly from navbar
+  useEffect(() => {
+    if (isDirectNavigation && isLoading && !isResumingGeneration) {
+      console.log("Direct navigation detected while loading, resetting state");
+      reset();
+    }
+  }, [isDirectNavigation, isLoading, reset, isResumingGeneration]);
+
   // Check if we need to resume recipe generation after login
   useEffect(() => {
     const handleRecipeResumption = async () => {
@@ -97,9 +107,9 @@ export function useQuickRecipePage() {
               console.log("Setting recipe from location state:", recipeData.recipe.title);
               setRecipe(recipeData.recipe);
               
-              // Navigate to recipe preview with ID
+              // Navigate to recipe preview with ID and consistent route
               if (recipeId) {
-                navigate(`/recipe-preview/${recipeId}`, { 
+                navigate(`/preview/${recipeId}`, { 
                   replace: true,
                   state: { 
                     recipeData: recipeData.recipe,
@@ -107,7 +117,7 @@ export function useQuickRecipePage() {
                   }
                 });
               } else {
-                navigate('/recipe-preview', { 
+                navigate('/preview', { 
                   replace: true,
                   state: { 
                     recipeData: recipeData.recipe,
@@ -186,14 +196,6 @@ export function useQuickRecipePage() {
   }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, setRecipe, setError, location.state, navigate,
       ensureRecipeHasId, storeRecipeWithId]);
 
-  // Reset loading state if navigating directly from navbar
-  useEffect(() => {
-    if (isDirectNavigation && isLoading && !isResumingGeneration) {
-      console.log("Direct navigation detected while loading, resetting state");
-      reset();
-    }
-  }, [isDirectNavigation, isLoading, reset, isResumingGeneration]);
-
   // Only redirect if NOT direct navigation AND not loading AND no recipe AND no error AND no form data
   useEffect(() => {
     const shouldRedirect = !isDirectNavigation && 
@@ -215,6 +217,9 @@ export function useQuickRecipePage() {
         setIsRetrying(true);
         console.log("Retrying recipe generation with formData:", formData);
         
+        // Track that generation is in progress to prevent infinite redirects
+        setGenerationInProgress(true);
+        
         // Clear any existing errors
         setError(null);
         
@@ -226,7 +231,7 @@ export function useQuickRecipePage() {
           description: "We're attempting to generate your recipe again...",
         });
         
-        // Navigate to loading page for the retry
+        // Navigate to loading page for the retry with consistent route
         navigate('/loading', { 
           state: { 
             fromQuickRecipePage: true,
@@ -235,15 +240,12 @@ export function useQuickRecipePage() {
           replace: true
         });
         
-        // Start the recipe generation
-        await generateQuickRecipe(formData);
-        
-        setIsRetrying(false);
       } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : "Please try again later.";
         console.error("Error retrying recipe generation:", e);
         setIsRetrying(false);
         setLoading(false);
+        setGenerationInProgress(false);
+        const message = e instanceof Error ? e.message : "Please try again later.";
         toast({
           title: "Recipe generation failed",
           description: message,
@@ -273,6 +275,7 @@ export function useQuickRecipePage() {
     debugMode,
     isDirectNavigation,
     isResumingGeneration,
+    generationInProgress,
     handleRetry,
     handleCancel,
     toggleDebugMode

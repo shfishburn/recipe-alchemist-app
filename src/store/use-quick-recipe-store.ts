@@ -18,6 +18,7 @@ interface QuickRecipeState {
   hasTimeoutError: boolean;
   loadingState: LoadingState;
   navigate: ((to: string, options?: any) => void) | null;
+  generationInProgress: boolean;
   
   // Actions
   setRecipe: (recipe: QuickRecipe) => void;
@@ -29,6 +30,7 @@ interface QuickRecipeState {
   reset: () => void;
   isRecipeValid: () => boolean;
   updateLoadingState: (newState: Partial<LoadingState>) => void;
+  setGenerationInProgress: (inProgress: boolean) => void;
 }
 
 export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
@@ -37,6 +39,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
   isLoading: false,
   error: null,
   hasTimeoutError: false,
+  generationInProgress: false,
   loadingState: {
     step: 0,
     stepDescription: 'Analyzing your ingredients...',
@@ -48,16 +51,29 @@ export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
   // Actions
   setRecipe: (recipe) => set({ recipe }),
   setFormData: (formData) => set({ formData }),
-  setLoading: (loading) => set({ isLoading: loading }),
+  setLoading: (loading) => set({ 
+    isLoading: loading,
+    // Reset loading state when turning off loading
+    ...(loading === false && {
+      loadingState: {
+        step: 0,
+        stepDescription: 'Analyzing your ingredients...',
+        percentComplete: 0,
+        estimatedTimeRemaining: 30
+      }
+    })
+  }),
   setError: (error) => set({ error }),
   setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
   setNavigate: (navigate) => set({ navigate }),
+  setGenerationInProgress: (inProgress) => set({ generationInProgress: inProgress }),
   
   reset: () => set({
     recipe: null,
     isLoading: false,
     error: null,
     hasTimeoutError: false,
+    generationInProgress: false,
     loadingState: {
       step: 0,
       stepDescription: 'Analyzing your ingredients...',
