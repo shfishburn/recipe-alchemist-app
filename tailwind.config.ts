@@ -165,7 +165,18 @@ export default {
 				'material-ripple': 'material-ripple 0.6s linear forwards',
 				'material-fade': 'material-fade-in 0.2s ease-out forwards',
 				'material-scale': 'material-scale 0.15s ease-out forwards'
-			}
+			},
+			// Material Design spacing scale
+			spacing: {
+				'md-1': '8px',  // 1 unit
+				'md-2': '16px', // 2 units
+				'md-3': '24px', // 3 units
+				'md-4': '32px', // 4 units
+				'md-5': '40px', // 5 units
+				'md-6': '48px', // 6 units
+				'md-7': '56px', // 7 units
+				'md-8': '64px', // 8 units
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

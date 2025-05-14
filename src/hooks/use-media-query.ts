@@ -1,72 +1,66 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 /**
- * Enhanced hook for responsive Material Design layouts
- * Uses standard Material Design breakpoints:
- * - xs: 0px and up
- * - sm: 600px and up
- * - md: 960px and up
- * - lg: 1280px and up
- * - xl: 1920px and up
+ * Custom hook for responsive design with Material Design breakpoints
+ * 
+ * @param query The media query to check
+ * @returns Boolean indicating if the media query matches
  */
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState<boolean>(() => {
-    // Check for SSR
-    if (typeof window !== "undefined") {
+    // Check if window is available (client-side)
+    if (typeof window !== 'undefined') {
       return window.matchMedia(query).matches;
     }
+    // Default to false on server-side rendering
     return false;
   });
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
     
     const mediaQuery = window.matchMedia(query);
     
-    // Initial check
+    // Set initial value
     setMatches(mediaQuery.matches);
     
-    // Create event listener that updates the state
-    const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
+    // Define listener
+    const handleChange = (event: MediaQueryListEvent) => {
+      setMatches(event.matches);
+    };
     
     // Modern browsers
-    mediaQuery.addEventListener("change", listener);
-    
-    // Clean up
-    return () => mediaQuery.removeEventListener("change", listener);
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } 
+    // Legacy support
+    else {
+      // @ts-ignore - For older browsers
+      mediaQuery.addListener(handleChange);
+      return () => {
+        // @ts-ignore - For older browsers
+        mediaQuery.removeListener(handleChange);
+      };
+    }
   }, [query]);
 
   return matches;
 }
 
 /**
- * Predefined Material Design breakpoint hooks
+ * Material Design responsive breakpoints:
+ * - xs: 0px
+ * - sm: 600px
+ * - md: 960px
+ * - lg: 1280px
+ * - xl: 1920px
  */
-export function useIsMobile() {
-  return useMediaQuery("(max-width: 599px)");
-}
-
-export function useIsTablet() {
-  return useMediaQuery("(min-width: 600px) and (max-width: 959px)");
-}
-
-export function useIsDesktop() {
-  return useMediaQuery("(min-width: 960px)");
-}
-
-export function useIsLargeDesktop() {
-  return useMediaQuery("(min-width: 1280px)");
-}
-
-export function useBreakpoint() {
-  const isMobile = useMediaQuery("(max-width: 599px)");
-  const isTablet = useMediaQuery("(min-width: 600px) and (max-width: 959px)");
-  const isDesktop = useMediaQuery("(min-width: 960px) and (max-width: 1279px)");
-  const isLargeDesktop = useMediaQuery("(min-width: 1280px)");
-  
-  if (isLargeDesktop) return "xl";
-  if (isDesktop) return "lg";
-  if (isTablet) return "md";
-  return "sm";
-}
+export const materialBreakpoints = {
+  xs: '(min-width: 0px)',
+  sm: '(min-width: 600px)',
+  md: '(min-width: 960px)',
+  lg: '(min-width: 1280px)',
+  xl: '(min-width: 1920px)',
+};

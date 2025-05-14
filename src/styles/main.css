@@ -7,17 +7,42 @@
 @import './scientific-content.css';
 
 :root {
+  /* Material Design color tokens */
+  --recipe-primaryPurple: rgb(155, 135, 245);    /* Primary Purple */
+  --recipe-secondaryPurple: rgb(126, 105, 171);  /* Secondary Purple */  
+  --recipe-tertiaryPurple: rgb(110, 89, 165);    /* Tertiary Purple */
+  --recipe-darkPurple: rgb(26, 31, 44);          /* Dark Purple */
+  
+  /* Legacy recipe colors - maintaining for backward compatibility */
   --recipe-blue: rgb(29, 78, 216);
   --recipe-blue-hover: rgb(37, 99, 235);
   --recipe-green: rgb(76, 175, 80);
   --recipe-green-hover: rgb(67, 160, 71);
   --recipe-orange: rgb(255, 152, 0);
   --recipe-orange-hover: rgb(245, 124, 0);
+  
+  /* Material Design spacing tokens */
+  --spacing-unit: 8px;
+  --spacing-1: calc(var(--spacing-unit) * 1);    /* 8px */
+  --spacing-2: calc(var(--spacing-unit) * 2);    /* 16px */
+  --spacing-3: calc(var(--spacing-unit) * 3);    /* 24px */
+  --spacing-4: calc(var(--spacing-unit) * 4);    /* 32px */
+  --spacing-5: calc(var(--spacing-unit) * 5);    /* 40px */
+  --spacing-6: calc(var(--spacing-unit) * 6);    /* 48px */
+  --spacing-7: calc(var(--spacing-unit) * 7);    /* 56px */
+  --spacing-8: calc(var(--spacing-unit) * 8);    /* 64px */
+  
+  /* Material Design surface tokens */
+  --surface-1: #F4F5FA;
+  --surface-2: #FFFFFF;
+  --surface-3: #F9FAFD;
+  --surface-4: #FAFBFC;
+  --surface-5: #FFFFFF;
 }
 
 /* Global focus styles */
 *:focus-visible {
-  outline: 2px solid var(--recipe-blue);
+  outline: 2px solid var(--recipe-primaryPurple);
   outline-offset: 2px;
 }
 
@@ -26,7 +51,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--recipe-blue);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--recipe-primaryPurple);
 }
 
 /* Completely remove the blue rectangle from react-select components */
@@ -51,26 +76,26 @@ textarea:focus-visible {
 
 .multi-select__control--is-focused,
 .multi-select__control--is-focused:hover {
-  border-color: rgb(37, 99, 235) !important;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2) !important;
+  border-color: var(--recipe-primaryPurple) !important;
+  box-shadow: 0 0 0 1px rgba(155, 135, 245, 0.2) !important;
 }
 
 /* Fix the multi-value selected items */
 .multi-select__multi-value {
   align-items: center;
-  background-color: rgb(219, 234, 254) !important;
+  background-color: rgba(155, 135, 245, 0.1) !important;
   border-radius: 0.375rem !important;
   margin: 2px 4px 2px 0 !important;
 }
 
 .multi-select__multi-value__label {
-  color: rgb(37, 99, 235) !important;
+  color: var(--recipe-primaryPurple) !important;
   font-size: 0.875rem !important;
   padding: 2px 4px 2px 6px !important;
 }
 
 .multi-select__multi-value__remove {
-  color: rgb(37, 99, 235) !important;
+  color: var(--recipe-primaryPurple) !important;
   padding: 0 6px !important;
   border-radius: 0 0.375rem 0.375rem 0 !important;
   cursor: pointer;
@@ -80,12 +105,36 @@ textarea:focus-visible {
 }
 
 .multi-select__multi-value__remove:hover {
-  background-color: rgb(191, 219, 254) !important;
-  color: rgb(37, 99, 235) !important;
+  background-color: rgba(155, 135, 245, 0.2) !important;
+  color: var(--recipe-primaryPurple) !important;
+}
+
+/* Material container classes */
+.container-page {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-2);
+  padding-right: var(--spacing-2);
+  max-width: 1400px;
+}
+
+@media (min-width: 600px) {
+  .container-page {
+    padding-left: var(--spacing-3);
+    padding-right: var(--spacing-3);
+  }
+}
+
+@media (min-width: 960px) {
+  .container-page {
+    padding-left: var(--spacing-4);
+    padding-right: var(--spacing-4);
+  }
 }
 
 /* Mobile optimizations for touch */
-@media (max-width: 640px) {
+@media (max-width: 599px) {
   .multi-select__control {
     min-height: 44px !important;
   }
@@ -106,28 +155,7 @@ textarea:focus-visible {
   }
 }
 
-.container-page {
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 640px) {
-  .container-page {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container-page {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
+/* Material Design animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -154,4 +182,61 @@ textarea:focus-visible {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+/* Material Design state layer (ripple) */
+.material-state-layer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.material-button:hover .material-state-layer {
+  opacity: 0.08;
+}
+
+.material-button:active .material-state-layer {
+  opacity: 0.12;
+}
+
+/* Material typography classes */
+.material-headline-large {
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+.material-headline-medium {
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.29;
+}
+
+.material-body-large {
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.03125em;
+  line-height: 1.5;
+}
+
+.material-body-medium {
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.015625em;
+  line-height: 1.43;
+}
+
+.material-label-large {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.00625em;
+  line-height: 1.43;
 }
