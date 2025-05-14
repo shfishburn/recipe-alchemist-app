@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -68,8 +69,8 @@ const LoadingPage: React.FC = () => {
             console.log("LoadingPage - Recipe generation successful, navigating to recipe preview");
             setRecipe(recipe);
             
-            // Navigate to recipe preview with ID
-            navigate('/recipe-preview', { 
+            // Navigate to preview page (fixed route)
+            navigate('/preview', { 
               state: { 
                 recipeData: recipe,
                 timestamp: Date.now()

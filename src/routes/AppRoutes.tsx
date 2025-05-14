@@ -26,9 +26,10 @@ const LazyRoutes = lazy(() => import('./LazyRoutes').then(module => ({
         <Route path="/profile" element={<ImportedRoutes.Profile />} />
         <Route path="/shopping-lists" element={<ImportedRoutes.ShoppingLists />} />
         <Route path="/favorites" element={<ImportedRoutes.Favorites />} />
-        <Route path="/data-import" element={<ImportedRoutes.DataImport />} />
         <Route path="/loading" element={<ImportedRoutes.LoadingPage />} />
         <Route path="/preview" element={<ImportedRoutes.RecipePreviewPage />} />
+        <Route path="/recipe-preview" element={<ImportedRoutes.RecipePreviewPage />} /> {/* Add this route as a fallback for backward compatibility */}
+        <Route path="/recipe-preview/:id" element={<ImportedRoutes.RecipePreviewPage />} /> {/* Add this route for shared recipes with IDs */}
         <Route path="*" element={<ImportedRoutes.NotFound />} />
       </Routes>
     );

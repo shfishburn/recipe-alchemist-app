@@ -1,4 +1,3 @@
-
 import { Ingredient, QuickRecipe } from "@/types/quick-recipe";
 
 // Function to normalize recipe response from edge function
@@ -8,21 +7,7 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
   // Handle completely empty data
   if (!data) {
     console.error("Empty recipe data received");
-    return { 
-      title: "Recipe Creation Error", 
-      ingredients: [{
-        item: "Missing ingredients",
-        qty_metric: 0,
-        unit_metric: "",
-        qty_imperial: 0,
-        unit_imperial: ""
-      }],
-      steps: ["Unable to create recipe with the provided information", "Please try again with different ingredients"],
-      instructions: ["Unable to create recipe with the provided information", "Please try again with different ingredients"],
-      servings: 2,
-      isError: true,
-      error_message: "Empty recipe data received"
-    };
+    return createErrorRecipe("Empty recipe data received");
   }
   
   // Check for error flags in the original data and preserve them
@@ -48,6 +33,12 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
       error_message: data.error_message || data.error || "Unknown error occurred"
     };
   }
+
+  // Special case: If data looks like a single ingredient rather than a recipe (common OpenAI error)
+  if (data.item && data.qty_imperial && !data.title) {
+    console.warn("Received single ingredient instead of complete recipe:", data);
+    return createErrorRecipe("Received incomplete recipe data", [data]);
+  }
   
   // Log validation issues but don't throw errors
   if (!data.title || !data.ingredients) {
@@ -55,39 +46,7 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
   }
   
   // Handle different response formats
-  const ingredients = data.ingredients?.map((ingredient: any) => {
-    // If already in the correct format with metric/imperial units
-    if (ingredient.qty_metric !== undefined || ingredient.qty_imperial !== undefined) {
-      return ingredient;
-    }
-    
-    // Otherwise normalize to our expected format
-    return {
-      qty: ingredient.qty,
-      unit: ingredient.unit,
-      // Add metric units (same as original if not specified)
-      qty_metric: ingredient.qty,
-      unit_metric: ingredient.unit,
-      // Add imperial units (same as original if not specified)
-      qty_imperial: ingredient.qty,
-      unit_imperial: ingredient.unit,
-      item: ingredient.item,
-      notes: ingredient.notes,
-      shop_size_qty: ingredient.shop_size_qty,
-      shop_size_unit: ingredient.shop_size_unit
-    };
-  }) || [];
-  
-  // Always ensure there's at least one ingredient if array is empty
-  if (ingredients.length === 0) {
-    ingredients.push({
-      item: "Ingredient information unavailable",
-      qty_metric: 0,
-      unit_metric: "",
-      qty_imperial: 0,
-      unit_imperial: ""
-    });
-  }
+  const ingredients = normalizeIngredients(data.ingredients);
   
   // Always ensure steps and instructions exist
   const steps = data.steps || data.instructions || ["Recipe steps could not be generated"];
@@ -120,3 +79,127 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     isError: false
   };
 };
+
+// Helper function to normalize ingredients array with various formats
+function normalizeIngredients(ingredients: any): any[] {
+  // If ingredients is not provided or not an array
+  if (!ingredients) {
+    return [{
+      item: "Ingredient information unavailable",
+      qty_metric: 0,
+      unit_metric: "",
+      qty_imperial: 0,
+      unit_imperial: ""
+    }];
+  }
+  
+  // If ingredients is already an array
+  if (Array.isArray(ingredients)) {
+    // If array is empty, return default ingredient
+    if (ingredients.length === 0) {
+      return [{
+        item: "Ingredient information unavailable",
+        qty_metric: 0,
+        unit_metric: "",
+        qty_imperial: 0,
+        unit_imperial: ""
+      }];
+    }
+    
+    // Process each ingredient to ensure consistent format
+    return ingredients.map((ingredient: any) => {
+      // If ingredient is a string (simple format)
+      if (typeof ingredient === 'string') {
+        return {
+          item: ingredient,
+          qty_metric: 0,
+          unit_metric: "",
+          qty_imperial: 0,
+          unit_imperial: ""
+        };
+      }
+      
+      // If already in the correct format with metric/imperial units
+      if (ingredient.qty_metric !== undefined || ingredient.qty_imperial !== undefined) {
+        return ingredient;
+      }
+      
+      // Handle case where item is nested inside an object property
+      if (typeof ingredient.item === 'object' && ingredient.item !== null) {
+        ingredient.item = ingredient.item.name || ingredient.item.item || "Unknown ingredient";
+      }
+      
+      // Otherwise normalize to our expected format
+      return {
+        qty: ingredient.qty,
+        unit: ingredient.unit,
+        // Add metric units (same as original if not specified)
+        qty_metric: ingredient.qty_metric || ingredient.qty,
+        unit_metric: ingredient.unit_metric || ingredient.unit || "",
+        // Add imperial units (same as original if not specified)
+        qty_imperial: ingredient.qty_imperial || ingredient.qty,
+        unit_imperial: ingredient.unit_imperial || ingredient.unit || "",
+        item: ingredient.item,
+        notes: ingredient.notes,
+        shop_size_qty: ingredient.shop_size_qty,
+        shop_size_unit: ingredient.shop_size_unit
+      };
+    });
+  }
+  
+  // If ingredients is an object (single ingredient), convert to array
+  if (typeof ingredients === 'object' && ingredients !== null) {
+    return [{
+      qty: ingredients.qty,
+      unit: ingredients.unit,
+      qty_metric: ingredients.qty_metric || ingredients.qty,
+      unit_metric: ingredients.unit_metric || ingredients.unit || "",
+      qty_imperial: ingredients.qty_imperial || ingredients.qty,
+      unit_imperial: ingredients.unit_imperial || ingredients.unit || "",
+      item: ingredients.item,
+      notes: ingredients.notes,
+      shop_size_qty: ingredients.shop_size_qty,
+      shop_size_unit: ingredients.shop_size_unit
+    }];
+  }
+  
+  // Fallback for unexpected format
+  return [{
+    item: "Ingredient information unavailable",
+    qty_metric: 0,
+    unit_metric: "",
+    qty_imperial: 0,
+    unit_imperial: ""
+  }];
+}
+
+// Helper function to create an error recipe
+function createErrorRecipe(errorMessage: string, partialIngredients?: any[]): QuickRecipe {
+  return {
+    title: "Recipe Generation Issue",
+    description: errorMessage,
+    ingredients: partialIngredients || [{
+      item: "Error generating ingredients",
+      qty_metric: 0,
+      unit_metric: "",
+      qty_imperial: 0,
+      unit_imperial: ""
+    }],
+    steps: ["There was an issue creating your recipe. Please try again."],
+    instructions: ["There was an issue creating your recipe. Please try again."],
+    servings: 2,
+    isError: true,
+    error_message: errorMessage,
+    prep_time_min: 0,
+    cook_time_min: 0,
+    prepTime: 0,
+    cookTime: 0,
+    science_notes: [],
+    nutrition: null,
+    nutritionHighlight: "",
+    cookingTip: "",
+    cuisine: "",
+    dietary: "",
+    flavor_tags: []
+  };
+}

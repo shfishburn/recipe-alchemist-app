@@ -121,10 +121,52 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         };
       }
       
+      // Quick validation of data structure before normalization
+      if (data.item && data.qty_imperial && !data.title) {
+        console.warn("Received single ingredient instead of complete recipe:", data);
+        data = {
+          title: formData.mainIngredient 
+            ? `${formData.mainIngredient.charAt(0).toUpperCase() + formData.mainIngredient.slice(1)} Recipe` 
+            : "Recipe",
+          ingredients: [data], // Wrap the single ingredient in an array
+          steps: ["Prepare and cook according to your preference."],
+          servings: formData.servings || 2
+        };
+      }
+      
       // Normalize the recipe data with more forgiving validation
       const normalizedRecipe = normalizeRecipeResponse(data);
       
       console.log('Normalized recipe:', normalizedRecipe);
+      
+      // If after normalization we still don't have a proper recipe, create a fallback one
+      if (!normalizedRecipe.title || normalizedRecipe.ingredients.length === 0 || normalizedRecipe.steps.length === 0) {
+        console.warn("Normalized recipe is still incomplete:", normalizedRecipe);
+        return {
+          title: formData.mainIngredient 
+            ? `${formData.mainIngredient.charAt(0).toUpperCase() + formData.mainIngredient.slice(1)} Recipe` 
+            : "Recipe",
+          description: "A recipe was generated but may be incomplete.",
+          ingredients: normalizedRecipe.ingredients.length > 0 ? normalizedRecipe.ingredients : [{
+            item: formData.mainIngredient || "Main Ingredient",
+            qty_imperial: 1,
+            unit_imperial: "serving",
+            qty_metric: 1,
+            unit_metric: "serving"
+          }],
+          steps: normalizedRecipe.steps.length > 0 ? normalizedRecipe.steps : [
+            "Prepare ingredients according to your preference.",
+            "Cook and serve as desired."
+          ],
+          instructions: normalizedRecipe.instructions.length > 0 ? normalizedRecipe.instructions : [
+            "Prepare ingredients according to your preference.",
+            "Cook and serve as desired."
+          ],
+          servings: formData.servings || 2,
+          error_message: null,
+          isError: false
+        };
+      }
       
       return normalizedRecipe;
     } catch (raceError) {

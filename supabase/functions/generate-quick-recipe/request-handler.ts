@@ -88,44 +88,95 @@ export async function handleRequest(
     // Generate recipe using OpenAI - update to use dynamic CORS headers
     const response = await generateRecipeWithOpenAI(apiKey, prompt, processedParams, getCorsHeadersWithOrigin(req), debugInfo);
     
-    // Validate cuisine_category in response if it's a successful response
+    // Validate response structure
     if (response.status === 200) {
       try {
         // Clone the response so we can read the body
         const clonedResponse = response.clone();
-        const responseBody = await clonedResponse.json();
+        const responseText = await clonedResponse.text();
         
-        // Check if the cuisine category is valid
-        if (responseBody && responseBody.cuisine_category) {
-          if (!VALID_CUISINE_CATEGORIES.includes(responseBody.cuisine_category)) {
-            console.warn(`Invalid cuisine_category '${responseBody.cuisine_category}' returned from OpenAI. Setting to 'Global'.`);
-            // Modify the response to set a valid category
-            responseBody.cuisine_category = "Global";
-            
-            // Return the modified response with dynamic CORS headers
+        try {
+          const responseBody = JSON.parse(responseText);
+          
+          // Validate minimum structure requirements
+          const isValid = validateResponseStructure(responseBody);
+          
+          if (!isValid) {
+            console.error("Invalid response structure:", responseBody);
+            // Create a valid response with error information
             return new Response(
-              JSON.stringify(responseBody),
+              JSON.stringify({
+                title: "Recipe Structure Error",
+                description: "The recipe generation service returned an invalid structure",
+                error_message: "Invalid recipe structure received",
+                isError: true,
+                ingredients: [],
+                steps: ["The recipe generation system encountered a structure error. Please try again."]
+              }),
               { status: 200, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
             );
           }
+          
+          // If valid, return the original response
+          return response;
+        } catch (jsonError) {
+          console.error("Error parsing response JSON:", jsonError);
+          // Handle non-JSON response
+          return new Response(
+            JSON.stringify({
+              title: "Recipe Format Error",
+              description: "The recipe generation service returned an invalid format",
+              error_message: "Invalid response format received",
+              isError: true,
+              ingredients: [],
+              steps: ["The recipe generation system encountered a format error. Please try again."]
+            }),
+            { status: 200, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
+          );
         }
       } catch (validationError) {
-        console.error("Error validating cuisine category:", validationError);
-        // We'll still return the original response even if validation fails
+        console.error("Error validating response:", validationError);
+        // If validation fails, return the original response
+        return response;
       }
     }
     
+    // For non-200 responses, just return them as is
     return response;
     
-  } catch (error: any) {
-    console.error("Quick recipe generation error:", error);
+  } catch (error) {
+    console.error("Error in handleRequest:", error);
     return new Response(
-      JSON.stringify({
-        error: "Recipe generation service error - please try again",
-        details: error.message || "An unexpected error occurred",
+      JSON.stringify({ 
+        error: "An unexpected error occurred in the recipe generation service",
+        details: error instanceof Error ? error.message : String(error),
         debugInfo: debugInfo
       }),
-      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } },
+      { status: 500, headers: { ...getCorsHeadersWithOrigin(req), "Content-Type": "application/json" } }
     );
   }
+}
+
+// Helper function to validate response structure
+function validateResponseStructure(response: any): boolean {
+  // Check for standard error response format
+  if (response.error || response.isError === true) {
+    // Already an error response, so it's "valid" structurally
+    return true;
+  }
+  
+  // Check for minimum recipe structure
+  const hasTitle = typeof response.title === 'string';
+  const hasIngredients = Array.isArray(response.ingredients);
+  const hasSteps = Array.isArray(response.steps) || Array.isArray(response.instructions);
+  
+  // Special case: single ingredient returned instead of a recipe
+  if (!hasTitle && !hasSteps && response.item && (response.qty_imperial !== undefined || response.qty_metric !== undefined)) {
+    // This is a single ingredient, not a complete recipe - still considered valid
+    // The client will handle this special case
+    return true;
+  }
+  
+  // Complete recipe must have title, ingredients, and steps
+  return hasTitle && hasIngredients && hasSteps;
 }
