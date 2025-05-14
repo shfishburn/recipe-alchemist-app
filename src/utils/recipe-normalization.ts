@@ -73,7 +73,7 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     nutritionHighlight: data.nutritionHighlight || "",
     cookingTip: data.cookingTip || "",
     cuisine: data.cuisine || "",
-    dietary: data.dietary || "",
+    dietary: data.dietary || [],  // Fix: Changed from string to empty array to match expected type
     flavor_tags: data.flavor_tags || [],
     // Preserve any error message but explicitly set isError to false
     error_message: null,
@@ -195,13 +195,13 @@ function createErrorRecipe(errorMessage: string, partialIngredients?: any[]): Qu
     cook_time_min: 0,
     prepTime: 0,
     cookTime: 0,
-    // Fix: Convert string to array
+    // Fix: Ensure science_notes is always an array
     science_notes: [],
     nutrition: null,
     nutritionHighlight: "",
     cookingTip: "",
     cuisine: "",
-    dietary: "",
+    dietary: [], // Fix: Changed from string to empty array to match expected type
     flavor_tags: []
   };
 }
