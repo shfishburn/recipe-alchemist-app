@@ -9,6 +9,7 @@ const Slot = React.forwardRef<
   React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
 >(({ children, asChild = false, ...props }, ref) => {
   if (asChild && React.isValidElement(children)) {
+    // When cloning an element, we need to properly handle the ref
     return React.cloneElement(
       children,
       {
@@ -27,7 +28,7 @@ const Slot = React.forwardRef<
 Slot.displayName = "Slot";
 
 // Utility function to merge refs
-function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T>>): React.RefCallback<T> {
+function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T> | null | undefined>): React.RefCallback<T> {
   return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
@@ -40,7 +41,7 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
 }
 
 // Utility function to merge props - fixed to properly handle event handlers and type safety
-function mergeProps<T extends Record<string, any>>(slotProps: T, childProps: T): Record<string, any> {
+function mergeProps(slotProps: Record<string, any>, childProps: Record<string, any>): Record<string, any> {
   const merged = { ...childProps };
   
   for (const propName in slotProps) {
