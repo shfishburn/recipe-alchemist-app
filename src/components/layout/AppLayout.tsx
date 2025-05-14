@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
@@ -13,7 +12,6 @@ import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation, useNavigate } from "react-router-dom";
 import '@/styles/loading.css';
-import LoadingPage from '@/pages/LoadingPage';
 
 // Updated utility function to prefetch assets that actually exist in production
 const prefetchAssets = (urls: string[]) => {
@@ -75,7 +73,18 @@ export const AppLayout = () => {
   
   // If we're on the loading route, render only the LoadingPage with smooth transition
   if (isLoadingRoute) {
-    return <LoadingPage />;
+    const LoadingPage = React.lazy(() => import("@/pages/LoadingPage"));
+    return (
+      <React.Suspense fallback={
+        <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center overflow-x-hidden">
+          <div className="loading-pulse-ring w-20 h-20 border-4 border-gray-200"></div>
+          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-green border-t-transparent animate-spin" 
+               style={{ animationDelay: '-0.5s' }}></div>
+        </div>
+      }>
+        <LoadingPage />
+      </React.Suspense>
+    );
   }
   
   return (

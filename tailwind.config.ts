@@ -82,18 +82,6 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
-			boxShadow: {
-				// Material Design elevation system
-				'elevation-1': 'var(--elevation-1)',
-				'elevation-2': 'var(--elevation-2)',
-				'elevation-3': 'var(--elevation-3)',
-				'elevation-4': 'var(--elevation-4)',
-				'elevation-5': 'var(--elevation-5)',
-			},
-			fontFamily: {
-				'sans': ['Roboto', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-				'roboto': ['Roboto', 'sans-serif'],
-			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -137,19 +125,6 @@ export default {
 					'0%': { backgroundPosition: '0% 50%' },
 					'50%': { backgroundPosition: '100% 50%' },
 					'100%': { backgroundPosition: '0% 50%' }
-				},
-				// Material specific animations
-				'material-ripple': {
-					'0%': { transform: 'scale(0)', opacity: '1' },
-					'100%': { transform: 'scale(4)', opacity: '0' }
-				},
-				'material-fade-in': {
-					'0%': { opacity: '0', transform: 'translateY(4px)' },
-					'100%': { opacity: '1', transform: 'translateY(0)' }
-				},
-				'material-scale': {
-					'0%': { transform: 'scale(0.95)' },
-					'100%': { transform: 'scale(1)' }
 				}
 			},
 			animation: {
@@ -160,23 +135,8 @@ export default {
 				'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 				'cooking-pot': 'cooking 2s ease-in-out infinite',
 				'gift-float': 'float 3s ease-in-out infinite',
-				'progress-pulse': 'progressPulse 2s ease infinite',
-				// Material specific animations
-				'material-ripple': 'material-ripple 0.6s linear forwards',
-				'material-fade': 'material-fade-in 0.2s ease-out forwards',
-				'material-scale': 'material-scale 0.15s ease-out forwards'
-			},
-			// Material Design spacing scale
-			spacing: {
-				'md-1': '8px',  // 1 unit
-				'md-2': '16px', // 2 units
-				'md-3': '24px', // 3 units
-				'md-4': '32px', // 4 units
-				'md-5': '40px', // 5 units
-				'md-6': '48px', // 6 units
-				'md-7': '56px', // 7 units
-				'md-8': '64px', // 8 units
-			},
+				'progress-pulse': 'progressPulse 2s ease infinite'
+			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

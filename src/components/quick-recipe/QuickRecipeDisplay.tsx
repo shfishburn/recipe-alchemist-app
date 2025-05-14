@@ -57,15 +57,6 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
     (Array.isArray(recipe.steps) && recipe.steps.length > 0) ? recipe.steps :
     [];
   
-  // Convert string times to numbers
-  const prepTimeMinutes = typeof recipe.prepTime === 'string' 
-    ? parseInt(recipe.prepTime, 10) || 0 
-    : recipe.prepTime || 0;
-    
-  const cookTimeMinutes = typeof recipe.cookTime === 'string' 
-    ? parseInt(recipe.cookTime, 10) || 0 
-    : recipe.cookTime || 0;
-  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
       <div className="p-6 md:p-8">
@@ -86,15 +77,16 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
           />
           
           <RecipeTimeInfo 
-            prepTime={prepTimeMinutes}
-            cookTime={cookTimeMinutes}
+            prepTime={recipe.prep_time_min || recipe.prepTime || 0}
+            cookTime={recipe.cook_time_min || recipe.cookTime || 0}
             servings={recipe.servings || 0}
           />
           
           <div className="grid md:grid-cols-2 gap-8">
             <div>
+              {/* Remove duplicated section header - it's already in RecipeIngredients */}
               {hasIngredients ? (
-                <RecipeIngredients ingredients={recipe.ingredients} />
+                <RecipeIngredients ingredients={recipe.ingredients || []} />
               ) : (
                 <Alert className="mt-2 bg-amber-50 dark:bg-amber-900/10">
                   <AlertTriangle className="h-4 w-4" />
@@ -107,6 +99,7 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
             </div>
             
             <div>
+              {/* Remove duplicated section header - it's already in RecipeSteps */}
               {hasInstructions ? (
                 <RecipeSteps steps={instructionsToDisplay} />
               ) : (

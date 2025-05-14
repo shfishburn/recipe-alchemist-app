@@ -2,103 +2,72 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import '@/styles/loading.css';
-import { cn } from '@/lib/utils';
-import { MaterialLoadingAnimation } from './loading/MaterialLoadingAnimation';
 
 interface QuickRecipeLoadingProps {
   onCancel?: () => void;
   timeoutWarning?: boolean;
-  progress?: number;
-  estimatedTimeRemaining?: number;
 }
 
-export function QuickRecipeLoading({ 
-  onCancel, 
-  timeoutWarning = false,
-  progress = 65,
-  estimatedTimeRemaining
-}: QuickRecipeLoadingProps) {
+export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRecipeLoadingProps) {
   return (
     <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
-      <div className={cn(
-        "flex flex-col items-center justify-center space-y-6 p-6 w-full max-w-lg mx-auto",
-        "rounded-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm",
-        "border border-gray-100 dark:border-gray-800",
-        "shadow-elevation-1"
-      )}>
-        {/* Material Design Loading Animation with dynamic progress */}
-        <MaterialLoadingAnimation 
-          progress={progress} 
-          showChefTip={true}
-          timeoutWarning={timeoutWarning}
-          estimatedTimeRemaining={estimatedTimeRemaining}
-        />
+      <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
+        {/* Gift box icon with animations */}
+        <div className="relative animate-gift-float hw-accelerated" aria-hidden="true">
+          <svg 
+            width="100" 
+            height="100" 
+            viewBox="0 0 100 100" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className="animate-gift-glow"
+          >
+            <rect x="25" y="37.5" width="50" height="50" rx="4" fill="#D1D5DB" />
+            <path d="M25 41.5a4 4 0 014-4h42a4 4 0 014 4v8H25v-8z" fill="#4CAF50" />
+            <path d="M50 37.5V25M41.6 31.25C41.6 27.33 45.5 20.83 50 25c4.5 4.17 8.3 2.08 8.3 6.25 0 4.17-4.16 6.25-8.3 6.25-4.16 0-8.4-2.33-8.4-6.25z" stroke="#4CAF50" strokeWidth="3" />
+          </svg>
+        </div>
         
-        {/* Main heading - Material typography */}
-        <h2 className="text-xl font-medium">
+        {/* Main heading */}
+        <h2 className="text-xl font-semibold">
           Creating your recipe...
         </h2>
         
-        {/* Progress bar with Material Design animation and proper ARIA attributes */}
-        <div className="w-full">
-          <Progress 
-            value={progress} 
-            className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
-            indicatorClassName="bg-primary animate-progress-pulse"
-            aria-label="Recipe creation progress"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          />
-        </div>
+        {/* Progress bar with animation */}
+        <Progress 
+          value={65} 
+          className="w-full"
+          indicatorClassName="animate-progress-pulse" 
+          indicatorColor="#4CAF50"
+        />
         
-        {/* Timeout warning - Material Design alert with proper ARIA attributes */}
+        {/* Timeout warning - conditionally rendered */}
         {timeoutWarning && (
-          <div 
-            className={cn(
-              "flex items-center gap-2 w-full",
-              "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400",
-              "py-3 px-4 rounded-lg text-sm"
-            )}
-            role="alert"
-            aria-live="polite"
-          >
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm bg-amber-50 dark:bg-amber-900/10 py-2 px-3 rounded-lg w-full">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>This is taking longer than usual. Please be patient...</span>
           </div>
         )}
         
-        {/* Tip card - Material Design card */}
-        <div className={cn(
-          "w-full rounded-lg",
-          "bg-background border border-gray-100 dark:border-gray-800",
-          "shadow-sm p-4"
-        )}>
-          <h4 className="text-base font-medium mb-2">Chef's Tip</h4>
+        {/* Tip card */}
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 w-full">
+          <h4 className="text-base font-semibold mb-2">Chef's Tip</h4>
           <p className="text-sm text-muted-foreground">
             Patience is key in cooking. The best flavors take time to develop, just like your recipe is taking shape now.
           </p>
         </div>
         
-        {/* Cancel button - Material Design button with ARIA attributes */}
+        {/* Cancel button */}
         <Button 
           variant="ghost" 
           onClick={onCancel} 
-          className={cn(
-            "text-muted-foreground hover:text-foreground mt-2",
-            "relative overflow-hidden"
-          )}
-          aria-label="Cancel recipe generation"
+          className="text-muted-foreground hover:text-foreground"
         >
-          <span>Cancel</span>
-          {/* Material ripple effect */}
-          <span className="absolute inset-0 bg-black/5 opacity-0 hover:opacity-100 transition-opacity rounded-md" />
+          Cancel
         </Button>
       </div>
     </div>
   );
 }
-
-export default QuickRecipeLoading;

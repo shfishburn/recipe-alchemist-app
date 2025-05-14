@@ -87,8 +87,7 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
     console.log("Starting race with timeout");
     
     try {
-      // Fix: Use a mutable variable instead of a constant for data
-      let responseData = await Promise.race([
+      const data = await Promise.race([
         callWithSupabaseFunctionClient().catch(async err => {
           console.warn("Supabase function client failed, falling back to direct fetch:", err);
           return fetchFromEdgeFunction(requestBody);
@@ -96,10 +95,10 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
         timeoutPromise
       ]);
       
-      console.log("Race completed, data received:", responseData ? "data exists" : "no data");
+      console.log("Race completed, data received:", data ? "data exists" : "no data");
       
       // Handle missing data
-      if (!responseData) {
+      if (!data) {
         console.error('No data returned from recipe generation');
         // Create a minimal recipe with error info
         return {
@@ -114,60 +113,18 @@ export const generateQuickRecipe = async (formData: QuickRecipeFormData): Promis
       }
       
       // Explicitly check for error flags in response
-      if (responseData.isError === true || responseData.error || responseData.error_message) {
-        console.log("Response contains error flags:", responseData.error || responseData.error_message);
+      if (data.isError === true || data.error || data.error_message) {
+        console.log("Response contains error flags:", data.error || data.error_message);
         return {
-          ...responseData,
+          ...data,
           isError: true // Ensure isError flag is set
         };
       }
       
-      // Quick validation of data structure before normalization
-      if (responseData.item && responseData.qty_imperial && !responseData.title) {
-        console.warn("Received single ingredient instead of complete recipe:", responseData);
-        responseData = {
-          title: formData.mainIngredient 
-            ? `${formData.mainIngredient.charAt(0).toUpperCase() + formData.mainIngredient.slice(1)} Recipe` 
-            : "Recipe",
-          ingredients: [responseData], // Wrap the single ingredient in an array
-          steps: ["Prepare and cook according to your preference."],
-          servings: formData.servings || 2
-        };
-      }
-      
       // Normalize the recipe data with more forgiving validation
-      const normalizedRecipe = normalizeRecipeResponse(responseData);
+      const normalizedRecipe = normalizeRecipeResponse(data);
       
       console.log('Normalized recipe:', normalizedRecipe);
-      
-      // If after normalization we still don't have a proper recipe, create a fallback one
-      if (!normalizedRecipe.title || normalizedRecipe.ingredients.length === 0 || normalizedRecipe.steps.length === 0) {
-        console.warn("Normalized recipe is still incomplete:", normalizedRecipe);
-        return {
-          title: formData.mainIngredient 
-            ? `${formData.mainIngredient.charAt(0).toUpperCase() + formData.mainIngredient.slice(1)} Recipe` 
-            : "Recipe",
-          description: "A recipe was generated but may be incomplete.",
-          ingredients: normalizedRecipe.ingredients.length > 0 ? normalizedRecipe.ingredients : [{
-            item: formData.mainIngredient || "Main Ingredient",
-            qty_imperial: 1,
-            unit_imperial: "serving",
-            qty_metric: 1,
-            unit_metric: "serving"
-          }],
-          steps: normalizedRecipe.steps.length > 0 ? normalizedRecipe.steps : [
-            "Prepare ingredients according to your preference.",
-            "Cook and serve as desired."
-          ],
-          instructions: normalizedRecipe.instructions.length > 0 ? normalizedRecipe.instructions : [
-            "Prepare ingredients according to your preference.",
-            "Cook and serve as desired."
-          ],
-          servings: formData.servings || 2,
-          error_message: null,
-          isError: false
-        };
-      }
       
       return normalizedRecipe;
     } catch (raceError) {

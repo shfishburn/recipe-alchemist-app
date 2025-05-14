@@ -1,36 +1,34 @@
 
 import React from 'react';
+import { FormattableItem, FormattingOptions } from './types';
+import { formatItem } from './item-formatter';
+import { FormattedIngredientText } from '@/components/recipe-chat/response/FormattedIngredientText';
+import { cn } from '@/lib/utils';
 
 interface FormattedItemProps {
-  item: any;
-  options?: {
-    highlight?: 'name' | 'none';
-    strikethrough?: boolean;
-  };
+  item: FormattableItem;
+  options?: FormattingOptions;
   className?: string;
 }
 
-export function FormattedItem({ item, options = {}, className = '' }: FormattedItemProps) {
-  const { highlight = 'none', strikethrough = false } = options;
+/**
+ * Universal component for formatting different types of items (ingredients, shopping items)
+ * with consistent styling and formatting
+ */
+export function FormattedItem({ item, options = {}, className }: FormattedItemProps) {
+  // Use the item formatter to generate markdown text
+  const formattedText = formatItem(item, options);
   
-  // Handle different item structures
-  const itemName = typeof item === 'string' 
-    ? item 
-    : item.name || item.item || '';
-    
-  const quantity = item.quantity || item.qty || '';
-  const unit = item.unit || '';
+  // Apply additional class names if provided - using the improved object syntax
+  const combinedClassName = cn(className, options.className, {
+    'text-muted-foreground': options.strikethrough
+  });
   
-  // Build display text
-  let displayText = itemName;
-  if (quantity || unit) {
-    displayText = `${quantity} ${unit} ${itemName}`.trim();
-  }
-  
-  const textClasses = [
-    className,
-    strikethrough ? 'line-through text-muted-foreground' : '',
-  ].filter(Boolean).join(' ');
-
-  return <span className={textClasses}>{displayText}</span>;
+  // Use the existing FormattedIngredientText component to handle the markdown
+  return (
+    <FormattedIngredientText 
+      text={formattedText} 
+      className={combinedClassName}
+    />
+  );
 }

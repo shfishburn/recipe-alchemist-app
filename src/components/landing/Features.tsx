@@ -1,77 +1,122 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { Brain, ChefHat, ChartPie, Sparkles } from 'lucide-react';
+import { Brain, ChartPie, CookingPot, Filter, HeartPulse, ShoppingBag, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface FeatureCardProps {
+  icon: React.ReactNode;
   title: string;
   description: string;
-  icon: React.ReactNode;
-  className?: string;
+  highlight?: boolean;
 }
 
-const FeatureCard = ({ title, description, icon, className }: FeatureCardProps) => (
-  <Card className={cn("overflow-hidden transition-all shadow-elevation-1 hover:shadow-elevation-2", className)}>
-    <CardContent className="p-6 space-y-3">
-      <div className="p-3 rounded-full bg-primary/10 w-fit">
+const FeatureCard = ({ icon, title, description, highlight = false }: FeatureCardProps) => {
+  return (
+    <div className={`p-6 rounded-xl border transition-all duration-300 hover:shadow-md ${
+      highlight ? 'bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-700 border-blue-100 dark:border-gray-600' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+    }`}>
+      <div className={`h-12 w-12 flex items-center justify-center rounded-full mb-4 ${
+        highlight ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-200' : 'bg-recipe-blue/10 text-recipe-blue'
+      }`}>
         {icon}
       </div>
-      <h3 className="text-lg font-medium">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </CardContent>
-  </Card>
-);
+      <h3 className="text-lg font-medium mb-2">{title}</h3>
+      <p className="text-muted-foreground">{description}</p>
+    </div>
+  );
+};
 
-export default function Features() {
+const Features = () => {
   const features = [
     {
+      icon: <Brain className="h-6 w-6" />,
       title: "AI-Powered Creation",
-      description: "Generate personalized recipes based on the ingredients you already have in your kitchen.",
-      icon: <Brain className="w-6 h-6 text-recipe-primaryPurple" />,
-      className: "border-t-4 border-recipe-primaryPurple",
+      description: "Our advanced AI analyzes your ingredients and preferences to create personalized, delicious recipes tailored just for you.",
+      highlight: true
     },
     {
-      title: "Nutrition Insights",
-      description: "Get detailed nutrition information and understand how each recipe fits your dietary goals.",
-      icon: <ChartPie className="w-6 h-6 text-recipe-green" />,
-      className: "border-t-4 border-recipe-green",
+      icon: <ChartPie className="h-6 w-6" />,
+      title: "Personalized Nutrition",
+      description: "Get detailed macro breakdowns and nutritional insights customized to your dietary goals and preferences.",
+      highlight: true
     },
     {
-      title: "Custom Modifications",
-      description: "Easily adapt recipes to your dietary preferences, restrictions, and serving sizes.",
-      icon: <Sparkles className="w-6 h-6 text-recipe-orange" />,
-      className: "border-t-4 border-recipe-orange",
+      icon: <Filter className="h-6 w-6" />,
+      title: "Dietary Customization",
+      description: "Automatically adapt recipes to fit your dietary restrictions, allergies, and personal preferences."
     },
     {
-      title: "Chef Assistance",
-      description: "Get step-by-step cooking instructions and professional tips for perfect results every time.",
-      icon: <ChefHat className="w-6 h-6 text-recipe-teal" />,
-      className: "border-t-4 border-recipe-teal",
+      icon: <HeartPulse className="h-6 w-6" />,
+      title: "Health-Focused",
+      description: "Optimize meals for your specific health goals with intelligent nutrient balancing and substitutions."
+    }
+  ];
+
+  const additionalFeatures = [
+    {
+      icon: <CookingPot className="h-6 w-6" />,
+      title: "Smart Cooking",
+      description: "Follow interactive step-by-step instructions with built-in timers and cooking mode."
     },
+    {
+      icon: <ShoppingBag className="h-6 w-6" />,
+      title: "Shopping Lists",
+      description: "Generate and manage shopping lists from your favorite recipes with automatic organization."
+    }
   ];
 
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-16 md:py-20 bg-gray-50 dark:bg-gray-900">
       <div className="container-page">
-        <div className="text-center mb-10">
-          <h2 className="material-h2 mb-3">Key Features</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Discover how Recipe Alchemy transforms your cooking experience with powerful AI-driven tools.
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <div className="inline-flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-recipe-blue" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Powered by AI, Personalized for You</h2>
+          <p className="text-lg text-muted-foreground">
+            Our intelligent tools help you create delicious, healthy meals tailored to your personal nutrition goals.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* Main features */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {features.map((feature, index) => (
-            <FeatureCard
-              key={index}
-              title={feature.title}
+            <FeatureCard 
+              key={index} 
+              icon={feature.icon} 
+              title={feature.title} 
               description={feature.description}
-              icon={feature.icon}
-              className={feature.className}
+              highlight={feature.highlight}
             />
           ))}
+        </div>
+        
+        {/* Additional features */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {additionalFeatures.map((feature, index) => (
+            <FeatureCard 
+              key={index} 
+              icon={feature.icon} 
+              title={feature.title} 
+              description={feature.description}
+            />
+          ))}
+        </div>
+        
+        {/* Call to action - Fixed implementation without asChild */}
+        <div className="mt-12 text-center">
+          <Button 
+            size="lg" 
+            className="bg-recipe-blue hover:bg-recipe-blue/90"
+            onClick={() => window.location.href = '/quick-recipe'}
+          >
+            Try AI Recipe Generation
+          </Button>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default Features;

@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import {
   Controller,
@@ -12,7 +11,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Slot } from "@/components/ui/slot"
+import { Slot } from "@/components/ui/slot"  // Changed from Radix to our custom implementation
 
 const Form = FormProvider
 
@@ -125,15 +124,14 @@ const FormControl = React.forwardRef<
   return (
     <Slot
       ref={ref}
-      // These are now passed as HTML attributes through the Slot component
-      {...props}
-      data-id={formItemId}
-      data-aria-describedby={
+      id={formItemId}
+      aria-describedby={
         !error
           ? `${formDescriptionId}`
           : `${formDescriptionId} ${formMessageId}`
       }
-      data-aria-invalid={!!error}
+      aria-invalid={!!error}
+      {...props}
     />
   )
 })

@@ -10,7 +10,6 @@ import { ErrorDisplay } from '@/components/ui/error-display';
 import { BreadcrumbNav, type BreadcrumbItem } from '@/components/ui/breadcrumb-nav';
 import { PageContainer } from '@/components/ui/containers';
 import { toast } from 'sonner';
-import { MaterialGrid } from '@/components/ui/containers';
 
 const RecipeDetail = () => {
   // Use slug instead of id as parameter name to match route definition
@@ -100,19 +99,13 @@ const RecipeDetail = () => {
     { label: recipe?.title || 'Recipe', current: true }
   ];
   
-  // If we have a recipe, show the content with Material Design layout
+  // If we have a recipe, show the content
   return (
-    <PageContainer variant="full" className="animate-material-fade">
-      <MaterialGrid container spacing={4} className="w-full">
-        <MaterialGrid item xs={12}>
-          {/* Breadcrumb Navigation */}
-          <BreadcrumbNav items={breadcrumbItems} />
-        </MaterialGrid>
-        
-        <MaterialGrid item xs={12}>
-          <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />
-        </MaterialGrid>
-      </MaterialGrid>
+    <PageContainer variant="full">
+      {/* Breadcrumb Navigation */}
+      <BreadcrumbNav items={breadcrumbItems} />
+      
+      <RecipeDetailContent recipe={recipe} id={recipe.id} refetch={refetch} />
     </PageContainer>
   );
 }

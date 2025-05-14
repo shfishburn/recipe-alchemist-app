@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
@@ -54,21 +55,6 @@ export function QuickCookingMode({ recipe, open, onOpenChange }: QuickCookingMod
     setCurrentStep((prev) => Math.min(totalSteps - 1, prev + 1));
   };
   
-  // Find the line with error TS2365 (adding string | number to string | number)
-  // Replace:
-  // const totalTime = recipe.prepTime + recipe.cookTime;
-  
-  // With:
-  const totalTime = typeof recipe.prepTime === 'number' && typeof recipe.cookTime === 'number'
-    ? recipe.prepTime + recipe.cookTime
-    : typeof recipe.prepTime === 'string' && typeof recipe.cookTime === 'string'
-      ? parseInt(recipe.prepTime || '0') + parseInt(recipe.cookTime || '0')
-      : typeof recipe.prepTime === 'number' && typeof recipe.cookTime === 'string'
-        ? recipe.prepTime + parseInt(recipe.cookTime || '0')
-        : typeof recipe.prepTime === 'string' && typeof recipe.cookTime === 'number'
-          ? parseInt(recipe.prepTime || '0') + recipe.cookTime
-          : 0;
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg md:max-w-xl">
@@ -95,7 +81,7 @@ export function QuickCookingMode({ recipe, open, onOpenChange }: QuickCookingMod
           {/* Time info */}
           <div className="flex items-center justify-start gap-2 text-sm text-muted-foreground mb-4">
             <Clock className="h-4 w-4" />
-            <span>Total: {totalTime} min</span>
+            <span>Total: {recipe.prepTime + recipe.cookTime} min</span>
             <span>|</span>
             <span>Step {currentStep + 1} of {totalSteps}</span>
           </div>

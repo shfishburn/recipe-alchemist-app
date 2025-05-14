@@ -1,5 +1,4 @@
 
-// Update import to get QuickRecipeFormData from types
 import { QuickRecipeFormData } from '@/types/quick-recipe';
 
 // Functions to format and process form data for API requests
@@ -127,7 +126,7 @@ export const formatRequestBody = (formData: QuickRecipeFormData) => {
     dietary: dietaryString || "",
     mainIngredient: formData.mainIngredient.trim(),
     servings: formData.servings || 2,
-    maxCalories: formData.maxCalories, // Now properly typed in the interface
+    maxCalories: formData.maxCalories,
     cuisineCategory: cuisineCategory
   };
 };

@@ -1,79 +1,89 @@
 
-import React from 'react';
-import { 
-  Carrot, 
-  WheatOff, 
-  MilkOff, 
-  Heart, 
-  LeafyGreen 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+/**
+ * DietarySelector.tsx
+ * Version: 1.0.4
+ * Date: 2025-05-10
+ * Changes:
+ * - Converted to use grouped options with category labels for improved UX
+ * - Fixed mobile styling for selection boxes
+ * - Improved X button alignment
+ */
 
-// Dietary options with icons
-const DIETARY = [
-  { name: "Low-Carb", value: "low-carb", icon: Carrot },
-  { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
-  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff },
-  { name: "Healthy", value: "healthy", icon: Heart },
-  { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
-];
+import React from 'react'
+import { MultiSelect, SelectOption, SelectGroup } from '@/components/ui/multi-select'
 
-interface DietarySelectorProps {
-  value: string[] | undefined;
-  onChange: (value: string[]) => void;
+export interface DietarySelectorProps {
+  value: string[]
+  onChange: (dietary: string[]) => void
 }
 
-export function DietarySelector({ 
-  value = [], 
-  onChange 
-}: DietarySelectorProps) {
-  // Ensure value is always an array to prevent iteration errors
-  const dietaryValues = Array.isArray(value) ? value : [];
-  
-  // Toggle dietary preference selection
-  const toggleDietary = (dietaryValue: string) => {
-    if (dietaryValues.includes(dietaryValue)) {
-      onChange(dietaryValues.filter(d => d !== dietaryValue));
-    } else {
-      onChange([...dietaryValues, dietaryValue]);
-    }
-  };
-  
+// Grouped dietary options with category labels
+const groupedDietaryOptions: SelectGroup[] = [
+  {
+    label: 'Diets & Styles',
+    options: [
+      { value: 'any', label: 'No Restrictions' },
+      { value: 'vegetarian', label: 'Vegetarian' },
+      { value: 'vegan', label: 'Vegan' },
+      { value: 'pescatarian', label: 'Pescatarian' },
+      { value: 'paleo', label: 'Paleo' },
+      { value: 'keto', label: 'Keto' },
+      { value: 'whole30', label: 'Whole30' },
+      { value: 'plant-based', label: 'Plant-Based' }
+    ]
+  },
+  {
+    label: 'Restrictions & Macros',
+    options: [
+      { value: 'gluten-free', label: 'Gluten-Free' },
+      { value: 'dairy-free', label: 'Dairy-Free' },
+      { value: 'nut-free', label: 'Nut-Free' },
+      { value: 'soy-free', label: 'Soy-Free' },
+      { value: 'egg-free', label: 'Egg-Free' },
+      { value: 'low-carb', label: 'Low-Carb' },
+      { value: 'low-fat', label: 'Low-Fat' },
+      { value: 'high-protein', label: 'High-Protein' },
+      { value: 'low-sodium', label: 'Low-Sodium' }
+    ]
+  },
+  {
+    label: 'Health Conditions',
+    options: [
+      { value: 'diabetic-friendly', label: 'Diabetic-Friendly' },
+      { value: 'heart-healthy', label: 'Heart-Healthy' },
+      { value: 'kidney-friendly', label: 'Kidney-Friendly' },
+      { value: 'anti-inflammatory', label: 'Anti-Inflammatory' },
+      { value: 'fodmap-friendly', label: 'FODMAP-Friendly' }
+    ]
+  },
+  {
+    label: 'Flavor Preferences',
+    options: [
+      { value: 'spicy', label: 'Spicy' },
+      { value: 'sweet', label: 'Sweet' },
+      { value: 'savory', label: 'Savory' },
+      { value: 'smoky', label: 'Smoky' },
+      { value: 'tangy', label: 'Tangy' },
+      { value: 'umami', label: 'Umami' }
+    ]
+  }
+]
+
+export function DietarySelector({ value, onChange }: DietarySelectorProps) {
+  const handleDietaryChange = (selected: string[]) => {
+    onChange(selected)
+  }
+
   return (
-    <div className="space-y-2">
-      {/* Material Design label */}
-      <label className="text-sm font-medium flex items-center gap-1.5 text-foreground">
-        <LeafyGreen className="h-4 w-4 text-primary/80" />
-        Dietary Preferences
-      </label>
-      
-      {/* Display selected dietary preferences as badges */}
-      <div className="flex flex-wrap gap-2">
-        {DIETARY.map(diet => {
-          const Icon = diet.icon;
-          return (
-            <button
-              key={diet.value}
-              type="button"
-              onClick={() => toggleDietary(diet.value)}
-              className={cn(
-                "px-3 py-1.5 rounded-full text-sm flex items-center gap-1 border transition-colors",
-                dietaryValues.includes(diet.value) 
-                  ? "bg-recipe-orange text-white border-recipe-orange" 
-                  : "bg-background border-input hover:border-recipe-orange/50"
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{diet.name}</span>
-            </button>
-          )}
-        )}
-      </div>
-      
-      {/* Helper text */}
-      <p className="text-xs text-muted-foreground">
-        Select any dietary restrictions for your recipe
-      </p>
+    <div className="w-full">
+      <MultiSelect
+        options={groupedDietaryOptions}
+        selected={value}
+        onChange={handleDietaryChange}
+        placeholder="Select preferences (max 4)"
+        maxSelections={4}
+        isGrouped
+      />
     </div>
-  );
+  )
 }

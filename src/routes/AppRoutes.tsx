@@ -1,60 +1,58 @@
-import React, { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+
+import React, { Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import PrivateRoute from '@/components/PrivateRoute';
+import * as LazyRoutes from '@/routes/LazyRoutes';
+import { useAuth } from '@/hooks/use-auth';
 import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
-import { MaterialHomepage } from '@/components/landing/MaterialHomepage';
 
-// Lazy load the LazyRoutes component
-const LazyRoutes = lazy(() => import('./LazyRoutes').then(module => ({ 
-  default: () => {
-    // LazyRoutes is exporting individual components, not a default component
-    // So we create a component that renders a Routes component with the routes
-    const ImportedRoutes = module;
-    return (
-      <Routes>
-        <Route path="/recipes" element={<ImportedRoutes.Recipes />} />
-        <Route path="/recipes/:id" element={<ImportedRoutes.RecipeDetail />} />
-        <Route path="/auth" element={<ImportedRoutes.Auth />} />
-        <Route path="/how-it-works" element={<ImportedRoutes.HowItWorks />} />
-        <Route path="/articles/:id" element={<ImportedRoutes.ArticleDetail />} />
-        <Route path="/faq" element={<ImportedRoutes.FAQ />} />
-        <Route path="/about" element={<ImportedRoutes.About />} />
-        <Route path="/contact" element={<ImportedRoutes.Contact />} />
-        <Route path="/privacy" element={<ImportedRoutes.Privacy />} />
-        <Route path="/terms" element={<ImportedRoutes.Terms />} />
-        <Route path="/cookies" element={<ImportedRoutes.Cookies />} />
-        <Route path="/profile" element={<ImportedRoutes.Profile />} />
-        <Route path="/shopping-lists" element={<ImportedRoutes.ShoppingLists />} />
-        <Route path="/favorites" element={<ImportedRoutes.Favorites />} />
-        <Route path="/loading" element={<ImportedRoutes.LoadingPage />} />
-        {/* Standardize on /preview route pattern */}
-        <Route path="/preview" element={<ImportedRoutes.RecipePreviewPage />} />
-        <Route path="/preview/:id" element={<ImportedRoutes.RecipePreviewPage />} />
-        {/* Keep for backward compatibility */}
-        <Route path="/recipe-preview" element={<ImportedRoutes.RecipePreviewPage />} />
-        <Route path="/recipe-preview/:id" element={<ImportedRoutes.RecipePreviewPage />} />
-        <Route path="*" element={<ImportedRoutes.NotFound />} />
-      </Routes>
-    );
-  }
-})));
-
-export function AppRoutes() {
+// Custom suspense component that includes a timeout message
+function CustomSuspense({ children }: { children: React.ReactNode }) {
   return (
-    <Routes>
-      {/* Immediate routes */}
-      <Route path="/" element={<MaterialHomepage />} />
-      
-      {/* Lazy loaded routes */}
-      <Route
-        path="/*"
-        element={
-          <Suspense fallback={<PageLoadingFallback />}>
-            <LazyRoutes />
-          </Suspense>
-        }
-      />
-    </Routes>
+    <Suspense fallback={<PageLoadingFallback />}>
+      {children}
+    </Suspense>
   );
 }
+
+export const AppRoutes = () => {
+  const { session } = useAuth();
+
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<CustomSuspense><LazyRoutes.Index /></CustomSuspense>} />
+      <Route path="/recipes" element={<CustomSuspense><LazyRoutes.Recipes /></CustomSuspense>} />
+      <Route path="/recipes/:slug" element={<CustomSuspense><LazyRoutes.RecipeDetail /></CustomSuspense>} />
+      {/* Support both with and without ID for recipe preview */}
+      <Route path="/recipe-preview" element={<CustomSuspense><LazyRoutes.RecipePreviewPage /></CustomSuspense>} />
+      <Route path="/recipe-preview/:id" element={<CustomSuspense><LazyRoutes.RecipePreviewPage /></CustomSuspense>} />
+      <Route path="/quick-recipe" element={<Navigate to="/" replace />} />
+      <Route path="/loading" element={<CustomSuspense><LazyRoutes.LoadingPage /></CustomSuspense>} />
+      <Route path="/auth" element={<CustomSuspense><LazyRoutes.Auth /></CustomSuspense>} />
+      <Route path="/how-it-works" element={<CustomSuspense><LazyRoutes.HowItWorks /></CustomSuspense>} />
+      {/* Add new route for article detail pages */}
+      <Route path="/how-it-works/:slug" element={<CustomSuspense><LazyRoutes.ArticleDetail /></CustomSuspense>} />
+      <Route path="/articles/:slug" element={<CustomSuspense><LazyRoutes.ArticleDetail /></CustomSuspense>} />
+      <Route path="/faq" element={<CustomSuspense><LazyRoutes.FAQ /></CustomSuspense>} />
+      <Route path="/about" element={<CustomSuspense><LazyRoutes.About /></CustomSuspense>} />
+      <Route path="/contact" element={<CustomSuspense><LazyRoutes.Contact /></CustomSuspense>} />
+      <Route path="/privacy" element={<CustomSuspense><LazyRoutes.Privacy /></CustomSuspense>} />
+      <Route path="/terms" element={<CustomSuspense><LazyRoutes.Terms /></CustomSuspense>} />
+      <Route path="/cookies" element={<CustomSuspense><LazyRoutes.Cookies /></CustomSuspense>} />
+      
+      {/* Protected Routes */}
+      <Route path="/profile" element={<PrivateRoute><CustomSuspense><LazyRoutes.Profile /></CustomSuspense></PrivateRoute>} />
+      <Route path="/shopping-lists" element={<PrivateRoute><CustomSuspense><LazyRoutes.ShoppingLists /></CustomSuspense></PrivateRoute>} />
+      {/* Add new route for shopping list details */}
+      <Route path="/shopping-lists/:id" element={<PrivateRoute><CustomSuspense><LazyRoutes.ShoppingLists /></CustomSuspense></PrivateRoute>} />
+      <Route path="/favorites" element={<PrivateRoute><CustomSuspense><LazyRoutes.Favorites /></CustomSuspense></PrivateRoute>} />
+      <Route path="/import" element={<PrivateRoute><CustomSuspense><LazyRoutes.DataImport /></CustomSuspense></PrivateRoute>} />
+      
+      {/* Fallback Routes */}
+      <Route path="*" element={<CustomSuspense><LazyRoutes.NotFound /></CustomSuspense>} />
+    </Routes>
+  );
+};
 
 export default AppRoutes;

@@ -1,56 +1,72 @@
 
-import * as React from "react"
+import * as React from "react";
 
-export interface SlotProps extends React.HTMLAttributes<HTMLElement> {
-  children?: React.ReactNode
+// Define clearer types for the Slot component
+interface SlotProps {
+  children?: React.ReactNode;
+  [key: string]: any; // Allow for additional props
 }
 
-// A simple implementation of the Slot pattern
-export const Slot = React.forwardRef<HTMLElement, SlotProps>(
-  ({ children, ...props }, ref) => {
-    // If there's no children or a single child that's not a valid element, just return null
-    if (!children || (React.Children.count(children) === 1 && !React.isValidElement(children))) {
-      return null
-    }
-
-    // If there's only one child and it's a valid element, clone it and merge the props
-    if (React.Children.count(children) === 1 && React.isValidElement(children)) {
-      // Properly type the children as ReactElement to avoid spreading error
-      const child = children as React.ReactElement;
-      
-      // Get the child's ref if it exists - with proper type handling
-      let childRef = null;
-      // Check if the child has a ref that we can access
-      if (React.isValidElement(child) && child.hasOwnProperty('ref')) {
-        childRef = (child as any).ref;
-      }
-      
-      return React.cloneElement(child, {
-        ...props,
-        ...child.props,
-        // Merge refs if the child has a ref
-        ref: childRef
-          ? mergeRefs([ref, childRef])
-          : ref,
-      });
-    }
-
-    // Otherwise, render a fragment
-    return <>{children}</>
+/**
+ * Custom Slot component that merges props with child element
+ * With improved TypeScript handling for refs
+ */
+const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
+  const { children, ...rest } = props;
+  
+  // If no children, return null
+  if (!children) {
+    return null;
   }
-)
+  
+  // Use Children.toArray to handle multiple children safely
+  const childrenArray = React.Children.toArray(children);
+  
+  // If array is empty after filtering, return null
+  if (childrenArray.length === 0) {
+    return null;
+  }
+  
+  // Use first child if it's a valid element
+  const firstChild = childrenArray[0];
+  
+  // Only proceed if we have a valid React element
+  if (!React.isValidElement(firstChild)) {
+    console.warn("Slot received non-element child");
+    return null;
+  }
+  
+  // Clone the element with merged props
+  // We need to use as React.ReactElement<any> to correctly handle refs
+  return React.cloneElement(
+    firstChild as React.ReactElement<any>, 
+    {
+      ...rest,
+      // When forwarding refs, we need to compose them properly
+      ref: forwardedRef 
+        ? composeRefs(forwardedRef, (firstChild as any).ref) 
+        : (firstChild as any).ref,
+    }
+  );
+});
 
-Slot.displayName = "Slot"
-
-// Helper to merge refs
-const mergeRefs = (refs: React.Ref<any>[]) => {
-  return (value: any) => {
+/**
+ * Helper to compose multiple refs into one - improved typing
+ */
+const composeRefs = <T extends any>(
+  ...refs: Array<React.Ref<T> | undefined | null>
+): React.RefCallback<T> => {
+  return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
-        ref(value)
+        ref(value);
       } else if (ref != null) {
-        ;(ref as React.MutableRefObject<any>).current = value
+        (ref as React.MutableRefObject<T | null>).current = value;
       }
-    })
-  }
-}
+    });
+  };
+};
+
+Slot.displayName = "Slot";
+
+export { Slot };

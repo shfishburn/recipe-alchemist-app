@@ -1,17 +1,18 @@
 
 import React from 'react';
 import { RecipeSectionHeader } from './RecipeSectionHeader';
-import { SimpleIngredientDisplay } from '../ingredient/SimpleIngredientDisplay';
+import { IngredientList } from './ingredient-formatter/IngredientList';
+import { Ingredient } from '@/hooks/use-quick-recipe';
 
 interface RecipeIngredientsProps {
-  ingredients: any[]; // Accept both string[] and object[] types
+  ingredients: Ingredient[];
 }
 
 export function RecipeIngredients({ ingredients }: RecipeIngredientsProps) {
   return (
     <div className="mb-6">
       <RecipeSectionHeader title="Ingredients" />
-      <SimpleIngredientDisplay ingredients={ingredients} />
+      <IngredientList ingredients={ingredients} />
     </div>
   );
 }

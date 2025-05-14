@@ -4,15 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ChefHat } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { IngredientInput } from './form-components/IngredientInput';
-import { SimplifiedServingsSelector } from './form-components/SimplifiedServingsSelector';
-import { SimplifiedCuisineSelector } from './form-components/SimplifiedCuisineSelector';
-import { SimplifiedDietarySelector } from './form-components/SimplifiedDietarySelector';
+import { ServingsSelector } from './form-components/ServingsSelector';
+import { CuisineSelector } from './form-components/CuisineSelector';
+import { DietarySelector } from './form-components/DietarySelector';
 import { SubmitButton } from './form-components/SubmitButton';
-import { cn } from '@/lib/utils';
 
 export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
-  const [cuisines, setCuisines] = useState<string[]>([]);
+  const [cuisines, setCuisines] = useState<string[]>(['any']); // Default to 'any'
   const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
   const [servings, setServings] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,8 +43,8 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
       // Create form data with all fields
       const formData = {
         ingredients: mainIngredient.trim(),
-        cuisine: cuisines, // Already ensured to be an array
-        dietary: dietaryPreferences, // Already ensured to be an array
+        cuisine: cuisines.length > 0 ? cuisines : ['any'], // Ensure we have an array
+        dietary: dietaryPreferences, // Already an array
         servings: servings
       };
 
@@ -66,12 +65,9 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-6">
-      {/* Section Title - Material Design typography */}
-      <h3 className="text-xl font-medium text-foreground">Create a Recipe</h3>
-      
-      {/* Ingredient Input with proper Material spacing */}
-      <div className="space-y-4">
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      {/* Ingredient Input */}
+      <div className="space-y-3">
         <IngredientInput 
           value={mainIngredient}
           onChange={setMainIngredient}
@@ -79,43 +75,35 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
         />
       </div>
       
-      {/* Options Container - Material Card styling */}
-      <div className={cn(
-        "rounded-lg bg-background/80 backdrop-blur-sm p-4",
-        "border border-border/50 shadow-elevation-1"
-      )}>
-        <h4 className="text-sm font-medium text-foreground mb-4">Customize Your Recipe</h4>
+      {/* Additional Options */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Servings Selector */}
+        <div>
+          <ServingsSelector 
+            selectedServings={servings} 
+            onServingsChange={setServings} 
+          />
+        </div>
         
-        {/* Material Grid Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Simplified Servings Selector */}
-          <div>
-            <SimplifiedServingsSelector 
-              value={servings} 
-              onChange={setServings} 
-            />
-          </div>
-          
-          {/* Simplified Cuisine Selector */}
-          <div>
-            <SimplifiedCuisineSelector 
-              selected={cuisines} 
-              onChange={setCuisines} 
-            />
-          </div>
-          
-          {/* Simplified Dietary Selector */}
-          <div>
-            <SimplifiedDietarySelector 
-              selected={dietaryPreferences} 
-              onChange={setDietaryPreferences} 
-            />
-          </div>
+        {/* Cuisine Selector */}
+        <div>
+          <CuisineSelector 
+            value={cuisines} 
+            onChange={setCuisines} 
+          />
+        </div>
+        
+        {/* Dietary Selector */}
+        <div>
+          <DietarySelector 
+            value={dietaryPreferences} 
+            onChange={setDietaryPreferences} 
+          />
         </div>
       </div>
       
-      {/* Submit Button with proper spacing */}
-      <div className="pt-2">
+      {/* Submit Button */}
+      <div className="flex justify-center mt-4">
         <SubmitButton 
           isLoading={isSubmitting}
           disabled={!mainIngredient.trim()}

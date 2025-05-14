@@ -9,7 +9,7 @@ import { useUnitSystem } from '@/hooks/use-unit-system';
 import { EnhancedAddToList } from './shopping-list/EnhancedAddToList';
 import { groupIngredientsByDepartment, getDepartmentDisplayOrder } from '@/utils/ingredient-department-utils';
 import { IngredientDepartmentHeader } from './ingredients/IngredientDepartmentHeader';
-import { SimpleIngredientDisplay } from '@/components/quick-recipe/ingredient/SimpleIngredientDisplay';
+import { FormattedItem } from '@/components/common/formatted-item/FormattedItem';
 
 interface RecipeIngredientsProps {
   recipe: Recipe;
@@ -60,7 +60,26 @@ export function RecipeIngredients({ recipe, isOpen, onToggle }: RecipeIngredient
                 {sortedDepartments.map((department) => (
                   <div key={department} className="ingredient-department">
                     <IngredientDepartmentHeader department={department} />
-                    <SimpleIngredientDisplay ingredients={ingredientsByDepartment[department]} />
+                    <ul className="space-y-3 pl-1">
+                      {ingredientsByDepartment[department].map((ingredient, index) => (
+                        <li 
+                          key={`${department}-${index}`}
+                          className="text-sm sm:text-base"
+                        >
+                          {typeof ingredient === 'string' ? (
+                            <span>{ingredient}</span>
+                          ) : (
+                            <FormattedItem 
+                              item={ingredient}
+                              options={{
+                                highlight: 'name',
+                                unitSystem
+                              }}
+                            />
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>

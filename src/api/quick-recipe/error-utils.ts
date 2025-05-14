@@ -11,7 +11,6 @@ export const enhanceErrorMessage = (error: any): string => {
     return "Error generating recipe. Try again or sign in for enhanced features.";
   }
   
-  // Specific error types with improved messages
   if (error.message?.includes("timeout")) {
     errorMessage = "Recipe generation timed out. Please try again with a simpler recipe.";
   } else if (error.message?.includes("fetch")) {
@@ -20,10 +19,6 @@ export const enhanceErrorMessage = (error: any): string => {
     errorMessage = "Server error while generating recipe. Please try again later.";
   } else if (error.status === 400 || error.message?.includes("400")) {
     errorMessage = "Invalid request format. Please check your inputs and try again.";
-  } else if (error.message?.includes("JSON") || error.message?.includes("parse")) {
-    errorMessage = "The AI generated an invalid recipe format. Our system is trying to recover. Please try again.";
-  } else if (error.message?.includes("unterminated")) {
-    errorMessage = "The recipe generation had formatting issues. Please try again with different ingredients.";
   }
   
   return errorMessage;
@@ -69,13 +64,6 @@ export const processErrorResponse = async (error: any): Promise<any> => {
         // Use the error message from the response body if available
         if (errorResponseBody.error) {
           errorMessage = errorResponseBody.error;
-        }
-        
-        // Look for specific error patterns
-        if (errorResponseBody.parsing_error && errorResponseBody.raw_recipe_preview) {
-          console.log("JSON parsing error details:", errorResponseBody.parsing_error);
-          console.log("Raw recipe preview:", errorResponseBody.raw_recipe_preview);
-          errorMessage = "The recipe couldn't be properly formatted. We're working on improving this.";
         }
       } catch (parseError) {
         console.error("Could not parse error response:", parseError);

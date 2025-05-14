@@ -38,7 +38,7 @@ export const Favorites = createLazyComponent(() => import("@/pages/Favorites"));
 export const DataImport = createLazyComponent(() => import("@/pages/DataImport"));
 export const NotFound = createLazyComponent(() => import("@/pages/NotFound"));
 
-// Loading page route - Ensure correct import
+// Loading page route
 export const LoadingPage = createLazyComponent(() => import("@/pages/LoadingPage"));
 
 // Recipe Preview page route

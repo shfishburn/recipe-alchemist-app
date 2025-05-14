@@ -1,5 +1,5 @@
 
-import { QuickRecipe, QuickRecipeIngredient } from '@/types/quick-recipe';
+import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { ShoppingItem, ShoppingItemsByDepartment } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,13 +35,11 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
   const initialItems: ShoppingItem[] = recipe.ingredients
     .filter(ingredient => {
       // Filter out water
-      const itemName = typeof ingredient === 'string' 
-        ? ingredient 
-        : typeof ingredient.item === 'string' 
-          ? ingredient.item 
-          : (typeof ingredient.item === 'object' && ingredient.item !== null)
-            ? (ingredient.item as any).item || JSON.stringify(ingredient.item)
-            : 'Unknown item';
+      const itemName = typeof ingredient.item === 'string' 
+        ? ingredient.item 
+        : (typeof ingredient.item === 'object' && ingredient.item !== null)
+          ? (ingredient.item.item || JSON.stringify(ingredient.item))
+          : 'Unknown item';
           
       return !itemName.toLowerCase().trim().match(/^water$/);
     })
@@ -50,13 +48,11 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
       console.log("Processing ingredient:", ingredient);
       
       // Extract the item name for better visibility
-      const itemName = typeof ingredient === 'string' 
-        ? ingredient 
-        : typeof ingredient.item === 'string' 
-          ? ingredient.item 
-          : (typeof ingredient.item === 'object' && ingredient.item !== null)
-            ? (ingredient.item as any).item || JSON.stringify(ingredient.item)
-            : 'Unknown item';
+      const itemName = typeof ingredient.item === 'string' 
+        ? ingredient.item 
+        : (typeof ingredient.item === 'object' && ingredient.item !== null)
+          ? (ingredient.item.item || JSON.stringify(ingredient.item))
+          : 'Unknown item';
       
       // Capitalize the item name
       const capitalizedName = itemName
@@ -65,33 +61,27 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
         .join(' ');
           
       // Get the appropriate quantity, filtering out zero values
-      const quantity = typeof ingredient !== 'string' && ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
+      const quantity = ingredient.shop_size_qty !== undefined && ingredient.shop_size_qty > 0
         ? ingredient.shop_size_qty
-        : typeof ingredient !== 'string' && ingredient.qty !== undefined && ingredient.qty > 0
+        : ingredient.qty !== undefined && ingredient.qty > 0
           ? ingredient.qty
           : null;
           
       // Create properly structured shopping item that preserves all ingredient data
-      const shoppingItem: ShoppingItem = {
-        // Format the text to include the item name
-        text: typeof ingredient === 'string' 
-          ? capitalizedName 
-          : `${ingredient.qty || ''} ${ingredient.unit || ''} ${capitalizedName}`.trim() + 
-            (ingredient.notes ? ` (${ingredient.notes})` : ''),
+      return {
+        // Format the text to clearly include the item name
+        text: `${ingredient.qty || ''} ${ingredient.unit || ''} ${capitalizedName}`.trim() + 
+              (ingredient.notes ? ` (${ingredient.notes})` : ''),
         checked: false,
         department: getDepartmentForIngredient(capitalizedName),
         // Save the complete original ingredient data to maintain structured information
-        ingredientData: typeof ingredient === 'string' 
-          ? { item: ingredient } as QuickRecipeIngredient
-          : ingredient,
+        ingredientData: ingredient,
         // Extract specific shopping fields for easier access
-        quantity: quantity !== null ? quantity : undefined, // Use filtered quantity that's never zero
-        unit: typeof ingredient !== 'string' ? (ingredient.shop_size_unit || ingredient.unit || '') : '',
+        quantity: quantity, // Use filtered quantity that's never zero
+        unit: ingredient.shop_size_unit || ingredient.unit,
         item: capitalizedName,
-        notes: typeof ingredient !== 'string' ? (ingredient.notes || '') : ''
+        notes: ingredient.notes || ''
       };
-      
-      return shoppingItem;
     });
   
   // Add extra items for cooking oil, salt, and pepper if not already in the list

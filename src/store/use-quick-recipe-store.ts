@@ -1,8 +1,12 @@
 
 import { create } from 'zustand';
-import { QuickRecipe, QuickRecipeFormData } from '@/types/quick-recipe';
-import { useNavigate } from 'react-router-dom';
+import { devtools, persist } from 'zustand/middleware';
+import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
+import { NavigateFunction } from 'react-router-dom';
 
+/**
+ * Interface for the loading state
+ */
 interface LoadingState {
   step: number;
   stepDescription: string;
@@ -10,88 +14,183 @@ interface LoadingState {
   estimatedTimeRemaining?: number;
 }
 
+/**
+ * Interface for the quick recipe store
+ */
 interface QuickRecipeState {
+  // State properties
   recipe: QuickRecipe | null;
   formData: QuickRecipeFormData | null;
-  isLoading: boolean;
   error: string | null;
+  isLoading: boolean;
+  navigate: NavigateFunction | null;
   hasTimeoutError: boolean;
   loadingState: LoadingState;
-  navigate: ((to: string, options?: any) => void) | null;
-  generationInProgress: boolean;
   
   // Actions
   setRecipe: (recipe: QuickRecipe) => void;
   setFormData: (formData: QuickRecipeFormData) => void;
-  setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+  setNavigate: (navigate: NavigateFunction) => void;
   setHasTimeoutError: (hasTimeoutError: boolean) => void;
-  setNavigate: (navigate: ((to: string, options?: any) => void)) => void;
+  updateLoadingState: (loadingState: Partial<LoadingState>) => void;
   reset: () => void;
-  isRecipeValid: () => boolean;
-  updateLoadingState: (newState: Partial<LoadingState>) => void;
-  setGenerationInProgress: (inProgress: boolean) => void;
+  
+  // Helper functions
+  isRecipeValid: (recipe: any) => boolean;
 }
 
-export const useQuickRecipeStore = create<QuickRecipeState>((set, get) => ({
-  recipe: null,
-  formData: null,
-  isLoading: false,
-  error: null,
-  hasTimeoutError: false,
-  generationInProgress: false,
-  loadingState: {
-    step: 0,
-    stepDescription: 'Analyzing your ingredients...',
-    percentComplete: 0,
-    estimatedTimeRemaining: 30 // Default 30 seconds estimate
-  },
-  navigate: null,
-  
-  // Actions
-  setRecipe: (recipe) => set({ recipe }),
-  setFormData: (formData) => set({ formData }),
-  setLoading: (loading) => set({ 
-    isLoading: loading,
-    // Reset loading state when turning off loading
-    ...(loading === false && {
-      loadingState: {
-        step: 0,
-        stepDescription: 'Analyzing your ingredients...',
-        percentComplete: 0,
-        estimatedTimeRemaining: 30
+/**
+ * Create the store with properly typed middleware
+ */
+export const useQuickRecipeStore = create<QuickRecipeState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        // Initial state
+        recipe: null,
+        formData: null,
+        error: null,
+        isLoading: false,
+        navigate: null,
+        hasTimeoutError: false,
+        loadingState: {
+          step: 0,
+          stepDescription: "Initializing...",
+          percentComplete: 0
+        },
+        
+        // Actions
+        setRecipe: (recipe) => {
+          // Add debugging to track recipe state changes
+          console.log("Setting recipe in store:", recipe ? {
+            title: recipe.title,
+            ingredientsCount: recipe.ingredients?.length,
+            hasSteps: Array.isArray(recipe.steps) && recipe.steps.length > 0,
+            isError: recipe.isError === true
+          } : "null recipe");
+          
+          // Check for error conditions to distinguish between error and valid recipe
+          if (recipe && (recipe.isError === true || recipe.error_message)) {
+            console.log('Recipe contains an error:', recipe.error_message || recipe.error || 'Unknown error');
+            set({ 
+              // Don't set the recipe if it's an error
+              recipe: null,
+              // Also clear formData to prevent the "recipe ready to view" message
+              formData: null,
+              // Set the error message for user feedback
+              error: recipe.error_message || recipe.error || 'Unknown error',
+              isLoading: false,
+              hasTimeoutError: (recipe.error_message || recipe.error || '')
+                                .toLowerCase().includes('timeout') ?? false
+            });
+          } else {
+            // Only set the recipe if it's valid
+            if (get().isRecipeValid(recipe)) {
+              set({ recipe, isLoading: false, error: null });
+              console.log("Recipe validation passed, recipe set in store:", recipe.title);
+            } else {
+              // Invalid recipe format - also clear formData to prevent issues
+              console.error("Recipe validation failed:", recipe);
+              set({ 
+                recipe: null,
+                formData: null,
+                error: "The recipe format is not valid. Please try again.",
+                isLoading: false 
+              });
+            }
+          }
+        },
+        
+        setFormData: (formData) => set({ formData }),
+        
+        setError: (error) => set({ 
+          error, 
+          isLoading: false,
+          // Clear formData when there's an error to prevent "recipe ready to view" message
+          formData: error ? null : get().formData,
+          hasTimeoutError: error?.toLowerCase().includes('timeout') ?? false
+        }),
+        
+        setLoading: (isLoading) => {
+          // If switching to loading state, reset error
+          if (isLoading) {
+            set({ isLoading, error: null });
+            console.log("Setting loading state to true, cleared errors");
+          } else {
+            set({ isLoading });
+            console.log("Setting loading state to false");
+          }
+        },
+        
+        setNavigate: (navigate) => set({ navigate }),
+        
+        setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
+        
+        updateLoadingState: (loadingState) => set((state) => ({
+          loadingState: {
+            ...state.loadingState,
+            ...loadingState
+          }
+        })),
+        
+        reset: () => set({ 
+          recipe: null, 
+          error: null,
+          formData: null,  // Also clear formData on reset
+          isLoading: false,
+          hasTimeoutError: false
+        }),
+        
+        // Recipe validation function
+        isRecipeValid: (recipe) => {
+          if (!recipe) {
+            console.log('Recipe validation: recipe is null or undefined');
+            return false;
+          }
+          
+          // Explicitly check for error flags
+          if (recipe.isError === true || recipe.error || recipe.error_message) {
+            console.log('Recipe validation: has error flags');
+            return false;
+          }
+          
+          // Check for title
+          if (!recipe.title) {
+            console.log('Recipe validation: missing title');
+            return false;
+          }
+          
+          // Require ingredients array
+          const hasIngredients = Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0;
+          if (!hasIngredients) {
+            console.log('Recipe validation: missing ingredients');
+            return false;
+          }
+          
+          // Require steps or instructions
+          const hasSteps = Array.isArray(recipe.steps) && recipe.steps.length > 0;
+          const hasInstructions = Array.isArray(recipe.instructions) && recipe.instructions.length > 0;
+          
+          if (!hasSteps && !hasInstructions) {
+            console.log('Recipe validation: missing steps/instructions');
+            return false;
+          }
+          
+          console.log('Recipe validation: passed all checks');
+          return true;
+        }
+      }),
+      {
+        name: 'quick-recipe-storage',
+        // Only persist recipe, don't persist formData to prevent "recipe ready to view" message on page reload
+        partialize: (state) => ({
+          recipe: state.recipe
+        })
       }
-    })
-  }),
-  setError: (error) => set({ error }),
-  setHasTimeoutError: (hasTimeoutError) => set({ hasTimeoutError }),
-  setNavigate: (navigate) => set({ navigate }),
-  setGenerationInProgress: (inProgress) => set({ generationInProgress: inProgress }),
-  
-  reset: () => set({
-    recipe: null,
-    isLoading: false,
-    error: null,
-    hasTimeoutError: false,
-    generationInProgress: false,
-    loadingState: {
-      step: 0,
-      stepDescription: 'Analyzing your ingredients...',
-      percentComplete: 0,
-      estimatedTimeRemaining: 30
-    },
-    // Don't reset formData as we might need it for retries
-  }),
-  
-  isRecipeValid: () => {
-    const { recipe } = get();
-    return !!recipe && !recipe.isError && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0;
-  },
-  
-  updateLoadingState: (newState) => set(state => ({
-    loadingState: {
-      ...state.loadingState,
-      ...newState
-    }
-  }))
-}));
+    )
+  )
+);
+
+export default useQuickRecipeStore;
