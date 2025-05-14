@@ -5,7 +5,7 @@ import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import { MaterialHomepage } from '@/components/landing/MaterialHomepage';
 
 // Lazy load routes to improve initial load performance
-const LazyRoutes = lazy(() => import('./LazyRoutes'));
+const LazyRoutes = lazy(() => import('./LazyRoutes').then(module => ({ default: module.default || module })));
 
 export function AppRoutes() {
   return (
@@ -25,3 +25,5 @@ export function AppRoutes() {
     </Routes>
   );
 }
+
+export default AppRoutes;

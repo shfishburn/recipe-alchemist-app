@@ -1,10 +1,10 @@
-
 @import './components.css';
 @import './theme.css';
 @import './transitions.css';
 @import './loading.css';
 @import './touch-optimizations.css';
 @import './scientific-content.css';
+@import './layout.css';
 
 :root {
   /* Material Design color tokens */

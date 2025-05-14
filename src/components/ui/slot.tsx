@@ -7,19 +7,19 @@ import * as React from "react"
 const Slot = React.forwardRef<
   HTMLElement,
   React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
->(({ children, asChild = false, ...props }, ref) => {
+>(({ children, asChild = false, ...props }, forwardedRef) => {
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(
       children,
       {
         ...mergeProps(props, children.props),
-        ref: mergeRefs([ref, (children as any).ref]),
+        ref: mergeRefs([forwardedRef, (children as any).ref]),
       }
     );
   }
   
   return (
-    <span {...props} ref={ref as React.ForwardedRef<HTMLSpanElement>}>
+    <span {...props} ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}>
       {children}
     </span>
   );
@@ -27,7 +27,7 @@ const Slot = React.forwardRef<
 Slot.displayName = "Slot";
 
 // Utility function to merge refs
-function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T>>): React.RefCallback<T> {
+function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T> | null | undefined>): React.RefCallback<T> {
   return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
@@ -39,7 +39,7 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
   };
 }
 
-// Utility function to merge props - fixed to properly handle event handlers and type safety
+// Utility function to merge props with better type safety
 function mergeProps<T extends Record<string, any>>(slotProps: T, childProps: T): Record<string, any> {
   const merged = { ...childProps };
   
