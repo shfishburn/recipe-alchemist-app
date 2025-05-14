@@ -4,15 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ChefHat } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { IngredientInput } from './form-components/IngredientInput';
-import { ServingsSelector } from './form-components/ServingsSelector';
-import { CuisineSelector } from './form-components/CuisineSelector';
-import { DietarySelector } from './form-components/DietarySelector';
+import { SimplifiedServingsSelector } from './form-components/SimplifiedServingsSelector';
+import { SimplifiedCuisineSelector } from './form-components/SimplifiedCuisineSelector';
+import { SimplifiedDietarySelector } from './form-components/SimplifiedDietarySelector';
 import { SubmitButton } from './form-components/SubmitButton';
 import { cn } from '@/lib/utils';
 
 export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
-  const [cuisines, setCuisines] = useState<string[]>(['any']); // Default to 'any'
+  const [cuisines, setCuisines] = useState<string[]>([]);
   const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
   const [servings, setServings] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,8 +44,8 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
       // Create form data with all fields
       const formData = {
         ingredients: mainIngredient.trim(),
-        cuisine: cuisines.length > 0 ? cuisines : ['any'], // Ensure we have an array
-        dietary: dietaryPreferences, // Already an array
+        cuisine: cuisines, // Already ensured to be an array
+        dietary: dietaryPreferences, // Already ensured to be an array
         servings: servings
       };
 
@@ -88,26 +88,26 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
         
         {/* Material Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Servings Selector */}
+          {/* Simplified Servings Selector */}
           <div>
-            <ServingsSelector 
-              selectedServings={servings} 
-              onServingsChange={setServings} 
+            <SimplifiedServingsSelector 
+              value={servings} 
+              onChange={setServings} 
             />
           </div>
           
-          {/* Cuisine Selector */}
+          {/* Simplified Cuisine Selector */}
           <div>
-            <CuisineSelector 
-              value={cuisines} 
+            <SimplifiedCuisineSelector 
+              selected={cuisines} 
               onChange={setCuisines} 
             />
           </div>
           
-          {/* Dietary Selector */}
+          {/* Simplified Dietary Selector */}
           <div>
-            <DietarySelector 
-              value={dietaryPreferences} 
+            <SimplifiedDietarySelector 
+              selected={dietaryPreferences} 
               onChange={setDietaryPreferences} 
             />
           </div>

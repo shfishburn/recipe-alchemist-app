@@ -6,9 +6,9 @@ import { CookingPot } from 'lucide-react';
 import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
-import { CuisineSelector } from './form-components/CuisineSelector';
-import { DietarySelector } from './form-components/DietarySelector';
-import { ServingsSelector } from './form-components/ServingsSelector';
+import { SimplifiedCuisineSelector } from './form-components/SimplifiedCuisineSelector';
+import { SimplifiedDietarySelector } from './form-components/SimplifiedDietarySelector';
+import { SimplifiedServingsSelector } from './form-components/SimplifiedServingsSelector';
 
 interface QuickRecipeFormProps {
   onSubmit: (data: QuickRecipeFormData) => void;
@@ -66,21 +66,21 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       </div>
 
       <div className="space-y-6 w-full">
-        {/* Servings selector */}
-        <ServingsSelector 
-          selectedServings={formData.servings}
-          onServingsChange={(servings) => setFormData({ ...formData, servings })}
+        {/* Simplified Servings selector */}
+        <SimplifiedServingsSelector 
+          value={formData.servings}
+          onChange={(servings) => setFormData({ ...formData, servings })}
         />
 
-        {/* Cuisine selector */}
-        <CuisineSelector
-          value={formData.cuisine}
+        {/* Simplified Cuisine selector */}
+        <SimplifiedCuisineSelector
+          selected={formData.cuisine as string[]}
           onChange={(cuisine) => setFormData({ ...formData, cuisine })}
         />
 
-        {/* Dietary selector */}
-        <DietarySelector
-          value={formData.dietary}
+        {/* Simplified Dietary selector */}
+        <SimplifiedDietarySelector
+          selected={formData.dietary as string[]}
           onChange={(dietary) => setFormData({ ...formData, dietary })}
         />
       </div>

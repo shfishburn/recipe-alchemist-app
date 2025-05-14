@@ -1,152 +1,117 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import type { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
-import { generateQuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
-import { Ingredient } from '@/types/recipe';
-import { Json } from '@/integrations/supabase/types';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { generateQuickRecipe } from '@/api/generate-quick-recipe';
+import { QuickRecipe } from '@/types/quick-recipe';
+ 
+// Define the expected input shape for the recipe generator
+export interface RecipeGeneratorInput {
+  ingredients: string;
+  cuisine?: string | string[];
+  dietary?: string | string[];
+  servings?: number;
+}
 
-/**
- * @deprecated This hook is deprecated and internally uses the QuickRecipe functionality.
- * Please use the useQuickRecipe hook and related components instead.
- */
-export const useRecipeGenerator = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+// Type for generated recipe response
+export interface GeneratedRecipeResponse {
+  recipe: QuickRecipe | null;
+  error: string | null;
+}
 
-  // Helper function to convert ingredients to a database-safe format
-  const convertIngredientsToJson = (ingredients: any[]): Json => {
-    return ingredients.map(ingredient => {
-      if (typeof ingredient === 'string') {
-        return {
-          qty: 1,
-          unit: '',
-          item: ingredient,
-          qty_metric: 1,
-          unit_metric: '',
-          qty_imperial: 1,
-          unit_imperial: ''
-        };
-      }
-      
-      return {
-        qty: ingredient.qty || 1,
-        unit: ingredient.unit || '',
-        item: typeof ingredient.item === 'string' ? ingredient.item : 
-              (ingredient.item ? JSON.stringify(ingredient.item) : ''),
-        qty_metric: ingredient.qty_metric || ingredient.qty || 1,
-        unit_metric: ingredient.unit_metric || ingredient.unit || '',
-        qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
-        unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
-      };
-    }) as Json;
-  };
-
-  const generateRecipe = async (formData: RecipeFormData) => {
+export function useRecipeGenerator() {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [recipe, setRecipe] = useState<QuickRecipe | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { session } = useAuth();
+  
+  const generateRecipe = async (input: RecipeGeneratorInput): Promise<GeneratedRecipeResponse> => {
     try {
-      setIsLoading(true);
-      console.log('DEPRECATED: Using generateRecipe which redirects to QuickRecipe');
-      console.log('Starting recipe generation with form data:', formData);
+      setIsGenerating(true);
+      setError(null);
       
-      // Convert RecipeFormData to QuickRecipeFormData
-      const quickFormData: QuickRecipeFormData = {
-        cuisine: formData.cuisine ? [formData.cuisine] : ['Any'],
-        dietary: formData.dietary ? [formData.dietary] : [],
-        mainIngredient: formData.title || "Chef's choice",
-        servings: formData.servings || 4,
-        // Added maxCalories to the interface, so now it's valid
-        maxCalories: formData.maxCalories
-      };
-      
-      // Show toast about using the new system
-      toast({
-        title: "Using Quick Recipe",
-        description: "We're using our improved recipe generation system.",
+      // Generate the recipe
+      console.log("Generating recipe with input:", input);
+      const result = await generateQuickRecipe({
+        mainIngredient: input.ingredients,
+        cuisine: input.cuisine || [],
+        dietary: input.dietary || [],
+        servings: input.servings || 2,
       });
       
-      // Use the QuickRecipe generator instead
-      const generatedRecipe = await generateQuickRecipe(quickFormData);
+      if (result.error) {
+        throw new Error(result.error);
+      }
       
-      // Handle saving if the user is logged in
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (!userError && user) {
-          console.log('Logged in user detected, saving recipe to database');
+      if (!result.recipe) {
+        throw new Error("Failed to generate recipe. Please try again.");
+      }
+      
+      // Store the recipe in state
+      setRecipe(result.recipe);
+      
+      // If user is authenticated, save to database
+      if (session?.user) {
+        try {
+          console.log("Saving recipe to database...");
           
-          // Convert ingredients to a JSON-compatible format
-          const ingredientsJson = convertIngredientsToJson(generatedRecipe.ingredients);
-          
-          // Fix: Pass a single object to insert, not an array of objects
-          const { data: savedRecipe, error: saveError } = await supabase
+          // This is passing a SINGLE object now, not an array
+          const { data, error } = await supabase
             .from('recipes')
             .insert({
-              title: generatedRecipe.title,
-              tagline: generatedRecipe.tagline || generatedRecipe.description,
-              cuisine: formData.cuisine,
-              dietary: formData.dietary,
-              flavor_tags: formData.flavorTags,
-              servings: generatedRecipe.servings,
-              prep_time_min: generatedRecipe.prep_time_min || generatedRecipe.prepTime,
-              cook_time_min: generatedRecipe.cook_time_min || generatedRecipe.cookTime,
-              ingredients: ingredientsJson,
-              instructions: generatedRecipe.steps || generatedRecipe.instructions,
-              nutrition: generatedRecipe.nutrition as Json,
-              user_id: user.id
-            })
-            .select();
-
-          if (saveError) {
-            console.error('Database save error:', saveError);
-            throw new Error(`Failed to save recipe: ${saveError.message}`);
+              user_id: session.user.id,
+              recipe_data: result.recipe,
+              description: result.recipe.description || '',
+              cuisine: typeof result.recipe.cuisine === 'string' ? result.recipe.cuisine : '',
+              name: result.recipe.title,
+              // IMPORTANT: Don't include properties that don't exist in the table schema
+              // title is not in the schema, so don't include it
+            });
+          
+          if (error) {
+            console.error("Error saving recipe:", error);
+            // Don't throw - we want to continue even if save fails
           }
-
-          console.log('Recipe saved successfully:', savedRecipe);
-
-          toast({
-            title: "Success!",
-            description: `Recipe "${generatedRecipe.title}" generated and saved successfully.`,
-          });
-
-          if (savedRecipe && savedRecipe.length > 0) {
-            // Navigate to the recipe detail page for saved recipes
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            navigate(`/recipes/${savedRecipe[0].id}`);
-            return generatedRecipe;
-          }
+        } catch (saveError) {
+          console.error("Exception saving recipe:", saveError);
+          // Continue even if save fails
         }
-      } catch (saveError) {
-        console.error('Error saving recipe:', saveError);
-        // Continue without saving if there's an error
       }
-
-      // For users who aren't logged in or if saving fails, navigate to the quick-recipe page
-      navigate('/quick-recipe', { 
-        state: { 
-          fromForm: true,
-          recipeData: generatedRecipe
-        } 
-      });
-
-      return generatedRecipe;
-    } catch (error) {
-      console.error('Error generating or saving recipe:', error);
+      
+      return { 
+        recipe: result.recipe,
+        error: null
+      };
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : "An unexpected error occurred";
+      
+      console.error("Recipe generation error:", err);
+      setError(errorMessage);
+      
       toast({
-        title: "Something went wrong.",
-        description: error.message || "Failed to generate or save recipe. Please try again.",
+        title: "Recipe Generation Failed",
+        description: errorMessage,
         variant: "destructive",
       });
-      return null;
+      
+      return {
+        recipe: null,
+        error: errorMessage
+      };
+      
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
   return {
     generateRecipe,
-    isLoading
+    isGenerating,
+    recipe,
+    error,
   };
-};
+}
