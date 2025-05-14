@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import {
@@ -16,16 +17,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
-// Production list of dietary preferences
+// Production list of dietary preferences derived from DietarySelect.tsx
 const DIETARY_OPTIONS = [
+  { value: "no-restrictions", label: "No Restrictions" },
   { value: "vegetarian", label: "Vegetarian" },
   { value: "vegan", label: "Vegan" },
+  { value: "pescatarian", label: "Pescatarian" },
   { value: "gluten-free", label: "Gluten-Free" },
   { value: "dairy-free", label: "Dairy-Free" },
-  { value: "nut-free", label: "Nut-Free" },
-  { value: "low-carb", label: "Low-Carb" },
   { value: "keto", label: "Keto" },
   { value: "paleo", label: "Paleo" },
+  { value: "low-carb", label: "Low-Carb" },
+  { value: "low-fat", label: "Low-Fat" },
+  { value: "low-sodium", label: "Low-Sodium" },
+  { value: "high-protein", label: "High-Protein" }
 ];
 
 interface DietarySelectorProps {

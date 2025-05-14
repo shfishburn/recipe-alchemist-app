@@ -15,20 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-
-// Production list of cuisines
-const CUISINES = [
-  { value: "any", label: "Any Cuisine" },
-  { value: "italian", label: "Italian" },
-  { value: "mexican", label: "Mexican" },
-  { value: "asian", label: "Asian" },
-  { value: "mediterranean", label: "Mediterranean" },
-  { value: "american", label: "American" },
-  { value: "indian", label: "Indian" },
-  { value: "french", label: "French" },
-  { value: "middle-eastern", label: "Middle Eastern" },
-  { value: "caribbean", label: "Caribbean" },
-];
+import { GROUPED_CUISINE_OPTIONS } from '@/config/cuisine-config';
 
 interface CuisineSelectorProps {
   value: string[];
@@ -64,8 +51,12 @@ export function CuisineSelector({ value = ['any'], onChange }: CuisineSelectorPr
     if (value.length === 0) return "Select cuisine";
     
     if (value.length === 1) {
-      const cuisine = CUISINES.find(c => c.value === value[0]);
-      return cuisine?.label || "Select cuisine";
+      // Find the cuisine label by searching through all groups
+      for (const group of GROUPED_CUISINE_OPTIONS) {
+        const cuisine = group.options.find(c => c.value === value[0]);
+        if (cuisine) return cuisine.label;
+      }
+      return "Select cuisine";
     }
     
     return `${value.length} cuisines selected`;
@@ -99,21 +90,23 @@ export function CuisineSelector({ value = ['any'], onChange }: CuisineSelectorPr
           <Command>
             <CommandInput placeholder="Search cuisine..." />
             <CommandEmpty>No cuisine found.</CommandEmpty>
-            <CommandGroup className="max-h-60 overflow-y-auto">
-              {CUISINES.map((cuisine) => (
-                <CommandItem
-                  key={cuisine.value}
-                  value={cuisine.value}
-                  onSelect={() => handleSelect(cuisine.value)}
-                  className="flex items-center justify-between"
-                >
-                  <span>{cuisine.label}</span>
-                  {value.includes(cuisine.value) && (
-                    <CheckIcon className="h-4 w-4" />
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {GROUPED_CUISINE_OPTIONS.map((group) => (
+              <CommandGroup key={group.category} heading={group.category} className="py-1.5">
+                {group.options.map((cuisine) => (
+                  <CommandItem
+                    key={cuisine.value}
+                    value={cuisine.value}
+                    onSelect={() => handleSelect(cuisine.value)}
+                    className="flex items-center justify-between"
+                  >
+                    <span>{cuisine.label}</span>
+                    {value.includes(cuisine.value) && (
+                      <CheckIcon className="h-4 w-4" />
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
           </Command>
         </PopoverContent>
       </Popover>
@@ -122,14 +115,23 @@ export function CuisineSelector({ value = ['any'], onChange }: CuisineSelectorPr
       {(value.length > 0 && !value.includes('any')) && (
         <div className="flex flex-wrap gap-1 mt-2">
           {value.map((v) => {
-            const cuisine = CUISINES.find(c => c.value === v);
-            return cuisine && (
+            // Find cuisine label by searching through all groups
+            let cuisineLabel = v;
+            for (const group of GROUPED_CUISINE_OPTIONS) {
+              const cuisine = group.options.find(c => c.value === v);
+              if (cuisine) {
+                cuisineLabel = cuisine.label;
+                break;
+              }
+            }
+            
+            return (
               <Badge 
                 key={v} 
                 variant="secondary"
                 className="text-xs"
               >
-                {cuisine.label}
+                {cuisineLabel}
                 <button
                   type="button"
                   className="ml-1 rounded-full outline-none hover:text-red-500 focus:text-red-500"

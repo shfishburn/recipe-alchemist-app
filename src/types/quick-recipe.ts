@@ -1,26 +1,39 @@
+
 export interface QuickRecipeIngredient {
   item: string;
   qty_metric?: number;
   unit_metric?: string;
   qty_imperial?: number;
   unit_imperial?: string;
+  qty?: number;
+  unit?: string;
+  notes?: string;
+  shop_size_qty?: number;
+  shop_size_unit?: string;
 }
 
 export interface QuickRecipe {
   id?: string;
   title: string;
   description?: string;
+  tagline?: string;
   ingredients: QuickRecipeIngredient[] | string[];
   steps: string[];
   instructions?: string[];
   servings: number;
-  prepTime?: string;
-  cookTime?: string;
-  totalTime?: string;
+  prepTime?: string | number;
+  cookTime?: string | number;
+  totalTime?: string | number;
+  prep_time_min?: number;
+  cook_time_min?: number;
   cuisine?: string;
   dietary?: string[];
   error_message?: string;
   isError?: boolean;
+  nutritionHighlight?: string;
+  cookingTip?: string;
+  science_notes?: string[];
+  flavor_tags?: string[];
   nutrition?: {
     calories?: number;
     protein?: number;
@@ -39,4 +52,17 @@ export interface QuickRecipeFormData {
   url?: string;
   imgUrl?: string;
   imageFile?: File | null;
+}
+
+// Re-export Ingredient type for backward compatibility
+export type Ingredient = QuickRecipeIngredient;
+
+// Re-export Recipe type for backward compatibility
+export type Recipe = QuickRecipe;
+
+// Re-export options type for backward compatibility
+export interface QuickRecipeOptions {
+  servings?: number;
+  cuisine?: string | string[];
+  dietary?: string | string[];
 }
