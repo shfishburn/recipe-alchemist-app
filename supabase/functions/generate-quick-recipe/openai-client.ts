@@ -86,26 +86,53 @@ export async function generateRecipeWithOpenAI(
       );
     }
     
-    // Extract and parse the recipe JSON
-    const recipeJson = data.choices[0].message.content;
-    console.log("OpenAI API returned recipe JSON (first 200 chars):", recipeJson.substring(0, 200));
+    // Extract the recipe JSON
+    const recipeJsonRaw = data.choices[0].message.content;
+    console.log("Raw recipe text:", recipeJsonRaw);
+    console.log("OpenAI API returned recipe JSON (first 200 chars):", recipeJsonRaw.substring(0, 200));
     
+    // Enhanced JSON parsing with error recovery
     let recipe;
     try {
-      recipe = JSON.parse(recipeJson);
-    } catch (err) {
-      console.error("Error parsing recipe JSON:", err);
-      console.log("Raw recipe text:", recipeJson);
+      // First attempt: Direct parsing
+      recipe = JSON.parse(recipeJsonRaw);
+    } catch (parseError) {
+      console.error("Error parsing recipe JSON:", parseError);
       
-      return new Response(
-        JSON.stringify({
-          error: "Invalid recipe format",
-          details: "Could not parse the generated recipe as valid JSON",
-          raw_recipe: recipeJson.substring(0, 500) + "...",
-          debug_info: debugInfo
-        }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Second attempt: Fix common JSON issues
+      try {
+        // Try to fix unterminated strings by adding missing quotes
+        const fixedJson = fixUnterminatedJson(recipeJsonRaw);
+        recipe = JSON.parse(fixedJson);
+        console.log("Successfully parsed recipe JSON after fixing unterminated strings");
+      } catch (fixError) {
+        console.error("Failed to fix unterminated JSON:", fixError);
+        
+        // Third attempt: Use a more lenient JSON parser or extraction strategy
+        try {
+          // Extract valid JSON object using regex - look for the outermost valid object
+          const extractedJson = extractValidJsonObject(recipeJsonRaw);
+          if (extractedJson) {
+            recipe = JSON.parse(extractedJson);
+            console.log("Successfully extracted and parsed valid JSON object");
+          } else {
+            throw new Error("Could not extract valid JSON");
+          }
+        } catch (extractError) {
+          console.error("All JSON parsing attempts failed:", extractError);
+          
+          return new Response(
+            JSON.stringify({
+              error: "Invalid recipe format",
+              details: "Could not parse the generated recipe as valid JSON. The AI returned malformed data.",
+              parsing_error: parseError.message,
+              raw_recipe_preview: recipeJsonRaw.substring(0, 500) + "...",
+              debug_info: debugInfo
+            }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
     }
     
     // Add metadata to the recipe
@@ -145,4 +172,50 @@ export async function generateRecipeWithOpenAI(
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
+}
+
+// Helper function to fix unterminated JSON strings
+function fixUnterminatedJson(rawJson: string): string {
+  // Look for unterminated strings (quotation marks without closing pairs)
+  let inString = false;
+  let escapeNext = false;
+  let fixed = rawJson;
+  
+  // Check for missing trailing quotes at the end of property values
+  fixed = fixed.replace(/:\s*"([^"\n]*)(?=\n|,|})/g, (match, p1) => {
+    return ': "' + p1 + '"';
+  });
+  
+  // Check for obvious unterminated strings at the end
+  if (fixed.trim().endsWith('"')) {
+    // If the JSON ends with a quotation mark that might be unopened
+    let lastBraceIndex = fixed.lastIndexOf('}');
+    if (lastBraceIndex > 0 && lastBraceIndex < fixed.length - 2) {
+      // There's content after the last closing brace, which may be malformed
+      fixed = fixed.substring(0, lastBraceIndex + 1);
+    }
+  }
+  
+  // Add missing closing brace if needed
+  const openBraces = (fixed.match(/{/g) || []).length;
+  const closeBraces = (fixed.match(/}/g) || []).length;
+  
+  if (openBraces > closeBraces) {
+    fixed = fixed + "}".repeat(openBraces - closeBraces);
+  }
+  
+  return fixed;
+}
+
+// Helper function to extract valid JSON object using regex
+function extractValidJsonObject(text: string): string | null {
+  // Look for a properly formed JSON object pattern
+  const objectRegex = /(\{(?:[^{}]|(?:\{[^{}]*\}))*\})/;
+  const matches = text.match(objectRegex);
+  
+  if (matches && matches[0]) {
+    return matches[0];
+  }
+  
+  return null;
 }

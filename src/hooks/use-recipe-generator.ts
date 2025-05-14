@@ -56,6 +56,16 @@ export function useRecipeGenerator() {
         try {
           console.log("Saving recipe to database...");
           
+          // Convert complex ingredients array to JSON string representation for database storage
+          const ingredientsForDb = typeof result.ingredients === 'string' 
+            ? result.ingredients 
+            : JSON.stringify(result.ingredients);
+            
+          // Convert instructions/steps to JSON string if they're arrays
+          const instructionsForDb = Array.isArray(result.steps || result.instructions) 
+            ? (result.steps || result.instructions || []) 
+            : [];
+          
           // The recipes table expects specific fields, let's extract them from the result
           const { data, error } = await supabase
             .from('recipes')
@@ -65,8 +75,8 @@ export function useRecipeGenerator() {
               description: result.description || '',
               cuisine: typeof result.cuisine === 'string' ? result.cuisine : '',
               servings: result.servings,
-              ingredients: result.ingredients,
-              instructions: result.steps || result.instructions || [],
+              ingredients: ingredientsForDb,
+              instructions: instructionsForDb,
               prep_time_min: result.prep_time_min || 0,
               cook_time_min: result.cook_time_min || 0
             });
