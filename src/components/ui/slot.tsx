@@ -39,18 +39,19 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
   };
 }
 
-// Utility function to merge props
-function mergeProps<T extends Object>(slotProps: T, childProps: T): T {
-  // This function does not handle event mergings and some other complex cases
-  // that Radix UI handles, but it's a simple implementation for basic cases.
+// Utility function to merge props - fixed to properly handle event handlers
+function mergeProps<T extends Record<string, any>>(slotProps: T, childProps: T): T {
   const merged = { ...childProps };
   
   for (const propName in slotProps) {
     if (propName.startsWith('on') && typeof slotProps[propName] === 'function' && typeof childProps[propName] === 'function') {
-      // For event handlers, we want to call both
-      merged[propName] = (...args: any[]) => {
-        childProps[propName]?.(...args);
-        slotProps[propName]?.(...args);
+      // For event handlers, create a new function that calls both handlers
+      const slotHandler = slotProps[propName];
+      const childHandler = childProps[propName];
+      
+      merged[propName] = function mergedHandler(...args: any[]) {
+        childHandler(...args);
+        slotHandler(...args);
       };
     } else if (propName === 'className' && slotProps[propName] && childProps[propName]) {
       // Join classNames

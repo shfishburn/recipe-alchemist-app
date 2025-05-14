@@ -24,6 +24,8 @@ const buttonVariants = cva(
         filled: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
         tonal: "bg-secondary/80 text-secondary-foreground hover:bg-secondary/70 active:bg-secondary/60",
         text: "text-primary hover:bg-primary/10 active:bg-primary/20",
+        // Add success variant
+        success: "bg-green-600 text-white hover:bg-green-700 active:bg-green-800",
       },
       size: {
         default: "h-10 px-4 py-2",
