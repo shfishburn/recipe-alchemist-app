@@ -15,7 +15,12 @@ export interface ExternalToast extends SonnerExternalToast {
 export type ToastProps = ExternalToast
 
 // Toast function with consolidated options and better defaults
-export function toast(props: ToastProps) {
+export function toast(props: ToastProps | string) {
+  // Handle string case for simple messages
+  if (typeof props === 'string') {
+    return sonnerToast(props);
+  }
+  
   // Enhanced touch feedback for toast interactions
   const enhancedProps = {
     ...props,
@@ -33,9 +38,17 @@ export function toast(props: ToastProps) {
     })
   }
   
-  // For backward compatibility and simpler calls with just a message
-  return sonnerToast(props.title as string || props as any)
+  // For simple title-only format
+  if (props.title) {
+    return sonnerToast(props.title as string, enhancedProps);
+  }
+  
+  // Fallback for any other case
+  return sonnerToast("Notification", enhancedProps);
 }
+
+// Add dismiss method to the toast function for easier access
+toast.dismiss = sonnerToast.dismiss;
 
 // Enhanced hook with convenience methods
 export function useToast() {
