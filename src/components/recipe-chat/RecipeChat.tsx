@@ -232,43 +232,45 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
   return (
-    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full hw-boost">
+    <Card className="flex flex-col h-full w-full overflow-hidden bg-white border-slate-100 shadow-sm hw-boost">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="flex flex-col h-full">
-          <div className="pt-2 sm:pt-4 px-3 sm:px-5 border-b">
+          <div className="flex-shrink-0 pt-2 sm:pt-4 px-3 sm:px-5 border-b">
             <ChatHeader 
               hasChatHistory={chatHistory.length > 0} 
               onClearChat={handleClearChat} 
             />
           </div>
           
-          <div className="flex-grow overflow-hidden relative">
+          <div className="flex-1 min-h-0 relative overflow-hidden">
             <ScrollArea 
-              className="h-[calc(100vh-200px)] sm:h-[60vh] px-3 sm:px-5 scroll-momentum"
+              className="h-full scroll-momentum" 
               ref={scrollAreaRef}
             >
-              {/* Show EmptyChatState if there are no messages */}
-              {showEmptyState ? (
-                <EmptyChatState />
-              ) : (
-                <div className="py-3">
-                  <ChatHistory
-                    chatHistory={chatHistory}
-                    optimisticMessages={optimisticMessages}
-                    isSending={isSending}
-                    setMessage={setMessage}
-                    applyChanges={applyChanges}
-                    isApplying={isApplying}
-                    recipe={recipe}
-                    retryMessage={retryMessage}
-                  />
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
+              <div className="px-3 sm:px-5 py-3">
+                {/* Show EmptyChatState if there are no messages */}
+                {showEmptyState ? (
+                  <EmptyChatState />
+                ) : (
+                  <div>
+                    <ChatHistory
+                      chatHistory={chatHistory}
+                      optimisticMessages={optimisticMessages}
+                      isSending={isSending}
+                      setMessage={setMessage}
+                      applyChanges={applyChanges}
+                      isApplying={isApplying}
+                      recipe={recipe}
+                      retryMessage={retryMessage}
+                    />
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
             </ScrollArea>
           </div>
 
-          <div className="sticky bottom-0 bg-white border-t pt-2 pb-3 px-3 sm:px-5 mt-auto z-10">
+          <div className="flex-shrink-0 border-t pt-2 pb-3 px-3 sm:px-5 bg-white z-10">
             <RecipeChatInput
               message={message}
               setMessage={setMessage}

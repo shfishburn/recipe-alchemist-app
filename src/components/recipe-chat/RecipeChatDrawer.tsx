@@ -54,11 +54,11 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerContent 
-        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto overflow-hidden flex flex-col hw-boost`} 
+        className={`${isMobile ? 'h-[95vh]' : 'h-[85vh]'} max-w-4xl mx-auto flex flex-col hw-boost`} 
         style={{ zIndex: 50 }} // Lower z-index than shopping list components
         ref={contentRef}
       >
-        <DrawerHeader className="border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10 hw-boost">
+        <DrawerHeader className="flex-shrink-0 border-b flex items-center justify-between bg-white py-2 sticky top-0 z-10 hw-boost">
           <div className="flex items-center gap-2">
             <DrawerTitle className="text-primary font-medium text-base">
               Recipe Chat
@@ -98,7 +98,7 @@ export function RecipeChatDrawer({ recipe, open, onOpenChange }: RecipeChatDrawe
             </TooltipProvider>
           </div>
         </DrawerHeader>
-        <div className={`p-2 sm:p-4 flex-1 ${isMobile ? 'h-[calc(95vh-48px)]' : 'h-[calc(85vh-60px)]'} flex`}>
+        <div className="flex-1 min-h-0 p-2 sm:p-4 overflow-hidden">
           <RecipeChat recipe={recipe} />
         </div>
       </DrawerContent>

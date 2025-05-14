@@ -1,35 +1,66 @@
 
-/* Touch optimization styles */
-.touch-active:active {
-  transform: scale(0.98);
-  transition: transform 0.1s ease-in-out;
+/* Touch-friendly scrolling optimizations */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
+/* Improve scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-/* Enhanced hardware acceleration class */
-.hw-boost {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  will-change: transform, opacity;
-  overflow: hidden; /* Prevent paint thrashing from content overflow */
-  contain: content; /* Enable containment for better performance */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Additional touch optimizations */
-.touch-optimized {
-  touch-action: manipulation; /* Remove 300ms delay on mobile */
-  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
-  user-select: none; /* Prevent text selection during taps */
-}
-
-/* Optimized scroll containers for touch devices */
+/* Touch-friendly scroll momentum */
 .scroll-momentum {
-  -webkit-overflow-scrolling: touch; /* Enable momentum scrolling on iOS */
   scroll-behavior: smooth;
-  overscroll-behavior: contain; /* Prevent unwanted page scrolling */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Hardware boost for scroll containers */
+.hw-accelerated-scroll {
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+}
+
+/* Touch targets for buttons */
+.touch-target-base {
+  min-height: 44px;
+  padding: 8px 16px;
+}
+
+/* Touch ripple effect for buttons */
+.touch-active {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-active:active::after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform .5s, opacity 1s;
+}
+
+.touch-active:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
 }
