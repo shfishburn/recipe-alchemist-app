@@ -1,77 +1,80 @@
 
 import * as React from "react"
 
-type SlotProps = React.HTMLAttributes<HTMLElement> & {
-  asChild?: boolean;
-  children: React.ReactNode;
-};
+type SlotProps = {
+  children?: React.ReactNode
+  [key: string]: any
+}
 
-/**
- * This is a simplified version of Radix UI's Slot component
- */
-const Slot = React.forwardRef<HTMLElement, SlotProps>(
-  ({ children, asChild = false, ...props }, forwardedRef) => {
-    if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(
-        children,
-        {
-          ...mergeProps(props, children.props),
-          ref: mergeRefs([forwardedRef, (children as any).ref]),
-        }
-      );
-    }
+// Inspired by Radix UI's Slot component
+// https://www.radix-ui.com/primitives/docs/utilities/slot
+export const Slot = React.forwardRef<HTMLElement, SlotProps>(
+  (props, forwardedRef) => {
+    const { children, ...slotProps } = props
     
-    return (
-      <span {...props} ref={forwardedRef as React.ForwardedRef<HTMLSpanElement>}>
-        {children}
-      </span>
-    );
-  }
-);
-Slot.displayName = "Slot";
+    // If no children, don't render anything
+    if (!children) {
+      return null
+    }
 
-// Utility function to merge refs with proper typing
-function mergeRefs<T = any>(refs: Array<React.Ref<T> | undefined | null>): React.RefCallback<T> {
-  return (value) => {
+    // If the children is not a valid React element, wrap it in a span
+    if (!React.isValidElement(children)) {
+      return (
+        <span {...slotProps} ref={forwardedRef as React.Ref<HTMLSpanElement>}>
+          {children}
+        </span>
+      )
+    }
+
+    // Merge the props
+    return React.cloneElement(children, {
+      ...mergeProps(slotProps, children.props),
+      ref: mergeRefs([forwardedRef, (children as any).ref]),
+    })
+  }
+)
+
+// Merge refs utility
+function mergeRefs(refs: React.Ref<any>[]) {
+  return (value: any) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
-        ref(value);
+        ref(value)
       } else if (ref != null) {
-        (ref as React.MutableRefObject<T | null>).current = value;
+        (ref as React.MutableRefObject<any>).current = value
       }
-    });
-  };
+    })
+  }
 }
 
 // Utility function to merge props with proper typing
 function mergeProps(
-  slotProps: React.HTMLAttributes<HTMLElement>,
+  slotProps: Record<string, any>,
   childProps: Record<string, any>
 ): Record<string, any> {
-  const merged = { ...childProps };
+  const merged = { ...childProps }
   
   Object.entries(slotProps).forEach(([propName, slotValue]) => {
-    if (propName.startsWith('on') && typeof slotValue === 'function' && typeof childProps[propName] === 'function') {
-      // For event handlers, create a new function that calls both handlers
-      const childHandler = childProps[propName];
-      
-      merged[propName] = function mergedHandler(...args: any[]) {
-        childHandler(...args);
-        (slotValue as Function)(...args);
-      };
-    } else if (propName === 'className' && slotValue && childProps[propName]) {
-      // Join classNames
-      merged[propName] = `${childProps[propName]} ${slotValue}`;
-    } else if (propName === 'style' && slotValue && childProps[propName]) {
-      // Merge styles
-      merged[propName] = { ...childProps[propName], ...slotValue };
-    } else if (!(propName in merged)) {
-      // Use slot prop if child doesn't have it
-      merged[propName] = slotValue;
+    // Handle class name merging
+    if (propName === "className") {
+      merged.className = [slotValue, childProps.className]
+        .filter(Boolean)
+        .join(" ")
     }
-  });
+    // Handle event handlers
+    else if (propName.startsWith("on") && typeof slotValue === "function" && typeof childProps[propName] === "function") {
+      merged[propName] = (...args: any[]) => {
+        childProps[propName](...args)
+        slotValue(...args)
+      }
+    }
+    // Handle all other props
+    else if (!(propName in merged)) {
+      merged[propName] = slotValue
+    }
+  })
   
-  return merged;
+  return merged
 }
 
-export { Slot };
+Slot.displayName = "Slot"

@@ -8,6 +8,7 @@ import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
 import { SubmitButton } from './form-components/SubmitButton';
+import { cn } from '@/lib/utils';
 
 export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
@@ -65,9 +66,12 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4">
-      {/* Ingredient Input */}
-      <div className="space-y-3">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
+      {/* Section Title - Material Design typography */}
+      <h3 className="text-xl font-medium text-foreground">Create a Recipe</h3>
+      
+      {/* Ingredient Input with proper Material spacing */}
+      <div className="space-y-4">
         <IngredientInput 
           value={mainIngredient}
           onChange={setMainIngredient}
@@ -75,35 +79,43 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
         />
       </div>
       
-      {/* Additional Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Servings Selector */}
-        <div>
-          <ServingsSelector 
-            selectedServings={servings} 
-            onServingsChange={setServings} 
-          />
-        </div>
+      {/* Options Container - Material Card styling */}
+      <div className={cn(
+        "rounded-lg bg-background/80 backdrop-blur-sm p-4",
+        "border border-border/50 shadow-elevation-1"
+      )}>
+        <h4 className="text-sm font-medium text-foreground mb-4">Customize Your Recipe</h4>
         
-        {/* Cuisine Selector */}
-        <div>
-          <CuisineSelector 
-            value={cuisines} 
-            onChange={setCuisines} 
-          />
-        </div>
-        
-        {/* Dietary Selector */}
-        <div>
-          <DietarySelector 
-            value={dietaryPreferences} 
-            onChange={setDietaryPreferences} 
-          />
+        {/* Material Grid Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Servings Selector */}
+          <div>
+            <ServingsSelector 
+              selectedServings={servings} 
+              onServingsChange={setServings} 
+            />
+          </div>
+          
+          {/* Cuisine Selector */}
+          <div>
+            <CuisineSelector 
+              value={cuisines} 
+              onChange={setCuisines} 
+            />
+          </div>
+          
+          {/* Dietary Selector */}
+          <div>
+            <DietarySelector 
+              value={dietaryPreferences} 
+              onChange={setDietaryPreferences} 
+            />
+          </div>
         </div>
       </div>
       
-      {/* Submit Button */}
-      <div className="flex justify-center mt-4">
+      {/* Submit Button with proper spacing */}
+      <div className="pt-2">
         <SubmitButton 
           isLoading={isSubmitting}
           disabled={!mainIngredient.trim()}

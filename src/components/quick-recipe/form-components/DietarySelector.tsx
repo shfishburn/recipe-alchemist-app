@@ -1,89 +1,170 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { 
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Leaf, Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-/**
- * DietarySelector.tsx
- * Version: 1.0.4
- * Date: 2025-05-10
- * Changes:
- * - Converted to use grouped options with category labels for improved UX
- * - Fixed mobile styling for selection boxes
- * - Improved X button alignment
- */
+// Dietary options with icons
+const DIETARY_OPTIONS = [
+  { value: 'none', label: 'No Restrictions', icon: '🍽️' },
+  { value: 'vegetarian', label: 'Vegetarian', icon: '🥗' },
+  { value: 'vegan', label: 'Vegan', icon: '🌱' },
+  { value: 'gluten-free', label: 'Gluten Free', icon: '🌾' },
+  { value: 'dairy-free', label: 'Dairy Free', icon: '🥛' },
+  { value: 'low-carb', label: 'Low Carb', icon: '🥦' },
+  { value: 'keto', label: 'Keto', icon: '🥑' },
+  { value: 'paleo', label: 'Paleo', icon: '🍖' },
+];
 
-import React from 'react'
-import { MultiSelect, SelectOption, SelectGroup } from '@/components/ui/multi-select'
-
-export interface DietarySelectorProps {
-  value: string[]
-  onChange: (dietary: string[]) => void
+interface DietarySelectorProps {
+  value: string[];
+  onChange: (value: string[]) => void;
+  maxSelections?: number;
 }
 
-// Grouped dietary options with category labels
-const groupedDietaryOptions: SelectGroup[] = [
-  {
-    label: 'Diets & Styles',
-    options: [
-      { value: 'any', label: 'No Restrictions' },
-      { value: 'vegetarian', label: 'Vegetarian' },
-      { value: 'vegan', label: 'Vegan' },
-      { value: 'pescatarian', label: 'Pescatarian' },
-      { value: 'paleo', label: 'Paleo' },
-      { value: 'keto', label: 'Keto' },
-      { value: 'whole30', label: 'Whole30' },
-      { value: 'plant-based', label: 'Plant-Based' }
-    ]
-  },
-  {
-    label: 'Restrictions & Macros',
-    options: [
-      { value: 'gluten-free', label: 'Gluten-Free' },
-      { value: 'dairy-free', label: 'Dairy-Free' },
-      { value: 'nut-free', label: 'Nut-Free' },
-      { value: 'soy-free', label: 'Soy-Free' },
-      { value: 'egg-free', label: 'Egg-Free' },
-      { value: 'low-carb', label: 'Low-Carb' },
-      { value: 'low-fat', label: 'Low-Fat' },
-      { value: 'high-protein', label: 'High-Protein' },
-      { value: 'low-sodium', label: 'Low-Sodium' }
-    ]
-  },
-  {
-    label: 'Health Conditions',
-    options: [
-      { value: 'diabetic-friendly', label: 'Diabetic-Friendly' },
-      { value: 'heart-healthy', label: 'Heart-Healthy' },
-      { value: 'kidney-friendly', label: 'Kidney-Friendly' },
-      { value: 'anti-inflammatory', label: 'Anti-Inflammatory' },
-      { value: 'fodmap-friendly', label: 'FODMAP-Friendly' }
-    ]
-  },
-  {
-    label: 'Flavor Preferences',
-    options: [
-      { value: 'spicy', label: 'Spicy' },
-      { value: 'sweet', label: 'Sweet' },
-      { value: 'savory', label: 'Savory' },
-      { value: 'smoky', label: 'Smoky' },
-      { value: 'tangy', label: 'Tangy' },
-      { value: 'umami', label: 'Umami' }
-    ]
-  }
-]
+export function DietarySelector({ 
+  value = [], 
+  onChange, 
+  maxSelections = 2 
+}: DietarySelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-export function DietarySelector({ value, onChange }: DietarySelectorProps) {
-  const handleDietaryChange = (selected: string[]) => {
-    onChange(selected)
-  }
+  // Handle selection changes
+  const handleSelectionChange = (selectedValue: string) => {
+    // If 'none' is selected, clear other selections
+    if (selectedValue === 'none') {
+      onChange([]);
+      return;
+    }
+    
+    // If the value is already selected, remove it
+    if (value.includes(selectedValue)) {
+      onChange(value.filter(item => item !== selectedValue));
+      return;
+    }
+    
+    // If we've reached the maximum selections, don't add more
+    if (value.length >= maxSelections) {
+      // Replace the last item with the new selection
+      const newValue = [...value];
+      newValue.pop();
+      onChange([...newValue, selectedValue]);
+      return;
+    }
+    
+    // Otherwise add the new selection
+    onChange([...value, selectedValue]);
+  };
 
+  // Get display text for the trigger
+  const getDisplayText = () => {
+    if (!value || value.length === 0) return 'No Restrictions';
+    
+    if (value.length === 1) {
+      const option = DIETARY_OPTIONS.find(opt => opt.value === value[0]);
+      return option ? option.label : 'Select...';
+    }
+    
+    return `${value.length} selected`;
+  };
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        buttonRef.current && 
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
   return (
-    <div className="w-full">
-      <MultiSelect
-        options={groupedDietaryOptions}
-        selected={value}
-        onChange={handleDietaryChange}
-        placeholder="Select preferences (max 4)"
-        maxSelections={4}
-        isGrouped
-      />
+    <div className="space-y-2">
+      {/* Material Design label */}
+      <label 
+        htmlFor="dietary-select" 
+        className="text-sm font-medium flex items-center gap-1.5 text-foreground"
+      >
+        <Filter className="h-4 w-4 text-primary/80" />
+        Dietary
+      </label>
+      
+      {/* Custom select with multi-select capabilities */}
+      <div className="relative">
+        <button
+          type="button"
+          id="dietary-select"
+          ref={buttonRef}
+          className={cn(
+            "flex w-full justify-between items-center rounded-md border border-input",
+            "bg-background px-3 py-2 text-sm shadow-elevation-1 h-10",
+            "hover:border-primary/50 hover:shadow-elevation-2 transition-colors",
+            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-0"
+          )}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <span>{getDisplayText()}</span>
+          <Leaf className="h-4 w-4 opacity-70" />
+        </button>
+        
+        {/* Dropdown menu */}
+        <div 
+          ref={dropdownRef}
+          className={cn(
+            "absolute z-10 mt-1 w-full rounded-md border border-input",
+            "bg-background shadow-elevation-2",
+            isOpen ? "block" : "hidden"
+          )}
+        >
+          <div className="max-h-60 overflow-auto p-1">
+            {DIETARY_OPTIONS.map((option) => {
+              const isSelected = value.includes(option.value);
+              return (
+                <div
+                  key={option.value}
+                  className={cn(
+                    "flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer",
+                    "transition-colors hover:bg-primary/10",
+                    isSelected ? "bg-primary/20 text-primary" : "text-foreground"
+                  )}
+                  onClick={() => {
+                    handleSelectionChange(option.value);
+                    // Don't hide dropdown after selection for multi-select
+                  }}
+                >
+                  <span className="mr-2">{option.icon}</span>
+                  <span>{option.label}</span>
+                  {isSelected && (
+                    <span className="ml-auto">✓</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      
+      {/* Material Design helper text */}
+      <p className="text-xs text-muted-foreground">
+        Dietary preferences (max {maxSelections})
+      </p>
     </div>
-  )
+  );
 }

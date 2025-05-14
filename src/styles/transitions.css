@@ -1,129 +1,65 @@
 
-/* Base page transition classes with improved performance */
-.page-transition {
-  will-change: opacity, transform;
-  transition-property: opacity;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 250ms;
-  backface-visibility: hidden;
-}
-
-/* Only apply transform animations on desktop for better mobile performance */
-@media (min-width: 768px) {
-  .page-transition {
-    transition-property: opacity, transform;
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
   }
-  
-  .page-transition.fadeIn {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  .page-transition.fadeOut {
+  100% {
+    transform: scale(4);
     opacity: 0;
-    transform: translateY(5px);
-  }
-  
-  /* Add slide transitions for loading page */
-  .loading-enter {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  
-  .loading-enter-active {
-    opacity: 1;
-    transform: scale(1);
-    transition: opacity 300ms, transform 300ms;
-  }
-  
-  .loading-exit {
-    opacity: 1;
-  }
-  
-  .loading-exit-active {
-    opacity: 0;
-    transition: opacity 200ms;
   }
 }
 
-/* Mobile optimized transitions - opacity only for better performance */
-@media (max-width: 767px) {
-  .page-transition.fadeIn {
-    opacity: 1;
+@keyframes scale-x {
+  0% {
+    transform: scaleX(0);
   }
-  
-  .page-transition.fadeOut {
-    opacity: 0;
-  }
-  
-  /* Mobile optimized loading transitions */
-  .loading-enter {
-    opacity: 0;
-  }
-  
-  .loading-enter-active {
-    opacity: 1;
-    transition: opacity 300ms;
-  }
-  
-  .loading-exit {
-    opacity: 1;
-  }
-  
-  .loading-exit-active {
-    opacity: 0;
-    transition: opacity 200ms;
+  100% {
+    transform: scaleX(1);
   }
 }
 
-/* Hardware acceleration optimization */
-.hw-accelerated {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  perspective: 1000;
-  will-change: transform, opacity;
+.animate-scale-x {
+  animation: scale-x 0.3s ease-out forwards;
+  transform-origin: left;
 }
 
-/* Reduce motion preference support */
-@media (prefers-reduced-motion) {
-  .page-transition,
-  .animate-in,
-  .animate-out,
-  .slide-in,
-  .slide-out,
-  .fade-in,
-  .fade-out,
-  .zoom-in,
-  .zoom-out,
-  .loading-enter-active,
-  .loading-exit-active {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
-}
-
-/* Optimized loading indicator animations */
-@keyframes pulse-ring {
-  0% { transform: scale(0.85); opacity: 0.6; }
-  50% { transform: scale(1); opacity: 0.3; }
-  100% { transform: scale(0.85); opacity: 0.6; }
-}
-
-.loading-pulse-ring {
+.touch-feedback::after {
+  content: '';
   position: absolute;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  animation: pulse-ring 2s ease-out infinite;
+  background-color: currentColor;
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
 }
 
-/* Gradient animation for backgrounds */
-@keyframes gradient-x {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+.touch-feedback:active::after {
+  animation: ripple 0.6s linear forwards;
 }
 
-.animate-gradient-x {
-  background-size: 200% 100%;
-  animation: gradient-x 15s ease infinite;
+/* Material Design state layer transitions */
+.state-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.hover-state-layer:hover .state-layer {
+  opacity: 0.08;
+}
+
+.active-state-layer:active .state-layer {
+  opacity: 0.12;
+}
+
+/* Material Design elevation transitions */
+.elevation-transition {
+  transition: box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }

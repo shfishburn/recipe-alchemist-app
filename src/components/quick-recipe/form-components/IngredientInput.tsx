@@ -1,17 +1,4 @@
 
-/**
- * IngredientInput.tsx
- * Version: 1.0.7
- * Date: 2025-05-10
- * Changes:
- * - Updated UI strings
- * - Updated placeholder text
- * - Fixed error display
- * - Improved label layout with double line break
- * - Changed second sentence styling
- * - Removed duplicated FeatureBadges component
- */
-
 import React, { useRef, useEffect, useState } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Search } from 'lucide-react'
@@ -30,15 +17,7 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
   const [isPulsing, setIsPulsing] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
 
-  useEffect(() => {
-    const start = setTimeout(() => {
-      setIsPulsing(true)
-      const stop = setTimeout(() => setIsPulsing(false), 3000)
-      return () => clearTimeout(stop)
-    }, 1000)
-    return () => clearTimeout(start)
-  }, [])
-
+  // Auto-resize logic
   useEffect(() => {
     if (textareaRef.current) {
       requestAnimationFrame(() => {
@@ -51,19 +30,46 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
     }
   }, [value, isMobile])
 
+  // Initial attraction animation
+  useEffect(() => {
+    const start = setTimeout(() => {
+      setIsPulsing(true)
+      const stop = setTimeout(() => setIsPulsing(false), 3000)
+      return () => clearTimeout(stop)
+    }, 1000)
+    return () => clearTimeout(start)
+  }, [])
+
   return (
     <div className="space-y-2 w-full max-w-full">
+      {/* Label with two-part styling */}
+      <div className="flex flex-col mb-2">
+        <label htmlFor="mainIngredient" className="text-sm font-medium text-foreground mb-1">
+          Enter your ingredients
+        </label>
+        <span className="text-xs text-muted-foreground">
+          What do you want to cook with today?
+        </span>
+      </div>
+
+      {/* Material input container */}
       <div
         className={cn(
-          'relative flex items-center rounded-xl shadow-md transition-all duration-300 w-full',
-          isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
-          isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
-          error ? 'ring-2 ring-red-500' : '',
-          'bg-gradient-to-r from-white to-blue-50/70 dark:from-gray-900 dark:to-gray-800'
+          'relative flex items-center rounded-md overflow-hidden transition-all duration-300 w-full',
+          'bg-background',
+          'shadow-elevation-1 hover:shadow-elevation-2',
+          isPulsing ? 'animate-pulse ring-2 ring-primary ring-opacity-50' : '',
+          isFocused ? 'ring-2 ring-primary' : '',
+          error ? 'ring-2 ring-destructive' : '',
         )}
       >
-        {/* Adjusted positioning of the search icon */}
-        <Search className="absolute left-3 h-5 w-5 text-recipe-blue" aria-hidden="true" />
+        {/* Search icon with Material positioning */}
+        <Search 
+          className="absolute left-3 h-5 w-5 text-primary" 
+          aria-hidden="true" 
+        />
+        
+        {/* Textarea with Material styling */}
         <Textarea
           id="mainIngredient"
           ref={textareaRef}
@@ -75,19 +81,29 @@ export function IngredientInput({ value, onChange, error }: IngredientInputProps
           rows={1}
           className={cn(
             isMobile ? 'min-h-[56px] text-base' : 'min-h-[60px] text-lg',
-            'flex-1 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl w-full',
-            'focus-within:border-recipe-blue placeholder:text-gray-500/80',
-            error ? 'border-red-500' : 'border-gray-200 focus:border-recipe-blue',
-            // Increased left padding to ensure text doesn't overlap with the search icon
-            'pl-10 pr-4'
+            'flex-1 text-left resize-none overflow-hidden transition-all bg-transparent border-0 rounded-none w-full',
+            'focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0',
+            'placeholder:text-muted-foreground/80',
+            'pl-10 pr-4 py-3'
           )}
           style={{ touchAction: 'manipulation' }}
         />
+
+        {/* Input focus indicator for Material ripple effect */}
+        {isFocused && (
+          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary animate-scale-x" />
+        )}
       </div>
 
+      {/* Error message with Material styling */}
       {error && (
-        <p className="text-sm text-red-500 mt-1">{error}</p>
+        <p className="text-sm text-destructive font-medium mt-1 animate-fade-in">{error}</p>
       )}
+
+      {/* Helper text with Material styling */}
+      <p className="text-xs text-muted-foreground mt-1">
+        List your main ingredients separated by commas
+      </p>
     </div>
   )
 }
