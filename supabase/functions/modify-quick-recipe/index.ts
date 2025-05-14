@@ -89,6 +89,9 @@ function validateRecipe(recipe: any) {
     throw new Error("Must have at least one ingredient");
   if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))
     throw new Error("Must have steps or instructions");
+  
+  // Validate recipe ID exists
+  if (!recipe.id) throw new Error("Recipe ID is required");
 }
 
 // === edge function ===
@@ -164,13 +167,27 @@ serve(async (req) => {
         const sb = createClient(SUPA_URL, SUPA_KEY, {
           global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
         });
-        await sb.from("recipe_chats").insert({
+        
+        // Ensure we have valid recipe ID before saving to database
+        if (!recipe.id) {
+          throw new Error("Cannot save chat: Recipe ID is missing");
+        }
+        
+        const chatData = {
           recipe_id: recipe.id,
           user_message: userRequest,
           ai_response: parsed.textResponse,
           changes_suggested: parsed.modifications,
           source_type: "modification"
+        };
+        
+        console.log("Saving chat to database:", {
+          recipeId: recipe.id,
+          messageLength: userRequest.length,
+          hasChanges: !!parsed.modifications
         });
+        
+        await sb.from("recipe_chats").insert(chatData);
       } catch (dbErr) {
         console.error("DB insert failed", dbErr);
       }
