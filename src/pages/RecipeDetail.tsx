@@ -35,10 +35,10 @@ const RecipeDetail = () => {
   // Set page title based on recipe
   useEffect(() => {
     if (recipe) {
-      document.title = `${recipe.title} | Recipe Alchemy`;
+      document.title = `${recipe.title} | Recipe`;
     }
     return () => {
-      document.title = 'Recipe Alchemy';
+      document.title = 'Recipe App';
     };
   }, [recipe]);
   

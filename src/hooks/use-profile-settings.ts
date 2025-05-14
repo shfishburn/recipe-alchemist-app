@@ -60,14 +60,9 @@ export function useProfileSettings() {
   // Load profile settings when profile changes
   useEffect(() => {
     if (profile && profile.nutrition_preferences) {
-      // Check if nutrition_preferences is an object before spreading
-      const preferencesToUse = typeof profile.nutrition_preferences === 'object' && profile.nutrition_preferences !== null 
-        ? profile.nutrition_preferences 
-        : {};
-      
       setNutritionPreferences({
         ...defaultNutritionPreferences,
-        ...preferencesToUse
+        ...profile.nutrition_preferences
       });
     }
   }, [profile]);

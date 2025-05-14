@@ -1,11 +1,9 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { useQuickRecipe } from '@/hooks/use-quick-recipe';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from '@/hooks/use-toast';
-import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 export function useQuickRecipePage() {
   const navigate = useNavigate();
@@ -26,7 +24,6 @@ export function useQuickRecipePage() {
   const { session } = useAuth();
   const [isRetrying, setIsRetrying] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
-  const { ensureRecipeHasId, storeRecipeWithId } = useRecipeDataRecovery();
   
   // Check if we're coming from the loading page
   const isFromLoadingPage = location.state?.fromLoading === true;
@@ -88,35 +85,14 @@ export function useQuickRecipePage() {
             }
           } else if (recipeData.recipe) {
             // We already have a generated recipe in location.state
-            // Ensure it has a unique ID for storage and retrieval
-            const recipeId = ensureRecipeHasId(recipeData.recipe);
-            
             // Only set it if it's not already the current recipe in the store,
             // or if the store's recipe is null/undefined.
-            if (!recipe) {
-              console.log("Setting recipe from location state:", recipeData.recipe.title);
+            // Assuming recipes have a unique 'id' property.
+            if (!recipe || (recipe && recipeData.recipe.id !== recipe.id)) {
+              console.log("Setting/updating recipe from location state:", recipeData.recipe.title);
               setRecipe(recipeData.recipe);
-              
-              // Navigate to recipe preview with ID
-              if (recipeId) {
-                navigate(`/recipe-preview/${recipeId}`, { 
-                  replace: true,
-                  state: { 
-                    recipeData: recipeData.recipe,
-                    timestamp: Date.now()
-                  }
-                });
-              } else {
-                navigate('/recipe-preview', { 
-                  replace: true,
-                  state: { 
-                    recipeData: recipeData.recipe,
-                    timestamp: Date.now()
-                  }
-                });
-              }
             } else {
-              console.log("Recipe from location state is already set, not re-setting.");
+              console.log("Recipe from location state is same as current store recipe or already set, not re-setting.");
             }
           }
         } catch (e: unknown) {
@@ -183,8 +159,7 @@ export function useQuickRecipePage() {
     if (!isLoading && (location.state?.recipeData || (session && sessionStorage.getItem('recipeGenerationSource')))) {
       handleRecipeResumption();
     }
-  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, setRecipe, setError, location.state, navigate,
-      ensureRecipeHasId, storeRecipeWithId]);
+  }, [session, isLoading, recipe, generateQuickRecipe, setLoading, setFormData, setRecipe, setError, location.state, navigate]);
 
   // Reset loading state if navigating directly from navbar
   useEffect(() => {

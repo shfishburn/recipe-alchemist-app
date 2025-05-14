@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,11 +5,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 // Define which fields are valid in the database and their mappings
-const FIELD_MAPPINGS: Record<string, string> = {
+const FIELD_MAPPINGS = {
   // Frontend camelCase to database snake_case mappings
   prepTime: 'prep_time_min',
   cookTime: 'cook_time_min',
@@ -56,50 +53,11 @@ const VALID_DB_FIELDS = [
 // Define the save-recipe action type
 const SAVE_RECIPE_ACTION: PendingActionType = 'save-recipe';
 
-/**
- * Helper function to transform recipe data to match database schema
- */
-function transformRecipeForDB(recipe: QuickRecipe): Record<string, unknown> {
-  const transformedRecipe: Record<string, unknown> = {};
-  
-  // Process all keys from the recipe
-  for (const key in recipe) {
-    // Skip null or undefined values
-    if (recipe[key as keyof QuickRecipe] === null || recipe[key as keyof QuickRecipe] === undefined) {
-      continue;
-    }
-    
-    // Skip functions and unsupported types
-    const value = recipe[key as keyof QuickRecipe];
-    if (typeof value === 'function' || typeof value === 'symbol') {
-      continue;
-    }
-    
-    // Check if we need to remap this field
-    const remappedKey = FIELD_MAPPINGS[key] || key;
-    
-    // Only include fields that are valid in the database
-    if (VALID_DB_FIELDS.includes(remappedKey)) {
-      // Special case: handle steps -> instructions mapping
-      if (key === 'steps' && Array.isArray(recipe[key as keyof QuickRecipe])) {
-        transformedRecipe['instructions'] = recipe[key as keyof QuickRecipe];
-      } else {
-        transformedRecipe[remappedKey] = recipe[key as keyof QuickRecipe];
-      }
-    }
-  }
-  
-  return transformedRecipe;
-}
-
 export function useQuickRecipeSave() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipe, setSavedRecipe] = useState<QuickRecipe | null>(null);
   const { session } = useAuth();
   const { open: openAuthDrawer } = useAuthDrawer();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { storeRecipeWithId, ensureRecipeHasId, getRecipeIdFromUrl } = useRecipeDataRecovery();
 
   const saveRecipe = useCallback(async (recipe: QuickRecipe, bypassAuth = false) => {
     try {
@@ -109,49 +67,14 @@ export function useQuickRecipeSave() {
       if (!session?.user && !bypassAuth) {
         // Store the current recipe in authStateManager before redirecting to auth
         try {
-          // Ensure recipe has an ID
-          const recipeId = ensureRecipeHasId(recipe);
-          
           // Queue the action using authStateManager
           const actionId = authStateManager.queueAction({
             type: SAVE_RECIPE_ACTION,
-            data: { recipe, recipeId },
-            sourceUrl: location.pathname
+            data: { recipe },
+            sourceUrl: window.location.pathname
           });
-          
-          // Also store in localStorage with ID for more reliable recovery
-          if (recipeId) {
-            storeRecipeWithId(recipe, recipeId);
-            console.log("Stored recipe with ID for auth:", recipeId);
-          }
-          
-          // Also use traditional fallback
-          authStateManager.storeRecipeDataFallback(recipe);
           
           console.log("Stored recipe save request with action ID:", actionId);
-          
-          // Store the current URL for more robust state preservation
-          // If we have a recipe ID, include it in the path
-          let currentUrl = location.pathname;
-          const urlRecipeId = getRecipeIdFromUrl() || recipeId;
-          
-          // If current path doesn't already have the ID and we have one, use it
-          if (urlRecipeId && !currentUrl.includes(`/recipe-preview/${urlRecipeId}`)) {
-            // Check if we're on the recipe-preview base path
-            if (currentUrl === '/recipe-preview') {
-              currentUrl = `/recipe-preview/${urlRecipeId}`;
-            }
-          }
-          
-          authStateManager.setRedirectAfterAuth(currentUrl, {
-            state: { 
-              pendingSave: true,
-              resumingAfterAuth: true,
-              recipeId: urlRecipeId,
-              recipeData: recipe, // Include recipe directly in state
-              timestamp: Date.now()
-            }
-          });
           
           toast.info("Please sign in to save your recipe", { 
             duration: 4000,
@@ -208,53 +131,124 @@ export function useQuickRecipeSave() {
           // Success!
           success = true;
           
-          // Clear any fallbacks since save succeeded
-          authStateManager.clearRecipeDataFallback();
-          
-          // Mark any pending actions as executed
-          const pendingActions = authStateManager.getPendingActions();
-          const saveActions = pendingActions.filter(a => a.type === SAVE_RECIPE_ACTION);
-          saveActions.forEach(action => {
-            authStateManager.markActionExecuted(action.id);
-          });
-          
-          // Also clear any recipe-specific cached data
-          const recipeId = getRecipeIdFromUrl();
-          if (recipeId) {
-            localStorage.removeItem(`recipe_${recipeId}`);
+          // Load the saved recipe
+          if (data) {
+            const { data: savedRecipeData, error: fetchError } = await supabase
+              .from('recipes')
+              .select('*')
+              .eq('id', data.id)
+              .single();
+              
+            if (fetchError) {
+              console.error("Error fetching saved recipe:", fetchError);
+              // Still show success even if we couldn't fetch the complete recipe
+              toast.success("Recipe saved successfully!");
+            } else {
+              console.log("Saved recipe loaded:", savedRecipeData);
+              setSavedRecipe(savedRecipeData as unknown as QuickRecipe);
+              // Show success toast without the action button
+              toast.success("Recipe saved successfully!");
+            }
+          } else {
+            toast.success("Recipe saved successfully!");
           }
           
-          // Load the saved recipe
-          setSavedRecipe(recipe);
-          
-          // Return success data including the slug for navigation
           return data;
-        } catch (err) {
+          
+        } catch (err: any) {
           retries++;
-          console.error(`Error saving recipe (attempt ${retries}/${maxRetries}):`, err);
+          console.error(`Save attempt ${retries} failed:`, err);
           
           if (retries >= maxRetries) {
             throw err;
           }
           
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
+          // Exponential backoff
+          const delay = Math.pow(2, retries) * 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
       
-      // Should never reach here due to success or throw in the loop
-      return null;
-    } catch (error) {
-      console.error("Failed to save recipe:", error);
-      throw error; // Re-throw for the caller to handle
+    } catch (error: any) {
+      console.error("Error saving recipe:", error);
+      toast.error(`Failed to save recipe: ${error.message}`);
+      throw error;
     } finally {
       setIsSaving(false);
     }
-  }, [session, openAuthDrawer, navigate, location, ensureRecipeHasId, storeRecipeWithId, getRecipeIdFromUrl]);
+  }, [session, openAuthDrawer]);
+  
+  return { saveRecipe, isSaving, savedRecipe };
+}
 
-  return {
-    saveRecipe,
-    isSaving,
-    savedRecipe
-  };
+/**
+ * Transforms a recipe object from frontend format to database format:
+ * 1. Maps camelCase properties to snake_case database columns
+ * 2. Removes properties that don't exist in the database
+ * 3. Handles special cases like arrays and nested objects
+ */
+function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  
+  // First, apply all camelCase to snake_case mappings
+  for (const [frontendKey, dbKey] of Object.entries(FIELD_MAPPINGS)) {
+    if (frontendKey in recipe && recipe[frontendKey] !== undefined) {
+      result[dbKey] = recipe[frontendKey];
+    }
+  }
+  
+  // Handle the description/tagline special case
+  if (recipe.description !== undefined) {
+    result.tagline = recipe.description;
+  }
+  // If both tagline and description exist, prioritize tagline
+  if (recipe.tagline !== undefined) {
+    result.tagline = recipe.tagline;
+  }
+  
+  // Next, copy all other properties that don't need mapping
+  for (const [key, value] of Object.entries(recipe)) {
+    // Skip keys we've already mapped
+    if (Object.keys(FIELD_MAPPINGS).includes(key)) {
+      continue;
+    }
+    
+    // For any property not in our mappings, copy it directly
+    result[key] = value;
+  }
+  
+  // Handle special transformations for arrays and objects
+  if (result.steps && !result.instructions) {
+    // Ensure steps get properly mapped to instructions (if not already)
+    result.instructions = result.steps;
+    delete result.steps; // Remove the duplicate after mapping
+  }
+  
+  // Filter out any properties not in our database whitelist
+  const finalResult: Record<string, any> = {};
+  for (const dbField of VALID_DB_FIELDS) {
+    if (dbField in result && result[dbField] !== undefined) {
+      finalResult[dbField] = result[dbField];
+    }
+  }
+  
+  // Always ensure user_id is preserved
+  if ('user_id' in recipe) {
+    finalResult.user_id = recipe.user_id;
+  }
+  
+  // Ensure arrays are properly formatted
+  if (finalResult.flavor_tags && typeof finalResult.flavor_tags === 'string') {
+    finalResult.flavor_tags = [finalResult.flavor_tags];
+  }
+  
+  // Handle science_notes - ensure it's an array
+  if (finalResult.science_notes && !Array.isArray(finalResult.science_notes)) {
+    finalResult.science_notes = [finalResult.science_notes];
+  }
+  
+  console.log("Original recipe:", recipe);
+  console.log("Transformed recipe for DB:", finalResult);
+  
+  return finalResult;
 }

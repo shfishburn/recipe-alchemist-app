@@ -1,6 +1,5 @@
 
 import { Session, User } from '@supabase/supabase-js';
-import { QuickRecipe } from '@/types/quick-recipe';
 
 // Version the state schema to allow for future migrations
 const AUTH_STATE_VERSION = '1.0.0';
@@ -32,13 +31,6 @@ export interface AuthState {
   };
   pendingActions: PendingAction[];
   lastActiveTimestamp: number;
-}
-
-// Type for the recipe backup in localStorage
-export interface RecipeBackup {
-  recipe: QuickRecipe;
-  timestamp: number;
-  sourceUrl: string;
 }
 
 /**
@@ -366,52 +358,6 @@ export class AuthStateManager {
       this.state.pendingActions = [];
       this.saveState();
       console.log('All pending actions cleared');
-    }
-  }
-
-  /**
-   * Store recipe data in localStorage as a fallback mechanism
-   * This helps with scenarios where sessionStorage might be cleared
-   * @param recipeData - The recipe data to store
-   */
-  public storeRecipeDataFallback(recipeData: QuickRecipe): void {
-    try {
-      localStorage.setItem('recipe_backup', JSON.stringify({
-        recipe: recipeData,
-        timestamp: Date.now(),
-        sourceUrl: window.location.pathname
-      }));
-      console.log('Recipe backup stored in localStorage');
-    } catch (error) {
-      console.error('Failed to store recipe backup:', error);
-    }
-  }
-
-  /**
-   * Retrieve recipe data from localStorage fallback
-   * @returns The stored recipe data or null if none exists
-   */
-  public getRecipeDataFallback(): RecipeBackup | null {
-    try {
-      const storedData = localStorage.getItem('recipe_backup');
-      if (storedData) {
-        return JSON.parse(storedData) as RecipeBackup;
-      }
-    } catch (error) {
-      console.error('Failed to retrieve recipe backup:', error);
-    }
-    return null;
-  }
-
-  /**
-   * Clear recipe data from localStorage fallback
-   */
-  public clearRecipeDataFallback(): void {
-    try {
-      localStorage.removeItem('recipe_backup');
-      console.log('Recipe backup cleared from localStorage');
-    } catch (error) {
-      console.error('Failed to clear recipe backup:', error);
     }
   }
 }

@@ -7,7 +7,6 @@ import { QuickRecipeError } from '@/components/quick-recipe/error/QuickRecipeErr
 import { useQuickRecipePage } from '@/hooks/use-quick-recipe-page';
 import { PageContainer } from '@/components/ui/containers';
 import { Button } from '@/components/ui/button';
-import { useRecipeDataRecovery } from '@/hooks/use-recipe-data-recovery';
 
 const QuickRecipePage: React.FC = () => {
   const {
@@ -25,7 +24,6 @@ const QuickRecipePage: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { getRecipeIdFromUrl } = useRecipeDataRecovery();
   
   // If loading or retrying, redirect to the loading page to prevent flicker
   useEffect(() => {
@@ -60,13 +58,7 @@ const QuickRecipePage: React.FC = () => {
   
   // Go to view recipe if we have a stored recipe
   const handleViewExistingRecipe = () => {
-    // If we can find a recipe ID in the store or URL, use it in the navigation
-    const recipeId = getRecipeIdFromUrl();
-    if (recipeId) {
-      navigate(`/recipe-preview/${recipeId}`);
-    } else {
-      navigate('/recipe-preview');
-    }
+    navigate('/recipe-preview');
   };
   
   return (

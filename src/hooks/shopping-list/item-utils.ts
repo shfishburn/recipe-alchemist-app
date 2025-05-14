@@ -18,8 +18,12 @@ export const toggleItem = async (
       checked: !updatedItems[index].checked
     };
     
-    // Save the updated list
-    await saveList(updatedItems);
+    // Save the updated list and show toast notification
+    const success = await saveList(updatedItems);
+    if (success) {
+      const action = updatedItems[index].checked ? 'completed' : 'uncompleted';
+      toast.success(`Item ${action}`);
+    }
   } catch (error) {
     console.error('Error toggling item:', error);
     toast.error('Failed to update item');
@@ -36,7 +40,7 @@ export const deleteItem = async (
     // Create a copy without the item to delete
     const updatedItems = items.filter((_, i) => i !== index);
     
-    // Save the updated list
+    // Save the updated list and show toast notification
     const success = await saveList(updatedItems);
     if (success) {
       toast.success('Item removed');
@@ -86,7 +90,7 @@ export const addItem = async (
     // Add the new item to the list
     const updatedItems = [...items, completeItem];
     
-    // Save the updated list
+    // Save the updated list and show toast notification
     const success = await saveList(updatedItems);
     if (success) {
       toast.success('Item added');

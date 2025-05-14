@@ -8,7 +8,7 @@ const config = {
     retryDelay: 1000, // ms
     models: ['gpt-4o', 'gpt-3.5-turbo'],
     requestOptions: { 
-      temperature: 0.3,       // low randomness → consistent, focused reviews  
+      temperature: 0.2,       // low randomness → consistent, focused reviews  
       top_p: 1.0,             // full nucleus sampling (combine with low temp for best of both)  
       frequency_penalty: 0.0, // allow repeated tokens if needed for clarity  
       presence_penalty: 0.0,  // don't discourage new topics—let it surface all issues  
@@ -179,7 +179,7 @@ function truncateDiff(diff) {
 function buildSystemPrompt() {
   return `You are strictly forbidden from repeating any instruction text in your reply. Do **not** include any of these instructions in your response.
 
-You are a code review assistant and architect analyzing an AI recipe generation app built as a Vite SPA deployed to Vercel with a Supabase backend. Provide a balanced, actionable analysis of git diffs that includes:
+You are a code review assistant analyzing git diffs. Provide a balanced, actionable analysis that includes:
 
 ### 1. Summary of the overall changes
 - High-level overview of added, removed, or modified code.
@@ -201,16 +201,7 @@ You are a code review assistant and architect analyzing an AI recipe generation 
 ### 6. Minor enhancements
 - Even if no critical issues are found, list up to 5 minor style, documentation, or readability improvements.
 
-### 7. Feature Improvement Observations
-- ONLY if the code changes indicate substantial new functionality or architecture:
-  * Suggest 1-2 specific extensions that build upon major additions or modifications
-  * Ignore minor parameter adjustments, comment changes, or simple refactorings
-  * For each suggestion, explain why it's a valuable extension of significant new functionality
-  * Reference specific functions or components that could be extended, not just line numbers
-  * Do NOT suggest generic features unrelated to the code changes in this review
-- If the changes are minor or maintenance-focused, write "No significant feature ideas identified for these changes."
-
-### 8. AI Developer Prompt
+### 7. AI Developer Prompt
 - At the end of your review, include a section titled "# AI Developer Prompt" formatted as follows:
   - Begin with "# AI Developer Prompt" as a title
   - Follow with "Please assess the following code issues and provide solutions:"
