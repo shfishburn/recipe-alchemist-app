@@ -16,16 +16,12 @@ export function useApplyChanges() {
       return false;
     }
     
-    console.log('Starting to apply changes from chat message:', {
-      chatId: chatMessage.id,
-      recipeId: chatMessage.recipe_id || recipe.id,
-      hasChanges: !!chatMessage.changes_suggested
-    });
+    console.log('Starting to apply changes from chat message:', chatMessage.id);
     
     // Check for required data
     if (!recipe || !recipe.id) {
       const errorMsg = 'Cannot apply changes: Recipe data is missing';
-      console.error(errorMsg, {recipe});
+      console.error(errorMsg);
       toast({
         title: 'Error',
         description: errorMsg,
@@ -34,11 +30,9 @@ export function useApplyChanges() {
       return false;
     }
     
-    // Ensure we have a valid recipe_id in the chat message
-    const recipeId = chatMessage.recipe_id || recipe.id;
-    if (!recipeId) {
-      const errorMsg = 'Cannot apply changes: Recipe reference is missing';
-      console.error(errorMsg, {chatMessage});
+    if (!chatMessage || !chatMessage.recipe_id) {
+      const errorMsg = 'Cannot apply changes: Chat message is missing recipe reference';
+      console.error(errorMsg, chatMessage);
       toast({
         title: 'Error',
         description: errorMsg,
@@ -46,12 +40,6 @@ export function useApplyChanges() {
       });
       return false;
     }
-    
-    // Create a chat message with guaranteed recipe_id
-    const validatedChatMessage = {
-      ...chatMessage,
-      recipe_id: recipeId
-    };
     
     try {
       setIsApplying(true);
@@ -60,14 +48,14 @@ export function useApplyChanges() {
       const { error: updateError } = await supabase
         .from('recipe_chats')
         .update({ applied: true })
-        .eq('id', validatedChatMessage.id);
+        .eq('id', chatMessage.id);
       
       if (updateError) {
         throw new Error(`Error marking chat as applied: ${updateError.message}`);
       }
       
       // Step 2: Update the recipe with the changes
-      await updateRecipe(recipe, validatedChatMessage)
+      await updateRecipe(recipe, chatMessage)
         .then(() => {
           // Success - Show toast notification
           toast({
@@ -88,25 +76,25 @@ export function useApplyChanges() {
         });
         
       // If the changes include science-related updates, analyze with the reactions function
-      if (validatedChatMessage.changes_suggested && 
-          (validatedChatMessage.changes_suggested.science_notes ||
-           validatedChatMessage.changes_suggested.instructions)) {
+      if (chatMessage.changes_suggested && 
+          (chatMessage.changes_suggested.science_notes ||
+           chatMessage.changes_suggested.instructions)) {
         
         // Skip reactions analysis if the instructions array is empty
-        const instructionsArray = validatedChatMessage.changes_suggested.instructions;
+        const instructionsArray = chatMessage.changes_suggested.instructions;
         if (Array.isArray(instructionsArray) && instructionsArray.length === 0) {
           console.log('Skipping reactions analysis: empty instructions array');
           return true;
         }
         
         try {
-          console.log('Starting scientific reaction analysis for recipe:', recipeId);
+          console.log('Starting scientific reaction analysis for recipe:', recipe.id);
           
           // Load updated recipe to get latest instructions
           const { data: updatedRecipe, error: loadError } = await supabase
             .from('recipes')
             .select('*')
-            .eq('id', recipeId)
+            .eq('id', recipe.id)
             .single();
             
           if (loadError) {
@@ -122,7 +110,7 @@ export function useApplyChanges() {
             // Call the analyze-reactions edge function
             supabase.functions.invoke('analyze-reactions', {
               body: {
-                recipe_id: recipeId,
+                recipe_id: recipe.id,
                 title: updatedRecipe.title || recipe.title,
                 instructions: instructions
               }
