@@ -1,0 +1,310 @@
+name: AI Commit Guardian
+
+on:
+  # For PRs - analyze before merging
+  pull_request:
+    types: [opened, synchronize]
+    branches: [ main, develop, master ]
+  
+  # For direct pushes - revert if necessary
+  push:
+    branches: [ main, develop, master ]
+
+jobs:
+  ai-code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch all history for proper diff analysis
+    
+    - name: Get changed files
+      id: changed-files
+      run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # For PRs, compare with base branch
+          git fetch origin ${{ github.base_ref }}
+          echo "CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.js$|\.ts$|\.py$|\.java$|\.go$|\.rb$|\.php$|\.jsx$|\.tsx$|\.cs$|\.cpp$|\.c$' | tr '\n' ' ')" >> $GITHUB_ENV
+        else
+          # For direct pushes, compare with previous commit
+          echo "CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.js$|\.ts$|\.py$|\.java$|\.go$|\.rb$|\.php$|\.jsx$|\.tsx$|\.cs$|\.cpp$|\.c$' | tr '\n' ' ')" >> $GITHUB_ENV
+        fi
+    
+    - name: OpenAI Code Guardian
+      id: code-guardian
+      uses: actions/github-script@v6
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        CHANGED_FILES: ${{ env.CHANGED_FILES }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        script: |
+          const { OPENAI_API_KEY, CHANGED_FILES } = process.env;
+          const axios = require('axios');
+          const fs = require('fs');
+          
+          // Skip if no relevant files changed
+          if (!CHANGED_FILES || CHANGED_FILES.trim() === '') {
+            console.log('No relevant code files changed, skipping review');
+            return {
+              shouldReject: false,
+              reviewResult: "No code files changed, review skipped"
+            };
+          }
+          
+          // Get file contents for changed files
+          const fileContents = {};
+          for (const file of CHANGED_FILES.split(' ')) {
+            if (file.trim() === '') continue;
+            try {
+              const content = fs.readFileSync(file, 'utf8');
+              fileContents[file] = content;
+            } catch (error) {
+              console.log(`Error reading file ${file}: ${error.message}`);
+            }
+          }
+          
+          // Skip if no files could be read
+          if (Object.keys(fileContents).length === 0) {
+            console.log('No files could be read for review');
+            return {
+              shouldReject: false,
+              reviewResult: "No readable files found, review skipped"
+            };
+          }
+          
+          // Get git diff to see exact changes
+          const { execSync } = require('child_process');
+          let diffOutput;
+          
+          try {
+            if (process.env.GITHUB_EVENT_NAME === 'pull_request') {
+              diffOutput = execSync(`git diff origin/${process.env.GITHUB_BASE_REF}...HEAD`).toString();
+            } else {
+              diffOutput = execSync(`git diff ${process.env.GITHUB_EVENT_BEFORE} ${process.env.GITHUB_SHA}`).toString();
+            }
+          } catch (error) {
+            console.log('Error getting git diff:', error);
+            diffOutput = "Error getting diff";
+          }
+          
+          // Prepare code for review
+          const codeForReview = Object.entries(fileContents)
+            .map(([file, content]) => `File: ${file}\n\n${content}`)
+            .join('\n\n---\n\n');
+          
+          try {
+            // Call OpenAI API for comprehensive code review
+            const response = await axios.post(
+              'https://api.openai.com/v1/chat/completions',
+              {
+                model: "gpt-4-turbo",
+                messages: [
+                  {
+                    role: "system",
+                    content: `You are an expert code guardian that prevents bad code from entering production branches.
+                    Your task is to thoroughly analyze code changes for:
+                    
+                    1. Critical bugs and logical errors
+                    2. Security vulnerabilities (especially injection, auth issues, data exposure)
+                    3. Performance problems (inefficient algorithms, memory leaks)
+                    4. Compliance issues
+                    5. Breaking changes to APIs or interfaces
+                    
+                    Assign a severity score from 1-10 where:
+                    - 1-3: Minor issues (style, small optimizations)
+                    - 4-6: Moderate issues (needs fixing but not critical)
+                    - 7-10: Critical issues (must be blocked/reverted immediately)
+                    
+                    If you detect any critical issues (7+), the commit will be AUTOMATICALLY BLOCKED OR REVERTED.
+                    
+                    Format your response:
+                    {
+                      "severity": {score},
+                      "summary": "{1-2 sentence overview}",
+                      "critical_issues": [
+                        "{detailed explanation of each critical issue}"
+                      ],
+                      "recommendations": [
+                        "{specific fixes for each issue}"
+                      ],
+                      "allow_commit": {true/false}
+                    }
+                    
+                    Be extremely precise. False positives are costly, so only report severity 7+ for genuinely dangerous code.`
+                  },
+                  {
+                    role: "user",
+                    content: `Review these code changes:\n\nGit diff summary:\n${diffOutput.substring(0, 10000)}\n\nFull files:\n${codeForReview.substring(0, 40000)}`
+                  }
+                ],
+                response_format: { type: "json_object" }
+              },
+              {
+                headers: {
+                  'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+            
+            let reviewData;
+            try {
+              // Parse the AI's response
+              const reviewResult = response.data.choices[0].message.content;
+              reviewData = JSON.parse(reviewResult);
+              
+              console.log('AI Review Result:', JSON.stringify(reviewData, null, 2));
+              
+              // Extract key info
+              const severityScore = reviewData.severity || 0;
+              const shouldReject = severityScore >= 7 || reviewData.allow_commit === false;
+              
+              // Set outputs for other steps
+              core.setOutput('severity_score', severityScore);
+              core.setOutput('should_reject', shouldReject);
+              core.setOutput('review_result', JSON.stringify(reviewData));
+              
+              return {
+                shouldReject,
+                reviewResult: reviewData
+              };
+            } catch (parseError) {
+              console.error('Error parsing AI response:', parseError);
+              const rawResponse = response.data.choices[0].message.content;
+              
+              // Fallback parsing for non-JSON responses
+              const severityMatch = rawResponse.match(/severity[^\d]*(\d+)/i);
+              const severityScore = severityMatch ? parseInt(severityMatch[1], 10) : 5;
+              const shouldReject = severityScore >= 7 || rawResponse.includes('BLOCK') || rawResponse.includes('REVERT');
+              
+              core.setOutput('severity_score', severityScore);
+              core.setOutput('should_reject', shouldReject);
+              core.setOutput('review_result', rawResponse);
+              
+              return {
+                shouldReject,
+                reviewResult: rawResponse
+              };
+            }
+          } catch (error) {
+            console.error('Error during AI code review:', error.message);
+            core.setFailed('AI code review failed');
+            return {
+              shouldReject: true, // Fail safe - if review fails, block the commit
+              reviewResult: `Error during review: ${error.message}`
+            };
+          }
+    
+    # PR ACTIONS - Handle pull requests
+    - name: Block PR if critical issues detected
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const result = ${{ steps.code-guardian.outputs.review_result }};
+          const shouldReject = ${{ steps.code-guardian.outputs.should_reject }};
+          const severity = ${{ steps.code-guardian.outputs.severity_score }};
+          
+          let formattedReview;
+          try {
+            const reviewData = JSON.parse(result);
+            formattedReview = `## 🤖 AI Code Guardian Analysis
+            
+            **Severity Score:** ${reviewData.severity}/10 ${severity >= 7 ? '⛔ CRITICAL' : severity >= 4 ? '⚠️ WARNING' : '✅ ACCEPTABLE'}
+            
+            ### Summary
+            ${reviewData.summary}
+            
+            ${reviewData.critical_issues && reviewData.critical_issues.length > 0 ? `### Critical Issues
+            ${reviewData.critical_issues.map(issue => `- ${issue}`).join('\n')}` : ''}
+            
+            ${reviewData.recommendations && reviewData.recommendations.length > 0 ? `### Recommendations
+            ${reviewData.recommendations.map(rec => `- ${rec}`).join('\n')}` : ''}
+            
+            ${shouldReject ? '⛔ **THIS PR IS BLOCKED** - Please address critical issues before merging.' : ''}`;
+          } catch (e) {
+            formattedReview = `## 🤖 AI Code Guardian Analysis
+            
+            **Severity Score:** ${severity}/10 ${severity >= 7 ? '⛔ CRITICAL' : severity >= 4 ? '⚠️ WARNING' : '✅ ACCEPTABLE'}
+            
+            ${result}
+            
+            ${shouldReject ? '⛔ **THIS PR IS BLOCKED** - Please address critical issues before merging.' : ''}`;
+          }
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: formattedReview
+          });
+          
+          if (shouldReject) {
+            // Add "do-not-merge" label to PR
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: ['do-not-merge', 'ai-flagged-issues']
+              });
+            } catch (e) {
+              console.log('Could not add labels - they may not exist');
+            }
+          }
+    
+    # PUSH ACTIONS - Handle direct pushes to protected branches
+    - name: Set up Git for possible reversion
+      if: ${{ github.event_name == 'push' && steps.code-guardian.outputs.should_reject == 'true' }}
+      run: |
+        git config --local user.email "ai-guardian@github.com"
+        git config --local user.name "AI Code Guardian"
+    
+    - name: Create reversion report
+      if: ${{ github.event_name == 'push' && steps.code-guardian.outputs.should_reject == 'true' }}
+      run: |
+        echo "# 🚨 CRITICAL ISSUES DETECTED - AUTOMATIC REVERSION INITIATED" > reversion-report.md
+        echo "" >> reversion-report.md
+        echo "The AI Code Guardian has detected critical issues in commit ${{ github.sha }}" >> reversion-report.md
+        echo "" >> reversion-report.md
+        echo "## AI Analysis" >> reversion-report.md
+        echo '${{ steps.code-guardian.outputs.review_result }}' >> reversion-report.md
+        echo "" >> reversion-report.md
+        echo "## Reverted Changes" >> reversion-report.md
+        echo "This commit has been automatically reverted to protect the codebase." >> reversion-report.md
+    
+    - name: Revert bad commit
+      if: ${{ github.event_name == 'push' && steps.code-guardian.outputs.should_reject == 'true' }}
+      run: |
+        git revert --no-edit ${{ github.sha }}
+        git push origin HEAD:${{ github.ref }}
+        
+    - name: Create issue with details
+      if: ${{ github.event_name == 'push' && steps.code-guardian.outputs.should_reject == 'true' }}
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const reportContent = fs.readFileSync('reversion-report.md', 'utf8');
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 Commit ${context.sha.substring(0, 7)} automatically reverted due to critical issues`,
+            body: reportContent,
+            labels: ['auto-reverted', 'needs-attention']
+          });
+    
+    - name: Fail workflow if issues detected
+      if: ${{ steps.code-guardian.outputs.should_reject == 'true' }}
+      run: |
+        echo "::error::Critical code issues detected - commit rejected"
+        exit 1
