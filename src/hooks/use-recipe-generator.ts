@@ -57,7 +57,8 @@ export const useRecipeGenerator = () => {
         dietary: formData.dietary ? [formData.dietary] : [],
         mainIngredient: formData.title || "Chef's choice",
         servings: formData.servings || 4,
-        maxCalories: formData.maxCalories || undefined
+        // Added maxCalories to the interface, so now it's valid
+        maxCalories: formData.maxCalories
       };
       
       // Show toast about using the new system
@@ -82,7 +83,7 @@ export const useRecipeGenerator = () => {
           // Save the recipe to the database for authenticated users
           const { data: savedRecipe, error: saveError } = await supabase
             .from('recipes')
-            .insert({
+            .insert([{
               title: generatedRecipe.title,
               tagline: generatedRecipe.tagline || generatedRecipe.description,
               cuisine: formData.cuisine,
@@ -95,9 +96,8 @@ export const useRecipeGenerator = () => {
               instructions: generatedRecipe.steps || generatedRecipe.instructions,
               nutrition: generatedRecipe.nutrition as Json,
               user_id: user.id
-            })
-            .select()
-            .single();
+            }])
+            .select();
 
           if (saveError) {
             console.error('Database save error:', saveError);
@@ -111,10 +111,10 @@ export const useRecipeGenerator = () => {
             description: `Recipe "${generatedRecipe.title}" generated and saved successfully.`,
           });
 
-          if (savedRecipe) {
+          if (savedRecipe && savedRecipe.length > 0) {
             // Navigate to the recipe detail page for saved recipes
             await new Promise(resolve => setTimeout(resolve, 1000));
-            navigate(`/recipes/${savedRecipe.id}`);
+            navigate(`/recipes/${savedRecipe[0].id}`);
             return generatedRecipe;
           }
         }

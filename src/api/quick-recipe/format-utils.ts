@@ -127,7 +127,7 @@ export const formatRequestBody = (formData: QuickRecipeFormData) => {
     dietary: dietaryString || "",
     mainIngredient: formData.mainIngredient.trim(),
     servings: formData.servings || 2,
-    maxCalories: formData.maxCalories,
+    maxCalories: formData.maxCalories, // Now properly typed in the interface
     cuisineCategory: cuisineCategory
   };
 };

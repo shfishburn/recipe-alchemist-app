@@ -71,6 +71,7 @@ export interface QuickRecipeFormData {
   cookingMethod?: string;
   difficulty?: string;
   preferences?: string[];
+  maxCalories?: number; // Add the missing maxCalories property
 }
 
 // Re-export Ingredient type for backward compatibility

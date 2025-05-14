@@ -93,6 +93,8 @@ export interface Recipe {
   instructions: string[];
   prep_time_min?: number;
   cook_time_min?: number;
+  prepTime?: number; // Add for compatibility with QuickRecipe
+  cookTime?: number; // Add for compatibility with QuickRecipe
   servings?: number;
   image_url?: string;
   cuisine?: string;

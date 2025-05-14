@@ -3,8 +3,8 @@ import React from 'react';
 import { Ingredient } from '@/types/quick-recipe';
 
 interface IngredientListProps {
-  ingredients: Ingredient[];
-  onChange?: (ingredients: Ingredient[]) => void;
+  ingredients: Ingredient[] | string[];
+  onChange?: (ingredients: Ingredient[] | string[]) => void;
 }
 
 export const IngredientList: React.FC<IngredientListProps> = ({ ingredients, onChange }) => {
@@ -13,24 +13,30 @@ export const IngredientList: React.FC<IngredientListProps> = ({ ingredients, onC
       <h4 className="text-sm font-medium">Ingredients</h4>
       <ul className="list-disc pl-5 space-y-1">
         {ingredients.map((ingredient, index) => {
-          // Handle string ingredients or object ingredients
+          // Handle string ingredients
           if (typeof ingredient === 'string') {
             return <li key={index} className="text-sm">{ingredient}</li>;
           }
           
           // Handle object ingredients
-          const displayName = typeof ingredient.item === 'string' 
-            ? ingredient.item 
-            : typeof ingredient.item === 'object' && ingredient.item !== null
-              ? (ingredient.item as any).name || 'Ingredient'
-              : 'Ingredient';
-            
-          return (
-            <li key={index} className="text-sm">
-              {ingredient.qty || ''} {ingredient.unit || ''} {displayName}
-              {ingredient.notes && <span className="text-muted-foreground ml-1">({ingredient.notes})</span>}
-            </li>
-          );
+          if (typeof ingredient === 'object' && ingredient !== null) {
+            const item = ingredient.item;
+            const displayName = typeof item === 'string' 
+              ? item 
+              : (item && typeof item === 'object' && (item as any).name) 
+                ? (item as any).name 
+                : 'Ingredient';
+              
+            return (
+              <li key={index} className="text-sm">
+                {ingredient.qty || ''} {ingredient.unit || ''} {displayName}
+                {ingredient.notes && <span className="text-muted-foreground ml-1">({ingredient.notes})</span>}
+              </li>
+            );
+          }
+          
+          // Fallback for unexpected types
+          return <li key={index} className="text-sm">Unknown ingredient</li>;
         })}
       </ul>
     </div>

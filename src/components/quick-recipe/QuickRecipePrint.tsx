@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
@@ -62,6 +63,15 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
   // Convert ingredients to expected format for PrintRecipe
   const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
 
+  // Convert string times to numbers
+  const prepTimeNumber = typeof recipe.prepTime === 'string' 
+    ? parseInt(recipe.prepTime, 10) || 0 
+    : recipe.prepTime || 0;
+    
+  const cookTimeNumber = typeof recipe.cookTime === 'string' 
+    ? parseInt(recipe.cookTime, 10) || 0 
+    : recipe.cookTime || 0;
+
   return (
     <>
       {/* Print Recipe Dialog */}
@@ -72,8 +82,8 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           description: recipe.description,
           ingredients: formattedIngredients,
           instructions: recipe.steps,
-          prepTime: typeof recipe.prepTime === 'string' ? parseInt(recipe.prepTime, 10) || 0 : recipe.prepTime || 0,
-          cookTime: typeof recipe.cookTime === 'string' ? parseInt(recipe.cookTime, 10) || 0 : recipe.cookTime || 0,
+          prep_time_min: prepTimeNumber,
+          cook_time_min: cookTimeNumber,
           nutrition: recipe.nutritionHighlight ? {
             // Basic minimum valid nutrition object
             calories: 0,

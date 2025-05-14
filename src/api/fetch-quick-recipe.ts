@@ -56,6 +56,12 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     return nutritionData;
   };
 
+  // Ensure that we have a steps array, derived from instructions if needed
+  const stepsArray = parseStringArray(data.instructions || data.steps || []);
+  
+  // Ensure we have a highlights array
+  const highlightsArray = parseStringArray(data.highlights || []);
+
   // Transform to ensure compatibility
   const recipe: QuickRecipe = {
     title: data.title,
@@ -64,17 +70,20 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     ingredients: Array.isArray(data.ingredients) ? data.ingredients : 
                 (typeof data.ingredients === 'string' ? JSON.parse(data.ingredients) : []),
     instructions: parseStringArray(data.instructions),
-    steps: parseStringArray(data.instructions || data.steps || []), // Ensure steps is always set
+    steps: stepsArray, // Set steps properly
     servings: data.servings,
     prep_time_min: data.prep_time_min,
     cook_time_min: data.cook_time_min,
+    prepTime: data.prep_time_min,
+    cookTime: data.cook_time_min,
     nutrition: parseNutrition(data.nutrition),
     science_notes: parseStringArray(data.science_notes),
     cuisine: data.cuisine,
     dietary: parseStringArray(data.dietary),
     flavor_tags: parseStringArray(data.flavor_tags),
-    highlights: parseStringArray(data.highlights || []), // Default to empty array if missing
-    id: data.id
+    highlights: highlightsArray, // Set highlights properly
+    id: data.id,
+    user_id: data.user_id // Include the user_id
   };
 
   return recipe;
