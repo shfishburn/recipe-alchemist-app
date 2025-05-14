@@ -1,230 +1,165 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
-import { generateQuickRecipe } from '@/hooks/use-quick-recipe';
-import { MaterialLoadingAnimation } from '@/components/quick-recipe/loading/MaterialLoadingAnimation';
+import { generateQuickRecipe } from '@/api/generate-quick-recipe';
 import { PageContainer } from '@/components/ui/containers';
-import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
+
+const messages = [
+  "Analyzing your ingredients...",
+  "Gathering cooking techniques...",
+  "Crafting the perfect recipe...",
+  "Adding a dash of magic...",
+  "Finalizing your culinary masterpiece..."
+];
 
 const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [cancelClicked, setCancelClicked] = useState(false);
-  const [timeoutWarning, setTimeoutWarning] = useState(false);
-  
-  // Get store state and actions
+  const { session } = useAuth();
   const { 
-    setRecipe, 
-    setError, 
+    isLoading, 
     setLoading, 
+    setError, 
+    setRecipe, 
     formData, 
-    loadingState,
+    reset,
     setHasTimeoutError,
+    loadingState,
     updateLoadingState
   } = useQuickRecipeStore();
   
-  // Get navigation state
-  const fromQuickRecipePage = location.state?.fromQuickRecipePage === true;
-  const formDataFromState = location.state?.formData;
-  const isRetrying = location.state?.isRetrying === true;
+  // Ensure we have form data, either from state or session
+  const hasFormData = !!formData || !!location.state?.formData;
   
+  // If no form data, redirect to home page
   useEffect(() => {
-    // First, ensure we're in loading state
-    setLoading(true);
-    
-    console.log("LoadingPage mounted with state:", {
-      formData,
-      formDataFromState,
-      fromQuickRecipePage,
-      isRetrying
-    });
-    
-    // Determine which form data to use - prioritize from state if available
-    const effectiveFormData = formDataFromState || formData;
-    
-    if (!effectiveFormData) {
-      console.error("No form data available for recipe generation");
-      navigate('/', { 
-        replace: true,
-        state: { error: "Missing recipe information. Please try again." }
-      });
-      return;
+    if (!hasFormData && !session) {
+      console.warn("No form data available, redirecting to home");
+      navigate('/');
     }
-
-    // Start generating the recipe
-    const generateRecipe = async () => {
-      try {
-        // Show timeout warning after 45 seconds
-        const timeoutWarningTimer = setTimeout(() => {
-          setTimeoutWarning(true);
-          updateLoadingState({
-            ...loadingState,
-            estimatedTimeRemaining: 30 // Estimate 30 more seconds
-          });
-        }, 45000);
-        
-        // Simulate step progress
-        const progressInterval = setInterval(() => {
-          updateLoadingState(prevState => {
-            // Calculate new step and progress
-            const newStep = Math.min(prevState.step + 1, 3);
-            const newProgress = Math.min(prevState.percentComplete + 5, 95);
+  }, [hasFormData, navigate, session]);
+  
+  // If not loading, redirect back to home page
+  useEffect(() => {
+    if (!isLoading) {
+      console.warn("Not loading, redirecting to home");
+      navigate('/');
+    }
+  }, [isLoading, navigate]);
+  
+  // Start recipe generation when component mounts and we have form data
+  useEffect(() => {
+    const generateRecipeOnMount = async () => {
+      if (formData) {
+        try {
+          console.log("LoadingPage - Starting recipe generation with data:", formData);
+          
+          // Reset timeout error
+          setHasTimeoutError(false);
+          
+          // Start the recipe generation
+          const recipe = await generateQuickRecipe(formData);
+          
+          // If recipe generation was successful, set the recipe and navigate
+          if (recipe && !recipe.isError) {
+            console.log("LoadingPage - Recipe generation successful, navigating to recipe preview");
+            setRecipe(recipe);
             
-            // Decrease estimated time as progress increases
-            const newTimeRemaining = Math.max(
-              5,
-              prevState.estimatedTimeRemaining ? 
-                Math.round(prevState.estimatedTimeRemaining * 0.8) : 
-                30
-            );
-            
-            return {
-              step: newStep,
-              stepDescription: getStepDescription(newStep),
-              percentComplete: newProgress,
-              estimatedTimeRemaining: newTimeRemaining
-            };
-          });
-        }, 2000);
-        
-        // Generate the recipe
-        console.log("Starting recipe generation with data:", effectiveFormData);
-        const generatedRecipe = await generateQuickRecipe(effectiveFormData);
-        
-        // Clear timers
-        clearInterval(progressInterval);
-        clearTimeout(timeoutWarningTimer);
-        
-        console.log("Recipe generated successfully:", generatedRecipe);
-        
-        // Check if we have an error in the recipe
-        if (generatedRecipe && generatedRecipe.isError) {
-          console.error("Recipe generation returned error:", generatedRecipe.error_message);
-          throw new Error(generatedRecipe.error_message || "Error generating recipe");
-        }
-        
-        // Set the recipe in the store
-        setRecipe(generatedRecipe);
-        
-        // Navigate to the recipe preview - use replace to prevent back navigation to loading
-        navigate('/recipe-preview', { replace: true });
-      } catch (error: any) {
-        console.error("Error generating recipe:", error);
-        
-        // Specific timeout error handling
-        let errorMessage = error.message || "Failed to generate recipe";
-        let isTimeout = errorMessage.toLowerCase().includes('timeout');
-        
-        if (isTimeout) {
-          setHasTimeoutError(true);
-          errorMessage = "Recipe generation timed out. Please try again with simpler ingredients.";
-        }
-        
-        setError(errorMessage);
-        
-        // Navigate back to home with error and form data for retry
-        navigate('/', { 
-          replace: true,
-          state: { 
-            error: errorMessage,
-            formData: effectiveFormData, // Keep form data for retry
-            hasTimeoutError: isTimeout
+            // Navigate to recipe preview with ID
+            navigate('/recipe-preview', { 
+              state: { 
+                recipeData: recipe,
+                timestamp: Date.now()
+              },
+              replace: true
+            });
+          } else {
+            // If there was an error, set the error and navigate back
+            console.error("LoadingPage - Recipe generation failed:", recipe?.error_message);
+            setError(recipe?.error_message || "Failed to generate recipe. Please try again.");
+            navigate('/', { 
+              state: { 
+                error: recipe?.error_message || "Failed to generate recipe. Please try again.",
+                formData: formData // Keep the form data on error
+              },
+              replace: true
+            });
           }
-        });
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : "Failed to generate recipe. Please try again.";
+          console.error("LoadingPage - Error during recipe generation:", e);
+          setError(message);
+          setLoading(false);
+          
+          // Navigate back to home page with error but retain form data
+          navigate('/', {
+            state: { 
+              error: message,
+              formData: formData // Keep the form data on error
+            },
+            replace: true
+          });
+        }
+      } else {
+        console.warn("LoadingPage - No form data available, resetting and redirecting to home");
+        reset();
+        navigate('/');
       }
     };
-
-    // Only start generation if not already cancelled
-    if (!cancelClicked) {
-      generateRecipe();
+    
+    // Only start generation if we're actually loading and have form data
+    if (isLoading && formData) {
+      generateRecipeOnMount();
     }
-    
-    return () => {
-      // Cleanup function
-      console.log("LoadingPage unmounting");
-    };
-  }, []);
+  }, [isLoading, setLoading, setError, setRecipe, formData, navigate, reset, setHasTimeoutError, updateLoadingState]);
   
-  // Get description based on step number
-  const getStepDescription = (step: number): string => {
-    switch (step) {
-      case 0:
-        return "Analyzing your ingredients...";
-      case 1:
-        return "Crafting the perfect recipe for you...";
-      case 2:
-        return "Calculating nutrition information...";
-      case 3:
-        return "Adding final touches to your recipe...";
-      default:
-        return "Processing your request...";
+  // Simulate loading steps with updated loading state
+  useEffect(() => {
+    if (isLoading) {
+      const totalSteps = messages.length;
+      const increment = 100 / totalSteps;
+      let currentStep = 0;
+      
+      const interval = setInterval(() => {
+        if (currentStep < totalSteps) {
+          const nextStep = currentStep;
+          const decrementTime = Math.floor(Math.random() * 5); // Random decrement between 0-5 seconds
+          
+          // Update loading state with new values
+          updateLoadingState({
+            step: loadingState.step + 1,
+            stepDescription: messages[nextStep] || "Processing your recipe...",
+            percentComplete: Math.min(100, loadingState.percentComplete + increment),
+            estimatedTimeRemaining: loadingState.estimatedTimeRemaining - decrementTime
+          });
+          
+          currentStep++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 5000); // Simulate each step taking 5 seconds
+      
+      return () => clearInterval(interval);
     }
-  };
-  
-  const handleCancel = () => {
-    setCancelClicked(true);
-    setLoading(false);
-    
-    toast({
-      title: "Recipe generation cancelled",
-      description: "You can try again with different ingredients"
-    });
-    
-    // Navigate back to home
-    navigate('/', { 
-      replace: true,
-      state: { cancelled: true }
-    });
-  };
+  }, [isLoading, updateLoadingState, loadingState]);
   
   return (
     <PageContainer>
-      <div className={cn(
-        "flex flex-col items-center justify-center min-h-[70vh] w-full p-6",
-        "animate-fadeIn transition-all duration-500 ease-in-out"
-      )}>
-        {/* Material card container */}
-        <div className={cn(
-          "w-full max-w-md rounded-xl overflow-hidden",
-          "bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm",
-          "border border-gray-100 dark:border-gray-800",
-          "shadow-elevation-1 p-8"
-        )}>
-          <div className="text-center mb-6">
-            <h1 className="text-xl font-medium mb-2">Creating Your Recipe</h1>
-            <p className="text-muted-foreground">
-              {loadingState.stepDescription}
-            </p>
-          </div>
-          
-          <MaterialLoadingAnimation 
-            progress={loadingState.percentComplete}
-            showChefTip={true}
-            variant="secondary"
-            timeoutWarning={timeoutWarning}
-            estimatedTimeRemaining={loadingState.estimatedTimeRemaining}
-          />
-          
-          <div className="mt-8 flex justify-center">
-            <Button 
-              variant="outline" 
-              onClick={handleCancel}
-              className={cn(
-                "px-6 py-2 h-auto",
-                "text-gray-600 dark:text-gray-300",
-                "hover:bg-gray-100 dark:hover:bg-gray-800",
-                "transition-all duration-300"
-              )}
-              aria-label="Cancel recipe generation"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Card className="w-full max-w-md mx-auto bg-white/50 backdrop-blur-sm rounded-xl shadow-md animate-fadeIn">
+        <CardContent className="space-y-4 p-6">
+          <h2 className="text-2xl font-semibold text-center">Creating Your Recipe</h2>
+          <p className="text-muted-foreground text-sm text-center">
+            {loadingState.stepDescription}
+          </p>
+          <Progress value={loadingState.percentComplete} className="h-2" />
+          <p className="text-muted-foreground text-sm text-center">
+            Estimated time remaining: {loadingState.estimatedTimeRemaining} seconds
+          </p>
+        </CardContent>
+      </Card>
     </PageContainer>
   );
 };

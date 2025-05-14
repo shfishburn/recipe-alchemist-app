@@ -13,9 +13,17 @@ export const IngredientList: React.FC<IngredientListProps> = ({ ingredients, onC
       <h4 className="text-sm font-medium">Ingredients</h4>
       <ul className="list-disc pl-5 space-y-1">
         {ingredients.map((ingredient, index) => {
+          // Handle string ingredients or object ingredients
+          if (typeof ingredient === 'string') {
+            return <li key={index} className="text-sm">{ingredient}</li>;
+          }
+          
+          // Handle object ingredients
           const displayName = typeof ingredient.item === 'string' 
             ? ingredient.item 
-            : ingredient.item.name || 'Ingredient';
+            : typeof ingredient.item === 'object' && ingredient.item !== null
+              ? (ingredient.item as any).name || 'Ingredient'
+              : 'Ingredient';
             
           return (
             <li key={index} className="text-sm">

@@ -1,5 +1,5 @@
 
-import { QuickRecipe } from '@/types/quick-recipe';
+import { QuickRecipe, QuickRecipeIngredient } from '@/types/quick-recipe';
 import { formatIngredient } from '@/utils/ingredient-format';
 import { ShoppingItem, ShoppingItemsByDepartment } from './types';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,7 +72,7 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
           : null;
           
       // Create properly structured shopping item that preserves all ingredient data
-      return {
+      const shoppingItem: ShoppingItem = {
         // Format the text to include the item name
         text: typeof ingredient === 'string' 
           ? capitalizedName 
@@ -81,13 +81,17 @@ export const createBasicShoppingItems = (recipe: QuickRecipe): ShoppingItem[] =>
         checked: false,
         department: getDepartmentForIngredient(capitalizedName),
         // Save the complete original ingredient data to maintain structured information
-        ingredientData: ingredient,
+        ingredientData: typeof ingredient === 'string' 
+          ? { item: ingredient } as QuickRecipeIngredient
+          : ingredient,
         // Extract specific shopping fields for easier access
-        quantity: quantity, // Use filtered quantity that's never zero
-        unit: typeof ingredient !== 'string' ? (ingredient.shop_size_unit || ingredient.unit) : '',
+        quantity: quantity !== null ? quantity : undefined, // Use filtered quantity that's never zero
+        unit: typeof ingredient !== 'string' ? (ingredient.shop_size_unit || ingredient.unit || '') : '',
         item: capitalizedName,
         notes: typeof ingredient !== 'string' ? (ingredient.notes || '') : ''
       };
+      
+      return shoppingItem;
     });
   
   // Add extra items for cooking oil, salt, and pepper if not already in the list

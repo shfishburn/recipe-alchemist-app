@@ -35,6 +35,7 @@ export interface QuickRecipe {
   science_notes?: string[];
   flavor_tags?: string[];
   highlights?: string[]; // Adding this missing property
+  user_id?: string; // Adding this to fix type error
   nutrition?: {
     calories?: number;
     protein?: number;
@@ -57,6 +58,19 @@ export interface QuickRecipe {
     data_quality?: string;
     calorie_check_pass?: boolean;
   };
+}
+
+// Add QuickRecipeFormData interface which was missing
+export interface QuickRecipeFormData {
+  mainIngredient: string;
+  cuisine?: string | string[];
+  dietary?: string | string[];
+  servings: number;
+  additionalIngredients?: string[];
+  mealType?: string;
+  cookingMethod?: string;
+  difficulty?: string;
+  preferences?: string[];
 }
 
 // Re-export Ingredient type for backward compatibility

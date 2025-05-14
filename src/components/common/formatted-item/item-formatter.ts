@@ -52,9 +52,9 @@ export function formatItem(
       // Extract the item name from the ingredient
       nameText = typeof item.item === 'string' 
         ? item.item 
-        : typeof item.item === 'object' && item.item && 'item' in item.item
-          ? String(item.item.item)
-          : String(item.item);
+        : typeof item.item === 'object' && item.item && item.item !== null
+          ? String((item.item as any).item || (item.item as any).name || 'Ingredient')
+          : 'Ingredient';
           
       // For recipe ingredients without pre-formatted text, construct it
       if (!formattedText) {

@@ -64,7 +64,7 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     ingredients: Array.isArray(data.ingredients) ? data.ingredients : 
                 (typeof data.ingredients === 'string' ? JSON.parse(data.ingredients) : []),
     instructions: parseStringArray(data.instructions),
-    steps: parseStringArray(data.instructions || data.steps), // Ensure both properties are set for compatibility
+    steps: parseStringArray(data.instructions || data.steps || []), // Ensure steps is always set
     servings: data.servings,
     prep_time_min: data.prep_time_min,
     cook_time_min: data.cook_time_min,
@@ -73,8 +73,7 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     cuisine: data.cuisine,
     dietary: parseStringArray(data.dietary),
     flavor_tags: parseStringArray(data.flavor_tags),
-    highlights: parseStringArray(data.highlights),
-    user_id: data.user_id,
+    highlights: parseStringArray(data.highlights || []), // Default to empty array if missing
     id: data.id
   };
 

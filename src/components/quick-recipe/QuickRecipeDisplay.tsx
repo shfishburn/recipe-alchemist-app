@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Recipe } from '@/types/quick-recipe';
 import { RecipeIngredients } from './card/RecipeIngredients';
@@ -77,8 +76,8 @@ export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({
           />
           
           <RecipeTimeInfo 
-            prepTime={recipe.prep_time_min || recipe.prepTime || 0}
-            cookTime={recipe.cook_time_min || recipe.cookTime || 0}
+            prepTime={typeof recipe.prepTime === 'string' ? parseInt(recipe.prepTime, 10) || 0 : recipe.prepTime || 0}
+            cookTime={typeof recipe.cookTime === 'string' ? parseInt(recipe.cookTime, 10) || 0 : recipe.cookTime || 0}
             servings={recipe.servings || 0}
           />
           

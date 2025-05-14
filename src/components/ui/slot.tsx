@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 export interface SlotProps extends React.HTMLAttributes<HTMLElement> {
@@ -18,15 +17,15 @@ export const Slot = React.forwardRef<HTMLElement, SlotProps>(
       // Properly type the children as ReactElement to avoid spreading error
       const child = children as React.ReactElement;
       
-      // Get the child's ref if it exists
-      const childRef = 'ref' in child ? child.ref : undefined;
+      // Get the child's ref if it exists - with proper type handling
+      const childRef = child.ref ? child.ref : null;
       
       return React.cloneElement(child, {
         ...props,
         ...child.props,
         // Merge refs if the child has a ref
         ref: childRef
-          ? mergeRefs([ref, childRef])
+          ? mergeRefs([ref, childRef as React.Ref<any>])
           : ref,
       });
     }

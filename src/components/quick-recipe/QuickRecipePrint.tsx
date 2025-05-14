@@ -72,8 +72,8 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           description: recipe.description,
           ingredients: formattedIngredients,
           instructions: recipe.steps,
-          prep_time_min: recipe.prepTime,
-          cook_time_min: recipe.cookTime,
+          prepTime: typeof recipe.prepTime === 'string' ? parseInt(recipe.prepTime, 10) || 0 : recipe.prepTime || 0,
+          cookTime: typeof recipe.cookTime === 'string' ? parseInt(recipe.cookTime, 10) || 0 : recipe.cookTime || 0,
           nutrition: recipe.nutritionHighlight ? {
             // Basic minimum valid nutrition object
             calories: 0,

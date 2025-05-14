@@ -1,4 +1,5 @@
 
+// Update import to get QuickRecipeFormData from types
 import { QuickRecipeFormData } from '@/types/quick-recipe';
 
 // Functions to format and process form data for API requests
