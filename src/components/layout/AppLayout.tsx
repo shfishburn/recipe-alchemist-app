@@ -13,6 +13,7 @@ import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation, useNavigate } from "react-router-dom";
 import '@/styles/loading.css';
+import '@/styles/material-animations.css'; // Import Material Design animations
 
 // Updated utility function to prefetch assets that actually exist in production
 const prefetchAssets = (urls: string[]) => {
@@ -79,7 +80,7 @@ export const AppLayout = () => {
       <React.Suspense fallback={
         <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center overflow-x-hidden">
           <div className="loading-pulse-ring w-20 h-20 border-4 border-gray-200"></div>
-          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-green border-t-transparent animate-spin" 
+          <div className="loading-pulse-ring w-16 h-16 border-4 border-primary border-t-transparent animate-spin" 
                style={{ animationDelay: '-0.5s' }}></div>
         </div>
       }>
@@ -94,7 +95,7 @@ export const AppLayout = () => {
         <DefaultSeo />
         <LoadingIndicator />
         <Navbar />
-        <main className="flex-1 mt-16 pt-4">
+        <main className="flex-1 mt-16 pt-4 material-fade-in">
           <PageTransition>
             <Outlet />
           </PageTransition>

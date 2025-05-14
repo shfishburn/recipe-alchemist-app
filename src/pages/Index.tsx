@@ -5,6 +5,8 @@ import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import '@/styles/touch-optimizations.css';
 import { useAuth } from '@/hooks/use-auth';
 import { PageContainer } from '@/components/ui/containers';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 // Lazy-loaded landing components
 const UserDashboard = lazy(() => import('@/components/landing/UserDashboard').then(m => ({ default: m.UserDashboard })));
@@ -43,6 +45,25 @@ const Index: React.FC = () => {
             {session ? <UserDashboard /> : <MarketingHomepage />}
           </Suspense>
         )}
+      </div>
+      
+      {/* Material Design Showcase Banner */}
+      <div className="container-page mt-8 mb-12">
+        <div className="bg-secondary/10 rounded-lg p-6 shadow-elevation-1 material-scale-in">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="material-headline-small mb-2">Explore Our Material Design</h3>
+              <p className="material-body-medium text-muted-foreground">
+                Check out our new Material Design components and styling in the showcase.
+              </p>
+            </div>
+            <Link to="/material-showcase">
+              <Button variant="filled" className="shadow-elevation-1 material-elevation-transition">
+                View Showcase
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
