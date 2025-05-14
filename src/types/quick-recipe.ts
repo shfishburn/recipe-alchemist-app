@@ -1,66 +1,42 @@
-
-export interface Ingredient {
-  // Metric measurements
+export interface QuickRecipeIngredient {
+  item: string;
   qty_metric?: number;
   unit_metric?: string;
-  // Imperial measurements
   qty_imperial?: number;
   unit_imperial?: string;
-  // Original measurement (backwards compatibility)
-  qty?: number;
-  unit?: string;
-  // Common fields
-  item: string | Record<string, any>;
-  notes?: string;
-  shop_size_qty?: number;
-  shop_size_unit?: string;
 }
 
-// Rename/alias QuickRecipe as Recipe for backward compatibility
-export type Recipe = QuickRecipe;
-
 export interface QuickRecipe {
+  id?: string;
   title: string;
-  tagline?: string;
   description?: string;
-  ingredients: Ingredient[];
-  steps?: string[];
+  ingredients: QuickRecipeIngredient[] | string[];
+  steps: string[];
   instructions?: string[];
   servings: number;
-  prep_time_min?: number;
-  cook_time_min?: number;
-  prepTime?: number;
-  cookTime?: number;
-  nutrition?: any;
-  science_notes?: string[];
-  nutritionHighlight?: string;
-  cookingTip?: string;
-  cuisine?: string[] | string;
-  dietary?: string[] | string;
-  flavor_tags?: string[];
-  highlights?: string[]; // Added for RecipeHighlights component
-  user_id?: string;
-  id?: string;
-  slug?: string;  // Added slug property
-  // Error-related properties
-  error?: string;
+  prepTime?: string;
+  cookTime?: string;
+  totalTime?: string;
+  cuisine?: string;
+  dietary?: string[];
   error_message?: string;
   isError?: boolean;
+  nutrition?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  };
 }
 
 export interface QuickRecipeFormData {
-  cuisine: string[] | string;
-  dietary: string[] | string;
-  mainIngredient: string;
-  servings: number;
+  mainIngredient?: string;
+  ingredients?: string;
+  cuisine?: string | string[];
+  dietary?: string | string[];
+  servings?: number;
   maxCalories?: number;
-}
-
-export interface QuickRecipeOptions {
-  cuisine: string[] | string;
-  dietary: string[] | string;
-  flavorTags: string[];
-  servings: number;
-  maxCalories?: number;
-  recipeRequest?: string;
+  url?: string;
+  imgUrl?: string;
+  imageFile?: File | null;
 }

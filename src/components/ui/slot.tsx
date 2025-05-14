@@ -14,14 +14,16 @@ export const Slot = React.forwardRef<HTMLElement, SlotProps>(
 
     // If there's only one child and it's a valid element, clone it and merge the props
     if (React.Children.count(children) === 1 && React.isValidElement(children)) {
-      return React.cloneElement(children, {
+      // Properly type the children as ReactElement to avoid spreading error
+      const child = children as React.ReactElement;
+      return React.cloneElement(child, {
         ...props,
-        ...children.props,
+        ...child.props,
         // Merge refs if the child has a ref
-        ref: (children as any).ref
-          ? mergeRefs([ref, (children as any).ref])
+        ref: child.ref
+          ? mergeRefs([ref, child.ref])
           : ref,
-      })
+      });
     }
 
     // Otherwise, render a fragment

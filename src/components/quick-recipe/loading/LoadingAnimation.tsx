@@ -1,31 +1,32 @@
 
 import React from 'react';
-import { RecipeLoadingAnimation } from './RecipeLoadingAnimation';
+import { MaterialLoadingAnimation } from './MaterialLoadingAnimation';
+import { cn } from '@/lib/utils';
 
 interface LoadingAnimationProps {
   step: number;
   stepDescription: string;
   percentComplete: number;
+  estimatedTimeRemaining?: number;
 }
 
-export function LoadingAnimation({ step, stepDescription, percentComplete }: LoadingAnimationProps) {
+export function LoadingAnimation({ 
+  step, 
+  stepDescription, 
+  percentComplete,
+  estimatedTimeRemaining 
+}: LoadingAnimationProps) {
   return (
     <div className="flex flex-col items-center justify-center space-y-8 w-full">
-      <RecipeLoadingAnimation progress={percentComplete} showChefTip={true} />
+      <MaterialLoadingAnimation 
+        progress={percentComplete} 
+        showChefTip={true}
+        estimatedTimeRemaining={estimatedTimeRemaining}
+        timeoutWarning={percentComplete > 85 && step >= 2} // Show timeout warning in later stages if taking long
+      />
       
       <div className="text-center space-y-3 max-w-md">
         <h2 className="text-xl font-semibold tracking-tight">{stepDescription}</h2>
-        
-        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-          <div 
-            className="bg-gradient-to-r from-recipe-blue to-recipe-green h-2.5 rounded-full transition-all duration-300 animate-progress-pulse"
-            style={{ width: `${percentComplete}%` }}
-            role="progressbar" 
-            aria-valuenow={percentComplete} 
-            aria-valuemin={0} 
-            aria-valuemax={100}
-          />
-        </div>
         
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {percentComplete < 50 ? 'This may take a minute...' : 'Almost there...'}

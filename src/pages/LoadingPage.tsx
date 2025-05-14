@@ -13,6 +13,7 @@ const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cancelClicked, setCancelClicked] = useState(false);
+  const [timeoutWarning, setTimeoutWarning] = useState(false);
   
   // Get store state and actions
   const { 
@@ -56,12 +57,36 @@ const LoadingPage: React.FC = () => {
     // Start generating the recipe
     const generateRecipe = async () => {
       try {
+        // Show timeout warning after 45 seconds
+        const timeoutWarningTimer = setTimeout(() => {
+          setTimeoutWarning(true);
+          updateLoadingState({
+            ...loadingState,
+            estimatedTimeRemaining: 30 // Estimate 30 more seconds
+          });
+        }, 45000);
+        
         // Simulate step progress
         const progressInterval = setInterval(() => {
-          updateLoadingState({
-            step: Math.min(loadingState.step + 1, 3),
-            stepDescription: getStepDescription(Math.min(loadingState.step + 1, 3)),
-            percentComplete: Math.min(loadingState.percentComplete + 5, 95)
+          updateLoadingState(prevState => {
+            // Calculate new step and progress
+            const newStep = Math.min(prevState.step + 1, 3);
+            const newProgress = Math.min(prevState.percentComplete + 5, 95);
+            
+            // Decrease estimated time as progress increases
+            const newTimeRemaining = Math.max(
+              5,
+              prevState.estimatedTimeRemaining ? 
+                Math.round(prevState.estimatedTimeRemaining * 0.8) : 
+                30
+            );
+            
+            return {
+              step: newStep,
+              stepDescription: getStepDescription(newStep),
+              percentComplete: newProgress,
+              estimatedTimeRemaining: newTimeRemaining
+            };
           });
         }, 2000);
         
@@ -69,7 +94,9 @@ const LoadingPage: React.FC = () => {
         console.log("Starting recipe generation with data:", effectiveFormData);
         const generatedRecipe = await generateQuickRecipe(effectiveFormData);
         
+        // Clear timers
         clearInterval(progressInterval);
+        clearTimeout(timeoutWarningTimer);
         
         console.log("Recipe generated successfully:", generatedRecipe);
         
@@ -177,6 +204,8 @@ const LoadingPage: React.FC = () => {
             progress={loadingState.percentComplete}
             showChefTip={true}
             variant="secondary"
+            timeoutWarning={timeoutWarning}
+            estimatedTimeRemaining={loadingState.estimatedTimeRemaining}
           />
           
           <div className="mt-8 flex justify-center">
@@ -189,6 +218,7 @@ const LoadingPage: React.FC = () => {
                 "hover:bg-gray-100 dark:hover:bg-gray-800",
                 "transition-all duration-300"
               )}
+              aria-label="Cancel recipe generation"
             >
               Cancel
             </Button>

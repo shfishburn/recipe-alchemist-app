@@ -1,206 +1,129 @@
 
 import React from 'react';
-import { Utensils, ChefHat } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { ChefHat } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import '@/styles/loading.css';
+
+interface ChefTipProps {
+  variant?: 'primary' | 'secondary';
+}
+
+const ChefTip = ({ variant = 'primary' }: ChefTipProps) => (
+  <div className={cn(
+    "mt-6 p-4 rounded-lg text-sm",
+    variant === 'primary' 
+      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300" 
+      : "bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300"
+  )}>
+    <div className="flex items-start gap-3">
+      <ChefHat className="h-5 w-5 text-recipe-green flex-shrink-0 mt-0.5" />
+      <p>
+        <span className="font-medium block mb-1">Chef's Tip</span>
+        Great recipes take time to prepare. Your culinary creation is being carefully crafted with precision.
+      </p>
+    </div>
+  </div>
+);
 
 interface MaterialLoadingAnimationProps {
   progress: number;
   showChefTip?: boolean;
   variant?: 'primary' | 'secondary';
+  timeoutWarning?: boolean;
+  estimatedTimeRemaining?: number;
 }
 
-export function MaterialLoadingAnimation({ 
-  progress, 
+export const MaterialLoadingAnimation = ({
+  progress,
   showChefTip = false,
-  variant = 'primary'
-}: MaterialLoadingAnimationProps) {
-  // Determine animation stages based on progress
-  const isStirring = progress > 10;
-  const isSteaming = progress > 20;
-  const isNearlyDone = progress > 85;
-
-  // Chef tips with Material Design typography
-  const chefTips = [
-    "The best flavors take time to develop.",
-    "Patience is the secret ingredient in every great recipe.",
-    "Good things are worth waiting for!",
-    "We're crafting the perfect recipe for you."
-  ];
-  
-  // State for chef tips rotation
-  const [tipIndex, setTipIndex] = React.useState(0);
-  
-  // Rotate chef tips every 5 seconds
-  React.useEffect(() => {
-    if (!showChefTip) return;
-    
-    const tipInterval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % chefTips.length);
-    }, 5000);
-    
-    return () => clearInterval(tipInterval);
-  }, [showChefTip]);
-  
-  // Create deterministic bubbles
-  const bubbles = Array.from({ length: 6 }).map((_, index) => {
-    const size = 4 + (index % 3) * 2;
-    const leftPosition = 30 + (index % 4) * 10;
-    const delay = (index % 3) * 0.2;
-    const duration = 1.5 + (index % 3) * 0.2;
-    
-    return (
-      <div
-        key={`bubble-${index}`}
-        className="absolute rounded-full bg-white/60 hw-accelerated"
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          left: `${leftPosition}%`,
-          bottom: '32%',
-          animation: `bubble ${duration}s ease-in infinite`,
-          animationDelay: `${delay}s`,
-          opacity: progress > 30 ? 0.7 : 0,
-          transition: 'opacity 0.3s ease-in-out'
-        }}
-        aria-hidden="true"
-      />
-    );
-  });
+  variant = 'primary',
+  timeoutWarning = false,
+  estimatedTimeRemaining
+}: MaterialLoadingAnimationProps) => {
+  // Format progress value for display
+  const formattedProgress = `${Math.round(progress)}%`;
 
   return (
-    <div className="relative flex flex-col items-center hw-accelerated" aria-hidden="true">
-      {/* Main animation container */}
-      <div className="relative mb-4">
-        {/* Cooking pot SVG - now with Material Design styling */}
-        <svg 
-          width="96" 
-          height="96" 
-          viewBox="0 0 96 96" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-          role="img"
-          className={cn(
-            "relative z-10 transition-transform",
-            isStirring ? "animate-cooking-pot" : "",
-            "drop-shadow-md"
-          )}
-        >
-          {/* Pot body - Material Design elevation */}
-          <path 
-            d="M72 40H24V72C24 75.3137 26.6863 78 30 78H66C69.3137 78 72 75.3137 72 72V40Z" 
-            fill={variant === 'primary' ? "#ECEFF1" : "#D1D5DB"}
-            className="transition-colors duration-300"
-          />
-          
-          {/* Pot rim - Material primary/accent color */}
-          <path 
-            d="M66 40H30C26.6863 40 24 37.3137 24 34C24 30.6863 26.6863 28 30 28H66C69.3137 28 72 30.6863 72 34C72 37.3137 69.3137 40 66 40Z" 
-            fill={variant === 'primary' ? "#4CAF50" : "#9b87f5"} 
-            className="transition-colors duration-300"
-          />
-          
-          {/* Left handle */}
-          <path 
-            d="M48 28C48 21.3726 42.6274 16 36 16C29.3726 16 24 21.3726 24 28" 
-            stroke={variant === 'primary' ? "#4CAF50" : "#9b87f5"}
-            strokeWidth="4" 
-            strokeLinecap="round"
-            className="transition-colors duration-300" 
-          />
-          
-          {/* Right handle */}
-          <path 
-            d="M48 28C48 21.3726 53.3726 16 60 16C66.6274 16 72 21.3726 72 28" 
-            stroke={variant === 'primary' ? "#4CAF50" : "#9b87f5"}
-            strokeWidth="4" 
-            strokeLinecap="round"
-            className="transition-colors duration-300" 
-          />
-          
-          {/* Material Design surface highlight */}
-          <path 
-            d="M30 65C30 65 35 70 48 70C61 70 66 65 66 65" 
-            stroke="white" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            opacity="0.5" 
-          />
-
-          {/* Lid for pot when nearly done - Material elevation */}
-          {isNearlyDone && (
-            <path 
-              d="M72 36H24C24 32 30 28 48 28C66 28 72 32 72 36Z" 
-              fill={variant === 'primary' ? "#BDBDBD" : "#9CA3AF"}
-              opacity="0.9"
-              className="transition-colors duration-300"
-            />
-          )}
-        </svg>
-        
-        {/* Steam particles with Material motion */}
-        {isSteaming && (
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
-            <div className="steam steam-1"></div>
-            <div className="steam steam-2"></div>
-            <div className="steam steam-3"></div>
+    <div className="space-y-4 w-full">
+      {/* Progress indicator */}
+      <div className="flex flex-col items-center">
+        <div className={cn(
+          "relative w-24 h-24 mb-4 flex items-center justify-center",
+          "bg-background rounded-full shadow-elevation-1 border border-gray-100 dark:border-gray-800"
+        )}>
+          <div className="absolute">
+            <svg className="w-20 h-20">
+              <circle 
+                className="text-gray-100 dark:text-gray-800" 
+                strokeWidth="4" 
+                stroke="currentColor" 
+                fill="transparent" 
+                r="36" 
+                cx="40" 
+                cy="40" 
+              />
+              <circle 
+                className="text-recipe-green" 
+                strokeWidth="4" 
+                strokeLinecap="round" 
+                stroke="currentColor" 
+                fill="transparent" 
+                r="36" 
+                cx="40" 
+                cy="40" 
+                strokeDasharray={`${226 * (progress / 100)} 226`} 
+                transform="rotate(-90 40 40)" 
+              />
+            </svg>
           </div>
-        )}
-        
-        {/* Bubbles with Material motion principles */}
-        {bubbles}
-        
-        {/* Icon beneath pot - uses variant color */}
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 transition-colors duration-300">
-          {isNearlyDone ? (
-            <ChefHat className={cn(
-              "h-6 w-6",
-              variant === 'primary' ? "text-recipe-green" : "text-primary"
-            )} />
-          ) : (
-            <Utensils className={cn(
-              "h-6 w-6",
-              variant === 'primary' ? "text-recipe-green" : "text-primary"
-            )} />
-          )}
+          <span className="text-lg font-medium">{formattedProgress}</span>
         </div>
       </div>
+
+      {/* Progress bar with Material Design styling */}
+      <Progress 
+        value={progress} 
+        className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
+        indicatorClassName="bg-recipe-green animate-progress-pulse" 
+        aria-label="Recipe generation progress"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      />
+
+      {/* Estimated time remaining */}
+      {estimatedTimeRemaining !== undefined && (
+        <div className="text-center text-sm text-muted-foreground">
+          Estimated time remaining: ~{estimatedTimeRemaining} seconds
+        </div>
+      )}
       
-      {/* Material Design linear progress indicator */}
-      {progress > 0 && (
-        <div className="mt-4 w-full max-w-xs">
-          <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div 
-              className={cn(
-                "h-full rounded-full transition-all duration-300 ease-out",
-                variant === 'primary' 
-                  ? "bg-recipe-green animate-progress-pulse" 
-                  : "bg-primary animate-pulse"
-              )}
-              style={{ width: `${progress}%` }}
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={progress}
-            />
-          </div>
+      {/* Timeout warning with ARIA attributes */}
+      {timeoutWarning && (
+        <div 
+          className={cn(
+            "p-3 rounded-lg text-sm bg-amber-50 dark:bg-amber-900/20",
+            "border border-amber-200 dark:border-amber-800",
+            "text-amber-800 dark:text-amber-300"
+          )}
+          role="alert"
+          aria-live="polite"
+        >
+          <p className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            This is taking longer than usual. Please be patient...
+          </p>
         </div>
       )}
 
-      {/* Chef tip with Material Design typography */}
-      {showChefTip && (
-        <div className={cn(
-          "mt-4 text-center px-3 py-2 rounded-md text-sm",
-          "border border-gray-100 dark:border-gray-800",
-          "shadow-sm bg-background/50 backdrop-blur-sm",
-          "animate-fade-in transition-all duration-300"
-        )}>
-          <em className="font-normal text-gray-600 dark:text-gray-300">{chefTips[tipIndex]}</em>
-        </div>
-      )}
+      {/* Chef's tip */}
+      {showChefTip && <ChefTip variant={variant} />}
     </div>
   );
-}
+};
 
 export default MaterialLoadingAnimation;
