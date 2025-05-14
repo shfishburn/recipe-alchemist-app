@@ -37,7 +37,6 @@ export function Navbar({ className = '' }: { className?: string }) {
 
   const navigationLinks = [
     { name: 'Kitchen', path: '/' },
-    { name: 'Material', path: '/material-showcase' },
     { name: 'Recipes', path: '/recipes' },
     { name: 'Market', path: '/shopping-lists', requiresAuth: true },
     { name: 'Science', path: '/how-it-works' },
@@ -91,7 +90,7 @@ export function Navbar({ className = '' }: { className?: string }) {
             {/* Logo - Fixed size to prevent layout issues */}
             <Link to="/" className="flex-shrink-0">
               <img
-                src="/lovable-uploads/recipe-alchemy-logo.png"
+                src="/lovable-uploads/2a8da736-fae3-4c6a-8212-c5786dfd4677.png"
                 alt="Recipe Alchemy Logo"
                 className="h-8 w-auto max-h-8"
               />
@@ -107,9 +106,9 @@ export function Navbar({ className = '' }: { className?: string }) {
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    'text-sm font-medium px-3 py-2 rounded-md transition-colors material-elevation-transition',
+                    'text-sm font-medium px-3 py-2 rounded-md transition-colors',
                     active
-                      ? 'text-white bg-primary hover:bg-primary/90 shadow-elevation-1'
+                      ? 'text-white bg-primary hover:bg-primary/90'
                       : 'text-gray-700 hover:text-primary hover:bg-gray-100/50'
                   )}
                 >
@@ -145,7 +144,7 @@ export function Navbar({ className = '' }: { className?: string }) {
                 <Button variant="outline" size="sm" onClick={open}>
                   Log in
                 </Button>
-                <Button variant="filled" size="sm" onClick={open} className="shadow-elevation-1">
+                <Button size="sm" onClick={open}>
                   Sign up
                 </Button>
               </>

@@ -1,19 +1,17 @@
-
 import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { DefaultSeo } from "@/components/seo/DefaultSeo";
 import { Toaster } from "@/components/ui/toaster";
 import { CookieConsent } from "@/components/ui/cookie-consent";
+import { AppRoutes } from "@/routes/AppRoutes";
 import { FooterWrapper } from "@/components/layout/FooterWrapper";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { Navbar } from "@/components/ui/navbar";
 import { cleanupUIState, setupRouteChangeCleanup } from '@/utils/dom-cleanup';
 import { useLocation, useNavigate } from "react-router-dom";
 import '@/styles/loading.css';
-import '@/styles/material-animations.css'; // Import Material Design animations
 
 // Updated utility function to prefetch assets that actually exist in production
 const prefetchAssets = (urls: string[]) => {
@@ -80,7 +78,7 @@ export const AppLayout = () => {
       <React.Suspense fallback={
         <div className="fixed inset-0 bg-white dark:bg-gray-950 flex items-center justify-center overflow-x-hidden">
           <div className="loading-pulse-ring w-20 h-20 border-4 border-gray-200"></div>
-          <div className="loading-pulse-ring w-16 h-16 border-4 border-primary border-t-transparent animate-spin" 
+          <div className="loading-pulse-ring w-16 h-16 border-4 border-recipe-green border-t-transparent animate-spin" 
                style={{ animationDelay: '-0.5s' }}></div>
         </div>
       }>
@@ -91,13 +89,13 @@ export const AppLayout = () => {
   
   return (
     <TooltipProvider>
-      <div className="min-h-screen flex flex-col overflow-x-hidden w-full">
+      <div className="min-h-screen flex flex-col overflow-x-hidden">
         <DefaultSeo />
         <LoadingIndicator />
         <Navbar />
-        <main className="flex-1 mt-16 pt-4 material-fade-in">
+        <main className="flex-1">
           <PageTransition>
-            <Outlet />
+            <AppRoutes />
           </PageTransition>
         </main>
         <FooterWrapper />

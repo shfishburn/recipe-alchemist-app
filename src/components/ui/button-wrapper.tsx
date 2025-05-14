@@ -1,3 +1,4 @@
+
 import React, { forwardRef } from 'react';
 import { Button as ShadcnButton, ButtonProps as ShadcnButtonProps } from '@/components/ui/button';
 import { Slot } from '@radix-ui/react-slot';
@@ -30,6 +31,13 @@ export interface ButtonProps extends ShadcnButtonProps {
    * Icon to display at the end of the button.
    */
   endIcon?: React.ReactNode;
+  
+  /**
+   * Controls the touch/click feedback behavior.
+   * - "default": Standard touch feedback 
+   * - "none": Disables all transform effects on click/touch
+   */
+  touchFeedback?: "default" | "none";
 }
 
 /**
@@ -88,7 +96,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
     
-    // Otherwise use ShadcnButton 
+    // Otherwise use ShadcnButton and pass touchFeedback prop
     return (
       <ShadcnButton
         className={buttonClass}
@@ -96,6 +104,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(
         size={size}
         disabled={isDisabled}
         ref={ref}
+        touchFeedback={touchFeedback}
         {...props}
       >
         {buttonContent}

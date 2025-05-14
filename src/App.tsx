@@ -8,7 +8,16 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { CookieConsentProvider } from "@/hooks/use-cookie-consent";
 import { queryClient } from "@/lib/query-client";
 import { PageLoadingFallback } from "@/components/ui/PageLoadingFallback";
-import { AppRoutes } from "./app-routes";
+
+// Import AppLayout with lazy loading and error handling
+const AppLayout = lazy(() => 
+  import("@/components/layout/AppLayout")
+    .then(module => ({ default: module.AppLayout }))
+    .catch(err => {
+      console.error("Error loading AppLayout:", err);
+      return { default: () => <FallbackErrorComponent error="Failed to load application layout" /> };
+    })
+);
 
 // Simple fallback error component
 const FallbackErrorComponent = ({ error }: { error: string }) => (
@@ -59,7 +68,7 @@ const App = () => (
             <ProfileProvider>
               <CookieConsentProvider>
                 <Suspense fallback={<PageLoadingFallback />}>
-                  <AppRoutes />
+                  <AppLayout />
                 </Suspense>
               </CookieConsentProvider>
             </ProfileProvider>

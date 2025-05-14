@@ -1,49 +1,36 @@
 
-/* Base button styles */
-.btn {
-  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors;
+/* Touch feedback styles for buttons */
+.touch-feedback {
+  @apply transition-all duration-150;
 }
 
-/* Touch feedback */
-button:not(.touch-feedback-none), 
-.button:not(.touch-feedback-none) {
-  @apply active:scale-[0.98] transition-transform;
+.touch-feedback:active {
+  @apply transform scale-[0.97] opacity-80;
 }
 
-.touch-feedback-none {
-  @apply transform-none !important;
+/* Performance-optimized feedback for mobile */
+.touch-feedback-optimized {
+  @apply transition-transform duration-150 will-change-transform;
 }
 
-/* Success button styles */
-.bg-success {
-  @apply bg-green-600;
+.touch-feedback-optimized:active {
+  @apply transform scale-[0.97];
 }
 
-.hover\:bg-success-hover:hover {
-  @apply bg-green-700;
+/* Stronger touch feedback for image buttons */
+.touch-feedback-strong {
+  @apply transition-all duration-200;
 }
 
-.text-success-foreground {
-  @apply text-white;
+.touch-feedback-strong:active {
+  @apply transform scale-[0.92] opacity-70;
 }
 
-/* Material Design elevation shadows */
-.shadow-elevation-1 {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+/* Mobile touch target classes */
+.touch-target-base {
+  @apply min-h-[44px] min-w-[44px];
 }
 
-.shadow-elevation-2 {
-  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-}
-
-.shadow-elevation-3 {
-  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
-}
-
-.shadow-elevation-4 {
-  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
-}
-
-.shadow-elevation-5 {
-  box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+.touch-target-lg {
+  @apply min-h-[54px] min-w-[54px];
 }

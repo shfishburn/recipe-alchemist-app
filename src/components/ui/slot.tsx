@@ -1,11 +1,32 @@
 
-import * as React from "react";
-
-type AnyProps = Record<string, any>;
+import * as React from "react"
 
 /**
- * Merges multiple refs into one
+ * This is a simplified version of Radix UI's Slot component
  */
+const Slot = React.forwardRef<
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+>(({ children, asChild = false, ...props }, ref) => {
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(
+      children,
+      {
+        ...mergeProps(props, children.props),
+        ref: mergeRefs([ref, (children as any).ref]),
+      }
+    );
+  }
+  
+  return (
+    <span {...props} ref={ref as React.ForwardedRef<HTMLSpanElement>}>
+      {children}
+    </span>
+  );
+});
+Slot.displayName = "Slot";
+
+// Utility function to merge refs
 function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T>>): React.RefCallback<T> {
   return (value) => {
     refs.forEach((ref) => {
@@ -18,70 +39,33 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
   };
 }
 
-/**
- * Merges multiple objects together
- */
-function mergeProps<T extends AnyProps = AnyProps>(slotProps: T, childProps: T): T {
-  // All non-event props from child
-  const nonEventChildProps = Object.fromEntries(
-    Object.entries(childProps).filter(([key]) => !key.startsWith("on"))
-  );
-
-  // All event handlers merged together
-  const mergedEventHandlers = Object.fromEntries(
-    Object.entries({...slotProps, ...childProps})
-      .filter(([key]) => key.startsWith("on"))
-      .map(([key, value]) => {
-        const slotHandler = slotProps[key];
-        const childHandler = childProps[key];
-        
-        return [
-          key,
-          // If both slot and child have the same handler, call both
-          slotHandler && childHandler
-            ? (...args: unknown[]) => {
-                childHandler(...args);
-                slotHandler(...args);
-              }
-            : slotHandler || childHandler
-        ];
-      })
-  );
-
-  return {
-    ...slotProps,
-    ...nonEventChildProps,
-    ...mergedEventHandlers,
-  } as T;
-}
-
-interface SlotProps {
-  children?: React.ReactNode;
-}
-
-/**
- * This component is used to merge the props of a parent component with the props of a child component.
- * It's useful for creating compound components that share props.
- */
-const Slot = React.forwardRef<HTMLElement, SlotProps>(
-  (props, ref) => {
-    const { children, ...slotProps } = props;
-    
-    if (!React.isValidElement(children)) {
-      return null;
+// Utility function to merge props - fixed to properly handle event handlers and type safety
+function mergeProps<T extends Record<string, any>>(slotProps: T, childProps: T): Record<string, any> {
+  const merged = { ...childProps };
+  
+  for (const propName in slotProps) {
+    if (propName.startsWith('on') && typeof slotProps[propName] === 'function' && typeof childProps[propName] === 'function') {
+      // For event handlers, create a new function that calls both handlers
+      const slotHandler = slotProps[propName];
+      const childHandler = childProps[propName];
+      
+      merged[propName] = function mergedHandler(...args: any[]) {
+        childHandler(...args);
+        slotHandler(...args);
+      };
+    } else if (propName === 'className' && slotProps[propName] && childProps[propName]) {
+      // Join classNames
+      merged[propName] = `${childProps[propName]} ${slotProps[propName]}`;
+    } else if (propName === 'style' && slotProps[propName] && childProps[propName]) {
+      // Merge styles
+      merged[propName] = { ...childProps[propName], ...slotProps[propName] };
+    } else if (!(propName in merged)) {
+      // Use slot prop if child doesn't have it
+      merged[propName] = slotProps[propName];
     }
-    
-    // Clone the child and merge the props and ref
-    return React.cloneElement(
-      children,
-      {
-        ...mergeProps(slotProps as AnyProps, children.props as AnyProps),
-        ref: mergeRefs([ref, (children as any).ref]) // Correctly merge refs
-      }
-    );
   }
-);
-
-Slot.displayName = "Slot";
+  
+  return merged;
+}
 
 export { Slot };
