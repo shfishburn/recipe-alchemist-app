@@ -1,133 +1,79 @@
 
 import React from 'react';
-import { CheckIcon, ChevronsUpDown } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
+import { 
+  Carrot, 
+  WheatOff, 
+  MilkOff, 
+  Heart, 
+  LeafyGreen 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
-// Production list of dietary preferences derived from DietarySelect.tsx
-const DIETARY_OPTIONS = [
-  { value: "no-restrictions", label: "No Restrictions" },
-  { value: "vegetarian", label: "Vegetarian" },
-  { value: "vegan", label: "Vegan" },
-  { value: "pescatarian", label: "Pescatarian" },
-  { value: "gluten-free", label: "Gluten-Free" },
-  { value: "dairy-free", label: "Dairy-Free" },
-  { value: "keto", label: "Keto" },
-  { value: "paleo", label: "Paleo" },
-  { value: "low-carb", label: "Low-Carb" },
-  { value: "low-fat", label: "Low-Fat" },
-  { value: "low-sodium", label: "Low-Sodium" },
-  { value: "high-protein", label: "High-Protein" }
+// Dietary options with icons
+const DIETARY = [
+  { name: "Low-Carb", value: "low-carb", icon: Carrot },
+  { name: "Gluten-Free", value: "gluten-free", icon: WheatOff },
+  { name: "Dairy-Free", value: "dairy-free", icon: MilkOff },
+  { name: "Healthy", value: "healthy", icon: Heart },
+  { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
 ];
 
 interface DietarySelectorProps {
-  value: string[];
+  value: string[] | undefined;
   onChange: (value: string[]) => void;
 }
 
-export function DietarySelector({ value = [], onChange }: DietarySelectorProps) {
-  const handleSelect = (selectedValue: string) => {
-    // If value already exists in array, remove it
-    if (value.includes(selectedValue)) {
-      onChange(value.filter(item => item !== selectedValue));
+export function DietarySelector({ 
+  value = [], 
+  onChange 
+}: DietarySelectorProps) {
+  // Ensure value is always an array to prevent iteration errors
+  const dietaryValues = Array.isArray(value) ? value : [];
+  
+  // Toggle dietary preference selection
+  const toggleDietary = (dietaryValue: string) => {
+    if (dietaryValues.includes(dietaryValue)) {
+      onChange(dietaryValues.filter(d => d !== dietaryValue));
     } else {
-      // Otherwise add it
-      onChange([...value, selectedValue]);
+      onChange([...dietaryValues, dietaryValue]);
     }
   };
-
+  
   return (
-    <div className="space-y-1.5">
-      <label htmlFor="dietary-selector" className="text-sm font-medium">
-        Dietary Needs
+    <div className="space-y-2">
+      {/* Material Design label */}
+      <label className="text-sm font-medium flex items-center gap-1.5 text-foreground">
+        <LeafyGreen className="h-4 w-4 text-primary/80" />
+        Dietary Preferences
       </label>
       
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-label="Select dietary preferences"
-            aria-expanded={false}
-            className={cn(
-              "w-full justify-between bg-white dark:bg-gray-950",
-              "text-left font-normal",
-              "h-10 px-3 py-2"
-            )}
-            id="dietary-selector"
-          >
-            {value.length === 0 ? (
-              <span className="text-muted-foreground">Select dietary needs</span>
-            ) : value.length === 1 ? (
-              DIETARY_OPTIONS.find(diet => diet.value === value[0])?.label || "Select dietary needs"
-            ) : (
-              `${value.length} options selected`
-            )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Search dietary options..." />
-            <CommandEmpty>No dietary option found.</CommandEmpty>
-            <CommandGroup className="max-h-60 overflow-y-auto">
-              {DIETARY_OPTIONS.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={() => handleSelect(option.value)}
-                  className="flex items-center justify-between"
-                >
-                  <span>{option.label}</span>
-                  {value.includes(option.value) && (
-                    <CheckIcon className="h-4 w-4" />
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      {/* Display selected dietary preferences as badges */}
+      <div className="flex flex-wrap gap-2">
+        {DIETARY.map(diet => {
+          const Icon = diet.icon;
+          return (
+            <button
+              key={diet.value}
+              type="button"
+              onClick={() => toggleDietary(diet.value)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-sm flex items-center gap-1 border transition-colors",
+                dietaryValues.includes(diet.value) 
+                  ? "bg-recipe-orange text-white border-recipe-orange" 
+                  : "bg-background border-input hover:border-recipe-orange/50"
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{diet.name}</span>
+            </button>
+          )}
+        )}
+      </div>
       
-      {/* Display selected dietary options as badges */}
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {value.map((v) => {
-            const option = DIETARY_OPTIONS.find(diet => diet.value === v);
-            return option && (
-              <Badge 
-                key={v} 
-                variant="secondary"
-                className="text-xs"
-              >
-                {option.label}
-                <button
-                  type="button"
-                  className="ml-1 rounded-full outline-none hover:text-red-500 focus:text-red-500"
-                  onClick={() => {
-                    onChange(value.filter(item => item !== v));
-                  }}
-                >
-                  ×
-                </button>
-              </Badge>
-            );
-          })}
-        </div>
-      )}
+      {/* Helper text */}
+      <p className="text-xs text-muted-foreground">
+        Select any dietary restrictions for your recipe
+      </p>
     </div>
   );
 }

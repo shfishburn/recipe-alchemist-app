@@ -80,7 +80,7 @@ export const useRecipeGenerator = () => {
           // Convert ingredients to a JSON-compatible format
           const ingredientsJson = convertIngredientsToJson(generatedRecipe.ingredients);
           
-          // FIX: The Supabase insert expects a single object, not an array of objects
+          // Fix: Pass a single object to insert, not an array of objects
           const { data: savedRecipe, error: saveError } = await supabase
             .from('recipes')
             .insert({
