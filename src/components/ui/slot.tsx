@@ -39,8 +39,8 @@ function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.Legacy
   };
 }
 
-// Utility function to merge props - fixed to properly handle event handlers
-function mergeProps<T extends Record<string, any>>(slotProps: T, childProps: T): T {
+// Utility function to merge props - fixed to properly handle event handlers and type safety
+function mergeProps<T extends Record<string, any>>(slotProps: T, childProps: T): Record<string, any> {
   const merged = { ...childProps };
   
   for (const propName in slotProps) {
