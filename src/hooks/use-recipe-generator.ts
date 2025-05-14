@@ -40,33 +40,35 @@ export function useRecipeGenerator() {
         servings: input.servings || 2,
       });
       
-      if (result.error) {
-        throw new Error(result.error);
+      if (result.error_message || result.isError) {
+        throw new Error(result.error_message || "Failed to generate recipe. Please try again.");
       }
       
-      if (!result.recipe) {
+      if (!result) {
         throw new Error("Failed to generate recipe. Please try again.");
       }
       
       // Store the recipe in state
-      setRecipe(result.recipe);
+      setRecipe(result);
       
       // If user is authenticated, save to database
       if (session?.user) {
         try {
           console.log("Saving recipe to database...");
           
-          // This is passing a SINGLE object now, not an array
+          // The recipes table expects specific fields, let's extract them from the result
           const { data, error } = await supabase
             .from('recipes')
             .insert({
               user_id: session.user.id,
-              recipe_data: result.recipe,
-              description: result.recipe.description || '',
-              cuisine: typeof result.recipe.cuisine === 'string' ? result.recipe.cuisine : '',
-              name: result.recipe.title,
-              // IMPORTANT: Don't include properties that don't exist in the table schema
-              // title is not in the schema, so don't include it
+              title: result.title,
+              description: result.description || '',
+              cuisine: typeof result.cuisine === 'string' ? result.cuisine : '',
+              servings: result.servings,
+              ingredients: result.ingredients,
+              instructions: result.steps || result.instructions || [],
+              prep_time_min: result.prep_time_min || 0,
+              cook_time_min: result.cook_time_min || 0
             });
           
           if (error) {
@@ -80,7 +82,7 @@ export function useRecipeGenerator() {
       }
       
       return { 
-        recipe: result.recipe,
+        recipe: result,
         error: null
       };
       
