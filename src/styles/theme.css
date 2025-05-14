@@ -1,3 +1,4 @@
+
 /*
   This file uses Tailwind CSS and PostCSS features.
   If you see 'Unknown at rule' errors in your editor, it's safe to ignore them as long as your build works.
@@ -10,66 +11,61 @@
 
 @layer base {
   :root {
+    /* Material Design color system */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 46% 74%;  /* #9b87f5 - Primary Purple */
+    
+    /* Primary color: Purple (#9b87f5) */
+    --primary: 262 46% 74%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 262 30% 54%;  /* #7E69AB - Secondary Purple */
+    
+    /* Secondary color: Deeper Purple (#7E69AB) */
+    --secondary: 262 30% 54%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Supporting colors */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    
+    /* Material elevation with borders */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 262 46% 74%; /* Match primary */
+    
+    /* Border radius for Material components */
     --radius: 0.5rem;
 
-    /* Sidebar */
+    /* Sidebar theming */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 262 46% 74%;  /* Match primary */
+    --sidebar-primary: 262 46% 74%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 262 46% 74%;  /* Match primary */
+    --sidebar-ring: 262 46% 74%;
 
-    --white: #ffffff;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #dbeafe;
-    --gray-400: #bfdbfe;
-    --gray-500: #6b7280;
-    --gray-600: #1f2937;
-    --gray-700: #111827;
-    --blue-50: #eff6ff;
-    --blue-100: #dbeafe;
-    --blue-200: #bfdbfe;
-    --blue-300: #93c5fd;
-    --blue-400: #60a5fa;
-    --blue-500: #2563eb;
-    --blue-600: #1d4ed8;
-    --blue-700: #1e40af;
-    --blue-800: #1e3a8a;
-    --green-50: #f0fdf4;
-    --green-100: #dcfce7;
-    --green-200: #bbf7d0;
-    --green-700: #15803d;
-    --radius-lg: 0.625rem;
-    --radius-md: 0.5rem;
-    --radius-sm: 0.375rem;
-    --radius-full: 9999px;
-    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-panel: 0 3px 6px rgba(0, 0, 0, 0.08);
+    /* Material Design elevation system */
+    --elevation-0: none;
+    --elevation-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --elevation-2: 0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12);
+    --elevation-3: 0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.10);
+    --elevation-4: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    --elevation-5: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+
+    /* Recipe specific colors - keeping them for compatibility */
+    --recipe-blue: #04a118;
+    --recipe-green: #59a52c;
+    --recipe-orange: #fb923c;
+    --recipe-yellow: #facc15;
   }
 
   .dark {
@@ -79,10 +75,13 @@
     --card-foreground: 213 31% 91%;
     --popover: 224 71% 4%;
     --popover-foreground: 213 31% 91%;
-    --primary: 262 46% 74%;  /* #9b87f5 - Primary Purple */
+    
+    /* Keep the same color hues in dark mode, adjust lightness */
+    --primary: 262 46% 74%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 262 30% 54%;  /* #7E69AB - Secondary Purple */
+    --secondary: 262 30% 54%;
     --secondary-foreground: 210 40% 98%;
+    
     --muted: 223 47% 11%;
     --muted-foreground: 215.4 16.3% 56.9%;
     --accent: 216 34% 17%;
@@ -91,56 +90,155 @@
     --destructive-foreground: 210 40% 98%;
     --border: 216 34% 17%;
     --input: 216 34% 17%;
-    --ring: 262 46% 74%; /* Match primary */
+    --ring: 262 46% 74%;
 
-    /* Sidebar */
+    /* Sidebar theming - dark mode */
     --sidebar-background: 224 71% 4%;
     --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 262 46% 74%;  /* Match primary */
+    --sidebar-primary: 262 46% 74%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 216 34% 17%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 216 34% 17%;
-    --sidebar-ring: 262 46% 74%;  /* Match primary */
+    --sidebar-ring: 262 46% 74%;
+
+    /* Material Design elevation system - dark mode (slightly more subtle) */
+    --elevation-1: 0 1px 3px rgba(0,0,0,0.24), 0 1px 2px rgba(0,0,0,0.36);
+    --elevation-2: 0 3px 6px rgba(0,0,0,0.26), 0 2px 4px rgba(0,0,0,0.24);
+    --elevation-3: 0 10px 20px rgba(0,0,0,0.26), 0 3px 6px rgba(0,0,0,0.22);
+    --elevation-4: 0 14px 28px rgba(0,0,0,0.35), 0 10px 10px rgba(0,0,0,0.32);
+    --elevation-5: 0 19px 38px rgba(0,0,0,0.40), 0 15px 12px rgba(0,0,0,0.32);
   }
 }
 
 @layer base {
   * {
-    /* Tailwind's border-border utility */
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
-
+  
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
+    font-family: 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 500;
-    letter-spacing: -0.015em;
-  }
-
-  h1 {
+  /* Material Typography Scale */
+  h1, .material-h1 {
     font-size: 2.25rem;
     font-size: clamp(2.25rem, 5vw, 3rem);
+    font-weight: 400;
+    letter-spacing: -0.015625em;
+    line-height: 1.2;
   }
 
-  h2 {
+  h2, .material-h2 {
     font-size: 1.875rem;
     font-size: clamp(1.875rem, 4vw, 2.25rem);
+    font-weight: 400;
+    letter-spacing: -0.0083333333em;
+    line-height: 1.3;
   }
 
-  h3 {
+  h3, .material-h3 {
     font-size: 1.5rem;
     font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 500;
+    letter-spacing: 0em;
+    line-height: 1.4;
   }
 
-  h4 {
+  h4, .material-h4 {
     font-size: 1.25rem;
     font-size: clamp(1.25rem, 2vw, 1.5rem);
+    font-weight: 500;
+    letter-spacing: 0.0073529412em;
+    line-height: 1.4;
+  }
+  
+  /* Material Typography Styles */
+  .material-headline-large {
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+  
+  .material-headline-medium {
+    font-size: 1.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.29;
+  }
+  
+  .material-headline-small {
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.33;
+  }
+  
+  .material-title-large {
+    font-size: 1.375rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.27;
+  }
+  
+  .material-title-medium {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.009375em;
+    line-height: 1.5;
+  }
+  
+  .material-title-small {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.00625em;
+    line-height: 1.43;
+  }
+  
+  .material-body-large {
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.03125em;
+    line-height: 1.5;
+  }
+  
+  .material-body-medium {
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.015625em;
+    line-height: 1.43;
+  }
+  
+  .material-body-small {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.025em;
+    line-height: 1.33;
+  }
+  
+  .material-label-large {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.00625em;
+    line-height: 1.43;
+  }
+  
+  .material-label-medium {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.03125em;
+    line-height: 1.33;
+  }
+  
+  .material-label-small {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.03125em;
+    line-height: 1.45;
   }
 }

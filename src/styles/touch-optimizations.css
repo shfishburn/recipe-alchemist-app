@@ -1,77 +1,83 @@
 
-/* Touch optimizations for better mobile experience */
+/* Mobile touch optimization styles based on Material Design guidelines */
 
-/* Basic touch optimizations */
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
-  scrollbar-width: none; /* Firefox */
-}
-
-.touch-scroll::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* Better tap targets for touch devices */
+/* Ensure touch targets are at least 48x48px */
 .touch-optimized button,
 .touch-optimized a,
-.touch-optimized [role="button"],
 .touch-optimized input[type="checkbox"],
 .touch-optimized input[type="radio"],
-.touch-optimized label {
-  min-height: 44px;
-  min-width: 44px;
+.touch-optimized .interactive-element {
+  min-height: 48px;
+  min-width: 48px;
 }
 
-/* Touch indicator feedback */
-.touch-optimized .touch-feedback {
+/* For inline elements that can't be 48px high, add padding */
+.touch-optimized label,
+.touch-optimized .label {
+  padding: 12px 0;
+  display: inline-block;
+}
+
+/* Add proper spacing between touch elements (8dp in Material Design) */
+.touch-optimized .touch-list > * {
+  margin-bottom: 8px;
+}
+
+.touch-optimized .touch-list > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Material Design specific touch optimizations */
+.touch-optimized .material-touch-ripple {
   position: relative;
   overflow: hidden;
 }
 
-.touch-optimized .touch-feedback::after {
+/* Ripple effect for touch feedback */
+.touch-optimized .material-touch-ripple::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: currentColor;
-  border-radius: inherit;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.1);
   opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
+  border-radius: 100%;
+  transform: scale(1);
+  transition: opacity 0.8s, transform 0.8s;
 }
 
-.touch-optimized .touch-feedback:active::after {
-  opacity: 0.1;
+.touch-optimized .material-touch-ripple:active::after {
+  opacity: 1;
+  transform: scale(60);
+  transition: opacity 0s, transform 0.4s;
 }
 
-/* Touch-friendly spacing for interactive elements */
-.touch-optimized .touch-friendly-spacing > * {
-  margin-top: 8px;
-  margin-bottom: 8px;
+/* Dark mode touch feedback */
+.dark .touch-optimized .material-touch-ripple::after {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-/* Better spacing for tabs on touch devices */
-.touch-optimized .touch-friendly-tabs {
-  overflow-x: auto;
+/* Card touch optimizations */
+.card-touch-optimized {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Larger tap targets for mobile checkboxes */
+.touch-optimized input[type="checkbox"] + label,
+.touch-optimized input[type="radio"] + label {
+  padding: 12px 8px;
+  margin: 0 -8px;
+}
+
+/* Optimized scrolling */
+.touch-scroll {
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
 }
 
-/* Add extra padding to touch elements */
-.touch-optimized .touch-target {
-  padding: 0.75rem;
-  min-height: 44px;
-}
-
-/* Optimized list items for touch */
-.touch-optimized li.touch-item {
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-
-/* Utility class to detect completion of loading */
-.completed-loading {
-  /* This class will be used to indicate loading is complete */
+.touch-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }

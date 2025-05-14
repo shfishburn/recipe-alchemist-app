@@ -1,61 +1,33 @@
 
-import * as React from "react";
-
-// Define clearer types for the Slot component
-interface SlotProps {
-  children?: React.ReactNode;
-  [key: string]: any; // Allow for additional props
-}
+import * as React from "react"
 
 /**
- * Custom Slot component that merges props with child element
- * With improved TypeScript handling for refs
+ * This is a simplified version of Radix UI's Slot component
  */
-const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
-  const { children, ...rest } = props;
-  
-  // If no children, return null
-  if (!children) {
-    return null;
+const Slot = React.forwardRef<
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+>(({ children, asChild = false, ...props }, ref) => {
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(
+      children,
+      {
+        ...mergeProps(props, children.props),
+        ref: mergeRefs([ref, (children as any).ref]),
+      }
+    );
   }
   
-  // Use Children.toArray to handle multiple children safely
-  const childrenArray = React.Children.toArray(children);
-  
-  // If array is empty after filtering, return null
-  if (childrenArray.length === 0) {
-    return null;
-  }
-  
-  // Use first child if it's a valid element
-  const firstChild = childrenArray[0];
-  
-  // Only proceed if we have a valid React element
-  if (!React.isValidElement(firstChild)) {
-    console.warn("Slot received non-element child");
-    return null;
-  }
-  
-  // Clone the element with merged props
-  // We need to use as React.ReactElement<any> to correctly handle refs
-  return React.cloneElement(
-    firstChild as React.ReactElement<any>, 
-    {
-      ...rest,
-      // When forwarding refs, we need to compose them properly
-      ref: forwardedRef 
-        ? composeRefs(forwardedRef, (firstChild as any).ref) 
-        : (firstChild as any).ref,
-    }
+  return (
+    <span {...props} ref={ref as React.ForwardedRef<HTMLSpanElement>}>
+      {children}
+    </span>
   );
 });
+Slot.displayName = "Slot";
 
-/**
- * Helper to compose multiple refs into one - improved typing
- */
-const composeRefs = <T extends any>(
-  ...refs: Array<React.Ref<T> | undefined | null>
-): React.RefCallback<T> => {
+// Utility function to merge refs
+function mergeRefs<T = any>(refs: Array<React.MutableRefObject<T> | React.LegacyRef<T>>): React.RefCallback<T> {
   return (value) => {
     refs.forEach((ref) => {
       if (typeof ref === "function") {
@@ -65,8 +37,34 @@ const composeRefs = <T extends any>(
       }
     });
   };
-};
+}
 
-Slot.displayName = "Slot";
+// Utility function to merge props
+function mergeProps<T extends Object>(slotProps: T, childProps: T): T {
+  // This function does not handle event mergings and some other complex cases
+  // that Radix UI handles, but it's a simple implementation for basic cases.
+  const merged = { ...childProps };
+  
+  for (const propName in slotProps) {
+    if (propName.startsWith('on') && typeof slotProps[propName] === 'function' && typeof childProps[propName] === 'function') {
+      // For event handlers, we want to call both
+      merged[propName] = (...args: any[]) => {
+        childProps[propName]?.(...args);
+        slotProps[propName]?.(...args);
+      };
+    } else if (propName === 'className' && slotProps[propName] && childProps[propName]) {
+      // Join classNames
+      merged[propName] = `${childProps[propName]} ${slotProps[propName]}`;
+    } else if (propName === 'style' && slotProps[propName] && childProps[propName]) {
+      // Merge styles
+      merged[propName] = { ...childProps[propName], ...slotProps[propName] };
+    } else if (!(propName in merged)) {
+      // Use slot prop if child doesn't have it
+      merged[propName] = slotProps[propName];
+    }
+  }
+  
+  return merged;
+}
 
 export { Slot };
