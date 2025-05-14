@@ -17,8 +17,14 @@ export function useApplyChanges() {
     }
     
     console.log('Starting to apply changes from chat message:', chatMessage.id);
+    console.log('Recipe details:', { id: recipe.id, title: recipe.title });
+    console.log('Chat message details:', { 
+      id: chatMessage.id,
+      recipe_id: chatMessage.recipe_id,
+      has_changes: !!chatMessage.changes_suggested
+    });
     
-    // Check for required data
+    // Check for required data with enhanced validation
     if (!recipe || !recipe.id) {
       const errorMsg = 'Cannot apply changes: Recipe data is missing';
       console.error(errorMsg);
@@ -30,7 +36,14 @@ export function useApplyChanges() {
       return false;
     }
     
-    if (!chatMessage || !chatMessage.recipe_id) {
+    // CRITICAL FIX: Ensure chat message has recipe_id, using recipe.id as fallback
+    if (!chatMessage?.recipe_id) {
+      console.warn('Chat message missing recipe_id. Using recipe.id as fallback.');
+      chatMessage.recipe_id = recipe.id;
+    }
+    
+    // Double-check recipe_id is set on the chat message
+    if (!chatMessage.recipe_id) {
       const errorMsg = 'Cannot apply changes: Chat message is missing recipe reference';
       console.error(errorMsg, chatMessage);
       toast({
@@ -47,10 +60,14 @@ export function useApplyChanges() {
       // First, mark this chat as "applied" in the database
       const { error: updateError } = await supabase
         .from('recipe_chats')
-        .update({ applied: true })
+        .update({ 
+          applied: true,
+          recipe_id: recipe.id // Ensure recipe_id is set again in case it was missing
+        })
         .eq('id', chatMessage.id);
       
       if (updateError) {
+        console.error('Error marking chat as applied:', updateError);
         throw new Error(`Error marking chat as applied: ${updateError.message}`);
       }
       

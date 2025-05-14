@@ -89,6 +89,7 @@ function validateRecipe(recipe: any) {
     throw new Error("Must have at least one ingredient");
   if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))
     throw new Error("Must have steps or instructions");
+  if (!recipe.id) throw new Error("Missing recipe.id");
 }
 
 // === edge function ===
@@ -106,11 +107,13 @@ serve(async (req) => {
 
   try {
     const { recipe, userRequest, modificationHistory = [] } = await req.json();
+    console.log("Processing modification request for recipe:", recipe?.id || "unknown");
 
     // validate input
     try {
       validateRecipe(recipe);
     } catch (vall) {
+      console.error("Recipe validation failed:", vall.message);
       return new Response(JSON.stringify({ error: vall.message }), { status: 400, headers });
     }
 
@@ -164,6 +167,15 @@ serve(async (req) => {
         const sb = createClient(SUPA_URL, SUPA_KEY, {
           global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
         });
+        
+        // CRITICAL FIX: Ensure recipe_id is explicitly set and logged
+        if (!recipe.id) {
+          console.error("Missing recipe.id when inserting chat record");
+          throw new Error("Recipe ID is required");
+        }
+        
+        console.log("Inserting chat record with recipe_id:", recipe.id);
+        
         await sb.from("recipe_chats").insert({
           recipe_id: recipe.id,
           user_message: userRequest,
@@ -171,6 +183,8 @@ serve(async (req) => {
           changes_suggested: parsed.modifications,
           source_type: "modification"
         });
+        
+        console.log("Successfully inserted chat record for recipe:", recipe.id);
       } catch (dbErr) {
         console.error("DB insert failed", dbErr);
       }

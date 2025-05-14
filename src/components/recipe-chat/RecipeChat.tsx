@@ -21,6 +21,13 @@ import { Button } from '@/components/ui/button';
 import { ChatLayout } from './ChatLayout';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
+  // Validate recipe input
+  useEffect(() => {
+    if (!recipe?.id) {
+      console.error("RecipeChat received invalid recipe:", recipe);
+    }
+  }, [recipe]);
+  
   const { user, session } = useAuth();
   const { handleError } = useErrorHandler({
     toastTitle: "Chat Error",
@@ -53,6 +60,18 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   // Create a wrapper for applyChanges that only takes the chatMessage parameter
   const applyChanges = async (chatMessage: ChatMessageType) => {
     try {
+      console.log("Applying changes with recipe_id check:", {
+        recipeId: recipe?.id,
+        chatMessageHasId: !!chatMessage?.recipe_id,
+        chatMessageId: chatMessage?.id
+      });
+      
+      // Ensure chat message has the proper recipe_id before applying changes
+      if (!chatMessage.recipe_id && recipe?.id) {
+        console.log("Setting missing recipe_id on chat message before applying changes");
+        chatMessage.recipe_id = recipe.id;
+      }
+      
       return await rawApplyChanges(recipe, chatMessage);
     } catch (error) {
       handleError(error);
@@ -131,7 +150,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     
     if (message.trim()) {
       try {
-        console.log("Sending message:", message);
+        console.log("Sending message for recipe:", recipe.id);
         sendMessage();
         // Immediately scroll down when sending
         setTimeout(scrollToBottom, 50);
