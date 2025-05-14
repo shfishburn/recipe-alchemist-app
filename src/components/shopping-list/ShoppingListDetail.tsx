@@ -10,7 +10,8 @@ import { ShoppingListControls } from './detail/ShoppingListControls';
 import { AddItemForm } from './detail/AddItemForm';
 import { ShoppingListItemsView } from './detail/ShoppingListItemsView';
 import { ShoppingListProgress } from './detail/ShoppingListProgress';
-import { useShoppingList } from '@/hooks/shopping-list/use-shopping-list';
+// Import the correct hook
+import { useShoppingList } from '@/hooks/use-shopping-list';
 
 // Import touch optimizations
 import '@/styles/touch-optimizations.css';
@@ -22,6 +23,7 @@ interface ShoppingListDetailProps {
 }
 
 export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDetailProps) {
+  // Use the correct hook with the list and onUpdate parameters
   const {
     searchTerm,
     setSearchTerm,
@@ -59,7 +61,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     };
   }, []);
 
-  // Fix: Convert Promise<boolean> to Promise<void>
+  // Convert Promise<boolean> to Promise<void>
   const handleCopyToClipboard = async (): Promise<void> => {
     await copyToClipboard();
   };

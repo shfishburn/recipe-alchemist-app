@@ -25,7 +25,8 @@ export interface ShoppingList {
   recipe_ids?: string[]; // Track source recipes
 }
 
-export function useShoppingList() {
+// Rename this function to make it clear it's for multiple shopping lists
+export function useShoppingLists() {
   const { session } = useAuth();
   const userId = session?.user?.id;
   const { toast } = useToast();
@@ -184,3 +185,6 @@ export function useShoppingList() {
     isCreatingFromRecipe
   };
 }
+
+// Export the original single-list hook as the default
+export { useShoppingList } from '@/hooks/use-shopping-list';

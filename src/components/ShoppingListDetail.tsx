@@ -1,16 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
-import { ShoppingListHeader } from '@/components/shopping-list/detail/ShoppingListHeader';
-import { ShoppingListNotes } from '@/components/shopping-list/detail/ShoppingListNotes';
-import { ShoppingListControls } from '@/components/shopping-list/detail/ShoppingListControls';
-import { AddItemForm } from '@/components/shopping-list/detail/AddItemForm';
-import { ShoppingListItemsView } from '@/components/shopping-list/detail/ShoppingListItemsView';
-import { ShoppingListProgress } from '@/components/shopping-list/detail/ShoppingListProgress';
-import { useShoppingList } from '@/hooks/shopping-list/use-shopping-list';
+import { ShoppingListHeader } from './detail/ShoppingListHeader';
+import { ShoppingListNotes } from './detail/ShoppingListNotes';
+import { ShoppingListControls } from './detail/ShoppingListControls';
+import { AddItemForm } from './detail/AddItemForm';
+import { ShoppingListItemsView } from './detail/ShoppingListItemsView';
+import { ShoppingListProgress } from './detail/ShoppingListProgress';
+import { useShoppingList as useSingleShoppingList } from '@/hooks/use-shopping-list';
 
 // Import touch optimizations
 import '@/styles/touch-optimizations.css';
@@ -22,6 +21,7 @@ interface ShoppingListDetailProps {
 }
 
 export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDetailProps) {
+  // We're using the single list hook here, not the main shopping list hook
   const {
     searchTerm,
     setSearchTerm,
@@ -38,7 +38,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
     toggleDeptExpanded,
     copyToClipboard,
     getItemIndex
-  } = useShoppingList(list, onUpdate);
+  } = useSingleShoppingList(list, onUpdate);
 
   const [showAddItemForm, setShowAddItemForm] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -70,7 +70,7 @@ export function ShoppingListDetail({ list, onUpdate, onDelete }: ShoppingListDet
   };
 
   return (
-    <Card className="p-4 md:p-6">
+    <Card className="p-4 md:p-6 max-w-full shadow-sm border-gray-200">
       <ShoppingListHeader 
         list={list} 
         onDelete={onDelete}
