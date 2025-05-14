@@ -1,138 +1,35 @@
-/* Touch optimizations for mobile devices */
 
-.touch-optimized {
-  /* Ensure elements have reasonable touch targets */
-  --touch-target-size: 44px;
+/* Touch optimization styles */
+.touch-active:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-in-out;
 }
 
-/* Increase opacity feedback for better touch feedback */
-.touch-optimized button:active,
-.touch-optimized .touch-active:active {
-  opacity: 0.7;
-  transform: scale(0.97);
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-/* Prevent the double-tap zoom on mobile for interactive elements */
-.touch-optimized button,
-.touch-optimized a,
-.touch-optimized input,
-.touch-optimized textarea,
-.touch-optimized label,
-.touch-optimized [role="button"] {
-  touch-action: manipulation;
-}
-
-/* Add visual feedback for touch element */
-.touch-optimized .touch-feedback {
-  -webkit-tap-highlight-color: transparent;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Remove mobile browser styling */
-.tap-highlight-none {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Touch ripple effect */
-.touch-ripple {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-.touch-ripple::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.7);
-  opacity: 0;
-  border-radius: 100%;
-  transform: scale(1) translate(-50%, -50%);
-  transform-origin: 50% 50%;
-}
-
-:active > .touch-ripple::after {
-  opacity: 1;
-  animation: ripple 0.6s linear;
-}
-
-@keyframes ripple {
-  0% {
-    transform: scale(0) translate(-50%, -50%);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(40) translate(-50%, -50%);
-    opacity: 0;
-  }
-}
-
-/* Scrolling and performance optimizations */
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-}
-
-.hw-accelerated {
-  will-change: transform;
+/* Enhanced hardware acceleration class */
+.hw-boost {
   transform: translateZ(0);
   backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
+  overflow: hidden; /* Prevent paint thrashing from content overflow */
+  contain: content; /* Enable containment for better performance */
 }
 
-/* Optimize form elements for touch */
-.touch-optimized input[type="checkbox"],
-.touch-optimized input[type="radio"] {
-  min-width: var(--touch-target-size);
-  min-height: var(--touch-target-size);
-  margin: 0;
+/* Additional touch optimizations */
+.touch-optimized {
+  touch-action: manipulation; /* Remove 300ms delay on mobile */
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
+  user-select: none; /* Prevent text selection during taps */
 }
 
-/* Better focus styles for touch */
-.touch-optimized :focus {
-  outline: none;
-}
-
-.touch-optimized :focus-visible {
-  outline: 2px solid rgb(59, 130, 246);
-  outline-offset: 2px;
-}
-
-/* Prevent long-press text selection */
-.touch-optimized .prevent-select {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Improve mobile button styles */
-.touch-optimized button,
-.touch-optimized .button {
-  min-height: 44px;
-}
-
-/* Fix mobile hover issues */
-@media (hover: hover) {
-  .hover-effect:hover {
-    opacity: 0.8;
-  }
-}
-
-/* Prevent sticky hover on mobile */
-@media (hover: none) {
-  .hover-effect:hover {
-    opacity: 1;
-  }
-}
-
-/* Optimize touch interactions */
-.touch-active:active {
-  opacity: 0.7;
-  transform: scale(0.97);
+/* Optimized scroll containers for touch devices */
+.scroll-momentum {
+  -webkit-overflow-scrolling: touch; /* Enable momentum scrolling on iOS */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain; /* Prevent unwanted page scrolling */
 }
