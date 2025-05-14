@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
+import { useAuth } from '@/hooks/use-auth';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import { RecipeChatInput } from './RecipeChatInput';
@@ -10,9 +12,11 @@ import { EmptyChatState } from './EmptyChatState';
 import { ChatHeader } from './ChatHeader';
 import { ChatLoading } from './ChatLoading';
 import { ClearChatDialog } from './ClearChatDialog';
+import { AuthOverlay } from './AuthOverlay';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
+  const { user, session } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -65,6 +69,16 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   };
 
   const handleSubmit = () => {
+    if (!session) {
+      // Store the intent to chat in the auth state manager
+      authStateManager.queueAction({
+        type: 'other',
+        data: { recipeId: recipe.id },
+        sourceUrl: window.location.pathname
+      });
+      return;
+    }
+    
     if (message.trim()) {
       console.log("Sending message:", message);
       sendMessage();
@@ -81,16 +95,28 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     await clearChatHistory();
     setIsDialogOpen(false);
   };
+  
+  const handleLogin = () => {
+    // Store the intent to return to this recipe
+    authStateManager.setRedirectAfterAuth(window.location.pathname);
+    // Navigate to auth page (you'll need to update this based on your routing)
+    window.location.href = '/auth';
+  };
 
   if (isLoadingHistory) {
     return <ChatLoading />;
+  }
+  
+  // Show auth overlay when user is not authenticated
+  if (!user || !session) {
+    return <AuthOverlay onLogin={handleLogin} />;
   }
 
   // Check if we should show the empty state
   const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
   return (
-    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full hw-boost">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="flex flex-col h-full">
           <div className="pt-2 sm:pt-4 px-3 sm:px-5 border-b">

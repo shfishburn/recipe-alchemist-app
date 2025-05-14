@@ -7,6 +7,9 @@
 @import './styles/clock.css';
 @import './styles/carousel/index.css';
 @import './styles/scientific-content.css';
+@import './styles/layout.css';
+@import './styles/touch-optimizations.css';
+@import './styles/touch.css';
 /* Remove react-clock CSS import as it was causing issues */
 
 /* Enhanced scientific content styling */
