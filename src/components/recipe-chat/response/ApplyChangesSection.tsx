@@ -13,7 +13,6 @@ interface ApplyChangesSectionProps {
   isApplying: boolean;
   applied: boolean;
   isMobile?: boolean;
-  recipeId?: string; // Add recipeId prop for validation
 }
 
 export function ApplyChangesSection({ 
@@ -21,8 +20,7 @@ export function ApplyChangesSection({
   onApplyChanges, 
   isApplying, 
   applied, 
-  isMobile = false,
-  recipeId
+  isMobile = false 
 }: ApplyChangesSectionProps) {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [applyTimeout, setApplyTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -60,13 +58,6 @@ export function ApplyChangesSection({
     }
   }, [isApplying]);
 
-  // Validate recipeId on mount and when it changes
-  useEffect(() => {
-    if (!recipeId) {
-      console.warn("ApplyChangesSection: No recipeId provided");
-    }
-  }, [recipeId]);
-
   if (!changesSuggested) return null;
 
   // Check if there are substantive changes to apply
@@ -96,15 +87,6 @@ export function ApplyChangesSection({
         setApplyError("No substantive changes to apply. The AI didn't suggest any specific modifications.");
         return;
       }
-      
-      // Validate recipeId is present - critical fix
-      if (!recipeId) {
-        console.error("Cannot apply changes: Missing recipe ID");
-        setApplyError("Recipe reference is missing. Please refresh and try again.");
-        return;
-      }
-      
-      console.log("Applying changes for recipe:", recipeId);
       
       // Call the apply changes function
       onApplyChanges();

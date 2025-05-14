@@ -11,23 +11,6 @@ export async function updateRecipe(
   recipe: Recipe,
   chatMessage: ChatMessage
 ) {
-  // Critical: Ensure recipe_id consistency
-  if (!recipe?.id) {
-    throw new Error("Invalid recipe: Missing ID");
-  }
-  
-  // Ensure chat message has recipe_id reference
-  if (!chatMessage.recipe_id) {
-    console.warn("Chat message missing recipe_id, setting it to recipe.id");
-    chatMessage.recipe_id = recipe.id;
-  }
-  
-  // Verify recipe_id matches
-  if (chatMessage.recipe_id && chatMessage.recipe_id !== recipe.id) {
-    console.warn("Chat message recipe_id doesn't match recipe.id, correcting");
-    chatMessage.recipe_id = recipe.id;
-  }
-  
   // Initial validation of inputs
   if (!validateRecipeUpdate(recipe, chatMessage.changes_suggested)) {
     throw new Error("Failed to validate recipe update");
@@ -70,7 +53,6 @@ export async function updateRecipe(
 
         // Check for duplicates in add mode
         if (mode === 'add') {
-          console.log("Adding new ingredients to existing recipe");
           const duplicates = findDuplicateIngredients(recipe.ingredients, items);
           if (duplicates.length > 0) {
             console.error("Duplicate ingredients detected:", duplicates);

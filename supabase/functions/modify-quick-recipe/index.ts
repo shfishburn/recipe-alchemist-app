@@ -89,7 +89,9 @@ function validateRecipe(recipe: any) {
     throw new Error("Must have at least one ingredient");
   if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))
     throw new Error("Must have steps or instructions");
-  if (!recipe.id) throw new Error("Missing recipe.id");
+  
+  // Validate recipe ID exists
+  if (!recipe.id) throw new Error("Recipe ID is required");
 }
 
 // === edge function ===
@@ -107,13 +109,11 @@ serve(async (req) => {
 
   try {
     const { recipe, userRequest, modificationHistory = [] } = await req.json();
-    console.log("Processing modification request for recipe:", recipe?.id || "unknown");
 
     // validate input
     try {
       validateRecipe(recipe);
     } catch (vall) {
-      console.error("Recipe validation failed:", vall.message);
       return new Response(JSON.stringify({ error: vall.message }), { status: 400, headers });
     }
 
@@ -168,23 +168,26 @@ serve(async (req) => {
           global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
         });
         
-        // CRITICAL FIX: Ensure recipe_id is explicitly set and logged
+        // Ensure we have valid recipe ID before saving to database
         if (!recipe.id) {
-          console.error("Missing recipe.id when inserting chat record");
-          throw new Error("Recipe ID is required");
+          throw new Error("Cannot save chat: Recipe ID is missing");
         }
         
-        console.log("Inserting chat record with recipe_id:", recipe.id);
-        
-        await sb.from("recipe_chats").insert({
+        const chatData = {
           recipe_id: recipe.id,
           user_message: userRequest,
           ai_response: parsed.textResponse,
           changes_suggested: parsed.modifications,
           source_type: "modification"
+        };
+        
+        console.log("Saving chat to database:", {
+          recipeId: recipe.id,
+          messageLength: userRequest.length,
+          hasChanges: !!parsed.modifications
         });
         
-        console.log("Successfully inserted chat record for recipe:", recipe.id);
+        await sb.from("recipe_chats").insert(chatData);
       } catch (dbErr) {
         console.error("DB insert failed", dbErr);
       }

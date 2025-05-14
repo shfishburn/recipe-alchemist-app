@@ -16,18 +16,16 @@ export function useApplyChanges() {
       return false;
     }
     
-    console.log('Starting to apply changes from chat message:', chatMessage.id);
-    console.log('Recipe details:', { id: recipe.id, title: recipe.title });
-    console.log('Chat message details:', { 
-      id: chatMessage.id,
-      recipe_id: chatMessage.recipe_id,
-      has_changes: !!chatMessage.changes_suggested
+    console.log('Starting to apply changes from chat message:', {
+      chatId: chatMessage.id,
+      recipeId: chatMessage.recipe_id || recipe.id,
+      hasChanges: !!chatMessage.changes_suggested
     });
     
-    // Check for required data with enhanced validation
+    // Check for required data
     if (!recipe || !recipe.id) {
       const errorMsg = 'Cannot apply changes: Recipe data is missing';
-      console.error(errorMsg);
+      console.error(errorMsg, {recipe});
       toast({
         title: 'Error',
         description: errorMsg,
@@ -36,16 +34,11 @@ export function useApplyChanges() {
       return false;
     }
     
-    // CRITICAL FIX: Ensure chat message has recipe_id, using recipe.id as fallback
-    if (!chatMessage?.recipe_id) {
-      console.warn('Chat message missing recipe_id. Using recipe.id as fallback.');
-      chatMessage.recipe_id = recipe.id;
-    }
-    
-    // Double-check recipe_id is set on the chat message
-    if (!chatMessage.recipe_id) {
-      const errorMsg = 'Cannot apply changes: Chat message is missing recipe reference';
-      console.error(errorMsg, chatMessage);
+    // Ensure we have a valid recipe_id in the chat message
+    const recipeId = chatMessage.recipe_id || recipe.id;
+    if (!recipeId) {
+      const errorMsg = 'Cannot apply changes: Recipe reference is missing';
+      console.error(errorMsg, {chatMessage});
       toast({
         title: 'Error',
         description: errorMsg,
@@ -53,6 +46,12 @@ export function useApplyChanges() {
       });
       return false;
     }
+    
+    // Create a chat message with guaranteed recipe_id
+    const validatedChatMessage = {
+      ...chatMessage,
+      recipe_id: recipeId
+    };
     
     try {
       setIsApplying(true);
@@ -60,19 +59,15 @@ export function useApplyChanges() {
       // First, mark this chat as "applied" in the database
       const { error: updateError } = await supabase
         .from('recipe_chats')
-        .update({ 
-          applied: true,
-          recipe_id: recipe.id // Ensure recipe_id is set again in case it was missing
-        })
-        .eq('id', chatMessage.id);
+        .update({ applied: true })
+        .eq('id', validatedChatMessage.id);
       
       if (updateError) {
-        console.error('Error marking chat as applied:', updateError);
         throw new Error(`Error marking chat as applied: ${updateError.message}`);
       }
       
       // Step 2: Update the recipe with the changes
-      await updateRecipe(recipe, chatMessage)
+      await updateRecipe(recipe, validatedChatMessage)
         .then(() => {
           // Success - Show toast notification
           toast({
@@ -93,25 +88,25 @@ export function useApplyChanges() {
         });
         
       // If the changes include science-related updates, analyze with the reactions function
-      if (chatMessage.changes_suggested && 
-          (chatMessage.changes_suggested.science_notes ||
-           chatMessage.changes_suggested.instructions)) {
+      if (validatedChatMessage.changes_suggested && 
+          (validatedChatMessage.changes_suggested.science_notes ||
+           validatedChatMessage.changes_suggested.instructions)) {
         
         // Skip reactions analysis if the instructions array is empty
-        const instructionsArray = chatMessage.changes_suggested.instructions;
+        const instructionsArray = validatedChatMessage.changes_suggested.instructions;
         if (Array.isArray(instructionsArray) && instructionsArray.length === 0) {
           console.log('Skipping reactions analysis: empty instructions array');
           return true;
         }
         
         try {
-          console.log('Starting scientific reaction analysis for recipe:', recipe.id);
+          console.log('Starting scientific reaction analysis for recipe:', recipeId);
           
           // Load updated recipe to get latest instructions
           const { data: updatedRecipe, error: loadError } = await supabase
             .from('recipes')
             .select('*')
-            .eq('id', recipe.id)
+            .eq('id', recipeId)
             .single();
             
           if (loadError) {
@@ -127,7 +122,7 @@ export function useApplyChanges() {
             // Call the analyze-reactions edge function
             supabase.functions.invoke('analyze-reactions', {
               body: {
-                recipe_id: recipe.id,
+                recipe_id: recipeId,
                 title: updatedRecipe.title || recipe.title,
                 instructions: instructions
               }

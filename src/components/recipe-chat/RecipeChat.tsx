@@ -21,13 +21,6 @@ import { Button } from '@/components/ui/button';
 import { ChatLayout } from './ChatLayout';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
-  // Validate recipe input
-  useEffect(() => {
-    if (!recipe?.id) {
-      console.error("RecipeChat received invalid recipe:", recipe);
-    }
-  }, [recipe]);
-  
   const { user, session } = useAuth();
   const { handleError } = useErrorHandler({
     toastTitle: "Chat Error",
@@ -37,6 +30,16 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const [retryCount, setRetryCount] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Validate recipe has an ID - crucial for the chat functionality
+  useEffect(() => {
+    if (!recipe || !recipe.id) {
+      console.error("Invalid recipe provided to RecipeChat component:", recipe);
+      toast.error("Error", { 
+        description: "Invalid recipe data. Please try again."
+      });
+    }
+  }, [recipe]);
   
   const {
     message,
@@ -60,19 +63,19 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   // Create a wrapper for applyChanges that only takes the chatMessage parameter
   const applyChanges = async (chatMessage: ChatMessageType) => {
     try {
-      console.log("Applying changes with recipe_id check:", {
-        recipeId: recipe?.id,
-        chatMessageHasId: !!chatMessage?.recipe_id,
-        chatMessageId: chatMessage?.id
+      // Ensure chat message has a recipe_id, fallback to current recipe if needed
+      const validatedChatMessage = {
+        ...chatMessage,
+        recipe_id: chatMessage.recipe_id || recipe.id
+      };
+      
+      console.log("Applying changes with validated chat message:", {
+        chatId: validatedChatMessage.id,
+        recipeId: validatedChatMessage.recipe_id,
+        hasChanges: !!validatedChatMessage.changes_suggested
       });
       
-      // Ensure chat message has the proper recipe_id before applying changes
-      if (!chatMessage.recipe_id && recipe?.id) {
-        console.log("Setting missing recipe_id on chat message before applying changes");
-        chatMessage.recipe_id = recipe.id;
-      }
-      
-      return await rawApplyChanges(recipe, chatMessage);
+      return await rawApplyChanges(recipe, validatedChatMessage);
     } catch (error) {
       handleError(error);
       toast.error("Changes couldn't be applied", {
@@ -148,9 +151,17 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
       return;
     }
     
+    // Validate recipe ID before submitting
+    if (!recipe.id) {
+      toast.error("Cannot send message", {
+        description: "Invalid recipe reference"
+      });
+      return;
+    }
+    
     if (message.trim()) {
       try {
-        console.log("Sending message for recipe:", recipe.id);
+        console.log("Sending message:", message);
         sendMessage();
         // Immediately scroll down when sending
         setTimeout(scrollToBottom, 50);

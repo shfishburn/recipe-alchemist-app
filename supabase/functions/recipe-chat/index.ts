@@ -247,6 +247,7 @@ function extractScienceNotesFromText(text: string): string[] {
   return scienceNotes.slice(0, 5); // Return at most 5 notes
 }
 
+// === edge function ===
 serve(async (req) => {
   // Handle CORS preflight requests with dynamic origin support for credentials
   if (req.method === 'OPTIONS') {
@@ -268,7 +269,7 @@ serve(async (req) => {
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
-      console.error("Missing recipe data in request");
+      console.error("Missing recipe data in request:", recipe);
       throw new Error("Recipe data is required");
     }
     
@@ -411,22 +412,30 @@ serve(async (req) => {
         const meta = messageId ? { optimistic_id: messageId } : {};
         
         try {
-          const { error: chatError } = await supabaseClient
+          console.log("Saving chat to database with recipe_id:", recipe.id);
+          
+          const chatRecord = {
+            recipe_id: recipe.id,
+            user_message: userMessage,
+            ai_response: textResponse,
+            changes_suggested: changes,
+            source_type: sourceType || 'manual',
+            source_url: sourceUrl,
+            source_image: sourceImage,
+            meta: meta
+          };
+          
+          const { data: insertedChat, error: chatError } = await supabaseClient
             .from('recipe_chats')
-            .insert({
-              recipe_id: recipe.id,
-              user_message: userMessage,
-              ai_response: textResponse,
-              changes_suggested: changes,
-              source_type: sourceType || 'manual',
-              source_url: sourceUrl,
-              source_image: sourceImage,
-              meta: meta
-            });
+            .insert(chatRecord)
+            .select()
+            .single();
 
           if (chatError) {
             console.error("Error storing chat:", chatError);
             throw chatError;
+          } else {
+            console.log("Successfully saved chat with ID:", insertedChat?.id);
           }
         } catch (dbError) {
           console.error("Database error in recipe-chat function:", dbError);
