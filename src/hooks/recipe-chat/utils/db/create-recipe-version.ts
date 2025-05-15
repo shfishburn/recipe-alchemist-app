@@ -1,8 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { processRecipeUpdates } from '../process-recipe-updates';
-import { transformRecipeForDb, safelyConvertToJson } from '@/utils/db-transformers';
+import { transformRecipeForDb } from '@/utils/db-transformers';
+import { asDbRecipeInsert } from '@/types/database';
 import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 
 /**
@@ -56,18 +58,21 @@ export async function createRecipeVersion(
   // Transform recipe to database format
   const recipeForDb = transformRecipeForDb(updatedRecipe);
   
+  // Convert to proper database insert type
+  const dbRecipe = asDbRecipeInsert(recipeForDb);
+  
   console.log("Creating recipe version with transformed data:", {
     id: 'new',
-    title: recipeForDb.title,
-    version: recipeForDb.version_number,
-    hasIngredients: recipeForDb.ingredients ? true : false,
-    hasInstructions: recipeForDb.instructions ? true : false
+    title: dbRecipe.title,
+    version: dbRecipe.version_number,
+    hasIngredients: dbRecipe.ingredients ? true : false,
+    hasInstructions: dbRecipe.instructions ? true : false
   });
   
   // Insert the new recipe version into the database
   const { data, error } = await supabase
     .from('recipes')
-    .insert(recipeForDb)
+    .insert(dbRecipe)
     .select('id, slug, version_number')
     .single();
     

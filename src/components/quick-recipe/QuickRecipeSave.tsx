@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthDrawer } from '@/hooks/use-auth-drawer';
 import { authStateManager, PendingActionType } from '@/lib/auth/auth-state-manager';
-import { transformRecipeForDb, VALID_DB_FIELDS } from '@/utils/db-transformers';
+import { transformRecipeForDb } from '@/utils/db-transformers';
+import { asDbRecipeInsert } from '@/types/database';
 
 // Define the save-recipe action type
 const SAVE_RECIPE_ACTION: PendingActionType = 'save-recipe';
@@ -62,7 +63,11 @@ export function useQuickRecipeSave() {
       };
       
       // Transform recipe for database compatibility using our utility
+      // This handles ingredient type conversion and other normalizations
       const recipeForDb = transformRecipeForDb(recipeWithUser);
+      
+      // Cast the transformed recipe to the specific database type
+      const dbRecipe = asDbRecipeInsert(recipeForDb);
       
       // Implement robust circuit-breaker style retry logic
       const maxRetries = 3;
@@ -71,10 +76,10 @@ export function useQuickRecipeSave() {
       
       while (retries < maxRetries && !success) {
         try {
-          console.log("Saving recipe with data:", recipeForDb);
+          console.log("Saving recipe with data:", dbRecipe);
           const { data, error } = await supabase
             .from('recipes')
-            .insert(recipeForDb)
+            .insert(dbRecipe)
             .select('id, title, slug')
             .single();
           

@@ -126,7 +126,7 @@ export function transformIngredient(ingredient: QuickRecipeIngredient | Ingredie
  * @param recipe - The recipe object to transform
  * @returns A database-compatible object
  */
-export function transformRecipeForDb(recipe: Partial<Recipe>): Record<string, any> {
+export function transformRecipeForDb(recipe: Partial<Recipe> | any): Record<string, any> {
   // Deep clone to avoid modifying the original
   const recipeClone = JSON.parse(JSON.stringify(recipe));
   const result: Record<string, any> = {};
