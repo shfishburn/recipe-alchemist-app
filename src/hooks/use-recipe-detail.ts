@@ -123,6 +123,9 @@ export const useRecipeDetail = (idOrSlug?: string) => {
           const recipe: Recipe = {
             id: data.id,
             title: data.title || 'Untitled Recipe',
+            // Include both fields for backwards compatibility during transition
+            description: data.description || data.tagline || '',
+            tagline: data.tagline || data.description || '',
             ingredients: ingredients as Ingredient[],
             instructions: Array.isArray(data.instructions) 
               ? data.instructions 
@@ -141,7 +144,6 @@ export const useRecipeDetail = (idOrSlug?: string) => {
             updated_at: data.updated_at || new Date().toISOString(),
             original_request: '', // Field doesn't exist in DB response, set default empty string
             reasoning: data.reasoning || '',
-            tagline: data.tagline || '',
             version_number: data.version_number || 1,
             previous_version_id: data.previous_version_id,
             deleted_at: data.deleted_at,

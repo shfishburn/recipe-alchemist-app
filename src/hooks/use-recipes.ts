@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 // Database recipe type coming directly from Supabase
 type DbRecipe = Database['public']['Tables']['recipes']['Row'];
+type DbRecipeArray = DbRecipe[];
 
 export const useRecipes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,8 +18,8 @@ export const useRecipes = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
   // Memoize recipe transformation function to avoid recreating on each render
-  const transformRecipes = useCallback((dbRecipes: any[]): Recipe[] => {
-    return (dbRecipes || []).map((dbRecipe: any): Recipe => {
+  const transformRecipes = useCallback((dbRecipes: DbRecipeArray): Recipe[] => {
+    return (dbRecipes || []).map((dbRecipe: DbRecipe): Recipe => {
       // Parse ingredients JSON to Ingredient array
       let ingredients: Ingredient[] = [];
       try {
@@ -36,7 +37,8 @@ export const useRecipes = () => {
       try {
         if (dbRecipe.science_notes) {
           scienceNotes = Array.isArray(dbRecipe.science_notes) 
-            ? dbRecipe.science_notes.map((note: any) => typeof note === 'string' ? note : String(note))
+            ? dbRecipe.science_notes.map((note: unknown) => 
+                typeof note === 'string' ? note : String(note))
             : [];
         }
       } catch (e) {
@@ -78,6 +80,9 @@ export const useRecipes = () => {
       return {
         id: dbRecipe.id,
         title: dbRecipe.title || '',
+        // Include both description and tagline during transition
+        description: dbRecipe.description || dbRecipe.tagline || '',
+        tagline: dbRecipe.tagline || dbRecipe.description || '',
         ingredients: ingredients,
         instructions: dbRecipe.instructions || [],
         prep_time_min: dbRecipe.prep_time_min,
@@ -92,7 +97,6 @@ export const useRecipes = () => {
         updated_at: dbRecipe.updated_at || new Date().toISOString(),
         original_request: dbRecipe.original_request || '',
         reasoning: dbRecipe.reasoning || '',
-        tagline: dbRecipe.tagline || '',
         version_number: dbRecipe.version_number || 1,
         previous_version_id: dbRecipe.previous_version_id,
         deleted_at: dbRecipe.deleted_at,
@@ -101,6 +105,7 @@ export const useRecipes = () => {
         nutrition: nutrition,
         science_notes: scienceNotes,
         chef_notes: dbRecipe.chef_notes || '',
+        cooking_tip: dbRecipe.cooking_tip || '',
         nutri_score: nutriScore
       };
     });
@@ -115,7 +120,7 @@ export const useRecipes = () => {
         // Build the base query
         let supabaseQuery = supabase
           .from('recipes')
-          .select('id, title, tagline, cuisine, dietary, cook_time_min, prep_time_min, image_url, nutrition, ingredients, science_notes')
+          .select('id, title, tagline, description, cuisine, dietary, cook_time_min, prep_time_min, image_url, nutrition, ingredients, science_notes')
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
 
@@ -123,7 +128,7 @@ export const useRecipes = () => {
         if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
           const trimmedTerm = debouncedSearchTerm.trim();
           supabaseQuery = supabaseQuery.or(
-            `title.ilike.%${trimmedTerm}%,tagline.ilike.%${trimmedTerm}%,cuisine.ilike.%${trimmedTerm}%,dietary.ilike.%${trimmedTerm}%`
+            `title.ilike.%${trimmedTerm}%,tagline.ilike.%${trimmedTerm}%,description.ilike.%${trimmedTerm}%,cuisine.ilike.%${trimmedTerm}%,dietary.ilike.%${trimmedTerm}%`
           );
         }
 

@@ -63,8 +63,10 @@ export function FeaturedRecipe() {
           <CardContent>
             <div className="space-y-6">
               <div>
-                <h3 className="text-2xl font-bold mb-2">{recipe.title}</h3>
-                <p className="text-muted-foreground">{recipe.tagline}</p>
+                <h3 className="text-2xl md:text-3xl font-bold mb-2">{recipe.title}</h3>
+                <p className="text-muted-foreground">
+                  {recipe.tagline || recipe.description || 'No tagline available'}
+                </p>
               </div>
               
               <Table>

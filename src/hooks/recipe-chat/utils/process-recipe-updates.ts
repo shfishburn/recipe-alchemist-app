@@ -33,9 +33,10 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   }
   
   // Handle description/tagline field update
-  // IMPORTANT FIX: Use tagline instead of description, as the database schema has 'tagline' and not 'description'
+  // Support both fields during transition
   if (changes_suggested.description) {
-    // Use tagline field instead of description
+    // Update both fields for compatibility during transition
+    updatedRecipe.description = changes_suggested.description;
     updatedRecipe.tagline = changes_suggested.description;
   }
   
@@ -66,7 +67,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   
   // Update instructions if provided
   if (Array.isArray(changes_suggested.instructions) && changes_suggested.instructions.length > 0) {
-    // Convert any complex instruction objects to simple strings
+    // Convert complex instruction objects to simple strings
     const processedInstructions = changes_suggested.instructions.map(instruction => 
       typeof instruction === 'string' ? instruction : instruction.action
     );
