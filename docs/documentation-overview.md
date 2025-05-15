@@ -34,6 +34,13 @@ Documentation intended for developers working with the Recipe Alchemy codebase:
 - [Science Analysis System](./science-analysis-system.md) - Scientific content generation
 - [Shopping List System](./shopping-list-system.md) - Shopping list functionality
 
+### Design and Technology Documentation
+
+- [Design System](./design-system.md) - Design language, CSS architecture, and UI components
+- [Technical Stack](./technical-stack.md) - Technologies and packages used
+- [Scientific Styling Guide](./scientific-styling-guide.md) - Guidelines for scientific content presentation
+- [Carousel Component](./carousel-component.md) - Custom carousel implementation details
+
 ### AI Prompts Documentation
 
 - [AI Prompts Overview](./ai-prompts/overview.md) - Introduction to all AI prompt systems
