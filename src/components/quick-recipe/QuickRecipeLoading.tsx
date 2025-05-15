@@ -16,11 +16,21 @@ interface QuickRecipeLoadingProps {
 
 // Array of rotating chef tips
 const CHEF_TIPS = [
-  "Patience is key in cooking. The best flavors take time to develop, just like your recipe is taking shape now.",
-  "Professional chefs read through the entire recipe before starting. It helps avoid surprises midway.",
-  "Mise en place (preparing ingredients before cooking) can save you valuable time and reduce cooking stress.",
-  "Always taste as you go. Seasoning gradually builds better flavors than adding all at once.",
-  "When possible, use fresh herbs at the end of cooking for the brightest flavor."
+ "Listen, amigos - patience isn't just a virtue, it's the secret ingredient! The soul of flavor develops slowly, just like your recipe is taking shape now. Trust the process."
+
+"Before you touch a single ingredient, read the entire recipe twice. Professional kitchens call this 'mise en place mental' - the preparation that happens in your head first."
+
+"In my kitchen, we live by mise en place - organizing ingredients before cooking. This isn't just about order; it's about respect for the food and creating rhythm in your cooking."
+
+"Taste constantly! Your palate is the most valuable tool. Seasoning gradually builds layers of flavor that sing together in harmony, not just noise."
+
+"The magic happens at the finish line. Add fresh herbs at the end of cooking - they're not just garnish, they're the bright notes that make a dish memorable."
+
+"The heat is your paintbrush, not your hammer. Control it precisely to coax out flavors rather than forcing them - gentle bubbles in a sauce mean love, not rapid boiling."
+
+"The difference between good and extraordinary? It's in the fond - those caramelized bits on the bottom of your pan. Deglaze with patience and watch magic happen."
+
+"Your knife is an extension of your hand. Keep it sharp, respect its power, and it will transform your cooking from labor to artistry."
 ];
 
 export function QuickRecipeLoading({ 
@@ -56,7 +66,7 @@ export function QuickRecipeLoading({
   return (
     <div className="flex flex-col items-center justify-center w-full max-w-2xl mx-auto overflow-x-hidden">
       <div className="flex flex-col items-center justify-center space-y-8 p-6 w-full">
-        {/* Animated cooking pot boiling over */}
+        {/* Staub-inspired cooking pot animation */}
         <div 
           className="relative animate-float-gentle hw-accelerated" 
           aria-hidden="true"
@@ -64,49 +74,63 @@ export function QuickRecipeLoading({
         >
           <svg 
             width="140" 
-            height="140" 
-            viewBox="0 0 140 140" 
+            height="120" 
+            viewBox="0 0 120 120" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
             className="animate-pulse-subtle"
           >
-            {/* Stove burner */}
-            <circle cx="70" cy="105" r="25" fill="#4B5563" />
-            <circle cx="70" cy="105" r="20" fill="#6B7280" strokeWidth="2" stroke="#9CA3AF" strokeDasharray="3 3" className="animate-spin-slow" />
+            {/* Main pot body - dark green, more straight-sided */}
+            <path d="M35 70C35 70 35 75 35 85C35 97 45 105 60 105C75 105 85 97 85 85C85 75 85 70 85 70" fill="#1E5631" />
             
-            {/* Pot body */}
-            <path d="M40 80C40 80 35 90 35 100C35 110 45 115 70 115C95 115 105 110 105 100C105 90 100 80 100 80H40Z" fill="#374151" />
-            <path d="M38 80H102C102 80 108 75 108 70C108 65 102 60 102 60H38C38 60 32 65 32 70C32 75 38 80 38 80Z" fill="#6B7280" />
-
-            {/* Pot handles */}
-            <path d="M32 70C32 70 25 68 25 75C25 82 32 80 32 80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
-            <path d="M108 70C108 70 115 68 115 75C115 82 108 80 108 80" stroke="#9CA3AF" strokeWidth="3" strokeLinecap="round" />
+            {/* Pot rim and top edge */}
+            <rect x="35" y="68" width="50" height="4" fill="#0F3920" />
+            <ellipse cx="60" cy="70" rx="25" ry="4" fill="#1E5631" />
             
-            {/* Boiling water inside pot */}
-            <path d="M42 80C42 80 45 85 70 85C95 85 98 80 98 80" fill="#4CAF50" />
-            <ellipse cx="70" cy="80" rx="28" ry="6" fill="#4CAF50" />
+            {/* Integrated cast iron style handles */}
+            <path d="M35 74C35 74 30 74 28 77C26 80 28 84 31 84L35 84" fill="#1E5631" stroke="#0F3920" strokeWidth="1" />
+            <path d="M85 74C85 74 90 74 92 77C94 80 92 84 89 84L85 84" fill="#1E5631" stroke="#0F3920" strokeWidth="1" />
             
-            {/* Bubbles in the water - animated */}
-            <circle cx="55" cy="77" r="2" fill="white" opacity="0.6" className="animate-bubble-1" />
-            <circle cx="65" cy="78" r="3" fill="white" opacity="0.7" className="animate-bubble-2" />
-            <circle cx="78" cy="76" r="2.5" fill="white" opacity="0.6" className="animate-bubble-3" />
-            <circle cx="85" cy="79" r="1.5" fill="white" opacity="0.7" className="animate-bubble-4" />
-            <circle cx="50" cy="79" r="1.5" fill="white" opacity="0.5" className="animate-bubble-5" />
+            {/* Amber broth rather than green liquid */}
+            <ellipse cx="60" cy="70" rx="23" ry="2" fill="#E6C17D" />
             
-            {/* Boiling over effects */}
-            <path d="M42 80C42 80 40 75 42 73C44 71 46 72 45 70C44 68 46 65 48 66" stroke="white" strokeWidth="2" strokeLinecap="round" className="animate-boil-over-1" />
-            <path d="M98 80C98 80 100 75 98 73C96 71 94 72 95 70C96 68 94 65 92 66" stroke="white" strokeWidth="2" strokeLinecap="round" className="animate-boil-over-2" />
+            {/* Subtle broth texture */}
+            <path d="M45 69C45 69 50 70 55 69C60 68 65 69 70 70C75 69" stroke="#D4A76A" strokeWidth="0.5" opacity="0.7" />
             
-            {/* Steam clouds */}
-            <path d="M50 55C50 55 45 50 47 45C49 40 54 42 55 38C56 34 60 32 63 35C66 38 64 42 67 43C70 44 71 48 68 50C65 52 62 48 60 50C58 52 55 52 53 50" fill="#E5E7EB" opacity="0.7" className="animate-steam-1" />
+            {/* Enhanced bubbles with glow effect */}
+            <circle cx="48" cy="69" r="1.5" fill="white" opacity="0.8" className="animate-bubble-1" />
+            <circle cx="48" cy="69" r="2" fill="white" opacity="0.3" className="animate-bubble-1" />
             
-            <path d="M75 50C75 50 70 45 72 40C74 35 79 37 80 33C81 29 85 27 88 30C91 33 89 37 92 38C95 39 96 43 93 45C90 47 87 43 85 45C83 47 80 47 78 45" fill="#E5E7EB" opacity="0.7" className="animate-steam-2" />
+            <circle cx="60" cy="69.5" r="2" fill="white" opacity="0.8" className="animate-bubble-2" />
+            <circle cx="60" cy="69.5" r="2.5" fill="white" opacity="0.3" className="animate-bubble-2" />
             
-            <path d="M60 40C60 40 58 35 60 32C62 29 65 31 65 28C65 25 68 24 70 26C72 28 70 30 72 31C74 32 75 34 73 36C71 38 69 36 68 37C67 38 65 38 64 37" fill="#E5E7EB" opacity="0.6" className="animate-steam-3" />
+            <circle cx="72" cy="69" r="1.3" fill="white" opacity="0.8" className="animate-bubble-3" />
+            <circle cx="72" cy="69" r="1.8" fill="white" opacity="0.3" className="animate-bubble-3" />
             
-            {/* Lid bobbing from pressure */}
-            <ellipse cx="70" cy="60" rx="30" ry="5" fill="#4B5563" className="animate-lid-bobble" />
-            <circle cx="70" cy="58" r="4" fill="#6B7280" />
+            {/* Staub-style lid with concentric circles and metal knob - updated with black top */}
+            <g className="animate-lid-bobble">
+              {/* Lid base */}
+              <ellipse cx="60" cy="63" rx="25" ry="4" fill="#1E5631" />
+              {/* Lid top - black */}
+              <ellipse cx="60" cy="61" rx="23" ry="3" fill="#111111" />
+              {/* Concentric circles - subtle dark gray against black */}
+              <ellipse cx="60" cy="61" rx="18" ry="2" fill="none" stroke="#2A2A2A" strokeWidth="1" />
+              <ellipse cx="60" cy="61" rx="12" ry="1.5" fill="none" stroke="#2A2A2A" strokeWidth="1" />
+              <ellipse cx="60" cy="61" rx="6" ry="1" fill="none" stroke="#2A2A2A" strokeWidth="1" />
+              {/* Metal knob */}
+              <circle cx="60" cy="59" r="3" fill="#D1D5DB" />
+              <circle cx="60" cy="59" r="1.5" fill="#9CA3AF" />
+            </g>
+            
+            {/* Enhanced steam - thicker, more visible with shadow effects */}
+            <path d="M45 55C45 55 43 45 48 40" stroke="#D1D5DB" strokeWidth="3" strokeLinecap="round" className="animate-steam-1" />
+            <path d="M60 50C60 50 58 40 63 35" stroke="#D1D5DB" strokeWidth="3" strokeLinecap="round" className="animate-steam-2" />
+            <path d="M75 55C75 55 73 45 78 40" stroke="#D1D5DB" strokeWidth="3" strokeLinecap="round" className="animate-steam-3" />
+            
+            {/* Steam shadows for better contrast on white background */}
+            <path d="M45 55C45 55 43 45 48 40" stroke="#9CA3AF" strokeWidth="4" strokeLinecap="round" opacity="0.2" className="animate-steam-1" />
+            <path d="M60 50C60 50 58 40 63 35" stroke="#9CA3AF" strokeWidth="4" strokeLinecap="round" opacity="0.2" className="animate-steam-2" />
+            <path d="M75 55C75 55 73 45 78 40" stroke="#9CA3AF" strokeWidth="4" strokeLinecap="round" opacity="0.2" className="animate-steam-3" />
           </svg>
         </div>
         
