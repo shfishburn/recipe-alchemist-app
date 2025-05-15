@@ -3,8 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { processRecipeUpdates } from '../process-recipe-updates';
-import { transformRecipeForDb } from '@/utils/db-transformers';
-import { asDbRecipeInsert } from '@/types/database';
+import { Json } from '@/integrations/supabase/types';
 import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 
 /**
@@ -55,24 +54,28 @@ export async function createRecipeVersion(
   // Ensure recipe integrity before database insert
   ensureRecipeIntegrity(updatedRecipe);
   
-  // Transform recipe to database format
-  const recipeForDb = transformRecipeForDb(updatedRecipe);
+  // Make sure servings is always defined (critical fix for build error)
+  if (updatedRecipe.servings === undefined || updatedRecipe.servings === null) {
+    updatedRecipe.servings = originalRecipe.servings || 1; // Default to 1 if original has no servings
+  }
   
-  // Convert to proper database insert type
-  const dbRecipe = asDbRecipeInsert(recipeForDb);
-  
-  console.log("Creating recipe version with transformed data:", {
-    id: 'new',
-    title: dbRecipe.title,
-    version: dbRecipe.version_number,
-    hasIngredients: dbRecipe.ingredients ? true : false,
-    hasInstructions: dbRecipe.instructions ? true : false
-  });
+  // Create database-compatible object with appropriate JSON conversions
+  const recipeForDb = {
+    ...updatedRecipe,
+    ingredients: updatedRecipe.ingredients as unknown as Json,
+    instructions: updatedRecipe.instructions as unknown as Json,
+    science_notes: Array.isArray(updatedRecipe.science_notes) 
+      ? updatedRecipe.science_notes as unknown as Json 
+      : [] as unknown as Json,
+    nutrition: updatedRecipe.nutrition as unknown as Json,
+    nutri_score: updatedRecipe.nutri_score as unknown as Json,
+    servings: updatedRecipe.servings, // Explicitly include servings
+  };
   
   // Insert the new recipe version into the database
   const { data, error } = await supabase
     .from('recipes')
-    .insert(dbRecipe as any) // Type assertion to bypass TypeScript error
+    .insert(recipeForDb)
     .select('id, slug, version_number')
     .single();
     
