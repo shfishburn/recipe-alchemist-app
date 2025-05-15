@@ -45,7 +45,7 @@ export function processRecipeUpdates(
         updatedRecipe.instructions = changes.instructions as string[];
       } else {
         // Complex object format - convert to string array
-        updatedRecipe.instructions = (changes.instructions as any[]).map(instruction => 
+        updatedRecipe.instructions = (changes.instructions as unknown[]).map(instruction => 
           typeof instruction === 'string' ? instruction : instruction.action || instruction.stepNumber?.toString() || ''
         ).filter(step => step.trim() !== '');
       }

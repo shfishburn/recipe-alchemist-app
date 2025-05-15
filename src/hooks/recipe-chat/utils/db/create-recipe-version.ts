@@ -1,7 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { processRecipeUpdates } from '../process-recipe-updates';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Creates a new version of a recipe based on changes from an AI chat message
@@ -51,7 +53,16 @@ export async function createRecipeVersion(
   // Insert the new recipe version into the database
   const { data, error } = await supabase
     .from('recipes')
-    .insert(updatedRecipe)
+    .insert({
+      ...updatedRecipe,
+      // Convert these to JSON for database storage
+      ingredients: updatedRecipe.ingredients as unknown as Json,
+      science_notes: Array.isArray(updatedRecipe.science_notes) 
+        ? updatedRecipe.science_notes as unknown as Json 
+        : [],
+      nutrition: updatedRecipe.nutrition as unknown as Json,
+      nutri_score: updatedRecipe.nutri_score as unknown as Json,
+    })
     .select('id, slug, version_number')
     .single();
     

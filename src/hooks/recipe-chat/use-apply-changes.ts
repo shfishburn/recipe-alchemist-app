@@ -20,7 +20,7 @@ export function useApplyChanges() {
     }
     
     if (!chatMessage || !chatMessage.recipe_id) {
-      console.error('Cannot apply changes: Chat message or recipe ID is missing', chatMessage);
+      console.error('Cannot apply changes: Chat message or recipe ID is missing');
       toast({
         title: 'Error',
         description: 'Cannot apply changes: Recipe reference is missing',

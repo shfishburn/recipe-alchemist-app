@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -61,31 +60,15 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   } = useRecipeChat(recipe);
 
   // Create a wrapper for applyChanges that only takes the chatMessage parameter
-  const applyChanges = async (chatMessage: ChatMessageType) => {
-    try {
-      // Ensure chat message has a recipe_id, fallback to current recipe if needed
-      const validatedChatMessage = {
-        ...chatMessage,
-        recipe_id: chatMessage.recipe_id || recipe.id
-      };
-      
-      console.log("Applying changes with validated chat message:", {
-        chatId: validatedChatMessage.id,
-        recipeId: validatedChatMessage.recipe_id,
-        hasChanges: !!validatedChatMessage.changes_suggested
-      });
-      
-      return await rawApplyChanges(recipe, validatedChatMessage);
-    } catch (error) {
-      handleError(error);
-      toast.error("Changes couldn't be applied", {
-        description: "Please try again or modify your request",
-        action: {
-          label: "Retry",
-          onClick: () => applyChanges(chatMessage),
-        },
-      });
-      return false;
+  const handleApplyChanges = async (message: ChatMessageType) => {
+    if (isApplying) return;
+    
+    // Fix: Call applyChanges with only the ChatMessage parameter
+    const success = await applyChanges(message);
+    
+    if (success) {
+      // Optional: You can refetch the chat history after successful changes
+      refetchChatHistory();
     }
   };
 
@@ -275,7 +258,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         optimisticMessages={optimisticMessages}
                         isSending={isSending}
                         setMessage={setMessage}
-                        applyChanges={applyChanges}
+                        applyChanges={handleApplyChanges}
                         isApplying={isApplying}
                         recipe={recipe}
                         retryMessage={retryMessage}
