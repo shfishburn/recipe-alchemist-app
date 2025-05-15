@@ -2,3 +2,6 @@
 project_id = "zjyfumqfrtppleftpzjd"
 [functions.generate-quick-recipe]
 verify_jwt = false
+[functions.usda-food-api]
+verify_jwt = false
+

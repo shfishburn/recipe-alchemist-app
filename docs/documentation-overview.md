@@ -14,6 +14,21 @@ This document provides a comprehensive overview of all documentation files avail
 | [Recipe Detail System](./recipe-detail-system.md) | Complete | Covers the recipe detail pages, components, and functionality |
 | [Science Analysis System](./science-analysis-system.md) | Complete | Documents the science analysis feature that provides insights into cooking processes |
 | [Nutrition Analysis System](./nutrition-analysis-system.md) | Complete | Explains the nutrition analysis system, calculations, and visualization components |
+| [Data Model](./data-model.md) | Complete | Comprehensive documentation of the database schema, relationships, and key fields |
+
+## Edge Functions
+
+The application uses several Supabase Edge Functions for secure backend processing:
+
+| Function | Purpose |
+|----------|---------|
+| [generate-quick-recipe](../supabase/functions/generate-quick-recipe/) | Generates recipe content using AI |
+| [modify-quick-recipe](../supabase/functions/modify-quick-recipe/) | Modifies existing recipes with AI assistance |
+| [generate-recipe-image](../supabase/functions/generate-recipe-image/) | Creates images for recipes |
+| [recipe-chat](../supabase/functions/recipe-chat/) | Handles conversational AI about recipes |
+| [fuse-nutrition](../supabase/functions/fuse-nutrition/) | Combines nutrition data from multiple sources |
+| [usda-food-api](../supabase/functions/usda-food-api/) | Interfaces with USDA Food Data Central API |
+| [analyze-reactions](../supabase/functions/analyze-reactions/) | Analyzes chemical reactions in cooking steps |
 
 ## Architecture Overview
 
@@ -41,3 +56,17 @@ The application consists of several interconnected systems:
 - **State Management**: React Query + Context API + Zustand
 - **Backend**: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
 - **AI Provider**: OpenAI GPT models
+- **External APIs**: USDA Food Data Central
+
+## Database Schema
+
+The application uses a comprehensive database schema with over 20 tables to support its features. Key tables include:
+
+- `recipes` - Core recipe data
+- `profiles` - User profile information
+- `shopping_lists` - User shopping lists
+- `usda_foods` - Nutritional database
+- `recipe_step_reactions` - Scientific cooking analysis
+- `food_embeddings` - Vector representations for semantic matching
+
+For detailed information on the database schema, see the [Data Model](./data-model.md) documentation.
