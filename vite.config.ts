@@ -1,5 +1,5 @@
-
 import { defineConfig } from "vite";
+
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -32,9 +32,9 @@ export default defineConfig(({ mode }) => ({
         secure: false,
       }
     },
-    // Ensure proper MIME types are set
+    // Remove Content-Type override so HTML is served as text/html
     headers: {
-      'Content-Type': 'application/javascript',
+      // Removed forced Content-Type so HTML is served correctly as text/html
       'X-Content-Type-Options': 'nosniff'
     }
   },
