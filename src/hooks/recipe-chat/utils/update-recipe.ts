@@ -6,6 +6,7 @@ import { processRecipeUpdates } from './process-recipe-updates';
 import { saveRecipeUpdate } from './db/save-recipe-update';
 import { validateRecipeUpdate } from './validation/validate-recipe-update';
 import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
+import { transformRecipeForDb } from '@/utils/db-transformers';
 
 export async function updateRecipe(
   recipe: Recipe,
@@ -73,12 +74,13 @@ export async function updateRecipe(
       }
     }
 
+    // Transform recipe to database format before saving
+    const dbRecipe = transformRecipeForDb(updatedRecipe);
+    
     console.log("Final recipe update ready to save:", {
-      id: updatedRecipe.id,
-      hasIngredients: updatedRecipe.ingredients?.length > 0,
-      ingredientCount: updatedRecipe.ingredients?.length,
-      hasInstructions: updatedRecipe.instructions?.length > 0,
-      instructionCount: updatedRecipe.instructions?.length
+      id: dbRecipe.id,
+      hasIngredients: dbRecipe.ingredients ? true : false,
+      hasInstructions: dbRecipe.instructions ? true : false
     });
     
     return await saveRecipeUpdate(updatedRecipe);

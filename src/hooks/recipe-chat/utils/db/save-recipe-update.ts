@@ -1,9 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
-import type { Json } from '@/integrations/supabase/types';
 import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
-import { standardizeNutrition } from '@/utils/nutrition-utils';
+import { transformRecipeForDb } from '@/utils/db-transformers';
 
 // Get the correct cuisine category based on cuisine value
 function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" {
@@ -48,32 +47,12 @@ function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional A
 }
 
 /**
- * Safely serialize a value to JSON
- * @param value - The value to serialize
- * @param fallback - The fallback value if serialization fails
- * @returns The serialized value as Json type
- */
-function safelySerializeToJson(value: unknown, fallback: string = '[]'): Json {
-  if (value === null || value === undefined) {
-    return fallback as Json;
-  }
-  
-  try {
-    return JSON.stringify(value) as Json;
-  } catch (error) {
-    console.error("Failed to serialize value to JSON:", error);
-    console.warn("Value that failed serialization:", typeof value);
-    return fallback as Json;
-  }
-}
-
-/**
  * Creates a safe preview string from a JSON value
  * @param jsonValue - The JSON value to preview
  * @param maxLength - Maximum length of the preview (default is 100)
  * @returns A string preview of the JSON value
  */
-function createSafeJsonPreview(jsonValue: Json, maxLength: number = 100): string {
+function createSafeJsonPreview(jsonValue: any, maxLength: number = 100): string {
   if (jsonValue === null || jsonValue === undefined) {
     return '[null or undefined]';
   }
@@ -100,106 +79,19 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   // Ensure recipe integrity before saving to database
   ensureRecipeIntegrity(updatedRecipe);
   
-  // Enhanced nutrition data handling with detailed logging
-  if (updatedRecipe.nutrition) {
-    console.log("Original nutrition data:", JSON.stringify(updatedRecipe.nutrition));
-    
-    try {
-      // Deep clone the nutrition data to prevent reference issues
-      const nutritionCopy = JSON.parse(JSON.stringify(updatedRecipe.nutrition));
-      const standardizedNutrition = standardizeNutrition(nutritionCopy);
-      
-      console.log("Standardized nutrition data:", JSON.stringify(standardizedNutrition));
-      
-      // Validate that we have actual nutrition data
-      if (!standardizedNutrition || 
-          typeof standardizedNutrition !== 'object' || 
-          Object.keys(standardizedNutrition).length === 0) {
-        console.warn("Empty or invalid nutrition data detected, using default values");
-        updatedRecipe.nutrition = {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-          fiber: 0,
-          sugar: 0,
-          sodium: 0
-        };
-      } else {
-        // Ensure all numerical values are valid non-zero numbers
-        const minValue = 0.1; // Minimum value for nutrition fields
-        
-        for (const key in standardizedNutrition) {
-          if (typeof standardizedNutrition[key] === 'number') {
-            if (isNaN(standardizedNutrition[key]) || standardizedNutrition[key] <= 0) {
-              console.warn(`Found invalid value for nutrition field ${key}, setting to minimum value`);
-              standardizedNutrition[key] = minValue;
-            }
-          }
-        }
-        
-        updatedRecipe.nutrition = standardizedNutrition;
-      }
-    } catch (error) {
-      console.error("Error processing nutrition data:", error);
-      // Fallback to basic nutrition structure
-      updatedRecipe.nutrition = {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        fiber: 0,
-        sugar: 0,
-        sodium: 0
-      };
-    }
-  }
-  
-  // Handle cuisine_category enum value - use our updated utility function
+  // Handle cuisine_category enum value
   if (updatedRecipe.cuisine) {
     updatedRecipe.cuisine_category = getCuisineCategory(updatedRecipe.cuisine);
     console.log(`Determined cuisine category: ${updatedRecipe.cuisine_category} for cuisine: ${updatedRecipe.cuisine}`);
   }
   
-  // Process science_notes to ensure it's always properly serialized as a JSON array
-  let scienceNotesJson: Json;
-  
-  if (updatedRecipe.science_notes) {
-    // Ensure science_notes is an array of strings
-    const validatedNotes = Array.isArray(updatedRecipe.science_notes) 
-      ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
-      : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
-    
-    // Properly serialize to JSON format for database storage with error handling
-    scienceNotesJson = safelySerializeToJson(validatedNotes, '[]');
-    console.log("Science notes serialized to JSON:", createSafeJsonPreview(scienceNotesJson));
-  } else {
-    // Default to empty array if science_notes is undefined
-    scienceNotesJson = '[]' as Json;
-  }
-  
   // Transform recipe for database storage with improved type safety
-  const dbRecipe = {
-    ...updatedRecipe,
-    ingredients: updatedRecipe.ingredients as unknown as Json,
-    nutrition: updatedRecipe.nutrition as unknown as Json,
-    // Use the properly serialized science_notes
-    science_notes: scienceNotesJson,
-    // Ensure nutri_score is properly cast to Json type
-    nutri_score: updatedRecipe.nutri_score as unknown as Json,
-    // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
-    cuisine_category: updatedRecipe.cuisine_category || "Global"
-  };
+  const dbRecipe = transformRecipeForDb(updatedRecipe);
 
   console.log("Saving recipe update with data:", {
     id: dbRecipe.id,
-    hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
-    ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
-    hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
-    instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
-    scienceNotesType: typeof scienceNotesJson,
-    // Use the new utility function for safe preview generation
-    scienceNotesPreview: createSafeJsonPreview(scienceNotesJson),
+    hasIngredients: dbRecipe.ingredients ? true : false,
+    hasInstructions: dbRecipe.instructions ? true : false,
     cuisine: updatedRecipe.cuisine,
     cuisine_category: dbRecipe.cuisine_category
   });
