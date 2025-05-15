@@ -1,131 +1,257 @@
 
-# Recipe Alchemy Technical Stack
+# Technical Stack
+
+This document provides a comprehensive overview of the technologies, libraries, and architecture patterns used in the Recipe Alchemy application.
 
 ## Core Technologies
 
-- **React**: Front-end library for building the user interface
-- **TypeScript**: Type-safe JavaScript for improved developer experience and code quality
-- **Vite**: Build tool and development server for fast development and optimized production builds
-- **Tailwind CSS**: Utility-first CSS framework for styling
+### Frontend Framework
 
-## UI Framework
+- **React (v18.3.1+)** - Component-based UI library providing declarative rendering and efficient DOM updates
+- **TypeScript (v5)** - Strongly typed programming language built on JavaScript
 
-- **Shadcn UI**: Component library built on Radix UI primitives
-- **Radix UI**: Headless UI components for building accessible interfaces
-  - Accordion, Alert Dialog, Avatar, Badge, Button, Calendar, etc.
+### Build and Development
+
+- **Vite** - Modern build tool and development server with HMR (Hot Module Replacement)
+- **ESLint** - JavaScript/TypeScript linter for code quality and consistency
+- **PostCSS** - Tool for transforming CSS with JavaScript plugins
+
+### Styling
+
+- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
+- **CSS Modules** - Component-scoped CSS to avoid style conflicts
+- **PostCSS plugins** - For advanced CSS processing and optimization
+
+## UI Component Libraries
+
+### Base Component System
+
+- **Shadcn UI** - Component collection built on Radix UI
+- **Radix UI (v1+)** - Unstyled, accessible component primitives
+  - Provides accessibility features like proper ARIA attributes, keyboard navigation, and focus management
+  - Low-level primitives like Dialog, Dropdown, Tooltip, etc.
+
+### Icon System
+
+- **Lucide React (v0.462.0+)** - Comprehensive icon library
+  - Tree-shakable import system
+  - Customizable icon properties (size, color, stroke width)
+  - Accessibility support
 
 ## State Management
 
-- **React Query (TanStack Query)**: Data fetching, caching, and state management
-  - Used for all API requests with automatic caching and revalidation
-- **Zustand**: Lightweight state management for global application state
-  - Used for managing UI state across components
+### Client-side State
 
-## Routing
+- **React Context** - For shared global state
+- **Custom Hooks** - For component-level and shared logic
+- **Zustand (v5.0.3+)** - Lightweight state management with a simple API
 
-- **React Router**: Client-side routing for single-page application
-  - Used for navigation between pages without full page reloads
+### Server State
 
-## Data Visualization
+- **TanStack Query (v5.56.2+)** - Data fetching, caching, and state management
+  - Handles loading, error, and success states
+  - Automatic retries and refetching
+  - Cache invalidation and background updates
+  - Pagination and infinite scrolling support
 
-- **Recharts**: Charting library for nutrition data visualization
-  - Used for macronutrient distribution charts, nutrition analysis, etc.
+## Routing and Navigation
+
+- **React Router (v6.26.2+)** - Client-side routing
+  - Declarative routing with nested routes
+  - Route-based code splitting
+  - Programmatic navigation
 
 ## Form Handling
 
-- **React Hook Form**: Form state management and validation
-- **Zod**: Schema validation library for form validation
-  - Used in conjunction with React Hook Form for type-safe validation
+- **React Hook Form (v7.53.0+)** - Form state and validation library
+  - Uncontrolled components for better performance
+  - Built-in validation
+  - Error handling
 
-## Animation & UI Effects
+- **Zod (v3.23.8+)** - TypeScript-first schema validation
+  - Type inference
+  - Detailed error messages
+  - Composable validation schemas
 
-- **Framer Motion**: Animation library for React
-  - Used for transitions, micro-interactions, and page transitions
-- **Tailwind CSS Animate**: Animation utilities integrated with Tailwind
-  - Used for simple animations and transitions
+## Data Visualization
 
-## Utility Libraries
+- **Recharts (v2.12.7+)** - Composable charting library for React
+  - Built on D3.js
+  - Responsive charts
+  - Customizable styling
+  - Animation support
 
-- **date-fns**: Date formatting and manipulation
-- **clsx** and **tailwind-merge**: Conditional class name utilities
-- **Lucide React**: Icon library with React components
-  - Used for consistent iconography throughout the application
+## Animation
 
-## Backend Integration
+- **Framer Motion (v6.5.1+)** - Animation library for React
+  - Declarative animations
+  - Gesture support
+  - Layout animations
+  - Exit animations
 
-- **Supabase JS Client**: Integration with Supabase backend services
-  - Authentication, database, storage, and edge functions
+- **Tailwind CSS Animate** - Animation utilities for Tailwind
+  - Keyframe definitions
+  - Animation utilities
+  - Transition utilities
 
-## Development Tools
+## UI Enhancement Libraries
 
-- **ESLint**: Code linting for consistent code quality
-- **Prettier**: Code formatting for consistent style
-- **Vitest**: Unit testing framework
-- **React Testing Library**: Component testing utilities
+- **Embla Carousel (v8.3.0+)** - Carousel/slider library
+  - Touch support
+  - Responsive design
+  - Customizable options
 
-## Package Management
+- **React Day Picker (v8.10.1+)** - Flexible date picker
+  - Customizable styling
+  - Range selection
+  - Accessibility support
 
-All packages are managed via npm with strict version control to ensure consistent behavior across environments.
+- **Vaul (v1.1.2+)** - Drawer component for mobile interfaces
+  - Spring animations
+  - Touch gestures
+  - Customizable behavior
 
-## Key Package Versions
+- **Sonner (v1.5.0+)** - Toast notification system
+  - Stacked notifications
+  - Custom rendering
+  - Accessibility support
 
-- React: v18.3.1
-- React DOM: v18.3.1
-- TypeScript: Latest stable
-- Tailwind CSS: Latest stable
-- React Router DOM: v6.26.2
-- TanStack React Query: v5.56.2
-- Radix UI components: v1.x and v2.x (component dependent)
-- Lucide React: v0.462.0
-- React Hook Form: v7.53.0
-- Zod: v3.23.8
-- Recharts: v2.12.7
-- date-fns: v3.6.0
+- **CMDK (v1.0.0+)** - Command palette interface
+  - Keyboard navigation
+  - Fuzzy search
+  - Customizable rendering
 
-## Package Organization
+- **React Select (v5.10.1+)** - Enhanced select inputs
+  - Searchable options
+  - Multi-select support
+  - Async loading
 
-The project uses a standard npm package structure with:
+## Authentication and Backend
 
-- **Dependencies**: Production dependencies
-- **DevDependencies**: Development-only dependencies
+- **Supabase JS (v2.49.4+)** - Client library for Supabase
+  - Authentication
+  - Database operations
+  - Storage integration
+  - Realtime subscriptions
 
-### Core Dependencies
+## Utilities and Helpers
 
-```json
-{
-  "@hookform/resolvers": "^3.9.0",
-  "@radix-ui/*": "^1.x and ^2.x",
-  "@supabase/supabase-js": "^2.49.4",
-  "@tanstack/react-query": "^5.56.2",
-  "date-fns": "^3.6.0",
-  "lucide-react": "^0.462.0",
-  "react": "^18.3.1",
-  "react-dom": "^18.3.1",
-  "react-hook-form": "^7.53.0",
-  "react-router-dom": "^6.26.2",
-  "recharts": "^2.12.7",
-  "tailwind-merge": "^2.5.2",
-  "tailwindcss-animate": "^1.0.7",
-  "zod": "^3.23.8"
-}
-```
+- **Date-fns (v3.6.0+)** - Date utility library
+  - Date formatting
+  - Date parsing
+  - Date arithmetic
+  - Timezone support
 
-## Directory Structure
+- **Class Variance Authority (v0.7.1+)** - For building UI component variants
+  - Type-safe variants
+  - Conditional class composition
 
-The application follows a feature-based organization:
+- **Tailwind Merge (v2.5.2+)** - Utility for merging Tailwind CSS classes
+  - Prevents class conflicts
+  - Handles complex class combinations
+
+- **CLSX (v2.1.1)** - Utility for constructing className strings
+  - Conditional class addition
+  - Array and object support
+
+## Developer Experience
+
+- **React DevTools** - Chrome/Firefox extension for React debugging
+  - Component inspection
+  - State inspection
+  - Performance profiling
+
+- **TypeScript** - For type safety and better developer experience
+  - Type definitions
+  - Code completion
+  - Error prevention
+  - Documentation
+
+## Accessibility Support
+
+- **ARIA Attributes** - For enhanced accessibility
+  - Screen reader support
+  - Keyboard navigation
+  - Focus management
+
+- **Radix UI Primitives** - Accessible by default
+  - WCAG 2.1 compliant
+  - Keyboard navigation
+  - Screen reader announcements
+
+## Architecture Patterns
+
+### Component Structure
+
+The application follows these component organization patterns:
+
+1. **Atomic Design Methodology**
+   - Atoms: Smallest UI components like buttons, inputs
+   - Molecules: Groups of atoms like form fields with labels
+   - Organisms: Complex UI components like navigation bars
+   - Templates: Page layouts without specific content
+   - Pages: Complete page implementations
+
+2. **Feature-based Organization**
+   - Components are grouped by feature/domain
+   - Shared components in common directories
+   - Feature-specific components co-located with feature code
+
+### Code Organization
 
 ```
 src/
-├── api/              # API clients and utilities
-├── components/       # React components
-│   ├── ui/           # Reusable UI components
-│   ├── layout/       # Layout components
-│   ├── recipe-detail/ # Recipe detail components
-│   ├── quick-recipe/ # Quick recipe components
-│   └── ...           # Other feature directories
-├── contexts/         # React contexts
-├── hooks/            # Custom React hooks
-├── lib/              # Utility functions
-├── styles/           # CSS and style files
-└── main.tsx          # Application entry point
+├── components/         # UI components
+│   ├── ui/             # Base UI components
+│   ├── layout/         # Layout components
+│   ├── recipe-detail/  # Recipe detail components
+│   ├── quick-recipe/   # Quick recipe components
+│   └── ...
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+├── api/                # API integration
+├── types/              # TypeScript type definitions
+├── styles/             # Global styles and theming
+├── store/              # State management
+└── ...
 ```
+
+## Performance Optimizations
+
+- **React.memo** - For preventing unnecessary re-renders
+- **Code splitting** - For reducing initial bundle size
+- **Dynamic imports** - For lazy-loading components
+- **Image optimization** - For faster page loads
+- **Virtualization** - For rendering large lists efficiently
+
+## Testing Approach
+
+- **Jest** - Testing framework
+- **React Testing Library** - For testing React components
+- **Cypress** - For end-to-end testing
+
+## Package Management
+
+- **npm/yarn/pnpm** - For dependency management
+- **package.json** - For dependency declarations
+- **lockfiles** - For deterministic dependency resolution
+
+## Deployment and Hosting
+
+- **CI/CD Pipeline** - For automated testing and deployment
+- **Environment configuration** - For environment-specific settings
+- **Static hosting** - For serving the frontend application
+
+## API Integration
+
+- **REST API** - For data fetching
+- **OpenAI API** - For AI-powered recipe generation
+- **Supabase API** - For database operations
+
+## Additional Resources
+
+- [Component Documentation](./design/components.md) - Detailed component API documentation
+- [Architecture Documentation](./architecture/system-architecture.md) - System architecture overview
+- [Accessibility Guidelines](./design/accessibility.md) - Accessibility standards and implementation
+
+This technical stack is continuously evolving as we adopt new tools and techniques to improve the application.

@@ -13,6 +13,7 @@ The documentation is organized into these primary sections:
 - **[Operations](./operations/)** - Operational concerns like scaling, monitoring, and versioning
 - **[Developer Guide](./developer-guide/)** - Resources for developers working on the codebase
 - **[User Guide](./user-guide/)** - End-user documentation for using the application
+- **[Design](./design/)** - Design system documentation and guidelines
 
 ## User Documentation
 
@@ -58,9 +59,20 @@ Documentation for individual systems:
 - [Science Analysis System](./systems/science-analysis-system.md) - Scientific content generation
 - [Shopping List System](./systems/shopping-list-system.md) - Shopping list functionality
 
-## Design and Technology Documentation
+## Design System Documentation
 
-- [Design System](./design-system.md) - Design language, CSS architecture, and UI components
+Comprehensive documentation for the design system:
+
+- [Design System Overview](./design/README.md) - Introduction to the design system
+- [Visual Language](./design/visual-language.md) - Colors, typography, spacing, and visual elements
+- [Components](./design/components.md) - UI component documentation
+- [Design Tokens](./design/tokens.md) - Design variables and implementation
+- [Layout System](./design/layout.md) - Grid, spacing, and responsive design
+- [Accessibility](./design/accessibility.md) - Accessibility guidelines and implementation
+- [Animations](./design/animations.md) - Animation patterns and principles
+
+## Technical Documentation
+
 - [Technical Stack](./technical-stack.md) - Technologies and packages used
 - [Scientific Styling Guide](./scientific-styling-guide.md) - Guidelines for scientific content presentation
 - [Carousel Component](./carousel-component.md) - Custom carousel implementation details
@@ -87,4 +99,3 @@ Documentation for individual systems:
 ## Reading Guides
 
 - [Documentation Reading Guide](./documentation-reading-guide.md) - Suggested paths through documentation
-
