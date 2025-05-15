@@ -19,6 +19,7 @@ Based on the documentation, Recipe Alchemy is a modern web application built wit
 - **Backend**: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
 - **AI Integration**: OpenAI GPT models (appears to use gpt-4o and gpt-4o-mini)
 - **External APIs**: USDA Food Data Central for nutrition data
+- **Design System**: Comprehensive design system documentation available in the [design folder](./design/README.md)
 
 ## Key Features and Components
 

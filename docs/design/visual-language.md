@@ -162,3 +162,7 @@ Visual examples of the design system in action can be found in the `assets` fold
 - [Color Palette](./assets/color-palette.png)
 - [Typography Scale](./assets/typography-scale.png)
 - [Spacing System](./assets/spacing-system.png)
+
+## Scientific Content Styling
+
+For specialized styling of scientific content, including chemical formulas, units of measurement, and technical terminology, please refer to our [Scientific Styling Guide](../scientific-styling-guide.md).

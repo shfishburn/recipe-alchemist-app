@@ -1,64 +1,48 @@
 
 # Design System Assets
 
-This directory contains visual assets that illustrate the Recipe Alchemy design system.
+This directory contains visual assets that support the Recipe Alchemy Design System documentation.
+
+## Purpose
+
+These assets serve as visual references for design system elements, providing clear examples of:
+- Color palettes and combinations
+- Typography scales and hierarchies
+- Spacing measurements and applications
+- Component states and variations
 
 ## Available Assets
 
-### Color System
-- [Color Palette](./color-palette.png) - Visual representation of the color system
-- [Color Accessibility](./color-accessibility.png) - Contrast compliance visualization
+### Core Visual Language
+- `color-palette.png` - Visual representation of the color system
+- `typography-scale.png` - Examples of the typography hierarchy
+- `spacing-system.png` - Visualization of spacing units
 
-### Typography
-- [Typography Scale](./typography-scale.png) - Visual representation of font sizes
-- [Typography Hierarchy](./typography-hierarchy.png) - Heading and text styles
-
-### Spacing and Layout
-- [Spacing System](./spacing-system.png) - Visual representation of spacing scale
-- [Grid System](./grid-system.png) - Layout grid visualization
-
-### Components
-- [Component Examples](./component-examples/) - Directory containing component screenshots
-  - Buttons in various states
-  - Form inputs
-  - Cards and containers
-  - Recipe-specific components
-
-### Design Tokens
-- [Token Visualization](./token-visualization.png) - Visual representation of design tokens
+### Component Examples
+The `component-examples/` directory contains screenshots showing various states and variations of UI components:
+- Default states
+- Hover states
+- Active states
+- Disabled states
+- Error states
 
 ## Usage Guidelines
 
-1. When adding new assets:
-   - Use descriptive filenames
-   - Optimize image files for web viewing
-   - Include appropriate metadata and alt text in documentation
-   - Maintain consistent dimensions and style
+When using these assets:
 
-2. Asset formats:
-   - Use PNG for most interface screenshots
-   - Use SVG for diagrams and illustrations when possible
-   - Use WEBP for complex images that need compression
-   - Keep file sizes under 200KB when possible
+1. **Reference in documentation** - Link to these assets from relevant documentation sections
+2. **Keep updated** - Update visual assets when the design system changes
+3. **Maintain consistency** - Ensure asset styling reflects the current design system
+4. **Use descriptive filenames** - Name files clearly to indicate their content
 
-3. Organization:
-   - Group related assets in subdirectories
-   - Include a README in each subdirectory explaining its contents
-   - Version assets when significant changes are made
+## Creating New Assets
 
-## Creating Assets
+When adding new visual assets:
 
-When creating new assets for the design system documentation:
+1. Use consistent dimensions and styling
+2. Include appropriate annotations
+3. Optimize images for web display
+4. Add references in relevant documentation
+5. Update this README when adding new asset categories
 
-1. Take screenshots at 2x resolution
-2. Crop to focus on the relevant content
-3. Add padding (16px) around the content
-4. Include state variations for interactive elements
-5. Add labels when necessary for clarity
-6. Use consistent lighting and background conditions
-
-## Related Documentation
-
-- [Visual Language](../visual-language.md) - Design system visual elements
-- [Components](../components.md) - Component documentation
-- [Design Tokens](../tokens.md) - Design token documentation
+For component screenshots, capture all relevant states in a consistent environment with appropriate padding and background.

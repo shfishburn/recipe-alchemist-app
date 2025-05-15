@@ -1,4 +1,3 @@
-
 # Components
 
 The Recipe Alchemy component library provides a comprehensive set of UI components that form the building blocks of the application interface. Components are built using Shadcn UI as a foundation, with custom components for recipe-specific functionality.
@@ -276,6 +275,13 @@ export function FormattedItemExample() {
   );
 }
 ```
+
+## Specialized Components
+
+For more detailed documentation on specific complex components:
+
+- [Carousel Component](../carousel-component.md) - Comprehensive documentation for the carousel implementation
+- [Scientific Content Components](../scientific-styling-guide.md#scientific-content-components) - Components for displaying scientific and nutritional information
 
 ## Form Components
 

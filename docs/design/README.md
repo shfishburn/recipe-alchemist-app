@@ -67,3 +67,9 @@ Our design-to-development process follows these steps:
 5. **Test for accessibility** using our established guidelines
 6. **Iterate based on feedback** from both design and development perspectives
 
+## Specialized Documentation
+
+For specific components and styling patterns:
+
+- [Scientific Styling Guide](../scientific-styling-guide.md) - Guidelines for presenting scientific and nutritional content
+- [Carousel Component](../carousel-component.md) - Detailed documentation for the carousel implementation
