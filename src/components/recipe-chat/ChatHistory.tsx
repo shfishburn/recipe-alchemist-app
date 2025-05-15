@@ -12,7 +12,7 @@ interface ChatHistoryProps {
   isApplying: boolean;
   isSending: boolean;
   setMessage: Dispatch<SetStateAction<string>>;
-  applyChanges: (chatMessage: ChatMessage) => Promise<boolean>;
+  applyChanges: (recipe: Recipe, chatMessage: ChatMessage) => Promise<boolean>;
   recipe: Recipe;
   retryMessage?: () => void;
 }
@@ -35,7 +35,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           <ChatMessageComp message={message.user_message} isUser={true} />
           <ChatResponse 
             chatMessage={message} 
-            onApplyChanges={applyChanges}
+            onApplyChanges={(chatMessage) => applyChanges(recipe, chatMessage)}
             isApplying={isApplying}
           />
         </div>

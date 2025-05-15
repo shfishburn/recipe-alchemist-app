@@ -34,3 +34,11 @@ export function ensureRecipeCompleteness(recipe: Partial<Recipe>): Recipe {
     ...(recipe as any)
   };
 }
+
+/**
+ * Legacy function alias for ensureRecipeCompleteness to maintain backwards compatibility
+ * with existing code that references transformRecipeData
+ */
+export function transformRecipeData(recipe: Partial<Recipe>): Recipe {
+  return ensureRecipeCompleteness(recipe);
+}

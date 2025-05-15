@@ -1,41 +1,52 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { ImageIcon, Link as LinkIcon } from 'lucide-react';
-import { ChatMessage } from '@/types/chat';
+import { ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import type { ChatMessage } from '@/types/chat';
 
 interface SourceSectionProps {
   chatMessage: ChatMessage;
 }
 
 export const SourceSection: React.FC<SourceSectionProps> = ({ chatMessage }) => {
-  // Only show source info if we have relevant source data
-  if (!chatMessage.source_type) return null;
+  // If there's no source, don't render anything
+  if (!chatMessage.source_type || chatMessage.source_type === 'manual') {
+    return null;
+  }
 
   return (
-    <div className="mt-2 mb-4">
-      {chatMessage.source_type === 'image' && chatMessage.source_image && (
-        <Card className="p-3 flex items-center gap-2 bg-muted/50">
-          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">Analysis based on uploaded image</span>
-        </Card>
+    <div className="mt-4 space-y-2">
+      {chatMessage.source_type === 'url' && chatMessage.source_url && (
+        <div className="bg-muted/40 p-3 rounded-md">
+          <div className="text-sm font-medium mb-1">Recipe analyzed from URL:</div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2 text-xs"
+            asChild
+          >
+            <a href={chatMessage.source_url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3 w-3" />
+              Visit source
+            </a>
+          </Button>
+        </div>
       )}
 
-      {chatMessage.source_type === 'url' && chatMessage.source_url && (
-        <Card className="p-3 flex items-center gap-2 bg-muted/50">
-          <LinkIcon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">
-            Analysis based on URL: 
-            <a 
-              href={chatMessage.source_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="underline ml-1 text-blue-600 hover:text-blue-800"
-            >
-              {chatMessage.source_url}
-            </a>
-          </span>
-        </Card>
+      {chatMessage.source_type === 'image' && chatMessage.source_image && (
+        <div className="bg-muted/40 p-3 rounded-md">
+          <div className="text-sm font-medium mb-2">Recipe analyzed from image:</div>
+          <div className="w-full max-w-[200px] rounded-md overflow-hidden">
+            <AspectRatio ratio={4/3}>
+              <img 
+                src={chatMessage.source_image} 
+                alt="Recipe source" 
+                className="object-cover w-full h-full"
+              />
+            </AspectRatio>
+          </div>
+        </div>
       )}
     </div>
   );

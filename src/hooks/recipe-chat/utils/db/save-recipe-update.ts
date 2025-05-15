@@ -237,7 +237,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   };
 
   console.log("Saving recipe update with data:", {
-    id: dbRecipe.id,  // This reference is now safe since we check for id above
+    id: filteredRecipe.id,  // This reference is now safe since we check for id above
     hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
@@ -254,7 +254,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     const { data, error } = await supabase
       .from('recipes')
       .update(dbRecipe)
-      .eq('id', dbRecipe.id)  // Using dbRecipe.id which is guaranteed to exist now
+      .eq('id', filteredRecipe.id)  // Using filteredRecipe.id which is guaranteed to exist now
       .select()
       .single();
 

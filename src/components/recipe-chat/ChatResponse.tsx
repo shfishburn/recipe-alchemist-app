@@ -6,11 +6,10 @@ import { ChatMessage as ChatMessageComp } from './ChatMessage';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
 import { SourceSection } from './response/SourceSection';
 import type { ChatMessage } from '@/types/chat';
-import type { Recipe } from '@/types/recipe';
 
 interface ChatResponseProps {
   chatMessage: ChatMessage;
-  onApplyChanges: (recipe: Recipe, chatMessage: ChatMessage) => Promise<boolean>;
+  onApplyChanges: (chatMessage: ChatMessage) => Promise<boolean>;
   isApplying: boolean;
 }
 
@@ -22,7 +21,6 @@ export const ChatResponse: React.FC<ChatResponseProps> = ({
   const [parsedResponse, setParsedResponse] = useState<string>('');
   const [isResponseParsed, setIsResponseParsed] = useState(false);
   const [isApplied, setIsApplied] = useState(chatMessage.applied || false);
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
 
   // Parse the AI response as Markdown
   useEffect(() => {
@@ -40,14 +38,8 @@ export const ChatResponse: React.FC<ChatResponseProps> = ({
 
   // Handle apply changes
   const handleApplyChanges = async () => {
-    // We need a valid recipe to apply changes
-    if (!recipe) {
-      console.error("Cannot apply changes: Recipe not loaded");
-      return false;
-    }
-    
     try {
-      const success = await onApplyChanges(recipe, chatMessage);
+      const success = await onApplyChanges(chatMessage);
       
       if (success) {
         setIsApplied(true);
@@ -89,4 +81,4 @@ export const ChatResponse: React.FC<ChatResponseProps> = ({
       )}
     </div>
   );
-};
+}

@@ -1,69 +1,67 @@
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { Recipe } from '@/types/recipe';
 import { cn } from '@/lib/utils';
-import { Recipe } from '@/types/recipe';
-import { getRecipeDescription } from '@/utils/recipe-transformers';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Link } from 'react-router-dom';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
-export interface RecipeCarouselProps {
-  recipes?: Recipe[];
+interface RecipeCarouselProps {
+  recipes: Recipe[];
+  onRecipeClick?: (recipe: Recipe) => void;
   className?: string;
-  title?: string;
 }
 
-export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({ 
-  recipes = [], 
-  className,
-  title 
-}) => {
-  const displayRecipes = recipes?.length ? recipes.slice(0, 5) : [];
-  
-  return (
-    <div className={cn('space-y-4', className)}>
-      {title && (
-        <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
-      )}
+export function RecipeCarousel({ recipes, onRecipeClick, className }: RecipeCarouselProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-      <div className="relative w-full">
-        <Carousel
-          className="w-full"
-        >
-          <CarouselContent>
-            {displayRecipes.map((recipe) => (
-              <CarouselItem key={recipe.id} className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                <Link to={`/recipes/${recipe.id}`}>
-                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-0">
-                      <div className="relative">
-                        <AspectRatio ratio={16/9} className="bg-muted">
-                          {recipe.image_url && (
-                            <img
-                              src={recipe.image_url}
-                              alt={recipe.title}
-                              className="object-cover w-full h-full rounded-t-md"
-                            />
-                          )}
-                        </AspectRatio>
-                        <div className="p-4">
-                          <h3 className="font-semibold text-md mb-1 truncate">{recipe.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {getRecipeDescription(recipe)}
-                          </p>
-                        </div>
+  if (!recipes || recipes.length === 0) {
+    return null;
+  }
+
+  return (
+    <Carousel className={cn("w-full", className)}>
+      <CarouselContent>
+        {recipes.map((recipe, index) => (
+          <CarouselItem key={recipe.id || index} className="md:basis-1/2 lg:basis-1/3">
+            <div className="p-1">
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-all"
+                onClick={() => onRecipeClick?.(recipe)}
+              >
+                <CardContent className="p-4">
+                  <div className="aspect-square relative overflow-hidden rounded-md mb-3">
+                    {recipe.image_url ? (
+                      <img 
+                        src={recipe.image_url} 
+                        alt={recipe.title} 
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="bg-muted w-full h-full flex items-center justify-center text-muted-foreground">
+                        No image
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2" />
-          <CarouselNext className="right-2" />
-        </Carousel>
-      </div>
-    </div>
+                    )}
+                  </div>
+                  <h3 className="font-medium line-clamp-2 text-lg">{recipe.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                    {recipe.tagline || "A delicious recipe waiting to be explored."}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselPrevious />
+      <CarouselNext />
+    </Carousel>
   );
-};
+}
