@@ -37,15 +37,17 @@ export function useRecipeUpdates(recipeId: string) {
           ...updates,
           // Only include properties if they exist in updates
           ingredients: updates.ingredients ? updates.ingredients as unknown as Json : undefined,
-          // Properly transform science_notes to ensure it's stored as JSON but is a string array
+          
+          // Properly serialize science_notes as JSON string before saving to database
           science_notes: updates.science_notes 
-            ? (Array.isArray(updates.science_notes) 
+            ? (JSON.stringify(Array.isArray(updates.science_notes) 
                 ? updates.science_notes.map(note => 
                     typeof note === 'string' ? note : String(note)
                   ) 
                 : []
-              ) as unknown as Json
+              ) as unknown as Json)
             : undefined,
+            
           nutrition: updates.nutrition ? updates.nutrition as unknown as Json : undefined,
           // Properly transform nutri_score to JSON format
           nutri_score: updates.nutri_score ? updates.nutri_score as unknown as Json : undefined,
@@ -67,10 +69,12 @@ export function useRecipeUpdates(recipeId: string) {
         const processedData: Recipe = {
           ...data,
           ingredients: data.ingredients as unknown as Ingredient[],
-          // Ensure science_notes is always a string array
+          // Parse science_notes from JSON string back to array
           science_notes: Array.isArray(data.science_notes) 
-            ? data.science_notes.map(note => typeof note === 'string' ? note : String(note))
-            : [],
+            ? data.science_notes 
+            : (typeof data.science_notes === 'string' 
+                ? JSON.parse(data.science_notes)
+                : []),
           // Transform nutrition back to the correct type
           nutrition: data.nutrition as unknown as Nutrition,
           // Transform nutri_score to the correct type

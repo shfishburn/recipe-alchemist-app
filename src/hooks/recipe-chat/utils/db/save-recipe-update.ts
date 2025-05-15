@@ -112,17 +112,31 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     console.log(`Determined cuisine category: ${updatedRecipe.cuisine_category} for cuisine: ${updatedRecipe.cuisine}`);
   }
   
-  // Process science_notes to ensure it's always a valid array of strings
-  const scienceNotes = Array.isArray(updatedRecipe.science_notes) 
-    ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
-    : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
+  // Process science_notes to ensure it's always properly serialized as a JSON array
+  // This is the key fix: properly serialize science_notes as JSON instead of casting
+  let scienceNotesJson: Json;
+  
+  if (updatedRecipe.science_notes) {
+    // Ensure science_notes is an array of strings
+    const validatedNotes = Array.isArray(updatedRecipe.science_notes) 
+      ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
+      : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
+      
+    // Properly serialize to JSON format for database storage
+    scienceNotesJson = JSON.stringify(validatedNotes) as Json;
+    console.log("Science notes serialized to JSON:", scienceNotesJson);
+  } else {
+    // Default to empty array if science_notes is undefined
+    scienceNotesJson = '[]' as Json;
+  }
   
   // Transform recipe for database storage with improved type safety
   const dbRecipe = {
     ...updatedRecipe,
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
-    science_notes: scienceNotes as unknown as Json,
+    // Use the properly serialized science_notes
+    science_notes: scienceNotesJson,
     // Ensure nutri_score is properly cast to Json type
     nutri_score: updatedRecipe.nutri_score as unknown as Json,
     // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
@@ -135,10 +149,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
-    hasNotes: Array.isArray(scienceNotes) && scienceNotes.length > 0,
-    noteCount: scienceNotes.length,
-    hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
-    nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : [],
+    scienceNotesType: typeof scienceNotesJson,
+    scienceNotesPreview: scienceNotesJson.substring(0, 100),
     cuisine: updatedRecipe.cuisine,
     cuisine_category: dbRecipe.cuisine_category
   });
