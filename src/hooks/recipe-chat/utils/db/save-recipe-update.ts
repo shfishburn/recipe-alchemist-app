@@ -86,7 +86,8 @@ function createSafeJsonPreview(jsonValue: Json, maxLength: number = 100): string
     try {
       return JSON.stringify(jsonValue).substring(0, maxLength);
     } catch (e) {
-      console.error('Error serializing JSON value for preview:', e);
+      // Security improvement: Log only the error message, not the entire error object
+      console.error('Error serializing JSON value for preview:', e instanceof Error ? e.message : 'Unknown error');
       return '[complex object]';
     }
   }
