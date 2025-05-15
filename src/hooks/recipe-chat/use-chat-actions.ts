@@ -67,10 +67,6 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: s
       const { error: uploadError, data } = await supabase.storage
         .from('recipe-images')
         .upload(filePath, file, {
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setUploadProgress(Math.round(percent));
-          },
           cacheControl: '3600',
           upsert: false,
         });

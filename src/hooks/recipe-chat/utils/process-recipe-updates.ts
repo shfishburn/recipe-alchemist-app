@@ -1,104 +1,105 @@
 
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage, ChangesResponse } from '@/types/chat';
+import type { ChatMessage } from '@/types/chat';
 
 /**
- * Process recipe updates based on chat message suggested changes
- * @param recipe Original recipe to update
- * @param chatMessage Chat message containing suggested changes
- * @returns Updated recipe object
+ * Process updates from a chat message to modify a recipe
  */
 export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Recipe {
-  // Create a clone of the recipe to avoid mutation issues
-  const updatedRecipe = structuredClone(recipe);
+  if (!recipe || !chatMessage) {
+    console.error("Cannot process recipe updates: missing required data");
+    return recipe;
+  }
+  
   const { changes_suggested } = chatMessage;
   
-  // Early return if no changes suggested
   if (!changes_suggested) {
-    return updatedRecipe;
-  }
-
-  console.log("Processing recipe updates with changes:", {
-    hasTitle: !!changes_suggested.title,
-    hasTagline: !!changes_suggested.tagline,
-    hasDescription: !!changes_suggested.description,
-    hasIngredients: !!changes_suggested.ingredients,
-    ingredientMode: changes_suggested.ingredients?.mode,
-    hasInstructions: !!changes_suggested.instructions,
-    hasNutrition: !!changes_suggested.nutrition
-  });
-
-  // Update title if provided and valid
-  if (changes_suggested.title !== undefined && 
-      changes_suggested.title !== null && 
-      typeof changes_suggested.title === 'string') {
-    updatedRecipe.title = changes_suggested.title;
+    console.log("No changes to apply");
+    return recipe;
   }
   
-  // Handle description/tagline field update - prioritize tagline over description
-  if (changes_suggested.tagline !== undefined && 
-      changes_suggested.tagline !== null && 
-      typeof changes_suggested.tagline === 'string') {
-    updatedRecipe.tagline = changes_suggested.tagline;
-  } else if (changes_suggested.description !== undefined && 
-             changes_suggested.description !== null && 
-             typeof changes_suggested.description === 'string') {
-    // Fallback to description if tagline isn't provided
-    updatedRecipe.tagline = changes_suggested.description;
-  }
+  console.log("Processing recipe updates with changes:", changes_suggested);
   
-  // Process ingredients updates if provided
-  if (changes_suggested.ingredients?.items?.length > 0) {
-    const { mode, items } = changes_suggested.ingredients;
-    
-    switch (mode) {
-      case 'replace':
-        // Replace all ingredients with new ones
-        updatedRecipe.ingredients = items;
-        break;
-      
-      case 'add':
-        // Add new ingredients to existing ones
-        updatedRecipe.ingredients = [
-          ...(updatedRecipe.ingredients || []),
-          ...items
-        ];
-        break;
-      
-      case 'none':
-      default:
-        // No changes to ingredients
-        break;
+  // Create a deep copy of the recipe to avoid mutating the original
+  const updatedRecipe = JSON.parse(JSON.stringify(recipe));
+  
+  try {
+    // Update title if provided
+    if (changes_suggested.title !== undefined && 
+        changes_suggested.title !== null && 
+        typeof changes_suggested.title === 'string') {
+      updatedRecipe.title = changes_suggested.title;
     }
-  }
-  
-  // Update instructions if provided
-  if (Array.isArray(changes_suggested.instructions) && changes_suggested.instructions.length > 0) {
-    // Convert complex instruction objects to simple strings
-    const processedInstructions = changes_suggested.instructions.map(instruction => 
-      typeof instruction === 'string' ? instruction : String(instruction)
-    );
-    updatedRecipe.instructions = processedInstructions;
-  }
-  
-  // Update nutrition data if provided
-  if (changes_suggested.nutrition) {
-    updatedRecipe.nutrition = {
-      ...updatedRecipe.nutrition,
-      ...changes_suggested.nutrition
-    };
-  }
-  
-  // Update science notes if provided
-  if (Array.isArray(changes_suggested.science_notes) && changes_suggested.science_notes.length > 0) {
-    // Convert any objects to strings to ensure compatibility
-    const processedNotes = changes_suggested.science_notes.map(note => 
-      typeof note === 'string' ? note : String(note)
-    );
     
-    // Assign processed notes to the recipe
-    updatedRecipe.science_notes = processedNotes;
+    // Update tagline/description if provided
+    // Note: We handle both field names for backward compatibility
+    if (changes_suggested.tagline) {
+      updatedRecipe.tagline = changes_suggested.tagline;
+    } else if (changes_suggested.description) {
+      // Map description to tagline for the database
+      updatedRecipe.tagline = changes_suggested.description;
+    }
+    
+    // Update cuisine if provided
+    if (changes_suggested.cuisine) {
+      updatedRecipe.cuisine = changes_suggested.cuisine;
+    }
+    
+    // Update cooking_tip if provided
+    if (changes_suggested.cooking_tip) {
+      updatedRecipe.cooking_tip = changes_suggested.cooking_tip;
+    }
+    
+    // Update science notes if provided
+    if (changes_suggested.science_notes && Array.isArray(changes_suggested.science_notes)) {
+      // Combine existing science notes with new ones, ensuring no duplicates
+      const existingNotes = Array.isArray(updatedRecipe.science_notes) ? updatedRecipe.science_notes : [];
+      const newNotes = changes_suggested.science_notes;
+      
+      // Combine and remove duplicates
+      const combinedNotes = [...existingNotes];
+      
+      for (const note of newNotes) {
+        if (!combinedNotes.includes(note)) {
+          combinedNotes.push(note);
+        }
+      }
+      
+      updatedRecipe.science_notes = combinedNotes;
+    }
+    
+    // Update ingredients if provided
+    if (changes_suggested.ingredients) {
+      const { mode, items } = changes_suggested.ingredients;
+      
+      if (mode === 'replace' && Array.isArray(items)) {
+        // Replace all ingredients
+        updatedRecipe.ingredients = items;
+      } else if (mode === 'add' && Array.isArray(items)) {
+        // Add new ingredients
+        updatedRecipe.ingredients = [...updatedRecipe.ingredients, ...items];
+      }
+    }
+    
+    // Update instructions if provided
+    if (changes_suggested.instructions && Array.isArray(changes_suggested.instructions)) {
+      updatedRecipe.instructions = changes_suggested.instructions;
+    }
+    
+    // Update nutrition data if provided
+    if (changes_suggested.nutrition) {
+      updatedRecipe.nutrition = {
+        ...updatedRecipe.nutrition,
+        ...changes_suggested.nutrition
+      };
+    }
+    
+    console.log("Recipe updated with changes");
+    return updatedRecipe;
+    
+  } catch (error) {
+    console.error("Error processing recipe updates:", error);
+    // Return the original recipe if there was an error
+    return recipe;
   }
-
-  return updatedRecipe;
 }

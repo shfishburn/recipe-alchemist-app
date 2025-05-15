@@ -2,117 +2,82 @@
 import type { Recipe } from '@/types/recipe';
 import type { ChangesResponse } from '@/types/chat';
 
-export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | null | undefined) {
+/**
+ * Validates recipe updates before applying them
+ * @param recipe - The current recipe
+ * @param changes - The changes to be applied
+ * @returns boolean indicating if the changes are valid
+ */
+export function validateRecipeUpdate(
+  recipe: Recipe,
+  changes?: ChangesResponse | null
+): boolean {
+  // If there are no changes, it's automatically valid
   if (!changes) {
-    console.log("No changes to validate");
-    return false;
-  }
-
-  if (!recipe?.id) {
-    console.error("Invalid recipe provided for validation");
-    return false;
-  }
-
-  // Enhanced debugging for title validation
-  console.log("Validating recipe update with changes:", {
-    hasTitle: changes.title !== undefined,
-    titleValue: changes.title,
-    titleType: typeof changes.title,
-    originalTitle: recipe.title,
-    hasIngredients: !!changes.ingredients,
-    ingredientMode: changes.ingredients?.mode,
-  });
-
-  // Basic validation - can be extended with more specific rules
-  try {
-    // Validate title changes - only if title is explicitly provided in changes
-    if (changes.title !== undefined) {
-      // Handle null title values explicitly
-      if (changes.title === null) {
-        console.warn("Found null title value in changes - ignoring");
-        delete changes.title; // Remove the null title to prevent updates
-        return true; // Continue with other validations
-      }
-      
-      if (typeof changes.title !== 'string') {
-        console.error("Invalid title format:", changes.title);
-        return false;
-      }
-      
-      // Ensure non-empty title if provided
-      if (changes.title.trim() === '') {
-        console.error("Title cannot be empty");
-        return false;
-      }
-    }
-    
-    // Validate ingredients changes
-    if (changes.ingredients) {
-      const { mode, items } = changes.ingredients;
-      
-      if (mode !== 'add' && mode !== 'replace' && mode !== 'none') {
-        console.error("Invalid ingredients mode:", mode);
-        return false;
-      }
-      
-      if (mode !== 'none' && (!Array.isArray(items) || items.length === 0)) {
-        console.error("Missing or empty ingredients items array");
-        return false;
-      }
-      
-      // Validate each ingredient item structure
-      if (mode !== 'none' && Array.isArray(items)) {
-        for (const item of items) {
-          if (typeof item === 'string') {
-            continue; // String ingredients are valid
-          }
-          
-          // Basic structure validation for object ingredients
-          if (!item || typeof item !== 'object') {
-            console.error("Invalid ingredient item format");
-            return false;
-          }
-        }
-      }
-    }
-    
-    // Validate instructions changes
-    if (changes.instructions && !Array.isArray(changes.instructions)) {
-      console.error("Instructions must be an array");
-      return false;
-    }
-    
-    // Validate science_notes changes
-    if (changes.science_notes && !Array.isArray(changes.science_notes)) {
-      console.error("Science notes must be an array");
-      return false;
-    }
-    
-    // Validate nutrition data if present
-    if (changes.nutrition) {
-      // Ensure it's an object
-      if (typeof changes.nutrition !== 'object' || changes.nutrition === null) {
-        console.error("Nutrition must be a valid object");
-        return false;
-      }
-      
-      // Check for minimum required nutrition fields
-      const requiredFields = ['calories', 'protein', 'carbs', 'fat'];
-      
-      // Log for debugging
-      console.log("Validating nutrition data:", changes.nutrition);
-      
-      // We don't strictly enforce these fields, just log warnings
-      for (const field of requiredFields) {
-        if (!(field in changes.nutrition) || changes.nutrition[field] === undefined) {
-          console.warn(`Missing nutrition field: ${field}`);
-        }
-      }
-    }
-    
     return true;
-  } catch (error) {
-    console.error("Validation error:", error);
-    return false;
   }
+  
+  console.log("Validating recipe update for recipe ID:", recipe.id);
+  console.log("Changes object:", JSON.stringify(changes, null, 2));
+  
+  // If title is being updated, validate it
+  if (changes.title !== undefined) {
+    console.log("Title before validation:", changes.title, "Type:", typeof changes.title);
+    
+    // Handle explicit null values by ignoring them
+    if (changes.title === null) {
+      console.warn("Ignoring null title value in changes");
+      return true; // Continue with other validations
+    }
+    
+    // Validate title type and content
+    if (typeof changes.title !== 'string') {
+      console.error("Invalid title type:", typeof changes.title);
+      return false;
+    }
+    
+    if (changes.title.trim() === '') {
+      console.error("Title cannot be empty");
+      return false;
+    }
+  }
+  
+  // If ingredients are being updated, validate them
+  if (changes.ingredients && changes.ingredients.mode !== 'none') {
+    const { items = [] } = changes.ingredients;
+    
+    // Ensure items is an array and not empty for replace mode
+    if (changes.ingredients.mode === 'replace' && (!Array.isArray(items) || items.length === 0)) {
+      console.error("Cannot replace ingredients with empty array");
+      return false;
+    }
+    
+    // Validate each ingredient if provided
+    if (Array.isArray(items)) {
+      for (const ingredient of items) {
+        if (!ingredient.item || ingredient.item.trim() === '') {
+          console.error("Ingredient missing item name");
+          return false;
+        }
+        if (ingredient.qty === undefined || isNaN(Number(ingredient.qty))) {
+          console.error("Ingredient has invalid quantity:", ingredient.qty);
+          return false;
+        }
+      }
+    }
+  }
+  
+  // If instructions are being updated, validate them
+  if (changes.instructions && Array.isArray(changes.instructions)) {
+    // For now, just verify none are empty
+    for (const instruction of changes.instructions) {
+      if (!instruction || instruction.trim() === '') {
+        console.error("Empty instructions are not allowed");
+        return false;
+      }
+    }
+  }
+  
+  // All validations passed
+  return true;
 }

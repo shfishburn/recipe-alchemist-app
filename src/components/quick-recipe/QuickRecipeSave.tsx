@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,8 +22,7 @@ const FIELD_MAPPINGS = {
 const VALID_DB_FIELDS = [
   'id',
   'title',
-  'description', // Added description field
-  'tagline', // Keep tagline for backward compatibility
+  'tagline', // Use tagline instead of description for DB storage
   'ingredients',
   'instructions',
   'steps', // This will be transformed to instructions
@@ -39,8 +37,6 @@ const VALID_DB_FIELDS = [
   'science_notes',
   'chef_notes',
   'image_url',
-  'reasoning',
-  'original_request',
   'version_number',
   'previous_version_id',
   'deleted_at',
@@ -201,14 +197,10 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
   
   // Now handle both description and tagline properly
   if (recipe.description !== undefined) {
-    result.description = recipe.description;
+    result.tagline = recipe.description;
   }
   if (recipe.tagline !== undefined) {
     result.tagline = recipe.tagline;
-  }
-  // If description exists but tagline doesn't, use description for tagline
-  if (recipe.description !== undefined && recipe.tagline === undefined) {
-    result.tagline = recipe.description;
   }
   
   // Next, copy all other properties that don't need mapping

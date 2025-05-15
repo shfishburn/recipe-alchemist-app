@@ -1,83 +1,103 @@
 
-import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Recipe } from '@/types/recipe';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { transformRecipeData } from '@/utils/recipe-transformers';
+import type { Recipe } from '@/types/recipe';
 
-// Custom hook to get recipes with search functionality
-export const useRecipes = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Debounce search term to prevent excessive refetches
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  
-  // Query to fetch and transform recipes
-  const query = useQuery({
-    queryKey: ['recipes', debouncedSearchTerm],
-    queryFn: async (): Promise<Recipe[]> => {
-      console.log('Fetching recipes with search term:', debouncedSearchTerm);
-      
+export interface RecipesOptions {
+  limit?: number;
+  searchTerm?: string;
+  showDeleted?: boolean;
+}
+
+export const useRecipes = (options?: RecipesOptions) => {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState(options?.searchTerm || '');
+  const { limit = 20, showDeleted = false } = options || {};
+
+  // Main recipes query
+  const recipesQuery = useQuery({
+    queryKey: ['recipes', limit, showDeleted, searchTerm],
+    queryFn: async () => {
       try {
-        // Build the base query
-        let supabaseQuery = supabase
+        // Start with base query
+        let query = supabase
           .from('recipes')
-          .select('id, title, tagline, cuisine, dietary, cook_time_min, prep_time_min, image_url, nutrition, ingredients, science_notes')
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false });
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
-        // Apply search filter if needed
-        if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
-          const trimmedTerm = debouncedSearchTerm.trim();
-          supabaseQuery = supabaseQuery.or(
-            `title.ilike.%${trimmedTerm}%,tagline.ilike.%${trimmedTerm}%,cuisine.ilike.%${trimmedTerm}%,dietary.ilike.%${trimmedTerm}%`
-          );
+        // Apply soft delete filter unless showing deleted
+        if (!showDeleted) {
+          query = query.is('deleted_at', null);
         }
 
-        const { data, error } = await supabaseQuery;
+        // Apply text search if provided
+        if (searchTerm) {
+          query = query.ilike('title', `%${searchTerm}%`);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
           console.error('Error fetching recipes:', error);
           throw error;
         }
+
+        // Transform the data to match the Recipe type
+        if (!data) return [];
         
-        console.log('Recipes fetched successfully:', data?.length || 0, 'recipes');
-        
-        // Transform the database recipes to match our Recipe type
-        return (data || []).map(dbRecipe => transformRecipeData(dbRecipe));
+        return data.map((item) => transformRecipeData(item));
       } catch (error) {
-        console.error('Unexpected error fetching recipes:', error);
-        toast.error('Failed to fetch recipes. Please try again.');
+        console.error('Error in useRecipes:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        toast({
+          title: 'Error',
+          description: `Failed to load recipes: ${errorMessage}`,
+          variant: 'destructive',
+        });
+        
         throw error;
       }
     },
-    retry: 1,
-    staleTime: 60000, // 1 minute
-    gcTime: 300000,   // 5 minutes
   });
 
-  // Return the query result along with search functionality
+  // Featured recipes query
+  const featuredRecipesQuery = useQuery({
+    queryKey: ['featured-recipes'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('recipes')
+          .select('*')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching featured recipes:', error);
+          throw error;
+        }
+
+        if (!data) return [];
+
+        return data.map((item) => transformRecipeData(item));
+      } catch (error) {
+        console.error('Error fetching featured recipes:', error);
+        // Don't show toast for featured recipes to avoid duplicate errors
+        throw error;
+      }
+    },
+  });
+
   return {
-    ...query,
+    ...recipesQuery,
     searchTerm,
     setSearchTerm,
+    featuredRecipes: featuredRecipesQuery.data || [],
+    isFeaturedLoading: featuredRecipesQuery.isLoading,
   };
 };
-
-// Custom hook for debouncing values
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-  
-  return debouncedValue;
-}

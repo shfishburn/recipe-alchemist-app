@@ -1,89 +1,92 @@
 
-import React from 'react';
-import { WarningAlert } from './response/WarningAlert';
-import { FormattedText } from './response/FormattedText';
+import React, { useState, useEffect } from 'react';
+import { Card } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { ChatMessage as ChatMessageComp } from './ChatMessage';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
-import { FollowUpQuestions } from './response/FollowUpQuestions';
-import { useResponseFormatter } from './response/hooks/useResponseFormatter';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import type { ChangesResponse } from '@/types/chat';
+import { SourceSection } from './response/SourceSection';
+import type { ChatMessage } from '@/types/chat';
+import type { Recipe } from '@/types/recipe';
 
 interface ChatResponseProps {
-  response: string;
-  changesSuggested: ChangesResponse | null;
-  followUpQuestions: string[];
-  setMessage: (message: string) => void;
-  onApplyChanges: () => void;
+  chatMessage: ChatMessage;
+  onApplyChanges: (recipe: Recipe, chatMessage: ChatMessage) => Promise<boolean>;
   isApplying: boolean;
-  applied: boolean;
-  isMobile?: boolean;
 }
 
-export function ChatResponse({ 
-  response, 
-  changesSuggested, 
-  followUpQuestions, 
-  setMessage, 
+export const ChatResponse: React.FC<ChatResponseProps> = ({
+  chatMessage,
   onApplyChanges,
-  isApplying,
-  applied
-}: ChatResponseProps) {
-  const { displayText, showWarning, changesPreview, isMethodology } = useResponseFormatter({ 
-    response, 
-    changesSuggested 
-  });
-  
-  const isMobile = useIsMobile();
-  
-  const handleFollowUpClick = (question: string) => {
-    setMessage(question);
+  isApplying
+}) => {
+  const [parsedResponse, setParsedResponse] = useState<string>('');
+  const [isResponseParsed, setIsResponseParsed] = useState(false);
+  const [isApplied, setIsApplied] = useState(chatMessage.applied || false);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+
+  // Parse the AI response as Markdown
+  useEffect(() => {
+    // Extract text response from the AI response - could be in various formats
+    const textResponse = chatMessage.ai_response;
+    
+    if (textResponse) {
+      setParsedResponse(textResponse);
+      setIsResponseParsed(true);
+    } else {
+      setParsedResponse('No response available');
+      setIsResponseParsed(true);
+    }
+  }, [chatMessage]);
+
+  // Handle apply changes
+  const handleApplyChanges = async () => {
+    // We need a valid recipe to apply changes
+    if (!recipe) {
+      console.error("Cannot apply changes: Recipe not loaded");
+      return false;
+    }
+    
+    try {
+      const success = await onApplyChanges(recipe, chatMessage);
+      
+      if (success) {
+        setIsApplied(true);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("Error applying changes:", error);
+      return false;
+    }
   };
 
-  const textSize = isMobile ? "text-xs sm:text-sm" : "text-sm";
-  const bubblePadding = isMobile ? "p-2 sm:p-4" : "p-4";
-  
-  // Helper to determine if text contains scientific content
-  const isScientific = displayText.toLowerCase().includes('protein') || 
-                       displayText.toLowerCase().includes('temperature') ||
-                       displayText.toLowerCase().includes('reaction');
+  // Loading state
+  if (!isResponseParsed) {
+    return (
+      <Card className="p-4 flex items-center justify-center w-full">
+        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        <span className="text-sm">Loading response...</span>
+      </Card>
+    );
+  }
 
   return (
-    <div className="flex-1 max-w-[calc(100%-32px)]">
-      <div className="flex flex-col space-y-2 sm:space-y-4">
-        <div className={`bg-white ${isScientific ? 'bg-gradient-to-br from-white to-blue-50/30' : ''} 
-                         rounded-[20px] rounded-tl-[5px] ${bubblePadding} shadow-sm border 
-                         ${isScientific ? 'border-blue-100' : 'border-slate-100'}`}>
-          {/* Warning alert for ingredient issues */}
-          <WarningAlert showWarning={showWarning} isMobile={isMobile} />
-          
-          {/* Main response text content */}
-          <ScrollArea className="max-h-[300px]">
-            <div className={`prose prose-sm max-w-none ${textSize} text-slate-800 break-words`}>
-              <FormattedText 
-                text={displayText} 
-                preserveWhitespace={isMethodology}
-              />
-            </div>
-          </ScrollArea>
-          
-          {/* Apply changes section with summary and confirmation */}
-          <ApplyChangesSection 
-            changesSuggested={changesSuggested}
-            onApplyChanges={onApplyChanges}
-            isApplying={isApplying}
-            applied={applied}
-            isMobile={isMobile}
-          />
-
-          {/* Follow-up questions section */}
-          <FollowUpQuestions
-            questions={followUpQuestions}
-            onQuestionClick={handleFollowUpClick}
-            isMobile={isMobile}
-          />
-        </div>
-      </div>
+    <div>
+      {/* AI response */}
+      <ChatMessageComp message={parsedResponse} isUser={false} />
+      
+      {/* Source info (for image/URL imports) */}
+      <SourceSection chatMessage={chatMessage} />
+      
+      {/* "Apply changes" section if needed */}
+      {chatMessage.changes_suggested && Object.keys(chatMessage.changes_suggested).length > 0 && (
+        <ApplyChangesSection 
+          changes={chatMessage.changes_suggested}
+          onApplyChanges={handleApplyChanges}
+          isApplying={isApplying}
+          applied={isApplied}
+        />
+      )}
     </div>
   );
-}
+};

@@ -6,6 +6,8 @@ import { useToast } from './use-toast';
 import { transformRecipeData } from '@/utils/recipe-transformers';
 import type { Recipe } from '@/types/recipe';
 
+export { type Recipe };
+
 export const useRecipeDetail = (idOrSlug?: string) => {
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();

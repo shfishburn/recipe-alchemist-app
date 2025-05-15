@@ -1,86 +1,54 @@
+
 import { useState, useEffect } from 'react';
 import type { ChatMessage, OptimisticMessage, ChatMeta } from '@/types/chat';
 import { v4 as uuidv4 } from 'uuid';
 
-/**
- * Custom hook for managing optimistic UI updates for chat messages
- */
-export const useOptimisticMessages = (
-  chatHistory: ChatMessage[]
-) => {
+export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
   const [optimisticMessages, setOptimisticMessages] = useState<OptimisticMessage[]>([]);
-
-  // Clean up optimistic messages when real messages arrive
+  
+  // Remove optimistic messages that have been replaced by real ones
   useEffect(() => {
-    // Check for resolved messages
-    if (chatHistory.length > 0 && optimisticMessages.length > 0) {
-      const remainingMessages = optimisticMessages.filter(optimistic => {
-        // Keep messages that don't have an optimistic_id or 
-        // where that optimistic_id doesn't match any real message
-        const hasMatchingRealMessage = chatHistory.some(real => {
-          // Extract optimistic_id from meta
-          const meta = real.meta || {};
-          const optimisticId = meta.optimistic_id;
-          return optimisticId === optimistic.meta?.optimistic_id;
+    if (chatHistory?.length > 0 && optimisticMessages.length > 0) {
+      const newOptimisticMessages = optimisticMessages.filter(optimisticMsg => {
+        // Check if this optimistic message has a corresponding real message
+        const isReplaced = chatHistory.some(realMsg => {
+          const meta = realMsg.meta as ChatMeta | undefined;
+          return meta?.optimistic_id === optimisticMsg.id;
         });
         
-        return !hasMatchingRealMessage;
+        return !isReplaced;
       });
       
-      if (remainingMessages.length !== optimisticMessages.length) {
-        setOptimisticMessages(remainingMessages);
+      if (newOptimisticMessages.length !== optimisticMessages.length) {
+        setOptimisticMessages(newOptimisticMessages);
       }
     }
   }, [chatHistory, optimisticMessages]);
   
-  /**
-   * Add an optimistic message while waiting for the server response
-   */
-  const addOptimisticMessage = (message: string, recipeId: string) => {
-    const optimisticId = uuidv4();
+  // Add a new optimistic message
+  const addOptimisticMessage = (message: string, recipeId: string): string => {
+    const id = uuidv4();
     
     const optimisticMessage: OptimisticMessage = {
-      id: optimisticId,
+      id,
       recipe_id: recipeId,
       user_message: message,
-      ai_response: '', // Empty initially
-      pending: true,   // Mark as pending
-      meta: {
-        optimistic_id: optimisticId, // Use for matching with real message later
-        processing_stage: 'sending',
-      },
+      isOptimistic: true,
+      created_at: new Date().toISOString()
     };
     
-    // Add the new optimistic message
     setOptimisticMessages(prev => [...prev, optimisticMessage]);
-    
-    return optimisticId;
+    return id;
   };
   
-  /**
-   * Mark an optimistic message as having an error
-   */
-  const markMessageError = (optimisticId: string) => {
-    setOptimisticMessages(prev => 
-      prev.map(msg => 
-        msg.meta?.optimistic_id === optimisticId
-          ? { ...msg, meta: { ...msg.meta, error: true } }
-          : msg
-      )
-    );
-  };
-  
-  /**
-   * Clear all optimistic messages (e.g., when clearing chat history)
-   */
+  // Clear all optimistic messages
   const clearOptimisticMessages = () => {
     setOptimisticMessages([]);
   };
-
+  
   return {
     optimisticMessages,
     addOptimisticMessage,
-    markMessageError,
-    clearOptimisticMessages,
+    clearOptimisticMessages
   };
 };

@@ -1,43 +1,25 @@
 
-import type { ChatMessage, ChatMeta } from '@/types/chat';
+import type { ChatMeta } from '@/types/chat';
 
 /**
- * Safe getter for ChatMeta properties with default value fallback
+ * Extracts a tracking ID from a chat message's meta data
  */
-export function getChatMeta<T>(
-  chat: ChatMessage,
-  key: keyof ChatMeta,
-  defaultValue: T
-): T {
-  if (!chat.meta) return defaultValue;
-  
-  const value = chat.meta[key];
-  return value === undefined ? defaultValue : value as unknown as T;
+export function getMessageTrackingId(meta?: ChatMeta): string | undefined {
+  return meta?.optimistic_id;
 }
 
 /**
- * Check if a chat message represents a specific source type
+ * Checks if a message was a retry attempt
  */
-export function isChatSourceType(
-  chat: ChatMessage,
-  type: 'manual' | 'image' | 'url'
-): boolean {
-  return chat.source_type === type;
+export function isRetryMessage(meta?: ChatMeta): boolean {
+  return !!meta?.is_retry;
 }
 
 /**
- * Format the timestamp for display
+ * Creates meta data for a new optimistic message
  */
-export function formatChatTimestamp(chat: ChatMessage): string {
-  if (!chat.created_at) return '';
-  
-  try {
-    const date = new Date(chat.created_at);
-    return date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (e) {
-    return '';
-  }
+export function createOptimisticMeta(messageId: string): ChatMeta {
+  return {
+    optimistic_id: messageId
+  };
 }
