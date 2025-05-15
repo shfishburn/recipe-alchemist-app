@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
 import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
@@ -117,6 +116,9 @@ serve(async (req) => {
     // validate input
     try {
       validateRecipe(recipe);
+      if (!userRequest || typeof userRequest !== 'string' || userRequest.trim() === '') {
+        throw new Error('Missing or empty userRequest. Please provide a modification request string.');
+      }
     } catch (vall) {
       return new Response(JSON.stringify({ error: vall.message }), { status: 400, headers });
     }
