@@ -150,7 +150,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
     scienceNotesType: typeof scienceNotesJson,
-    scienceNotesPreview: scienceNotesJson.substring(0, 100),
+    // Fix here: cast scienceNotesJson to string before using substring
+    scienceNotesPreview: String(scienceNotesJson).substring(0, 100),
     cuisine: updatedRecipe.cuisine,
     cuisine_category: dbRecipe.cuisine_category
   });
