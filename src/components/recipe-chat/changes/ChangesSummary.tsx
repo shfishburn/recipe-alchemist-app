@@ -1,92 +1,84 @@
 
 import React from 'react';
-import type { ChangesResponse } from '@/types/chat';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ListCheck, Settings2, Pill, BookOpen } from 'lucide-react';
+import type { ChangesResponse } from '@/types/chat';
 
 interface ChangesSummaryProps {
   changes: ChangesResponse;
-  isMobile?: boolean;
+  onClick?: () => void;
 }
 
-export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProps) {
-  if (!changes) return null;
+export function ChangesSummary({ changes, onClick }: ChangesSummaryProps) {
+  // Count how many different types of changes are being suggested
+  const changeCount = [
+    !!changes.title, 
+    !!changes.tagline || !!changes.description,
+    changes.ingredients?.mode !== 'none' && changes.ingredients?.items?.length > 0,
+    changes.instructions && changes.instructions.length > 0,
+    changes.science_notes && changes.science_notes.length > 0,
+    !!changes.nutrition
+  ].filter(Boolean).length;
   
-  const hasTitle = !!changes.title;
-  const hasIngredients = changes.ingredients?.items && changes.ingredients.items.length > 0;
-  const hasInstructions = changes.instructions && changes.instructions.length > 0;
-  const hasScienceNotes = changes.science_notes && changes.science_notes.length > 0;
-  
-  if (!hasTitle && !hasIngredients && !hasInstructions && !hasScienceNotes) return null;
-
-  const textSize = isMobile ? "text-xs" : "text-sm";
-  const marginClass = isMobile ? "mt-1.5" : "mt-3";
+  if (changeCount === 0) {
+    return null;
+  }
   
   return (
-    <div className={`${marginClass} p-2 sm:p-3 bg-slate-50 rounded-md border border-slate-200`}>
-      <h4 className={`font-medium ${textSize} text-slate-700 mb-1.5`}>Changes to be applied:</h4>
-      
-      <ScrollArea className="max-h-[150px]">
-        <div className="space-y-2">
-          {hasTitle && (
-            <div>
-              <Badge variant="outline" className="bg-amber-50 text-amber-700 mb-1">Title</Badge>
-              <p className={`${textSize} text-slate-600 pl-1 break-words`}>{changes.title}</p>
-            </div>
+    <Card 
+      className={`p-3 mb-2 border-l-4 border-l-blue-500 ${onClick ? 'cursor-pointer hover:bg-blue-50 transition-colors' : ''}`}
+      onClick={onClick}
+    >
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-semibold text-blue-700">
+            {changeCount > 1 ? `${changeCount} Changes Suggested` : '1 Change Suggested'}
+          </h4>
+          <Badge variant="outline" className="text-xs font-normal">
+            Review &amp; Apply
+          </Badge>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          {changes.title && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Settings2 className="w-3 h-3" />
+              <span>Title</span>
+            </Badge>
           )}
           
-          {hasIngredients && (
-            <div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 mb-1">
-                {changes.ingredients.mode === 'add' ? 'Add Ingredients' : 'Replace Ingredients'}
-              </Badge>
-              <ul className={`${textSize} list-disc list-inside text-slate-600 pl-1`}>
-                {changes.ingredients.items.slice(0, 5).map((ingredient, index) => (
-                  <li key={index} className="break-words truncate">
-                    {ingredient.qty} {ingredient.unit} {ingredient.item}
-                    {ingredient.notes ? <span className="text-slate-500 italic"> ({ingredient.notes})</span> : ''}
-                  </li>
-                ))}
-                {changes.ingredients.items.length > 5 && (
-                  <li>And {changes.ingredients.items.length - 5} more ingredients...</li>
-                )}
-              </ul>
-            </div>
+          {(changes.tagline || changes.description) && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Settings2 className="w-3 h-3" />
+              <span>Description</span>
+            </Badge>
           )}
           
-          {hasInstructions && (
-            <div>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 mb-1">
-                {Array.isArray(changes.instructions) && changes.instructions.length === 1 
-                  ? '1 Instruction' 
-                  : `${changes.instructions.length} Instructions`}
-              </Badge>
-              <ul className={`${textSize} list-disc list-inside text-slate-600 pl-1`}>
-                {Array.isArray(changes.instructions) && 
-                  changes.instructions.slice(0, 3).map((instruction, index) => (
-                    <li key={index} className="break-words truncate">
-                      {typeof instruction === 'string' 
-                        ? instruction.substring(0, 60) + (instruction.length > 60 ? '...' : '')
-                        : instruction.action?.substring(0, 60) + (instruction.action?.length > 60 ? '...' : '')}
-                    </li>
-                  ))}
-                {Array.isArray(changes.instructions) && changes.instructions.length > 3 && (
-                  <li>And {changes.instructions.length - 3} more steps...</li>
-                )}
-              </ul>
-            </div>
+          {changes.ingredients && changes.ingredients.mode !== 'none' && changes.ingredients.items && changes.ingredients.items.length > 0 && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <ListCheck className="w-3 h-3" />
+              <span>
+                {changes.ingredients.mode === 'replace' ? 'Replace' : 'Add'} {changes.ingredients.items.length} {changes.ingredients.items.length === 1 ? 'ingredient' : 'ingredients'}
+              </span>
+            </Badge>
           )}
           
-          {hasScienceNotes && (
-            <div>
-              <Badge variant="outline" className="bg-purple-50 text-purple-700 mb-1">Science Notes</Badge>
-              <p className={`${textSize} text-slate-600 pl-1`}>
-                {changes.science_notes.length} science notes will be added
-              </p>
-            </div>
+          {changes.instructions && changes.instructions.length > 0 && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <BookOpen className="w-3 h-3" />
+              <span>{changes.instructions.length} {changes.instructions.length === 1 ? 'step' : 'steps'}</span>
+            </Badge>
+          )}
+          
+          {changes.nutrition && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Pill className="w-3 h-3" />
+              <span>Nutrition</span>
+            </Badge>
           )}
         </div>
-      </ScrollArea>
-    </div>
+      </div>
+    </Card>
   );
 }

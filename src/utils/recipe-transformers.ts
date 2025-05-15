@@ -1,95 +1,106 @@
 
-import { Recipe, Ingredient, Nutrition } from '@/types/recipe';
-import { standardizeNutrition } from './recipe-utils';
+import type { Recipe } from '@/types/recipe';
 
 /**
- * Transform raw database recipe data into a structured Recipe object
+ * Transform a recipe from the database format to the application format
  */
-export function transformRecipeData(data: any): Recipe {
-  // Create default minimal recipe
-  const recipe: Recipe = {
-    id: data.id || '',
-    title: data.title || 'Unnamed Recipe',
-    tagline: data.tagline || '',
-    ingredients: [],
-    instructions: [],
-    science_notes: []
-  };
-  
-  // Parse and add other fields if available
-  if (data) {
-    // Add basic fields
-    if (data.image_url) recipe.image_url = data.image_url;
-    if (data.cuisine) recipe.cuisine = data.cuisine;
-    if (data.prep_time_min) recipe.prep_time_min = data.prep_time_min;
-    if (data.cook_time_min) recipe.cook_time_min = data.cook_time_min;
-    if (data.servings) recipe.servings = data.servings;
-    if (data.dietary) recipe.dietary = data.dietary;
-    if (data.user_id) recipe.user_id = data.user_id;
-    if (data.cuisine_category) recipe.cuisine_category = data.cuisine_category;
-    if (data.slug) recipe.slug = data.slug;
-    
-    // Parse ingredients if available
-    if (data.ingredients) {
-      try {
-        recipe.ingredients = Array.isArray(data.ingredients) 
-          ? data.ingredients 
-          : typeof data.ingredients === 'object'
-            ? Object.values(data.ingredients)
-            : typeof data.ingredients === 'string'
-              ? JSON.parse(data.ingredients)
-              : [];
-      } catch (e) {
-        console.error('Error parsing ingredients:', e);
-      }
-    }
-    
-    // Parse instructions if available
-    if (data.instructions) {
-      try {
-        recipe.instructions = Array.isArray(data.instructions)
-          ? data.instructions
-          : typeof data.instructions === 'string'
-            ? JSON.parse(data.instructions)
-            : [];
-      } catch (e) {
-        console.error('Error parsing instructions:', e);
-      }
-    }
-    
-    // Parse science_notes if available
-    if (data.science_notes) {
-      try {
-        recipe.science_notes = Array.isArray(data.science_notes)
-          ? data.science_notes
-          : typeof data.science_notes === 'string'
-            ? JSON.parse(data.science_notes)
-            : [];
-      } catch (e) {
-        console.error('Error parsing science_notes:', e);
-      }
-    }
-    
-    // Parse nutrition if available
-    if (data.nutrition) {
-      try {
-        recipe.nutrition = standardizeNutrition(data.nutrition);
-      } catch (e) {
-        console.error('Error parsing nutrition:', e);
-      }
-    }
-    
-    // Parse nutri_score if available
-    if (data.nutri_score) {
-      try {
-        recipe.nutri_score = typeof data.nutri_score === 'string'
-          ? JSON.parse(data.nutri_score)
-          : data.nutri_score;
-      } catch (e) {
-        console.error('Error parsing nutri_score:', e);
-      }
-    }
+export function transformRecipeData(dbRecipe: any): Recipe {
+  // Safety check to avoid errors with null data
+  if (!dbRecipe) {
+    console.error('Attempted to transform null or undefined recipe data');
+    throw new Error('Invalid recipe data provided for transformation');
   }
   
-  return recipe;
+  // Parse ingredients JSON to Ingredient array
+  let ingredients = [];
+  try {
+    ingredients = Array.isArray(dbRecipe.ingredients) 
+      ? dbRecipe.ingredients
+      : typeof dbRecipe.ingredients === 'object' 
+        ? Object.values(dbRecipe.ingredients)
+        : [];
+  } catch (e) {
+    console.error('Failed to parse ingredients', e);
+  }
+  
+  // Parse science_notes JSON to string array
+  let scienceNotes = [];
+  try {
+    if (dbRecipe.science_notes) {
+      scienceNotes = Array.isArray(dbRecipe.science_notes) 
+        ? dbRecipe.science_notes.map((note: any) => typeof note === 'string' ? note : String(note))
+        : [];
+    }
+  } catch (e) {
+    console.error('Failed to parse science notes', e);
+  }
+  
+  // Parse instructions to ensure they're an array of strings
+  let instructions = [];
+  try {
+    if (dbRecipe.instructions) {
+      instructions = Array.isArray(dbRecipe.instructions)
+        ? dbRecipe.instructions.map((instruction: any) => 
+            typeof instruction === 'string' ? instruction : String(instruction))
+        : [];
+    }
+  } catch (e) {
+    console.error('Failed to parse instructions', e);
+  }
+  
+  // Handle nutrition data with defaults
+  let nutrition = {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    fiber: 0,
+    sugar: 0,
+    sodium: 0
+  };
+  
+  try {
+    if (dbRecipe.nutrition && typeof dbRecipe.nutrition === 'object') {
+      nutrition = {
+        ...nutrition,
+        ...dbRecipe.nutrition
+      };
+    }
+  } catch (e) {
+    console.error('Failed to parse nutrition', e);
+  }
+  
+  // Extract tagline from either tagline or description field
+  const tagline = dbRecipe.tagline || dbRecipe.description || '';
+  
+  // Return a complete Recipe object with default values for missing properties
+  return {
+    id: dbRecipe.id,
+    title: dbRecipe.title || '',
+    tagline: tagline,
+    ingredients: ingredients,
+    instructions: instructions,
+    prep_time_min: dbRecipe.prep_time_min,
+    cook_time_min: dbRecipe.cook_time_min,
+    servings: dbRecipe.servings || 1,
+    image_url: dbRecipe.image_url,
+    cuisine: dbRecipe.cuisine,
+    cuisine_category: dbRecipe.cuisine_category || "Global",
+    tags: dbRecipe.tags || [],
+    user_id: dbRecipe.user_id,
+    created_at: dbRecipe.created_at || new Date().toISOString(),
+    updated_at: dbRecipe.updated_at || new Date().toISOString(),
+    original_request: dbRecipe.original_request || '',
+    reasoning: dbRecipe.reasoning || '',
+    version_number: dbRecipe.version_number || 1,
+    previous_version_id: dbRecipe.previous_version_id,
+    deleted_at: dbRecipe.deleted_at,
+    dietary: dbRecipe.dietary || '',
+    flavor_tags: dbRecipe.flavor_tags || [],
+    nutrition: nutrition,
+    science_notes: scienceNotes,
+    chef_notes: dbRecipe.chef_notes || '',
+    nutri_score: dbRecipe.nutri_score || null,
+    slug: dbRecipe.slug || ''
+  };
 }

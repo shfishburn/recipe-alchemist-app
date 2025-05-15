@@ -1,6 +1,6 @@
 
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, ChangesResponse } from '@/types/chat';
 
 /**
  * Process recipe updates based on chat message suggested changes
@@ -20,7 +20,8 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
 
   console.log("Processing recipe updates with changes:", {
     hasTitle: !!changes_suggested.title,
-    hasTagline: !!changes_suggested.description,
+    hasTagline: !!changes_suggested.tagline,
+    hasDescription: !!changes_suggested.description,
     hasIngredients: !!changes_suggested.ingredients,
     ingredientMode: changes_suggested.ingredients?.mode,
     hasInstructions: !!changes_suggested.instructions,
@@ -32,9 +33,11 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     updatedRecipe.title = changes_suggested.title;
   }
   
-  // Handle description/tagline field update
-  if (changes_suggested.description) {
-    // Update tagline for compatibility (description is not in Recipe type)
+  // Handle description/tagline field update - prioritize tagline over description
+  if (changes_suggested.tagline) {
+    updatedRecipe.tagline = changes_suggested.tagline;
+  } else if (changes_suggested.description) {
+    // Fallback to description if tagline isn't provided
     updatedRecipe.tagline = changes_suggested.description;
   }
   

@@ -13,12 +13,28 @@ export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | 
     return false;
   }
 
+  // Enhanced debugging for title validation
+  console.log("Validating recipe update with changes:", {
+    hasTitle: changes.title !== undefined,
+    titleValue: changes.title,
+    titleType: typeof changes.title,
+    originalTitle: recipe.title,
+    hasIngredients: !!changes.ingredients,
+    ingredientMode: changes.ingredients?.mode,
+  });
+
   // Basic validation - can be extended with more specific rules
   try {
     // Validate title changes - only if title is explicitly provided in changes
     if (changes.title !== undefined) {
       if (typeof changes.title !== 'string') {
-        console.error("Invalid title format");
+        console.error("Invalid title format:", changes.title);
+        return false;
+      }
+      
+      // Ensure non-empty title if provided
+      if (changes.title.trim() === '') {
+        console.error("Title cannot be empty");
         return false;
       }
     }
