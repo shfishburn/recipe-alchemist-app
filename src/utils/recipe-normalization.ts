@@ -66,11 +66,11 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
       qty: ingredient.qty,
       unit: ingredient.unit,
       // Add metric units (same as original if not specified)
-      qty_metric: ingredient.qty,
-      unit_metric: ingredient.unit,
+      qty_metric: ingredient.qty_metric || ingredient.qty,
+      unit_metric: ingredient.unit_metric || ingredient.unit,
       // Add imperial units (same as original if not specified)
-      qty_imperial: ingredient.qty,
-      unit_imperial: ingredient.unit,
+      qty_imperial: ingredient.qty_imperial || ingredient.qty,
+      unit_imperial: ingredient.unit_imperial || ingredient.unit,
       item: ingredient.item,
       notes: ingredient.notes,
       shop_size_qty: ingredient.shop_size_qty,
@@ -95,6 +95,7 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
   
   // Normalize the recipe structure with fallbacks
   return {
+    id: data.originalRecipeId || data.id, // Preserve ID when it's a modification
     title: data.title || "Unnamed Recipe",
     tagline: data.tagline || data.description || "",
     description: data.description || "",
@@ -115,6 +116,8 @@ export const normalizeRecipeResponse = (data: any): QuickRecipe => {
     cuisine: data.cuisine || "",
     dietary: data.dietary || "",
     flavor_tags: data.flavor_tags || [],
+    // Preserve original user ID if available (for modifications)
+    user_id: data.user_id,
     // Preserve any error message but explicitly set isError to false
     error_message: null,
     isError: false

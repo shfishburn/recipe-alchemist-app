@@ -1,37 +1,49 @@
 
 import { QuickRecipe } from '@/types/quick-recipe';
 
-// Define the NutritionImpact type
+export type ModificationStatus = 
+  'idle' | 
+  'loading' | 
+  'success' | 
+  'error' | 
+  'not-authenticated' | 
+  'not-deployed' | 
+  'canceled' | 
+  'applying' | 
+  'applied';
+
 export interface NutritionImpact {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  summary: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
+  assessment?: string;
 }
 
 export interface RecipeModifications {
+  textResponse: string;
+  reasoning: string;
   modifications: {
     title?: string;
     description?: string;
-    ingredients?: {
-      action: 'add' | 'remove' | 'modify';
-      originalIndex?: number;
-      item: string;
-      qty_metric?: number;
-      unit_metric?: string;
-      qty_imperial?: number;
-      unit_imperial?: string;
-      notes?: string;
-    }[];
-    steps?: {
-      action: 'add' | 'remove' | 'modify';
-      originalIndex?: number;
-      content: string;
-    }[];
+    ingredients?: Array<{
+      original?: string;
+      modified: string;
+      reason?: string;
+    }>;
+    steps?: Array<{
+      original?: string;
+      modified: string;
+      reason?: string;
+    }>;
+    cookingTip?: string;
   };
-  nutritionImpact: NutritionImpact;
-  reasoning: string;
+  nutritionImpact?: NutritionImpact;
+  // Add support for full modified recipe
+  modifiedRecipe?: QuickRecipe | null;
 }
 
 export interface ModificationHistoryEntry {
@@ -40,14 +52,3 @@ export interface ModificationHistoryEntry {
   timestamp: string;
   applied: boolean;
 }
-
-export type ModificationStatus =
-  | 'idle'
-  | 'loading'
-  | 'success'
-  | 'applying'
-  | 'applied'
-  | 'error'
-  | 'canceled'
-  | 'not-deployed'
-  | 'not-authenticated';
