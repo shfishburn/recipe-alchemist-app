@@ -5,6 +5,7 @@ import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
 import { isValidUUID } from '@/utils/slug-utils';
 import { toast } from 'sonner';
+import { transformDbToRecipe } from '@/utils/db-transformers';
 
 export type { Recipe, Ingredient, Nutrition };
 
@@ -54,119 +55,16 @@ export const useRecipeDetail = (idOrSlug?: string) => {
           hasNutrition: !!data.nutrition
         });
         
-        // Transform data with better error handling
-        try {
-          // Process science_notes with more defensive programming
-          let scienceNotes: string[] = [];
-          
-          if (data.science_notes) {
-            if (Array.isArray(data.science_notes)) {
-              // Already an array, make sure all elements are strings
-              scienceNotes = data.science_notes.map(note => 
-                typeof note === 'string' ? note : String(note)
-              );
-            } else if (typeof data.science_notes === 'string') {
-              // Try to parse JSON string
-              try {
-                const parsed = JSON.parse(data.science_notes);
-                if (Array.isArray(parsed)) {
-                  scienceNotes = parsed.map(note => String(note));
-                } else {
-                  // Single string note
-                  scienceNotes = [data.science_notes];
-                }
-              } catch (jsonError) {
-                // If JSON parsing fails, treat as a single string note
-                scienceNotes = [data.science_notes];
-              }
-            } else if (typeof data.science_notes === 'object') {
-              // Object but not array, try to extract values
-              scienceNotes = Object.values(data.science_notes)
-                .map(note => String(note));
-            }
-          }
-          
-          // Ensure ingredients is properly processed
-          const ingredients = typeof data.ingredients === 'string'
-            ? JSON.parse(data.ingredients)
-            : Array.isArray(data.ingredients)
-              ? data.ingredients
-              : typeof data.ingredients === 'object' && data.ingredients !== null
-                ? Object.values(data.ingredients)
-                : [];
-          
-          // Safe nutrition processing
-          const nutrition = typeof data.nutrition === 'string'
-            ? standardizeNutrition(JSON.parse(data.nutrition))
-            : standardizeNutrition(data.nutrition || {});
-          
-          // Parse nutri_score to the proper type
-          let nutriScore: NutriScore | undefined;
-          try {
-            if (data.nutri_score) {
-              nutriScore = typeof data.nutri_score === 'string'
-                ? JSON.parse(data.nutri_score)
-                : data.nutri_score as unknown as NutriScore;
-                
-              // Validate required fields
-              if (!nutriScore.grade || typeof nutriScore.score !== 'number') {
-                console.warn('Invalid nutri_score structure, skipping:', nutriScore);
-                nutriScore = undefined;
-              }
-            }
-          } catch (parseError) {
-            console.error('Error parsing nutri_score:', parseError);
-            nutriScore = undefined;
-          }
-          
-          // Build the full recipe object with default values for missing fields
-          const recipe: Recipe = {
-            id: data.id,
-            title: data.title || 'Untitled Recipe',
-            ingredients: ingredients as Ingredient[],
-            instructions: Array.isArray(data.instructions) 
-              ? data.instructions 
-              : typeof data.instructions === 'string'
-                ? JSON.parse(data.instructions)
-                : [],
-            prep_time_min: data.prep_time_min || 0,
-            cook_time_min: data.cook_time_min || 0,
-            servings: data.servings || 1,
-            image_url: data.image_url || '',
-            cuisine: data.cuisine || '',
-            cuisine_category: data.cuisine_category || "Global",
-            tags: [], // Field doesn't exist in DB response, set default empty array
-            user_id: data.user_id,
-            created_at: data.created_at || new Date().toISOString(),
-            updated_at: data.updated_at || new Date().toISOString(),
-            original_request: '', // Field doesn't exist in DB response, set default empty string
-            reasoning: data.reasoning || '',
-            tagline: data.tagline || '',
-            version_number: data.version_number || 1,
-            previous_version_id: data.previous_version_id,
-            deleted_at: data.deleted_at,
-            dietary: data.dietary || '',
-            flavor_tags: data.flavor_tags || [],
-            nutrition: nutrition,
-            science_notes: scienceNotes,
-            chef_notes: data.chef_notes || '',
-            cooking_tip: data.cooking_tip || '',
-            slug: data.slug || '',
-            nutri_score: nutriScore
-          };
-          
-          console.log('Recipe transformed successfully:', {
-            id: recipe.id,
-            title: recipe.title,
-            scienceNotesCount: recipe.science_notes.length
-          });
-          
-          return recipe;
-        } catch (parseError) {
-          console.error('Error parsing recipe data:', parseError);
-          toast.error('Error processing recipe data');
-          throw new Error('Error processing recipe data');
-        }
+        // Transform database record to Recipe type
+        const recipe = transformDbToRecipe(data);
+        
+        console.log('Recipe transformed successfully:', {
+          id: recipe.id,
+          title: recipe.title,
+          scienceNotesCount: recipe.science_notes.length
+        });
+        
+        return recipe;
       } catch (e) {
         console.error('Error in recipe detail fetch:', e);
         throw e;

@@ -1,6 +1,7 @@
 
 import type { Json } from '@/integrations/supabase/types';
 import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
+import type { Ingredient as QuickRecipeIngredient } from '@/types/quick-recipe';
 import { standardizeNutrition } from './nutrition-utils';
 
 /**
@@ -84,6 +85,43 @@ export function safelyParseJsonArray<T>(jsonValue: any, fallback: T[] = []): T[]
 }
 
 /**
+ * Transforms a QuickRecipeIngredient to a database-compatible Ingredient
+ * @param ingredient - Source ingredient from QuickRecipe
+ * @returns Database-compatible Ingredient
+ */
+export function transformIngredient(ingredient: QuickRecipeIngredient | Ingredient): Ingredient {
+  // Start with default values for required fields
+  const result: Ingredient = {
+    qty_metric: 0,
+    unit_metric: '',
+    qty_imperial: 0,
+    unit_imperial: '',
+    item: typeof ingredient.item === 'string' ? ingredient.item : 'Ingredient',
+  };
+  
+  // Copy over existing values, prioritizing metric/imperial fields
+  if ('qty_metric' in ingredient) result.qty_metric = ingredient.qty_metric || 0;
+  if ('unit_metric' in ingredient) result.unit_metric = ingredient.unit_metric || '';
+  if ('qty_imperial' in ingredient) result.qty_imperial = ingredient.qty_imperial || 0;
+  if ('unit_imperial' in ingredient) result.unit_imperial = ingredient.unit_imperial || '';
+  
+  // Fall back to legacy fields if metric/imperial not available
+  if (!result.qty_metric && ingredient.qty) result.qty_metric = ingredient.qty;
+  if (!result.unit_metric && ingredient.unit) result.unit_metric = ingredient.unit;
+  
+  // Preserve other fields
+  if (ingredient.notes) result.notes = ingredient.notes;
+  if (ingredient.shop_size_qty) result.shop_size_qty = ingredient.shop_size_qty;
+  if (ingredient.shop_size_unit) result.shop_size_unit = ingredient.shop_size_unit;
+  
+  // Legacy support
+  if (ingredient.qty) result.qty = ingredient.qty;
+  if (ingredient.unit) result.unit = ingredient.unit;
+  
+  return result;
+}
+
+/**
  * Transforms a recipe object for database storage
  * @param recipe - The recipe object to transform
  * @returns A database-compatible object
@@ -100,11 +138,13 @@ export function transformRecipeForDb(recipe: Partial<Recipe>): Record<string, an
   
   // Special handling for arrays that need to be stored as JSON
   if (recipeClone.ingredients) {
-    result.ingredients = recipeClone.ingredients as unknown as Json;
+    // Transform ingredients to ensure they have required fields
+    const transformedIngredients = recipeClone.ingredients.map(i => transformIngredient(i));
+    result.ingredients = transformedIngredients;
   }
   
   if (recipeClone.instructions) {
-    result.instructions = recipeClone.instructions as unknown as Json;
+    result.instructions = recipeClone.instructions;
   }
   
   if (recipeClone.science_notes) {
@@ -113,9 +153,9 @@ export function transformRecipeForDb(recipe: Partial<Recipe>): Record<string, an
       ? recipeClone.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
       : (recipeClone.science_notes ? [String(recipeClone.science_notes)] : []);
     
-    result.science_notes = validatedNotes as unknown as Json;
+    result.science_notes = validatedNotes;
   } else {
-    result.science_notes = [] as unknown as Json;
+    result.science_notes = [];
   }
   
   if (recipeClone.flavor_tags) {
@@ -127,11 +167,11 @@ export function transformRecipeForDb(recipe: Partial<Recipe>): Record<string, an
   if (recipeClone.nutrition) {
     // Standardize nutrition data
     const standardizedNutrition = standardizeNutrition(recipeClone.nutrition);
-    result.nutrition = standardizedNutrition as unknown as Json;
+    result.nutrition = standardizedNutrition;
   }
   
   if (recipeClone.nutri_score) {
-    result.nutri_score = recipeClone.nutri_score as unknown as Json;
+    result.nutri_score = recipeClone.nutri_score;
   }
   
   // Copy all other valid fields
@@ -180,7 +220,9 @@ export function transformDbToRecipe(dbRecipe: Record<string, any>): Recipe {
   // Handle arrays that are stored as JSON
   if (dbRecipeClone.ingredients) {
     // Parse ingredients from JSON if needed
-    result.ingredients = safelyParseJsonArray<Ingredient>(dbRecipeClone.ingredients, []);
+    const parsedIngredients = safelyParseJsonArray<Partial<Ingredient>>(dbRecipeClone.ingredients, []);
+    // Ensure all ingredients have required fields
+    result.ingredients = parsedIngredients.map(i => transformIngredient(i as QuickRecipeIngredient));
   } else {
     result.ingredients = [];
   }
@@ -200,11 +242,28 @@ export function transformDbToRecipe(dbRecipe: Record<string, any>): Recipe {
   }
   
   if (dbRecipeClone.nutrition) {
-    result.nutrition = dbRecipeClone.nutrition;
+    const nutrition = typeof dbRecipeClone.nutrition === 'string' 
+      ? JSON.parse(dbRecipeClone.nutrition) 
+      : dbRecipeClone.nutrition;
+    
+    result.nutrition = standardizeNutrition(nutrition) as Nutrition;
+  } else {
+    // Default nutrition object
+    result.nutrition = {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0
+    };
   }
   
   if (dbRecipeClone.nutri_score) {
-    result.nutri_score = dbRecipeClone.nutri_score;
+    result.nutri_score = typeof dbRecipeClone.nutri_score === 'string'
+      ? JSON.parse(dbRecipeClone.nutri_score)
+      : dbRecipeClone.nutri_score;
   }
   
   // Copy all other fields

@@ -64,3 +64,52 @@ export function standardizeNutrition(nutrition: Record<string, any>): Record<str
 
   return standardized;
 }
+
+/**
+ * Validates nutrition data against required fields and value types
+ * @param nutrition - The nutrition object to validate
+ * @returns Object with validation result and any error messages
+ */
+export function validateNutritionData(nutrition: Record<string, any>): { valid: boolean; message?: string } {
+  if (!nutrition || typeof nutrition !== 'object') {
+    return { valid: false, message: 'Nutrition data must be an object' };
+  }
+
+  // Required fields for basic nutritional information
+  const requiredFields = ['calories', 'protein', 'carbs', 'fat'];
+  
+  // Check for required fields
+  for (const field of requiredFields) {
+    const value = nutrition[field];
+    if (value === undefined || value === null) {
+      return { 
+        valid: false, 
+        message: `Missing required nutrition field: ${field}` 
+      };
+    }
+    
+    // Ensure numeric values
+    if (typeof value !== 'number' && isNaN(Number(value))) {
+      return { 
+        valid: false, 
+        message: `Nutrition field ${field} must have a numeric value` 
+      };
+    }
+  }
+
+  // Check for negative values
+  for (const [key, value] of Object.entries(nutrition)) {
+    // Skip non-numeric or special fields
+    if (typeof value !== 'number' || key === 'data_quality') continue;
+    
+    if (value < 0) {
+      return {
+        valid: false,
+        message: `Nutrition field ${key} cannot have a negative value`
+      };
+    }
+  }
+
+  // If we get here, validation passed
+  return { valid: true };
+}
