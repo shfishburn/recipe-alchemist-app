@@ -7,28 +7,31 @@ This document provides a comprehensive overview of all documentation files avail
 
 | Document | Status | Description |
 |----------|--------|-------------|
-| [Recipe Chat System](./recipe-chat-system.md) | Complete | Describes the Recipe Chat system, including message flows, UI components, and backend interactions |
+| [User Guide Overview](./user-guide/overview.md) | Complete | A high-level overview of all features with links to detailed guides |
 | [Recipe Generation Pipeline](./recipe-generation-pipeline.md) | Complete | Details the recipe generation process, components, and flows |
+| [Recipe Chat System](./recipe-chat-system.md) | Complete | Describes the Recipe Chat system, including message flows, UI components, and backend interactions |
 | [Recipe Modification Pipeline](./recipe-modification-pipeline.md) | Complete | Explains how recipes are modified using AI, the architecture, and implementation |
 | [Shopping List System](./shopping-list-system.md) | Complete | Documentation for the shopping list functionality, including data models and user interactions |
 | [Recipe Detail System](./recipe-detail-system.md) | Complete | Covers the recipe detail pages, components, and functionality |
 | [Science Analysis System](./science-analysis-system.md) | Complete | Documents the science analysis feature that provides insights into cooking processes |
 | [Nutrition Analysis System](./nutrition-analysis-system.md) | Complete | Explains the nutrition analysis system, calculations, and visualization components |
+| [AI Prompts and Responses](./ai-prompts-and-responses.md) | Complete | Comprehensive overview of all AI prompt systems and response formats used throughout the application |
 | [Data Model](./data-model.md) | Complete | Comprehensive documentation of the database schema, relationships, and key fields |
+| [User Guide - Feature Areas](./user-guide/) | Complete | Detailed guides for specific feature areas of the application |
 
 ## Edge Functions
 
 The application uses several Supabase Edge Functions for secure backend processing:
 
-| Function | Purpose |
-|----------|---------|
-| [generate-quick-recipe](../supabase/functions/generate-quick-recipe/) | Generates recipe content using AI |
-| [modify-quick-recipe](../supabase/functions/modify-quick-recipe/) | Modifies existing recipes with AI assistance |
-| [generate-recipe-image](../supabase/functions/generate-recipe-image/) | Creates images for recipes |
-| [recipe-chat](../supabase/functions/recipe-chat/) | Handles conversational AI about recipes |
-| [fuse-nutrition](../supabase/functions/fuse-nutrition/) | Combines nutrition data from multiple sources |
-| [usda-food-api](../supabase/functions/usda-food-api/) | Interfaces with USDA Food Data Central API |
-| [analyze-reactions](../supabase/functions/analyze-reactions/) | Analyzes chemical reactions in cooking steps |
+| Function | Purpose | Related Documentation |
+|----------|---------|------------------------|
+| [generate-quick-recipe](../supabase/functions/generate-quick-recipe/) | Generates recipe content using AI | [Recipe Generation Pipeline](./recipe-generation-pipeline.md) |
+| [modify-quick-recipe](../supabase/functions/modify-quick-recipe/) | Modifies existing recipes with AI assistance | [Recipe Modification Pipeline](./recipe-modification-pipeline.md) |
+| [generate-recipe-image](../supabase/functions/generate-recipe-image/) | Creates images for recipes | [Recipe Detail System](./recipe-detail-system.md) |
+| [recipe-chat](../supabase/functions/recipe-chat/) | Handles conversational AI about recipes | [Recipe Chat System](./recipe-chat-system.md), [AI Prompts and Responses](./ai-prompts-and-responses.md) |
+| [fuse-nutrition](../supabase/functions/fuse-nutrition/) | Combines nutrition data from multiple sources | [Nutrition Analysis System](./nutrition-analysis-system.md) |
+| [usda-food-api](../supabase/functions/usda-food-api/) | Interfaces with USDA Food Data Central API | [Nutrition Analysis System](./nutrition-analysis-system.md) |
+| [analyze-reactions](../supabase/functions/analyze-reactions/) | Analyzes chemical reactions in cooking steps | [Science Analysis System](./science-analysis-system.md) |
 
 ## Architecture Overview
 
