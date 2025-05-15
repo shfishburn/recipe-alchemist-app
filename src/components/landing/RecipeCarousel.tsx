@@ -30,9 +30,6 @@ export const RecipeCarousel: React.FC<RecipeCarouselProps> = ({
       <div className="relative w-full">
         <Carousel
           className="w-full"
-          opts={{
-            align: 'start'
-          }}
         >
           <CarouselContent>
             {displayRecipes.map((recipe) => (

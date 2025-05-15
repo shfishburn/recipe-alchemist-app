@@ -217,13 +217,19 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     }
   }
   
+  // Ensure ID is included
+  if (!filteredRecipe.id) {
+    console.error("Missing recipe ID in saveRecipeUpdate");
+    throw new Error("Recipe ID is required for updates");
+  }
+  
   // Transform recipe for database storage with improved type safety
   const dbRecipe = {
     ...filteredRecipe,
     ingredients: filteredRecipe.ingredients as unknown as Json,
     nutrition: filteredRecipe.nutrition as unknown as Json,
     // Use the properly serialized science_notes
-    science_notes: scienceNotesJson,
+    science_notes: scienceNotesJson || filteredRecipe.science_notes as unknown as Json,
     // Ensure nutri_score is properly cast to Json type
     nutri_score: filteredRecipe.nutri_score as unknown as Json,
     // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
@@ -231,7 +237,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   };
 
   console.log("Saving recipe update with data:", {
-    id: dbRecipe.id,
+    id: dbRecipe.id,  // This reference is now safe since we check for id above
     hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
@@ -248,7 +254,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     const { data, error } = await supabase
       .from('recipes')
       .update(dbRecipe)
-      .eq('id', updatedRecipe.id)
+      .eq('id', dbRecipe.id)  // Using dbRecipe.id which is guaranteed to exist now
       .select()
       .single();
 

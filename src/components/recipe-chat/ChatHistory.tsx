@@ -3,19 +3,29 @@ import React from 'react';
 import { ChatMessage as ChatMessageComp } from './ChatMessage';
 import { ChatResponse } from './ChatResponse';
 import type { ChatMessage, OptimisticMessage } from '@/types/chat';
+import type { Recipe } from '@/types/recipe';
+import { Dispatch, SetStateAction } from 'react';
 
 interface ChatHistoryProps {
   chatHistory: ChatMessage[];
   optimisticMessages: OptimisticMessage[];
   isApplying: boolean;
-  applyChanges: (recipe: any, chatMessage: ChatMessage) => Promise<boolean>;
+  isSending: boolean;
+  setMessage: Dispatch<SetStateAction<string>>;
+  applyChanges: (chatMessage: ChatMessage) => Promise<boolean>;
+  recipe: Recipe;
+  retryMessage?: () => void;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
   chatHistory,
   optimisticMessages,
   isApplying,
-  applyChanges
+  isSending,
+  setMessage,
+  applyChanges,
+  recipe,
+  retryMessage
 }) => {
   return (
     <div className="space-y-6">
