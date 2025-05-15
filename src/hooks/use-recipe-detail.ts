@@ -123,7 +123,6 @@ export const useRecipeDetail = (idOrSlug?: string) => {
           const recipe: Recipe = {
             id: data.id,
             title: data.title || 'Untitled Recipe',
-            description: '', // Field doesn't exist in DB response, set default empty string
             ingredients: ingredients as Ingredient[],
             instructions: Array.isArray(data.instructions) 
               ? data.instructions 

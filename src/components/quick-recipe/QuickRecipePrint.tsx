@@ -69,7 +69,7 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
         recipe={{
           id: 'quick-recipe',
           title: recipe.title,
-          description: recipe.description,
+          tagline: recipe.description,
           ingredients: formattedIngredients,
           instructions: recipe.steps,
           prep_time_min: recipe.prepTime,
@@ -86,7 +86,6 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
             kcal: 0
           } : undefined,
           science_notes: [],
-          tagline: recipe.description,
           cooking_tip: recipe.cookingTip
         }} 
         ref={printDialogTriggerRef}

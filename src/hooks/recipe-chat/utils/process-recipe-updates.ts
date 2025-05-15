@@ -20,6 +20,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
 
   console.log("Processing recipe updates with changes:", {
     hasTitle: !!changes_suggested.title,
+    hasTagline: !!changes_suggested.description,
     hasIngredients: !!changes_suggested.ingredients,
     ingredientMode: changes_suggested.ingredients?.mode,
     hasInstructions: !!changes_suggested.instructions,
@@ -65,7 +66,11 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   
   // Update instructions if provided
   if (Array.isArray(changes_suggested.instructions) && changes_suggested.instructions.length > 0) {
-    updatedRecipe.instructions = changes_suggested.instructions;
+    // Convert any complex instruction objects to simple strings
+    const processedInstructions = changes_suggested.instructions.map(instruction => 
+      typeof instruction === 'string' ? instruction : instruction.action
+    );
+    updatedRecipe.instructions = processedInstructions;
   }
   
   // Update nutrition data if provided
