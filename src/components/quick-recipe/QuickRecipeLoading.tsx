@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -8,9 +7,11 @@ import '@/styles/loading.css';
 interface QuickRecipeLoadingProps {
   onCancel?: () => void;
   timeoutWarning?: boolean;
+  percentComplete: number;
+  stepDescription: string;
 }
 
-export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRecipeLoadingProps) {
+export function QuickRecipeLoading({ onCancel, timeoutWarning = false, percentComplete, stepDescription }: QuickRecipeLoadingProps) {
   return (
     <div className="flex flex-col items-center justify-center w-full overflow-x-hidden">
       <div className="flex flex-col items-center justify-center space-y-6 p-4 sm:p-6 w-full">
@@ -31,17 +32,19 @@ export function QuickRecipeLoading({ onCancel, timeoutWarning = false }: QuickRe
         </div>
         
         {/* Main heading */}
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold animate-fade-in">
           Creating your recipe...
         </h2>
+        <p className="text-sm text-gray-500 animate-fade-in">{stepDescription}</p>
         
         {/* Progress bar with animation */}
-        <Progress 
-          value={65} 
-          className="w-full"
-          indicatorClassName="animate-progress-pulse" 
+        <Progress
+          value={percentComplete}
+          className="w-full animate-fade-in"
+          indicatorClassName="animate-progress-pulse"
           indicatorColor="#4CAF50"
         />
+        <span className="text-sm mt-1 text-gray-500 animate-fade-in">{percentComplete}%</span>
         
         {/* Timeout warning - conditionally rendered */}
         {timeoutWarning && (

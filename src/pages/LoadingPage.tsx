@@ -21,6 +21,7 @@ const LoadingPage: React.FC = () => {
     formData, 
     isLoading, 
     setHasTimeoutError,
+    hasTimeoutError,
     loadingState,
     updateLoadingState
   } = useQuickRecipeStore();
@@ -162,7 +163,12 @@ const LoadingPage: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
       {/* single animated loader with built-in cancel button */}
-      <QuickRecipeLoading onCancel={handleCancel} />
+      <QuickRecipeLoading
+        onCancel={handleCancel}
+        timeoutWarning={hasTimeoutError}
+        percentComplete={loadingState.percentComplete}
+        stepDescription={loadingState.stepDescription}
+      />
     </div>
   );
 };
