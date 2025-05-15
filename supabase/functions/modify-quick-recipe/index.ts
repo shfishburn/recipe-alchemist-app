@@ -7,6 +7,7 @@ import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langcha
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { recipeModificationsSchema } from "./schema.ts";
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
+import { storeRecipeVersion, getLatestVersionNumber } from "../_shared/recipe-versions.ts";
 
 // === retry helper ===
 async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 500): Promise<T> {
@@ -65,10 +66,16 @@ function createLangChainSequence() {
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", `
 You are a culinary nutrition expert. When modifying recipes:
-1) Keep flavors balanced and logical.
-2) Honor cooking chemistry in substitutions.
-3) Correctly recalc nutrition.
-4) Return a strict JSON matching the Zod schema, nothing else.
+1) Return a COMPLETE recipe that includes ALL fields from the original recipe with your modifications applied.
+2) Keep flavors balanced and use logical substitutions.
+3) Honor cooking chemistry principles in substitutions.
+4) Recalculate nutrition values when ingredients change.
+5) Follow the exact schema structure of the original recipe.
+6) DO NOT return just the changes - return the entire recipe with changes applied.
+7) Include a modification_reason field in version_info explaining the changes.
+8) Maintain all original recipe fields even if you don't modify them.
+
+IMPORTANT: Your response must contain a complete recipe object with all fields from the original that match the recipe generation format.
 `],
     new MessagesPlaceholder("history"),
     ["human", "{input}"],
@@ -105,7 +112,7 @@ serve(async (req) => {
   }
 
   try {
-    const { recipe, userRequest, modificationHistory = [] } = await req.json();
+    const { recipe, userRequest, modificationHistory = [], user_id } = await req.json();
 
     // validate input
     try {
@@ -117,8 +124,11 @@ serve(async (req) => {
     // build LangChain call
     const chain = createLangChainSequence();
     const input = `
-      Recipe: ${JSON.stringify(recipe)}
-      Request: ${userRequest}
+      Original Recipe: ${JSON.stringify(recipe)}
+      Modification Request: ${userRequest}
+      
+      Return a complete JSON object containing the entire recipe with your modifications applied.
+      Include every field from the original recipe, with your modifications applied.
     `;
     const history = [
       ...modificationHistory.map(e => ({ role: "human", content: e.request })),
@@ -154,7 +164,43 @@ serve(async (req) => {
       );
     }
 
-    // write chat record
+    // Get latest version number
+    let latestVersionNumber = 0;
+    let versionData = null;
+    
+    try {
+      latestVersionNumber = await getLatestVersionNumber(recipe.id);
+      const newVersionNumber = latestVersionNumber + 1;
+      
+      // Add version info to recipe
+      const modifiedRecipe = parsed.recipe;
+      if (!modifiedRecipe.version_info) {
+        modifiedRecipe.version_info = {
+          version_number: newVersionNumber,
+          parent_version_id: recipe.version_id || null,
+          modification_reason: userRequest
+        };
+      }
+      
+      // Store the version
+      versionData = await storeRecipeVersion({
+        recipeId: recipe.id,
+        parentVersionId: recipe.version_id || null,
+        versionNumber: newVersionNumber,
+        userId: user_id,
+        modificationRequest: userRequest,
+        recipeData: modifiedRecipe
+      });
+      
+      if (versionData) {
+        modifiedRecipe.version_id = versionData.version_id;
+      }
+    } catch (versionError) {
+      console.error("Version handling error:", versionError);
+      // Continue despite version handling error
+    }
+
+    // Write chat record
     const SUPA_URL = Deno.env.get("SUPABASE_URL");
     const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!SUPA_URL || !SUPA_KEY) {
@@ -168,7 +214,8 @@ serve(async (req) => {
           recipe_id: recipe.id,
           user_message: userRequest,
           ai_response: parsed.textResponse,
-          changes_suggested: parsed.modifications,
+          changes_suggested: true,
+          version_id: parsed.recipe.version_id, // Link to version
           source_type: "modification"
         });
       } catch (dbErr) {
@@ -176,8 +223,14 @@ serve(async (req) => {
       }
     }
 
+    // Add version ID to response
+    const response = {
+      ...parsed,
+      recipe: parsed.recipe
+    };
+
     // return success
-    return new Response(JSON.stringify(parsed), { status: 200, headers });
+    return new Response(JSON.stringify(response), { status: 200, headers });
   } catch (err) {
     console.error("Unexpected error", err);
     return new Response(JSON.stringify({ error: (err as Error).message }), {

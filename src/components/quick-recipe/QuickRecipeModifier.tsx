@@ -13,6 +13,7 @@ import { AuthOverlay } from './modifier/AuthOverlay';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
+import { VersionSelector } from './modifier/VersionSelector'; // Import the new component
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
@@ -34,6 +35,9 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     modifiedRecipe,
     modificationRequest,
     modificationHistory,
+    versionHistory, // New version history state
+    selectedVersionId, // New selected version state
+    selectVersion, // New version selection function
     isModified,
     requestModifications,
     applyModifications,
@@ -152,6 +156,15 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
 
         {/* Status and Error Display */}
         <StatusDisplay status={status} error={error} />
+
+        {/* Version Selector - New Component */}
+        {versionHistory.length > 0 && (
+          <VersionSelector
+            versions={versionHistory}
+            selectedVersionId={selectedVersionId}
+            onSelectVersion={selectVersion}
+          />
+        )}
 
         {/* Modification History */}
         <ModificationHistory historyItems={modificationHistory} />

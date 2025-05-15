@@ -16,6 +16,13 @@ export interface Ingredient {
   shop_size_unit?: string;
 }
 
+// Version information
+export interface VersionInfo {
+  version_number: number;
+  parent_version_id?: string;
+  modification_reason: string;
+}
+
 // Rename/alias QuickRecipe as Recipe for backward compatibility
 export type Recipe = QuickRecipe;
 
@@ -42,6 +49,9 @@ export interface QuickRecipe {
   user_id?: string;
   id?: string;
   slug?: string;  // Added slug property
+  // Version-related properties
+  version_id?: string;
+  version_info?: VersionInfo;
   // Error-related properties
   error?: string;
   error_message?: string;

@@ -2,9 +2,13 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import { ModificationStatus, RecipeModifications, ModificationHistoryEntry } from './types';
+import { 
+  ModificationStatus, 
+  RecipeModifications, 
+  ModificationHistoryEntry,
+  VersionHistoryEntry 
+} from './types';
 import { requestRecipeModifications } from './api-client';
-import { applyModificationsToRecipe } from './mutation-utils';
 import { saveModificationRequest } from './storage-utils';
 
 export function useRecipeModifications(recipe: QuickRecipe) {
@@ -15,27 +19,94 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   const [modifications, setModifications] = useState<RecipeModifications | null>(null);
   const [modificationHistory, setModificationHistory] = useState<ModificationHistoryEntry[]>([]);
   const [modifiedRecipe, setModifiedRecipe] = useState<QuickRecipe>(recipe);
+  const [versionHistory, setVersionHistory] = useState<VersionHistoryEntry[]>([]);
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
 
   const pendingRequestRef = useRef<string | null>(null);
   const requestTimerRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // reset on recipe change
+  // Reset on recipe change
   useEffect(() => {
     setModifiedRecipe(recipe);
     setStatus('idle');
     setError(null);
     setModifications(null);
     // keep history
+    
+    // Fetch version history when recipe changes
+    if (recipe.id) {
+      fetchVersionHistory(recipe.id);
+    }
   }, [recipe.id]);
 
-  // cleanup on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       abortControllerRef.current?.abort();
       if (requestTimerRef.current != null) window.clearTimeout(requestTimerRef.current);
     };
   }, []);
+  
+  // Fetch recipe version history
+  const fetchVersionHistory = async (recipeId: string) => {
+    if (!session) return;
+    
+    try {
+      setStatus('loading');
+      
+      const token = session.access_token;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recipe-versions/${recipeId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch version history');
+      }
+      
+      const versions = await response.json();
+      setVersionHistory(versions);
+      
+      // Set selected version to the latest one
+      if (versions.length > 0) {
+        const latestVersion = versions[0]; // Already sorted descending
+        setSelectedVersionId(latestVersion.version_id);
+        
+        // If the recipe doesn't have a version_id, use the latest version data
+        if (!recipe.version_id) {
+          setModifiedRecipe({
+            ...recipe,
+            ...latestVersion.recipe_data,
+            version_id: latestVersion.version_id
+          });
+        }
+      }
+      
+      setStatus('idle');
+    } catch (err) {
+      console.error("Error fetching version history:", err);
+      setError(err instanceof Error ? err.message : 'Unknown error fetching versions');
+      setStatus('error');
+    }
+  };
+  
+  // Select a specific version
+  const selectVersion = useCallback((versionId: string) => {
+    const version = versionHistory.find(v => v.version_id === versionId);
+    if (version) {
+      setSelectedVersionId(versionId);
+      setModifiedRecipe({
+        ...recipe,
+        ...version.recipe_data,
+        version_id: version.version_id
+      });
+      setStatus('applied');
+    }
+  }, [versionHistory, recipe]);
 
   const requestModifications = useCallback(async (request: string, immediate = false) => {
     if (!request.trim()) return;
@@ -96,6 +167,11 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         setModifications(validated);
         setModificationHistory(h => [...h, entry]);
         setStatus('success');
+        
+        // Refresh version history
+        if (recipe.id) {
+          fetchVersionHistory(recipe.id);
+        }
       } catch (err: any) {
         abortControllerRef.current = null;
         
@@ -115,7 +191,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     } else {
       requestTimerRef.current = window.setTimeout(executeRequest, 800);
     }
-  }, [modifiedRecipe, modificationHistory, session]);
+  }, [modifiedRecipe, modificationHistory, session, recipe.id]);
 
   const applyModifications = useCallback(() => {
     if (!modifications || status !== 'success') return;
@@ -123,7 +199,8 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     setStatus('applying');
     
     try {
-      const next = applyModificationsToRecipe(modifiedRecipe, modifications);
+      // With the complete recipe update approach, we can just use the complete recipe
+      const next = modifications.recipe;
       setModifiedRecipe(next);
       setStatus('applied');
       setModifications(null);
@@ -131,13 +208,18 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         h.map((e, i) => i === h.length - 1 ? { ...e, applied: true } : e)
       );
       toast.success("Recipe updated");
+      
+      // Refresh version history
+      if (recipe.id) {
+        fetchVersionHistory(recipe.id);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message);
       setStatus('error');
       toast.error("Apply failed");
     }
-  }, [modifications, modifiedRecipe, status]);
+  }, [modifications, status, recipe.id]);
 
   const rejectModifications = useCallback(() => {
     setModifications(null);
@@ -173,11 +255,15 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     modifiedRecipe,
     modificationRequest,
     modificationHistory,
+    versionHistory,
+    selectedVersionId,
     isModified: JSON.stringify(recipe) !== JSON.stringify(modifiedRecipe),
     requestModifications,
     applyModifications,
     rejectModifications,
     cancelRequest,
-    resetToOriginal
+    resetToOriginal,
+    selectVersion,
+    refreshVersionHistory: () => recipe.id && fetchVersionHistory(recipe.id)
   };
 }

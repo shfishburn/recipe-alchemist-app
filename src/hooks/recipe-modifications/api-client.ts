@@ -1,71 +1,83 @@
 
-import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
-import { RecipeModifications } from './types';
-import { recipeModificationsSchema } from './validation';
 import { QuickRecipe } from '@/types/quick-recipe';
+import { RecipeModifications, ModificationHistoryEntry } from './types';
 
+/**
+ * Requests modifications to a recipe using the AI service
+ */
 export async function requestRecipeModifications(
   recipe: QuickRecipe,
   userRequest: string,
-  modificationHistory: any[],
+  modificationHistory: ModificationHistoryEntry[] = [],
   token: string,
-  abortController: AbortController
+  abortController?: AbortController
 ): Promise<RecipeModifications> {
-  console.log('Requesting recipe modifications:', userRequest);
-  
-  try {
-    // Register abort handler to throw an AbortError if the controller aborts
-    // This allows us to catch and handle it properly below
-    const abortPromise = new Promise<never>((_, reject) => {
-      abortController.signal.addEventListener('abort', () => {
-        reject(new DOMException('Request aborted', 'AbortError'));
-      });
-    });
-    
-    // Race the function call against abort
-    const responsePromise = callSupabaseFunction<
-      { recipe: QuickRecipe; userRequest: string; modificationHistory: any[] },
-      RecipeModifications
-    >('modify-quick-recipe', {
-      method: 'POST',
-      payload: {
-        recipe,
-        userRequest,
-        modificationHistory
-      },
-      token,
-      debugTag: 'recipe-modification'
-    });
-    
-    // This will either resolve with the function response or reject if aborted
-    const response = await Promise.race([responsePromise, abortPromise]);
+  // Get supabase URL from environment
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  if (!SUPABASE_URL) {
+    throw new Error('Supabase URL is not defined');
+  }
 
-    // Check for errors in the response
-    if (response.error) {
-      // Handle authentication errors
-      if (response.status === 401) {
-        throw new Error('Authentication required to modify recipes');
-      } else if (response.status === 404) {
-        throw new Error('Modification service not deployed');
-      } else {
-        throw new Error(response.error || `HTTP error ${response.status}`);
+  // Check for recipe object validity
+  if (!recipe || typeof recipe !== 'object') {
+    throw new Error('Invalid recipe object');
+  }
+
+  // Only send the necessary history to the API
+  const apiRequestBody = {
+    recipe,
+    userRequest,
+    modificationHistory: modificationHistory.map(({ request, response }) => ({
+      request,
+      response
+    })),
+    user_id: null // Let the server get this from auth
+  };
+
+  try {
+    // Make request to the Supabase edge function
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/modify-quick-recipe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(apiRequestBody),
+      signal: abortController?.signal,
+    });
+
+    // Handle HTTP errors
+    if (!response.ok) {
+      let errorMsg = `API error: ${response.status}`;
+      try {
+        const error = await response.json();
+        errorMsg = error.error || errorMsg;
+      } catch (e) {
+        // Ignore parsing errors
       }
+      throw new Error(errorMsg);
+    }
+
+    // Parse response
+    const result = await response.json();
+    
+    // Validate response has expected structure
+    if (!result || !result.textResponse || !result.recipe) {
+      throw new Error('Invalid response format from modification service');
+    }
+
+    return result as RecipeModifications;
+  } catch (err: unknown) {
+    // Check for AbortError specifically
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw err; // Rethrow AbortError for handling elsewhere
     }
     
-    if (!response.data) {
-      throw new Error('No data returned');
-    }
-    
-    // Use Zod to validate the response data
-    return recipeModificationsSchema.parse(response.data);
-  } catch (err) {
-    // Check if this is an AbortError from the AbortController
-    if (err.name === 'AbortError') {
-      console.log('Request was canceled');
-      throw err;
-    }
-    
-    console.error('Error modifying recipe:', err);
-    throw err;
+    // Re-throw with more context
+    throw new Error(
+      err instanceof Error 
+        ? `Recipe modification failed: ${err.message}` 
+        : 'Unknown error during recipe modification'
+    );
   }
 }
