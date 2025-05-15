@@ -1,11 +1,11 @@
-
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { generateQuickRecipe } from '@/hooks/use-quick-recipe';
-import { LoadingAnimation } from '@/components/quick-recipe/loading/LoadingAnimation';
+import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading';
 
 const LoadingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,10 +59,13 @@ const LoadingPage: React.FC = () => {
       try {
         // Simulate step progress
         const progressInterval = setInterval(() => {
+          // read current state fresh to avoid stale closure
+          const current = useQuickRecipeStore.getState().loadingState;
+          const newStep = Math.min(current.step + 1, 3);
           updateLoadingState({
-            step: Math.min(loadingState.step + 1, 3),
-            stepDescription: getStepDescription(Math.min(loadingState.step + 1, 3)),
-            percentComplete: Math.min(loadingState.percentComplete + 5, 95)
+            step: newStep,
+            stepDescription: getStepDescription(newStep),
+            percentComplete: Math.min(current.percentComplete + 5, 95)
           });
         }, 2000);
         
@@ -85,12 +88,14 @@ const LoadingPage: React.FC = () => {
         
         // Navigate to the recipe preview
         navigate('/recipe-preview', { replace: true });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error generating recipe:", error);
+        // Ensure error is an Error instance
+        const err = error instanceof Error ? error : new Error(String(error));
         
         // Specific timeout error handling
-        let errorMessage = error.message || "Failed to generate recipe";
-        let isTimeout = errorMessage.toLowerCase().includes('timeout');
+        let errorMessage = err.message || "Failed to generate recipe";
+        const isTimeout = errorMessage.toLowerCase().includes('timeout');
         
         if (isTimeout) {
           setHasTimeoutError(true);
@@ -156,21 +161,8 @@ const LoadingPage: React.FC = () => {
   
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-      <LoadingAnimation 
-        step={loadingState.step}
-        stepDescription={loadingState.stepDescription}
-        percentComplete={loadingState.percentComplete}
-      />
-      
-      <div className="mt-8">
-        <Button 
-          variant="outline" 
-          onClick={handleCancel}
-          className="px-8"
-        >
-          Cancel
-        </Button>
-      </div>
+      {/* single animated loader with built-in cancel button */}
+      <QuickRecipeLoading onCancel={handleCancel} />
     </div>
   );
 };
