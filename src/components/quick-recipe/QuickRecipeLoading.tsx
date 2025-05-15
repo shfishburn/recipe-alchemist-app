@@ -14,23 +14,17 @@ interface QuickRecipeLoadingProps {
   stepDescription: string;
 }
 
-// Array of rotating chef tips
+// Array of rotating chef tips with improved writing style
 const CHEF_TIPS = [
- "Listen, amigos - patience isn't just a virtue, it's the secret ingredient! The soul of flavor develops slowly, just like your recipe is taking shape now. Trust the process."
-
-"Before you touch a single ingredient, read the entire recipe twice. Professional kitchens call this 'mise en place mental' - the preparation that happens in your head first."
-
-"In my kitchen, we live by mise en place - organizing ingredients before cooking. This isn't just about order; it's about respect for the food and creating rhythm in your cooking."
-
-"Taste constantly! Your palate is the most valuable tool. Seasoning gradually builds layers of flavor that sing together in harmony, not just noise."
-
-"The magic happens at the finish line. Add fresh herbs at the end of cooking - they're not just garnish, they're the bright notes that make a dish memorable."
-
-"The heat is your paintbrush, not your hammer. Control it precisely to coax out flavors rather than forcing them - gentle bubbles in a sauce mean love, not rapid boiling."
-
-"The difference between good and extraordinary? It's in the fond - those caramelized bits on the bottom of your pan. Deglaze with patience and watch magic happen."
-
-"Your knife is an extension of your hand. Keep it sharp, respect its power, and it will transform your cooking from labor to artistry."
+  "Listen, amigos - patience isn't just a virtue, it's the secret ingredient! The soul of flavor develops slowly, just like your recipe is taking shape now. Trust the process.",
+  
+  "Before you touch a single ingredient, read the entire recipe twice. Professional kitchens call this 'mise en place mental' - the preparation that happens in your head first.",
+  
+  "In my kitchen, we live by mise en place - organizing ingredients before cooking. This isn't just about order; it's about respect for the food and creating rhythm in your cooking.",
+  
+  "Taste constantly! Your palate is the most valuable tool. Seasoning gradually builds layers of flavor that sing together in harmony, not just noise.",
+  
+  "The magic happens at the finish line. Add fresh herbs at the end of cooking - they're not just garnish, they're the bright notes that make a dish memorable."
 ];
 
 export function QuickRecipeLoading({ 
@@ -39,19 +33,43 @@ export function QuickRecipeLoading({
   percentComplete, 
   stepDescription 
 }: QuickRecipeLoadingProps) {
-  // Rotating chef tips
+  // Current tip to display with animation states
   const [tipIndex, setTipIndex] = useState(0);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(true);
   
   // Estimated time remaining calculation
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   
-  // Rotate tips every 8 seconds
+  // Rotate tips with animation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % CHEF_TIPS.length);
-    }, 8000);
+    // Initial fade in
+    const fadeInTimer = setTimeout(() => {
+      setIsAnimatingIn(false);
+    }, 1000);
     
-    return () => clearInterval(interval);
+    // Set up rotation interval
+    const tipRotationInterval = setInterval(() => {
+      // Start fade out animation
+      setIsAnimatingOut(true);
+      
+      // After fade out completes, change tip and start fade in
+      setTimeout(() => {
+        setTipIndex(prev => (prev + 1) % CHEF_TIPS.length);
+        setIsAnimatingOut(false);
+        setIsAnimatingIn(true);
+        
+        // Complete fade in
+        setTimeout(() => {
+          setIsAnimatingIn(false);
+        }, 1000);
+      }, 1000);
+    }, 8000); // Show each tip for 8 seconds total
+    
+    return () => {
+      clearTimeout(fadeInTimer);
+      clearInterval(tipRotationInterval);
+    };
   }, []);
   
   // Calculate estimated time
@@ -180,16 +198,41 @@ export function QuickRecipeLoading({
           </div>
         )}
         
-        {/* Enhanced chef tip card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md p-5 w-full transition-all duration-500">
+        {/* Enhanced chef tip card with animations */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md p-5 w-full transition-all duration-500 relative overflow-hidden">
           <div className="flex items-start space-x-3">
-            <ChefHat className="h-6 w-6 text-recipe-green flex-shrink-0 mt-1" />
+            <ChefHat className="h-6 w-6 text-recipe-green flex-shrink-0 mt-1 animate-pulse-attention" />
             <div>
               <h4 className="text-base font-semibold mb-2 text-gray-800 dark:text-gray-100">Chef's Tip</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                {CHEF_TIPS[tipIndex]}
-              </p>
+              <div className="min-h-[80px] relative">
+                <p 
+                  className={`text-sm text-gray-600 dark:text-gray-300 leading-relaxed absolute transition-all duration-1000 ${
+                    isAnimatingOut 
+                      ? 'opacity-0 transform -translate-y-4' 
+                      : isAnimatingIn 
+                        ? 'opacity-0 transform translate-y-4' 
+                        : 'opacity-100 transform translate-y-0'
+                  }`}
+                >
+                  {CHEF_TIPS[tipIndex]}
+                </p>
+              </div>
             </div>
+          </div>
+          
+          {/* Tip indicator dots */}
+          <div className="flex justify-center mt-4 space-x-1.5">
+            {CHEF_TIPS.map((_, index) => (
+              <div 
+                key={index} 
+                className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                  index === tipIndex 
+                    ? 'bg-recipe-green scale-125' 
+                    : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+                aria-hidden="true"
+              />
+            ))}
           </div>
         </div>
         
