@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ChatMessage, ChangesResponse, ChatMeta } from '@/types/chat';
+import type { ChatMessage, ChangesResponse, ChatMeta, IngredientChange } from '@/types/chat';
 
 /**
  * Hook for fetching and processing chat history for a recipe

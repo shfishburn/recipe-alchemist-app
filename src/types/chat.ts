@@ -33,16 +33,33 @@ export interface ChatMessage {
   follow_up_questions?: string[];
 }
 
-// Restored ChangesResponse type for compatibility with all usages
+// Updated ChangesResponse type with proper typing for ingredients and other fields
 export interface ChangesResponse {
   title?: string | null;
   ingredients?: {
     mode: 'add' | 'replace' | 'none';
-    items: unknown[];
+    items: IngredientChange[];
   };
-  instructions?: string[] | unknown[];
+  instructions?: string[] | InstructionChange[];
   science_notes?: string[];
-  nutrition?: unknown;
+  nutrition?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+// New interface for ingredient changes
+export interface IngredientChange {
+  qty: number;
+  unit: string;
+  item: string;
+  notes?: string;
+  action?: string;
+  [key: string]: unknown;
+}
+
+// New interface for instruction changes
+export interface InstructionChange {
+  text: string;
+  action?: string;
   [key: string]: unknown;
 }
 
