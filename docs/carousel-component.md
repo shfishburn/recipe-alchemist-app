@@ -1,232 +1,416 @@
 
-# Carousel Component Documentation
+# Carousel Component
+
+This document provides detailed information about the custom carousel implementation in Recipe Alchemy, including its architecture, configuration options, and usage patterns.
 
 ## Overview
 
-The Recipe Alchemy application uses custom carousel components to display various types of content, including recipes, nutrition information, and scientific explanations. This document outlines the implementation, styling, and usage of these carousel components.
+The Recipe Alchemy carousel is built on top of Embla Carousel, providing enhanced features and styling consistent with our design system. The carousel is designed to be flexible, performant, and accessible, supporting various content types and responsive behaviors.
 
-## Carousel Architecture
+## Architecture
 
-### File Structure
+### Component Structure
 
-The carousel implementation is organized in a modular structure:
+The carousel implementation follows a modular architecture:
 
 ```
 src/styles/carousel/
-├── index.css       # Main entry point that imports all carousel styles
-├── base.css        # Core carousel container and layout styles
-├── navigation.css  # Carousel navigation controls
-├── pagination.css  # Pagination indicators
-├── progress.css    # Progress indicators for auto-scrolling
-├── mobile.css      # Mobile-specific optimizations
-└── misc.css        # Miscellaneous and utility styles
+├── index.css          # Main entry point
+├── base.css           # Core carousel styles
+├── navigation.css     # Navigation button styles
+├── pagination.css     # Pagination dots styles
+├── progress.css       # Progress bar styles
+├── mobile.css         # Mobile-specific optimizations
+└── misc.css           # Miscellaneous utilities
 ```
 
-### Key Components
+### Core Components
 
-The carousel system consists of several key components:
+1. **CarouselWrapper** - Container component that manages carousel state
+2. **CarouselViewport** - Visible area of the carousel
+3. **CarouselContainer** - Container for slides
+4. **CarouselSlide** - Individual slide component
+5. **CarouselControls** - Navigation buttons and pagination dots
+6. **CarouselProgress** - Visual progress indicator
 
-1. **Carousel Container**: The main wrapper that holds all carousel elements
-2. **Scroll Area**: The horizontally scrollable area containing carousel items
-3. **Carousel Items**: Individual content pieces displayed in the carousel
-4. **Navigation Controls**: Previous/next buttons for manual navigation
-5. **Pagination Indicators**: Visual indicators showing current position
-6. **Progress Indicators**: Visual indicators for auto-scrolling progress
+## Basic Usage
 
-## CSS Implementation
+```tsx
+import { Carousel, CarouselSlide, CarouselControls } from "@/components/carousel";
 
-### Base Styles
-
-```css
-/* Base carousel container styles */
-.carousel-container {
-  @apply relative h-auto;
-  overflow: visible;
-  -webkit-overflow-scrolling: touch;
-}
-
-.carousel-scroll-area {
-  @apply flex overflow-x-auto pb-4 snap-x snap-mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
-  min-height: 0;
-  max-width: 100vw;
-  scroll-snap-type: x mandatory;
-}
-
-.carousel-scroll-area::-webkit-scrollbar {
-  display: none;
-}
-
-.carousel-item {
-  @apply flex-shrink-0 h-auto align-top;
-  transition: opacity 0.3s ease;
-  max-width: 100%;
-  scroll-snap-align: center;
-  scroll-snap-stop: always;
+function BasicCarousel() {
+  return (
+    <Carousel>
+      <CarouselSlide>
+        <div className="h-48 bg-gray-200 rounded flex items-center justify-center">
+          Slide 1
+        </div>
+      </CarouselSlide>
+      <CarouselSlide>
+        <div className="h-48 bg-gray-200 rounded flex items-center justify-center">
+          Slide 2
+        </div>
+      </CarouselSlide>
+      <CarouselSlide>
+        <div className="h-48 bg-gray-200 rounded flex items-center justify-center">
+          Slide 3
+        </div>
+      </CarouselSlide>
+      <CarouselControls />
+    </Carousel>
+  );
 }
 ```
 
-### Navigation Controls
+## Advanced Usage
 
-```css
-/* Carousel navigation buttons */
-.carousel-nav-button {
-  @apply rounded-full border-gray-300 dark:border-gray-600 hover:bg-recipe-blue hover:text-white hover:border-transparent;
-  min-height: 24px;
-  min-width: 24px;
-  opacity: 0.9;
-  position: absolute;
-  top: 50%; 
-  transform: translateY(-50%);
-  will-change: opacity, background-color, color;
-  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+### Recipe Card Carousel
+
+```tsx
+import { Carousel, CarouselSlide, CarouselControls } from "@/components/carousel";
+import { RecipeCard } from "@/components/recipes/RecipeCard";
+
+function RecipeCarousel({ recipes }) {
+  return (
+    <Carousel
+      options={{
+        align: 'start',
+        containScroll: 'trimSnaps',
+        dragFree: true
+      }}
+      breakpoints={{
+        '(min-width: 640px)': {
+          slides: { perView: 2, spacing: 16 }
+        },
+        '(min-width: 1024px)': {
+          slides: { perView: 3, spacing: 24 }
+        },
+        '(min-width: 1280px)': {
+          slides: { perView: 4, spacing: 24 }
+        }
+      }}
+    >
+      {recipes.map(recipe => (
+        <CarouselSlide key={recipe.id}>
+          <RecipeCard recipe={recipe} />
+        </CarouselSlide>
+      ))}
+      <CarouselControls />
+    </Carousel>
+  );
 }
 ```
 
-### Pagination Indicators
+### Auto-Playing Carousel
 
-```css
-/* Pagination dots */
-.carousel-pagination {
-  @apply flex justify-center gap-1 sm:gap-1.5 mt-2 sm:mt-3;
-}
+```tsx
+import { Carousel, CarouselSlide, CarouselControls, CarouselProgress } from "@/components/carousel";
 
-.carousel-pagination-dot {
-  @apply inline-block rounded-full bg-gray-300 transition-all duration-200;
-  width: 5px !important;
-  height: 5px !important;
-}
-```
-
-### Progress Indicators
-
-```css
-/* Auto-scrolling progress indicator */
-.carousel-progress-indicator {
-  @apply absolute bottom-0 left-0 h-0.5 bg-recipe-blue opacity-70;
-  width: 0;
-}
-
-.carousel-progress-indicator.animate {
-  animation: carousel-progress linear forwards;
+function AutoPlayCarousel() {
+  return (
+    <Carousel
+      options={{
+        loop: true
+      }}
+      plugins={[
+        AutoplayPlugin({
+          delay: 4000,
+          stopOnInteraction: true,
+          stopOnMouseEnter: true
+        })
+      ]}
+    >
+      {/* Slides */}
+      <CarouselControls />
+      <CarouselProgress />
+    </Carousel>
+  );
 }
 ```
 
-## Mobile Optimization
+## API Reference
 
-The carousel is optimized for mobile devices with:
+### Carousel Component
 
-1. **Touch-friendly controls**: Larger touch targets and appropriate spacing
-2. **Performance optimizations**: Hardware acceleration for smooth scrolling
-3. **Reduced animations**: For better performance on lower-end devices
-4. **Snap behavior**: Improved snap behavior for touch interactions
-5. **Visible indicators**: Pagination dots more visible on small screens
+The main wrapper component that initializes the carousel.
 
-```css
-/* Additional mobile optimizations */
-@media (max-width: 640px) {
-  .carousel-pagination {
-    gap: 0.5rem;
-  }
-  
-  .reduce-motion-mobile {
-    scroll-behavior: auto;
-  }
-  
-  /* Ensure mobile carousel doesn't overflow screen */
-  .nutrition-carousel {
-    margin-left: -2px;
-    margin-right: -2px;
-    max-width: calc(100% + 4px);
-    padding-left: 0;
-    padding-right: 0;
-  }
-}
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `options` | `EmblaOptionsType` | `{}` | Core carousel configuration options |
+| `plugins` | `EmblaPluginType[]` | `[]` | Embla carousel plugins |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Carousel orientation |
+| `breakpoints` | `Record<string, EmblaOptionsType>` | `{}` | Responsive breakpoint options |
+| `className` | `string` | `''` | Additional CSS class names |
+| `skipSnaps` | `boolean` | `false` | Allow skipping of snaps during drag |
+| `onInit` | `(embla: EmblaCarouselType) => void` | `undefined` | Callback when carousel initializes |
+| `children` | `React.ReactNode` | Required | Carousel content |
+
+### CarouselSlide Component
+
+Individual slide container.
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `className` | `string` | `''` | Additional CSS class names |
+| `children` | `React.ReactNode` | Required | Slide content |
+
+### CarouselControls Component
+
+Navigation controls for the carousel.
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `showArrows` | `boolean` | `true` | Show navigation arrows |
+| `showDots` | `boolean` | `true` | Show pagination dots |
+| `arrowPosition` | `'inside' \| 'outside'` | `'inside'` | Position of arrow controls |
+| `className` | `string` | `''` | Additional CSS class names |
+| `prevArrow` | `React.ReactNode` | Default arrow | Custom previous arrow element |
+| `nextArrow` | `React.ReactNode` | Default arrow | Custom next arrow element |
+| `dotRender` | `(index: number, isSelected: boolean) => React.ReactNode` | Default dot | Custom dot renderer |
+
+### CarouselProgress Component
+
+Visual progress indicator.
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `variant` | `'bar' \| 'dots'` | `'bar'` | Progress indicator style |
+| `className` | `string` | `''` | Additional CSS class names |
+
+## Styling Customization
+
+### Custom Slide Styles
+
+```tsx
+<Carousel>
+  <CarouselSlide className="custom-slide bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+    Gradient Slide
+  </CarouselSlide>
+</Carousel>
+```
+
+### Custom Navigation
+
+```tsx
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+<Carousel>
+  {/* Slides */}
+  <CarouselControls
+    showDots={false}
+    arrowPosition="outside"
+    prevArrow={<ChevronLeft className="h-6 w-6" />}
+    nextArrow={<ChevronRight className="h-6 w-6" />}
+    className="mt-4"
+  />
+</Carousel>
+```
+
+### Custom Progress Indicator
+
+```tsx
+<Carousel>
+  {/* Slides */}
+  <CarouselProgress
+    variant="dots"
+    className="mt-4"
+  />
+</Carousel>
+```
+
+## Responsive Configuration
+
+The carousel supports responsive configuration through the `breakpoints` prop:
+
+```tsx
+<Carousel
+  breakpoints={{
+    // Small screens (640px and above)
+    '(min-width: 640px)': {
+      slides: {
+        perView: 2,
+        spacing: 16
+      }
+    },
+    // Medium screens (768px and above)
+    '(min-width: 768px)': {
+      slides: {
+        perView: 3,
+        spacing: 20
+      }
+    },
+    // Large screens (1024px and above)
+    '(min-width: 1024px)': {
+      slides: {
+        perView: 4,
+        spacing: 24
+      }
+    }
+  }}
+>
+  {/* Slides */}
+</Carousel>
+```
+
+## Animation Options
+
+The carousel supports various animation options:
+
+```tsx
+<Carousel
+  options={{
+    // Animation speed
+    speed: 10, // Default is 10
+    
+    // Animation easing function for scroll
+    easing: (x) => 1 - Math.pow(1 - x, 4), // Default cubic easing
+    
+    // Scroll behavior when a slide is selected
+    slidesToScroll: 1, // Default is 1
+    
+    // Slide snapping behavior
+    dragFree: false, // Default is false
+    
+    // Adjusts the position of the active slide
+    align: 'center', // 'start' | 'center' | 'end'
+    
+    // Jump directly to slides when clicking navigation
+    skipSnaps: false
+  }}
+>
+  {/* Slides */}
+</Carousel>
 ```
 
 ## Accessibility Features
 
-The carousel implementation includes several accessibility enhancements:
+The carousel implements several accessibility features:
 
-1. **Keyboard Navigation**: Next/previous buttons are keyboard accessible
-2. **Screen Reader Support**: Appropriate ARIA attributes for screen readers
-3. **Reduced Motion Support**: Respects user's prefers-reduced-motion settings
-4. **Focus Management**: Proper focus handling when navigating carousel items
-5. **Alternative Navigation**: Pagination as an alternative navigation method
+### Keyboard Navigation
 
-```css
-/* Reduce motion for user preferences */
-@media (prefers-reduced-motion) {
-  .carousel-scroll-area {
-    scroll-behavior: auto;
-  }
-  
-  .carousel-item {
-    transition: none;
-  }
-}
-```
+Users can navigate the carousel with keyboard:
+- `Tab`: Focus on carousel controls
+- `Left/Right Arrow`: Navigate between slides when carousel has focus
+- `Enter/Space`: Select the currently focused slide or control
 
-## Usage Examples
+### Screen Reader Support
 
-### Basic Recipe Carousel
+- Appropriate ARIA roles and labels
+- Announcements for slide changes
+- Hidden controls for screen reader navigation
 
-```jsx
-<div className="carousel-container">
-  <div className="carousel-scroll-area">
-    {recipes.map((recipe) => (
-      <div className="carousel-item" key={recipe.id}>
-        <RecipeCard recipe={recipe} />
-      </div>
-    ))}
-  </div>
-  <CarouselNavigation onPrevious={handlePrevious} onNext={handleNext} />
-  <CarouselPagination itemCount={recipes.length} activeIndex={activeIndex} />
-</div>
-```
+### Focus Management
 
-### Auto-advancing Carousel
+- Focus is appropriately moved when slides change
+- Focus is trapped within the carousel when navigating
+- Focus indicators are clearly visible
 
-```jsx
-<div className="carousel-container">
-  <div className="carousel-scroll-area">
-    {slides.map((slide) => (
-      <div className="carousel-item" key={slide.id}>
-        {slide.content}
-      </div>
-    ))}
-  </div>
-  <div className="carousel-progress-indicator animate" 
-       style={{"--carousel-duration": `${duration}ms`}} />
-</div>
+Example of accessibility implementation:
+
+```tsx
+<Carousel aria-label="Featured Recipes">
+  <CarouselSlide>
+    <div aria-roledescription="slide" aria-label="1 of 5">
+      Slide content
+    </div>
+  </CarouselSlide>
+  {/* More slides */}
+  <CarouselControls 
+    prevArrow={<button aria-label="Previous slide">Prev</button>}
+    nextArrow={<button aria-label="Next slide">Next</button>}
+  />
+</Carousel>
 ```
 
 ## Performance Considerations
 
-The carousel implementation includes several performance optimizations:
+The carousel is optimized for performance:
 
-1. **Hardware Acceleration**: Elements use CSS properties that trigger GPU rendering
-2. **Minimal DOM Updates**: The design minimizes DOM manipulation during scrolling
-3. **Efficient Animation**: Only properties that benefit from hardware acceleration are animated
-4. **Lazy Loading**: Content can be lazy-loaded as needed
-5. **Optimized Images**: Image carousel items can use optimized loading strategies
+1. **Virtualization** - Only rendering visible slides and a few adjacent ones
+2. **Intersection Observer** - Pausing autoplay when carousel is not in viewport
+3. **Optimized Animations** - Using CSS properties that don't trigger layout
+4. **Touch Optimizations** - Improved performance on touch devices
+5. **Image Lazy Loading** - Loading images only when needed
 
-```css
-/* Performance optimizations */
-.hw-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-  will-change: transform;
-}
+## Common Patterns and Examples
+
+### Full-Width Banner Carousel
+
+```tsx
+<Carousel
+  options={{
+    loop: true,
+    align: 'center'
+  }}
+  className="w-full"
+>
+  <CarouselSlide className="w-full">
+    <img 
+      src="/banner1.jpg" 
+      alt="Banner 1" 
+      className="w-full h-[300px] object-cover"
+    />
+  </CarouselSlide>
+  {/* More slides */}
+  <CarouselControls />
+  <CarouselProgress />
+</Carousel>
 ```
 
-## Browser Compatibility
+### Card Carousel with Peek
 
-The carousel implementation works across all modern browsers with:
+```tsx
+<Carousel
+  options={{
+    align: 'start',
+    containScroll: 'trimSnaps',
+    dragFree: true
+  }}
+  className="w-full"
+>
+  {cards.map(card => (
+    <CarouselSlide key={card.id} className="w-[300px] pl-4 first:pl-0">
+      <div className="bg-white p-4 rounded shadow">
+        {card.content}
+      </div>
+    </CarouselSlide>
+  ))}
+  <CarouselControls />
+</Carousel>
+```
 
-1. **Vendor Prefixes**: Appropriate prefixes for cross-browser compatibility
-2. **Fallbacks**: Fallback behaviors for browsers that don't support certain features
-3. **Testing**: Verified on Chrome, Firefox, Safari, and Edge
+### Testimonial Carousel
+
+```tsx
+<Carousel
+  options={{
+    loop: true,
+    align: 'center'
+  }}
+  plugins={[AutoplayPlugin({ delay: 5000 })]}
+>
+  {testimonials.map(testimonial => (
+    <CarouselSlide key={testimonial.id}>
+      <div className="bg-white p-6 rounded-lg shadow text-center max-w-lg mx-auto">
+        <p className="italic">{testimonial.quote}</p>
+        <p className="font-bold mt-4">{testimonial.author}</p>
+      </div>
+    </CarouselSlide>
+  ))}
+  <CarouselControls />
+</Carousel>
+```
+
+## Related Documentation
+
+- [Design System](./design/README.md) - Core design guidelines
+- [Components](./design/components.md) - Other UI components
+- [Animations](./design/animations.md) - Animation principles and patterns
