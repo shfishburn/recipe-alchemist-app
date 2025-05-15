@@ -30,6 +30,21 @@ export interface ChangesResponse {
   };
 }
 
+// Define metadata type for chat messages
+export interface ChatMeta {
+  optimistic_id?: string;
+  tracking_id?: string;
+  processing_stage?: string;
+  is_retry?: boolean;
+  error?: boolean;
+  timestamp?: number;
+  source_info?: {
+    type?: string;
+    url?: string;
+  };
+  [key: string]: any;
+}
+
 // Define the shape of a chat message
 export interface ChatMessage {
   id: string;
@@ -45,7 +60,14 @@ export interface ChatMessage {
   status?: ChatMessageStatus;
   applied?: boolean;
   optimistic?: boolean;
-  meta?: Record<string, any>;
+  meta?: ChatMeta;
+  follow_up_questions?: string[]; // Added follow_up_questions
+}
+
+// Define the type for optimistic messages
+export interface OptimisticMessage extends ChatMessage {
+  pending: boolean;
+  timestamp?: number;
 }
 
 export interface RecipeChatSettings {

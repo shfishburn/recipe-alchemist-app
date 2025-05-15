@@ -1,5 +1,5 @@
 
-import type { ChatMessage, ChatMeta } from '@/types/chat';
+import type { ChatMessage } from '@/types/chat';
 
 /**
  * Safely get chat metadata value with type checking and fallback
@@ -47,7 +47,7 @@ export function setChatMeta<T>(
   value: T
 ): ChatMessage {
   // Create a new meta object with the existing meta properties
-  const updatedMeta: ChatMeta = {
+  const updatedMeta = {
     ...(message.meta || {}),
     [key]: value
   };

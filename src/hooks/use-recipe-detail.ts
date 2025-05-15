@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,8 +137,7 @@ const transformRecipeData = (data: any): Recipe => {
   return {
     id: data.id,
     title: data.title || '',
-    tagline: data.tagline || '', // Keep tagline for backward compatibility
-    description: data.description || data.tagline || '', // Use description as primary, fallback to tagline
+    tagline: data.tagline || '', // Use tagline as defined in Recipe type
     ingredients: ingredients,
     instructions: instructions,
     prep_time_min: data.prep_time_min,
@@ -161,7 +161,7 @@ const transformRecipeData = (data: any): Recipe => {
     science_notes: scienceNotes,
     chef_notes: data.chef_notes || '',
     cooking_tip: data.cooking_tip || '',
-    nutri_score: nutriScore,
-    slug: data.slug
+    slug: data.slug,
+    nutri_score: nutriScore
   };
 };

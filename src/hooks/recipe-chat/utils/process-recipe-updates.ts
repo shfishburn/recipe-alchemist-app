@@ -34,8 +34,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   
   // Handle description/tagline field update
   if (changes_suggested.description) {
-    // Update both fields for compatibility during transition
-    updatedRecipe.description = changes_suggested.description;
+    // Update tagline for compatibility (description is not in Recipe type)
     updatedRecipe.tagline = changes_suggested.description;
   }
   
@@ -68,7 +67,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   if (Array.isArray(changes_suggested.instructions) && changes_suggested.instructions.length > 0) {
     // Convert complex instruction objects to simple strings
     const processedInstructions = changes_suggested.instructions.map(instruction => 
-      typeof instruction === 'string' ? instruction : instruction.action
+      typeof instruction === 'string' ? instruction : String(instruction)
     );
     updatedRecipe.instructions = processedInstructions;
   }

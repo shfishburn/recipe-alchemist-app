@@ -36,17 +36,17 @@ export const useChatHistory = (recipeId: string) => {
         console.log(`No existing chat history for recipe ${recipeId}`);
       }
       
-      // Process the chat messages to handle follow_up_questions and changes_suggested
+      // Process the chat messages to handle changes_suggested
       return data.map(chat => {
         // Initialize chat message with default values
         const chatMessage: ChatMessage = {
           id: chat.id,
+          recipe_id: chat.recipe_id,
           user_message: chat.user_message,
           ai_response: chat.ai_response,
           changes_suggested: null,
           applied: chat.applied || false,
           created_at: chat.created_at,
-          follow_up_questions: [], // Default empty array
           meta: typeof chat.meta === 'object' ? chat.meta || {} : {} // Ensure meta is always a valid object
         };
 
@@ -69,7 +69,8 @@ export const useChatHistory = (recipeId: string) => {
               chatMessage.follow_up_questions = responseObj.followUpQuestions;
             }
           } catch (e) {
-            // If parsing fails, just continue with the empty array
+            // If parsing fails, just continue with default values
+            chatMessage.follow_up_questions = [];
           }
         }
         

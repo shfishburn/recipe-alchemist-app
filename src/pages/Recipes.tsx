@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { BreadcrumbNav } from '@/components/ui/breadcrumb-nav';
 import { PageContainer } from '@/components/ui/containers';
+import { Recipe } from '@/types/recipe';
 
 const Recipes = () => {
   const { 
@@ -25,9 +26,9 @@ const Recipes = () => {
       status,
       isLoading,
       isFetching,
-      recipesCount: recipes?.length || 0,
+      recipesCount: recipes ? (recipes as Recipe[]).length : 0,
       error: error ? `${error}` : 'none',
-      firstRecipe: recipes && recipes.length > 0 ? {
+      firstRecipe: recipes && Array.isArray(recipes) && recipes.length > 0 ? {
         id: recipes[0].id,
         title: recipes[0].title,
         hasNutriScore: !!recipes[0].nutri_score,
