@@ -1,4 +1,8 @@
 
 project_id = "zjyfumqfrtppleftpzjd"
+
 [functions.generate-quick-recipe]
+verify_jwt = true
+
+[functions.generate-shopping-list]
 verify_jwt = true
