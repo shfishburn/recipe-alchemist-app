@@ -1,4 +1,3 @@
-
 export interface Ingredient {
   // Metric measurements
   qty_metric: number;
@@ -88,7 +87,8 @@ export interface NutriScore {
 export interface Recipe {
   id: string;
   title: string;
-  description?: string;
+  // IMPORTANT: tagline is used instead of description in the database schema
+  tagline?: string; // This is what's in the database instead of description
   ingredients: Ingredient[];
   instructions: string[];
   prep_time_min?: number;
@@ -103,7 +103,6 @@ export interface Recipe {
   updated_at?: string;
   original_request?: string;
   reasoning?: string;
-  tagline?: string;
   version_number?: number;
   previous_version_id?: string;
   deleted_at?: string;
