@@ -51,19 +51,31 @@ export async function createRecipeVersion(
   const versionSuffix = `-v${updatedRecipe.version_number.toString().replace('.', '-')}`;
   updatedRecipe.slug = `${baseSlug}${versionSuffix}`;
   
+  // Ensure recipe integrity before database insert
+  ensureRecipeIntegrity(updatedRecipe);
+  
+  // Make sure servings is always defined (critical fix for build error)
+  if (updatedRecipe.servings === undefined || updatedRecipe.servings === null) {
+    updatedRecipe.servings = originalRecipe.servings || 1; // Default to 1 if original has no servings
+  }
+  
+  // Create database-compatible object with appropriate JSON conversions
+  const recipeForDb = {
+    ...updatedRecipe,
+    ingredients: updatedRecipe.ingredients as unknown as Json,
+    instructions: updatedRecipe.instructions as unknown as Json,
+    science_notes: Array.isArray(updatedRecipe.science_notes) 
+      ? updatedRecipe.science_notes as unknown as Json 
+      : [] as unknown as Json,
+    nutrition: updatedRecipe.nutrition as unknown as Json,
+    nutri_score: updatedRecipe.nutri_score as unknown as Json,
+    servings: updatedRecipe.servings, // Explicitly include servings
+  };
+  
   // Insert the new recipe version into the database
   const { data, error } = await supabase
     .from('recipes')
-    .insert({
-      ...updatedRecipe,
-      // Convert these to JSON for database storage
-      ingredients: updatedRecipe.ingredients as unknown as Json,
-      science_notes: Array.isArray(updatedRecipe.science_notes) 
-        ? updatedRecipe.science_notes as unknown as Json 
-        : [],
-      nutrition: updatedRecipe.nutrition as unknown as Json,
-      nutri_score: updatedRecipe.nutri_score as unknown as Json,
-    })
+    .insert(recipeForDb)
     .select('id, slug, version_number')
     .single();
     

@@ -46,6 +46,7 @@ export const useRecipeChat = (recipe: Recipe) => {
   } = useChatManagement(recipe.id, refetchChatHistory, clearOptimisticMessages);
   
   // Apply changes from chat to the recipe
+  // Use a consistent function name (applyChanges)
   const { applyChanges, isApplying } = useApplyChanges();
 
   return {

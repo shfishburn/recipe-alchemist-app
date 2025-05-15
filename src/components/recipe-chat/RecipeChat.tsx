@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -49,7 +48,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isLoadingHistory,
     sendMessage,
     isSending,
-    applyChanges: rawApplyChanges,
+    applyChanges,
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
@@ -65,8 +64,8 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     if (isApplying) return false;
     
     try {
-      // Fix: Call rawApplyChanges with only the ChatMessage parameter
-      const success = await rawApplyChanges(chatMessage);
+      // Call applyChanges with only the ChatMessage parameter
+      const success = await applyChanges(chatMessage);
       
       if (success) {
         // Optional: You can refetch the chat history after successful changes

@@ -59,7 +59,7 @@ export function useApplyChanges() {
         throw new Error(`Error fetching recipe: ${recipeError?.message || 'Recipe not found'}`);
       }
       
-      // Convert database record to Recipe type
+      // Convert database record to Recipe type with proper type safety
       const originalRecipe = recipeData as unknown as Recipe;
       
       // Create a new recipe version with the changes
