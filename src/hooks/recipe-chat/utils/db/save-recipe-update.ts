@@ -53,7 +53,7 @@ function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional A
  * @param fallback - The fallback value if serialization fails
  * @returns The serialized value as Json type
  */
-function safelySerializeToJson(value: any, fallback: string = '[]'): Json {
+function safelySerializeToJson(value: unknown, fallback: string = '[]'): Json {
   if (value === null || value === undefined) {
     return fallback as Json;
   }
@@ -70,7 +70,7 @@ function safelySerializeToJson(value: any, fallback: string = '[]'): Json {
 /**
  * Creates a safe preview string from a JSON value
  * @param jsonValue - The JSON value to preview
- * @param maxLength - Maximum length of the preview
+ * @param maxLength - Maximum length of the preview (default is 100)
  * @returns A string preview of the JSON value
  */
 function createSafeJsonPreview(jsonValue: Json, maxLength: number = 100): string {
@@ -86,6 +86,7 @@ function createSafeJsonPreview(jsonValue: Json, maxLength: number = 100): string
     try {
       return JSON.stringify(jsonValue).substring(0, maxLength);
     } catch (e) {
+      console.error('Error serializing JSON value for preview:', e);
       return '[complex object]';
     }
   }
