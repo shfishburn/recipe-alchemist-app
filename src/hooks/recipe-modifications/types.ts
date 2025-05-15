@@ -11,7 +11,7 @@ export interface NutritionImpact {
   sugar?: number;
   sodium?: number;
   assessment?: string;
-  summary?: string; // Added missing property
+  summary?: string;
 }
 
 // Version information

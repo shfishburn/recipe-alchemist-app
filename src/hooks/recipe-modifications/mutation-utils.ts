@@ -12,10 +12,16 @@ export function applyModifications(
 ): QuickRecipe {
   // If we have a complete recipe in the new format, use it
   if (modifications.recipe) {
+    // Ensure the recipe ID is preserved
+    const completeRecipe = {
+      ...modifications.recipe,
+      id: recipe.id // Always preserve the original recipe ID
+    };
+    
     // Copy over any properties that might not be in the modification response
     return {
       ...recipe,
-      ...modifications.recipe,
+      ...completeRecipe
     };
   }
   

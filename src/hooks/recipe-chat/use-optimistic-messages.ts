@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import type { ChatMessage, OptimisticMessage, ChatMeta } from '@/types/chat';
 
@@ -73,7 +74,7 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
     }
   }, [chatHistory, optimisticMessages, cleanupOptimisticMessages]);
 
-  // Enhanced addOptimisticMessage with improved tracking
+  // Enhanced addOptimisticMessage with improved tracking and recipe_id preservation
   const addOptimisticMessage = useCallback((message: OptimisticMessage) => {
     console.log("Adding optimistic message:", message);
     
@@ -91,13 +92,19 @@ export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
       timestamp: timestamp
     };
     
+    // Make sure recipe_id is included if available
+    if (message.recipe_id) {
+      messageMeta.recipe_id = message.recipe_id;
+    }
+    
     // Create enhanced message with consistent properties
     const enhancedMessage: OptimisticMessage = {
       ...message,
       id: message.id || optimisticId,
       meta: messageMeta,
       timestamp: timestamp,
-      pending: true
+      pending: true,
+      recipe_id: message.recipe_id // Ensure recipe_id is preserved
     };
     
     setOptimisticMessages(prev => [...prev, enhancedMessage]);

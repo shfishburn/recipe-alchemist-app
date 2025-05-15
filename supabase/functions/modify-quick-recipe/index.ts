@@ -182,6 +182,9 @@ serve(async (req) => {
         };
       }
       
+      // Ensure recipe ID is preserved
+      modifiedRecipe.id = recipe.id;
+      
       // Store the version
       versionData = await storeRecipeVersion({
         recipeId: recipe.id,

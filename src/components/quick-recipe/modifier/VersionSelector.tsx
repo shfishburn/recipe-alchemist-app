@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { formatDistanceToNow } from 'date-fns';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { format } from 'date-fns';
 import { VersionHistoryEntry } from '@/hooks/recipe-modifications/types';
 
 interface VersionSelectorProps {
@@ -15,49 +16,39 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({
   selectedVersionId,
   onSelectVersion
 }) => {
-  if (!versions || versions.length === 0) {
-    return null;
-  }
-
-  // Sort versions by version number (descending)
-  const sortedVersions = [...versions].sort((a, b) => b.version_number - a.version_number);
+  if (!versions.length) return null;
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Recipe Versions</h3>
-        <span className="text-xs text-muted-foreground">
-          {versions.length} version{versions.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      <Select 
-        value={selectedVersionId || undefined}
-        onValueChange={onSelectVersion}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select version" />
-        </SelectTrigger>
-        <SelectContent>
-          {sortedVersions.map((version) => (
-            <SelectItem key={version.version_id} value={version.version_id}>
-              <div className="flex flex-col">
-                <span>Version {version.version_number}</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(version.created_at), { addSuffix: true })}
-                </span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {selectedVersionId && (
-        <div className="text-xs text-muted-foreground">
-          <span className="font-medium">Modification:</span>{' '}
-          {versions.find(v => v.version_id === selectedVersionId)?.modification_request || 'Original recipe'}
-        </div>
-      )}
-    </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Recipe Version History</CardTitle>
+        <CardDescription>View and compare previous versions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Select
+          value={selectedVersionId || undefined}
+          onValueChange={onSelectVersion}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a version" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {versions.map((version) => (
+                <SelectItem key={version.version_id} value={version.version_id}>
+                  Version {version.version_number} - {format(new Date(version.created_at), 'MMM d, yyyy')}{' '}
+                  {version.modification_request ? (
+                    <span className="text-xs ml-2 text-muted-foreground">
+                      ({version.modification_request.substring(0, 30)}
+                      {version.modification_request.length > 30 ? '...' : ''})
+                    </span>
+                  ) : null}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </CardContent>
+    </Card>
   );
 };

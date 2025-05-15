@@ -1,3 +1,4 @@
+
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
@@ -8,15 +9,37 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     ingredientMode: chatMessage.changes_suggested?.ingredients?.mode,
     hasInstructions: !!chatMessage.changes_suggested?.instructions?.length,
     hasNutrition: !!chatMessage.changes_suggested?.nutrition,
-    hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length
+    hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length,
+    hasCompleteRecipe: !!chatMessage.recipe // Check for complete recipe object
   });
 
   // Start with a complete copy of the original recipe to prevent data loss
-  const updatedRecipe: Recipe = {
+  let updatedRecipe: Recipe = {
     ...recipe,
     updated_at: new Date().toISOString()
   };
 
+  // If we have a complete recipe object in the chat message, use it
+  if (chatMessage.recipe) {
+    console.log("Using complete recipe object from chat message");
+    updatedRecipe = {
+      ...updatedRecipe,
+      ...chatMessage.recipe,
+      id: recipe.id, // Always preserve the original recipe ID
+      updated_at: new Date().toISOString() // Update the timestamp
+    };
+    
+    // If version info is present, add it to the recipe
+    if (chatMessage.recipe.version_info) {
+      updatedRecipe.version_info = chatMessage.recipe.version_info;
+    }
+    
+    // Return the updated recipe
+    return updatedRecipe;
+  }
+
+  // Fall back to processing individual changes if no complete recipe is provided
+  
   // Only override specific fields if they're provided in the changes
   if (chatMessage.changes_suggested?.title) {
     updatedRecipe.title = chatMessage.changes_suggested.title;

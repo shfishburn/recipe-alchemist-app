@@ -10,64 +10,30 @@ serve(async (req) => {
     return new Response(null, { status: 204, headers });
   }
   
-  try {
-    const url = new URL(req.url);
-    const pathParts = url.pathname.split("/");
-    const recipeId = pathParts[pathParts.length - 1];
-    
-    if (!recipeId) {
-      return new Response(
-        JSON.stringify({ error: "Recipe ID is required" }),
-        { status: 400, headers }
-      );
-    }
-    
-    // Get authorization token
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Authorization is required" }),
-        { status: 401, headers }
-      );
-    }
-    
-    // Parse token
-    const token = authHeader.replace("Bearer ", "");
-    
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-    
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
-        { status: 500, headers }
-      );
-    }
-    
-    // Create authenticated client with user's token
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      }
+  const url = new URL(req.url);
+  const recipeId = url.pathname.split("/").pop();
+  
+  if (!recipeId) {
+    return new Response(
+      JSON.stringify({ error: "Recipe ID is required" }),
+      { status: 400, headers }
     );
+  }
+  
+  const SUPA_URL = Deno.env.get("SUPABASE_URL");
+  const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  
+  if (!SUPA_URL || !SUPA_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Server configuration error" }),
+      { status: 500, headers }
+    );
+  }
+  
+  try {
+    const supabase = createClient(SUPA_URL, SUPA_KEY);
     
-    // Get user from token
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !userData?.user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication" }),
-        { status: 401, headers }
-      );
-    }
-    
-    // Fetch recipe versions
+    // Get all versions for the recipe
     const { data, error } = await supabase
       .from("recipe_versions")
       .select("*")
@@ -86,9 +52,8 @@ serve(async (req) => {
       { status: 200, headers }
     );
   } catch (err) {
-    console.error("Error in recipe-versions function:", err);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: err.message }),
       { status: 500, headers }
     );
   }
