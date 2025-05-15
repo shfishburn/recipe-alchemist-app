@@ -47,6 +47,26 @@ function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional A
   return "Global";
 }
 
+/**
+ * Safely serialize a value to JSON
+ * @param value - The value to serialize
+ * @param fallback - The fallback value if serialization fails
+ * @returns The serialized value as Json type
+ */
+function safelySerializeToJson(value: any, fallback: string = '[]'): Json {
+  if (value === null || value === undefined) {
+    return fallback as Json;
+  }
+  
+  try {
+    return JSON.stringify(value) as Json;
+  } catch (error) {
+    console.error("Failed to serialize value to JSON:", error);
+    console.warn("Value that failed serialization:", typeof value);
+    return fallback as Json;
+  }
+}
+
 export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: string }) {
   // Ensure recipe integrity before saving to database
   ensureRecipeIntegrity(updatedRecipe);
@@ -113,7 +133,6 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   }
   
   // Process science_notes to ensure it's always properly serialized as a JSON array
-  // This is the key fix: properly serialize science_notes as JSON instead of casting
   let scienceNotesJson: Json;
   
   if (updatedRecipe.science_notes) {
@@ -121,10 +140,11 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     const validatedNotes = Array.isArray(updatedRecipe.science_notes) 
       ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
       : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
-      
-    // Properly serialize to JSON format for database storage
-    scienceNotesJson = JSON.stringify(validatedNotes) as Json;
-    console.log("Science notes serialized to JSON:", scienceNotesJson);
+    
+    // Properly serialize to JSON format for database storage with error handling
+    scienceNotesJson = safelySerializeToJson(validatedNotes, '[]');
+    console.log("Science notes serialized to JSON:", typeof scienceNotesJson === 'string' ? 
+                scienceNotesJson.substring(0, 100) : '[serialization preview unavailable]');
   } else {
     // Default to empty array if science_notes is undefined
     scienceNotesJson = '[]' as Json;
@@ -150,8 +170,9 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
     scienceNotesType: typeof scienceNotesJson,
-    // Fix here: cast scienceNotesJson to string before using substring
-    scienceNotesPreview: String(scienceNotesJson).substring(0, 100),
+    // Safely handle science notes preview
+    scienceNotesPreview: typeof scienceNotesJson === 'string' ? 
+      scienceNotesJson.substring(0, 100) : '[not a string]',
     cuisine: updatedRecipe.cuisine,
     cuisine_category: dbRecipe.cuisine_category
   });
