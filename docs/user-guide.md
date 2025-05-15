@@ -20,4 +20,6 @@ The comprehensive user guide is now organized by feature area:
 
 This restructuring makes the documentation easier to navigate and maintain while providing more focused content for each feature area.
 
+For technical documentation about the AI systems, see the [AI Prompts and Responses](./ai-prompts/overview.md) section.
+
 For a structured approach to reading all documentation, see the [Documentation Reading Guide](./documentation-reading-guide.md).
