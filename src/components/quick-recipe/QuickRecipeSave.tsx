@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,14 +16,14 @@ const FIELD_MAPPINGS = {
   flavorTags: 'flavor_tags',
   scienceNotes: 'science_notes',
   steps: 'instructions', // Map steps to instructions (they're the same content)
-  // We don't need the description mapping anymore since the column exists
+  description: 'tagline', // IMPORTANT: Map description to tagline since description doesn't exist in DB
 };
 
 // Define a whitelist of valid database column names
 const VALID_DB_FIELDS = [
   'id',
   'title',
-  'tagline', // Use tagline instead of description for DB storage
+  'tagline', // Only tagline exists in DB, not description
   'ingredients',
   'instructions',
   'steps', // This will be transformed to instructions
@@ -37,6 +38,8 @@ const VALID_DB_FIELDS = [
   'science_notes',
   'chef_notes',
   'image_url',
+  'reasoning',
+  'original_request',
   'version_number',
   'previous_version_id',
   'deleted_at',
@@ -195,10 +198,11 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
     }
   }
   
-  // Now handle both description and tagline properly
+  // Handle the description/tagline special case
   if (recipe.description !== undefined) {
     result.tagline = recipe.description;
   }
+  // If both tagline and description exist, prioritize tagline
   if (recipe.tagline !== undefined) {
     result.tagline = recipe.tagline;
   }
@@ -206,7 +210,7 @@ function transformRecipeForDB(recipe: Record<string, any>): Record<string, any> 
   // Next, copy all other properties that don't need mapping
   for (const [key, value] of Object.entries(recipe)) {
     // Skip keys we've already mapped
-    if (Object.keys(FIELD_MAPPINGS).includes(key) || key === 'description' || key === 'tagline') {
+    if (Object.keys(FIELD_MAPPINGS).includes(key)) {
       continue;
     }
     

@@ -1,9 +1,27 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
+import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
+import { RunnableSequence } from "https://esm.sh/@langchain/core@0.1.5/runnables";
+import { ChatPromptTemplate, MessagesPlaceholder } from "https://esm.sh/@langchain/core@0.1.5/prompts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { recipeModificationsSchema } from "./schema.ts";
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
-import { generateRecipeWithOpenAI } from "../generate-quick-recipe/openai-client.ts";
-import { buildModificationPrompt } from "./prompt-builder.ts";
+
+// === retry helper ===
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 500): Promise<T> {
+  let retries = 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (++retries > maxRetries) throw err;
+      const delay = initialDelay * 2 ** (retries - 1);
+      console.warn(`Retry ${retries}/${maxRetries} after ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
 
 // === circuit breaker ===
 class CircuitBreaker {
@@ -30,19 +48,38 @@ class CircuitBreaker {
 }
 const openAICircuit = new CircuitBreaker();
 
-// === retry helper ===
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 500): Promise<T> {
-  let retries = 0;
-  while (true) {
-    try {
-      return await fn();
-    } catch (err) {
-      if (++retries > maxRetries) throw err;
-      const delay = initialDelay * 2 ** (retries - 1);
-      console.warn(`Retry ${retries}/${maxRetries} after ${delay}ms`);
-      await new Promise(r => setTimeout(r, delay));
-    }
-  }
+// === build LangChain pipeline ===
+function createLangChainSequence() {
+  const parser = StructuredOutputParser.fromZodSchema(recipeModificationsSchema);
+  const key = Deno.env.get("OPENAI_API_KEY");
+  if (!key) throw new Error("OPENAI_API_KEY missing");
+
+  const model = new ChatOpenAI({
+    openAIApiKey: key,
+    modelName: "gpt-4o",
+    temperature: 0.2,
+    timeout: 60_000,
+    maxRetries: 0, // we handle retries ourselves
+  });
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `
+You are a culinary nutrition expert. When modifying recipes:
+1) Keep flavors balanced and logical.
+2) Honor cooking chemistry in substitutions.
+3) Correctly recalc nutrition.
+4) Return a strict JSON matching the Zod schema, nothing else.
+`],
+    new MessagesPlaceholder("history"),
+    ["human", "{input}"],
+  ]);
+
+  return RunnableSequence.from([
+    { input: (r) => r.input, history: (r) => r.history || [] },
+    prompt,
+    model,
+    parser
+  ]);
 }
 
 // === validate incoming recipe ===
@@ -80,40 +117,22 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: vall.message }), { status: 400, headers });
     }
 
-    // Get OpenAI API key
-    const key = Deno.env.get("OPENAI_API_KEY");
-    if (!key) {
-      return new Response(
-        JSON.stringify({ error: "OPENAI_API_KEY missing" }), 
-        { status: 500, headers }
-      );
-    }
+    // build LangChain call
+    const chain = createLangChainSequence();
+    const input = `
+      Recipe: ${JSON.stringify(recipe)}
+      Request: ${userRequest}
+    `;
+    const history = [
+      ...modificationHistory.map(e => ({ role: "human", content: e.request })),
+      ...modificationHistory.map(e => ({ role: "ai", content: JSON.stringify(e.response) }))
+    ];
 
-    // Build prompt using the recipe generation style but for modifications
-    const prompt = buildModificationPrompt({
-      recipe,
-      userRequest,
-      modificationHistory
-    });
-
-    // call OpenAI with circuit breaker + retry
+    // call LLM with circuit breaker + retry
     let result: any;
     try {
       result = await openAICircuit.execute(() =>
-        withRetry(async () => {
-          // Use the same OpenAI client as the recipe generation pipeline
-          return await generateRecipeWithOpenAI(
-            key, 
-            prompt, 
-            { 
-              servings: recipe.servings || 2,
-              debugInfo: "recipe-modification", 
-              embeddingModel: "text-embedding-ada-002"
-            },
-            headers,
-            "recipe-modification"
-          );
-        }, 3, 500)
+        withRetry(() => chain.invoke({ input, history }), 3, 500)
       );
     } catch (llmErr) {
       const msg = llmErr.message.includes("Circuit is open")
@@ -124,27 +143,26 @@ serve(async (req) => {
       return new Response(JSON.stringify(msg), { status: 503, headers });
     }
 
-    // Handle OpenAI response error
-    if (result.status && result.status !== 200) {
+    // Zod-validate AI output
+    let parsed: any;
+    try {
+      parsed = recipeModificationsSchema.parse(result);
+    } catch (parseErr) {
       return new Response(
-        JSON.stringify({ 
-          error: "Failed to generate recipe modification",
-          details: result.error || "Unknown error" 
+        JSON.stringify({
+          error: "Invalid AI response format",
+          details: (parseErr as Error).message
         }),
-        { status: result.status || 500, headers }
+        { status: 422, headers }
       );
     }
 
-    // Add metadata to track that this is a modification
-    result.isModification = true;
-    result.modificationRequest = userRequest;
-    result.modificationHistory = modificationHistory;
-    result.originalRecipeId = recipe.id;
-
-    // Save modification request to database
+    // write chat record
     const SUPA_URL = Deno.env.get("SUPABASE_URL");
     const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (SUPA_URL && SUPA_KEY) {
+    if (!SUPA_URL || !SUPA_KEY) {
+      console.error("Missing Supabase env vars");
+    } else {
       try {
         const sb = createClient(SUPA_URL, SUPA_KEY, {
           global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
@@ -158,17 +176,16 @@ serve(async (req) => {
         const chatData = {
           recipe_id: recipe.id,
           user_message: userRequest,
-          ai_response: JSON.stringify({
-            textResponse: `Modified recipe: ${result.title}`,
-            changes: {
-              title: result.title !== recipe.title ? result.title : undefined,
-              ingredients: result.ingredients && result.ingredients.length > 0 ? result.ingredients : undefined,
-              steps: result.steps && result.steps.length > 0 ? result.steps : undefined,
-              instructions: result.instructions && result.instructions.length > 0 ? result.instructions : undefined,
-            }
-          }),
+          ai_response: parsed.textResponse,
+          changes_suggested: parsed.modifications,
           source_type: "modification"
         };
+        
+        console.log("Saving chat to database:", {
+          recipeId: recipe.id,
+          messageLength: userRequest.length,
+          hasChanges: !!parsed.modifications
+        });
         
         await sb.from("recipe_chats").insert(chatData);
       } catch (dbErr) {
@@ -176,33 +193,8 @@ serve(async (req) => {
       }
     }
 
-    // Create a backwards-compatible response structure
-    const response = {
-      ...result,
-      textResponse: `I've modified the recipe "${recipe.title}" to "${result.title}" based on your request.`,
-      reasoning: result.description || "Recipe modified based on your instructions.",
-      modifications: {
-        title: result.title,
-        description: result.description,
-        ingredients: result.ingredients.map((ingredient: any, i: number) => ({
-          original: recipe.ingredients[i]?.item,
-          modified: ingredient.item,
-          reason: "Modified based on request"
-        })),
-        steps: result.steps.map((step: string, i: number) => ({
-          original: recipe.steps && i < recipe.steps.length ? recipe.steps[i] : undefined,
-          modified: step,
-          reason: "Modified based on request"
-        })),
-        cookingTip: result.cookingTip
-      },
-      nutritionImpact: {
-        assessment: "Recipe nutrition has been recalculated." 
-      }
-    };
-
-    // return success with full recipe and backwards-compatible structure
-    return new Response(JSON.stringify(response), { status: 200, headers });
+    // return success
+    return new Response(JSON.stringify(parsed), { status: 200, headers });
   } catch (err) {
     console.error("Unexpected error", err);
     return new Response(JSON.stringify({ error: (err as Error).message }), {

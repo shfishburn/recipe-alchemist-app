@@ -1,4 +1,3 @@
-
 export interface Ingredient {
   // Metric measurements
   qty_metric: number;
@@ -102,6 +101,8 @@ export interface Recipe {
   user_id?: string;
   created_at?: string;
   updated_at?: string;
+  original_request?: string;
+  reasoning?: string;
   version_number?: number;
   previous_version_id?: string;
   deleted_at?: string;

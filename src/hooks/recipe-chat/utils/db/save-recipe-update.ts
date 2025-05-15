@@ -1,37 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { Json } from '@/integrations/supabase/types';
 import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 import { standardizeNutrition } from '@/utils/nutrition-utils';
-
-// Define a whitelist of valid database column names
-const VALID_DB_FIELDS = [
-  'id',
-  'title',
-  'tagline', // Use tagline, not description
-  'ingredients',
-  'instructions',
-  'servings',
-  'prep_time_min',
-  'cook_time_min',
-  'nutrition',
-  'cooking_tip',
-  'cuisine',
-  'dietary',
-  'flavor_tags',
-  'science_notes',
-  'chef_notes',
-  'image_url',
-  'version_number',
-  'previous_version_id',
-  'deleted_at',
-  'created_at',
-  'updated_at',
-  'slug',
-  'nutri_score',
-  'cuisine_category',
-  'user_id'
-];
 
 // Get the correct cuisine category based on cuisine value
 function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional American" | "European" | "Asian" | "Dietary Styles" | "Middle Eastern" {
@@ -205,39 +177,22 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     // Default to empty array if science_notes is undefined
     scienceNotesJson = '[]' as Json;
   }
-
-  // Filter out any fields that don't exist in the database
-  const filteredRecipe: Record<string, any> = {};
-  
-  for (const key in updatedRecipe) {
-    if (VALID_DB_FIELDS.includes(key)) {
-      filteredRecipe[key] = updatedRecipe[key];
-    } else {
-      console.log(`Skipping non-existent database field: ${key}`);
-    }
-  }
-  
-  // Ensure ID is included
-  if (!filteredRecipe.id) {
-    console.error("Missing recipe ID in saveRecipeUpdate");
-    throw new Error("Recipe ID is required for updates");
-  }
   
   // Transform recipe for database storage with improved type safety
   const dbRecipe = {
-    ...filteredRecipe,
-    ingredients: filteredRecipe.ingredients as unknown as Json,
-    nutrition: filteredRecipe.nutrition as unknown as Json,
+    ...updatedRecipe,
+    ingredients: updatedRecipe.ingredients as unknown as Json,
+    nutrition: updatedRecipe.nutrition as unknown as Json,
     // Use the properly serialized science_notes
-    science_notes: scienceNotesJson || filteredRecipe.science_notes as unknown as Json,
+    science_notes: scienceNotesJson,
     // Ensure nutri_score is properly cast to Json type
-    nutri_score: filteredRecipe.nutri_score as unknown as Json,
+    nutri_score: updatedRecipe.nutri_score as unknown as Json,
     // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
-    cuisine_category: filteredRecipe.cuisine_category || "Global"
+    cuisine_category: updatedRecipe.cuisine_category || "Global"
   };
 
   console.log("Saving recipe update with data:", {
-    id: filteredRecipe.id,  // This reference is now safe since we check for id above
+    id: dbRecipe.id,
     hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
@@ -246,15 +201,14 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     // Use the new utility function for safe preview generation
     scienceNotesPreview: createSafeJsonPreview(scienceNotesJson),
     cuisine: updatedRecipe.cuisine,
-    cuisine_category: dbRecipe.cuisine_category,
-    fieldsIncluded: Object.keys(dbRecipe)
+    cuisine_category: dbRecipe.cuisine_category
   });
 
   try {
     const { data, error } = await supabase
       .from('recipes')
       .update(dbRecipe)
-      .eq('id', filteredRecipe.id)  // Using filteredRecipe.id which is guaranteed to exist now
+      .eq('id', updatedRecipe.id)
       .select()
       .single();
 

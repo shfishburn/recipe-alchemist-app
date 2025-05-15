@@ -1,63 +1,68 @@
 
-import React from 'react';
-import { ChatMessage as ChatMessageComp } from './ChatMessage';
-import { ChatResponse } from './ChatResponse';
-import type { ChatMessage, OptimisticMessage } from '@/types/chat';
+import React, { useMemo } from 'react';
+import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 import type { Recipe } from '@/types/recipe';
-import { Dispatch, SetStateAction } from 'react';
+import { ChatMessage } from './ChatMessage';
+import { ChatProcessingIndicator } from './ChatProcessingIndicator';
+import { getMessageTrackingId } from '@/utils/chat-meta';
 
 interface ChatHistoryProps {
-  chatHistory: ChatMessage[];
-  optimisticMessages: OptimisticMessage[];
-  isApplying: boolean;
-  isSending: boolean;
-  setMessage: Dispatch<SetStateAction<string>>;
-  applyChanges: (recipe: Recipe, chatMessage: ChatMessage) => Promise<boolean>;
+  chatHistory: ChatMessageType[];
+  optimisticMessages?: OptimisticMessage[];
+  isSending?: boolean;
+  setMessage: (message: string) => void;
+  applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
+  isApplying?: boolean;
   recipe: Recipe;
   retryMessage?: () => void;
 }
 
-export const ChatHistory: React.FC<ChatHistoryProps> = ({
+export function ChatHistory({
   chatHistory,
-  optimisticMessages,
-  isApplying,
-  isSending,
+  optimisticMessages = [],
+  isSending = false,
   setMessage,
   applyChanges,
+  isApplying = false,
   recipe,
   retryMessage
-}) => {
+}: ChatHistoryProps) {
+  // Use a more reliable approach to filter out duplicate messages
+  const combinedMessages = useMemo(() => {
+    // Create a Set of tracking IDs from optimistic messages
+    const optimisticIds = new Set(
+      optimisticMessages.map(msg => getMessageTrackingId(msg))
+        .filter(Boolean)
+    );
+    
+    // Filter out real messages that have a corresponding optimistic message
+    const filteredChatHistory = chatHistory.filter(msg => {
+      const trackingId = getMessageTrackingId(msg);
+      return !trackingId || !optimisticIds.has(trackingId);
+    });
+    
+    // Return the filtered chat history followed by optimistic messages
+    return [...filteredChatHistory, ...optimisticMessages];
+  }, [chatHistory, optimisticMessages]);
+  
   return (
-    <div className="space-y-6">
-      {/* Regular chat history */}
-      {chatHistory.map((message) => (
-        <div key={message.id}>
-          <ChatMessageComp message={message.user_message} isUser={true} />
-          <ChatResponse 
-            chatMessage={message} 
-            onApplyChanges={(chatMessage) => applyChanges(recipe, chatMessage)}
-            isApplying={isApplying}
-          />
-        </div>
+    <div className="flex flex-col space-y-6 w-full">
+      {/* Render the combined message history */}
+      {combinedMessages.map((chat) => (
+        <ChatMessage
+          key={getMessageTrackingId(chat) || `chat-${Date.now()}-${Math.random()}`}
+          chat={chat}
+          setMessage={setMessage}
+          applyChanges={applyChanges}
+          isApplying={isApplying && chat.id === chatHistory[chatHistory.length - 1]?.id}
+          isOptimistic={'pending' in chat && !!chat.pending}
+          applied={!!chat.applied}
+          retryMessage={retryMessage}
+        />
       ))}
       
-      {/* Optimistic messages */}
-      {optimisticMessages.map((message) => (
-        <div key={message.id}>
-          <ChatMessageComp 
-            message={message.user_message} 
-            isUser={true} 
-            isOptimistic={true} 
-          />
-        </div>
-      ))}
-      
-      {/* Show empty state when no messages */}
-      {chatHistory.length === 0 && optimisticMessages.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground">
-          <p>No messages yet. Start a conversation with the recipe AI!</p>
-        </div>
-      )}
+      {/* Show loading indicator when sending a message */}
+      {isSending && <ChatProcessingIndicator stage="sending" />}
     </div>
   );
-};
+}

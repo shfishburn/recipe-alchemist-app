@@ -3,7 +3,6 @@ import { callSupabaseFunction } from '@/api/supabaseFunctionClient';
 import { RecipeModifications } from './types';
 import { recipeModificationsSchema } from './validation';
 import { QuickRecipe } from '@/types/quick-recipe';
-import { normalizeRecipeResponse } from '@/utils/recipe-normalization';
 
 export async function requestRecipeModifications(
   recipe: QuickRecipe,
@@ -16,6 +15,7 @@ export async function requestRecipeModifications(
   
   try {
     // Register abort handler to throw an AbortError if the controller aborts
+    // This allows us to catch and handle it properly below
     const abortPromise = new Promise<never>((_, reject) => {
       abortController.signal.addEventListener('abort', () => {
         reject(new DOMException('Request aborted', 'AbortError'));
@@ -25,7 +25,7 @@ export async function requestRecipeModifications(
     // Race the function call against abort
     const responsePromise = callSupabaseFunction<
       { recipe: QuickRecipe; userRequest: string; modificationHistory: any[] },
-      any
+      RecipeModifications
     >('modify-quick-recipe', {
       method: 'POST',
       payload: {
@@ -56,52 +56,8 @@ export async function requestRecipeModifications(
       throw new Error('No data returned');
     }
     
-    // Process the response - now comes with full recipe data
-    const data = response.data;
-    
-    // First, normalize the recipe data using the same utility as quick recipes
-    const modifiedRecipe = data.isModification ? normalizeRecipeResponse(data) : null;
-    
-    // Ensure textResponse is always present (required field)
-    const textResponse = data.textResponse || `Modified recipe: ${data.title || 'Unknown'}`;
-    
-    // Construct a response that matches our existing schema for backward compatibility
-    const result: RecipeModifications = {
-      textResponse,
-      reasoning: data.reasoning || data.description || "Recipe modified based on your instructions.",
-      modifications: data.modifications || {
-        title: data.title,
-        description: data.description || data.tagline,
-        ingredients: data.ingredients?.map((ing: any, i: number) => ({
-          original: recipe.ingredients[i]?.item,
-          modified: ing.item,
-          reason: "Modified based on request"
-        })) || [],
-        steps: data.steps?.map((step: string, i: number) => ({
-          original: recipe.steps && i < recipe.steps.length ? recipe.steps[i] : undefined,
-          modified: step,
-          reason: "Modified based on request"
-        })) || [],
-        cookingTip: data.cookingTip
-      },
-      nutritionImpact: {
-        assessment: data.nutritionImpact?.assessment || "Recipe nutrition has been recalculated.",
-        summary: data.nutritionImpact?.summary || "Nutrition values have been updated.",
-        details: data.nutritionImpact?.details,
-        calories: data.nutritionImpact?.calories,
-        protein: data.nutritionImpact?.protein,
-        carbs: data.nutritionImpact?.carbs,
-        fat: data.nutritionImpact?.fat,
-        fiber: data.nutritionImpact?.fiber,
-        sugar: data.nutritionImpact?.sugar,
-        sodium: data.nutritionImpact?.sodium
-      },
-      // Add the normalized full recipe data
-      modifiedRecipe
-    };
-    
-    // Use zod to validate the response format for type safety
-    return recipeModificationsSchema.parse(result);
+    // Use Zod to validate the response data
+    return recipeModificationsSchema.parse(response.data);
   } catch (err) {
     // Check if this is an AbortError from the AbortController
     if (err.name === 'AbortError') {

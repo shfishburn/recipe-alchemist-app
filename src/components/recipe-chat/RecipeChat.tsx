@@ -1,173 +1,313 @@
 
-import React, { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { toast } from 'sonner';
+import React, { useState, useRef, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import { useAuth } from '@/hooks/use-auth';
-import { useRecipeDetail } from '@/hooks/use-recipe-detail';
-import { RecipeDisplay } from '@/components/quick-recipe/RecipeDisplay';
-import { ApplyChangesSection } from './response/ApplyChangesSection';
-import { ResponseFormatter } from './response/ResponseFormatter';
-import { useChatMutations } from '@/hooks/recipe-chat/use-chat-mutations';
-import { updateRecipe } from '@/hooks/recipe-chat/utils/update-recipe';
-import { ChatMessage as ChatMessageType } from '@/types/chat';
-import { supabase } from '@/integrations/supabase/client';
+import { useErrorHandler } from '@/hooks/use-error-handler';
+import { authStateManager } from '@/lib/auth/auth-state-manager';
+import type { Recipe } from '@/types/recipe';
+import type { ChatMessage as ChatMessageType } from '@/types/chat';
+import { RecipeChatInput } from './RecipeChatInput';
+import { ChatHistory } from './ChatHistory';
+import { EmptyChatState } from './EmptyChatState';
+import { ChatHeader } from './ChatHeader';
+import { ChatLoading } from './ChatLoading';
+import { ClearChatDialog } from './ClearChatDialog';
+import { AuthOverlay } from './AuthOverlay';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChatLayout } from './ChatLayout';
 
-interface RecipeChatProps {
-  recipe: any;
-  initialMessage?: string;
-}
-
-export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
-  const [message, setMessage] = useState(initialMessage || '');
-  const [appliedMessageIds, setAppliedMessageIds] = useState<string[]>([]);
-  const queryClient = useQueryClient();
-  const { profile } = useAuth();
-  const { data: chats } = useQuery({
-    queryKey: ['recipe-chats', recipe.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('recipe_chats')
-        .select('*')
-        .eq('recipe_id', recipe.id)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
+export function RecipeChat({ recipe }: { recipe: Recipe }) {
+  const { user, session } = useAuth();
+  const { handleError } = useErrorHandler({
+    toastTitle: "Chat Error",
+    toastDuration: 6000
   });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const mutation = useChatMutations(recipe);
+  // Validate recipe has an ID - crucial for the chat functionality
+  useEffect(() => {
+    if (!recipe || !recipe.id) {
+      console.error("Invalid recipe provided to RecipeChat component:", recipe);
+      toast.error("Error", { 
+        description: "Invalid recipe data. Please try again."
+      });
+    }
+  }, [recipe]);
   
-  const sendMessage = async () => {
-    if (!message.trim()) return;
-    
-    // Generate a unique ID for the message
-    const messageId = Math.random().toString(36).substring(2, 15);
-    
+  const {
+    message,
+    setMessage,
+    chatHistory,
+    optimisticMessages,
+    isLoadingHistory,
+    sendMessage,
+    isSending,
+    applyChanges: rawApplyChanges,
+    isApplying,
+    uploadRecipeImage,
+    submitRecipeUrl,
+    clearChatHistory,
+    retryMessage,
+    uploadProgress,
+    isUploading,
+    refetchChatHistory
+  } = useRecipeChat(recipe);
+
+  // Create a wrapper for applyChanges that only takes the chatMessage parameter
+  const applyChanges = async (chatMessage: ChatMessageType) => {
     try {
-      await mutation.mutateAsync({ message, messageId });
-      setMessage('');
-    } catch (error: any) {
-      console.error("Send message error:", error);
-      toast.error("Message Failed", {
-        description: error.message || "Failed to send message"
+      // Ensure chat message has a recipe_id, fallback to current recipe if needed
+      const validatedChatMessage = {
+        ...chatMessage,
+        recipe_id: chatMessage.recipe_id || recipe.id
+      };
+      
+      console.log("Applying changes with validated chat message:", {
+        chatId: validatedChatMessage.id,
+        recipeId: validatedChatMessage.recipe_id,
+        hasChanges: !!validatedChatMessage.changes_suggested
+      });
+      
+      return await rawApplyChanges(recipe, validatedChatMessage);
+    } catch (error) {
+      handleError(error);
+      toast.error("Changes couldn't be applied", {
+        description: "Please try again or modify your request",
+        action: {
+          label: "Retry",
+          onClick: () => applyChanges(chatMessage),
+        },
+      });
+      return false;
+    }
+  };
+
+  // Auto-scroll to bottom when new messages arrive or when sending a message
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatHistory.length, optimisticMessages.length, isSending]);
+
+  // Enhanced scroll to bottom with fallbacks
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      try {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {
+        // Fallback for browsers that don't support smooth scrolling
+        messagesEndRef.current.scrollIntoView();
+      }
+    } else if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    try {
+      await uploadRecipeImage(file);
+    } catch (error) {
+      handleError(error);
+      toast.error("Upload failed", {
+        description: (
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <span>Please try again with a smaller image or different format</span>
+          </div>
+        ),
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleUrlSubmit = (url: string) => {
+    try {
+      submitRecipeUrl(url);
+    } catch (error) {
+      handleError(error);
+      toast.error("URL submission failed", {
+        description: "Please check the URL and try again",
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!session) {
+      // Store the intent to chat in the auth state manager
+      authStateManager.queueAction({
+        type: 'other',
+        data: { recipeId: recipe.id },
+        sourceUrl: window.location.pathname
+      });
+      return;
+    }
+    
+    // Validate recipe ID before submitting
+    if (!recipe.id) {
+      toast.error("Cannot send message", {
+        description: "Invalid recipe reference"
+      });
+      return;
+    }
+    
+    if (message.trim()) {
+      try {
+        console.log("Sending message:", message);
+        sendMessage();
+        // Immediately scroll down when sending
+        setTimeout(scrollToBottom, 50);
+      } catch (error) {
+        handleError(error);
+        toast.error("Failed to send message", {
+          description: "Please try again",
+          action: {
+            label: "Retry",
+            onClick: handleSubmit,
+          },
+        });
+      }
+    }
+  };
+  
+  const handleClearChat = () => {
+    setIsDialogOpen(true);
+  };
+  
+  const confirmClearChat = async () => {
+    try {
+      await clearChatHistory();
+      setIsDialogOpen(false);
+    } catch (error) {
+      handleError(error);
+      toast.error("Failed to clear chat history", {
+        description: "Please try again",
+        action: {
+          label: "Retry",
+          onClick: confirmClearChat,
+        },
       });
     }
   };
   
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
-    }
+  const handleLogin = () => {
+    // Store the intent to return to this recipe
+    authStateManager.setRedirectAfterAuth(window.location.pathname);
+    // Navigate to auth page
+    window.location.href = '/auth';
   };
-  
-  const markMessageApplied = useCallback((messageId: string) => {
-    setAppliedMessageIds(prev => [...prev, messageId]);
-  }, []);
 
-  const applyChanges = useCallback(
-    async (chatMessage: ChatMessageType): Promise<boolean> => {
+  // Enhanced retry mechanism with exponential backoff
+  const handleRetryLoadHistory = async () => {
+    const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+    setRetryCount(prev => prev + 1);
+    
+    toast.info("Retrying...", {
+      description: `Attempt ${retryCount + 1}`,
+      duration: backoffDelay,
+    });
+    
+    setTimeout(async () => {
       try {
-        const result = await updateRecipe(recipe, chatMessage);
-        queryClient.invalidateQueries({ queryKey: ['recipe', recipe.id] });
-        markMessageApplied(chatMessage.id);
-        return true;
+        await refetchChatHistory();
       } catch (error) {
-        console.error('Error applying changes:', error);
-        toast.error("Failed to apply changes", {
-          description: error instanceof Error ? error.message : 'An unknown error occurred'
-        });
-        return false;
+        handleError(error);
+        if (retryCount < 3) {
+          toast.info("Still having trouble", {
+            description: "We'll try again shortly",
+            duration: 3000,
+          });
+        } else {
+          toast.error("Connection issues", {
+            description: "Please check your network or try again later",
+            duration: 8000,
+          });
+        }
       }
-    },
-    [recipe, queryClient, markMessageApplied]
-  );
+    }, backoffDelay);
+  };
+
+  if (isLoadingHistory) {
+    return <ChatLoading onRetry={handleRetryLoadHistory} retryCount={retryCount} />;
+  }
+  
+  // Show auth overlay when user is not authenticated
+  if (!user || !session) {
+    return <AuthOverlay onLogin={handleLogin} />;
+  }
+
+  // Check if we should show the empty state
+  const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {/* Recipe Display Section */}
-      <div className="lg:col-span-2">
-        <Card className="h-full">
-          <CardContent className="p-4">
-            <RecipeDisplay recipe={recipe} />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Chat Section */}
-      <div>
-        <Card className="flex flex-col h-full">
-          <CardContent className="relative flex-grow">
-            <ScrollArea className="h-full">
-              <div className="space-y-4">
-                {chats?.map((chat: any) => (
-                  <div key={chat.id} className="space-y-2">
-                    {/* User Message */}
-                    <div className="flex items-start space-x-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={profile?.avatar_url} />
-                        <AvatarFallback>{profile?.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <div className="text-sm font-bold">{profile?.username || 'You'}</div>
-                        <p className="text-sm text-gray-800">{chat.user_message}</p>
-                        <div className="text-xs text-gray-500">{new Date(chat.created_at).toLocaleString()}</div>
-                      </div>
-                    </div>
-
-                    {/* AI Response */}
-                    <div className="flex items-start space-x-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src="/recipe-alchemy-logo.png" />
-                        <AvatarFallback>AI</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <div className="text-sm font-bold">Recipe AI</div>
-                        <ResponseFormatter 
-                          response={chat.ai_response} 
-                          changesSuggested={chat.changes_suggested} 
-                        />
-                        <div className="text-xs text-gray-500">{new Date(chat.created_at).toLocaleString()}</div>
-                        
-                        {/* Apply Changes Section */}
-                        {!appliedMessageIds.includes(chat.id) && (
-                          <ApplyChangesSection
-                            changes={chat.changes_suggested}
-                            onApplyChanges={() => applyChanges(chat)}
-                            isApplying={mutation.isPending}
-                            applied={appliedMessageIds.includes(chat.id)}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-          <CardFooter>
-            <div className="w-full flex space-x-2">
-              <Input
-                type="text"
-                placeholder="Ask a question or request a change..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
+    <ChatLayout>
+      <Card className="flex flex-col h-full w-full overflow-hidden bg-white border-slate-100 shadow-sm hw-boost">
+        <CardContent className="p-0 flex flex-col h-full">
+          <div className="flex flex-col h-full">
+            <div className="flex-shrink-0 pt-2 sm:pt-4 px-3 sm:px-5 border-b">
+              <ChatHeader 
+                hasChatHistory={chatHistory.length > 0} 
+                onClearChat={handleClearChat} 
               />
-              <Button onClick={sendMessage} disabled={mutation.isPending}>
-                {mutation.isPending ? 'Sending...' : 'Send'}
-              </Button>
             </div>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+            
+            <div className="flex-1 min-h-0 relative overflow-hidden">
+              <ScrollArea 
+                className="h-full px-3 sm:px-5 scroll-momentum hw-accelerated-scroll" 
+                ref={scrollAreaRef}
+              >
+                <div className="py-3">
+                  {/* Show EmptyChatState if there are no messages */}
+                  {showEmptyState ? (
+                    <EmptyChatState />
+                  ) : (
+                    <div>
+                      <ChatHistory
+                        chatHistory={chatHistory}
+                        optimisticMessages={optimisticMessages}
+                        isSending={isSending}
+                        setMessage={setMessage}
+                        applyChanges={applyChanges}
+                        isApplying={isApplying}
+                        recipe={recipe}
+                        retryMessage={retryMessage}
+                      />
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            <div className="flex-shrink-0 border-t pt-2 pb-3 px-3 sm:px-5 bg-white z-10">
+              <RecipeChatInput
+                message={message}
+                setMessage={setMessage}
+                onSubmit={handleSubmit}
+                isSending={isSending}
+                onUpload={handleUpload}
+                onUrlSubmit={handleUrlSubmit}
+                uploadProgress={uploadProgress}
+                isUploading={isUploading}
+              />
+            </div>
+          </div>
+        </CardContent>
+        
+        <ClearChatDialog 
+          open={isDialogOpen} 
+          onOpenChange={setIsDialogOpen}
+          onConfirm={confirmClearChat}
+        />
+      </Card>
+    </ChatLayout>
   );
 }

@@ -1,165 +1,174 @@
 
-import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Recipe } from '@/types/recipe';
-import { useState } from 'react';
+import type { Database } from '@/integrations/supabase/types';
+import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
+import { standardizeNutrition } from '@/utils/nutrition-utils';
+import { toast } from 'sonner';
 
-// Function to normalize recipe data from the database
-const normalizeRecipe = (recipe: any): Recipe => {
-  if (!recipe) return {} as Recipe;
-  
-  try {
-    // Ensure ingredients is properly processed as an array
-    let ingredients = [];
-    
-    if (Array.isArray(recipe.ingredients)) {
-      ingredients = recipe.ingredients;
-    } else if (typeof recipe.ingredients === 'string') {
-      ingredients = JSON.parse(recipe.ingredients);
-    } else if (recipe.ingredients && typeof recipe.ingredients === 'object') {
-      ingredients = Array.isArray(JSON.parse(JSON.stringify(recipe.ingredients)))
-        ? JSON.parse(JSON.stringify(recipe.ingredients))
-        : [];
-    }
-    
-    return {
-      ...recipe,
-      ingredients
-    } as Recipe;
-  } catch (e) {
-    console.error("Error normalizing recipe:", e, recipe);
-    return {
-      ...recipe, 
-      ingredients: []
-    } as Recipe;
-  }
-};
-
-// Convert Recipe to database format
-const convertRecipeForDb = (recipe: Omit<Recipe, 'id'> | Recipe) => {
-  // Convert complex objects to JSON strings if needed
-  return {
-    ...recipe,
-    // Ensure ingredients are stored as a JSON object for Supabase
-    ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
-  };
-};
+// Database recipe type coming directly from Supabase
+type DbRecipe = Database['public']['Tables']['recipes']['Row'];
 
 export const useRecipes = () => {
-  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const createRecipeMutation = useMutation({
-    mutationFn: async (newRecipe: Omit<Recipe, 'id'>) => {
-      const recipeForDb = convertRecipeForDb(newRecipe);
-      // Ensure we're inserting a properly formatted object for Supabase
-      const { data, error } = await supabase
-        .from('recipes')
-        .insert([{
-          ...recipeForDb,
-          ingredients: JSON.stringify(recipeForDb.ingredients)
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-    },
-  });
-
-  const updateRecipeMutation = useMutation({
-    mutationFn: async (updatedRecipe: Recipe) => {
-      const recipeForDb = convertRecipeForDb(updatedRecipe);
-      // Ensure we're updating with a properly formatted object for Supabase
-      const { data, error } = await supabase
-        .from('recipes')
-        .update({
-          ...recipeForDb,
-          ingredients: JSON.stringify(recipeForDb.ingredients)
-        })
-        .eq('id', updatedRecipe.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-    },
-  });
-
-  const deleteRecipeMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from('recipes')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-    },
-  });
   
-  // Use the normalized recipe function in the query
-  const recipesQuery = useQuery({
-    queryKey: ['recipes', searchTerm],
-    queryFn: async () => {
-      let query = supabase
-        .from('recipes')
-        .select('*')
-        .is('deleted_at', null)
-        .order('updated_at', { ascending: false });
-        
-      if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
+  // Debounce search term to prevent excessive refetches
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  
+  // Memoize recipe transformation function to avoid recreating on each render
+  const transformRecipes = useCallback((dbRecipes: any[]): Recipe[] => {
+    return (dbRecipes || []).map((dbRecipe: any): Recipe => {
+      // Parse ingredients JSON to Ingredient array
+      let ingredients: Ingredient[] = [];
+      try {
+        ingredients = Array.isArray(dbRecipe.ingredients) 
+          ? (dbRecipe.ingredients as unknown as Ingredient[])
+          : typeof dbRecipe.ingredients === 'object' 
+            ? (Object.values(dbRecipe.ingredients) as unknown as Ingredient[])
+            : [];
+      } catch (e) {
+        console.error('Failed to parse ingredients', e);
       }
+      
+      // Parse science_notes JSON to string array
+      let scienceNotes: string[] = [];
+      try {
+        if (dbRecipe.science_notes) {
+          scienceNotes = Array.isArray(dbRecipe.science_notes) 
+            ? dbRecipe.science_notes.map((note: any) => typeof note === 'string' ? note : String(note))
+            : [];
+        }
+      } catch (e) {
+        console.error('Failed to parse science notes', e);
+      }
+      
+      // Parse nutrition JSON to Nutrition object
+      let nutrition: Nutrition = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0
+      };
+      
+      try {
+        if (dbRecipe.nutrition) {
+          nutrition = standardizeNutrition(dbRecipe.nutrition);
+        }
+      } catch (e) {
+        console.error('Failed to parse nutrition', e);
+      }
+      
+      // Parse nutri_score JSON to NutriScore object
+      let nutriScore: NutriScore | undefined;
+      try {
+        if (dbRecipe.nutri_score) {
+          nutriScore = typeof dbRecipe.nutri_score === 'string'
+            ? JSON.parse(dbRecipe.nutri_score)
+            : dbRecipe.nutri_score as unknown as NutriScore;
+        }
+      } catch (e) {
+        console.error('Failed to parse nutri_score', e);
+      }
+      
+      // Return a complete Recipe object with default values for missing properties
+      return {
+        id: dbRecipe.id,
+        title: dbRecipe.title || '',
+        ingredients: ingredients,
+        instructions: dbRecipe.instructions || [],
+        prep_time_min: dbRecipe.prep_time_min,
+        cook_time_min: dbRecipe.cook_time_min,
+        servings: dbRecipe.servings || 1,
+        image_url: dbRecipe.image_url,
+        cuisine: dbRecipe.cuisine,
+        cuisine_category: dbRecipe.cuisine_category || "Global",
+        tags: dbRecipe.tags || [],
+        user_id: dbRecipe.user_id,
+        created_at: dbRecipe.created_at || new Date().toISOString(),
+        updated_at: dbRecipe.updated_at || new Date().toISOString(),
+        original_request: dbRecipe.original_request || '',
+        reasoning: dbRecipe.reasoning || '',
+        tagline: dbRecipe.tagline || '',
+        version_number: dbRecipe.version_number || 1,
+        previous_version_id: dbRecipe.previous_version_id,
+        deleted_at: dbRecipe.deleted_at,
+        dietary: dbRecipe.dietary || '',
+        flavor_tags: dbRecipe.flavor_tags || [],
+        nutrition: nutrition,
+        science_notes: scienceNotes,
+        chef_notes: dbRecipe.chef_notes || '',
+        nutri_score: nutriScore
+      };
+    });
+  }, []);
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return (data || []).map(normalizeRecipe);
-    },
-    staleTime: 60000, // 1 minute
-  });
-
-  // Also fix in the featured recipes query
-  const featuredRecipesQuery = useQuery({
-    queryKey: ['recipes', 'featured'],
+  const query = useQuery<Recipe[]>({
+    queryKey: ['recipes', debouncedSearchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(6);
+      console.log('Fetching recipes with search term:', debouncedSearchTerm);
+      
+      try {
+        // Build the base query
+        let supabaseQuery = supabase
+          .from('recipes')
+          .select('id, title, tagline, cuisine, dietary, cook_time_min, prep_time_min, image_url, nutrition, ingredients, science_notes')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return (data || []).map(normalizeRecipe);
+        // Apply search filter if needed
+        if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+          const trimmedTerm = debouncedSearchTerm.trim();
+          supabaseQuery = supabaseQuery.or(
+            `title.ilike.%${trimmedTerm}%,tagline.ilike.%${trimmedTerm}%,cuisine.ilike.%${trimmedTerm}%,dietary.ilike.%${trimmedTerm}%`
+          );
+        }
+
+        const { data, error } = await supabaseQuery;
+
+        if (error) {
+          console.error('Error fetching recipes:', error);
+          throw error;
+        }
+        
+        console.log('Recipes fetched successfully:', data?.length || 0, 'recipes');
+        
+        // Transform the database recipes to match our Recipe type
+        return transformRecipes(data || []);
+      } catch (error) {
+        console.error('Unexpected error fetching recipes:', error);
+        toast.error('Failed to fetch recipes. Please try again.');
+        throw error;
+      }
     },
+    retry: 1,
     staleTime: 60000, // 1 minute
+    gcTime: 300000,   // 5 minutes
   });
 
   return {
-    recipes: recipesQuery.data || [],
-    featuredRecipes: featuredRecipesQuery.data || [],
-    data: recipesQuery.data || [],
-    isLoading: recipesQuery.isLoading,
-    isFetching: recipesQuery.isFetching,
-    error: recipesQuery.error,
-    status: recipesQuery.status,
+    ...query,
     searchTerm,
     setSearchTerm,
-    createRecipe: createRecipeMutation.mutateAsync,
-    updateRecipe: updateRecipeMutation.mutateAsync,
-    deleteRecipe: (id: string) => deleteRecipeMutation.mutateAsync(id),
   };
 };
+
+// Custom hook for debouncing values
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+  
+  return debouncedValue;
+}

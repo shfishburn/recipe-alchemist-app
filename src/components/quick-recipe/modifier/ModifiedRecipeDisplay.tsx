@@ -27,9 +27,6 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
   const isSuccess = status === 'success';
   const isApplying = status === 'applying';
   const isLoading = status === 'loading';
-  
-  // Use preview recipe if available in the modifications
-  const previewRecipe = modifications?.modifiedRecipe || modifiedRecipe;
 
   return (
     <Card>
@@ -38,7 +35,7 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
         <CardDescription>View the modified recipe and apply changes.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <RecipeDisplay recipe={previewRecipe} />
+        <RecipeDisplay recipe={modifiedRecipe} />
         {modifications && (
           <NutritionSummary nutrition={modifications.nutritionImpact} />
         )}

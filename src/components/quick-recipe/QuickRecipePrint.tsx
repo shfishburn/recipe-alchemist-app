@@ -4,7 +4,7 @@ import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 import { Ingredient } from '@/types/recipe';
 
 // Helper function to format ingredient for database storage
-const formatIngredientForDB = (ingredient: unknown): Ingredient => {
+const formatIngredientForDB = (ingredient: any): Ingredient => {
   if (typeof ingredient === 'string') {
     return {
       qty: 1,
@@ -19,31 +19,29 @@ const formatIngredientForDB = (ingredient: unknown): Ingredient => {
   }
   
   // If it's already in the right format, return it
-  if (ingredient && typeof ingredient === 'object' && 'item' in ingredient && typeof ingredient.item === 'string') {
-    const ing = ingredient as Record<string, any>;
+  if (ingredient.item && typeof ingredient.item === 'string') {
     return {
-      qty: ing.qty || 1,
-      unit: ing.unit || '',
-      item: ing.item,
+      qty: ingredient.qty || 1,
+      unit: ingredient.unit || '',
+      item: ingredient.item,
       // Add required metric/imperial units
-      qty_metric: ing.qty_metric || ing.qty || 1,
-      unit_metric: ing.unit_metric || ing.unit || '',
-      qty_imperial: ing.qty_imperial || ing.qty || 1,
-      unit_imperial: ing.unit_imperial || ing.unit || ''
+      qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+      unit_metric: ingredient.unit_metric || ingredient.unit || '',
+      qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+      unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
     };
   }
   
   // Otherwise, extract what we can
-  const ing = ingredient as Record<string, any> || {};
   return {
-    qty: ing.qty || 1,
-    unit: ing.unit || '',
+    qty: ingredient.qty || 1,
+    unit: ingredient.unit || '',
     item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient),
     // Add required metric/imperial units
-    qty_metric: ing.qty_metric || ing.qty || 1,
-    unit_metric: ing.unit_metric || ing.unit || '',
-    qty_imperial: ing.qty_imperial || ing.qty || 1,
-    unit_imperial: ing.unit_imperial || ing.unit || ''
+    qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+    unit_metric: ingredient.unit_metric || ingredient.unit || '',
+    qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+    unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
   };
 };
 
@@ -71,7 +69,7 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
         recipe={{
           id: 'quick-recipe',
           title: recipe.title,
-          tagline: recipe.description, // Use description for tagline
+          tagline: recipe.description,
           ingredients: formattedIngredients,
           instructions: recipe.steps,
           prep_time_min: recipe.prepTime,
@@ -87,7 +85,8 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
             sodium: 0,
             kcal: 0
           } : undefined,
-          science_notes: []
+          science_notes: [],
+          cooking_tip: recipe.cookingTip
         }} 
         ref={printDialogTriggerRef}
       />

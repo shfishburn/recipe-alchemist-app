@@ -1,21 +1,22 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ChatMessage, ChatMeta } from '@/types/chat';
+import type { ChatMessage, ChangesResponse } from '@/types/chat';
 
 /**
- * Custom hook for retrieving chat history for a recipe
+ * Hook for fetching and processing chat history for a recipe
  */
 export const useChatHistory = (recipeId: string) => {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data: chatHistory = [], isLoading: isLoadingHistory, refetch } = useQuery({
     queryKey: ['recipe-chats', recipeId],
     queryFn: async () => {
+      console.log(`Fetching chat history for recipe ${recipeId}`);
+      
+      // Validate recipe ID to prevent API errors
       if (!recipeId) {
-        console.warn("useChatHistory called without a recipe ID");
+        console.warn("Missing recipe ID in useChatHistory");
         return [];
       }
-      
-      console.log(`Fetching chat history for recipe ${recipeId}`);
       
       const { data, error } = await supabase
         .from('recipe_chats')
@@ -23,61 +24,65 @@ export const useChatHistory = (recipeId: string) => {
         .eq('recipe_id', recipeId)
         .is('deleted_at', null)
         .order('created_at', { ascending: true });
-      
+
       if (error) {
         console.error("Error fetching chat history:", error);
         throw error;
       }
       
-      if (!data) {
-        return [];
+      if (data && data.length > 0) {
+        console.log(`Found ${data.length} chat messages for recipe ${recipeId}`);
+      } else {
+        console.log(`No existing chat history for recipe ${recipeId}`);
       }
-
-      // Transform the response to match the ChatMessage type
-      const chatMessages = data.map((item): ChatMessage => {
-        // Handle possible JSON fields
-        let meta: ChatMeta = {};
-        if (item.meta) {
-          meta = typeof item.meta === 'string' ? JSON.parse(item.meta) : item.meta;
-        }
-        
-        let changes_suggested: any = null;
-        if (item.changes_suggested) {
-          changes_suggested = typeof item.changes_suggested === 'string' 
-            ? JSON.parse(item.changes_suggested) 
-            : item.changes_suggested;
-        }
-        
-        // Extract follow-up questions from the response if available
-        const follow_up_questions: string[] = [];
-        
-        return {
-          id: item.id,
-          recipe_id: item.recipe_id,
-          user_message: item.user_message,
-          ai_response: item.ai_response,
-          changes_suggested: changes_suggested,
-          source_type: item.source_type,
-          source_url: item.source_url,
-          source_image: item.source_image,
-          applied: item.applied,
-          created_at: item.created_at,
-          meta: meta,
-          follow_up_questions: follow_up_questions
-        };
-      });
       
-      console.log(`Retrieved ${chatMessages.length} chat messages for recipe ${recipeId}`);
-      return chatMessages;
+      // Process the chat messages to handle follow_up_questions and changes_suggested
+      return data.map(chat => {
+        // Initialize chat message with default values
+        const chatMessage: ChatMessage = {
+          id: chat.id,
+          user_message: chat.user_message,
+          ai_response: chat.ai_response,
+          changes_suggested: null,
+          applied: chat.applied || false,
+          created_at: chat.created_at,
+          follow_up_questions: [], // Default empty array
+          meta: typeof chat.meta === 'object' ? chat.meta || {} : {} // Ensure meta is always a valid object
+        };
+
+        // Process changes_suggested as a properly typed object
+        if (chat.changes_suggested) {
+          try {
+            // Ensure changes_suggested is properly typed
+            chatMessage.changes_suggested = chat.changes_suggested as unknown as ChangesResponse;
+          } catch (e) {
+            console.error("Error processing changes_suggested data:", e);
+          }
+        }
+        
+        // Check if the chat response has followUpQuestions in the response data
+        if (typeof chat.ai_response === 'string') {
+          try {
+            // Try to extract follow-up questions from the AI response if they exist
+            const responseObj = JSON.parse(chat.ai_response);
+            if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
+              chatMessage.follow_up_questions = responseObj.followUpQuestions;
+            }
+          } catch (e) {
+            // If parsing fails, just continue with the empty array
+          }
+        }
+        
+        return chatMessage;
+      });
     },
-    staleTime: 30000, // 30 seconds
-    enabled: !!recipeId, // Only run the query if recipeId is provided
+    refetchOnWindowFocus: false,
+    staleTime: 5000, // Don't refetch too often to avoid flickering
   });
-  
+
   return {
-    chatHistory: data || [],
-    isLoadingHistory: isLoading,
-    historyError: error,
+    chatHistory,
+    isLoadingHistory,
     refetchChatHistory: refetch
   };
 };
