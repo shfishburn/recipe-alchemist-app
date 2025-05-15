@@ -1,165 +1,167 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
+import { useClipboard } from './clipboard-utils';
+import { organizeItems } from './item-organization';
+import { toggleItem, deleteItem, addItem } from './item-utils';
 import type { ShoppingList, ShoppingListItem } from '@/types/shopping-list';
 
-export function useShoppingList() {
-  const [lists, setLists] = useState<ShoppingList[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { session } = useAuth();
+export const useShoppingList = (list: ShoppingList, onUpdate: () => void) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'dept'>('dept');
+  const [expandedDepts, setExpandedDepts] = useState<Record<string, boolean>>({});
+  const { copyToClipboard } = useClipboard();
   
-  // Additional properties needed by ShoppingListDetail component
-  const searchTerm = '';
-  const setSearchTerm = () => {};
-  const sortOrder = 'dept' as 'asc' | 'desc' | 'dept';
-  const setSortOrder = () => {};
-  const expandedDepts = {};
-  const groupedItems = [];
-  const allDepartments = [];
-  const itemsByDepartment = {};
-  const handleToggleItem = () => {};
-  const handleDeleteItem = () => {};
-  const handleAddItem = () => {};
-  const toggleAllInDepartment = () => {};
-  const toggleDeptExpanded = () => {};
-  const copyToClipboard = () => {};
-  const getItemIndex = () => -1;
+  // Get all departments from list items
+  const allDepartments = Array.from(
+    new Set([
+      ...list.items.map(item => item.department || 'Other'),
+      'Produce', 'Dairy', 'Meat', 'Bakery', 'Frozen', 'Pantry', 'Other'
+    ])
+  ).sort();
   
-  const fetchLists = async () => {
-    if (!session?.user) {
-      setError('Authentication required');
-      return;
+  // Organize items based on search and sort criteria
+  const itemsByDepartment = organizeItems(list.items, searchTerm, sortOrder);
+  
+  // Filter out "water" items
+  const filteredItemsByDepartment = Object.entries(itemsByDepartment).reduce((acc, [dept, items]) => {
+    const filteredItems = items.filter(item => 
+      !item.name.toLowerCase().trim().match(/^water$/)
+    );
+    
+    if (filteredItems.length > 0) {
+      acc[dept] = filteredItems;
     }
-
-    setIsLoading(true);
-    setError('');
-
+    return acc;
+  }, {} as Record<string, ShoppingListItem[]>);
+  
+  const groupedItems = filteredItemsByDepartment;
+  
+  // Helper function to save the updated list
+  const saveList = async (updatedItems: ShoppingListItem[]): Promise<boolean> => {
     try {
-      const { data, error: fetchError } = await supabase
-        .from('shopping_lists')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+      const updatedList = {
+        ...list,
+        items: updatedItems,
+        updated_at: new Date().toISOString()
+      };
       
-      if (fetchError) throw fetchError;
-      setLists(data || []);
-    } catch (err: any) {
-      console.error('Error fetching shopping lists:', err);
-      setError(err.message || 'Failed to fetch shopping lists');
-      toast.error('Failed to load shopping lists');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createList = async (title: string, items: ShoppingListItem[] = []) => {
-    if (!session?.user) {
-      setError('Authentication required');
-      return null;
-    }
-
-    try {
-      const { data, error: insertError } = await supabase
-        .from('shopping_lists')
-        .insert({
-          title,
-          items,
-          user_id: session.user.id
-        })
-        .select()
-        .single();
-      
-      if (insertError) throw insertError;
-      
-      toast.success('Shopping list created');
-      await fetchLists();
-      return data;
-    } catch (err: any) {
-      console.error('Error creating shopping list:', err);
-      setError(err.message || 'Failed to create shopping list');
-      toast.error('Failed to create shopping list');
-      return null;
-    }
-  };
-
-  const updateList = async (id: string, updates: Partial<ShoppingList>) => {
-    try {
-      const { error: updateError } = await supabase
-        .from('shopping_lists')
-        .update(updates)
-        .eq('id', id);
-      
-      if (updateError) throw updateError;
-      
-      toast.success('Shopping list updated');
-      await fetchLists();
+      // Call the parent component's update function
+      onUpdate();
       return true;
-    } catch (err: any) {
-      console.error('Error updating shopping list:', err);
-      setError(err.message || 'Failed to update shopping list');
-      toast.error('Failed to update shopping list');
+    } catch (error) {
+      console.error('Error saving list:', error);
+      toast.error('Failed to save changes');
       return false;
     }
   };
-
-  const deleteList = async (id: string) => {
+  
+  // Toggle item checked state
+  const handleToggleItem = async (index: number) => {
+    await toggleItem(index, list.items, saveList);
+  };
+  
+  // Delete item from the list
+  const handleDeleteItem = async (index: number) => {
+    await deleteItem(index, list.items, saveList);
+  };
+  
+  // Add a new item to the list
+  const handleAddItem = async (newItem: Partial<ShoppingListItem>) => {
+    return await addItem(newItem, list.items, saveList);
+  };
+  
+  // Toggle department expansion
+  const toggleDeptExpanded = useCallback((dept: string) => {
+    setExpandedDepts(prev => ({
+      ...prev,
+      [dept]: !prev[dept]
+    }));
+  }, []);
+  
+  // Get the index of an item
+  const getItemIndex = useCallback(
+    (item: ShoppingListItem) => {
+      return list.items.findIndex(
+        i => i.name === item.name && i.department === item.department
+      );
+    },
+    [list.items]
+  );
+  
+  // Toggle all items in a department
+  const toggleAllInDepartment = async (department: string, checked: boolean) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('shopping_lists')
-        .delete()
-        .eq('id', id);
+      // Find all items in this department
+      const deptItems = list.items.filter(item => item.department === department);
       
-      if (deleteError) throw deleteError;
+      if (deptItems.length === 0) {
+        return false;
+      }
       
-      toast.success('Shopping list deleted');
-      await fetchLists();
-      return true;
-    } catch (err: any) {
-      console.error('Error deleting shopping list:', err);
-      setError(err.message || 'Failed to delete shopping list');
-      toast.error('Failed to delete shopping list');
+      // Create a new array with updated checked states
+      const updatedItems = list.items.map(item =>
+        item.department === department ? { ...item, checked } : item
+      );
+      
+      // Save the updated list
+      const success = await saveList(updatedItems);
+      
+      if (success) {
+        toast.success(`${checked ? 'Completed' : 'Uncompleted'} all items in ${department}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error toggling department:', error);
+      toast.error('Failed to update items');
       return false;
     }
   };
-
-  const initialize = () => {
-    if (session?.user) {
-      fetchLists();
+  
+  // Copy the shopping list to clipboard
+  const handleCopyToClipboard = async (): Promise<boolean> => {
+    try {
+      await copyToClipboard(list, itemsByDepartment);
+      return true;
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      toast.error('Failed to copy to clipboard');
+      return false;
     }
   };
-
-  // Initialize on mount and when auth changes
+  
+  // Init: Expand all departments by default
   useEffect(() => {
-    initialize();
-  }, [session?.user?.id]);
-
+    // Get all departments in the current view
+    const depts = Object.keys(groupedItems);
+    
+    // Create an object with all departments expanded
+    const initialExpandedState = depts.reduce((acc, dept) => {
+      acc[dept] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+    
+    // Set the initial state
+    setExpandedDepts(initialExpandedState);
+  }, []);
+  
   return {
-    lists,
-    isLoading,
-    error,
-    fetchLists,
-    createList,
-    updateList,
-    deleteList,
-    initialize,
-    // Add all the properties needed by ShoppingListDetail
     searchTerm,
     setSearchTerm,
     sortOrder,
     setSortOrder,
-    expandedDepts,
     groupedItems,
-    allDepartments,
-    itemsByDepartment,
+    expandedDepts,
+    toggleDeptExpanded,
     handleToggleItem,
     handleDeleteItem,
     handleAddItem,
     toggleAllInDepartment,
-    toggleDeptExpanded,
-    copyToClipboard,
+    copyToClipboard: handleCopyToClipboard,
+    allDepartments,
+    itemsByDepartment,
     getItemIndex
   };
-}
+};
