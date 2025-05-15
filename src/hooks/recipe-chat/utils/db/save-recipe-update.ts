@@ -67,6 +67,33 @@ function safelySerializeToJson(value: any, fallback: string = '[]'): Json {
   }
 }
 
+/**
+ * Creates a safe preview string from a JSON value
+ * @param jsonValue - The JSON value to preview
+ * @param maxLength - Maximum length of the preview
+ * @returns A string preview of the JSON value
+ */
+function createSafeJsonPreview(jsonValue: Json, maxLength: number = 100): string {
+  if (jsonValue === null || jsonValue === undefined) {
+    return '[null or undefined]';
+  }
+  
+  if (typeof jsonValue === 'string') {
+    return jsonValue.substring(0, maxLength);
+  }
+  
+  if (typeof jsonValue === 'object' || Array.isArray(jsonValue)) {
+    try {
+      return JSON.stringify(jsonValue).substring(0, maxLength);
+    } catch (e) {
+      return '[complex object]';
+    }
+  }
+  
+  // For numbers, booleans, etc.
+  return String(jsonValue).substring(0, maxLength);
+}
+
 export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: string }) {
   // Ensure recipe integrity before saving to database
   ensureRecipeIntegrity(updatedRecipe);
@@ -143,8 +170,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     
     // Properly serialize to JSON format for database storage with error handling
     scienceNotesJson = safelySerializeToJson(validatedNotes, '[]');
-    console.log("Science notes serialized to JSON:", typeof scienceNotesJson === 'string' ? 
-                scienceNotesJson.substring(0, 100) : '[serialization preview unavailable]');
+    console.log("Science notes serialized to JSON:", createSafeJsonPreview(scienceNotesJson));
   } else {
     // Default to empty array if science_notes is undefined
     scienceNotesJson = '[]' as Json;
@@ -170,9 +196,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
     scienceNotesType: typeof scienceNotesJson,
-    // Safely handle science notes preview
-    scienceNotesPreview: typeof scienceNotesJson === 'string' ? 
-      scienceNotesJson.substring(0, 100) : '[not a string]',
+    // Use the new utility function for safe preview generation
+    scienceNotesPreview: createSafeJsonPreview(scienceNotesJson),
     cuisine: updatedRecipe.cuisine,
     cuisine_category: dbRecipe.cuisine_category
   });
