@@ -1,3 +1,4 @@
+
 import { QuickRecipe } from './quick-recipe';
 import { Recipe } from './recipe';
 
@@ -16,17 +17,7 @@ export interface ChatMessage {
   recipe_id?: string;
   user_message?: string;
   ai_response?: string;
-  changes_suggested?: {
-    title?: string;
-    ingredients?: {
-      mode: 'add' | 'replace' | 'none';
-      items: unknown[];
-    };
-    instructions?: string[] | unknown[];
-    science_notes?: string[];
-    nutrition?: unknown;
-    [key: string]: unknown;
-  };
+  changes_suggested?: ChangesResponse;
   source_type?: string;
   source_url?: string;
   source_image?: string;
@@ -37,7 +28,7 @@ export interface ChatMessage {
   // New field to support the complete recipe object
   recipe?: Recipe | QuickRecipe;
   
-  // Added missing properties
+  // Add missing properties that the components expect
   applied?: boolean;
   follow_up_questions?: string[];
 }

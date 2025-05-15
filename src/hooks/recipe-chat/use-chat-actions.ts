@@ -46,6 +46,7 @@ export const useChatActions = (
       user_message: messageText,
       pending: true,
       id: messageId,
+      timestamp: Date.now(),
       meta: {
         optimistic_id: messageId,
         tracking_id: messageId,
@@ -106,6 +107,7 @@ export const useChatActions = (
         
         // Create a unique message ID to help with tracking and cleanup
         const messageId = generateTrackingId('image');
+        const timestamp = Date.now();
         
         // Save retry data
         setPendingRetryData({
@@ -120,6 +122,7 @@ export const useChatActions = (
           user_message: "Analyzing recipe image...",
           pending: true,
           id: messageId,
+          timestamp,
           meta: {
             optimistic_id: messageId,
             tracking_id: messageId,
@@ -185,6 +188,7 @@ export const useChatActions = (
     
     // Create a unique message ID
     const messageId = generateTrackingId('url');
+    const timestamp = Date.now();
     
     // Save retry data
     setPendingRetryData({
@@ -199,6 +203,7 @@ export const useChatActions = (
       user_message: `Analyzing recipe from: ${url}`,
       pending: true,
       id: messageId,
+      timestamp,
       meta: {
         optimistic_id: messageId,
         tracking_id: messageId,
@@ -235,6 +240,7 @@ export const useChatActions = (
     
     // Create a unique ID for tracking
     const messageId = generateTrackingId('msg');
+    const timestamp = Date.now();
     
     // Save retry data
     setPendingRetryData({
@@ -248,6 +254,7 @@ export const useChatActions = (
       user_message: trimmedMessage,
       pending: true,
       id: messageId,
+      timestamp,
       meta: {
         optimistic_id: messageId,
         tracking_id: messageId,
