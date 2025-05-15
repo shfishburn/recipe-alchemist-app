@@ -1,81 +1,39 @@
 
-import type { ShoppingListItem } from '@/types/shopping-list';
+import { ShoppingListItem } from "@/types/shopping-list";
 
-/**
- * Groups shopping list items by department
- */
-export const groupItemsByDepartment = (items: ShoppingListItem[]) => {
-  // Filter out water items
-  const filteredItems = items.filter(item => 
-    !item.name.toLowerCase().trim().match(/^water$/)
-  );
-  
-  // Capitalize each item's name
-  const capitalizedItems = filteredItems.map(item => ({
-    ...item,
-    name: capitalizeName(item.name)
-  }));
-  
-  // Group by department
-  return capitalizedItems.reduce((acc, item) => {
-    const dept = item.department || 'Other';
-    if (!acc[dept]) acc[dept] = [];
-    acc[dept].push(item);
-    return acc;
-  }, {} as Record<string, ShoppingListItem[]>);
-};
-
-/**
- * Organizes items according to search and sort criteria
- */
+// Helper function to organize items based on search term and sort order
 export const organizeItems = (
   items: ShoppingListItem[],
   searchTerm: string,
   sortOrder: 'asc' | 'desc' | 'dept'
-): Record<string, ShoppingListItem[]> => {
-  // Filter out water items first
-  const filteredItems = items.filter(item => 
-    !item.name.toLowerCase().trim().match(/^water$/)
-  );
-  
+): ShoppingListItem[] => {
   // Filter by search term if provided
-  const searchFilteredItems = searchTerm.trim() === '' 
-    ? filteredItems
-    : filteredItems.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  let filteredItems = items;
   
-  // Sort items
-  const sortedItems = [...searchFilteredItems].sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a.name.localeCompare(b.name);
-    } else if (sortOrder === 'desc') {
-      return b.name.localeCompare(a.name);
-    }
-    // For 'dept', return 0 as we'll handle grouping separately
-    return 0;
-  });
+  if (searchTerm.trim()) {
+    const search = searchTerm.toLowerCase().trim();
+    filteredItems = items.filter(item => 
+      item.name.toLowerCase().includes(search) ||
+      (item.note && item.note.toLowerCase().includes(search))
+    );
+  }
   
-  // Capitalize all item names
-  const capitalizedItems = sortedItems.map(item => ({
-    ...item,
-    name: capitalizeName(item.name)
-  }));
-  
-  // Group by department or return as "All Items" for non-department sorting
-  return sortOrder === 'dept' 
-    ? groupItemsByDepartment(capitalizedItems) 
-    : {
-        'All Items': capitalizedItems
-      };
-};
-
-/**
- * Capitalize the first letter of each word in a string
- */
-export const capitalizeName = (name: string): string => {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  // Sort items according to selected sort order
+  if (sortOrder === 'asc') {
+    return [...filteredItems].sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortOrder === 'desc') {
+    return [...filteredItems].sort((a, b) => b.name.localeCompare(a.name));
+  } else {
+    // First group by department, then sort alphabetically within each department
+    return [...filteredItems].sort((a, b) => {
+      const deptA = a.department || 'Other';
+      const deptB = b.department || 'Other';
+      
+      if (deptA === deptB) {
+        return a.name.localeCompare(b.name);
+      }
+      
+      return deptA.localeCompare(deptB);
+    });
+  }
 };

@@ -1,36 +1,19 @@
 
-export type ShoppingListItem = {
+export interface ShoppingListItem {
+  id?: string;
   name: string;
-  quantity: number;
-  unit: string;
-  checked: boolean;
-  notes?: string;
-  quality_indicators?: string;
-  alternatives?: string[];
-  pantry_staple?: boolean;
-  storage_tips?: string;
+  quantity?: number;
+  unit?: string;
+  checked?: boolean;
   department?: string;
-  recipeId?: string;
-  // New fields for shoppable quantities
-  shop_size_qty?: number;
-  shop_size_unit?: string;
-  package_notes?: string;
-  confidence?: number; // Added confidence field for AI matching quality
-};
+  note?: string;
+}
 
-export type ShoppingList = {
+export interface ShoppingList {
   id: string;
   title: string;
   items: ShoppingListItem[];
-  tips?: string[];
-  preparation_notes?: string[];
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   user_id: string;
-  deleted_at?: string;
-};
-
-export type ShoppingListSummary = {
-  id: string;
-  title: string;
-};
+}
