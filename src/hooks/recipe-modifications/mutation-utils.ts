@@ -1,94 +1,119 @@
 
 import { QuickRecipe } from '@/types/quick-recipe';
 import { RecipeModifications } from './types';
-import { toast } from 'sonner';
 
-export function applyModificationsToRecipe(modifiedRecipe: QuickRecipe, modifications: RecipeModifications): QuickRecipe {
-  const next = JSON.parse(JSON.stringify(modifiedRecipe));
-  
-  // Apply title and description changes
-  if (modifications.modifications.title) {
-    next.title = modifications.modifications.title;
+/**
+ * Apply modifications to the recipe based on the modifications object
+ * This function handles both the new complete recipe format and the legacy modifications format
+ */
+export function applyModifications(
+  recipe: QuickRecipe,
+  modifications: RecipeModifications
+): QuickRecipe {
+  // If we have a complete recipe in the new format, use it
+  if (modifications.recipe) {
+    // Copy over any properties that might not be in the modification response
+    return {
+      ...recipe,
+      ...modifications.recipe,
+    };
   }
   
-  if (modifications.modifications.description) {
-    next.description = modifications.modifications.description;
+  // Fallback to legacy handling if no complete recipe
+  const result = { ...recipe };
+  
+  // Apply title if modified
+  if (modifications.modifications?.title) {
+    result.title = modifications.modifications.title;
   }
   
-  // Apply ingredient changes if available
-  if (Array.isArray(modifications.modifications.ingredients)) {
-    modifications.modifications.ingredients.forEach(change => {
-      switch (change.action) {
-        case 'add':
-          next.ingredients.push({
-            item: change.item,
-            qty_metric: change.qty_metric,
-            unit_metric: change.unit_metric,
-            qty_imperial: change.qty_imperial,
-            unit_imperial: change.unit_imperial,
-            notes: change.notes
+  // Apply description if modified
+  if (modifications.modifications?.description) {
+    result.description = modifications.modifications.description;
+  }
+  
+  // Apply cooking tip if modified
+  if (modifications.modifications?.cookingTip) {
+    result.cookingTip = modifications.modifications.cookingTip;
+  }
+  
+  // Apply ingredient modifications
+  if (modifications.modifications?.ingredients) {
+    // Process each ingredient modification
+    const originalIngredients = [...recipe.ingredients];
+    const updatedIngredients = [...originalIngredients];
+    
+    modifications.modifications.ingredients.forEach(modification => {
+      if (!modification) return;
+      
+      // For backward compatibility, parse the ingredient text
+      const ingredientText = modification.modified;
+      if (!ingredientText) return;
+      
+      // Try to find a matching ingredient by original text
+      const originalText = modification.original;
+      if (originalText) {
+        const index = originalIngredients.findIndex(
+          ing => `${ing.qty_imperial || ing.qty || ''} ${ing.unit_imperial || ing.unit || ''} ${ing.item}`.trim() === originalText.trim()
+        );
+        
+        if (index >= 0) {
+          // Found a matching ingredient, update it
+          // We would need a parser to properly update the ingredient
+          // For now we just update the item field as a basic implementation
+          updatedIngredients[index] = {
+            ...updatedIngredients[index],
+            item: ingredientText
+          };
+        } else {
+          // No matching ingredient found, add a new one
+          updatedIngredients.push({
+            item: ingredientText,
+            qty_imperial: 0,
+            unit_imperial: '',
+            qty_metric: 0,
+            unit_metric: ''
           });
-          break;
-        case 'remove':
-          if (typeof change.originalIndex === 'number') {
-            next.ingredients.splice(change.originalIndex, 1);
-          }
-          break;
-        case 'modify':
-          if (typeof change.originalIndex === 'number') {
-            next.ingredients[change.originalIndex] = {
-              ...next.ingredients[change.originalIndex],
-              item: change.item || next.ingredients[change.originalIndex].item,
-              qty_metric: change.qty_metric || next.ingredients[change.originalIndex].qty_metric,
-              unit_metric: change.unit_metric || next.ingredients[change.originalIndex].unit_metric,
-              qty_imperial: change.qty_imperial || next.ingredients[change.originalIndex].qty_imperial,
-              unit_imperial: change.unit_imperial || next.ingredients[change.originalIndex].unit_imperial,
-              notes: change.notes || next.ingredients[change.originalIndex].notes
-            };
-          }
-          break;
+        }
       }
     });
+    
+    result.ingredients = updatedIngredients;
   }
   
-  // Apply step changes if available
-  if (Array.isArray(modifications.modifications.steps)) {
-    modifications.modifications.steps.forEach(change => {
-      switch (change.action) {
-        case 'add':
-          next.steps.push({
-            content: change.content
-          });
-          // Also update instructions for compatibility
-          if (Array.isArray(next.instructions)) {
-            next.instructions.push(change.content);
-          } else {
-            next.instructions = [change.content];
-          }
-          break;
-        case 'remove':
-          if (typeof change.originalIndex === 'number') {
-            next.steps.splice(change.originalIndex, 1);
-            // Also update instructions for compatibility
-            if (Array.isArray(next.instructions)) {
-              next.instructions.splice(change.originalIndex, 1);
-            }
-          }
-          break;
-        case 'modify':
-          if (typeof change.originalIndex === 'number') {
-            if (next.steps[change.originalIndex]) {
-              next.steps[change.originalIndex].content = change.content;
-            }
-            // Also update instructions for compatibility
-            if (Array.isArray(next.instructions) && next.instructions[change.originalIndex]) {
-              next.instructions[change.originalIndex] = change.content;
-            }
-          }
-          break;
+  // Apply step modifications
+  if (modifications.modifications?.steps) {
+    const steps = recipe.steps || recipe.instructions || [];
+    const originalSteps = [...steps];
+    const updatedSteps = [...originalSteps];
+    
+    modifications.modifications.steps.forEach(modification => {
+      if (!modification) return;
+      
+      const stepText = modification.modified;
+      if (!stepText) return;
+      
+      const originalText = modification.original;
+      if (originalText) {
+        // Find matching step by original text
+        const index = originalSteps.findIndex(step => step.trim() === originalText.trim());
+        
+        if (index >= 0) {
+          // Found matching step, update it
+          updatedSteps[index] = stepText;
+        } else {
+          // No matching step, add a new one
+          updatedSteps.push(stepText);
+        }
       }
     });
+    
+    if (recipe.steps) {
+      result.steps = updatedSteps;
+    } else {
+      result.instructions = updatedSteps;
+    }
   }
   
-  return next;
+  return result;
 }
