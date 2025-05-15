@@ -1,6 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
+import { useState } from 'react';
 
 // Function to normalize recipe data from the database
 const normalizeRecipe = (recipe: any): Recipe => {
@@ -33,14 +35,26 @@ const normalizeRecipe = (recipe: any): Recipe => {
   }
 };
 
+// Convert Recipe to database format
+const convertRecipeForDb = (recipe: Omit<Recipe, 'id'> | Recipe) => {
+  // Convert complex objects to JSON strings if needed
+  return {
+    ...recipe,
+    ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+    // Add any other conversions needed for database compatibility
+  };
+};
+
 export const useRecipes = () => {
   const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const createRecipeMutation = useMutation({
     mutationFn: async (newRecipe: Omit<Recipe, 'id'>) => {
+      const recipeForDb = convertRecipeForDb(newRecipe);
       const { data, error } = await supabase
         .from('recipes')
-        .insert([newRecipe])
+        .insert([recipeForDb])
         .select()
         .single();
 
@@ -54,9 +68,10 @@ export const useRecipes = () => {
 
   const updateRecipeMutation = useMutation({
     mutationFn: async (updatedRecipe: Recipe) => {
+      const recipeForDb = convertRecipeForDb(updatedRecipe);
       const { data, error } = await supabase
         .from('recipes')
-        .update(updatedRecipe)
+        .update(recipeForDb)
         .eq('id', updatedRecipe.id)
         .select()
         .single();
@@ -88,21 +103,25 @@ export const useRecipes = () => {
   
   // Use the normalized recipe function in the query
   const recipesQuery = useQuery({
-    queryKey: ['recipes'],
+    queryKey: ['recipes', searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('recipes')
         .select('*')
         .is('deleted_at', null)
         .order('updated_at', { ascending: false });
+        
+      if (searchTerm) {
+        query = query.ilike('title', `%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return (data || []).map(normalizeRecipe);
     },
     staleTime: 60000, // 1 minute
   });
-
-  const { data: recipes, ...recipesQueryProps } = recipesQuery;
 
   // Also fix in the featured recipes query
   const featuredRecipesQuery = useQuery({
@@ -120,14 +139,17 @@ export const useRecipes = () => {
     },
     staleTime: 60000, // 1 minute
   });
-  
-  const { data: featuredRecipes, ...featuredRecipesQueryProps } = featuredRecipesQuery;
 
   return {
-    recipes: recipes || [],
-    featuredRecipes: featuredRecipes || [],
-    ...recipesQueryProps,
-    ...featuredRecipesQueryProps,
+    recipes: recipesQuery.data || [],
+    featuredRecipes: featuredRecipesQuery.data || [],
+    data: recipesQuery.data || [],
+    isLoading: recipesQuery.isLoading,
+    isFetching: recipesQuery.isFetching,
+    error: recipesQuery.error,
+    status: recipesQuery.status,
+    searchTerm,
+    setSearchTerm,
     createRecipe: createRecipeMutation.mutateAsync,
     updateRecipe: updateRecipeMutation.mutateAsync,
     deleteRecipe: deleteRecipeMutation.mutateAsync,

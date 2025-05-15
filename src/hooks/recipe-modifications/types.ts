@@ -1,50 +1,47 @@
 
 import { QuickRecipe } from '@/types/quick-recipe';
 
-export type ModificationStatus = 
-  'idle' | 
-  'loading' | 
-  'success' | 
-  'error' | 
-  'not-authenticated' | 
-  'not-deployed' | 
-  'canceled' | 
-  'applying' | 
-  'applied';
+export type ModificationStatus =
+  | 'idle'
+  | 'loading'
+  | 'success'
+  | 'error'
+  | 'not-deployed'
+  | 'not-authenticated'
+  | 'canceled'
+  | 'applying'
+  | 'applied';
+
+export interface IngredientModification {
+  original?: string;
+  modified: string;
+  reason?: string;
+}
+
+export interface StepModification {
+  original?: string;
+  modified: string;
+  reason?: string;
+}
 
 export interface NutritionImpact {
-  calories?: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-  fiber?: number;
-  sugar?: number;
-  sodium?: number;
-  assessment?: string;
-  summary?: string; // Add summary property
+  assessment: string;
+  summary: string;
+  details?: string[];
 }
 
 export interface RecipeModifications {
-  textResponse: string;
-  reasoning: string;
+  textResponse: string; // Required field
+  reasoning?: string;
   modifications: {
     title?: string;
     description?: string;
-    ingredients?: Array<{
-      original?: string;
-      modified: string;
-      reason?: string;
-    }>;
-    steps?: Array<{
-      original?: string;
-      modified: string;
-      reason?: string;
-    }>;
+    ingredients?: IngredientModification[];
+    steps?: StepModification[];
     cookingTip?: string;
   };
-  nutritionImpact?: NutritionImpact;
-  // Add support for full modified recipe
-  modifiedRecipe?: QuickRecipe | null;
+  nutritionImpact: NutritionImpact;
+  modifiedRecipe?: QuickRecipe;
 }
 
 export interface ModificationHistoryEntry {

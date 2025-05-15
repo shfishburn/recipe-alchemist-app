@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
+  CarouselItem as CarouselItemComponent,
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
@@ -30,7 +30,7 @@ export function RecipeCarousel({ recipes = [], onRecipeClick, className }: Recip
     <Carousel className={cn("w-full", className)}>
       <CarouselContent>
         {recipes.map((recipe, index) => (
-          <CarouselItem key={recipe.id || index} className="md:basis-1/2 lg:basis-1/3">
+          <CarouselItemComponent key={recipe.id || index} className="md:basis-1/2 lg:basis-1/3">
             <div className="p-1">
               <Card 
                 className="cursor-pointer hover:shadow-md transition-all"
@@ -57,7 +57,7 @@ export function RecipeCarousel({ recipes = [], onRecipeClick, className }: Recip
                 </CardContent>
               </Card>
             </div>
-          </CarouselItem>
+          </CarouselItemComponent>
         ))}
       </CarouselContent>
       <CarouselPrevious />

@@ -1,6 +1,10 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
+
+// Re-export the Recipe type for components that need it
+export type { Recipe };
 
 export const useRecipeDetail = (id?: string) => {
   const query = useQuery({

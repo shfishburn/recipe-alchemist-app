@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -6,16 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { RecipeDisplay } from '@/components/quick-recipe/RecipeDisplay';
-import { RecipeNutrition } from '@/components/quick-recipe/RecipeNutrition';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
-import { ResponseFormatter } from './response/ResponseFormatter';
+import { useResponseFormatter } from './response/ResponseFormatter';
 import { useChatMutations } from '@/hooks/recipe-chat/use-chat-mutations';
 import { updateRecipe } from '@/hooks/recipe-chat/utils/update-recipe';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RecipeChatProps {
   recipe: any;
@@ -82,8 +83,10 @@ export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
         return true;
       } catch (error) {
         console.error('Error applying changes:', error);
-        toast.error('Failed to apply changes', {
+        toast({
+          title: "Failed to apply changes",
           description: error instanceof Error ? error.message : 'An unknown error occurred',
+          variant: "destructive",
         });
         return false;
       }
@@ -98,7 +101,6 @@ export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
         <Card className="h-full">
           <CardContent className="p-4">
             <RecipeDisplay recipe={recipe} />
-            <RecipeNutrition recipe={recipe} />
           </CardContent>
         </Card>
       </div>
@@ -132,7 +134,10 @@ export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
                       </Avatar>
                       <div className="space-y-1">
                         <div className="text-sm font-bold">Recipe AI</div>
-                        <ResponseFormatter response={chat.ai_response} />
+                        {React.createElement(useResponseFormatter, {
+                          response: chat.ai_response,
+                          changesSuggested: chat.changes_suggested
+                        })}
                         <div className="text-xs text-gray-500">{new Date(chat.created_at).toLocaleString()}</div>
                         
                         {/* Apply Changes Section */}
