@@ -21,6 +21,7 @@ export interface NutritionImpact {
   sugar?: number;
   sodium?: number;
   assessment?: string;
+  summary?: string; // Add summary property
 }
 
 export interface RecipeModifications {

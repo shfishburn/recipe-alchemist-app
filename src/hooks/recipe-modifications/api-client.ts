@@ -63,7 +63,7 @@ export async function requestRecipeModifications(
     const modifiedRecipe = data.isModification ? normalizeRecipeResponse(data) : null;
     
     // Construct a response that matches our existing schema for backward compatibility
-    const result = {
+    const result: RecipeModifications = {
       textResponse: data.textResponse || `Modified recipe: ${data.title}`,
       reasoning: data.reasoning || data.description || "Recipe modified based on your instructions.",
       modifications: data.modifications || {
@@ -82,7 +82,8 @@ export async function requestRecipeModifications(
         cookingTip: data.cookingTip
       },
       nutritionImpact: data.nutritionImpact || {
-        assessment: "Recipe nutrition has been recalculated." 
+        assessment: "Recipe nutrition has been recalculated.",
+        summary: "Nutrition values have been updated."
       },
       // Add the normalized full recipe data
       modifiedRecipe

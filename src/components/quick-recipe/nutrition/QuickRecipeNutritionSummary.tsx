@@ -1,123 +1,81 @@
-
 import React from 'react';
-import { QuickRecipe } from '@/types/quick-recipe';
-import { Card } from '@/components/ui/card';
-import PieChart from '@/components/common/PieChart';
-import { NutritionImpact } from '@/hooks/use-recipe-modifications';
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { NutritionImpact } from '@/hooks/recipe-modifications/types';
 
 interface QuickRecipeNutritionSummaryProps {
-  recipe: QuickRecipe;
-  nutritionImpact?: NutritionImpact;
+  nutritionImpact?: NutritionImpact | null;
+  className?: string;
+  expandedView?: boolean;
 }
 
-export function QuickRecipeNutritionSummary({ recipe, nutritionImpact }: QuickRecipeNutritionSummaryProps) {
-  const nutrition = recipe.nutrition || {};
+export function QuickRecipeNutritionSummary({
+  nutritionImpact,
+  className,
+  expandedView = false,
+}: QuickRecipeNutritionSummaryProps) {
+  if (!nutritionImpact) {
+    return (
+      <Card className={className}>
+        <CardContent>
+          <p>No nutrition information available.</p>
+        </CardContent>
+      </Card>
+    );
+  }
   
-  // Calculate total calories
-  const totalCalories = nutrition.calories || 0;
-  
-  // Calculate macros with fallbacks
-  const protein = nutrition.protein || 0;
-  const carbs = nutrition.carbs || 0;
-  const fat = nutrition.fat || 0;
-  
-  // Calculate percentages for pie chart
-  const proteinCals = protein * 4;
-  const carbsCals = carbs * 4;
-  const fatCals = fat * 9;
-  const totalMacroCals = proteinCals + carbsCals + fatCals;
-  
-  const proteinPct = totalMacroCals > 0 ? (proteinCals / totalMacroCals) * 100 : 0;
-  const carbsPct = totalMacroCals > 0 ? (carbsCals / totalMacroCals) * 100 : 0;
-  const fatPct = totalMacroCals > 0 ? (fatCals / totalMacroCals) * 100 : 0;
-  
-  // Prepare data for pie chart
-  const chartData = [
-    { name: 'Protein', value: proteinPct, color: '#4ade80' },
-    { name: 'Carbs', value: carbsPct, color: '#60a5fa' },
-    { name: 'Fat', value: fatPct, color: '#f87171' },
-  ];
-  
-  return (
-    <div className="space-y-4">
-      {/* Macronutrient distribution */}
+  const renderNutritionItem = (label: string, value: number | undefined, unit: string = '') => {
+    if (value === undefined) return null;
+    return (
       <div>
-        <h3 className="text-sm font-medium mb-2">Macronutrient Distribution</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="aspect-square">
-            <PieChart data={chartData} />
-          </div>
-          <div className="grid grid-cols-1 gap-2 content-center">
-            <MacroRow label="Protein" value={protein} unit="g" color="#4ade80" percent={proteinPct} />
-            <MacroRow label="Carbs" value={carbs} unit="g" color="#60a5fa" percent={carbsPct} />
-            <MacroRow label="Fat" value={fat} unit="g" color="#f87171" percent={fatPct} />
-          </div>
-        </div>
+        <span className="font-medium">{label}:</span> {value}{unit}
       </div>
-      
-      {/* Summary */}
-      <div>
-        <h3 className="text-sm font-medium mb-2">Nutrition Summary</h3>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="bg-muted p-2 rounded flex justify-between">
-            <span>Calories</span>
-            <span className="font-medium">{Math.round(totalCalories)}</span>
-          </div>
-          <div className="bg-muted p-2 rounded flex justify-between">
-            <span>Protein</span>
-            <span className="font-medium">{Math.round(protein)}g</span>
-          </div>
-          <div className="bg-muted p-2 rounded flex justify-between">
-            <span>Carbs</span>
-            <span className="font-medium">{Math.round(carbs)}g</span>
-          </div>
-          <div className="bg-muted p-2 rounded flex justify-between">
-            <span>Fat</span>
-            <span className="font-medium">{Math.round(fat)}g</span>
-          </div>
-        </div>
+    );
+  };
+  
+  const renderExpandedView = () => {
+    return (
+      <>
+        {renderNutritionItem("Calories", nutritionImpact?.calories)}
+        {renderNutritionItem("Protein", nutritionImpact?.protein, 'g')}
+        {renderNutritionItem("Carbs", nutritionImpact?.carbs, 'g')}
+        {renderNutritionItem("Fat", nutritionImpact?.fat, 'g')}
+        {renderNutritionItem("Fiber", nutritionImpact?.fiber, 'g')}
+        {renderNutritionItem("Sugar", nutritionImpact?.sugar, 'g')}
+        {renderNutritionItem("Sodium", nutritionImpact?.sodium, 'mg')}
+      </>
+    );
+  };
+  
+  const renderConciseView = () => {
+    return (
+      <>
+        {nutritionImpact?.calories && <div>Calories: {nutritionImpact.calories}</div>}
+        {nutritionImpact?.protein && <div>Protein: {nutritionImpact.protein}g</div>}
+        {nutritionImpact?.carbs && <div>Carbs: {nutritionImpact.carbs}g</div>}
+      </>
+    );
+  };
+  
+  // Fix the nutrition impact rendering for the nutrition property
+  const renderNutritionImpact = (impact: NutritionImpact) => {
+    if (!impact) return null;
+    return (
+      <div className="p-4 border rounded-md bg-muted/20">
+        <h4 className="font-medium mb-2">Nutrition Impact</h4>
+        {impact.assessment && <p className="text-sm mb-2">{impact.assessment}</p>}
+        {impact.summary && <p className="text-sm text-muted-foreground italic">{impact.summary}</p>}
       </div>
-      
-      {/* Nutrition Impact */}
-      {nutritionImpact && (
-        <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/10">
-          <h3 className="text-sm font-medium mb-2">Potential Nutrition Changes</h3>
-          <div className="text-xs space-y-1">
-            <ImpactRow label="Calories" value={nutritionImpact.calories} />
-            <ImpactRow label="Protein" value={nutritionImpact.protein} unit="g" />
-            <ImpactRow label="Carbs" value={nutritionImpact.carbs} unit="g" />
-            <ImpactRow label="Fat" value={nutritionImpact.fat} unit="g" />
-            <p className="mt-2 text-muted-foreground">{nutritionImpact.summary}</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Helper component for displaying macronutrient rows
-function MacroRow({ label, value, unit, color, percent }) {
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></div>
-      <div className="flex-1">{label}</div>
-      <div className="font-medium">{Math.round(value)}{unit} ({Math.round(percent)}%)</div>
-    </div>
-  );
-}
-
-// Helper component for displaying impact values
-function ImpactRow({ label, value, unit = '' }) {
-  const isPositive = value > 0;
-  const isNegative = value < 0;
-  const absValue = Math.abs(value);
+    );
+  };
   
   return (
-    <div className="flex justify-between">
-      <span>{label}</span>
-      <span className={`font-medium ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : ''}`}>
-        {isPositive && '+'}{Math.round(value)}{unit}
-      </span>
-    </div>
+    <Card className={className}>
+      <CardContent>
+        {nutritionImpact && renderNutritionImpact(nutritionImpact)}
+        <Separator className="my-2" />
+        {expandedView ? renderExpandedView() : renderConciseView()}
+      </CardContent>
+    </Card>
   );
 }

@@ -48,7 +48,7 @@ export function UserDashboard() {
 
         {/* Trending Recipes Carousel - Full width on mobile */}
         <section className="w-full py-2 sm:py-6 -mx-4 sm:mx-0 px-0 sm:px-4">
-          <RecipeCarousel />
+          <RecipeCarousel recipes={[]} />
         </section>
 
       </div>

@@ -1,103 +1,135 @@
-
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { transformRecipeData } from '@/utils/recipe-transformers';
 import type { Recipe } from '@/types/recipe';
 
-export interface RecipesOptions {
-  limit?: number;
-  searchTerm?: string;
-  showDeleted?: boolean;
-}
+// Function to normalize recipe data from the database
+const normalizeRecipe = (recipe: any): Recipe => {
+  if (!recipe) return {} as Recipe;
+  
+  try {
+    // Ensure ingredients is properly processed as an array
+    let ingredients = [];
+    
+    if (Array.isArray(recipe.ingredients)) {
+      ingredients = recipe.ingredients;
+    } else if (typeof recipe.ingredients === 'string') {
+      ingredients = JSON.parse(recipe.ingredients);
+    } else if (recipe.ingredients && typeof recipe.ingredients === 'object') {
+      ingredients = Array.isArray(JSON.parse(JSON.stringify(recipe.ingredients)))
+        ? JSON.parse(JSON.stringify(recipe.ingredients))
+        : [];
+    }
+    
+    return {
+      ...recipe,
+      ingredients
+    } as Recipe;
+  } catch (e) {
+    console.error("Error normalizing recipe:", e, recipe);
+    return {
+      ...recipe, 
+      ingredients: []
+    } as Recipe;
+  }
+};
 
-export const useRecipes = (options?: RecipesOptions) => {
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState(options?.searchTerm || '');
-  const { limit = 20, showDeleted = false } = options || {};
+export const useRecipes = () => {
+  const queryClient = useQueryClient();
 
-  // Main recipes query
+  const createRecipeMutation = useMutation({
+    mutationFn: async (newRecipe: Omit<Recipe, 'id'>) => {
+      const { data, error } = await supabase
+        .from('recipes')
+        .insert([newRecipe])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+
+  const updateRecipeMutation = useMutation({
+    mutationFn: async (updatedRecipe: Recipe) => {
+      const { data, error } = await supabase
+        .from('recipes')
+        .update(updatedRecipe)
+        .eq('id', updatedRecipe.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+
+  const deleteRecipeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('recipes')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+    },
+  });
+  
+  // Use the normalized recipe function in the query
   const recipesQuery = useQuery({
-    queryKey: ['recipes', limit, showDeleted, searchTerm],
+    queryKey: ['recipes'],
     queryFn: async () => {
-      try {
-        // Start with base query
-        let query = supabase
-          .from('recipes')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(limit);
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false });
 
-        // Apply soft delete filter unless showing deleted
-        if (!showDeleted) {
-          query = query.is('deleted_at', null);
-        }
-
-        // Apply text search if provided
-        if (searchTerm) {
-          query = query.ilike('title', `%${searchTerm}%`);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-          console.error('Error fetching recipes:', error);
-          throw error;
-        }
-
-        // Transform the data to match the Recipe type
-        if (!data) return [];
-        
-        return data.map((item) => transformRecipeData(item));
-      } catch (error) {
-        console.error('Error in useRecipes:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        
-        toast({
-          title: 'Error',
-          description: `Failed to load recipes: ${errorMessage}`,
-          variant: 'destructive',
-        });
-        
-        throw error;
-      }
+      if (error) throw error;
+      return (data || []).map(normalizeRecipe);
     },
+    staleTime: 60000, // 1 minute
   });
 
-  // Featured recipes query
+  const { data: recipes, ...recipesQueryProps } = recipesQuery;
+
+  // Also fix in the featured recipes query
   const featuredRecipesQuery = useQuery({
-    queryKey: ['featured-recipes'],
+    queryKey: ['recipes', 'featured'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('recipes')
-          .select('*')
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
-          .limit(5);
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(6);
 
-        if (error) {
-          console.error('Error fetching featured recipes:', error);
-          throw error;
-        }
-
-        if (!data) return [];
-
-        return data.map((item) => transformRecipeData(item));
-      } catch (error) {
-        console.error('Error fetching featured recipes:', error);
-        // Don't show toast for featured recipes to avoid duplicate errors
-        throw error;
-      }
+      if (error) throw error;
+      return (data || []).map(normalizeRecipe);
     },
+    staleTime: 60000, // 1 minute
   });
+  
+  const { data: featuredRecipes, ...featuredRecipesQueryProps } = featuredRecipesQuery;
 
   return {
-    ...recipesQuery,
-    searchTerm,
-    setSearchTerm,
-    featuredRecipes: featuredRecipesQuery.data || [],
-    isFeaturedLoading: featuredRecipesQuery.isLoading,
+    recipes: recipes || [],
+    featuredRecipes: featuredRecipes || [],
+    ...recipesQueryProps,
+    ...featuredRecipesQueryProps,
+    createRecipe: createRecipeMutation.mutateAsync,
+    updateRecipe: updateRecipeMutation.mutateAsync,
+    deleteRecipe: deleteRecipeMutation.mutateAsync,
   };
 };

@@ -19,7 +19,7 @@ interface RecipeCarouselProps {
   className?: string;
 }
 
-export function RecipeCarousel({ recipes, onRecipeClick, className }: RecipeCarouselProps) {
+export function RecipeCarousel({ recipes = [], onRecipeClick, className }: RecipeCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!recipes || recipes.length === 0) {
