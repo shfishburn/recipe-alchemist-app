@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';

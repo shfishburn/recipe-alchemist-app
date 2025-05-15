@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
 import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
@@ -147,6 +146,28 @@ serve(async (req) => {
     let parsed: any;
     try {
       parsed = recipeModificationsSchema.parse(result);
+      
+      // Add the full recipe structure to the meta field
+      // This combines the original recipe with the modifications
+      parsed.meta = parsed.meta || {};
+      parsed.meta.full_recipe = {
+        ...recipe,
+        title: parsed.modifications.title || recipe.title,
+        description: parsed.modifications.description || recipe.description,
+        // Keep other fields from the original recipe
+      };
+      
+      // If we have ingredient modifications, update the full recipe
+      if (parsed.modifications.ingredients && Array.isArray(parsed.modifications.ingredients)) {
+        parsed.meta.full_recipe.ingredients = parsed.modifications.ingredients;
+      }
+      
+      // If we have step modifications, update the full recipe
+      if (parsed.modifications.steps && Array.isArray(parsed.modifications.steps)) {
+        // Convert modified steps to instructions array
+        const instructions = parsed.modifications.steps.map(step => step.modified || step);
+        parsed.meta.full_recipe.instructions = instructions;
+      }
     } catch (parseErr) {
       return new Response(
         JSON.stringify({

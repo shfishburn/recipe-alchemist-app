@@ -933,6 +933,7 @@ export type Database = {
             | Database["public"]["Enums"]["cuisine_category"]
             | null
           deleted_at: string | null
+          description: string | null
           dietary: string | null
           flavor_tags: string[] | null
           id: string
@@ -965,6 +966,7 @@ export type Database = {
             | Database["public"]["Enums"]["cuisine_category"]
             | null
           deleted_at?: string | null
+          description?: string | null
           dietary?: string | null
           flavor_tags?: string[] | null
           id?: string
@@ -997,6 +999,7 @@ export type Database = {
             | Database["public"]["Enums"]["cuisine_category"]
             | null
           deleted_at?: string | null
+          description?: string | null
           dietary?: string | null
           flavor_tags?: string[] | null
           id?: string

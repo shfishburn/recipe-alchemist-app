@@ -53,7 +53,7 @@ class CircuitBreaker {
 }
 
 // Function to validate and process the AI response
-function validateRecipeChanges(rawResponse) {
+function validateRecipeChanges(rawResponse, originalRecipe) {
   try {
     // Now that we're using response_format: { type: "json_object" },
     // the response should be a JSON object directly
@@ -81,6 +81,58 @@ function validateRecipeChanges(rawResponse) {
     } else if (jsonResponse.changes) {
       // Initialize ingredients with safe defaults if missing
       jsonResponse.changes.ingredients = { mode: "none", items: [] };
+    }
+    
+    // Add full recipe structure to meta if available
+    if (jsonResponse.fullRecipe || jsonResponse.full_recipe) {
+      const fullRecipe = jsonResponse.fullRecipe || jsonResponse.full_recipe;
+      
+      // If we have a full recipe, add it to the meta field
+      // This preserves the original recipe structure while adding the changes
+      if (fullRecipe) {
+        if (!jsonResponse.meta) {
+          jsonResponse.meta = {};
+        }
+        
+        jsonResponse.meta.full_recipe = fullRecipe;
+        
+        // Also merge important fields into the changes object for backward compatibility
+        if (!jsonResponse.changes) {
+          jsonResponse.changes = {};
+        }
+        
+        // Map key fields from fullRecipe to changes for consistency
+        if (fullRecipe.title) jsonResponse.changes.title = fullRecipe.title;
+        if (fullRecipe.ingredients) {
+          jsonResponse.changes.ingredients = {
+            mode: 'replace',
+            items: fullRecipe.ingredients
+          };
+        }
+        if (fullRecipe.instructions) {
+          jsonResponse.changes.instructions = fullRecipe.instructions;
+        }
+        if (fullRecipe.nutrition) {
+          jsonResponse.changes.nutrition = fullRecipe.nutrition;
+        }
+        if (fullRecipe.science_notes) {
+          jsonResponse.changes.science_notes = fullRecipe.science_notes;
+        }
+      }
+    } else if (originalRecipe) {
+      // If no full recipe was provided but we have changes and the original recipe,
+      // create a synthetic full recipe by applying changes
+      const syntheticFullRecipe = {
+        ...originalRecipe,
+        title: jsonResponse.changes.title || originalRecipe.title,
+        // Apply other changes as needed
+      };
+      
+      // Add to meta
+      if (!jsonResponse.meta) {
+        jsonResponse.meta = {};
+      }
+      jsonResponse.meta.full_recipe = syntheticFullRecipe;
     }
     
     // Standardize science_notes format
@@ -361,7 +413,7 @@ serve(async (req) => {
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
 
       // Process the response with our validation function
-      const processedResponse = validateRecipeChanges(rawResponse);
+      const processedResponse = validateRecipeChanges(rawResponse, recipe);
       
       // Prepare the response data format
       let textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;

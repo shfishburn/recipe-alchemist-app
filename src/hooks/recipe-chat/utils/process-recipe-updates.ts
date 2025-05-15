@@ -1,96 +1,104 @@
 
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, ChangesResponse } from '@/types/chat';
 
 /**
- * Process recipe updates based on chat message suggested changes
- * @param recipe Original recipe to update
- * @param chatMessage Chat message containing suggested changes
- * @returns Updated recipe object
+ * Processes recipe updates from an AI chat message's suggested changes
+ * @param originalRecipe The recipe to update
+ * @param chatMessage The chat message containing suggested changes
+ * @returns The updated recipe with changes applied
  */
-export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Recipe {
-  // Create a clone of the recipe to avoid mutation issues
-  const updatedRecipe = structuredClone(recipe);
-  const { changes_suggested } = chatMessage;
+export function processRecipeUpdates(
+  originalRecipe: Recipe,
+  chatMessage: ChatMessage
+): Recipe {
+  const changes = chatMessage.changes_suggested;
   
-  // Early return if no changes suggested
-  if (!changes_suggested) {
-    return updatedRecipe;
+  if (!changes) {
+    return originalRecipe;
   }
-
-  console.log("Processing recipe updates with changes:", {
-    hasTitle: !!changes_suggested.title,
-    hasTagline: !!changes_suggested.description,
-    hasIngredients: !!changes_suggested.ingredients,
-    ingredientMode: changes_suggested.ingredients?.mode,
-    hasInstructions: !!changes_suggested.instructions,
-    hasNutrition: !!changes_suggested.nutrition
-  });
-
+  
+  // Create a deep clone of the recipe to modify
+  const updatedRecipe = structuredClone(originalRecipe);
+  
   // Update title if provided
-  if (changes_suggested.title) {
-    updatedRecipe.title = changes_suggested.title;
+  if (changes.title) {
+    updatedRecipe.title = changes.title;
   }
   
-  // Handle description/tagline field update
-  // IMPORTANT FIX: Use tagline instead of description, as the database schema has 'tagline' and not 'description'
-  if (changes_suggested.description) {
-    // Use tagline field instead of description
-    updatedRecipe.tagline = changes_suggested.description;
-  }
-  
-  // Process ingredients updates if provided
-  if (changes_suggested.ingredients?.items?.length > 0) {
-    const { mode, items } = changes_suggested.ingredients;
-    
-    switch (mode) {
-      case 'replace':
-        // Replace all ingredients with new ones
-        updatedRecipe.ingredients = items;
-        break;
-      
-      case 'add':
-        // Add new ingredients to existing ones
-        updatedRecipe.ingredients = [
-          ...(updatedRecipe.ingredients || []),
-          ...items
-        ];
-        break;
-      
-      case 'none':
-      default:
-        // No changes to ingredients
-        break;
+  // Update ingredients if provided
+  if (changes.ingredients && changes.ingredients.mode !== 'none' && Array.isArray(changes.ingredients.items)) {
+    if (changes.ingredients.mode === 'replace' && changes.ingredients.items.length > 0) {
+      // Replace all ingredients
+      updatedRecipe.ingredients = changes.ingredients.items;
+    } else if (changes.ingredients.mode === 'add' && changes.ingredients.items.length > 0) {
+      // Add new ingredients to the existing ones
+      updatedRecipe.ingredients = [...updatedRecipe.ingredients, ...changes.ingredients.items];
     }
   }
   
   // Update instructions if provided
-  if (Array.isArray(changes_suggested.instructions) && changes_suggested.instructions.length > 0) {
-    // Convert any complex instruction objects to simple strings
-    const processedInstructions = changes_suggested.instructions.map(instruction => 
-      typeof instruction === 'string' ? instruction : instruction.action
-    );
-    updatedRecipe.instructions = processedInstructions;
+  if (changes.instructions) {
+    if (Array.isArray(changes.instructions)) {
+      if (typeof changes.instructions[0] === 'string') {
+        // Simple string array format
+        updatedRecipe.instructions = changes.instructions as string[];
+      } else {
+        // Complex object format - convert to string array
+        updatedRecipe.instructions = (changes.instructions as any[]).map(instruction => 
+          typeof instruction === 'string' ? instruction : instruction.action || instruction.stepNumber?.toString() || ''
+        ).filter(step => step.trim() !== '');
+      }
+    }
   }
   
-  // Update nutrition data if provided
-  if (changes_suggested.nutrition) {
+  // Update nutrition if provided
+  if (changes.nutrition) {
     updatedRecipe.nutrition = {
-      ...updatedRecipe.nutrition,
-      ...changes_suggested.nutrition
+      ...updatedRecipe.nutrition || {},
+      ...changes.nutrition
     };
   }
   
   // Update science notes if provided
-  if (Array.isArray(changes_suggested.science_notes) && changes_suggested.science_notes.length > 0) {
-    // Convert any objects to strings to ensure compatibility
-    const processedNotes = changes_suggested.science_notes.map(note => 
-      typeof note === 'string' ? note : String(note)
-    );
-    
-    // Assign processed notes to the recipe
-    updatedRecipe.science_notes = processedNotes;
+  if (changes.science_notes && Array.isArray(changes.science_notes)) {
+    updatedRecipe.science_notes = changes.science_notes.filter(note => note && typeof note === 'string');
   }
-
+  
+  // Update health insights if provided
+  if (changes.health_insights && Array.isArray(changes.health_insights)) {
+    if (!updatedRecipe.chef_notes) {
+      updatedRecipe.chef_notes = '';
+    }
+    
+    const healthInsights = changes.health_insights.filter(insight => insight && typeof insight === 'string');
+    if (healthInsights.length > 0) {
+      updatedRecipe.chef_notes += '\n\nHealth Insights:\n' + healthInsights.join('\n');
+    }
+  }
+  
+  // Extract full recipe from changes if available
+  // This handles the case where the AI returns a complete recipe structure
+  if (chatMessage.meta?.full_recipe) {
+    try {
+      const fullRecipe = chatMessage.meta.full_recipe as Partial<Recipe>;
+      
+      // Merge the full recipe structure with the existing recipe
+      // while preserving critical fields like ID
+      Object.entries(fullRecipe).forEach(([key, value]) => {
+        // Skip critical fields we don't want to override
+        if (['id', 'user_id', 'created_at', 'updated_at', 'version_number', 'previous_version_id'].includes(key)) {
+          return;
+        }
+        
+        if (value !== undefined && value !== null) {
+          updatedRecipe[key] = value;
+        }
+      });
+    } catch (error) {
+      console.error('Error processing full recipe from chat message:', error);
+    }
+  }
+  
   return updatedRecipe;
 }
