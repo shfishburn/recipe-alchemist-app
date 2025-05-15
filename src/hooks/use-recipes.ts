@@ -40,8 +40,8 @@ const convertRecipeForDb = (recipe: Omit<Recipe, 'id'> | Recipe) => {
   // Convert complex objects to JSON strings if needed
   return {
     ...recipe,
+    // Ensure ingredients are stored as a JSON object for Supabase
     ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
-    // Add any other conversions needed for database compatibility
   };
 };
 
@@ -52,9 +52,13 @@ export const useRecipes = () => {
   const createRecipeMutation = useMutation({
     mutationFn: async (newRecipe: Omit<Recipe, 'id'>) => {
       const recipeForDb = convertRecipeForDb(newRecipe);
+      // Ensure we're inserting a properly formatted object for Supabase
       const { data, error } = await supabase
         .from('recipes')
-        .insert([recipeForDb])
+        .insert([{
+          ...recipeForDb,
+          ingredients: JSON.stringify(recipeForDb.ingredients)
+        }])
         .select()
         .single();
 
@@ -69,9 +73,13 @@ export const useRecipes = () => {
   const updateRecipeMutation = useMutation({
     mutationFn: async (updatedRecipe: Recipe) => {
       const recipeForDb = convertRecipeForDb(updatedRecipe);
+      // Ensure we're updating with a properly formatted object for Supabase
       const { data, error } = await supabase
         .from('recipes')
-        .update(recipeForDb)
+        .update({
+          ...recipeForDb,
+          ingredients: JSON.stringify(recipeForDb.ingredients)
+        })
         .eq('id', updatedRecipe.id)
         .select()
         .single();
@@ -152,6 +160,6 @@ export const useRecipes = () => {
     setSearchTerm,
     createRecipe: createRecipeMutation.mutateAsync,
     updateRecipe: updateRecipeMutation.mutateAsync,
-    deleteRecipe: deleteRecipeMutation.mutateAsync,
+    deleteRecipe: (id: string) => deleteRecipeMutation.mutateAsync(id),
   };
 };

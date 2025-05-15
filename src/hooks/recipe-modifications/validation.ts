@@ -11,15 +11,15 @@ const nutritionImpactSchema = z.object({
   fiber: z.number().optional(),
   sugar: z.number().optional(),
   sodium: z.number().optional(),
-  assessment: z.string().optional(),
-  summary: z.string().optional(), // Add summary field
+  assessment: z.string(),
+  summary: z.string(),
   details: z.array(z.string()).optional()
 });
 
 // Define schema for recipe modifications
 export const recipeModificationsSchema = z.object({
   textResponse: z.string(),
-  reasoning: z.string(),
+  reasoning: z.string().optional(),
   modifications: z.object({
     title: z.string().optional(),
     description: z.string().optional(),

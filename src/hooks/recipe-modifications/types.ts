@@ -28,7 +28,7 @@ export interface NutritionImpact {
   assessment: string;
   summary: string;
   details?: string[];
-  // Adding the missing nutritional properties
+  // Adding the required nutritional properties
   calories?: number;
   protein?: number;
   carbs?: number;

@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -11,12 +10,12 @@ import { CarouselPagination } from "./carousel/CarouselPagination";
 import { CarouselCounter } from "./carousel/CarouselCounter";
 import { 
   CarouselContent,
-  CarouselSlide,
+  CarouselItem,
   CarouselPrevious,
   CarouselNext,
   CarouselProgress 
 } from "./carousel/legacy-components";
-import type { CarouselItem, CarouselProps } from "./carousel/types";
+import type { CarouselItem as CarouselItemType, CarouselProps } from "./carousel/types";
 
 const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
   (
@@ -188,12 +187,12 @@ Carousel.displayName = "Carousel";
 export { Carousel };
 
 // Export the types
-export type { CarouselItem, CarouselProps };
+export type { CarouselItemType, CarouselProps };
 
 // Re-export legacy components for backward compatibility
 export {
   CarouselContent,
-  CarouselSlide,
+  CarouselItem,
   CarouselPrevious,
   CarouselNext,
   CarouselProgress

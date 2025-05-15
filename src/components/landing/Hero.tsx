@@ -206,3 +206,6 @@ export function Hero() {
     </section>
   );
 }
+
+// Add default export for lazy loading compatibility
+export default Hero;

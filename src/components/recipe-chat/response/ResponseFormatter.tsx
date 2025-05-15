@@ -8,7 +8,7 @@ interface ResponseFormatterProps {
 }
 
 export function ResponseFormatter({ response, changesSuggested }: ResponseFormatterProps) {
-  const { displayText, showWarning, changesPreview, isMethodology } = useResponseFormatter({ 
+  const { displayText } = useResponseFormatter({ 
     response, 
     changesSuggested 
   });
