@@ -33,7 +33,6 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   }
   
   // Handle description/tagline field update
-  // Support both fields during transition
   if (changes_suggested.description) {
     // Update both fields for compatibility during transition
     updatedRecipe.description = changes_suggested.description;

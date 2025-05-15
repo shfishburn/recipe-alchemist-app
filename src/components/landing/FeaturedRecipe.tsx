@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
@@ -65,7 +64,7 @@ export function FeaturedRecipe() {
               <div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-2">{recipe.title}</h3>
                 <p className="text-muted-foreground">
-                  {recipe.tagline || recipe.description || 'No tagline available'}
+                  {recipe.tagline || recipe.description || 'No description available'}
                 </p>
               </div>
               

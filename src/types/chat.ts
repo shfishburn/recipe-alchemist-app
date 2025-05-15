@@ -1,60 +1,62 @@
 
-import type { Ingredient, Nutrition } from './recipe';
+import { Ingredient, Recipe } from './recipe';
 
+// Define the status for a chat message
+export type ChatMessageStatus = 'pending' | 'complete' | 'failed';
+
+// Define the source of a chat message
+export type ChatMessageSource = 'manual' | 'analysis' | 'modification' | 'url' | 'image';
+
+// Define the shape of a chat message's changes
 export interface ChangesResponse {
+  mode?: 'replace' | 'add' | 'none';
   title?: string;
+  description?: string; // Added description field
   ingredients?: {
-    mode: 'add' | 'replace' | 'none';
+    mode: 'replace' | 'add' | 'none';
     items: Ingredient[];
   };
-  instructions?: string[] | Array<{
-    stepNumber?: number;
-    action: string;
-    explanation?: string;
-    whyItWorks?: string;
-    troubleshooting?: string;
-    indicator?: string;
-  }>;
-  nutrition?: Nutrition;
-  equipmentNeeded?: string[];
+  instructions?: string[];
   science_notes?: string[];
-  health_insights?: string[];
-}
-
-// Enhanced ChatMeta type for better type safety
-export interface ChatMeta {
-  optimistic_id?: string;
-  tracking_id?: string;
-  processing_stage?: 'pending' | 'completed' | 'failed';
-  source_info?: {
-    type?: 'manual' | 'image' | 'url' | 'analysis';
-    url?: string;
-    imageId?: string;
+  nutrition?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    fiber?: number;
+    sugar?: number;
+    sodium?: number;
+    [key: string]: any;
   };
-  [key: string]: any; // Allow for other meta properties while maintaining type safety for known ones
 }
 
+// Define the shape of a chat message
 export interface ChatMessage {
-  id?: string;
+  id: string;
+  recipe_id: string;
   user_message: string;
-  ai_response?: string;
-  recipe_id?: string;
-  created_at?: string;
+  ai_response: string;
   changes_suggested?: ChangesResponse;
+  created_at?: string;
+  updated_at?: string;
+  source_type?: ChatMessageSource;
+  source_url?: string;
+  source_image?: string;
+  status?: ChatMessageStatus;
   applied?: boolean;
-  follow_up_questions?: string[];
-  meta?: ChatMeta;
+  optimistic?: boolean;
+  meta?: Record<string, any>;
 }
 
-export interface OptimisticMessage extends ChatMessage {
-  pending?: boolean;
-  id?: string;
-  error?: string | null;
-  timestamp?: number;
+export interface RecipeChatSettings {
+  temperature?: number;
+  model?: string;
+  systemPrompt?: string;
 }
 
-export interface AIResponse {
-  textResponse: string;
-  changes: ChangesResponse;
-  followUpQuestions: string[];
+export type ChatSettings = RecipeChatSettings;
+
+export interface ChatHistoryResponse {
+  data: ChatMessage[];
+  error: any;
 }

@@ -15,10 +15,12 @@ export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | 
 
   // Basic validation - can be extended with more specific rules
   try {
-    // Validate title changes
-    if (changes.title !== undefined && typeof changes.title !== 'string') {
-      console.error("Invalid title format");
-      return false;
+    // Validate title changes - only if title is explicitly provided in changes
+    if (changes.title !== undefined) {
+      if (typeof changes.title !== 'string') {
+        console.error("Invalid title format");
+        return false;
+      }
     }
     
     // Validate ingredients changes
