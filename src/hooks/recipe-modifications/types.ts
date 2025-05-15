@@ -28,6 +28,14 @@ export interface NutritionImpact {
   assessment: string;
   summary: string;
   details?: string[];
+  // Adding the missing nutritional properties
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
 }
 
 export interface RecipeModifications {

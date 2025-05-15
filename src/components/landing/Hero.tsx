@@ -1,126 +1,208 @@
-
-import React, { memo, useCallback } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuthDrawer } from '@/hooks/use-auth-drawer';
-import { QuickRecipeGenerator } from '../quick-recipe/QuickRecipeGenerator';
-import { NutritionPreview } from './NutritionPreview';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+import { Sparkles } from "lucide-react"
+import { apiRequest } from '@/lib/api-client';
 import { RecipeCarousel } from './RecipeCarousel';
-import { Brain, ChefHat, ChartPie, Sparkles } from 'lucide-react';
-import { useQuickRecipeForm } from '@/hooks/use-quick-recipe-form';
-import { toast } from '@/hooks/use-toast';
+import type { Recipe } from '@/types/recipe';
 
-interface BadgeProps {
-  icon?: React.ReactNode;
-  label: string;
-  color: 'blue' | 'green' | 'amber';
+interface RecipeCardProps {
+  recipe: Recipe;
+  onClick: (recipe: Recipe) => void;
 }
 
-const Badge: React.FC<BadgeProps> = ({ icon, label, color }) => {
-  const colorClasses = {
-    blue: 'bg-blue-100 text-blue-800',
-    green: 'bg-green-100 text-green-800',
-    amber: 'bg-amber-100 text-amber-800'
-  };
-
+function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   return (
-    <span className={`${colorClasses[color]} text-xs font-medium px-2.5 py-1 rounded flex items-center`}>
-      {icon}
-      {label}
-    </span>
+    <Card
+      className="w-full max-w-sm mx-auto cursor-pointer hover:shadow-md transition-shadow duration-300"
+      onClick={() => onClick(recipe)}
+    >
+      <CardHeader>
+        <CardTitle>{recipe.title}</CardTitle>
+        <CardDescription>{recipe.tagline}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <img
+          src={recipe.image_url}
+          alt={recipe.title}
+          className="w-full h-48 object-cover rounded-md"
+        />
+      </CardContent>
+    </Card>
   );
-};
+}
 
-/**
- * Hero section for the landing page. Displays title, call-to-action,
- * recipe generator, nutrition preview, and sample carousel.
- */
-const Hero: React.FC = memo(() => {
-  const isMobile = useIsMobile();
-  const { open: openAuthDrawer } = useAuthDrawer();
-  const { handleSubmit } = useQuickRecipeForm();
+export function Hero() {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [ingredients, setIngredients] = useState('');
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [featuredRecipes, setFeaturedRecipes] = useState<any[]>([]);
 
-  // Create a memoized handler to prevent unnecessary re-renders
-  const handleFormSubmit = useCallback((formData: any) => {
-    console.log('Hero - Form submitted:', formData);
-    
-    // Validate the form data before submitting
-    if (!formData.ingredients || !formData.ingredients.trim()) {
+  useEffect(() => {
+    const fetchFeaturedRecipes = async () => {
+      try {
+        const response = await apiRequest<any[]>('/api/featured-recipes');
+        setFeaturedRecipes(response);
+      } catch (error) {
+        console.error("Error fetching featured recipes:", error);
+        toast({
+          title: "Error fetching recipes",
+          description: "Failed to load featured recipes. Please try again later.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchFeaturedRecipes();
+  }, [toast]);
+
+  const handleGenerateRecipe = async () => {
+    if (!ingredients.trim()) {
       toast({
-        title: "Missing ingredient",
-        description: "Please enter at least one main ingredient",
-        variant: "destructive",
+        title: "Missing ingredients",
+        description: "Please enter some ingredients to generate a recipe.",
       });
       return;
     }
-    
-    // Format the data expected by the recipe generation function
-    const recipeFormData = {
-      mainIngredient: formData.ingredients.trim(),
-      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : [formData.cuisine].filter(Boolean),
-      dietary: Array.isArray(formData.dietary) ? formData.dietary : formData.dietary ? [formData.dietary] : [],
-      servings: Number(formData.servings) || 4
-    };
-    
-    console.log('Hero - Calling handleSubmit with formatted data:', recipeFormData);
-    
-    // Call the recipe generation function
-    handleSubmit(recipeFormData);
-  }, [handleSubmit]);
+
+    setIsGenerating(true);
+    try {
+      const response = await apiRequest<{ id: string }>('/api/generate-recipe', {
+        method: 'POST',
+        body: { ingredients },
+      });
+
+      if (response?.id) {
+        navigate(`/recipes/${response.id}`);
+      } else {
+        toast({
+          title: "Recipe generation failed",
+          description: "Failed to generate a recipe. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating recipe:", error);
+      toast({
+        title: "Error generating recipe",
+        description: "An error occurred while generating the recipe. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRecipeClick = (recipe: Recipe) => {
+    if (recipe?.id) {
+      navigate(`/recipes/${recipe.id}`);
+    } else {
+      toast({
+        title: "Recipe ID missing",
+        description: "This recipe does not have a valid ID.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to transform featuredRecipes to correct format
+  const mapToRecipeType = (recipes: any[]): Recipe[] => {
+  return recipes.map(recipe => ({
+    id: recipe.id || String(Math.random()),
+    title: recipe.title || 'Untitled Recipe',
+    tagline: recipe.tagline || recipe.description || '',
+    ingredients: recipe.ingredients || [],
+    instructions: recipe.instructions || recipe.steps || [],
+    servings: recipe.servings || 4,
+    image_url: recipe.image_url || '',
+    // Include other required fields with defaults
+    cuisine: recipe.cuisine || '',
+    cuisine_category: recipe.cuisine_category || 'Global',
+    user_id: recipe.user_id || '',
+    created_at: recipe.created_at || new Date().toISOString(),
+    updated_at: recipe.updated_at || new Date().toISOString(),
+    science_notes: recipe.science_notes || []
+  }));
+};
+
+  // Update the section that renders the RecipeCarousel
+  const renderFeatureSection = () => {
+    if (featuredRecipes && featuredRecipes.length > 0) {
+      const formattedRecipes = mapToRecipeType(featuredRecipes);
+      return (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-4 text-center">Featured Recipes</h2>
+          <RecipeCarousel 
+            recipes={formattedRecipes} 
+            onRecipeClick={handleRecipeClick}
+            className="max-w-5xl mx-auto"
+          />
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <section className="py-6 md:py-12 lg:py-16 content-visibility-auto hero-section w-full max-w-full overflow-hidden">
-      <div className="space-y-10 max-w-full overflow-hidden">
-        {/* Hero Title & Actions */}
-        <div className="text-center animate-fade-in px-2 sm:px-4 w-full">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <ChefHat className="h-6 w-6 sm:h-8 sm:w-8 text-recipe-green" />
-            <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-recipe-blue" />
-          </div>
-          <h1 className="font-bold tracking-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
-            <span className="bg-gradient-to-r from-recipe-blue to-recipe-green bg-clip-text text-transparent">
-              AI-Powered Recipe Creation
-            </span>
-          </h1>
-          <p className="mt-4 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Tell us what you have in your kitchen and our <strong>AI chef</strong> will transform your ingredients into
-            delicious, <strong>personalized recipes</strong> with tailored <strong>nutrition insights</strong>.
-          </p>
-          
-          {/* Badges displayed in a horizontal row */}
-          <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <Badge icon={<Sparkles className="w-4 h-4 mr-1" />} label="AI-Powered" color="blue" />
-            <Badge icon={<ChartPie className="w-4 h-4 mr-1" />} label="Personalized Nutrition" color="green" />
-            <Badge label="Ingredient-Based" color="amber" />
-          </div>
-        </div>
-
-        {/* Recipe Generator Card */}
-        <div className="flex justify-center px-2 sm:px-4 w-full">
-          <div className="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-shadow hover:shadow-xl border border-gray-100">
-            <QuickRecipeGenerator onSubmit={handleFormSubmit} />
-          </div>
-        </div>
-
-        {/* Nutrition Preview */}
-        <div className="flex justify-center w-full overflow-hidden">
-          <div className="w-full max-w-3xl">
-            <NutritionPreview />
-          </div>
-        </div>
-
-        {/* Sample Recipes Carousel */}
-        <div className="flex justify-center w-full overflow-hidden">
-          <div className="w-full max-w-6xl mx-auto relative overflow-hidden">
-            <div className="absolute -top-6 -left-6 w-16 h-16 md:w-24 md:h-24 bg-recipe-green/10 rounded-full backdrop-blur-xl" />
-            <div className="absolute -bottom-6 -right-6 w-20 h-20 md:w-32 md:h-32 bg-recipe-orange/10 rounded-full backdrop-blur-xl" />
-            <div className="relative z-10 px-2 sm:px-4">
-              <RecipeCarousel />
+    <section className="py-12 md:py-24">
+      <div className="container mx-auto px-4">
+        <div className="grid gap-6 items-center md:grid-cols-2">
+          <div className="text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Unlock Culinary Magic with AI
+            </h1>
+            <p className="text-lg text-gray-600 mb-6">
+              Simply provide your ingredients, and our AI will craft a unique
+              recipe tailored just for you.
+            </p>
+            <div className="flex flex-col md:flex-row gap-4">
+              <Input
+                type="text"
+                placeholder="Enter your ingredients (e.g., chicken, rice, vegetables)"
+                value={ingredients}
+                onChange={(e) => setIngredients(e.target.value)}
+                className="w-full md:w-auto"
+              />
+              <Button
+                size="lg"
+                className="w-full md:w-auto"
+                onClick={handleGenerateRecipe}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate Recipe
+                  </>
+                )}
+              </Button>
             </div>
           </div>
+          <div className="hidden md:block">
+            <img
+              src="/hero-image.webp"
+              alt="Delicious Recipe"
+              className="rounded-lg shadow-md"
+            />
+          </div>
         </div>
+        {renderFeatureSection()}
       </div>
     </section>
   );
-});
-
-export default Hero;
+}

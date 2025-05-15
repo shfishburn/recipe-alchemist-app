@@ -12,7 +12,8 @@ const nutritionImpactSchema = z.object({
   sugar: z.number().optional(),
   sodium: z.number().optional(),
   assessment: z.string().optional(),
-  summary: z.string().optional() // Add summary field
+  summary: z.string().optional(), // Add summary field
+  details: z.array(z.string()).optional()
 });
 
 // Define schema for recipe modifications
@@ -34,7 +35,7 @@ export const recipeModificationsSchema = z.object({
     })).optional(),
     cookingTip: z.string().optional(),
   }),
-  nutritionImpact: nutritionImpactSchema.optional(),
+  nutritionImpact: nutritionImpactSchema,
   // Add support for the full modified recipe
   modifiedRecipe: z.custom<QuickRecipe>().nullable().optional()
 });

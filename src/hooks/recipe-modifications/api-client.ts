@@ -81,9 +81,16 @@ export async function requestRecipeModifications(
         })),
         cookingTip: data.cookingTip
       },
-      nutritionImpact: data.nutritionImpact || {
-        assessment: "Recipe nutrition has been recalculated.",
-        summary: "Nutrition values have been updated."
+      nutritionImpact: {
+        assessment: data.nutritionImpact?.assessment || "Recipe nutrition has been recalculated.",
+        summary: data.nutritionImpact?.summary || "Nutrition values have been updated.",
+        calories: data.nutritionImpact?.calories,
+        protein: data.nutritionImpact?.protein,
+        carbs: data.nutritionImpact?.carbs,
+        fat: data.nutritionImpact?.fat,
+        fiber: data.nutritionImpact?.fiber,
+        sugar: data.nutritionImpact?.sugar,
+        sodium: data.nutritionImpact?.sodium
       },
       // Add the normalized full recipe data
       modifiedRecipe

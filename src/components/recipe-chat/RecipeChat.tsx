@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRecipeDetail } from '@/hooks/use-recipe-detail';
 import { RecipeDisplay } from '@/components/quick-recipe/RecipeDisplay';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
-import { useResponseFormatter } from './response/ResponseFormatter';
+import { ResponseFormatter } from './response/ResponseFormatter';
 import { useChatMutations } from '@/hooks/recipe-chat/use-chat-mutations';
 import { updateRecipe } from '@/hooks/recipe-chat/utils/update-recipe';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
@@ -55,10 +55,8 @@ export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
       setMessage('');
     } catch (error: any) {
       console.error("Send message error:", error);
-      toast({
-        title: "Message Failed",
-        description: error.message || "Failed to send message",
-        variant: "destructive",
+      toast.error("Message Failed", {
+        description: error.message || "Failed to send message"
       });
     }
   };
@@ -83,10 +81,8 @@ export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
         return true;
       } catch (error) {
         console.error('Error applying changes:', error);
-        toast({
-          title: "Failed to apply changes",
-          description: error instanceof Error ? error.message : 'An unknown error occurred',
-          variant: "destructive",
+        toast.error("Failed to apply changes", {
+          description: error instanceof Error ? error.message : 'An unknown error occurred'
         });
         return false;
       }
@@ -134,10 +130,10 @@ export function RecipeChat({ recipe, initialMessage }: RecipeChatProps) {
                       </Avatar>
                       <div className="space-y-1">
                         <div className="text-sm font-bold">Recipe AI</div>
-                        {React.createElement(useResponseFormatter, {
-                          response: chat.ai_response,
-                          changesSuggested: chat.changes_suggested
-                        })}
+                        <ResponseFormatter 
+                          response={chat.ai_response} 
+                          changesSuggested={chat.changes_suggested} 
+                        />
                         <div className="text-xs text-gray-500">{new Date(chat.created_at).toLocaleString()}</div>
                         
                         {/* Apply Changes Section */}
