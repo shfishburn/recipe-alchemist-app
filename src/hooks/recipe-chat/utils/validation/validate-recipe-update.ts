@@ -27,6 +27,13 @@ export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | 
   try {
     // Validate title changes - only if title is explicitly provided in changes
     if (changes.title !== undefined) {
+      // Handle null title values explicitly
+      if (changes.title === null) {
+        console.warn("Found null title value in changes - ignoring");
+        delete changes.title; // Remove the null title to prevent updates
+        return true; // Continue with other validations
+      }
+      
       if (typeof changes.title !== 'string') {
         console.error("Invalid title format:", changes.title);
         return false;

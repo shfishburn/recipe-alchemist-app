@@ -19,6 +19,7 @@ export interface OptimisticMessage extends ChatMessage {
   recipe_id: string;
   ai_response: string;
   meta: ChatMeta;
+  timestamp?: number; // Added to support timestamp
 }
 
 export interface ChangesResponse {
@@ -45,4 +46,5 @@ export interface ChatMeta {
     type: 'manual' | 'image' | 'url';
     url?: string;
   };
+  timestamp?: number; // Added timestamp to support sorting
 }

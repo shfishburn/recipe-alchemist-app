@@ -1,69 +1,48 @@
 
-import { Nutrition } from '@/types/recipe';
+import type { Recipe } from '@/types/recipe';
 
 /**
- * Standardizes nutrition data to ensure consistent format
- * @param data The raw nutrition data object
- * @returns A standardized Nutrition object
+ * Format cooking time from minutes to hours and minutes
+ * @param minutes Total time in minutes
+ * @returns Formatted time string
  */
-export function standardizeNutrition(data: any): Nutrition {
-  // Handle null or undefined data
-  if (!data) {
-    return {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-      fiber: 0,
-      sugar: 0,
-      sodium: 0
-    };
+export function formatCookingTime(minutes?: number): string {
+  if (!minutes) return 'N/A';
+  
+  if (minutes < 60) {
+    return `${minutes} min`;
   }
+  
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  
+  if (remainingMinutes === 0) {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  }
+  
+  return `${hours} ${hours === 1 ? 'hour' : 'hours'}, ${remainingMinutes} min`;
+}
 
-  // Create base nutrition object with defaults
-  const standardized: Nutrition = {
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-    fiber: 0,
-    sugar: 0,
-    sodium: 0
+/**
+ * Get the description from either the tagline or description field
+ */
+export function getRecipeDescription(recipe: Recipe): string {
+  // Prefer tagline (current schema) but fall back to description if present
+  return recipe.tagline || '';
+}
+
+/**
+ * Transform recipe data for UI presentation
+ */
+export function transformRecipeData(recipe: Recipe): Recipe {
+  // Ensure consistent data shape for UI components
+  return {
+    ...recipe,
+    // Ensure ingredients is always an array
+    ingredients: recipe.ingredients || [],
+    // Ensure instructions is always an array
+    instructions: recipe.instructions || [],
+    // Ensure science_notes is always an array
+    science_notes: recipe.science_notes || [],
   };
-
-  // Map values from various possible property names
-  // Calories
-  standardized.calories = data.calories || data.kcal || 0;
-  // Protein
-  standardized.protein = data.protein || data.protein_g || 0;
-  // Carbs
-  standardized.carbs = data.carbs || data.carbs_g || data.carbohydrates || 0;
-  // Fat
-  standardized.fat = data.fat || data.fat_g || 0;
-  // Fiber
-  standardized.fiber = data.fiber || data.fiber_g || 0;
-  // Sugar
-  standardized.sugar = data.sugar || data.sugar_g || 0;
-  // Sodium
-  standardized.sodium = data.sodium || data.sodium_mg || 0;
-
-  // Copy any micronutrients that exist
-  const micronutrients = ['vitamin_a', 'vitamin_c', 'vitamin_d', 'calcium', 'iron', 'potassium', 'cholesterol'];
-  micronutrients.forEach(nutrient => {
-    if (data[nutrient] !== undefined) {
-      standardized[nutrient] = data[nutrient];
-    }
-  });
-
-  // Handle alternative naming for micronutrients
-  if (data.vitaminA !== undefined) standardized.vitamin_a = data.vitaminA;
-  if (data.vitaminC !== undefined) standardized.vitamin_c = data.vitaminC;
-  if (data.vitaminD !== undefined) standardized.vitamin_d = data.vitaminD;
-
-  // Copy data quality information if it exists
-  if (data.data_quality) {
-    standardized.data_quality = { ...data.data_quality };
-  }
-
-  return standardized;
 }

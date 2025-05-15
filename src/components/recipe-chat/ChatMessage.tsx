@@ -47,6 +47,11 @@ export function ChatMessage({
     await applyChanges(chat);
   };
 
+  // Get follow-up questions with a safety check
+  const followUpQuestions = Array.isArray(chat.follow_up_questions) 
+    ? chat.follow_up_questions 
+    : [];
+
   return (
     <div className="space-y-4">
       <UserMessage 
@@ -60,7 +65,7 @@ export function ChatMessage({
         <ChatResponse
           response={chat.ai_response}
           changesSuggested={chat.changes_suggested || null}
-          followUpQuestions={chat.follow_up_questions || []}
+          followUpQuestions={followUpQuestions}
           setMessage={setMessage}
           onApplyChanges={handleApplyChanges}
           isApplying={isApplying}

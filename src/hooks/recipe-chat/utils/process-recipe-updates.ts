@@ -28,15 +28,21 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     hasNutrition: !!changes_suggested.nutrition
   });
 
-  // Update title if provided
-  if (changes_suggested.title) {
+  // Update title if provided and valid
+  if (changes_suggested.title !== undefined && 
+      changes_suggested.title !== null && 
+      typeof changes_suggested.title === 'string') {
     updatedRecipe.title = changes_suggested.title;
   }
   
   // Handle description/tagline field update - prioritize tagline over description
-  if (changes_suggested.tagline) {
+  if (changes_suggested.tagline !== undefined && 
+      changes_suggested.tagline !== null && 
+      typeof changes_suggested.tagline === 'string') {
     updatedRecipe.tagline = changes_suggested.tagline;
-  } else if (changes_suggested.description) {
+  } else if (changes_suggested.description !== undefined && 
+             changes_suggested.description !== null && 
+             typeof changes_suggested.description === 'string') {
     // Fallback to description if tagline isn't provided
     updatedRecipe.tagline = changes_suggested.description;
   }

@@ -1,89 +1,74 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ChatMessage, ChangesResponse } from '@/types/chat';
+import type { ChatMessage, ChatMeta } from '@/types/chat';
 
 /**
- * Hook for fetching and processing chat history for a recipe
+ * Custom hook for retrieving chat history for a recipe
  */
 export const useChatHistory = (recipeId: string) => {
-  const { data: chatHistory = [], isLoading: isLoadingHistory, refetch } = useQuery({
-    queryKey: ['recipe-chats', recipeId],
-    queryFn: async () => {
-      console.log(`Fetching chat history for recipe ${recipeId}`);
-      
-      // Validate recipe ID to prevent API errors
-      if (!recipeId) {
-        console.warn("Missing recipe ID in useChatHistory");
-        return [];
-      }
-      
+  const fetchChatHistory = async (): Promise<ChatMessage[]> => {
+    if (!recipeId) {
+      console.warn('No recipe ID provided to useChatHistory');
+      return [];
+    }
+    
+    try {
       const { data, error } = await supabase
         .from('recipe_chats')
         .select('*')
         .eq('recipe_id', recipeId)
-        .is('deleted_at', null)
         .order('created_at', { ascending: true });
-
+      
       if (error) {
-        console.error("Error fetching chat history:", error);
         throw error;
       }
       
-      if (data && data.length > 0) {
-        console.log(`Found ${data.length} chat messages for recipe ${recipeId}`);
-      } else {
-        console.log(`No existing chat history for recipe ${recipeId}`);
-      }
+      // Process and normalize the data
+      const normalizedChats = data.map(chat => ({
+        id: chat.id,
+        recipe_id: chat.recipe_id,
+        user_message: chat.user_message,
+        ai_response: chat.ai_response,
+        changes_suggested: chat.changes_suggested,
+        source_type: chat.source_type,
+        source_url: chat.source_url,
+        source_image: chat.source_image,
+        applied: chat.applied,
+        created_at: chat.created_at,
+        meta: chat.meta as ChatMeta || {},
+        follow_up_questions: chat.follow_up_questions || []
+      }));
       
-      // Process the chat messages to handle changes_suggested
-      return data.map(chat => {
-        // Initialize chat message with default values
-        const chatMessage: ChatMessage = {
-          id: chat.id,
-          recipe_id: chat.recipe_id,
-          user_message: chat.user_message,
-          ai_response: chat.ai_response,
-          changes_suggested: null,
-          applied: chat.applied || false,
-          created_at: chat.created_at,
-          meta: typeof chat.meta === 'object' ? chat.meta || {} : {} // Ensure meta is always a valid object
-        };
+      return normalizedChats;
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      throw error;
+    }
+  };
 
-        // Process changes_suggested as a properly typed object
-        if (chat.changes_suggested) {
-          try {
-            // Ensure changes_suggested is properly typed
-            chatMessage.changes_suggested = chat.changes_suggested as unknown as ChangesResponse;
-          } catch (e) {
-            console.error("Error processing changes_suggested data:", e);
-          }
-        }
-        
-        // Check if the chat response has followUpQuestions in the response data
-        if (typeof chat.ai_response === 'string') {
-          try {
-            // Try to extract follow-up questions from the AI response if they exist
-            const responseObj = JSON.parse(chat.ai_response);
-            if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
-              chatMessage.follow_up_questions = responseObj.followUpQuestions;
-            }
-          } catch (e) {
-            // If parsing fails, just continue with default values
-            chatMessage.follow_up_questions = [];
-          }
-        }
-        
-        return chatMessage;
-      });
-    },
+  // Query hook with proper error handling
+  const {
+    data = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['recipe-chats', recipeId],
+    queryFn: fetchChatHistory,
+    enabled: !!recipeId,
     refetchOnWindowFocus: false,
-    staleTime: 5000, // Don't refetch too often to avoid flickering
+    retry: 1
   });
 
+  // Enhanced error handling for development debugging
+  if (error) {
+    console.error('Chat history query error:', error);
+  }
+
   return {
-    chatHistory,
-    isLoadingHistory,
+    chatHistory: data,
+    isLoadingHistory: isLoading,
     refetchChatHistory: refetch
   };
 };

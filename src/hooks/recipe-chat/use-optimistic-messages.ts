@@ -1,125 +1,86 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import type { ChatMessage, OptimisticMessage, ChatMeta } from '@/types/chat';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Safely gets a value from a chat message's meta property with proper type checking
- * @param message Chat message object
- * @param key Meta property key to retrieve
- * @param defaultValue Default value to return if key doesn't exist
- * @returns The value from meta or the default value
+ * Custom hook for managing optimistic UI updates for chat messages
  */
-function getMetaProperty<T>(
-  message: ChatMessage | OptimisticMessage | null | undefined,
-  key: string,
-  defaultValue: T
-): T {
-  if (!message?.meta || typeof message.meta !== 'object') return defaultValue;
-  
-  try {
-    const value = message.meta[key];
-    if (value !== undefined && (typeof value === typeof defaultValue || defaultValue === null)) {
-      return value as T;
-    }
-  } catch (e) {
-    console.error(`Error getting meta value for key ${key}:`, e);
-  }
-  
-  return defaultValue;
-}
-
-/**
- * Hook for managing optimistic UI updates while waiting for real chat responses
- */
-export const useOptimisticMessages = (chatHistory: ChatMessage[]) => {
+export const useOptimisticMessages = (
+  chatHistory: ChatMessage[]
+) => {
   const [optimisticMessages, setOptimisticMessages] = useState<OptimisticMessage[]>([]);
 
-  // Enhanced cleanup function for better reliability
-  const cleanupOptimisticMessages = useCallback((messages: OptimisticMessage[], history: ChatMessage[]) => {
-    // Create a Set of all optimistic IDs in the real message history
-    const replacedOptimisticIds = new Set<string>();
-    
-    // First pass: collect all optimistic_ids from real messages
-    history.forEach(message => {
-      const optimisticId = getMetaProperty(message, 'optimistic_id', '');
-      if (optimisticId) {
-        replacedOptimisticIds.add(optimisticId);
-      }
-    });
-    
-    // Second pass: filter out optimistic messages that now have real counterparts
-    return messages.filter(message => {
-      // Get all possible IDs that might match with history
-      const messageOptimisticId = getMetaProperty(message, 'optimistic_id', '');
-      const messageId = message.id || messageOptimisticId;
-      
-      // Keep message only if it doesn't have a corresponding real message
-      return !messageId || !replacedOptimisticIds.has(messageId);
-    });
-  }, []);
-
-  // Clear optimistic messages that have actual responses in chat history
+  // Clean up optimistic messages when real messages arrive
   useEffect(() => {
+    // Check for resolved messages
     if (chatHistory.length > 0 && optimisticMessages.length > 0) {
-      const filteredMessages = cleanupOptimisticMessages(optimisticMessages, chatHistory);
-      
-      // Update only if we filtered any messages out
-      if (filteredMessages.length !== optimisticMessages.length) {
-        console.log("Clearing optimistic messages that have been replaced by real messages", {
-          before: optimisticMessages.length,
-          after: filteredMessages.length
+      const remainingMessages = optimisticMessages.filter(optimistic => {
+        // Keep messages that don't have an optimistic_id or 
+        // where that optimistic_id doesn't match any real message
+        const hasMatchingRealMessage = chatHistory.some(real => {
+          // Extract optimistic_id from meta
+          const meta = real.meta || {};
+          const optimisticId = meta.optimistic_id;
+          return optimisticId === optimistic.meta?.optimistic_id;
         });
-        setOptimisticMessages(filteredMessages);
+        
+        return !hasMatchingRealMessage;
+      });
+      
+      if (remainingMessages.length !== optimisticMessages.length) {
+        setOptimisticMessages(remainingMessages);
       }
     }
-  }, [chatHistory, optimisticMessages, cleanupOptimisticMessages]);
-
-  // Enhanced addOptimisticMessage with improved tracking
-  const addOptimisticMessage = useCallback((message: OptimisticMessage) => {
-    console.log("Adding optimistic message:", message);
+  }, [chatHistory, optimisticMessages]);
+  
+  /**
+   * Add an optimistic message while waiting for the server response
+   */
+  const addOptimisticMessage = (message: string, recipeId: string) => {
+    const optimisticId = uuidv4();
     
-    // Generate a unique ID if not provided
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substr(2, 5);
-    const optimisticId = `optimistic-${timestamp}-${randomSuffix}`;
-    
-    // Ensure message has proper metadata structure
-    const messageMeta: ChatMeta = {
-      ...(message.meta || {}),
-      optimistic_id: message.id || optimisticId,
-      tracking_id: message.id || optimisticId,
-      processing_stage: 'pending',
-      timestamp: timestamp
+    const optimisticMessage: OptimisticMessage = {
+      id: optimisticId,
+      recipe_id: recipeId,
+      user_message: message,
+      ai_response: '', // Empty initially
+      pending: true,   // Mark as pending
+      meta: {
+        optimistic_id: optimisticId, // Use for matching with real message later
+        processing_stage: 'sending',
+      },
     };
     
-    // Create enhanced message with consistent properties
-    const enhancedMessage: OptimisticMessage = {
-      ...message,
-      id: message.id || optimisticId,
-      meta: messageMeta,
-      timestamp: timestamp,
-      pending: true
-    };
+    // Add the new optimistic message
+    setOptimisticMessages(prev => [...prev, optimisticMessage]);
     
-    setOptimisticMessages(prev => [...prev, enhancedMessage]);
     return optimisticId;
-  }, []);
-
-  const clearOptimisticMessages = useCallback(() => {
+  };
+  
+  /**
+   * Mark an optimistic message as having an error
+   */
+  const markMessageError = (optimisticId: string) => {
+    setOptimisticMessages(prev => 
+      prev.map(msg => 
+        msg.meta?.optimistic_id === optimisticId
+          ? { ...msg, meta: { ...msg.meta, error: true } }
+          : msg
+      )
+    );
+  };
+  
+  /**
+   * Clear all optimistic messages (e.g., when clearing chat history)
+   */
+  const clearOptimisticMessages = () => {
     setOptimisticMessages([]);
-  }, []);
+  };
 
   return {
     optimisticMessages,
     addOptimisticMessage,
-    clearOptimisticMessages
+    markMessageError,
+    clearOptimisticMessages,
   };
 };
-
-// Export utility function for general use
-export function getChatMeta<T>(
-  message: ChatMessage | null | undefined, 
-  key: string, 
-  defaultValue: T
-): T {
-  return getMetaProperty(message, key, defaultValue);
-}
