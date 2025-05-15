@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
 import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
@@ -88,9 +89,6 @@ function validateRecipe(recipe: any) {
     throw new Error("Must have at least one ingredient");
   if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))
     throw new Error("Must have steps or instructions");
-  
-  // Validate recipe ID exists
-  if (!recipe.id) throw new Error("Recipe ID is required");
 }
 
 // === edge function ===
@@ -146,28 +144,6 @@ serve(async (req) => {
     let parsed: any;
     try {
       parsed = recipeModificationsSchema.parse(result);
-      
-      // Add the full recipe structure to the meta field
-      // This combines the original recipe with the modifications
-      parsed.meta = parsed.meta || {};
-      parsed.meta.full_recipe = {
-        ...recipe,
-        title: parsed.modifications.title || recipe.title,
-        description: parsed.modifications.description || recipe.description,
-        // Keep other fields from the original recipe
-      };
-      
-      // If we have ingredient modifications, update the full recipe
-      if (parsed.modifications.ingredients && Array.isArray(parsed.modifications.ingredients)) {
-        parsed.meta.full_recipe.ingredients = parsed.modifications.ingredients;
-      }
-      
-      // If we have step modifications, update the full recipe
-      if (parsed.modifications.steps && Array.isArray(parsed.modifications.steps)) {
-        // Convert modified steps to instructions array
-        const instructions = parsed.modifications.steps.map(step => step.modified || step);
-        parsed.meta.full_recipe.instructions = instructions;
-      }
     } catch (parseErr) {
       return new Response(
         JSON.stringify({
@@ -188,27 +164,13 @@ serve(async (req) => {
         const sb = createClient(SUPA_URL, SUPA_KEY, {
           global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
         });
-        
-        // Ensure we have valid recipe ID before saving to database
-        if (!recipe.id) {
-          throw new Error("Cannot save chat: Recipe ID is missing");
-        }
-        
-        const chatData = {
+        await sb.from("recipe_chats").insert({
           recipe_id: recipe.id,
           user_message: userRequest,
           ai_response: parsed.textResponse,
           changes_suggested: parsed.modifications,
           source_type: "modification"
-        };
-        
-        console.log("Saving chat to database:", {
-          recipeId: recipe.id,
-          messageLength: userRequest.length,
-          hasChanges: !!parsed.modifications
         });
-        
-        await sb.from("recipe_chats").insert(chatData);
       } catch (dbErr) {
         console.error("DB insert failed", dbErr);
       }

@@ -26,14 +26,6 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
   const { open: openAuthDrawer } = useAuthDrawer();
   const { setError } = useQuickRecipeStore();
   
-  // Ensure recipe has an ID - critical for modification tracking
-  useEffect(() => {
-    if (!recipe.id) {
-      console.error("Warning: Recipe without ID provided to QuickRecipeModifier");
-      setError("Invalid recipe data: Missing recipe ID");
-    }
-  }, [recipe, setError]);
-  
   // Initialize these values to avoid conditional hook calls
   const {
     status,
@@ -100,17 +92,6 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
       });
       
       openAuthDrawer();
-      return;
-    }
-    
-    // Validate recipe has an ID before proceeding
-    if (!recipe.id) {
-      const errorMsg = "Cannot modify recipe: Recipe ID is missing";
-      console.error(errorMsg, recipe);
-      setError(errorMsg);
-      toast.error("Recipe Modification Error", {
-        description: errorMsg
-      });
       return;
     }
     

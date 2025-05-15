@@ -1,4 +1,5 @@
-import type { Ingredient, Nutrition, Recipe } from './recipe';
+
+import type { Ingredient, Nutrition } from './recipe';
 
 export interface ChangesResponse {
   title?: string;
@@ -18,7 +19,6 @@ export interface ChangesResponse {
   equipmentNeeded?: string[];
   science_notes?: string[];
   health_insights?: string[];
-  full_recipe?: Partial<Recipe>; // Add support for full recipe in changes response
 }
 
 // Enhanced ChatMeta type for better type safety
@@ -31,7 +31,6 @@ export interface ChatMeta {
     url?: string;
     imageId?: string;
   };
-  full_recipe?: Partial<Recipe>; // Add support for full recipe in meta
   [key: string]: any; // Allow for other meta properties while maintaining type safety for known ones
 }
 

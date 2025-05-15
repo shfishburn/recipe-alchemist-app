@@ -47,55 +47,6 @@ function getCuisineCategory(cuisine: string | undefined): "Global" | "Regional A
   return "Global";
 }
 
-/**
- * Safely serialize a value to JSON
- * @param value - The value to serialize
- * @param fallback - The fallback value if serialization fails
- * @returns The serialized value as Json type
- */
-function safelySerializeToJson(value: unknown, fallback: string = '[]'): Json {
-  if (value === null || value === undefined) {
-    return fallback as Json;
-  }
-  
-  try {
-    return JSON.stringify(value) as Json;
-  } catch (error) {
-    console.error("Failed to serialize value to JSON:", error);
-    console.warn("Value that failed serialization:", typeof value);
-    return fallback as Json;
-  }
-}
-
-/**
- * Creates a safe preview string from a JSON value
- * @param jsonValue - The JSON value to preview
- * @param maxLength - Maximum length of the preview (default is 100)
- * @returns A string preview of the JSON value
- */
-function createSafeJsonPreview(jsonValue: Json, maxLength: number = 100): string {
-  if (jsonValue === null || jsonValue === undefined) {
-    return '[null or undefined]';
-  }
-  
-  if (typeof jsonValue === 'string') {
-    return jsonValue.substring(0, maxLength);
-  }
-  
-  if (typeof jsonValue === 'object' || Array.isArray(jsonValue)) {
-    try {
-      return JSON.stringify(jsonValue).substring(0, maxLength);
-    } catch (e) {
-      // Security improvement: Log only the error message, not the entire error object
-      console.error('Error serializing JSON value for preview:', e instanceof Error ? e.message : 'Unknown error');
-      return '[complex object]';
-    }
-  }
-  
-  // For numbers, booleans, etc.
-  return String(jsonValue).substring(0, maxLength);
-}
-
 export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: string }) {
   // Ensure recipe integrity before saving to database
   ensureRecipeIntegrity(updatedRecipe);
@@ -161,30 +112,17 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     console.log(`Determined cuisine category: ${updatedRecipe.cuisine_category} for cuisine: ${updatedRecipe.cuisine}`);
   }
   
-  // Process science_notes to ensure it's always properly serialized as a JSON array
-  let scienceNotesJson: Json;
-  
-  if (updatedRecipe.science_notes) {
-    // Ensure science_notes is an array of strings
-    const validatedNotes = Array.isArray(updatedRecipe.science_notes) 
-      ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
-      : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
-    
-    // Properly serialize to JSON format for database storage with error handling
-    scienceNotesJson = safelySerializeToJson(validatedNotes, '[]');
-    console.log("Science notes serialized to JSON:", createSafeJsonPreview(scienceNotesJson));
-  } else {
-    // Default to empty array if science_notes is undefined
-    scienceNotesJson = '[]' as Json;
-  }
+  // Process science_notes to ensure it's always a valid array of strings
+  const scienceNotes = Array.isArray(updatedRecipe.science_notes) 
+    ? updatedRecipe.science_notes.map(note => (note !== null && note !== undefined) ? String(note) : '')
+    : (updatedRecipe.science_notes ? [String(updatedRecipe.science_notes)] : []);
   
   // Transform recipe for database storage with improved type safety
   const dbRecipe = {
     ...updatedRecipe,
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
-    // Use the properly serialized science_notes
-    science_notes: scienceNotesJson,
+    science_notes: scienceNotes as unknown as Json,
     // Ensure nutri_score is properly cast to Json type
     nutri_score: updatedRecipe.nutri_score as unknown as Json,
     // Ensure cuisine_category is one of the allowed enum values including the new Middle Eastern
@@ -197,9 +135,10 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
     instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
-    scienceNotesType: typeof scienceNotesJson,
-    // Use the new utility function for safe preview generation
-    scienceNotesPreview: createSafeJsonPreview(scienceNotesJson),
+    hasNotes: Array.isArray(scienceNotes) && scienceNotes.length > 0,
+    noteCount: scienceNotes.length,
+    hasNutrition: !!dbRecipe.nutrition && Object.keys(dbRecipe.nutrition).length > 0,
+    nutritionKeys: !!dbRecipe.nutrition ? Object.keys(dbRecipe.nutrition) : [],
     cuisine: updatedRecipe.cuisine,
     cuisine_category: dbRecipe.cuisine_category
   });

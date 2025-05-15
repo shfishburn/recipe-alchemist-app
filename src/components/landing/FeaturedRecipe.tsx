@@ -64,7 +64,7 @@ export function FeaturedRecipe() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-2xl font-bold mb-2">{recipe.title}</h3>
-                <p className="text-muted-foreground">{recipe.tagline}</p>
+                <p className="text-muted-foreground">{recipe.tagline || recipe.description}</p>
               </div>
               
               <Table>

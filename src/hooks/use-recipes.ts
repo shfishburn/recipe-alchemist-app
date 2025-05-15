@@ -78,6 +78,7 @@ export const useRecipes = () => {
       return {
         id: dbRecipe.id,
         title: dbRecipe.title || '',
+        description: dbRecipe.description || '',
         ingredients: ingredients,
         instructions: dbRecipe.instructions || [],
         prep_time_min: dbRecipe.prep_time_min,

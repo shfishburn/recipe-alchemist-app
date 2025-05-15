@@ -2,55 +2,79 @@
 import type { Recipe } from '@/types/recipe';
 
 /**
- * Ensures a recipe object has all required fields before database operations
- * @param recipe The recipe object to validate
- * @returns The validated recipe with all required fields
+ * Comprehensive recipe data integrity validation
+ * Ensures all critical fields are present and properly formatted
  */
-export function ensureRecipeIntegrity(recipe: Partial<Recipe>): Recipe {
-  if (!recipe) {
-    throw new Error('Recipe object is null or undefined');
+export function validateRecipeIntegrity(recipe: Recipe | Partial<Recipe>): { 
+  valid: boolean; 
+  issues: string[]; 
+} {
+  const issues: string[] = [];
+  
+  // Check for required recipe fields
+  if (!recipe.id) {
+    issues.push("Missing recipe ID");
   }
   
-  // Create copy to avoid mutating the original
-  const validatedRecipe = { ...recipe };
+  // Title validation
+  if (!recipe.title || typeof recipe.title !== 'string' || recipe.title.trim() === '') {
+    issues.push("Missing or invalid recipe title");
+  }
+
+  // Instructions validation
+  if (!recipe.instructions) {
+    issues.push("Missing recipe instructions");
+  } else if (!Array.isArray(recipe.instructions)) {
+    issues.push("Recipe instructions must be an array");
+  } else if (recipe.instructions.length === 0) {
+    issues.push("Recipe instructions array is empty");
+  } else {
+    // Validate each instruction
+    const invalidInstructions = recipe.instructions.filter(instruction => 
+      typeof instruction !== 'string' || instruction.trim() === ''
+    );
+    
+    if (invalidInstructions.length > 0) {
+      issues.push(`${invalidInstructions.length} invalid instructions found`);
+    }
+  }
+
+  // Ingredients validation
+  if (!recipe.ingredients) {
+    issues.push("Missing recipe ingredients");
+  } else if (!Array.isArray(recipe.ingredients)) {
+    issues.push("Recipe ingredients must be an array");
+  } else if (recipe.ingredients.length === 0) {
+    issues.push("Recipe ingredients array is empty");
+  } else {
+    // Validate each ingredient
+    const invalidIngredients = recipe.ingredients.filter(ing => 
+      !ing || typeof ing !== 'object' || !ing.item || typeof ing.item !== 'string'
+    );
+    
+    if (invalidIngredients.length > 0) {
+      issues.push(`${invalidIngredients.length} invalid ingredients found`);
+    }
+  }
+
+  return {
+    valid: issues.length === 0,
+    issues
+  };
+}
+
+/**
+ * Ensures the recipe has all required fields before saving
+ * Throws an error with a detailed message if validation fails
+ */
+export function ensureRecipeIntegrity(recipe: Recipe | Partial<Recipe> & { id: string }): void {
+  const validation = validateRecipeIntegrity(recipe as Recipe);
   
-  // Essential fields that must be present
-  if (!validatedRecipe.title) {
-    throw new Error('Recipe missing required field: title');
+  if (!validation.valid) {
+    const errorMessage = `Recipe integrity check failed: ${validation.issues.join(', ')}`;
+    console.error(errorMessage, recipe);
+    throw new Error(errorMessage);
   }
   
-  // Ensure ingredients is an array
-  if (!validatedRecipe.ingredients || !Array.isArray(validatedRecipe.ingredients)) {
-    validatedRecipe.ingredients = [];
-  }
-  
-  // Ensure instructions is an array
-  if (!validatedRecipe.instructions || !Array.isArray(validatedRecipe.instructions)) {
-    validatedRecipe.instructions = [];
-  }
-  
-  // Ensure servings is defined (critical for database validation)
-  if (validatedRecipe.servings === undefined || validatedRecipe.servings === null) {
-    validatedRecipe.servings = 1; // Default to 1 serving
-  }
-  
-  // Ensure science_notes is an array
-  if (!validatedRecipe.science_notes || !Array.isArray(validatedRecipe.science_notes)) {
-    validatedRecipe.science_notes = [];
-  }
-  
-  // Ensure nutrition object exists
-  if (!validatedRecipe.nutrition) {
-    validatedRecipe.nutrition = {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-      fiber: 0,
-      sugar: 0,
-      sodium: 0
-    };
-  }
-  
-  return validatedRecipe as Recipe;
+  console.log("Recipe integrity validation passed");
 }

@@ -22,33 +22,6 @@ interface CookingDetails {
   }[];
 }
 
-/**
- * Safely parse a JSON string to an array
- * @param jsonValue - The JSON string or value to parse
- * @param fallback - The fallback array if parsing fails
- * @returns The parsed array or fallback
- */
-function safelyParseJsonArray<T>(jsonValue: any, fallback: T[] = []): T[] {
-  if (!jsonValue) return fallback;
-  
-  // If it's already an array, just return it
-  if (Array.isArray(jsonValue)) return jsonValue;
-  
-  // If it's a string, try to parse it
-  if (typeof jsonValue === 'string') {
-    try {
-      const parsed = JSON.parse(jsonValue);
-      return Array.isArray(parsed) ? parsed : fallback;
-    } catch (error) {
-      console.error("Error parsing JSON string:", error);
-      return fallback;
-    }
-  }
-  
-  // For any other type, return the fallback
-  return fallback;
-}
-
 export function useRecipeUpdates(recipeId: string) {
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -64,17 +37,15 @@ export function useRecipeUpdates(recipeId: string) {
           ...updates,
           // Only include properties if they exist in updates
           ingredients: updates.ingredients ? updates.ingredients as unknown as Json : undefined,
-          
-          // Properly serialize science_notes as JSON string before saving to database
+          // Properly transform science_notes to ensure it's stored as JSON but is a string array
           science_notes: updates.science_notes 
-            ? (JSON.stringify(Array.isArray(updates.science_notes) 
+            ? (Array.isArray(updates.science_notes) 
                 ? updates.science_notes.map(note => 
                     typeof note === 'string' ? note : String(note)
                   ) 
                 : []
-              ) as unknown as Json)
+              ) as unknown as Json
             : undefined,
-            
           nutrition: updates.nutrition ? updates.nutrition as unknown as Json : undefined,
           // Properly transform nutri_score to JSON format
           nutri_score: updates.nutri_score ? updates.nutri_score as unknown as Json : undefined,
@@ -96,8 +67,10 @@ export function useRecipeUpdates(recipeId: string) {
         const processedData: Recipe = {
           ...data,
           ingredients: data.ingredients as unknown as Ingredient[],
-          // Parse science_notes from JSON string back to array
-          science_notes: safelyParseJsonArray<string>(data.science_notes, []),
+          // Ensure science_notes is always a string array
+          science_notes: Array.isArray(data.science_notes) 
+            ? data.science_notes.map(note => typeof note === 'string' ? note : String(note))
+            : [],
           // Transform nutrition back to the correct type
           nutrition: data.nutrition as unknown as Nutrition,
           // Transform nutri_score to the correct type

@@ -53,7 +53,7 @@ class CircuitBreaker {
 }
 
 // Function to validate and process the AI response
-function validateRecipeChanges(rawResponse, originalRecipe) {
+function validateRecipeChanges(rawResponse) {
   try {
     // Now that we're using response_format: { type: "json_object" },
     // the response should be a JSON object directly
@@ -81,58 +81,6 @@ function validateRecipeChanges(rawResponse, originalRecipe) {
     } else if (jsonResponse.changes) {
       // Initialize ingredients with safe defaults if missing
       jsonResponse.changes.ingredients = { mode: "none", items: [] };
-    }
-    
-    // Add full recipe structure to meta if available
-    if (jsonResponse.fullRecipe || jsonResponse.full_recipe) {
-      const fullRecipe = jsonResponse.fullRecipe || jsonResponse.full_recipe;
-      
-      // If we have a full recipe, add it to the meta field
-      // This preserves the original recipe structure while adding the changes
-      if (fullRecipe) {
-        if (!jsonResponse.meta) {
-          jsonResponse.meta = {};
-        }
-        
-        jsonResponse.meta.full_recipe = fullRecipe;
-        
-        // Also merge important fields into the changes object for backward compatibility
-        if (!jsonResponse.changes) {
-          jsonResponse.changes = {};
-        }
-        
-        // Map key fields from fullRecipe to changes for consistency
-        if (fullRecipe.title) jsonResponse.changes.title = fullRecipe.title;
-        if (fullRecipe.ingredients) {
-          jsonResponse.changes.ingredients = {
-            mode: 'replace',
-            items: fullRecipe.ingredients
-          };
-        }
-        if (fullRecipe.instructions) {
-          jsonResponse.changes.instructions = fullRecipe.instructions;
-        }
-        if (fullRecipe.nutrition) {
-          jsonResponse.changes.nutrition = fullRecipe.nutrition;
-        }
-        if (fullRecipe.science_notes) {
-          jsonResponse.changes.science_notes = fullRecipe.science_notes;
-        }
-      }
-    } else if (originalRecipe) {
-      // If no full recipe was provided but we have changes and the original recipe,
-      // create a synthetic full recipe by applying changes
-      const syntheticFullRecipe = {
-        ...originalRecipe,
-        title: jsonResponse.changes.title || originalRecipe.title,
-        // Apply other changes as needed
-      };
-      
-      // Add to meta
-      if (!jsonResponse.meta) {
-        jsonResponse.meta = {};
-      }
-      jsonResponse.meta.full_recipe = syntheticFullRecipe;
     }
     
     // Standardize science_notes format
@@ -299,7 +247,6 @@ function extractScienceNotesFromText(text: string): string[] {
   return scienceNotes.slice(0, 5); // Return at most 5 notes
 }
 
-// === edge function ===
 serve(async (req) => {
   // Handle CORS preflight requests with dynamic origin support for credentials
   if (req.method === 'OPTIONS') {
@@ -321,7 +268,7 @@ serve(async (req) => {
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
-      console.error("Missing recipe data in request:", recipe);
+      console.error("Missing recipe data in request");
       throw new Error("Recipe data is required");
     }
     
@@ -413,7 +360,7 @@ serve(async (req) => {
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
 
       // Process the response with our validation function
-      const processedResponse = validateRecipeChanges(rawResponse, recipe);
+      const processedResponse = validateRecipeChanges(rawResponse);
       
       // Prepare the response data format
       let textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;
@@ -464,30 +411,22 @@ serve(async (req) => {
         const meta = messageId ? { optimistic_id: messageId } : {};
         
         try {
-          console.log("Saving chat to database with recipe_id:", recipe.id);
-          
-          const chatRecord = {
-            recipe_id: recipe.id,
-            user_message: userMessage,
-            ai_response: textResponse,
-            changes_suggested: changes,
-            source_type: sourceType || 'manual',
-            source_url: sourceUrl,
-            source_image: sourceImage,
-            meta: meta
-          };
-          
-          const { data: insertedChat, error: chatError } = await supabaseClient
+          const { error: chatError } = await supabaseClient
             .from('recipe_chats')
-            .insert(chatRecord)
-            .select()
-            .single();
+            .insert({
+              recipe_id: recipe.id,
+              user_message: userMessage,
+              ai_response: textResponse,
+              changes_suggested: changes,
+              source_type: sourceType || 'manual',
+              source_url: sourceUrl,
+              source_image: sourceImage,
+              meta: meta
+            });
 
           if (chatError) {
             console.error("Error storing chat:", chatError);
             throw chatError;
-          } else {
-            console.log("Successfully saved chat with ID:", insertedChat?.id);
           }
         } catch (dbError) {
           console.error("Database error in recipe-chat function:", dbError);

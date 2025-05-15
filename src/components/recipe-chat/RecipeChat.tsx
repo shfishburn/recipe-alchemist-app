@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -30,16 +31,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Validate recipe has an ID - crucial for the chat functionality
-  useEffect(() => {
-    if (!recipe || !recipe.id) {
-      console.error("Invalid recipe provided to RecipeChat component:", recipe);
-      toast.error("Error", { 
-        description: "Invalid recipe data. Please try again."
-      });
-    }
-  }, [recipe]);
-  
   const {
     message,
     setMessage,
@@ -48,7 +39,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isLoadingHistory,
     sendMessage,
     isSending,
-    applyChanges,
+    applyChanges: rawApplyChanges,
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
@@ -60,30 +51,16 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   } = useRecipeChat(recipe);
 
   // Create a wrapper for applyChanges that only takes the chatMessage parameter
-  const handleApplyChanges = async (chatMessage: ChatMessageType): Promise<boolean> => {
-    if (isApplying) return false;
-    
+  const applyChanges = async (chatMessage: ChatMessageType) => {
     try {
-      // Call applyChanges with only the ChatMessage parameter
-      const success = await applyChanges(chatMessage);
-      
-      if (success) {
-        // Optional: You can refetch the chat history after successful changes
-        refetchChatHistory();
-        return true;
-      } else {
-        toast.error("Failed to apply changes", {
-          description: "Please try again or modify your request"
-        });
-        return false;
-      }
+      return await rawApplyChanges(recipe, chatMessage);
     } catch (error) {
       handleError(error);
       toast.error("Changes couldn't be applied", {
         description: "Please try again or modify your request",
         action: {
           label: "Retry",
-          onClick: () => handleApplyChanges(chatMessage),
+          onClick: () => applyChanges(chatMessage),
         },
       });
       return false;
@@ -148,14 +125,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
         type: 'other',
         data: { recipeId: recipe.id },
         sourceUrl: window.location.pathname
-      });
-      return;
-    }
-    
-    // Validate recipe ID before submitting
-    if (!recipe.id) {
-      toast.error("Cannot send message", {
-        description: "Invalid recipe reference"
       });
       return;
     }
@@ -276,7 +245,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         optimisticMessages={optimisticMessages}
                         isSending={isSending}
                         setMessage={setMessage}
-                        applyChanges={handleApplyChanges}
+                        applyChanges={applyChanges}
                         isApplying={isApplying}
                         recipe={recipe}
                         retryMessage={retryMessage}

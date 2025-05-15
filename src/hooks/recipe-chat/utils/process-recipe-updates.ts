@@ -1,112 +1,102 @@
-
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage, ChangesResponse } from '@/types/chat';
+import type { ChatMessage } from '@/types/chat';
 
-/**
- * Processes recipe updates from an AI chat message's suggested changes
- * @param originalRecipe The recipe to update
- * @param chatMessage The chat message containing suggested changes
- * @returns The updated recipe with changes applied
- */
-export function processRecipeUpdates(
-  originalRecipe: Recipe,
-  chatMessage: ChatMessage
-): Recipe {
-  const changes = chatMessage.changes_suggested;
-  
-  if (!changes) {
-    return originalRecipe;
+export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Partial<Recipe> & { id: string } {
+  console.log("Processing recipe updates with changes:", {
+    hasTitle: !!chatMessage.changes_suggested?.title,
+    hasIngredients: !!chatMessage.changes_suggested?.ingredients?.items?.length,
+    ingredientMode: chatMessage.changes_suggested?.ingredients?.mode,
+    hasInstructions: !!chatMessage.changes_suggested?.instructions?.length,
+    hasNutrition: !!chatMessage.changes_suggested?.nutrition,
+    hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length
+  });
+
+  // Start with a complete copy of the original recipe to prevent data loss
+  const updatedRecipe: Recipe = {
+    ...recipe,
+    updated_at: new Date().toISOString()
+  };
+
+  // Only override specific fields if they're provided in the changes
+  if (chatMessage.changes_suggested?.title) {
+    updatedRecipe.title = chatMessage.changes_suggested.title;
   }
-  
-  // Create a deep clone of the recipe to modify
-  const updatedRecipe = structuredClone(originalRecipe);
-  
-  // Update title if provided
-  if (changes.title) {
-    updatedRecipe.title = changes.title;
+
+  if (chatMessage.changes_suggested?.nutrition) {
+    updatedRecipe.nutrition = chatMessage.changes_suggested.nutrition;
   }
-  
-  // Update ingredients if provided
-  if (changes.ingredients && changes.ingredients.mode !== 'none' && Array.isArray(changes.ingredients.items)) {
-    if (changes.ingredients.mode === 'replace' && changes.ingredients.items.length > 0) {
-      // Replace all ingredients
-      updatedRecipe.ingredients = changes.ingredients.items;
-    } else if (changes.ingredients.mode === 'add' && changes.ingredients.items.length > 0) {
-      // Add new ingredients to the existing ones
-      updatedRecipe.ingredients = [...updatedRecipe.ingredients, ...changes.ingredients.items];
-    }
+
+  // Safely update science notes - never replace with an empty array
+  if (chatMessage.changes_suggested?.science_notes && 
+      Array.isArray(chatMessage.changes_suggested.science_notes) &&
+      chatMessage.changes_suggested.science_notes.length > 0) {
+    console.log("Updating science notes with", chatMessage.changes_suggested.science_notes.length, "items");
+    updatedRecipe.science_notes = chatMessage.changes_suggested.science_notes;
   }
-  
-  // Update instructions if provided
-  if (changes.instructions) {
-    if (Array.isArray(changes.instructions)) {
-      if (typeof changes.instructions[0] === 'string') {
-        // Simple string array format
-        updatedRecipe.instructions = changes.instructions as string[];
-      } else {
-        // Complex object format - convert to string array
-        updatedRecipe.instructions = (changes.instructions as unknown[]).map(instruction => {
-          if (typeof instruction === 'string') return instruction;
-          
-          // Safely access properties with type checking
-          const instructionObj = instruction as Record<string, unknown>;
-          return (
-            typeof instructionObj.action === 'string' ? instructionObj.action : 
-            typeof instructionObj.stepNumber === 'number' ? instructionObj.stepNumber.toString() : 
-            ''
-          );
-        }).filter(step => step.trim() !== '');
-      }
-    }
-  }
-  
-  // Update nutrition if provided
-  if (changes.nutrition) {
-    updatedRecipe.nutrition = {
-      ...updatedRecipe.nutrition || {},
-      ...changes.nutrition
-    };
-  }
-  
-  // Update science notes if provided
-  if (changes.science_notes && Array.isArray(changes.science_notes)) {
-    updatedRecipe.science_notes = changes.science_notes.filter(note => note && typeof note === 'string');
-  }
-  
-  // Update health insights if provided
-  if (changes.health_insights && Array.isArray(changes.health_insights)) {
-    if (!updatedRecipe.chef_notes) {
-      updatedRecipe.chef_notes = '';
-    }
+
+  // Safely update instructions - never replace with an empty array
+  if (chatMessage.changes_suggested?.instructions && 
+      Array.isArray(chatMessage.changes_suggested.instructions) &&
+      chatMessage.changes_suggested.instructions.length > 0) {
+    console.log("Updating instructions with", chatMessage.changes_suggested.instructions.length, "items");
     
-    const healthInsights = changes.health_insights.filter(insight => insight && typeof insight === 'string');
-    if (healthInsights.length > 0) {
-      updatedRecipe.chef_notes += '\n\nHealth Insights:\n' + healthInsights.join('\n');
+    // Process instructions to ensure they're all strings
+    const formattedInstructions = chatMessage.changes_suggested.instructions.map(
+      instruction => {
+        if (typeof instruction === 'string') {
+          return instruction;
+        }
+        if (typeof instruction === 'object' && instruction.action) {
+          return instruction.action;
+        }
+        console.warn("Skipping invalid instruction format:", instruction);
+        return null;
+      }
+    ).filter(Boolean);
+    
+    // Only update if we have valid instructions after processing
+    if (formattedInstructions.length > 0) {
+      updatedRecipe.instructions = formattedInstructions as string[];
     }
   }
-  
-  // Extract full recipe from changes if available
-  // This handles the case where the AI returns a complete recipe structure
-  if (chatMessage.meta?.full_recipe) {
-    try {
-      const fullRecipe = chatMessage.meta.full_recipe as Partial<Recipe>;
-      
-      // Merge the full recipe structure with the existing recipe
-      // while preserving critical fields like ID
-      Object.entries(fullRecipe).forEach(([key, value]) => {
-        // Skip critical fields we don't want to override
-        if (['id', 'user_id', 'created_at', 'updated_at', 'version_number', 'previous_version_id'].includes(key)) {
-          return;
-        }
-        
-        if (value !== undefined && value !== null) {
-          updatedRecipe[key] = value;
-        }
-      });
-    } catch (error) {
-      console.error('Error processing full recipe from chat message:', error);
+
+  // Process ingredients if they exist using the provided mode
+  if (chatMessage.changes_suggested?.ingredients?.items) {
+    const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
+    console.log("Processing ingredients:", { mode, itemCount: items.length });
+    
+    if (mode !== 'none' && items.length > 0) {
+      // Update ingredients based on mode
+      if (mode === 'add') {
+        console.log("Adding new ingredients to existing recipe");
+        updatedRecipe.ingredients = [...recipe.ingredients, ...items];
+      } else if (mode === 'replace') {
+        console.log("Replacing all ingredients");
+        updatedRecipe.ingredients = items;
+      }
+      // For 'none' mode, keep existing ingredients
     }
   }
+
+  // Data validation to ensure critical fields are always present
+  if (!updatedRecipe.ingredients || !Array.isArray(updatedRecipe.ingredients) || updatedRecipe.ingredients.length === 0) {
+    console.warn("No ingredients found in updated recipe, keeping original ingredients");
+    updatedRecipe.ingredients = recipe.ingredients;
+  }
   
+  if (!updatedRecipe.instructions || !Array.isArray(updatedRecipe.instructions) || updatedRecipe.instructions.length === 0) {
+    console.warn("No instructions found in updated recipe, keeping original instructions");
+    updatedRecipe.instructions = recipe.instructions;
+  }
+
+  // Keep the image URL intact
+  updatedRecipe.image_url = recipe.image_url;
+
+  console.log("Final updated recipe status:", {
+    hasIngredients: updatedRecipe.ingredients.length > 0,
+    hasInstructions: updatedRecipe.instructions.length > 0,
+    hasScienceNotes: updatedRecipe.science_notes && updatedRecipe.science_notes.length > 0,
+  });
+
   return updatedRecipe;
 }

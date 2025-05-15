@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +15,7 @@ const FIELD_MAPPINGS = {
   flavorTags: 'flavor_tags',
   scienceNotes: 'science_notes',
   steps: 'instructions', // Map steps to instructions (they're the same content)
-  description: 'tagline', // IMPORTANT: Map description to tagline since description doesn't exist in DB
+  description: 'tagline', // Map description to tagline since description doesn't exist in DB
 };
 
 // Define a whitelist of valid database column names

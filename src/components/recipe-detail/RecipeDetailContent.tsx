@@ -99,11 +99,6 @@ export function RecipeDetailContent({ recipe, id, refetch }: RecipeDetailContent
       changedFields.chef_notes = updatedRecipe.chef_notes;
     }
     
-    // IMPORTANT: Use tagline instead of description if needed
-    if (updatedRecipe.tagline !== localRecipe.tagline) {
-      changedFields.tagline = updatedRecipe.tagline;
-    }
-    
     // Only update if there are changes
     if (Object.keys(changedFields).length > 0) {
       console.log('Updating recipe with fields:', Object.keys(changedFields));
