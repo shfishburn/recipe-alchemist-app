@@ -1,27 +1,48 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import LoadingBar from 'react-top-loading-bar';
-import '@/styles/loading.css';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
-export function ChatLoading() {
-  const loadingRef = useRef<any>(null);
-  
-  useEffect(() => {
-    loadingRef.current?.continuousStart();
-    return () => loadingRef.current?.complete();
-  }, []);
+interface ChatLoadingProps {
+  onRetry?: () => void;
+  retryCount?: number;
+}
+
+export function ChatLoading({ onRetry, retryCount = 0 }: ChatLoadingProps) {
+  const showRetry = retryCount > 0;
 
   return (
-    <Card className="border-slate-100">
-      <CardContent className="pt-2 sm:pt-6 relative">
-        <LoadingBar color="#4CAF50" height={3} ref={loadingRef} shadow={true} className="absolute top-0 left-0 right-0" />
-        <div className="w-full flex justify-center items-center min-h-[150px] sm:min-h-[300px] p-4 sm:py-8">
-          <div className="space-y-4 text-center">
-            <div className="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
-              <div className="h-full bg-recipe-green animate-progress-pulse rounded-full min-w-5" style={{ width: '60%' }} />
+    <Card className="bg-white border-slate-100 shadow-sm overflow-hidden flex flex-col h-full hw-boost">
+      <CardContent className="p-0 flex flex-col h-full">
+        <div className="flex flex-col items-center justify-center h-full p-6">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <LoadingSpinner size="lg" className="text-recipe-green" />
+              <div className="absolute inset-0 loading-pulse-ring border-2 border-recipe-green/30"></div>
+              <div className="absolute inset-0 loading-pulse-ring border-2 border-recipe-green/20" style={{ animationDelay: '0.3s' }}></div>
             </div>
-            <p className="text-sm text-muted-foreground">Loading content...</p>
+            <p className="text-muted-foreground text-sm animate-pulse">Loading chat history...</p>
+            
+            {showRetry && onRetry && (
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">
+                  {retryCount > 2 
+                    ? "Having trouble connecting..." 
+                    : "Taking longer than expected..."}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={onRetry} 
+                  className="touch-optimized"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  {retryCount > 2 ? "Try again" : "Reload"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
