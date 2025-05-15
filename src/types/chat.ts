@@ -1,4 +1,3 @@
-
 import { QuickRecipe } from './quick-recipe';
 import { Recipe } from './recipe';
 
@@ -21,12 +20,12 @@ export interface ChatMessage {
     title?: string;
     ingredients?: {
       mode: 'add' | 'replace' | 'none';
-      items: any[];
+      items: unknown[];
     };
-    instructions?: string[] | any[];
+    instructions?: string[] | unknown[];
     science_notes?: string[];
-    nutrition?: any;
-    [key: string]: any;
+    nutrition?: unknown;
+    [key: string]: unknown;
   };
   source_type?: string;
   source_url?: string;
@@ -37,6 +36,23 @@ export interface ChatMessage {
   
   // New field to support the complete recipe object
   recipe?: Recipe | QuickRecipe;
+  
+  // Added missing properties
+  applied?: boolean;
+  follow_up_questions?: string[];
+}
+
+// Restored ChangesResponse type for compatibility with all usages
+export interface ChangesResponse {
+  title?: string | null;
+  ingredients?: {
+    mode: 'add' | 'replace' | 'none';
+    items: unknown[];
+  };
+  instructions?: string[] | unknown[];
+  science_notes?: string[];
+  nutrition?: unknown;
+  [key: string]: unknown;
 }
 
 export interface OptimisticMessage extends Partial<ChatMessage> {
@@ -46,4 +62,7 @@ export interface OptimisticMessage extends Partial<ChatMessage> {
   content?: string;
   meta?: ChatMeta;
   timestamp: number;
+  // Added missing properties
+  applied?: boolean;
+  follow_up_questions?: string[];
 }
