@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import type { Connect } from 'vite';
+import type { ViteDevServer, Connect } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 // https://vitejs.dev/config/
@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => ({
     // Ensure proper HMR configuration
     hmr: {
       protocol: 'ws',
-      host: 'localhost',
     },
     // Add explicit CORS support
     cors: true,
@@ -34,26 +33,25 @@ export default defineConfig(({ mode }) => ({
         secure: false,
       }
     },
-    // Set proper mime types to ensure React loads correctly
+    // Only set essential headers without overriding content types
     headers: {
-      'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
-      'Content-Type': 'application/javascript; charset=utf-8'
-    },
-    // Add middleware for SPA routing
-    middlewares: [
-      (req: IncomingMessage, res: ServerResponse, next: Connect.NextFunction) => {
-        // Force JavaScript content type for JS files
-        if (req.url?.endsWith('.js')) {
-          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        }
-        next();
-      }
-    ]
+      'Cache-Control': 'no-store'
+    }
   },
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
+    // Add custom plugin for SPA routing
+    {
+      name: 'spa-fallback',
+      configureServer(server: ViteDevServer) {
+        server.middlewares.use((req: Connect.IncomingMessage, res: ServerResponse, next: Connect.NextFunction) => {
+          // Let Vite handle all requests normally
+          next();
+        });
+      }
+    }
   ].filter(Boolean),
   resolve: {
     alias: {
