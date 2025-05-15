@@ -2,6 +2,17 @@
 import type { Json } from '@/integrations/supabase/types';
 
 /**
+ * Valid cuisine categories in the database schema
+ */
+export type CuisineCategory = 
+  | "Global" 
+  | "Regional American" 
+  | "European" 
+  | "Asian" 
+  | "Dietary Styles" 
+  | "Middle Eastern";
+
+/**
  * Database recipe type for insert operations
  * Matches exactly what Supabase expects
  */
@@ -16,7 +27,7 @@ export interface DbRecipeInsert {
   prep_time_min?: number;
   cook_time_min?: number;
   cuisine?: string;
-  cuisine_category?: string;
+  cuisine_category?: CuisineCategory;
   dietary?: string | string[];
   flavor_tags?: string[];
   nutrition?: Json;
@@ -41,6 +52,19 @@ export function asDbRecipeInsert(data: Record<string, any>): DbRecipeInsert {
   if (!data.title || !data.ingredients || !data.instructions || data.servings === undefined) {
     console.error("Missing required fields for database insert", data);
     throw new Error("Missing required fields for database recipe insert");
+  }
+  
+  // Validate cuisine_category if present
+  if (data.cuisine_category) {
+    const validCategories: CuisineCategory[] = [
+      "Global", "Regional American", "European", 
+      "Asian", "Dietary Styles", "Middle Eastern"
+    ];
+    
+    if (!validCategories.includes(data.cuisine_category as CuisineCategory)) {
+      console.warn(`Invalid cuisine_category "${data.cuisine_category}", defaulting to "Global"`);
+      data.cuisine_category = "Global";
+    }
   }
   
   return data as unknown as DbRecipeInsert;

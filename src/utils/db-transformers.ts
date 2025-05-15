@@ -174,6 +174,22 @@ export function transformRecipeForDb(recipe: Partial<Recipe> | any): Record<stri
     result.nutri_score = recipeClone.nutri_score;
   }
   
+  // Handle cuisine_category validation
+  if (recipeClone.cuisine_category) {
+    const validCategories = [
+      "Global", "Regional American", "European", 
+      "Asian", "Dietary Styles", "Middle Eastern"
+    ];
+    
+    // If it's not a valid category, default to "Global"
+    if (!validCategories.includes(recipeClone.cuisine_category)) {
+      result.cuisine_category = "Global";
+      console.warn(`Invalid cuisine_category "${recipeClone.cuisine_category}", defaulting to "Global"`);
+    } else {
+      result.cuisine_category = recipeClone.cuisine_category;
+    }
+  }
+  
   // Copy all other valid fields
   for (const key in recipeClone) {
     if (VALID_DB_FIELDS.includes(key) && result[key] === undefined) {

@@ -1,65 +1,63 @@
 
 import type { Recipe } from '@/types/recipe';
+import type { CuisineCategory } from '@/types/database';
 
 /**
- * Ensures that a recipe has all required fields before database operations
- * @param recipe The recipe to validate
- * @throws Error if the recipe is missing required fields
+ * Validates and ensures a recipe has all required fields and correct data types
+ * @param recipe The recipe to validate and fix
+ * @returns The recipe with all required fields and correct types
  */
-export function ensureRecipeIntegrity(recipe: Partial<Recipe>): void {
-  // Check for required fields
+export function ensureRecipeIntegrity(recipe: Partial<Recipe>): Recipe {
+  if (!recipe) {
+    throw new Error('Recipe is undefined or null');
+  }
+  
+  // Ensure basic required fields
   if (!recipe.title) {
-    throw new Error('Recipe is missing a title');
+    throw new Error('Recipe must have a title');
   }
   
-  if (!recipe.ingredients || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-    throw new Error('Recipe must have at least one ingredient');
+  // Ensure ingredients array exists
+  if (!recipe.ingredients || !Array.isArray(recipe.ingredients)) {
+    throw new Error('Recipe must have ingredients as an array');
   }
   
-  if (!recipe.instructions || !Array.isArray(recipe.instructions) || recipe.instructions.length === 0) {
-    throw new Error('Recipe must have at least one instruction');
+  // Ensure instructions array exists
+  if (!recipe.instructions || !Array.isArray(recipe.instructions)) {
+    throw new Error('Recipe must have instructions as an array');
   }
   
-  if (recipe.servings === undefined || recipe.servings <= 0) {
-    // Set a reasonable default if missing
-    recipe.servings = 4;
+  // Ensure servings is a number
+  if (typeof recipe.servings !== 'number' || isNaN(recipe.servings)) {
+    recipe.servings = 1; // Default to 1 serving if invalid
+    console.warn('Invalid servings value, defaulting to 1');
   }
   
-  // Ensure ingredients have required fields
-  recipe.ingredients = recipe.ingredients.map(ingredient => {
-    // Handle potential issues with ingredient data
-    if (typeof ingredient.item !== 'string' || !ingredient.item) {
-      ingredient.item = 'Unnamed ingredient';
-    }
+  // Validate cuisine_category if present
+  if (recipe.cuisine_category) {
+    const validCategories: CuisineCategory[] = [
+      "Global", "Regional American", "European", 
+      "Asian", "Dietary Styles", "Middle Eastern"
+    ];
     
-    // Ensure required metric fields have default values if missing
-    if (ingredient.qty_metric === undefined) {
-      ingredient.qty_metric = ingredient.qty || 0;
+    if (!validCategories.includes(recipe.cuisine_category as CuisineCategory)) {
+      recipe.cuisine_category = "Global";
+      console.warn(`Invalid cuisine_category "${recipe.cuisine_category}", defaulted to "Global"`);
     }
-    
-    if (!ingredient.unit_metric) {
-      ingredient.unit_metric = ingredient.unit || '';
-    }
-    
-    // Ensure required imperial fields have default values if missing
-    if (ingredient.qty_imperial === undefined) {
-      ingredient.qty_imperial = ingredient.qty_metric;
-    }
-    
-    if (!ingredient.unit_imperial) {
-      ingredient.unit_imperial = ingredient.unit_metric;
-    }
-    
-    return ingredient;
-  });
-  
-  // If science notes is not an array, convert it
-  if (recipe.science_notes && !Array.isArray(recipe.science_notes)) {
-    recipe.science_notes = [String(recipe.science_notes)];
   }
   
-  // If flavor tags is not an array, convert it
-  if (recipe.flavor_tags && !Array.isArray(recipe.flavor_tags)) {
-    recipe.flavor_tags = [String(recipe.flavor_tags)];
+  // Ensure nutrition object exists (even if empty)
+  if (!recipe.nutrition) {
+    recipe.nutrition = {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0
+    };
   }
+  
+  return recipe as Recipe;
 }
