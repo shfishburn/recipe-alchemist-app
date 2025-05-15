@@ -4,6 +4,7 @@ import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { processRecipeUpdates } from '../process-recipe-updates';
 import { Json } from '@/integrations/supabase/types';
+import { ensureRecipeIntegrity } from '../validation/validate-recipe-integrity';
 
 /**
  * Creates a new version of a recipe based on changes from an AI chat message

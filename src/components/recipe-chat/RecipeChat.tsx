@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -60,15 +61,33 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   } = useRecipeChat(recipe);
 
   // Create a wrapper for applyChanges that only takes the chatMessage parameter
-  const handleApplyChanges = async (message: ChatMessageType) => {
-    if (isApplying) return;
+  const handleApplyChanges = async (chatMessage: ChatMessageType): Promise<boolean> => {
+    if (isApplying) return false;
     
-    // Fix: Call applyChanges with only the ChatMessage parameter
-    const success = await applyChanges(message);
-    
-    if (success) {
-      // Optional: You can refetch the chat history after successful changes
-      refetchChatHistory();
+    try {
+      // Fix: Call rawApplyChanges with only the ChatMessage parameter
+      const success = await rawApplyChanges(chatMessage);
+      
+      if (success) {
+        // Optional: You can refetch the chat history after successful changes
+        refetchChatHistory();
+        return true;
+      } else {
+        toast.error("Failed to apply changes", {
+          description: "Please try again or modify your request"
+        });
+        return false;
+      }
+    } catch (error) {
+      handleError(error);
+      toast.error("Changes couldn't be applied", {
+        description: "Please try again or modify your request",
+        action: {
+          label: "Retry",
+          onClick: () => handleApplyChanges(chatMessage),
+        },
+      });
+      return false;
     }
   };
 

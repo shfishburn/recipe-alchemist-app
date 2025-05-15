@@ -59,7 +59,8 @@ export function useApplyChanges() {
         throw new Error(`Error fetching recipe: ${recipeError?.message || 'Recipe not found'}`);
       }
       
-      const originalRecipe = recipeData as Recipe;
+      // Convert database record to Recipe type
+      const originalRecipe = recipeData as unknown as Recipe;
       
       // Create a new recipe version with the changes
       const newRecipeData = await createRecipeVersion(originalRecipe, chatMessage);

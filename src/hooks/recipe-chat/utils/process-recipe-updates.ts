@@ -45,9 +45,17 @@ export function processRecipeUpdates(
         updatedRecipe.instructions = changes.instructions as string[];
       } else {
         // Complex object format - convert to string array
-        updatedRecipe.instructions = (changes.instructions as unknown[]).map(instruction => 
-          typeof instruction === 'string' ? instruction : instruction.action || instruction.stepNumber?.toString() || ''
-        ).filter(step => step.trim() !== '');
+        updatedRecipe.instructions = (changes.instructions as unknown[]).map(instruction => {
+          if (typeof instruction === 'string') return instruction;
+          
+          // Safely access properties with type checking
+          const instructionObj = instruction as Record<string, unknown>;
+          return (
+            typeof instructionObj.action === 'string' ? instructionObj.action : 
+            typeof instructionObj.stepNumber === 'number' ? instructionObj.stepNumber.toString() : 
+            ''
+          );
+        }).filter(step => step.trim() !== '');
       }
     }
   }
