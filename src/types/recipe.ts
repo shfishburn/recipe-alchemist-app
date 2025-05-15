@@ -1,4 +1,3 @@
-
 export interface Ingredient {
   // Metric measurements
   qty_metric: number;
@@ -85,6 +84,12 @@ export interface NutriScore {
   calculated_at?: string;
 }
 
+export interface VersionInfo {
+  version_number: number;
+  parent_version_id?: string;
+  modification_reason: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
@@ -115,6 +120,10 @@ export interface Recipe {
   cooking_tip?: string;
   slug?: string;
   nutri_score?: NutriScore;
+  
+  // Version information field
+  version_info?: VersionInfo;
+  version_id?: string;
 }
 
 // Export the Nutrition type explicitly

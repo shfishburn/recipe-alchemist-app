@@ -10,7 +10,8 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     hasInstructions: !!chatMessage.changes_suggested?.instructions?.length,
     hasNutrition: !!chatMessage.changes_suggested?.nutrition,
     hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length,
-    hasCompleteRecipe: !!chatMessage.recipe // Check for complete recipe object
+    // Check for complete recipe object coming from the updated API
+    hasCompleteRecipe: !!(chatMessage as any).recipe 
   });
 
   // Start with a complete copy of the original recipe to prevent data loss
@@ -20,18 +21,19 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   };
 
   // If we have a complete recipe object in the chat message, use it
-  if (chatMessage.recipe) {
+  // Note: We're using type assertion since the ChatMessage type might not be updated yet
+  if ((chatMessage as any).recipe) {
     console.log("Using complete recipe object from chat message");
     updatedRecipe = {
       ...updatedRecipe,
-      ...chatMessage.recipe,
+      ...(chatMessage as any).recipe,
       id: recipe.id, // Always preserve the original recipe ID
       updated_at: new Date().toISOString() // Update the timestamp
     };
     
     // If version info is present, add it to the recipe
-    if (chatMessage.recipe.version_info) {
-      updatedRecipe.version_info = chatMessage.recipe.version_info;
+    if ((chatMessage as any).recipe.version_info) {
+      updatedRecipe.version_info = (chatMessage as any).recipe.version_info;
     }
     
     // Return the updated recipe
