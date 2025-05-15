@@ -1,68 +1,89 @@
-import type { Recipe, Ingredient } from '@/types/recipe';
-import type { ChangesResponse, IngredientChange } from '@/types/chat';
+
+import type { Recipe } from '@/types/recipe';
+import type { ChatMessage } from '@/types/chat';
+import { findDuplicateIngredients, validateIngredientQuantities } from './ingredients/ingredient-validation';
+import { processRecipeUpdates } from './process-recipe-updates';
+import { saveRecipeUpdate } from './db/save-recipe-update';
 import { validateRecipeUpdate } from './validation/validate-recipe-update';
+import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 
-/**
- * Apply changes to a recipe and return the updated recipe
- */
-export function updateRecipe(recipe: Recipe, changes: ChangesResponse): Recipe {
-  // Validate the changes before applying them
-  if (!validateRecipeUpdate(recipe, changes)) {
-    console.error("Invalid recipe update");
-    return recipe; // Return original recipe if validation fails
-  }
-
-  // Create a deep copy to avoid mutating the original
-  const updatedRecipe = JSON.parse(JSON.stringify(recipe)) as Recipe;
-  
-  // Apply title changes if a new title is provided
-  if (changes.title && changes.title !== recipe.title) {
-    updatedRecipe.title = changes.title;
+export async function updateRecipe(
+  recipe: Recipe,
+  chatMessage: ChatMessage
+) {
+  // Initial validation of inputs
+  if (!validateRecipeUpdate(recipe, chatMessage.changes_suggested)) {
+    throw new Error("Failed to validate recipe update");
   }
   
-  // Apply ingredient changes based on mode
-  if (changes.ingredients && changes.ingredients.mode !== 'none') {
-    const { mode, items } = changes.ingredients;
+  console.log("Starting recipe update with changes:", {
+    hasTitle: !!chatMessage.changes_suggested?.title,
+    hasIngredients: !!chatMessage.changes_suggested?.ingredients,
+    ingredientMode: chatMessage.changes_suggested?.ingredients?.mode,
+    ingredientCount: chatMessage.changes_suggested?.ingredients?.items?.length,
+    hasInstructions: !!chatMessage.changes_suggested?.instructions,
+    hasNutrition: !!chatMessage.changes_suggested?.nutrition,
+    hasScienceNotes: !!chatMessage.changes_suggested?.science_notes,
+    scienceNoteCount: chatMessage.changes_suggested?.science_notes?.length
+  });
+
+  try {
+    // Process basic recipe updates - this now returns a complete recipe copy with changes applied
+    const updatedRecipe = processRecipeUpdates(recipe, chatMessage);
+
+    // Verify recipe integrity before saving
+    ensureRecipeIntegrity(updatedRecipe);
     
-    if (mode === 'replace' && Array.isArray(items) && items.length > 0) {
-      // Convert items from the AI format to the Ingredient format
-      updatedRecipe.ingredients = items.map((item: IngredientChange): Ingredient => ({
-        qty_imperial: item.qty || 0,
-        unit_imperial: item.unit || '',
-        qty_metric: item.qty || 0, // Should properly convert
-        unit_metric: '', // Should properly convert based on unit_imperial
-        item: item.item || '',
-        notes: item.notes
-      }));
-    } 
-    else if (mode === 'add' && Array.isArray(items) && items.length > 0) {
-      // Keep existing ingredients and add new ones
-      const convertedItems: Ingredient[] = items.map((item: IngredientChange): Ingredient => ({
-        qty_imperial: item.qty || 0,
-        unit_imperial: item.unit || '',
-        qty_metric: item.qty || 0, // Should properly convert
-        unit_metric: '', // Should properly convert based on unit_imperial
-        item: item.item || '',
-        notes: item.notes
-      }));
+    // Advanced ingredient validations if ingredients are being modified
+    if (chatMessage.changes_suggested?.ingredients?.items) {
+      const { mode = 'none', items = [] } = chatMessage.changes_suggested.ingredients;
       
-      updatedRecipe.ingredients = [...(updatedRecipe.ingredients || []), ...convertedItems];
+      if (mode !== 'none' && items.length > 0) {
+        // Validate ingredient format
+        const validIngredients = items.every(item => 
+          typeof item.qty === 'number' && 
+          typeof item.unit === 'string' && 
+          typeof item.item === 'string'
+        );
+
+        if (!validIngredients) {
+          console.error("Invalid ingredient format detected");
+          throw new Error("Invalid ingredient format in suggested changes");
+        }
+
+        // Check for duplicates in add mode
+        if (mode === 'add') {
+          const duplicates = findDuplicateIngredients(recipe.ingredients, items);
+          if (duplicates.length > 0) {
+            console.error("Duplicate ingredients detected:", duplicates);
+            throw new Error(
+              `These ingredients (or similar ones) already exist in the recipe: ${
+                duplicates.map(d => d.new).join(', ')
+              }`
+            );
+          }
+        }
+
+        // Validate quantities
+        const quantityValidation = validateIngredientQuantities(recipe, items, mode);
+        if (!quantityValidation.valid) {
+          console.error("Ingredient quantity validation failed:", quantityValidation.message);
+          throw new Error(quantityValidation.message || "Invalid ingredient quantities");
+        }
+      }
     }
+
+    console.log("Final recipe update ready to save:", {
+      id: updatedRecipe.id,
+      hasIngredients: updatedRecipe.ingredients?.length > 0,
+      ingredientCount: updatedRecipe.ingredients?.length,
+      hasInstructions: updatedRecipe.instructions?.length > 0,
+      instructionCount: updatedRecipe.instructions?.length
+    });
+    
+    return await saveRecipeUpdate(updatedRecipe);
+  } catch (error) {
+    console.error("Update recipe error:", error);
+    throw error;
   }
-  
-  // Apply instruction/steps changes
-  if (Array.isArray(changes.instructions) && changes.instructions.length > 0) {
-    // Handle whether recipe uses 'steps' or 'instructions' field
-    if (Array.isArray(updatedRecipe.steps)) {
-      updatedRecipe.steps = changes.instructions.map(item => 
-        typeof item === 'string' ? item : item.text
-      );
-    } else if (Array.isArray(updatedRecipe.instructions)) {
-      updatedRecipe.instructions = changes.instructions.map(item => 
-        typeof item === 'string' ? item : item.text
-      );
-    }
-  }
-  
-  return updatedRecipe;
 }

@@ -1,49 +1,93 @@
 
-import { Recipe } from '@/types/recipe';
-import { ChangesResponse } from '@/types/chat';
+import type { Recipe } from '@/types/recipe';
+import type { ChangesResponse } from '@/types/chat';
 
-/**
- * Validate that a recipe update is valid before applying it
- */
-export function validateRecipeUpdate(
-  recipe: Recipe,
-  changes?: ChangesResponse | null
-): boolean {
-  if (!recipe) {
-    console.error("Missing recipe in validateRecipeUpdate");
-    return false;
-  }
-  
-  if (!recipe.id) {
-    console.error("Recipe is missing ID in validateRecipeUpdate");
-    return false;
-  }
-  
-  // If no changes, consider it valid (nothing to update)
+export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | null | undefined) {
   if (!changes) {
-    return true;
+    console.log("No changes to validate");
+    return false;
   }
-  
-  // Check if ingredients structure is valid when it exists
-  if (changes.ingredients) {
-    if (!changes.ingredients.mode) {
-      console.error("Missing ingredients.mode in changes");
+
+  if (!recipe?.id) {
+    console.error("Invalid recipe provided for validation");
+    return false;
+  }
+
+  // Basic validation - can be extended with more specific rules
+  try {
+    // Validate title changes
+    if (changes.title !== undefined && typeof changes.title !== 'string') {
+      console.error("Invalid title format");
       return false;
     }
     
-    if (changes.ingredients.mode !== 'none' && 
-       (!Array.isArray(changes.ingredients.items) || 
-        changes.ingredients.items.length === 0)) {
-      console.warn("Ingredients mode is not 'none' but items array is empty");
-      // This might be acceptable, but worth logging a warning
+    // Validate ingredients changes
+    if (changes.ingredients) {
+      const { mode, items } = changes.ingredients;
+      
+      if (mode !== 'add' && mode !== 'replace' && mode !== 'none') {
+        console.error("Invalid ingredients mode:", mode);
+        return false;
+      }
+      
+      if (mode !== 'none' && (!Array.isArray(items) || items.length === 0)) {
+        console.error("Missing or empty ingredients items array");
+        return false;
+      }
+      
+      // Validate each ingredient item structure
+      if (mode !== 'none' && Array.isArray(items)) {
+        for (const item of items) {
+          if (typeof item === 'string') {
+            continue; // String ingredients are valid
+          }
+          
+          // Basic structure validation for object ingredients
+          if (!item || typeof item !== 'object') {
+            console.error("Invalid ingredient item format");
+            return false;
+          }
+        }
+      }
     }
-  }
-  
-  // Check for instructions array when present
-  if (changes.instructions && !Array.isArray(changes.instructions)) {
-    console.error("Instructions must be an array");
+    
+    // Validate instructions changes
+    if (changes.instructions && !Array.isArray(changes.instructions)) {
+      console.error("Instructions must be an array");
+      return false;
+    }
+    
+    // Validate science_notes changes
+    if (changes.science_notes && !Array.isArray(changes.science_notes)) {
+      console.error("Science notes must be an array");
+      return false;
+    }
+    
+    // Validate nutrition data if present
+    if (changes.nutrition) {
+      // Ensure it's an object
+      if (typeof changes.nutrition !== 'object' || changes.nutrition === null) {
+        console.error("Nutrition must be a valid object");
+        return false;
+      }
+      
+      // Check for minimum required nutrition fields
+      const requiredFields = ['calories', 'protein', 'carbs', 'fat'];
+      
+      // Log for debugging
+      console.log("Validating nutrition data:", changes.nutrition);
+      
+      // We don't strictly enforce these fields, just log warnings
+      for (const field of requiredFields) {
+        if (!(field in changes.nutrition) || changes.nutrition[field] === undefined) {
+          console.warn(`Missing nutrition field: ${field}`);
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Validation error:", error);
     return false;
   }
-  
-  return true;
 }
