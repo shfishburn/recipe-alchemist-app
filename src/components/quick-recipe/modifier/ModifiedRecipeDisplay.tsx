@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeDisplay } from '../RecipeDisplay';
@@ -7,7 +7,15 @@ import { NutritionSummary } from '../NutritionSummary';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { ModificationStatus, RecipeModifications } from '@/hooks/recipe-modifications/types';
 import { Badge } from "@/components/ui/badge";
-import { History } from 'lucide-react';
+import { History, BugIcon } from 'lucide-react';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ModifiedRecipeDisplayProps {
   modifiedRecipe: QuickRecipe;
@@ -28,6 +36,7 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
   onResetToOriginal,
   isHistoricalVersion = false
 }) => {
+  const [debugOpen, setDebugOpen] = useState(false);
   const isSuccess = status === 'success';
   const isApplying = status === 'applying';
   const isLoading = status === 'loading';
@@ -36,6 +45,10 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
   // Display version information if available
   const versionInfo = modifiedRecipe.version_info || 
                      (modifications?.recipe?.version_info);
+  
+  const formatJsonOutput = (obj: any): string => {
+    return JSON.stringify(obj, null, 2);
+  };
 
   return (
     <Card>
@@ -62,6 +75,43 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
               )}
             </CardDescription>
           </div>
+          <Dialog open={debugOpen} onOpenChange={setDebugOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="icon" title="Debug AI Response">
+                <BugIcon className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+              <DialogHeader>
+                <DialogTitle>AI Modification Debug View</DialogTitle>
+                <DialogDescription>
+                  Raw data returned from the AI modification request
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mt-4 space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Status</h4>
+                  <code className="block p-2 bg-slate-100 rounded overflow-auto whitespace-pre text-xs">
+                    {status}
+                  </code>
+                </div>
+                {modifications && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Modifications</h4>
+                    <code className="block p-2 bg-slate-100 rounded overflow-auto whitespace-pre text-xs max-h-[300px]">
+                      {formatJsonOutput(modifications)}
+                    </code>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <h4 className="font-medium">Modified Recipe</h4>
+                  <code className="block p-2 bg-slate-100 rounded overflow-auto whitespace-pre text-xs max-h-[300px]">
+                    {formatJsonOutput(modifiedRecipe)}
+                  </code>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

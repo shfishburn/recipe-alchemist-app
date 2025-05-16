@@ -31,6 +31,18 @@ export function ChatMessage({
   // Check if this message has an error
   const hasError = getChatMeta(chat, 'error', false);
   
+  // Log chat message for debugging
+  React.useEffect(() => {
+    console.log("Chat Message:", {
+      id: chat.id,
+      isOptimistic,
+      hasError,
+      userMessage: chat.user_message?.substring(0, 100) + (chat.user_message?.length > 100 ? '...' : ''),
+      hasAiResponse: !!chat.ai_response,
+      hasChangesSuggested: !!chat.changes_suggested
+    });
+  }, [chat, isOptimistic, hasError]);
+  
   // For optimistic user messages, only show the user message
   if (isOptimisticUserMessage) {
     return (
@@ -65,6 +77,7 @@ export function ChatMessage({
           onApplyChanges={handleApplyChanges}
           isApplying={isApplying}
           applied={applied || !!chat.applied}
+          messageId={chat.id}
         />
       )}
     </div>

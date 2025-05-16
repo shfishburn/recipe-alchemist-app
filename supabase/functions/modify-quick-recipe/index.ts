@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
 import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
@@ -110,8 +111,23 @@ serve(async (req) => {
     });
   }
 
+  let requestPayload: any;
   try {
-    const { recipe, userRequest, modificationHistory = [], user_id } = await req.json();
+    requestPayload = await req.json();
+    console.log("Modification request received with payload keys:", Object.keys(requestPayload));
+    const { recipe, userRequest } = requestPayload;
+    console.log("Recipe ID:", recipe?.id || "missing");
+    console.log("User Request:", userRequest?.substring(0, 50) + (userRequest?.length > 50 ? "..." : ""));
+  } catch (parseErr) {
+    console.error("Failed to parse request JSON:", parseErr);
+    return new Response(JSON.stringify({ error: "Invalid request format" }), { 
+      status: 400, 
+      headers 
+    });
+  }
+
+  try {
+    const { recipe, userRequest, modificationHistory = [], user_id } = requestPayload;
 
     // validate input
     try {
@@ -119,8 +135,9 @@ serve(async (req) => {
       if (!userRequest || typeof userRequest !== 'string' || userRequest.trim() === '') {
         throw new Error('Missing or empty userRequest. Please provide a modification request string.');
       }
-    } catch (vall) {
-      return new Response(JSON.stringify({ error: vall.message }), { status: 400, headers });
+    } catch (valErr) {
+      console.error("Validation error:", valErr);
+      return new Response(JSON.stringify({ error: valErr.message }), { status: 400, headers });
     }
 
     // build LangChain call
@@ -137,18 +154,23 @@ serve(async (req) => {
       ...modificationHistory.map(e => ({ role: "ai", content: JSON.stringify(e.response) }))
     ];
 
+    console.log("Calling AI model with history length:", history.length);
+
     // call LLM with circuit breaker + retry
     let result: any;
     try {
       result = await openAICircuit.execute(() =>
         withRetry(() => chain.invoke({ input, history }), 3, 500)
       );
+      console.log("AI returned result with keys:", Object.keys(result));
     } catch (llmErr) {
       const msg = llmErr.message.includes("Circuit is open")
         ? { error: "Service unavailable, too many failures" }
         : llmErr.message.includes("timeout")
           ? { error: "AI request timed out" }
-          : { error: "AI generation failed" };
+          : { error: "AI generation failed", details: llmErr.message };
+      
+      console.error("LLM error:", llmErr);
       return new Response(JSON.stringify(msg), { status: 503, headers });
     }
 
@@ -156,7 +178,9 @@ serve(async (req) => {
     let parsed: any;
     try {
       parsed = recipeModificationsSchema.parse(result);
+      console.log("Parsed recipe with updated title:", parsed.recipe?.title);
     } catch (parseErr) {
+      console.error("Schema parsing error:", parseErr);
       return new Response(
         JSON.stringify({
           error: "Invalid AI response format",
@@ -184,6 +208,8 @@ serve(async (req) => {
         };
       }
       
+      console.log("Creating version:", newVersionNumber, "for recipe:", recipe.id);
+      
       // Ensure recipe ID is preserved
       modifiedRecipe.id = recipe.id;
       
@@ -199,6 +225,7 @@ serve(async (req) => {
       
       if (versionData) {
         modifiedRecipe.version_id = versionData.version_id;
+        console.log("Version created successfully with ID:", versionData.version_id);
       }
     } catch (versionError) {
       console.error("Version handling error:", versionError);
@@ -215,7 +242,7 @@ serve(async (req) => {
         const sb = createClient(SUPA_URL, SUPA_KEY, {
           global: { headers: { Authorization: `Bearer ${SUPA_KEY}` } }
         });
-        await sb.from("recipe_chats").insert({
+        const chatResult = await sb.from("recipe_chats").insert({
           recipe_id: recipe.id,
           user_message: userRequest,
           ai_response: parsed.textResponse,
@@ -223,6 +250,12 @@ serve(async (req) => {
           version_id: parsed.recipe.version_id, // Link to version
           source_type: "modification"
         });
+        
+        if (chatResult.error) {
+          console.error("Error saving chat record:", chatResult.error);
+        } else {
+          console.log("Chat record saved successfully");
+        }
       } catch (dbErr) {
         console.error("DB insert failed", dbErr);
       }
@@ -234,7 +267,8 @@ serve(async (req) => {
       recipe: parsed.recipe
     };
 
-    // return success
+    // Final success response
+    console.log("Returning successful response with recipe ID:", response.recipe.id);
     return new Response(JSON.stringify(response), { status: 200, headers });
   } catch (err) {
     console.error("Unexpected error", err);

@@ -28,6 +28,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
 
   // Reset on recipe change
   useEffect(() => {
+    console.log("Recipe changed in useRecipeModifications:", recipe.id);
     setModifiedRecipe(recipe);
     setStatus('idle');
     setError(null);
@@ -50,9 +51,13 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   
   // Fetch recipe version history
   const fetchVersionHistory = async (recipeId: string) => {
-    if (!session) return;
+    if (!session) {
+      console.log("Cannot fetch version history: No session");
+      return;
+    }
     
     try {
+      console.log("Fetching version history for recipe:", recipeId);
       setStatus('loading');
       
       const token = session.access_token;
@@ -69,15 +74,18 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       }
       
       const versions = await response.json();
+      console.log(`Fetched ${versions.length} versions for recipe:`, recipeId);
       setVersionHistory(versions);
       
       // Set selected version to the latest one
       if (versions.length > 0) {
         const latestVersion = versions[0]; // Already sorted descending
+        console.log("Setting selected version to latest:", latestVersion.version_id);
         setSelectedVersionId(latestVersion.version_id);
         
         // If the recipe doesn't have a version_id, use the latest version data
         if (!recipe.version_id) {
+          console.log("Recipe has no version_id, using latest version data");
           setModifiedRecipe({
             ...recipe,
             ...latestVersion.recipe_data,
@@ -96,6 +104,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   
   // Select a specific version
   const selectVersion = useCallback((versionId: string) => {
+    console.log("Selecting version:", versionId);
     const version = versionHistory.find(v => v.version_id === versionId);
     if (version) {
       setSelectedVersionId(versionId);
@@ -105,6 +114,9 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         version_id: version.version_id
       });
       setStatus('applied');
+      console.log("Version selected successfully:", versionId);
+    } else {
+      console.warn("Version not found:", versionId);
     }
   }, [versionHistory, recipe]);
 
@@ -120,6 +132,8 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       return;
     }
 
+    console.log("Initiating modification request:", request.substring(0, 50) + (request.length > 50 ? "..." : ""));
+    
     // cancel previous
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
@@ -147,6 +161,9 @@ export function useRecipeModifications(recipe: QuickRecipe) {
       abortControllerRef.current = new AbortController();
 
       try {
+        console.log("Executing modification request:", actualRequest.substring(0, 50) + (actualRequest.length > 50 ? "..." : ""));
+        console.log("Using recipe version:", modifiedRecipe.version_id || "none");
+        
         const validated = await requestRecipeModifications(
           modifiedRecipe,
           actualRequest,
@@ -156,6 +173,12 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         );
         
         abortControllerRef.current = null;
+        
+        console.log("Modification request succeeded, response:", {
+          recipeId: validated.recipe?.id,
+          recipeTitle: validated.recipe?.title,
+          versionId: validated.recipe?.version_id
+        });
         
         const entry: ModificationHistoryEntry = {
           request: actualRequest,
@@ -170,12 +193,14 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         
         // Refresh version history
         if (recipe.id) {
+          console.log("Refreshing version history after successful modification");
           fetchVersionHistory(recipe.id);
         }
       } catch (err: any) {
         abortControllerRef.current = null;
         
         if (err.name === 'AbortError') {
+          console.log("Modification request aborted");
           setStatus('canceled');
         } else {
           console.error('Modification error:', err);
@@ -187,20 +212,34 @@ export function useRecipeModifications(recipe: QuickRecipe) {
     };
 
     if (immediate) {
+      console.log("Executing modification request immediately");
       await executeRequest();
     } else {
+      console.log("Scheduling modification request with delay");
       requestTimerRef.current = window.setTimeout(executeRequest, 800);
     }
   }, [modifiedRecipe, modificationHistory, session, recipe.id]);
 
   const applyModifications = useCallback(() => {
-    if (!modifications || status !== 'success') return;
+    if (!modifications || status !== 'success') {
+      console.warn("Cannot apply modifications - status is not 'success' or modifications are null");
+      return;
+    }
     
+    console.log("Applying modifications to recipe", modifiedRecipe.id);
     setStatus('applying');
     
     try {
       // With the complete recipe update approach, we can just use the complete recipe
       const next = modifications.recipe;
+      console.log("New recipe data:", {
+        id: next.id,
+        title: next.title,
+        versionId: next.version_id,
+        ingredientsCount: next.ingredients?.length || 0,
+        stepsCount: next.steps?.length || 0
+      });
+      
       setModifiedRecipe(next);
       setStatus('applied');
       setModifications(null);
@@ -208,13 +247,15 @@ export function useRecipeModifications(recipe: QuickRecipe) {
         h.map((e, i) => i === h.length - 1 ? { ...e, applied: true } : e)
       );
       toast.success("Recipe updated");
+      console.log("Modifications applied successfully");
       
       // Refresh version history
       if (recipe.id) {
+        console.log("Refreshing version history after applying modifications");
         fetchVersionHistory(recipe.id);
       }
     } catch (err: any) {
-      console.error(err);
+      console.error("Error applying modifications:", err);
       setError(err.message);
       setStatus('error');
       toast.error("Apply failed");
@@ -222,6 +263,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   }, [modifications, status, recipe.id]);
 
   const rejectModifications = useCallback(() => {
+    console.log("Rejecting modifications");
     setModifications(null);
     setStatus('idle');
     setModificationHistory(h =>
@@ -231,6 +273,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   }, []);
 
   const cancelRequest = useCallback(() => {
+    console.log("Canceling modification request");
     abortControllerRef.current?.abort();
     pendingRequestRef.current = null;
     if (requestTimerRef.current != null) window.clearTimeout(requestTimerRef.current);
@@ -240,6 +283,7 @@ export function useRecipeModifications(recipe: QuickRecipe) {
   }, []);
 
   const resetToOriginal = useCallback(() => {
+    console.log("Resetting recipe to original version");
     setModifiedRecipe(recipe);
     setStatus('idle');
     setError(null);
