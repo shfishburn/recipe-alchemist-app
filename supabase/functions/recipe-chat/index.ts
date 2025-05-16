@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -265,6 +266,7 @@ serve(async (req) => {
       // Extract data from response
       const textResponse = processedResponse.textResponse || "No response text provided";
       const completeRecipe = processedResponse.recipe;
+      const changes = processedResponse.changes || null;
       const followUpQuestions = processedResponse.followUpQuestions || [];
       
       // Check if the response contains a complete recipe (modification) or just text (question answer)
@@ -315,7 +317,7 @@ serve(async (req) => {
         }
       }
       
-      // Store the chat interaction
+      // Store the chat interaction - strip out recipe to avoid db schema issues
       if (recipe.id) {
         // Create meta object for optimistic updates tracking
         const metaData = {
@@ -330,8 +332,8 @@ serve(async (req) => {
               recipe_id: recipe.id,
               user_message: userMessage,
               ai_response: textResponse,
-              recipe: processedResponse.recipe, // Store the complete recipe directly
-              source_type: sourceType || 'manual', // Ensure we have a valid source type
+              changes_suggested: changes, // Store changes not full recipe
+              source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
               version_id: processedResponse.recipe?.version_id, // Link to version if created

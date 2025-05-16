@@ -158,6 +158,24 @@ IMPORTANT INSTRUCTIONS (MANDATORY):
 2. When modifying a recipe, you MUST ALWAYS RETURN A COMPLETE RECIPE OBJECT strictly adhering to this JSON schema:
 {
   "textResponse": "Detailed summary of recipe modifications", // mandatory
+  "changes": {  // Include specific changes in this object
+    "title": "string", // optional 
+    "ingredients": { // optional
+      "mode": "add" | "replace" | "none",
+      "items": [{ 
+        "qty_imperial": number,
+        "unit_imperial": string, 
+        "qty_metric": number,
+        "unit_metric": string,
+        "shop_size_qty": number, 
+        "shop_size_unit": string,
+        "item": string, 
+        "notes": string
+      }]
+    },
+    "instructions": ["Array of steps"], // optional
+    "science_notes": ["Array of scientific explanations"] // optional
+  },
   "recipe": {
     "id": "${originalRecipe.id}", // mandatory - preserve original ID
     "title": "Recipe Title", // mandatory
