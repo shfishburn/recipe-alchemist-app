@@ -922,6 +922,54 @@ export type Database = {
           },
         ]
       }
+      recipe_versions: {
+        Row: {
+          created_at: string
+          modification_request: string | null
+          parent_version_id: string | null
+          recipe_data: Json
+          recipe_id: string
+          user_id: string | null
+          version_id: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          modification_request?: string | null
+          parent_version_id?: string | null
+          recipe_data: Json
+          recipe_id: string
+          user_id?: string | null
+          version_id?: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          modification_request?: string | null
+          parent_version_id?: string | null
+          recipe_data?: Json
+          recipe_id?: string
+          user_id?: string | null
+          version_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_versions_parent_version_id_fkey"
+            columns: ["parent_version_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_versions"
+            referencedColumns: ["version_id"]
+          },
+          {
+            foreignKeyName: "recipe_versions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipes: {
         Row: {
           chef_notes: string | null
