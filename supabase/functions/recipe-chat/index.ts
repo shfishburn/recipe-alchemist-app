@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -279,7 +280,8 @@ serve(async (req) => {
       // Calculate an adaptive timeout based on retry attempt
       const timeout = Math.min(60000 + (retryAttempt * 15000), 120000); // Between 60-120 seconds
       
-      // Use the unified recipe prompt that includes the original recipe data
+      // Determine whether to use the unified recipe prompt based on source type
+      // For analysis requests, use the unified approach that returns complete recipe
       const systemPromptContent = sourceType === 'analysis' 
         ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
         : chatSystemPrompt;

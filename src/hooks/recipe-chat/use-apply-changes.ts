@@ -1,53 +1,40 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ChatMessage } from '@/types/chat';
-import type { Recipe } from '@/types/recipe';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { updateRecipe } from './utils/update-recipe';
 import { updateRecipeUnified } from './utils/unified-recipe-update';
-import { supabase } from '@/integrations/supabase/client';
+import type { Recipe } from '@/types/recipe';
+import type { ChatMessage } from '@/types/chat';
 
-interface ApplyChangesOptions {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-}
-
-/**
- * Hook for applying recipe changes from AI chat responses
- */
-export const useApplyChanges = (options: ApplyChangesOptions = {}) => {
+export const useApplyChanges = () => {
   const [isApplying, setIsApplying] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const mutation = useMutation({
-    mutationFn: async ({ 
-      chatMessage, 
-      recipe 
-    }: { 
-      chatMessage: ChatMessage; 
-      recipe: Recipe 
+  const applyChangesMutation = useMutation({
+    mutationFn: async ({
+      recipe,
+      chatMessage,
+    }: {
+      recipe: Recipe;
+      chatMessage: ChatMessage;
     }) => {
-      console.log("Applying changes from chat message:", {
-        messageId: chatMessage.id,
-        hasRecipeObject: !!chatMessage.recipe,
-        hasChangesSuggested: !!chatMessage.changes_suggested,
-        recipeId: recipe.id
-      });
-
+      setIsApplying(true);
+      
       try {
-        setIsApplying(true);
         let updatedRecipe: Recipe;
         
+        // Check if this is a unified recipe update (complete recipe) or a partial update
         if (chatMessage.recipe) {
-          // Use the unified approach if we have a complete recipe object
-          console.log("Using unified recipe update approach with complete recipe object");
+          console.log('Applying unified recipe update with complete recipe object');
           updatedRecipe = await updateRecipeUnified(recipe, chatMessage);
         } else if (chatMessage.changes_suggested) {
-          // Fall back to the legacy approach for partial updates
-          console.log("Using legacy recipe update approach with partial changes");
+          console.log('Applying partial recipe update with changes_suggested');
           updatedRecipe = await updateRecipe(recipe, chatMessage);
         } else {
-          throw new Error("Chat message contains no changes to apply");
+          throw new Error('No changes to apply - message contains neither recipe nor changes_suggested');
         }
         
         // Mark the chat message as applied in the database
@@ -55,62 +42,50 @@ export const useApplyChanges = (options: ApplyChangesOptions = {}) => {
           .from('recipe_chats')
           .update({ applied: true })
           .eq('id', chatMessage.id);
-
+          
         if (error) {
-          console.error("Error updating recipe chat applied status:", error);
-          // Continue anyway - the recipe update still worked
+          console.error('Error marking chat as applied:', error);
         }
         
-        // Return the updated recipe
         return updatedRecipe;
+      } catch (error) {
+        console.error('Error applying changes:', error);
+        throw error;
       } finally {
         setIsApplying(false);
       }
     },
-    onSuccess: (updatedRecipe) => {
-      // Invalidate relevant queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['recipe', updatedRecipe.id] });
-      queryClient.invalidateQueries({ queryKey: ['recipe-chats', updatedRecipe.id] });
+    onSuccess: (data, variables) => {
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({
+        queryKey: ['recipe', data.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['recipe-chats', variables.recipe.id],
+      });
       
-      // Call the success callback if provided
-      if (options.onSuccess) {
-        options.onSuccess();
-      }
+      // Show success toast
+      toast({
+        title: 'Changes applied successfully',
+        description: 'The recipe has been updated with the suggested changes.',
+      });
     },
-    onError: (error) => {
-      console.error("Error applying changes:", error);
-      
-      // Call the error callback if provided
-      if (options.onError) {
-        options.onError(error as Error);
-      }
-    }
+    onError: (error, variables) => {
+      // Show error toast
+      toast({
+        title: 'Failed to apply changes',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    },
   });
 
-  const applyChanges = async (chatMessage: ChatMessage) => {
-    // Ensure we have the latest recipe data
-    const { data: recipeData, error: recipeError } = await supabase
-      .from('recipes')
-      .select('*')
-      .eq('id', chatMessage.recipe_id)
-      .single();
-
-    if (recipeError) {
-      console.error("Error fetching recipe:", recipeError);
-      throw new Error("Could not fetch recipe data");
-    }
-
-    // Apply the changes - convert the data to proper Recipe type
-    const result = await mutation.mutateAsync({ 
-      chatMessage, 
-      recipe: recipeData as unknown as Recipe 
-    });
-    
-    return !!result;
+  const applyChanges = (recipe: Recipe, chatMessage: ChatMessage) => {
+    return applyChangesMutation.mutateAsync({ recipe, chatMessage });
   };
 
   return {
     applyChanges,
-    isApplying
+    isApplying,
   };
 };
