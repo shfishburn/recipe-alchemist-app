@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -125,8 +124,56 @@ function validateRecipeChanges(rawResponse, recipe) {
   }
 }
 
+// Helper function to extract science notes from text if none were properly structured
+function extractScienceNotesFromText(text: string): string[] {
+  const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
+  const paragraphs = text.split(/\n\n+/);
+  const scienceNotes: string[] = [];
+  
+  // Look for paragraphs containing science keywords
+  paragraphs.forEach(paragraph => {
+    const lowerParagraph = paragraph.toLowerCase();
+    
+    for (const keyword of scienceKeywords) {
+      if (lowerParagraph.includes(keyword) && paragraph.length > 30) {
+        // Clean up the paragraph
+        const cleaned = paragraph
+          .replace(/^#+\s+/, '') // Remove markdown headers
+          .replace(/^\d+\.\s+/, '') // Remove numbered list markers
+          .replace(/^\*\s+/, '') // Remove bullet points
+          .trim();
+        
+        if (cleaned.length > 0) {
+          scienceNotes.push(cleaned);
+          break; // Break after finding first keyword match in paragraph
+        }
+      }
+    }
+  });
+  
+  // If we still don't have any science notes, look for sentences
+  if (scienceNotes.length === 0) {
+    const sentences = text.split(/[.!?]+\s+/);
+    
+    for (const sentence of sentences) {
+      const lowerSentence = sentence.toLowerCase();
+      for (const keyword of scienceKeywords) {
+        if (lowerSentence.includes(keyword) && sentence.length > 20) {
+          scienceNotes.push(sentence.trim());
+          break;
+        }
+      }
+      
+      // Limit to 3 extracted notes
+      if (scienceNotes.length >= 3) break;
+    }
+  }
+  
+  return scienceNotes.slice(0, 5); // Return at most 5 notes
+}
+
 // Inline recipe analysis prompt
-const recipeAnalysisPrompt = `You are a culinary scientist and expert chef in the López-Alt tradition, analyzing recipes through the lens of food chemistry and precision cooking techniques.
+const recipeAnalysisPrompt = `You are a culinary scientist and expert chef in the López-Alt tradition, analyzing recipes through the lens of food chemistry and precision cooking techniques. Always respond in JSON format.
 
 Focus on:
 1. COOKING CHEMISTRY:
@@ -178,7 +225,7 @@ Return response as JSON with this exact structure:
 }`;
 
 // Inline chat system prompt
-const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. When suggesting changes to recipes:
+const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. Always respond in JSON format. When suggesting changes to recipes:
 
 1. Always return a complete recipe object with all changes applied, not just the modifications
 2. For cooking instructions:
@@ -227,54 +274,6 @@ Example format:
   },
   "followUpQuestions": ["Array of suggested follow-up questions"]
 }`;
-
-// Helper function to extract science notes from text if none were properly structured
-function extractScienceNotesFromText(text: string): string[] {
-  const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
-  const paragraphs = text.split(/\n\n+/);
-  const scienceNotes: string[] = [];
-  
-  // Look for paragraphs containing science keywords
-  paragraphs.forEach(paragraph => {
-    const lowerParagraph = paragraph.toLowerCase();
-    
-    for (const keyword of scienceKeywords) {
-      if (lowerParagraph.includes(keyword) && paragraph.length > 30) {
-        // Clean up the paragraph
-        const cleaned = paragraph
-          .replace(/^#+\s+/, '') // Remove markdown headers
-          .replace(/^\d+\.\s+/, '') // Remove numbered list markers
-          .replace(/^\*\s+/, '') // Remove bullet points
-          .trim();
-        
-        if (cleaned.length > 0) {
-          scienceNotes.push(cleaned);
-          break; // Break after finding first keyword match in paragraph
-        }
-      }
-    }
-  });
-  
-  // If we still don't have any science notes, look for sentences
-  if (scienceNotes.length === 0) {
-    const sentences = text.split(/[.!?]+\s+/);
-    
-    for (const sentence of sentences) {
-      const lowerSentence = sentence.toLowerCase();
-      for (const keyword of scienceKeywords) {
-        if (lowerSentence.includes(keyword) && sentence.length > 20) {
-          scienceNotes.push(sentence.trim());
-          break;
-        }
-      }
-      
-      // Limit to 3 extracted notes
-      if (scienceNotes.length >= 3) break;
-    }
-  }
-  
-  return scienceNotes.slice(0, 5); // Return at most 5 notes
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests with dynamic origin support for credentials
@@ -342,7 +341,7 @@ serve(async (req) => {
 
     ${analysisInstructions}
 
-    IMPORTANT: Your response must include a complete recipe object with all original fields and any modifications applied.
+    IMPORTANT: Your response must include a complete recipe object with all original fields and any modifications applied in JSON format.
     Always preserve the recipe ID and structure. If suggesting changes, include them in the changes object AND apply them to the recipe object.
     `;
 
@@ -364,7 +363,7 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: systemPrompt + "\nIMPORTANT: Always return a complete recipe object with all original fields and your modifications applied."
+                content: systemPrompt + "\nIMPORTANT: Always return a complete recipe object in JSON format with all original fields and your modifications applied."
               },
               {
                 role: 'user',
@@ -463,20 +462,20 @@ serve(async (req) => {
       const responseData = sourceType === 'analysis' 
         ? { 
             success: true, 
-            changes,
-            recipe: completeRecipe,
-            science_notes: scienceNotes,
-            techniques: techniques,
-            troubleshooting: troubleshooting,
-            followUpQuestions: followUpQuestions,
-            textResponse: textResponse // Include text response for fallback
+            changes: processedResponse.changes || { mode: "none" },
+            recipe: processedResponse.recipe || recipe,
+            science_notes: processedResponse.science_notes || [],
+            techniques: processedResponse.techniques || [],
+            troubleshooting: processedResponse.troubleshooting || [],
+            followUpQuestions: processedResponse.followUpQuestions || [],
+            textResponse: processedResponse.textResponse || processedResponse.text_response || "Analysis complete."
           }
         : { 
             success: true, 
-            changes, 
-            recipe: completeRecipe,
-            textResponse, 
-            followUpQuestions 
+            changes: processedResponse.changes || { mode: "none" }, 
+            recipe: processedResponse.recipe || recipe,
+            textResponse: processedResponse.textResponse || processedResponse.text_response || "Chat response processed.", 
+            followUpQuestions: processedResponse.followUpQuestions || []
           };
 
       // Store the chat interaction if it's not an analysis
@@ -514,12 +513,30 @@ serve(async (req) => {
       
     } catch (aiError) {
       console.error("Error with OpenAI request:", aiError);
-      throw new Error(`OpenAI request failed: ${aiError.message}`);
+      
+      // Add more specific error handling
+      let errorMessage = aiError.message || "An unknown error occurred";
+      let statusCode = 400;
+      
+      // Check for specific OpenAI error patterns
+      if (errorMessage.includes("messages' must contain the word 'json'")) {
+        errorMessage = "Configuration error: JSON format specification missing";
+        statusCode = 500; // Server configuration error
+      } else if (errorMessage.includes("timeout")) {
+        errorMessage = "Request timed out. Please try again.";
+        statusCode = 504; // Gateway timeout
+      }
+      
+      throw new Error(`OpenAI request failed: ${errorMessage}`);
     }
   } catch (error) {
     console.error("Error in recipe-chat function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        errorType: error.name,
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 400,
         headers

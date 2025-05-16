@@ -4,6 +4,16 @@ export function validateRecipeChanges(rawResponse: string) {
   console.log("Validating response length:", rawResponse.length);
   
   try {
+    // First check if the response contains error information from OpenAI
+    if (typeof rawResponse === 'string' && 
+        (rawResponse.includes('"error":') && rawResponse.includes('"message":'))) {
+      console.error("OpenAI error detected in response:", rawResponse);
+      return {
+        textResponse: "I encountered an error processing your request. Please try again.",
+        changes: { mode: "none" }
+      };
+    }
+    
     // With response_format: { type: "json_object" }, the response should be valid JSON
     const parsedResponse = JSON.parse(rawResponse);
     
@@ -40,12 +50,20 @@ export function validateRecipeChanges(rawResponse: string) {
       parsedResponse.textResponse = "Analysis complete.";
     }
     
+    // Ensure recipe object is present
+    if (!parsedResponse.recipe) {
+      console.warn("Response missing recipe object, using default");
+      parsedResponse.recipe = {};
+    }
+    
     return parsedResponse;
   } catch (error) {
     console.error("Error validating recipe changes:", error);
     // If JSON parsing fails, return a simple object with the raw text
     return {
-      textResponse: rawResponse,
+      textResponse: typeof rawResponse === 'string' 
+        ? rawResponse 
+        : "Failed to process response. Please try again.",
       changes: { mode: "none" }
     };
   }
