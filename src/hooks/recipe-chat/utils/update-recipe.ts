@@ -48,23 +48,33 @@ export async function updateRecipe(
       // Transform ingredients with strict type checking for each property
       ingredients: Array.isArray(updatedRecipeData.ingredients)
         ? updatedRecipeData.ingredients.map(ing => {
-            // Safely handle any type of input by checking types explicitly
-            const ingredient = typeof ing === 'object' && ing !== null ? ing : {};
+            // Handle ing as potentially any type, including null, string, etc.
+            if (typeof ing !== 'object' || ing === null) {
+              // Return default ingredient if ing is not a proper object
+              return {
+                qty_metric: 0,
+                unit_metric: '',
+                qty_imperial: 0,
+                unit_imperial: '',
+                item: '',
+              };
+            }
             
+            // Now TypeScript knows ing is a non-null object so we can safely access properties
             return {
               // Required fields with fallbacks
-              qty_metric: typeof ingredient.qty_metric === 'number' ? ingredient.qty_metric : 0,
-              unit_metric: typeof ingredient.unit_metric === 'string' ? ingredient.unit_metric : '',
-              qty_imperial: typeof ingredient.qty_imperial === 'number' ? ingredient.qty_imperial : 0,
-              unit_imperial: typeof ingredient.unit_imperial === 'string' ? ingredient.unit_imperial : '',
-              item: typeof ingredient.item === 'string' ? ingredient.item : '',
+              qty_metric: typeof ing.qty_metric === 'number' ? ing.qty_metric : 0,
+              unit_metric: typeof ing.unit_metric === 'string' ? ing.unit_metric : '',
+              qty_imperial: typeof ing.qty_imperial === 'number' ? ing.qty_imperial : 0,
+              unit_imperial: typeof ing.unit_imperial === 'string' ? ing.unit_imperial : '',
+              item: typeof ing.item === 'string' ? ing.item : '',
               
               // Optional fields
-              notes: typeof ingredient.notes === 'string' ? ingredient.notes : undefined,
-              shop_size_qty: typeof ingredient.shop_size_qty === 'number' ? ingredient.shop_size_qty : undefined,
-              shop_size_unit: typeof ingredient.shop_size_unit === 'string' ? ingredient.shop_size_unit : undefined,
-              qty: typeof ingredient.qty === 'number' ? ingredient.qty : undefined,
-              unit: typeof ingredient.unit === 'string' ? ingredient.unit : undefined
+              notes: typeof ing.notes === 'string' ? ing.notes : undefined,
+              shop_size_qty: typeof ing.shop_size_qty === 'number' ? ing.shop_size_qty : undefined,
+              shop_size_unit: typeof ing.shop_size_unit === 'string' ? ing.shop_size_unit : undefined,
+              qty: typeof ing.qty === 'number' ? ing.qty : undefined,
+              unit: typeof ing.unit === 'string' ? ing.unit : undefined
             };
           })
         : recipe.ingredients || [],
