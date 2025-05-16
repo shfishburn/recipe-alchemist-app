@@ -1,54 +1,48 @@
 
+import _ from 'lodash';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
-import { cloneDeep } from 'lodash';
 
 /**
- * Processes recipe updates from chat message changes
- * Returns a complete recipe with updates applied
+ * Process recipe updates based on chat message changes
+ * This function takes the original recipe and applies changes from the chat message
+ * to create a new updated recipe
  */
 export function processRecipeUpdates(
   originalRecipe: Recipe,
   chatMessage: ChatMessage
 ): Recipe {
-  console.log("Processing recipe updates for recipe:", originalRecipe.id);
+  // Start with a deep clone of the original recipe to avoid mutation
+  const updatedRecipe = _.cloneDeep(originalRecipe);
   
-  // If the chat message contains a complete recipe, return that instead
+  // If the chat message contains a complete recipe, use it directly
   if (chatMessage.recipe) {
     console.log("Using complete recipe from chat message");
+    
+    // Preserve critical fields from the original recipe
     return {
-      ...chatMessage.recipe as unknown as Recipe,
-      id: originalRecipe.id, // Always preserve the original recipe ID
+      ...chatMessage.recipe as Recipe,
+      id: originalRecipe.id, // Always preserve the original ID
       updated_at: new Date().toISOString()
     };
   }
   
-  // Start with a deep clone of the original recipe
-  const updatedRecipe = cloneDeep(originalRecipe);
-  
-  // No changes suggested - return original
-  if (!chatMessage.changes_suggested) {
-    console.log("No changes to apply");
-    return updatedRecipe;
-  }
-  
-  // Apply title changes if provided
-  if (chatMessage.changes_suggested.title) {
-    console.log("Updating title to:", chatMessage.changes_suggested.title);
-    updatedRecipe.title = chatMessage.changes_suggested.title;
-  }
-  
-  // Apply ingredient changes if provided
-  const ingredientUpdates = chatMessage.changes_suggested.ingredients;
-  if (ingredientUpdates) {
-    const { mode, items } = ingredientUpdates;
+  // Legacy support for partial changes (changes_suggested)
+  if (chatMessage.changes_suggested) {
+    console.log("Processing legacy changes_suggested format");
+    const { changes_suggested } = chatMessage;
     
-    // Only process if we have items and they're in an array
-    if (items && Array.isArray(items) && items.length > 0) {
-      console.log(`Updating ingredients with ${mode} mode - ${items.length} items`);
+    // Update title if provided
+    if (changes_suggested.title) {
+      updatedRecipe.title = changes_suggested.title;
+    }
+    
+    // Update ingredients if provided
+    if (changes_suggested.ingredients) {
+      const { mode, items = [] } = changes_suggested.ingredients;
       
-      if (mode === "replace") {
-        // Replace all ingredients with new list
+      if (mode === 'replace' && Array.isArray(items)) {
+        // Replace all ingredients
         updatedRecipe.ingredients = items.map(item => ({
           qty_metric: item.qty_metric || 0,
           unit_metric: item.unit_metric || '',
@@ -56,11 +50,11 @@ export function processRecipeUpdates(
           unit_imperial: item.unit_imperial || '',
           item: typeof item.item === 'string' ? item.item : String(item.item || ''),
           notes: item.notes,
-          qty: item.qty,
-          unit: item.unit
+          shop_size_qty: item.shop_size_qty,
+          shop_size_unit: item.shop_size_unit
         }));
-      } else if (mode === "add") {
-        // Add new ingredients to existing list
+      } else if (mode === 'add' && Array.isArray(items)) {
+        // Add new ingredients
         const newIngredients = items.map(item => ({
           qty_metric: item.qty_metric || 0,
           unit_metric: item.unit_metric || '',
@@ -68,63 +62,34 @@ export function processRecipeUpdates(
           unit_imperial: item.unit_imperial || '',
           item: typeof item.item === 'string' ? item.item : String(item.item || ''),
           notes: item.notes,
-          qty: item.qty,
-          unit: item.unit
+          shop_size_qty: item.shop_size_qty,
+          shop_size_unit: item.shop_size_unit
         }));
         
-        updatedRecipe.ingredients = [
-          ...updatedRecipe.ingredients,
-          ...newIngredients
-        ];
+        updatedRecipe.ingredients = [...updatedRecipe.ingredients, ...newIngredients];
       }
-      // "none" mode means no changes to ingredients
+    }
+    
+    // Update instructions if provided
+    if (Array.isArray(changes_suggested.instructions)) {
+      updatedRecipe.instructions = changes_suggested.instructions;
+    }
+    
+    // Update science notes if provided
+    if (Array.isArray(changes_suggested.science_notes)) {
+      updatedRecipe.science_notes = changes_suggested.science_notes;
+    }
+    
+    // Update nutrition if provided
+    if (changes_suggested.nutrition) {
+      updatedRecipe.nutrition = {
+        ...updatedRecipe.nutrition,
+        ...changes_suggested.nutrition
+      };
     }
   }
   
-  // Apply instruction changes if provided
-  if (chatMessage.changes_suggested.instructions &&
-      Array.isArray(chatMessage.changes_suggested.instructions) &&
-      chatMessage.changes_suggested.instructions.length > 0) {
-    
-    console.log(
-      "Updating instructions with",
-      chatMessage.changes_suggested.instructions.length,
-      "instructions"
-    );
-    
-    // Replace instructions with the new list
-    updatedRecipe.instructions = chatMessage.changes_suggested.instructions.map(
-      instruction => typeof instruction === 'string' ? instruction : String(instruction)
-    );
-  }
-  
-  // Apply science notes changes if provided
-  if (chatMessage.changes_suggested.science_notes &&
-      Array.isArray(chatMessage.changes_suggested.science_notes) &&
-      chatMessage.changes_suggested.science_notes.length > 0) {
-    
-    console.log(
-      "Updating science notes with",
-      chatMessage.changes_suggested.science_notes.length,
-      "notes"
-    );
-    
-    // Replace science notes with the new list
-    updatedRecipe.science_notes = chatMessage.changes_suggested.science_notes.map(
-      note => typeof note === 'string' ? note : String(note)
-    );
-  }
-  
-  // Apply nutrition changes if provided
-  if (chatMessage.changes_suggested.nutrition) {
-    console.log("Updating nutrition data");
-    updatedRecipe.nutrition = {
-      ...updatedRecipe.nutrition || {},
-      ...chatMessage.changes_suggested.nutrition
-    };
-  }
-  
-  // Update timestamp
+  // Ensure updated timestamp
   updatedRecipe.updated_at = new Date().toISOString();
   
   return updatedRecipe;
