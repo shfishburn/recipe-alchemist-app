@@ -1,7 +1,9 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 import { storeRecipeVersion, getLatestVersionNumber } from "../_shared/recipe-versions.ts";
+import { validateRecipeChanges } from "./validation.ts";
 
 // Define circuit breaker to prevent cascading failures
 class CircuitBreaker {
@@ -53,78 +55,12 @@ class CircuitBreaker {
   }
 }
 
-// Function to validate and process the AI response
-function validateRecipeChanges(rawResponse, recipe) {
-  try {
-    // Parse the response if it's a string
-    const jsonResponse = typeof rawResponse === 'string' 
-      ? JSON.parse(rawResponse) 
-      : rawResponse;
-    
-    // Safety checks for required fields
-    if (!jsonResponse.textResponse && !jsonResponse.text_response) {
-      jsonResponse.textResponse = rawResponse;
-    }
-    
-    // Initialize recipe data if not present
-    if (!jsonResponse.recipe) {
-      console.log("Recipe data not found in AI response, creating from changes");
-      jsonResponse.recipe = { ...recipe }; // Start with a copy of the original recipe
-    }
-    
-    // Ensure recipe ID is preserved
-    if (recipe && recipe.id) {
-      jsonResponse.recipe.id = recipe.id;
-    }
-    
-    // Ensure changes object exists with safe defaults
-    if (!jsonResponse.changes) {
-      jsonResponse.changes = { mode: "none" };
-    }
-    
-    // Ensure ingredients structure is consistent
-    if (jsonResponse.changes && jsonResponse.changes.ingredients) {
-      if (!Array.isArray(jsonResponse.changes.ingredients.items) || 
-          jsonResponse.changes.ingredients.items.length === 0) {
-        jsonResponse.changes.ingredients.mode = "none";
-        jsonResponse.changes.ingredients.items = [];
-      }
-    } else if (jsonResponse.changes) {
-      // Initialize ingredients with safe defaults if missing
-      jsonResponse.changes.ingredients = { mode: "none", items: [] };
-    }
-    
-    // Standardize science_notes format
-    if (jsonResponse.science_notes) {
-      if (!Array.isArray(jsonResponse.science_notes)) {
-        jsonResponse.science_notes = [];
-      } else {
-        // Filter out any non-string values
-        jsonResponse.science_notes = jsonResponse.science_notes
-          .filter(note => typeof note === 'string' && note.trim() !== '')
-          .map(note => note.trim());
-      }
-    }
-    
-    // Ensure follow-up questions is properly initialized
-    if (!jsonResponse.followUpQuestions) {
-      jsonResponse.followUpQuestions = [];
-    }
-    
-    return jsonResponse;
-  } catch (error) {
-    console.error("Error validating recipe changes:", error);
-    // Fallback to wrapping the raw response as text
-    return {
-      textResponse: typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse),
-      changes: { mode: "none" },
-      recipe: { ...recipe }, // Include original recipe
-      followUpQuestions: []
-    };
-  }
-}
-
-// Helper function to extract science notes from text if none were properly structured
+/**
+ * Helper function to extract science notes from text when structured notes are missing
+ * Analyzes paragraphs and sentences for scientific content based on food science keywords
+ * @param text The text to extract science notes from
+ * @returns Array of extracted science notes, limited to 5 items maximum
+ */
 function extractScienceNotesFromText(text: string): string[] {
   const scienceKeywords = ['chemistry', 'maillard', 'protein', 'reaction', 'temperature', 'starch'];
   const paragraphs = text.split(/\n\n+/);
@@ -389,16 +325,16 @@ serve(async (req) => {
       // Process the response with our validation function
       const processedResponse = validateRecipeChanges(rawResponse, recipe);
       
-      // Prepare the response data format
-      let textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;
-      let changes = processedResponse.changes || { mode: "none" };
-      let scienceNotes = processedResponse.science_notes || [];
-      let techniques = processedResponse.techniques || [];
-      let troubleshooting = processedResponse.troubleshooting || [];
-      let followUpQuestions = processedResponse.followUpQuestions || [];
+      // Prepare the response data format - Fix: change all variables to const
+      const textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;
+      const changes = processedResponse.changes || { mode: "none" };
+      const scienceNotes = processedResponse.science_notes || [];
+      const techniques = processedResponse.techniques || [];
+      const troubleshooting = processedResponse.troubleshooting || [];
+      const followUpQuestions = processedResponse.followUpQuestions || [];
       
       // Ensure we have a complete recipe object with all original fields
-      let completeRecipe = processedResponse.recipe || { ...recipe };
+      const completeRecipe = processedResponse.recipe || { ...recipe };
       
       // Ensure recipe ID is preserved
       completeRecipe.id = recipe.id;
@@ -416,7 +352,7 @@ serve(async (req) => {
         // Ensure we have at least some science notes
         if (!Array.isArray(scienceNotes) || scienceNotes.length === 0) {
           // Extract potential science notes from the text response
-          scienceNotes = extractScienceNotesFromText(textResponse);
+          scienceNotes.push(...extractScienceNotesFromText(textResponse));
         }
       }
       
@@ -459,23 +395,24 @@ serve(async (req) => {
       }
       
       // For analysis requests, make sure we include the extracted sections in the response
+      // Fix: standardize on textResponse field and fix inconsistent field naming
       const responseData = sourceType === 'analysis' 
         ? { 
             success: true, 
-            changes: processedResponse.changes || { mode: "none" },
-            recipe: processedResponse.recipe || recipe,
-            science_notes: processedResponse.science_notes || [],
-            techniques: processedResponse.techniques || [],
-            troubleshooting: processedResponse.troubleshooting || [],
-            followUpQuestions: processedResponse.followUpQuestions || [],
-            textResponse: processedResponse.textResponse || processedResponse.text_response || "Analysis complete."
+            changes: changes,
+            recipe: completeRecipe,
+            science_notes: scienceNotes,
+            techniques: techniques,
+            troubleshooting: troubleshooting,
+            followUpQuestions: followUpQuestions,
+            textResponse: textResponse
           }
         : { 
             success: true, 
-            changes: processedResponse.changes || { mode: "none" }, 
-            recipe: processedResponse.recipe || recipe,
-            textResponse: processedResponse.textResponse || processedResponse.text_response || "Chat response processed.", 
-            followUpQuestions: processedResponse.followUpQuestions || []
+            changes: changes, 
+            recipe: completeRecipe,
+            textResponse: textResponse, 
+            followUpQuestions: followUpQuestions
           };
 
       // Store the chat interaction if it's not an analysis

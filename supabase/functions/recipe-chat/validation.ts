@@ -17,6 +17,17 @@ export function validateRecipeChanges(rawResponse: string) {
     // With response_format: { type: "json_object" }, the response should be valid JSON
     const parsedResponse = JSON.parse(rawResponse);
     
+    // Standardize response format - ensure consistent field naming
+    if (!parsedResponse.textResponse && parsedResponse.text_response) {
+      parsedResponse.textResponse = parsedResponse.text_response;
+      // Delete the inconsistent field to prevent confusion
+      delete parsedResponse.text_response;
+    }
+
+    if (!parsedResponse.textResponse) {
+      parsedResponse.textResponse = "Analysis complete.";
+    }
+    
     // Ensure that ingredients have a "mode" property and it's set to "none" if items array is empty or missing
     if (parsedResponse.changes && parsedResponse.changes.ingredients) {
       if (!Array.isArray(parsedResponse.changes.ingredients.items) || 
@@ -27,6 +38,12 @@ export function validateRecipeChanges(rawResponse: string) {
     } else if (parsedResponse.changes) {
       // Initialize ingredients with safe defaults if missing
       parsedResponse.changes.ingredients = { mode: "none", items: [] };
+    } else {
+      // Ensure changes object exists
+      parsedResponse.changes = { 
+        mode: "none",
+        ingredients: { mode: "none", items: [] }
+      };
     }
     
     // Ensure science_notes is always a valid array
@@ -39,21 +56,29 @@ export function validateRecipeChanges(rawResponse: string) {
           .filter(note => typeof note === 'string' && note.trim() !== '')
           .map(note => note.trim());
       }
-    }
-    
-    // Standardize response format
-    if (!parsedResponse.textResponse && parsedResponse.text_response) {
-      parsedResponse.textResponse = parsedResponse.text_response;
-    }
-
-    if (!parsedResponse.textResponse) {
-      parsedResponse.textResponse = "Analysis complete.";
+    } else {
+      parsedResponse.science_notes = [];
     }
     
     // Ensure recipe object is present
     if (!parsedResponse.recipe) {
       console.warn("Response missing recipe object, using default");
       parsedResponse.recipe = {};
+    }
+    
+    // Ensure followUpQuestions is always a valid array
+    if (!parsedResponse.followUpQuestions || !Array.isArray(parsedResponse.followUpQuestions)) {
+      parsedResponse.followUpQuestions = [];
+    }
+    
+    // Ensure techniques is always a valid array
+    if (!parsedResponse.techniques || !Array.isArray(parsedResponse.techniques)) {
+      parsedResponse.techniques = [];
+    }
+    
+    // Ensure troubleshooting is always a valid array
+    if (!parsedResponse.troubleshooting || !Array.isArray(parsedResponse.troubleshooting)) {
+      parsedResponse.troubleshooting = [];
     }
     
     return parsedResponse;
@@ -64,7 +89,12 @@ export function validateRecipeChanges(rawResponse: string) {
       textResponse: typeof rawResponse === 'string' 
         ? rawResponse 
         : "Failed to process response. Please try again.",
-      changes: { mode: "none" }
+      changes: { mode: "none" },
+      recipe: {},
+      science_notes: [],
+      techniques: [],
+      troubleshooting: [],
+      followUpQuestions: []
     };
   }
 }

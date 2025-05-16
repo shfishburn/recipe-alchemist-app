@@ -135,7 +135,6 @@ export const useChatMutations = (recipe: Recipe) => {
 
         // Extract and validate the AI response content
         const aiResponse = response.data.textResponse || 
-                          response.data.text || 
                           JSON.stringify({
                             textResponse: "I couldn't generate a proper analysis for this recipe. Please try again."
                           });
@@ -191,7 +190,7 @@ export const useChatMutations = (recipe: Recipe) => {
         console.error("Recipe chat error:", err);
         throw err;
       } finally {
-        // Clear the processing toast regardless of outcome
+        // Fix: Properly clean up the toast notification
         toast({
           id: toastId,
           duration: 0, // Immediately remove the processing toast
