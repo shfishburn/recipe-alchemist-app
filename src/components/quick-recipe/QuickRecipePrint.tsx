@@ -71,21 +71,12 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           title: recipe.title,
           description: recipe.description,
           ingredients: formattedIngredients,
-          instructions: recipe.steps,
+          instructions: recipe.steps || [],
           prep_time_min: recipe.prepTime,
           cook_time_min: recipe.cookTime,
-          nutrition: recipe.nutritionHighlight ? {
-            // Basic minimum valid nutrition object
-            calories: 0,
-            protein: 0,
-            carbs: 0,
-            fat: 0,
-            fiber: 0,
-            sugar: 0,
-            sodium: 0,
-            kcal: 0
-          } : undefined,
-          science_notes: [],
+          servings: recipe.servings,
+          nutrition: undefined, // Removed nutrition data as it's not relevant for cooking
+          science_notes: [], // Removed science notes as they're not relevant for cooking
           tagline: recipe.description,
           cooking_tip: recipe.cookingTip
         }} 

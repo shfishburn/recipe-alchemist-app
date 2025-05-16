@@ -192,40 +192,6 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
               font-weight: 700;
             }
             
-            /* Nutrition */
-            .nutrition { 
-              margin: 35px 0;
-              padding: 20px;
-              background-color: #f5f5f5;
-              border-radius: 8px; 
-            }
-            .nutrition h2 {
-              margin-top: 0;
-              border-bottom-color: #e0e0e0;
-            }
-            .nutrition-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-              gap: 15px;
-            }
-            .nutrition-item {
-              padding: 10px;
-              background: #ffffff;
-              border-radius: 6px;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }
-            .nutrition-label {
-              font-size: 13px;
-              color: #666;
-              display: block;
-            }
-            .nutrition-value {
-              font-size: 16px;
-              font-weight: 600;
-              color: #333;
-              display: block;
-            }
-            
             /* Footer */
             .footer { 
               margin-top: 40px; 
@@ -244,8 +210,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
                 font-size: 11pt;
               }
               .recipe-header,
-              .ingredients,
-              .nutrition {
+              .ingredients {
                 background-color: #ffffff !important;
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
@@ -257,12 +222,6 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
               }
               h2 { break-after: avoid; }
               .instructions li { break-inside: avoid; }
-              .nutrition-item {
-                background-color: #f9f9f9 !important;
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-                print-color-adjust: exact;
-              }
               
               /* Responsive layout adjustments */
               @media (max-width: 600px) {
@@ -400,56 +359,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
             </>
           )}
           
-          {/* Nutrition Section */}
-          {recipe.nutrition && Object.keys(recipe.nutrition).length > 0 && (
-            <div className="nutrition">
-              <h2>Nutrition (per serving)</h2>
-              <div className="nutrition-grid">
-                {recipe.nutrition.kcal !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Calories</span>
-                    <span className="nutrition-value">{recipe.nutrition.kcal} kcal</span>
-                  </div>
-                )}
-                {recipe.nutrition.protein_g !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Protein</span>
-                    <span className="nutrition-value">{recipe.nutrition.protein_g}g</span>
-                  </div>
-                )}
-                {recipe.nutrition.carbs_g !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Carbs</span>
-                    <span className="nutrition-value">{recipe.nutrition.carbs_g}g</span>
-                  </div>
-                )}
-                {recipe.nutrition.fat_g !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Fat</span>
-                    <span className="nutrition-value">{recipe.nutrition.fat_g}g</span>
-                  </div>
-                )}
-                {recipe.nutrition.fiber_g !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Fiber</span>
-                    <span className="nutrition-value">{recipe.nutrition.fiber_g}g</span>
-                  </div>
-                )}
-                {recipe.nutrition.sugar_g !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Sugar</span>
-                    <span className="nutrition-value">{recipe.nutrition.sugar_g}g</span>
-                  </div>
-                )}
-                {recipe.nutrition.sodium_mg !== undefined && (
-                  <div className="nutrition-item">
-                    <span className="nutrition-label">Sodium</span>
-                    <span className="nutrition-value">{recipe.nutrition.sodium_mg}mg</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Removed nutrition section entirely */}
         </div>
         
         <DialogFooter>
