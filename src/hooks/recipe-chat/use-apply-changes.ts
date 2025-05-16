@@ -95,13 +95,14 @@ export const useApplyChanges = () => {
         throw new Error("Could not fetch recipe data");
       }
       
-      // Transform the raw data to Recipe type
+      // Transform the raw data to Recipe type with explicit type conversions
       const recipe: Recipe = {
         ...recipeData,
-        ingredients: recipeData.ingredients as any,
+        // Ensure arrays are properly typed
+        ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
         instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
         science_notes: Array.isArray(recipeData.science_notes) ? recipeData.science_notes as string[] : []
-      };
+      } as Recipe;
       
       // Apply the changes
       await applyChangesMutation.mutateAsync({ recipe, chatMessage });

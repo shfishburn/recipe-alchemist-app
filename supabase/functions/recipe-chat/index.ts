@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -244,7 +245,7 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json();
-    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId } = requestData;
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId, meta } = requestData;
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
@@ -275,11 +276,14 @@ serve(async (req) => {
     const newVersionNumber = latestVersionNumber + 1;
 
     try {
-      // Determine whether to use the unified recipe prompt based on source type
-      // For analysis requests, use the unified approach that returns complete recipe
-      const systemPromptContent = sourceType === 'analysis' 
+      // Determine whether to use the unified recipe prompt based on metadata
+      // Check meta.use_unified_approach instead of sourceType
+      const useUnifiedApproach = meta?.use_unified_approach === true;
+      const systemPromptContent = useUnifiedApproach
         ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
         : chatSystemPrompt;
+      
+      console.log(`Using ${useUnifiedApproach ? "unified" : "standard"} recipe prompt approach`);
       
       const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -379,7 +383,10 @@ serve(async (req) => {
       // Store the chat interaction
       if (recipe.id) {
         // Create meta object for optimistic updates tracking
-        const meta = messageId ? { optimistic_id: messageId } : {};
+        const metaData = {
+          ...meta || {},
+          optimistic_id: messageId || null
+        };
         
         try {
           const { error: chatError } = await supabaseClient
@@ -389,11 +396,11 @@ serve(async (req) => {
               user_message: userMessage,
               ai_response: textResponse,
               recipe: processedResponse.recipe, // Store the complete recipe directly
-              source_type: sourceType || 'manual',
+              source_type: sourceType || 'manual', // Ensure we have a valid source type
               source_url: sourceUrl,
               source_image: sourceImage,
               version_id: processedResponse.recipe?.version_id, // Link to version if created
-              meta: meta
+              meta: metaData
             });
 
           if (chatError) {

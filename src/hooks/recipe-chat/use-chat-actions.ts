@@ -34,7 +34,8 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
       pending: true,
       meta: {
         optimistic_id: messageId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        use_unified_approach: true // Indicate that we want the unified recipe approach
       }
     });
 
@@ -42,11 +43,14 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
     setMessage('');
 
     try {
-      // Set source type to 'analysis' for the unified recipe update approach
+      // Send with source_type 'manual' instead of 'analysis'
       await mutation.mutateAsync({
         message: messageToSend,
-        sourceType: 'analysis', // Use analysis type to trigger unified recipe approach
-        messageId
+        sourceType: 'manual', // Changed from 'analysis' to valid value 'manual'
+        messageId,
+        meta: {
+          use_unified_approach: true // Pass metadata to indicate we want unified recipe approach
+        }
       });
     } catch (error) {
       console.error('Error sending message:', error);
@@ -193,15 +197,19 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
         optimistic_id: messageId,
         is_retry: true,
         retry_of: failedMessageId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        use_unified_approach: true // Indicate that we want the unified recipe approach
       }
     });
 
     try {
       await mutation.mutateAsync({
         message: failedMessage,
-        sourceType: 'analysis',
-        messageId
+        sourceType: 'manual', // Changed from 'analysis' to 'manual'
+        messageId,
+        meta: {
+          use_unified_approach: true // Pass metadata to indicate we want unified recipe approach
+        }
       });
     } catch (error) {
       console.error("Error retrying message:", error);

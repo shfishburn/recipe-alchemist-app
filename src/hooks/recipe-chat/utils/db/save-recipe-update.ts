@@ -19,10 +19,20 @@ export async function saveRecipeUpdate(recipe: Recipe): Promise<Recipe | null> {
       Object.entries(recipe).filter(([_, v]) => v !== undefined)
     );
 
+    // Ensure proper typing for database operations
+    // Convert the recipe to the format expected by the database
+    const dbRecipe = {
+      ...cleanRecipe,
+      // Ensure arrays are properly serialized
+      ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+      instructions: Array.isArray(recipe.instructions) ? recipe.instructions : [],
+      science_notes: Array.isArray(recipe.science_notes) ? recipe.science_notes : []
+    };
+
     // Update the recipe in the database
     const { data, error } = await supabase
       .from('recipes')
-      .update(cleanRecipe)
+      .update(dbRecipe)
       .eq('id', recipe.id)
       .select()
       .single();
@@ -36,8 +46,17 @@ export async function saveRecipeUpdate(recipe: Recipe): Promise<Recipe | null> {
       throw new Error("No data returned from database update");
     }
 
+    // Convert the database response back to Recipe type
+    const updatedRecipe: Recipe = {
+      ...data,
+      // Ensure arrays are properly typed
+      ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+      instructions: Array.isArray(data.instructions) ? data.instructions : [],
+      science_notes: Array.isArray(data.science_notes) ? data.science_notes : []
+    } as Recipe;
+
     console.log("Recipe update saved successfully");
-    return data as Recipe;
+    return updatedRecipe;
   } catch (error) {
     console.error("Error in saveRecipeUpdate:", error);
     throw error;
