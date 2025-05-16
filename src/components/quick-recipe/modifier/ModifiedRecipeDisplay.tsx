@@ -1,11 +1,13 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeDisplay } from '../RecipeDisplay';
 import { NutritionSummary } from '../NutritionSummary';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { ModificationStatus, RecipeModifications } from '@/hooks/recipe-modifications/types';
+import { Badge } from "@/components/ui/badge";
+import { History } from 'lucide-react';
 
 interface ModifiedRecipeDisplayProps {
   modifiedRecipe: QuickRecipe;
@@ -14,6 +16,7 @@ interface ModifiedRecipeDisplayProps {
   onApplyModifications: () => void;
   onRejectModifications: () => void;
   onResetToOriginal: () => void;
+  isHistoricalVersion?: boolean;
 }
 
 export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
@@ -22,7 +25,8 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
   status,
   onApplyModifications,
   onRejectModifications,
-  onResetToOriginal
+  onResetToOriginal,
+  isHistoricalVersion = false
 }) => {
   const isSuccess = status === 'success';
   const isApplying = status === 'applying';
@@ -36,32 +40,54 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Modified Recipe</CardTitle>
-        <CardDescription>
-          View the modified recipe and apply changes.
-          {versionInfo && (
-            <span className="block text-xs mt-1">
-              Version {versionInfo.version_number}
-              {versionInfo.modification_reason && (
-                <> - {versionInfo.modification_reason}</>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="flex items-center">
+              Modified Recipe
+              {isHistoricalVersion && (
+                <Badge variant="outline" className="ml-2">
+                  <History className="w-3 h-3 mr-1" /> Historical Version
+                </Badge>
               )}
-            </span>
-          )}
-        </CardDescription>
+            </CardTitle>
+            <CardDescription>
+              View the modified recipe and apply changes.
+              {versionInfo && (
+                <span className="block text-xs mt-1">
+                  Version {versionInfo.version_number}
+                  {versionInfo.modification_reason && (
+                    <> - {versionInfo.modification_reason}</>
+                  )}
+                </span>
+              )}
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <RecipeDisplay recipe={modifiedRecipe} />
         {modifications?.nutritionImpact && (
-          <NutritionSummary nutrition={modifications.nutritionImpact} />
+          <div>
+            <h4 className="text-sm font-medium mb-2">Nutrition Impact</h4>
+            <NutritionSummary nutrition={modifications.nutritionImpact} />
+          </div>
         )}
       </CardContent>
-      <CardFooter className="justify-between">
+      <CardFooter className="justify-between flex-wrap gap-2">
         {isSuccess && (
           <>
-            <Button onClick={onApplyModifications} disabled={isApplying}>
+            <Button 
+              onClick={onApplyModifications} 
+              disabled={isApplying}
+              className="flex-1"
+            >
               {isApplying ? 'Applying...' : 'Apply Modifications'}
             </Button>
-            <Button variant="secondary" onClick={onRejectModifications}>
+            <Button 
+              variant="secondary" 
+              onClick={onRejectModifications}
+              className="flex-1"
+            >
               Reject Modifications
             </Button>
           </>
@@ -70,6 +96,8 @@ export const ModifiedRecipeDisplay: React.FC<ModifiedRecipeDisplayProps> = ({
           variant="destructive" 
           onClick={onResetToOriginal} 
           disabled={isLoading || isApplying}
+          className={isSuccess ? "mt-2 w-full" : "flex-1"}
+          size={isSuccess ? "sm" : "default"}
         >
           Reset to Original
         </Button>

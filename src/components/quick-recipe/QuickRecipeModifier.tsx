@@ -13,7 +13,9 @@ import { AuthOverlay } from './modifier/AuthOverlay';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
-import { VersionSelector } from './modifier/VersionSelector'; // Import the new component
+import { VersionSelector } from './modifier/VersionSelector';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface QuickRecipeModifierProps {
   recipe: QuickRecipe;
@@ -35,9 +37,9 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     modifiedRecipe,
     modificationRequest,
     modificationHistory,
-    versionHistory, // New version history state
-    selectedVersionId, // New selected version state
-    selectVersion, // New version selection function
+    versionHistory,
+    selectedVersionId,
+    selectVersion,
     isModified,
     requestModifications,
     applyModifications,
@@ -140,6 +142,8 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     );
   }
 
+  const hasMultipleVersions = versionHistory && versionHistory.length > 1;
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Request Input and Controls */}
@@ -157,13 +161,25 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
         {/* Status and Error Display */}
         <StatusDisplay status={status} error={error} />
 
-        {/* Version Selector - New Component */}
-        {versionHistory.length > 0 && (
+        {/* Version Selector with improved visibility */}
+        {versionHistory && versionHistory.length > 0 && (
           <VersionSelector
             versions={versionHistory}
             selectedVersionId={selectedVersionId}
             onSelectVersion={selectVersion}
+            currentRecipeId={recipe.id}
           />
+        )}
+        
+        {/* Viewing historical version alert */}
+        {hasMultipleVersions && selectedVersionId && 
+         selectedVersionId !== versionHistory[0].version_id && (
+          <Alert variant="warning" className="bg-amber-50">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You are viewing a historical version of this recipe. Any modifications will create a new version based on this one.
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Modification History */}
@@ -179,6 +195,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
           onApplyModifications={handleApplyModifications}
           onRejectModifications={rejectModifications}
           onResetToOriginal={resetToOriginal}
+          isHistoricalVersion={hasMultipleVersions && selectedVersionId !== versionHistory[0].version_id}
         />
       </div>
     </div>
