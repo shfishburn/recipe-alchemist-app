@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -169,8 +168,9 @@ IMPORTANT INSTRUCTIONS (MANDATORY):
     "servings": number, // mandatory
     "cuisine": "EXACT cuisine value from predefined list", // mandatory
     "cuisine_category": "Global|Regional American|European|Asian|Dietary Styles|Middle Eastern", // mandatory
-    "science_notes": ["Array of scientific explanations"], // optional
+    "science_notes": ["Array of scientific explanations"], // mandatory
     "nutrition": { // mandatory object with all fields
+      "calories": number, // mandatory (same as kcal)
       "kcal": number, // mandatory
       "protein_g": number, // mandatory
       "carbs_g": number, // mandatory
@@ -178,12 +178,12 @@ IMPORTANT INSTRUCTIONS (MANDATORY):
       "fiber_g": number, // mandatory
       "sugar_g": number, // mandatory
       "sodium_mg": number, // mandatory
-      "vitamin_a_iu": number, // optional, default 0
-      "vitamin_c_mg": number, // optional, default 0
-      "vitamin_d_iu": number, // optional, default 0
-      "calcium_mg": number, // optional, default 0
-      "iron_mg": number, // optional, default 0
-      "potassium_mg": number, // optional, default 0
+      "vitamin_a_iu": number, // optional, default 0 if unknown
+      "vitamin_c_mg": number, // optional, default 0 if unknown
+      "vitamin_d_iu": number, // optional, default 0 if unknown
+      "calcium_mg": number, // optional, default 0 if unknown
+      "iron_mg": number, // optional, default 0 if unknown
+      "potassium_mg": number, // optional, default 0 if unknown
       "data_quality": "complete" | "partial", // mandatory
       "calorie_check_pass": boolean // mandatory
     },

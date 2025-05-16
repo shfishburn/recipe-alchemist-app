@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -72,7 +71,7 @@ export const useChatMutations = (recipe: Recipe) => {
       sourceImage,
       messageId,
       isRetry = false,
-      meta
+      meta = { use_unified_approach: true } // Set unified approach as default
     }: ChatMessageOptions) => {
       // Enhanced debugging start log
       console.info("[ChatMutation] Starting mutation:", { 
@@ -128,6 +127,12 @@ export const useChatMutations = (recipe: Recipe) => {
               timestamp: new Date().toISOString()
             });
             
+            // Add use_unified_approach flag in meta to ensure complete recipe objects are returned
+            const enhancedMeta = {
+              ...meta,
+              use_unified_approach: true
+            };
+            
             const response = await Promise.race([
               supabase.functions.invoke('recipe-chat', {
                 body: { 
@@ -138,7 +143,7 @@ export const useChatMutations = (recipe: Recipe) => {
                   sourceImage,
                   messageId,
                   retryAttempt: retryCount,
-                  meta // Pass meta data to the edge function
+                  meta: enhancedMeta
                 }
               }),
               new Promise<never>((_, reject) => 
