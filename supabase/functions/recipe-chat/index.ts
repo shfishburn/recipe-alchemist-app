@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 import { storeRecipeVersion, getLatestVersionNumber } from "../_shared/recipe-versions.ts";
-import { validateRecipeChanges } from "./validation.ts";
+import { validateRecipeIntegrity } from "./validation.ts";
+import { buildOpenAIPrompt } from "../generate-quick-recipe/prompt-builder.ts";
 
 // Define circuit breaker to prevent cascading failures
 class CircuitBreaker {
@@ -107,57 +108,81 @@ function extractScienceNotesFromText(text: string): string[] {
   return scienceNotes.slice(0, 5); // Return at most 5 notes
 }
 
-// Inline recipe analysis prompt
-const recipeAnalysisPrompt = `You are a culinary scientist and expert chef in the López-Alt tradition, analyzing recipes through the lens of food chemistry and precision cooking techniques. Always respond in JSON format.
+// Modified function to create a unified recipe prompt that includes the original recipe
+function buildUnifiedRecipePrompt(
+  originalRecipe: Record<string, any>,
+  userMessage: string,
+  versionNumber: number
+): string {
+  // Clean up recipe for the prompt context
+  const cleanRecipe = {
+    id: originalRecipe.id,
+    title: originalRecipe.title,
+    instructions: originalRecipe.instructions,
+    ingredients: originalRecipe.ingredients,
+    science_notes: originalRecipe.science_notes || [],
+    servings: originalRecipe.servings,
+    prep_time_min: originalRecipe.prep_time_min,
+    cook_time_min: originalRecipe.cook_time_min,
+    cuisine: originalRecipe.cuisine,
+    cuisine_category: originalRecipe.cuisine_category,
+    description: originalRecipe.description,
+    nutrition: originalRecipe.nutrition
+  };
+  
+  // Format for the prompt 
+  return `
+You are a culinary scientist and expert chef in the López-Alt tradition, analyzing and modifying recipes through the lens of food chemistry and precision cooking techniques.
 
-Focus on:
-1. COOKING CHEMISTRY:
-   - Identify key chemical processes (e.g., Maillard reactions, protein denaturation, emulsification)
-   - Explain temperature-dependent reactions and their impact on flavor/texture
-   - Note critical control points where chemistry affects outcome
-   - Consider various reactions relevant to the specific recipe context
+CURRENT RECIPE (JSON):
+${JSON.stringify(cleanRecipe, null, 2)}
 
-2. TECHNIQUE OPTIMIZATION:
-   - Provide appropriate temperature ranges (°F and °C) and approximate timing guidelines
-   - Include multiple visual/tactile/aromatic doneness indicators when possible
-   - Consider how ingredient preparation affects final results
-   - Suggest equipment options and configuration alternatives
-   - Balance precision with flexibility based on context
+USER REQUEST:
+"${userMessage}"
 
-3. INGREDIENT SCIENCE:
-   - Functional roles, temp-sensitive items, evidence-based substitutions
-   - Recommend evidence-based technique modifications
-   - Explain the chemistry behind each suggested change
+IMPORTANT INSTRUCTIONS:
+1. Analyze the user's request carefully to determine if they want:
+   a) A simple answer to a question (return as textResponse only)
+   b) Modification to the recipe (return complete modified recipe)
 
-Return response as JSON with this exact structure:
+2. When returning a modified recipe:
+   - Return a COMPLETE recipe object with ALL fields from the original recipe
+   - Apply all requested modifications directly to the recipe object
+   - NEVER return partial changes, always return the fully updated recipe
+   - Preserve the original recipe ID and structure
+   - Increment version_number to ${versionNumber}
+   - Include a clear modification_summary explaining what changed
+
+3. For recipe formatting:
+   - Format each ingredient consistently with all measurement fields
+   - Include both imperial and metric measurements for all ingredients
+   - Ensure all ingredients have the required fields: qty_metric, unit_metric, qty_imperial, unit_imperial, item
+   - Wrap ingredient names in recipe steps with **double asterisks**
+   - Include specific temperatures (°F AND °C) in cooking steps
+   - Maintain López-Alt style scientific explanations in instructions
+
+4. Return your response in JSON format with this structure:
 {
-  "textResponse": "Detailed conversational analysis of the recipe chemistry",
+  "textResponse": "Detailed analysis or answer to the user's question",
   "recipe": {
-    // Complete recipe object with all original fields
-    "id": "recipe-id", // Preserve original ID
+    // Complete recipe object with all original fields and your modifications
+    "id": "${originalRecipe.id}", // Preserve original ID
     "title": "Recipe title",
     "ingredients": [],
-    "steps": [],
-    // All other fields from original recipe
+    "instructions": [],
+    // All other original fields must be included
     "version_info": {
-      "version_number": 0,
-      "parent_version_id": "original-version-id",
-      "modification_reason": "Scientific analysis"
+      "version_number": ${versionNumber},
+      "parent_version_id": "${originalRecipe.version_id || null}",
+      "modification_reason": "Brief reason for changes"
     }
   },
-  "science_notes": ["Array of scientific explanations"],
-  "techniques": ["Array of technique details"],
-  "troubleshooting": ["Array of science-based solutions"],
-  "changes": {
-    "title": "string or null",
-    "ingredients": {
-      "mode": "add" | "replace" | "none",
-      "items": []
-    },
-    "instructions": []
-  },
-  "followUpQuestions": ["Array of suggested follow-up questions"] 
-}`;
+  "followUpQuestions": ["Suggested follow-up question 1", "Suggested follow-up question 2"]
+}
+
+If the user is just asking a question and not requesting changes, only include the textResponse field and followUpQuestions.
+`;
+}
 
 // Inline chat system prompt
 const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. Always respond in JSON format. When suggesting changes to recipes:
@@ -198,14 +223,6 @@ Example format:
       "parent_version_id": "original-version-id",
       "modification_reason": "User requested changes"
     }
-  },
-  "changes": {
-    "title": "string or null",
-    "ingredients": {
-      "mode": "add" | "replace" | "none",
-      "items": []
-    },
-    "instructions": []
   },
   "followUpQuestions": ["Array of suggested follow-up questions"]
 }`;
@@ -249,42 +266,23 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Use the appropriate prompt based on the source type
-    const systemPrompt = sourceType === 'analysis' ? recipeAnalysisPrompt : chatSystemPrompt;
-
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // Special safety parameters for analysis mode to prevent data loss
-    const analysisInstructions = sourceType === 'analysis' ? `
-    IMPORTANT INSTRUCTION FOR ANALYSIS:
-    1. Return a complete recipe object with all original fields.
-    2. Never return empty arrays for ingredients or instructions.
-    3. If you don't have significant improvements for ingredients, set ingredients.mode to "none".
-    4. Always provide at least 3 specific science notes related to the chemistry of the recipe.
-    5. Structure your analysis sections clearly with headers (## Chemistry, ## Techniques, ## Troubleshooting).
-    ` : '';
-
-    const prompt = `
-    Current recipe:
-    ${JSON.stringify(recipe)}
-
-    User request:
-    ${userMessage}
-
-    ${analysisInstructions}
-
-    IMPORTANT: Your response must include a complete recipe object with all original fields and any modifications applied in JSON format.
-    Always preserve the recipe ID and structure. If suggesting changes, include them in the changes object AND apply them to the recipe object.
-    `;
-
-    console.log(`Sending request to OpenAI with ${prompt.length} characters`);
+    // Get latest version number for this recipe
+    const latestVersionNumber = await getLatestVersionNumber(recipe.id);
+    const newVersionNumber = latestVersionNumber + 1;
 
     try {
       // Calculate an adaptive timeout based on retry attempt
       const timeout = Math.min(60000 + (retryAttempt * 15000), 120000); // Between 60-120 seconds
+      
+      // Use the unified recipe prompt that includes the original recipe data
+      const systemPromptContent = sourceType === 'analysis' 
+        ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
+        : chatSystemPrompt;
       
       const aiResponse = await Promise.race([
         fetch('https://api.openai.com/v1/chat/completions', {
@@ -298,11 +296,11 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: systemPrompt + "\nIMPORTANT: Always return a complete recipe object in JSON format with all original fields and your modifications applied."
+                content: systemPromptContent
               },
               {
                 role: 'user',
-                content: prompt,
+                content: userMessage,
               },
             ],
             temperature: 0.7,
@@ -321,105 +319,59 @@ serve(async (req) => {
       const rawResponse = aiResponse.choices[0].message.content;
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
 
-      // Process the response with our validation function
-      const processedResponse = validateRecipeChanges(rawResponse);
+      // Parse the response
+      let processedResponse;
+      try {
+        processedResponse = JSON.parse(rawResponse);
+      } catch (parseError) {
+        console.error("Error parsing AI response:", parseError);
+        throw new Error("Failed to parse AI response as valid JSON");
+      }
       
-      // Prepare the response data format - using const for all variables
-      const textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;
-      const changes = processedResponse.changes || { mode: "none" };
-      const scienceNotes = Array.isArray(processedResponse.science_notes) 
-        ? processedResponse.science_notes 
-        : [];
-      const techniques = processedResponse.techniques || [];
-      const troubleshooting = processedResponse.troubleshooting || [];
+      // Extract data from response
+      const textResponse = processedResponse.textResponse || "No response text provided";
+      const completeRecipe = processedResponse.recipe;
       const followUpQuestions = processedResponse.followUpQuestions || [];
       
-      // Ensure we have a complete recipe object with all original fields
-      const completeRecipe = processedResponse.recipe || { ...recipe };
-      
-      // Ensure recipe ID is preserved
-      completeRecipe.id = recipe.id;
-      
-      // Add additional safety checks for analysis mode
-      if (sourceType === 'analysis') {
-        // Force ingredients mode to "none" if no items or empty array
-        if (!changes.ingredients?.items || 
-            !Array.isArray(changes.ingredients.items) || 
-            changes.ingredients.items.length === 0) {
-          if (!changes.ingredients) changes.ingredients = { mode: "none", items: [] };
-          changes.ingredients.mode = "none";
-        }
-        
-        // Ensure we have at least some science notes - Using concat instead of push for safer operations
-        if (scienceNotes.length === 0) {
-          // Extract potential science notes and concat with existing array (even if empty)
-          const extractedNotes = extractScienceNotesFromText(textResponse);
-          const updatedScienceNotes = scienceNotes.concat(extractedNotes);
-          // Assign back to a new constant for clarity
-          const finalScienceNotes = updatedScienceNotes;
-        }
-      }
-      
-      // Get latest version number and create a new version
+      // Check if the response contains a complete recipe (modification) or just text (question answer)
       let versionData = null;
-      try {
-        const latestVersionNumber = await getLatestVersionNumber(recipe.id);
-        const newVersionNumber = latestVersionNumber + 1;
+      if (completeRecipe) {
+        // Ensure the complete recipe has all required fields and the correct ID
+        completeRecipe.id = recipe.id;
         
-        // Add version info to recipe
-        if (!completeRecipe.version_info) {
-          completeRecipe.version_info = {
-            version_number: newVersionNumber,
-            parent_version_id: recipe.version_id || null,
-            modification_reason: sourceType === 'analysis' ? "Scientific analysis" : userMessage
-          };
+        // Verify recipe integrity before saving
+        try {
+          validateRecipeIntegrity(completeRecipe);
+        } catch (validationError) {
+          console.error("Recipe validation failed:", validationError);
+          throw new Error(`Recipe validation failed: ${validationError.message}`);
         }
         
-        // Store the version if this is not just a chat response
-        if (changes && (changes.title || 
-            (changes.ingredients && changes.ingredients.mode !== 'none') || 
-            (changes.instructions && changes.instructions.length > 0))) {
-          
-          versionData = await storeRecipeVersion({
-            recipeId: recipe.id,
-            parentVersionId: recipe.version_id || null,
-            versionNumber: newVersionNumber,
-            userId: null, // No user ID in this context
-            modificationRequest: userMessage,
-            recipeData: completeRecipe
-          });
-          
-          if (versionData) {
-            completeRecipe.version_id = versionData.version_id;
-          }
+        // Store the updated recipe as a new version
+        versionData = await storeRecipeVersion({
+          recipeId: recipe.id,
+          parentVersionId: recipe.version_id || null,
+          versionNumber: newVersionNumber,
+          userId: null, // No user ID in this context
+          modificationRequest: userMessage,
+          recipeData: completeRecipe
+        });
+        
+        if (versionData) {
+          completeRecipe.version_id = versionData.version_id;
         }
-      } catch (versionError) {
-        console.error("Version handling error:", versionError);
-        // Continue despite version handling error
       }
       
-      // For analysis requests, make sure we include the extracted sections in the response
-      const responseData = sourceType === 'analysis' 
-        ? { 
-            success: true, 
-            changes,
-            recipe: completeRecipe,
-            science_notes: scienceNotes,
-            techniques,
-            troubleshooting,
-            followUpQuestions,
-            textResponse
-          }
-        : { 
-            success: true, 
-            changes, 
-            recipe: completeRecipe,
-            textResponse, 
-            followUpQuestions
-          };
+      // Prepare response data
+      const responseData = {
+        success: true,
+        textResponse,
+        recipe: completeRecipe || null,
+        followUpQuestions
+      };
 
-      // Store the chat interaction if it's not an analysis
-      if (sourceType !== 'analysis' && recipe.id) {
+      // Store the chat interaction
+      if (recipe.id) {
         // Create meta object for optimistic updates tracking
         const meta = messageId ? { optimistic_id: messageId } : {};
         
@@ -430,11 +382,12 @@ serve(async (req) => {
               recipe_id: recipe.id,
               user_message: userMessage,
               ai_response: textResponse,
-              changes_suggested: changes,
+              changes_suggested: null, // No longer using partial changes
+              recipe: completeRecipe, // Store the complete recipe directly
               source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
-              version_id: completeRecipe.version_id, // Link to version if created
+              version_id: completeRecipe?.version_id, // Link to version if created
               meta: meta
             });
 

@@ -37,7 +37,7 @@ export async function updateRecipeUnified(
       hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,
       instructionCount: Array.isArray(updatedRecipe.instructions) ? updatedRecipe.instructions.length : 0,
       hasNotes: Array.isArray(updatedRecipe.science_notes) && updatedRecipe.science_notes.length > 0,
-      noteCount: updatedRecipe.science_notes.length
+      noteCount: updatedRecipe.science_notes?.length || 0
     });
     
     // Verify recipe integrity before saving
