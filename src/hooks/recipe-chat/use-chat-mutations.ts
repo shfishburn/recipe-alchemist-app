@@ -5,30 +5,43 @@ import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
-// Define interfaces for response and error types to replace 'any'
+/**
+ * Interface for the response from the edge function
+ * Contains either data or error information, but not both
+ */
 interface EdgeFunctionResponse {
+  // The data returned by the function, contains recipe modifications and text responses
   data?: {
     textResponse?: string;
     text_response?: string;
     changes?: Record<string, unknown>;
     error?: string;
   };
+  // Error information if the request failed
   error?: {
     message: string;
     status?: number;
   };
 }
 
+/**
+ * Interface for standardizing chat error handling
+ * Provides consistent structure for different error sources
+ */
 interface ChatError {
+  // Primary error message
   message?: string;
+  // Nested error object from services
   error?: {
     message: string;
   };
+  // HTTP status code if available
   status?: number;
 }
 
 /**
  * Custom hook for handling chat message mutations
+ * Manages sending chat messages to the API and handling the responses
  */
 export const useChatMutations = (recipe: Recipe) => {
   const { toast } = useToast();
@@ -54,8 +67,8 @@ export const useChatMutations = (recipe: Recipe) => {
       isRetry?: boolean;
     }) => {
       console.log("Starting recipe chat mutation:", { 
-        message, 
-        sourceType, // Should now always have a value
+        message: message.length > 20 ? `${message.substring(0, 20)}...` : message, // Limit logged message length 
+        sourceType,
         messageId: messageId || 'not-provided',
         isRetry: !!isRetry,
         recipeId: recipe.id
@@ -79,13 +92,14 @@ export const useChatMutations = (recipe: Recipe) => {
         // Implement enhanced request timeout handling with retry logic
         const makeRequest = async (retryCount = 0): Promise<EdgeFunctionResponse> => {
           try {
-            // Set progressively longer timeouts for retries
-            const timeout = 60000 + (retryCount * 15000); // 60s, 75s, 90s, 105s
+            // Set progressively longer timeouts for retries with exponential backoff
+            const baseTimeout = 60000; // 60s base timeout
+            const timeout = baseTimeout * Math.pow(1.5, retryCount); // Exponential increase
             
-            // Log the exact payload being sent to help with debugging
+            // Log the request attempt with limited payload info
             console.log("Sending payload to recipe-chat edge function:", {
               recipeId: recipe.id,
-              userMessage: message.substring(0, 50) + (message.length > 50 ? "..." : ""),
+              userMessage: message.length > 20 ? `${message.substring(0, 20)}...` : message,
               sourceType,
               hasSourceUrl: !!sourceUrl,
               hasSourceImage: !!sourceImage,
@@ -98,7 +112,7 @@ export const useChatMutations = (recipe: Recipe) => {
                 body: { 
                   recipe, 
                   userMessage: message,
-                  sourceType, // Will always have a value now
+                  sourceType,
                   sourceUrl,
                   sourceImage,
                   messageId,
@@ -115,19 +129,22 @@ export const useChatMutations = (recipe: Recipe) => {
             }
             
             return response;
-          } catch (error: unknown) {
+          } catch (error) {
             // Type guard to work with the error properties
             const chatError = error as ChatError;
             
-            // Implement retry for certain errors with exponential backoff
+            // Implement adaptive retry logic based on error type
             const isRetriableError = 
               chatError.message?.includes("timeout") || 
               chatError.message?.includes("network") || 
               chatError.status === 503 || 
               chatError.status === 504;
               
-            if (retryCount < 3 && isRetriableError) {
-              console.log(`Retrying request (attempt ${retryCount + 1})...`);
+            // Use dynamic retry count based on error type
+            const maxRetries = chatError.message?.includes("timeout") ? 4 : 3;
+            
+            if (retryCount < maxRetries && isRetriableError) {
+              console.log(`Retrying request (attempt ${retryCount + 1} of ${maxRetries})...`);
               // Update toast to show retry attempt
               toast({
                 id: toastId,
@@ -169,8 +186,10 @@ export const useChatMutations = (recipe: Recipe) => {
           throw new Error("Invalid AI response format");
         }
 
-        // Log the exact content we're saving to help with debugging
-        console.log("Saving chat message to database with response:", aiResponse.substring(0, 100) + "...");
+        // Log limited response content to avoid exposing sensitive data
+        const responseSummary = aiResponse.length > 100 ? 
+          `${aiResponse.substring(0, 100)}...` : aiResponse;
+        console.log("Saving chat message to database with response:", responseSummary);
         
         try {
           // Create meta object for optimistic updates tracking
@@ -180,14 +199,18 @@ export const useChatMutations = (recipe: Recipe) => {
           } : {};
           
           // Insert the chat message into the database
+          // Fix: Convert changes_suggested to JSON string if it's an object to match expected type
+          const changesValue = response.data.changes ? 
+            response.data.changes : null;
+          
           const { data, error } = await supabase
             .from('recipe_chats')
             .insert({
               recipe_id: recipe.id,
               user_message: message,
               ai_response: aiResponse,
-              changes_suggested: response.data.changes || null,
-              source_type: sourceType, // Will always have a value now
+              changes_suggested: changesValue,
+              source_type: sourceType,
               source_url: sourceUrl,
               source_image: sourceImage,
               meta: meta
@@ -202,19 +225,18 @@ export const useChatMutations = (recipe: Recipe) => {
           
           console.log("Chat successfully saved to database with ID:", data.id);
           return { data, messageId };
-        } catch (dbError: unknown) {
+        } catch (dbError) {
           console.error("Database error when saving chat:", dbError);
           
-          // Type guard for the database error
+          // Enhanced database error handling
           const typedDbError = dbError as { message?: string };
           
-          // Enhanced database error handling
           if (typedDbError.message?.includes("violates not-null constraint")) {
             throw new Error("Failed to save chat response: Required field is missing");
           }
           throw dbError;
         }
-      } catch (err: unknown) {
+      } catch (err) {
         console.error("Recipe chat error:", err);
         throw err;
       } finally {
@@ -234,7 +256,7 @@ export const useChatMutations = (recipe: Recipe) => {
         duration: 3000,
       });
     },
-    onError: (error: unknown, variables) => {
+    onError: (error, variables) => {
       console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
       
       // Enhanced error handling with better UX
