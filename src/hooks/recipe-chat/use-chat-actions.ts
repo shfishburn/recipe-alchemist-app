@@ -65,7 +65,7 @@ export const useChatActions = (
     // Send the message with retry flag
     mutation.mutate({
       message: messageText,
-      sourceType,
+      sourceType: sourceType || 'manual', // Ensure sourceType is always provided
       sourceUrl,
       sourceImage,
       messageId,
@@ -108,11 +108,14 @@ export const useChatActions = (
         // Create a unique message ID to help with tracking and cleanup
         const messageId = generateTrackingId('image');
         
+        // Always set sourceType explicitly for image uploads
+        const sourceType = 'image';
+        
         // Save retry data
         setPendingRetryData({
           messageText: "Analyzing recipe image...",
           messageId,
-          sourceType: 'image',
+          sourceType,
           sourceImage: base64Image
         });
         
@@ -127,7 +130,7 @@ export const useChatActions = (
             tracking_id: messageId,
             processing_stage: 'pending',
             source_info: {
-              type: 'image'
+              type: sourceType
             }
           }
         };
@@ -141,7 +144,7 @@ export const useChatActions = (
           setIsUploading(false);
           mutation.mutate({
             message: "Please analyze this recipe image",
-            sourceType: 'image',
+            sourceType,
             sourceImage: base64Image,
             messageId
           });
@@ -188,11 +191,14 @@ export const useChatActions = (
     // Create a unique message ID
     const messageId = generateTrackingId('url');
     
+    // Always set sourceType explicitly for URL submissions
+    const sourceType = 'url';
+    
     // Save retry data
     setPendingRetryData({
       messageText: `Analyzing recipe from: ${url}`,
       messageId,
-      sourceType: 'url',
+      sourceType,
       sourceUrl: url
     });
     
@@ -207,7 +213,7 @@ export const useChatActions = (
         tracking_id: messageId,
         processing_stage: 'pending',
         source_info: {
-          type: 'url',
+          type: sourceType,
           url: url
         }
       }
@@ -216,7 +222,7 @@ export const useChatActions = (
     
     mutation.mutate({
       message: "Please analyze this recipe URL",
-      sourceType: 'url',
+      sourceType,
       sourceUrl: url,
       messageId
     });
@@ -239,11 +245,14 @@ export const useChatActions = (
     // Create a unique ID for tracking
     const messageId = generateTrackingId('msg');
     
+    // Always set sourceType explicitly for manual text messages
+    const sourceType = 'manual';
+    
     // Save retry data
     setPendingRetryData({
       messageText: trimmedMessage,
       messageId,
-      sourceType: 'manual'
+      sourceType
     });
     
     // Create optimistic message with unique ID
@@ -257,7 +266,7 @@ export const useChatActions = (
         tracking_id: messageId,
         processing_stage: 'pending',
         source_info: {
-          type: 'manual'
+          type: sourceType
         }
       }
     };
@@ -273,6 +282,7 @@ export const useChatActions = (
     
     mutation.mutate({ 
       message: trimmedMessage,
+      sourceType, // Always include sourceType
       messageId
     });
     

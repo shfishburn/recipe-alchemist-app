@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +18,7 @@ export const useChatMutations = (recipe: Recipe) => {
   const mutation = useMutation({
     mutationFn: async ({ 
       message, 
-      sourceType, 
+      sourceType = 'manual', // Always provide a default value
       sourceUrl, 
       sourceImage,
       messageId,
@@ -32,7 +33,7 @@ export const useChatMutations = (recipe: Recipe) => {
     }) => {
       console.log("Starting recipe chat mutation:", { 
         message, 
-        sourceType,
+        sourceType, // Should now always have a value
         messageId: messageId || 'not-provided',
         isRetry: !!isRetry,
         recipeId: recipe.id
@@ -59,12 +60,23 @@ export const useChatMutations = (recipe: Recipe) => {
             // Set progressively longer timeouts for retries
             const timeout = 60000 + (retryCount * 15000); // 60s, 75s, 90s, 105s
             
+            // Log the exact payload being sent to help with debugging
+            console.log("Sending payload to recipe-chat edge function:", {
+              recipeId: recipe.id,
+              userMessage: message.substring(0, 50) + (message.length > 50 ? "..." : ""),
+              sourceType,
+              hasSourceUrl: !!sourceUrl,
+              hasSourceImage: !!sourceImage,
+              messageId,
+              retryAttempt: retryCount
+            });
+            
             const response = await Promise.race([
               supabase.functions.invoke('recipe-chat', {
                 body: { 
                   recipe, 
                   userMessage: message,
-                  sourceType,
+                  sourceType, // Will always have a value now
                   sourceUrl,
                   sourceImage,
                   messageId,
@@ -151,7 +163,7 @@ export const useChatMutations = (recipe: Recipe) => {
               user_message: message,
               ai_response: aiResponse,
               changes_suggested: response.data.changes || null,
-              source_type: sourceType || 'manual',
+              source_type: sourceType, // Will always have a value now
               source_url: sourceUrl,
               source_image: sourceImage,
               meta: meta

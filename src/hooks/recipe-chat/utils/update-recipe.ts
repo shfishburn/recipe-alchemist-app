@@ -31,32 +31,57 @@ export async function updateRecipe(
     // Process basic recipe updates - this now returns a complete recipe copy with changes applied
     const updatedRecipeData = processRecipeUpdates(recipe, chatMessage);
     
+    // First convert to unknown to ensure type safety during conversion
+    const intermediateData = updatedRecipeData as unknown;
+    
     // Properly transform data to ensure type safety for ingredients
-    // Ensure all required properties from Recipe are included with appropriate defaults
     const updatedRecipe: Recipe = {
       ...recipe, // Start with the original recipe to ensure all properties exist
-      ...updatedRecipeData as Partial<Recipe>, // Apply the updates
-      // Ensure title is always provided (required in Recipe type)
+      
+      // Safely apply updates with explicit property assignments
+      id: recipe.id, // Always preserve original ID
       title: updatedRecipeData.title || recipe.title || "Untitled Recipe",
-      // Ensure instructions array is always present
-      instructions: Array.isArray(updatedRecipeData.instructions) ? updatedRecipeData.instructions : recipe.instructions || [],
-      // Transform ingredients to ensure they match the Ingredient type requirements
+      description: updatedRecipeData.description || recipe.description,
+      
+      // Ensure array fields are properly handled
+      instructions: Array.isArray(updatedRecipeData.instructions)
+        ? updatedRecipeData.instructions.map(instr => typeof instr === 'string' ? instr : String(instr))
+        : recipe.instructions || [],
+      
+      // Transform ingredients with strict type checking for each property
       ingredients: Array.isArray(updatedRecipeData.ingredients)
-        ? updatedRecipeData.ingredients.map((ing: any) => ({
-            qty_metric: ing.qty_metric || 0,
-            unit_metric: ing.unit_metric || '',
-            qty_imperial: ing.qty_imperial || 0,
-            unit_imperial: ing.unit_imperial || '',
-            item: ing.item || '',
-            notes: ing.notes,
-            shop_size_qty: ing.shop_size_qty,
-            shop_size_unit: ing.shop_size_unit,
-            qty: ing.qty,
-            unit: ing.unit
+        ? updatedRecipeData.ingredients.map(ing => ({
+            // Required fields with strong type checking
+            qty_metric: typeof ing.qty_metric === 'number' ? ing.qty_metric : 0,
+            unit_metric: typeof ing.unit_metric === 'string' ? ing.unit_metric : '',
+            qty_imperial: typeof ing.qty_imperial === 'number' ? ing.qty_imperial : 0,
+            unit_imperial: typeof ing.unit_imperial === 'string' ? ing.unit_imperial : '',
+            item: typeof ing.item === 'string' ? ing.item : '',
+            
+            // Optional fields
+            notes: typeof ing.notes === 'string' ? ing.notes : undefined,
+            shop_size_qty: typeof ing.shop_size_qty === 'number' ? ing.shop_size_qty : undefined,
+            shop_size_unit: typeof ing.shop_size_unit === 'string' ? ing.shop_size_unit : undefined,
+            qty: typeof ing.qty === 'number' ? ing.qty : undefined,
+            unit: typeof ing.unit === 'string' ? ing.unit : undefined
           }))
         : recipe.ingredients || [],
-      // Ensure science_notes is always an array
-      science_notes: Array.isArray(updatedRecipeData.science_notes) ? updatedRecipeData.science_notes : recipe.science_notes || []
+      
+      // Handle science_notes safely
+      science_notes: Array.isArray(updatedRecipeData.science_notes)
+        ? updatedRecipeData.science_notes.map(note => typeof note === 'string' ? note : String(note))
+        : recipe.science_notes || [],
+      
+      // Copy other fields that might be updated
+      nutrition: updatedRecipeData.nutrition || recipe.nutrition,
+      image_url: updatedRecipeData.image_url || recipe.image_url,
+      prep_time_min: updatedRecipeData.prep_time_min || recipe.prep_time_min,
+      cook_time_min: updatedRecipeData.cook_time_min || recipe.cook_time_min,
+      servings: updatedRecipeData.servings || recipe.servings,
+      cuisine: updatedRecipeData.cuisine || recipe.cuisine,
+      cuisine_category: updatedRecipeData.cuisine_category || recipe.cuisine_category,
+      tags: updatedRecipeData.tags || recipe.tags,
+      updated_at: new Date().toISOString()
     };
 
     // Verify recipe integrity before saving
