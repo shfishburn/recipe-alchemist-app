@@ -1,7 +1,9 @@
+
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { useChatMutations } from './use-chat-mutations';
+import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { OptimisticMessage } from '@/types/chat';
 

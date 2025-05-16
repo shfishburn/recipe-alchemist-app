@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Markdown } from '@/components/markdown/Markdown';
 import { Spinner } from '@/components/ui/spinner';
 import { Card } from '@/components/ui/card';
-import type { ChatMessage, ChatHistoryItem } from '@/types/chat';
+import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 import type { Recipe } from '@/types/recipe';
 
+type AnyMessageType = ChatMessageType | OptimisticMessage;
+
 interface ChatMessageProps {
-  message: ChatHistoryItem;
+  message: AnyMessageType;
   isUser: boolean;
   recipe: Recipe;
-  onApplyChanges?: (message: ChatMessage) => void;
+  onApplyChanges?: (message: ChatMessageType) => void;
   onRetry?: (text: string, id: string) => void;
   isApplying?: boolean;
 }
@@ -78,7 +80,7 @@ export function ChatMessage({
             {canApplyChanges && (
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button 
-                  onClick={() => onApplyChanges(message as ChatMessage)} 
+                  onClick={() => onApplyChanges(message as ChatMessageType)} 
                   disabled={isApplying}
                   size="sm"
                   variant="secondary"
