@@ -78,11 +78,21 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
 
   // Add a callback to notify parent component when modifications are applied
   const handleApplyModifications = useCallback(() => {
+    console.log("handleApplyModifications called");
+    console.log("Modified recipe before apply:", modifiedRecipe);
+    
     applyModifications();
+    
     if (onModifiedRecipe && modifiedRecipe) {
+      console.log("Calling onModifiedRecipe with:", modifiedRecipe);
       onModifiedRecipe(modifiedRecipe);
       toast("Modifications Applied", {
         description: "Your recipe modifications have been applied successfully."
+      });
+    } else {
+      console.log("Unable to apply modifications:", { 
+        onModifiedRecipe: !!onModifiedRecipe,
+        modifiedRecipe: !!modifiedRecipe 
       });
     }
   }, [applyModifications, modifiedRecipe, onModifiedRecipe]);
@@ -102,6 +112,7 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
     }
     
     try {
+      console.log("Requesting modifications with:", { request, immediate });
       requestModifications(request, immediate);
     } catch (err: unknown) {
       // Improved error handling with type checking
@@ -171,12 +182,12 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
           />
         )}
         
-        {/* Viewing historical version alert */}
+        {/* Viewing historical version alert - FIX THE VARIANT HERE */}
         {hasMultipleVersions && selectedVersionId && 
          selectedVersionId !== versionHistory[0].version_id && (
-          <Alert variant="warning" className="bg-amber-50">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-amber-700">
               You are viewing a historical version of this recipe. Any modifications will create a new version based on this one.
             </AlertDescription>
           </Alert>
