@@ -67,17 +67,22 @@ export const useChatMutations = (recipe: Recipe) => {
       messageId?: string;
       isRetry?: boolean;
     }) => {
-      console.log("Starting recipe chat mutation:", { 
-        message: message.length > 20 ? `${message.substring(0, 20)}...` : message, // Limit logged message length 
+      // Enhanced debugging start log
+      console.info("[ChatMutation] Starting mutation:", { 
+        message: message.length > 20 ? `${message.substring(0, 20)}...` : message,
         sourceType,
         messageId: messageId || 'not-provided',
         isRetry: !!isRetry,
-        recipeId: recipe.id
+        recipeId: recipe.id,
+        timestamp: new Date().toISOString(),
+        requestId: `req_${Date.now().toString(36)}`
       });
       
       // Validate recipe ID to prevent errors
       if (!recipe || !recipe.id) {
-        throw new Error("Invalid recipe data: missing recipe ID");
+        const error = new Error("Invalid recipe data: missing recipe ID");
+        console.error("[ChatMutation] Validation error:", { error });
+        throw error;
       }
       
       // Show toast notification for request processing
@@ -86,26 +91,34 @@ export const useChatMutations = (recipe: Recipe) => {
         description: sourceType === 'manual' 
           ? "Our culinary scientist is analyzing your request..."
           : "Extracting recipe information...",
-        duration: 5000, // Shorter duration for better UX
+        duration: 5000,
       });
       
       try {
         // Implement enhanced request timeout handling with retry logic
         const makeRequest = async (retryCount = 0): Promise<EdgeFunctionResponse> => {
+          const requestStartTime = Date.now();
+          console.log("[ChatMutation] Making request:", {
+            retryCount,
+            timestamp: new Date().toISOString()
+          });
+          
           try {
             // Set progressively longer timeouts for retries with exponential backoff
             const baseTimeout = 60000; // 60s base timeout
             const timeout = baseTimeout * Math.pow(1.5, retryCount); // Exponential increase
             
-            // Log the request attempt with limited payload info
-            console.log("Sending payload to recipe-chat edge function:", {
+            // Log the request attempt with detailed info
+            console.log("[ChatMutation] Sending payload to edge function:", {
               recipeId: recipe.id,
-              userMessage: message.length > 20 ? `${message.substring(0, 20)}...` : message,
+              userMessageLength: message.length,
               sourceType,
               hasSourceUrl: !!sourceUrl,
               hasSourceImage: !!sourceImage,
               messageId,
-              retryAttempt: retryCount
+              retryAttempt: retryCount,
+              timeout,
+              timestamp: new Date().toISOString()
             });
             
             const response = await Promise.race([
@@ -121,11 +134,29 @@ export const useChatMutations = (recipe: Recipe) => {
                 }
               }),
               new Promise<never>((_, reject) => 
-                setTimeout(() => reject(new Error("Request timed out after " + timeout + "ms")), timeout)
+                setTimeout(() => {
+                  const timeoutError = new Error("Request timed out after " + timeout + "ms");
+                  console.error("[ChatMutation] Request timeout:", {
+                    timeout,
+                    retryCount,
+                    messageId
+                  });
+                  reject(timeoutError);
+                }, timeout)
               )
             ]) as EdgeFunctionResponse;
             
+            const requestDuration = Date.now() - requestStartTime;
+            console.log("[ChatMutation] Edge function response received:", {
+              durationMs: requestDuration,
+              hasData: !!response.data,
+              hasError: !!response.error,
+              retryCount,
+              timestamp: new Date().toISOString()
+            });
+            
             if (response.error) {
+              console.error("[ChatMutation] Edge function returned error:", response.error);
               throw response.error;
             }
             
@@ -133,6 +164,12 @@ export const useChatMutations = (recipe: Recipe) => {
           } catch (error) {
             // Type guard to work with the error properties
             const chatError = error as ChatError;
+            console.error("[ChatMutation] Request error:", {
+              message: chatError.message,
+              status: chatError.status,
+              retryCount,
+              timestamp: new Date().toISOString()
+            });
             
             // Implement adaptive retry logic based on error type
             const isRetriableError = 
@@ -145,7 +182,12 @@ export const useChatMutations = (recipe: Recipe) => {
             const maxRetries = chatError.message?.includes("timeout") ? 4 : 3;
             
             if (retryCount < maxRetries && isRetriableError) {
-              console.log(`Retrying request (attempt ${retryCount + 1} of ${maxRetries})...`);
+              console.log(`[ChatMutation] Retrying request:`, {
+                attempt: retryCount + 1,
+                maxRetries,
+                errorType: chatError.message?.includes("timeout") ? "timeout" : "other",
+                timestamp: new Date().toISOString()
+              });
               // Update toast to show retry attempt
               toast({
                 id: toastId,
@@ -154,8 +196,10 @@ export const useChatMutations = (recipe: Recipe) => {
                 duration: 3000,
               });
               // Add exponential backoff
+              const backoffDelay = 1000 * Math.pow(2, retryCount);
+              console.log(`[ChatMutation] Backing off for ${backoffDelay}ms before retry ${retryCount + 1}`);
               await new Promise(resolve => 
-                setTimeout(resolve, 1000 * Math.pow(2, retryCount))
+                setTimeout(resolve, backoffDelay)
               );
               return makeRequest(retryCount + 1);
             }
@@ -164,15 +208,17 @@ export const useChatMutations = (recipe: Recipe) => {
         };
 
         // Make the request with retry capability
+        console.time("[ChatMutation] Edge function request");
         const response = await makeRequest();
+        console.timeEnd("[ChatMutation] Edge function request");
 
         if (!response.data) {
-          console.error("Edge function returned no data");
+          console.error("[ChatMutation] Edge function returned no data");
           throw new Error("No data returned from edge function");
         }
         
         if (response.data.error) {
-          console.error("Edge function response contains error:", response.data.error);
+          console.error("[ChatMutation] Edge function response contains error:", response.data.error);
           throw new Error(response.data.error);
         }
 
@@ -183,21 +229,35 @@ export const useChatMutations = (recipe: Recipe) => {
                           });
         
         if (!aiResponse) {
-          console.error("No valid response content found in:", response.data);
+          console.error("[ChatMutation] No valid response content found in:", response.data);
           throw new Error("Invalid AI response format");
         }
 
-        // Log limited response content to avoid exposing sensitive data
-        const responseSummary = aiResponse.length > 100 ? 
-          `${aiResponse.substring(0, 100)}...` : aiResponse;
-        console.log("Saving chat message to database with response:", responseSummary);
+        // Log response metadata to help with debugging but protect sensitive content
+        console.log("[ChatMutation] Processing AI response:", {
+          responseLength: aiResponse.length,
+          hasChanges: !!response.data.changes,
+          changesCount: response.data.changes ? Object.keys(response.data.changes).length : 0,
+          timestamp: new Date().toISOString()
+        });
         
         try {
           // Create meta object for optimistic updates tracking
           const meta = messageId ? { 
             optimistic_id: messageId,
-            is_retry: !!isRetry
-          } : {};
+            is_retry: !!isRetry,
+            processed_at: new Date().toISOString()
+          } : {
+            processed_at: new Date().toISOString()
+          };
+          
+          console.time("[ChatMutation] Database save");
+          console.log("[ChatMutation] Saving to database:", {
+            recipeId: recipe.id,
+            messageId,
+            sourceType,
+            timestamp: new Date().toISOString()
+          });
           
           // Insert the chat message into the database
           // Fix: Convert changes_suggested to JSON type to match expected database type
@@ -218,15 +278,23 @@ export const useChatMutations = (recipe: Recipe) => {
             .select()
             .single();
 
+          console.timeEnd("[ChatMutation] Database save");
+          
           if (error) {
-            console.error("Error saving chat to database:", error);
+            console.error("[ChatMutation] Database error:", {
+              error,
+              timestamp: new Date().toISOString()
+            });
             throw error;
           }
           
-          console.log("Chat successfully saved to database with ID:", data.id);
+          console.log("[ChatMutation] Successfully saved chat to database:", {
+            chatId: data.id,
+            timestamp: new Date().toISOString()
+          });
           return { data, messageId };
         } catch (dbError) {
-          console.error("Database error when saving chat:", dbError);
+          console.error("[ChatMutation] Database save error:", dbError);
           
           // Enhanced database error handling
           const typedDbError = dbError as { message?: string };
@@ -237,7 +305,7 @@ export const useChatMutations = (recipe: Recipe) => {
           throw dbError;
         }
       } catch (err) {
-        console.error("Recipe chat error:", err);
+        console.error("[ChatMutation] Error in mutation function:", err);
         throw err;
       } finally {
         // Fix: Properly clean up the toast notification
@@ -245,10 +313,14 @@ export const useChatMutations = (recipe: Recipe) => {
           id: toastId,
           duration: 0, // Immediately remove the processing toast
         });
+        console.log("[ChatMutation] Request process completed");
       }
     },
     onSuccess: (result) => {
-      console.log("Recipe chat mutation completed successfully with messageId:", result?.messageId || 'not-provided');
+      console.log("[ChatMutation] onSuccess callback:", {
+        messageId: result?.messageId || 'not-provided',
+        timestamp: new Date().toISOString()
+      });
       queryClient.invalidateQueries({ queryKey: ['recipe-chats', recipe.id] });
       toast({
         title: "Response received",
@@ -257,7 +329,11 @@ export const useChatMutations = (recipe: Recipe) => {
       });
     },
     onError: (error, variables) => {
-      console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
+      console.error("[ChatMutation] onError callback:", {
+        error,
+        messageId: variables.messageId || 'not-provided',
+        timestamp: new Date().toISOString()
+      });
       
       // Enhanced error handling with better UX
       let errorMessage = "Failed to get AI response";
@@ -274,14 +350,17 @@ export const useChatMutations = (recipe: Recipe) => {
         errorMessage = error;
       }
       
-      // Truncate very long error messages
-      const displayMessage = errorMessage.length > 100 
-        ? `${errorMessage.substring(0, 100)}...` 
-        : errorMessage;
+      // Log detailed error information
+      console.error("[ChatMutation] Formatted error:", {
+        originalError: error,
+        displayMessage: errorMessage.length > 100 ? 
+          `${errorMessage.substring(0, 100)}...` : errorMessage,
+        timestamp: new Date().toISOString()
+      });
       
       toast({
         title: "Error",
-        description: displayMessage,
+        description: errorMessage.length > 100 ? `${errorMessage.substring(0, 100)}...` : errorMessage,
         variant: "destructive",
         duration: 8000, // Give users more time to read error messages
       });

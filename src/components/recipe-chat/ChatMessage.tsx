@@ -31,17 +31,38 @@ export function ChatMessage({
   // Check if this message has an error
   const hasError = getChatMeta(chat, 'error', false);
   
-  // Log chat message for debugging
+  // Log chat message for debugging - enhanced with more details
   React.useEffect(() => {
-    console.log("Chat Message:", {
+    console.log("[ChatMessage] Message rendered:", {
       id: chat.id,
+      timestamp: new Date().toISOString(),
       isOptimistic,
+      isOptimisticUserMessage,
       hasError,
-      userMessage: chat.user_message?.substring(0, 100) + (chat.user_message?.length > 100 ? '...' : ''),
       hasAiResponse: !!chat.ai_response,
-      hasChangesSuggested: !!chat.changes_suggested
+      hasChangesSuggested: !!chat.changes_suggested,
+      userMessagePreview: chat.user_message?.substring(0, 50) + (chat.user_message?.length > 50 ? '...' : ''),
+      aiResponseLength: chat.ai_response?.length || 0,
+      meta: chat.meta || {},
+      applied: applied || !!chat.applied
     });
-  }, [chat, isOptimistic, hasError]);
+    
+    // Log specific conditions for easier debugging
+    if (hasError) {
+      console.warn("[ChatMessage] Error detected in message:", {
+        id: chat.id,
+        errorDetails: chat.meta?.error_details || "No detailed error information"
+      });
+    }
+    
+    if (isOptimisticUserMessage) {
+      console.log("[ChatMessage] Optimistic message render:", {
+        id: chat.id,
+        optimisticId: getChatMeta(chat, 'optimistic_id', ''),
+        waitingForResponse: true
+      });
+    }
+  }, [chat, isOptimistic, hasError, isOptimisticUserMessage, applied]);
   
   // For optimistic user messages, only show the user message
   if (isOptimisticUserMessage) {
@@ -56,7 +77,26 @@ export function ChatMessage({
   }
 
   const handleApplyChanges = async () => {
-    await applyChanges(chat);
+    console.log("[ChatMessage] Applying changes for message:", {
+      id: chat.id,
+      hasChangesSuggested: !!chat.changes_suggested,
+      timestamp: new Date().toISOString()
+    });
+    
+    try {
+      const result = await applyChanges(chat);
+      console.log("[ChatMessage] Apply changes result:", {
+        id: chat.id,
+        success: result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("[ChatMessage] Error applying changes:", {
+        id: chat.id,
+        error,
+        timestamp: new Date().toISOString()
+      });
+    }
   };
 
   return (

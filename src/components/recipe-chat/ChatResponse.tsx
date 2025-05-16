@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { WarningAlert } from './response/WarningAlert';
 import { FormattedText } from './response/FormattedText';
 import { ApplyChangesSection } from './response/ApplyChangesSection';
@@ -39,19 +39,57 @@ export function ChatResponse({
   
   const isMobile = useIsMobile();
   
-  // Log AI response for debugging
-  React.useEffect(() => {
-    console.log("AI Response:", {
+  // Log AI response for enhanced debugging with more detailed information
+  useEffect(() => {
+    console.log("[ChatResponse] Rendering response:", {
       messageId,
-      rawResponse: response,
-      changesSuggested,
-      displayText: displayText.substring(0, 100) + (displayText.length > 100 ? '...' : ''),
+      timestamp: new Date().toISOString(),
+      responseLength: response.length,
+      displayTextLength: displayText.length,
       isMethodology,
-      followUpQuestions
+      hasChangesSuggested: !!changesSuggested,
+      changesPreview: changesSuggested ? Object.keys(changesSuggested).length : 0,
+      followUpQuestions: followUpQuestions.length,
+      isApplying,
+      applied,
+      showWarning,
+      isMobile,
     });
-  }, [response, changesSuggested, messageId, displayText, isMethodology, followUpQuestions]);
+
+    // Log response parsing info
+    console.debug("[ChatResponse] Response analysis:", {
+      messageId,
+      parsingComplete: true,
+      displayTextPreview: displayText.substring(0, 100) + (displayText.length > 100 ? '...' : ''),
+      contentType: isMethodology ? 'methodology' : 'standard',
+      warningTriggered: showWarning,
+    });
+    
+    return () => {
+      console.log("[ChatResponse] Unmounting response component:", {
+        messageId,
+        timestamp: new Date().toISOString()
+      });
+    };
+  }, [
+    response, 
+    changesSuggested, 
+    messageId, 
+    displayText, 
+    isMethodology, 
+    followUpQuestions,
+    isMobile,
+    showWarning,
+    isApplying,
+    applied
+  ]);
   
   const handleFollowUpClick = (question: string) => {
+    console.log("[ChatResponse] Follow-up question clicked:", {
+      messageId,
+      question,
+      timestamp: new Date().toISOString()
+    });
     setMessage(question);
   };
 
@@ -69,7 +107,7 @@ export function ChatResponse({
         <div className={`bg-white ${isScientific ? 'bg-gradient-to-br from-white to-blue-50/30' : ''} 
                          rounded-[20px] rounded-tl-[5px] ${bubblePadding} shadow-sm border 
                          ${isScientific ? 'border-blue-100' : 'border-slate-100'}`}>
-          {/* Debug panel icon */}
+          {/* Debug panel icon with better positioning for mobile */}
           <div className="flex justify-end mb-1">
             <DebugPanel 
               response={response}
@@ -81,8 +119,8 @@ export function ChatResponse({
           {/* Warning alert for ingredient issues */}
           <WarningAlert showWarning={showWarning} isMobile={isMobile} />
           
-          {/* Main response text content */}
-          <ScrollArea className="max-h-[300px]">
+          {/* Main response text content with enhanced scroll behavior */}
+          <ScrollArea className="max-h-[300px] overflow-auto">
             <div className={`prose prose-sm max-w-none ${textSize} text-slate-800 break-words`}>
               <FormattedText 
                 text={displayText} 
