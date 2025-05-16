@@ -5,6 +5,28 @@ import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
+// Define interfaces for response and error types to replace 'any'
+interface EdgeFunctionResponse {
+  data?: {
+    textResponse?: string;
+    text_response?: string;
+    changes?: Record<string, unknown>;
+    error?: string;
+  };
+  error?: {
+    message: string;
+    status?: number;
+  };
+}
+
+interface ChatError {
+  message?: string;
+  error?: {
+    message: string;
+  };
+  status?: number;
+}
+
 /**
  * Custom hook for handling chat message mutations
  */
@@ -55,7 +77,7 @@ export const useChatMutations = (recipe: Recipe) => {
       
       try {
         // Implement enhanced request timeout handling with retry logic
-        const makeRequest = async (retryCount = 0): Promise<any> => {
+        const makeRequest = async (retryCount = 0): Promise<EdgeFunctionResponse> => {
           try {
             // Set progressively longer timeouts for retries
             const timeout = 60000 + (retryCount * 15000); // 60s, 75s, 90s, 105s
@@ -83,23 +105,26 @@ export const useChatMutations = (recipe: Recipe) => {
                   retryAttempt: retryCount
                 }
               }),
-              new Promise((_, reject) => 
+              new Promise<never>((_, reject) => 
                 setTimeout(() => reject(new Error("Request timed out after " + timeout + "ms")), timeout)
               )
-            ]) as { data?: any, error?: any };
+            ]) as EdgeFunctionResponse;
             
             if (response.error) {
               throw response.error;
             }
             
             return response;
-          } catch (error: any) {
+          } catch (error: unknown) {
+            // Type guard to work with the error properties
+            const chatError = error as ChatError;
+            
             // Implement retry for certain errors with exponential backoff
             const isRetriableError = 
-              error.message?.includes("timeout") || 
-              error.message?.includes("network") || 
-              error.status === 503 || 
-              error.status === 504;
+              chatError.message?.includes("timeout") || 
+              chatError.message?.includes("network") || 
+              chatError.status === 503 || 
+              chatError.status === 504;
               
             if (retryCount < 3 && isRetriableError) {
               console.log(`Retrying request (attempt ${retryCount + 1})...`);
@@ -177,16 +202,19 @@ export const useChatMutations = (recipe: Recipe) => {
           
           console.log("Chat successfully saved to database with ID:", data.id);
           return { data, messageId };
-        } catch (dbError: any) {
+        } catch (dbError: unknown) {
           console.error("Database error when saving chat:", dbError);
           
+          // Type guard for the database error
+          const typedDbError = dbError as { message?: string };
+          
           // Enhanced database error handling
-          if (dbError.message?.includes("violates not-null constraint")) {
+          if (typedDbError.message?.includes("violates not-null constraint")) {
             throw new Error("Failed to save chat response: Required field is missing");
           }
           throw dbError;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Recipe chat error:", err);
         throw err;
       } finally {
@@ -206,17 +234,20 @@ export const useChatMutations = (recipe: Recipe) => {
         duration: 3000,
       });
     },
-    onError: (error: any, variables) => {
+    onError: (error: unknown, variables) => {
       console.error("Recipe chat mutation error:", error, "for message ID:", variables.messageId || 'not-provided');
       
       // Enhanced error handling with better UX
       let errorMessage = "Failed to get AI response";
       
+      // Type guard for the error
+      const typedError = error as ChatError;
+      
       // Extract the most meaningful error message
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.error?.message) {
-        errorMessage = error.error.message;
+      if (typedError.message) {
+        errorMessage = typedError.message;
+      } else if (typedError.error?.message) {
+        errorMessage = typedError.error.message;
       } else if (typeof error === 'string') {
         errorMessage = error;
       }

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -323,12 +322,14 @@ serve(async (req) => {
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
 
       // Process the response with our validation function
-      const processedResponse = validateRecipeChanges(rawResponse, recipe);
+      const processedResponse = validateRecipeChanges(rawResponse);
       
-      // Prepare the response data format - Fix: change all variables to const
+      // Prepare the response data format - using const for all variables
       const textResponse = processedResponse.textResponse || processedResponse.text_response || rawResponse;
       const changes = processedResponse.changes || { mode: "none" };
-      const scienceNotes = processedResponse.science_notes || [];
+      const scienceNotes = Array.isArray(processedResponse.science_notes) 
+        ? processedResponse.science_notes 
+        : [];
       const techniques = processedResponse.techniques || [];
       const troubleshooting = processedResponse.troubleshooting || [];
       const followUpQuestions = processedResponse.followUpQuestions || [];
@@ -349,10 +350,13 @@ serve(async (req) => {
           changes.ingredients.mode = "none";
         }
         
-        // Ensure we have at least some science notes
-        if (!Array.isArray(scienceNotes) || scienceNotes.length === 0) {
-          // Extract potential science notes from the text response
-          scienceNotes.push(...extractScienceNotesFromText(textResponse));
+        // Ensure we have at least some science notes - Using concat instead of push for safer operations
+        if (scienceNotes.length === 0) {
+          // Extract potential science notes and concat with existing array (even if empty)
+          const extractedNotes = extractScienceNotesFromText(textResponse);
+          const updatedScienceNotes = scienceNotes.concat(extractedNotes);
+          // Assign back to a new constant for clarity
+          const finalScienceNotes = updatedScienceNotes;
         }
       }
       
@@ -395,24 +399,23 @@ serve(async (req) => {
       }
       
       // For analysis requests, make sure we include the extracted sections in the response
-      // Fix: standardize on textResponse field and fix inconsistent field naming
       const responseData = sourceType === 'analysis' 
         ? { 
             success: true, 
-            changes: changes,
+            changes,
             recipe: completeRecipe,
             science_notes: scienceNotes,
-            techniques: techniques,
-            troubleshooting: troubleshooting,
-            followUpQuestions: followUpQuestions,
-            textResponse: textResponse
+            techniques,
+            troubleshooting,
+            followUpQuestions,
+            textResponse
           }
         : { 
             success: true, 
-            changes: changes, 
+            changes, 
             recipe: completeRecipe,
-            textResponse: textResponse, 
-            followUpQuestions: followUpQuestions
+            textResponse, 
+            followUpQuestions
           };
 
       // Store the chat interaction if it's not an analysis
