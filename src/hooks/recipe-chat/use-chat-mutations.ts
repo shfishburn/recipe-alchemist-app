@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
+import type { Json } from '@/integrations/supabase/types';
 
 /**
  * Interface for the response from the edge function
@@ -199,9 +200,8 @@ export const useChatMutations = (recipe: Recipe) => {
           } : {};
           
           // Insert the chat message into the database
-          // Fix: Convert changes_suggested to JSON string if it's an object to match expected type
-          const changesValue = response.data.changes ? 
-            response.data.changes : null;
+          // Fix: Convert changes_suggested to JSON type to match expected database type
+          const changesValue = response.data.changes || null;
           
           const { data, error } = await supabase
             .from('recipe_chats')
@@ -209,11 +209,11 @@ export const useChatMutations = (recipe: Recipe) => {
               recipe_id: recipe.id,
               user_message: message,
               ai_response: aiResponse,
-              changes_suggested: changesValue,
+              changes_suggested: changesValue as Json,
               source_type: sourceType,
               source_url: sourceUrl,
               source_image: sourceImage,
-              meta: meta
+              meta: meta as Json
             })
             .select()
             .single();
