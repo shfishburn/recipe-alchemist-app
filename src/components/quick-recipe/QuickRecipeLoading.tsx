@@ -1,3 +1,4 @@
+
 // @ai-protect read-only
 // This file contains critical loading animations and should be modified with care
 
@@ -198,15 +199,15 @@ export function QuickRecipeLoading({
           </div>
         )}
         
-        {/* Enhanced chef tip card with animations */}
+        {/* Enhanced chef tip card with animations - FIX: Improve overflow handling */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md p-5 w-full transition-all duration-500 relative overflow-hidden">
           <div className="flex items-start space-x-3">
             <ChefHat className="h-6 w-6 text-recipe-green flex-shrink-0 mt-1 animate-pulse-attention" />
-            <div>
+            <div className="w-full">
               <h4 className="text-base font-semibold mb-2 text-gray-800 dark:text-gray-100">Chef's Tip</h4>
-              <div className="min-h-[80px] relative">
+              <div className="min-h-[120px] relative w-full"> {/* Increased height to accommodate the content */}
                 <p 
-                  className={`text-sm text-gray-600 dark:text-gray-300 leading-relaxed absolute transition-all duration-1000 ${
+                  className={`text-sm text-gray-600 dark:text-gray-300 leading-relaxed absolute w-full transition-all duration-1000 ${
                     isAnimatingOut 
                       ? 'opacity-0 transform -translate-y-4' 
                       : isAnimatingIn 
