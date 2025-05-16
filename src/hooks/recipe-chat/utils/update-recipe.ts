@@ -32,8 +32,14 @@ export async function updateRecipe(
     const updatedRecipeData = processRecipeUpdates(recipe, chatMessage);
     
     // Properly transform data to ensure type safety for ingredients
+    // Ensure all required properties from Recipe are included with appropriate defaults
     const updatedRecipe: Recipe = {
       ...updatedRecipeData,
+      // Ensure title is always provided (required in Recipe type)
+      title: updatedRecipeData.title || recipe.title || "Untitled Recipe",
+      // Ensure instructions array is always present
+      instructions: Array.isArray(updatedRecipeData.instructions) ? updatedRecipeData.instructions : recipe.instructions || [],
+      // Transform ingredients to ensure they match the Ingredient type requirements
       ingredients: Array.isArray(updatedRecipeData.ingredients)
         ? updatedRecipeData.ingredients.map((ing: any) => ({
             qty_metric: ing.qty_metric || 0,
@@ -47,7 +53,9 @@ export async function updateRecipe(
             qty: ing.qty,
             unit: ing.unit
           }))
-        : []
+        : recipe.ingredients || [],
+      // Ensure science_notes is always an array
+      science_notes: Array.isArray(updatedRecipeData.science_notes) ? updatedRecipeData.science_notes : recipe.science_notes || []
     };
 
     // Verify recipe integrity before saving
