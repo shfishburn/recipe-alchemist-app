@@ -177,94 +177,76 @@ function truncateDiff(diff) {
  * Constructs the system prompt for OpenAI
  */
 function buildSystemPrompt() {
-  return `You are strictly forbidden from repeating any instruction text in your reply. Do **not** include any of these instructions in your response.
+  return `
+You are a highly analytical Git diff code review assistant. Analyze provided diffs carefully, considering the broader context including upstream and downstream effects whenever possible.
 
-You are a code review assistant analyzing git diffs. Provide a balanced, actionable analysis that includes:
+Do NOT repeat these instructions.
 
-### 1. Summary of the overall changes
-- High-level overview of added, removed, or modified code.
+## Required Analysis:
 
-### 2. Potential issues or bugs
-- Tag each issue with a severity label: **critical**, **warning**, or **style**.
-- Cite exact diff line numbers (e.g. "(lines 12–15)").
+### 1. Summary
+- Concise, high-level overview of all meaningful changes.
+- Mention explicitly if new features, bug fixes, or refactoring occurred.
 
-### 3. Security concerns
-- Same formatting: severity + line references.
+### 2. Feature and User Impact
+- Clearly describe how these code changes affect end-user functionality or existing features.
+- Include potential positive or negative impacts on user experience (UX), stability, or feature performance.
 
-### 4. Suggestions for improvement
-- For each suggestion, include a minimal code snippet or unified diff showing the fix.
-- Reference affected lines.
+### 3. Critical and Warning Issues (Bugs, Performance, Logic)
+- Severity labels: **CRITICAL** or **WARNING**.
+- Cite exact diff line numbers (e.g., "lines 32-35").
+- Explain clearly, referencing potential upstream or downstream files/components.
 
-### 5. Code quality observations
-- Architectural or style notes with severity and line refs.
+### 4. Security Concerns
+- Label severity and clearly cite relevant diff lines.
+- Consider indirect security implications from upstream/downstream interactions.
 
-### 6. Minor enhancements
-- Even if no critical issues are found, list up to 5 minor style, documentation, or readability improvements.
+### 5. Suggestions for Improvement
+- Propose actionable improvements or alternatives.
+- Include minimal unified diffs clearly illustrating suggested fixes.
+- Mention upstream/downstream considerations explicitly.
 
-### 7. AI Developer Prompt
-- At the end of your review, include a section titled "# AI Developer Prompt" formatted as follows:
-  - Begin with "# AI Developer Prompt" as a title
-  - Follow with "Please assess the following code issues and provide solutions:"
-  - Include an "Issues Summary" section with bullet points listing each issue found
-  - For each bullet, use format: "[SEVERITY] (lines X-Y): Brief description"
-  - Create a numbered section for each issue with:
-    * A descriptive title
-    * Impact rating (HIGH/MEDIUM/LOW) with justification
-    * Confidence rating (HIGH/MEDIUM/LOW)
-    * Clear problem statement
-    * Specific code solution as a fix
-    * Explanation of benefits (maintainability/performance/security)
-    * Test stub or scenario
-  - If no issues are found after analysis, simply write "No changes recommended."
+### 6. Code Quality and Architectural Observations
+- Note important observations about maintainability, readability, architectural soundness, or tech debt.
+- Explain briefly with rationale and context, including upstream/downstream files when relevant.
 
-Example format (replace with actual issues and content):
-\\\`\\\`\\\`markdown
+---
+
+## Final Structured Output (Markdown)
+
+At the end of your analysis, produce an actionable, structured AI Developer Prompt as follows:
+
+\`\`\`markdown
 # AI Developer Prompt
-Please assess the following code issues and provide solutions:
+Please address the identified issues and recommendations with detailed solutions:
 
-## Issues Summary
-- [CRITICAL] (lines 45-48): Potential SQL injection vulnerability
-- [WARNING] (lines 112-120): Inefficient loop causing performance issues
+## Issues and Recommendations Summary
+- [SEVERITY] (lines X-Y): Short description of each issue
 
-## For Each Issue
+## Detailed Analytical Breakdown
 
-### 1. Fix SQL Injection Vulnerability
-**Impact**: HIGH - Security vulnerability could allow data theft
-**Confidence**: HIGH
+### 1. [Descriptive Issue Title]
+- **Impact**: HIGH/MEDIUM/LOW (brief justification, include feature/user impact explicitly)
+- **Confidence**: HIGH/MEDIUM/LOW
+- **Affected Components**: Mention upstream/downstream files or modules explicitly.
+- **Problem Statement**: Clearly and analytically describe the issue.
+- **Recommended Fix**:
+\`\`\`diff
+- current code snippet
++ recommended improved snippet
+\`\`\`
+- **Benefit**: Specific impact on maintainability, user experience, security, performance, or stability.
+- **Verification Scenario**: Describe a precise test or verification scenario for the recommended change.
 
-**Problem**: User input is directly concatenated into SQL query without sanitization
+(Repeat for additional issues as needed)
 
-**Fix**: 
-\\\`\\\`\\\`diff
-- const query = "SELECT * FROM users WHERE username = '" + username + "'";
-+ const query = "SELECT * FROM users WHERE username = ?";
-+ db.query(query, [username]);
-\\\`\\\`\\\`
+If no significant issues are detected, state explicitly:
+**No changes recommended.**
+\`\`\`
 
-**Benefit**: Prevents SQL injection attacks by properly parameterizing queries
-
-**Test**: 
-\\\`\\\`\\\`javascript
-test('should safely handle special characters in username', () => {
-  const result = getUserByName("Robert'); DROP TABLE users;--");
-  expect(result).toEqual(null);
-  // Verify users table still exists
-});
-\\\`\\\`\\\`
-
-### 2. Optimize Inefficient Loop
-...etc...
-\\\`\\\`\\\`
-
-**Output format**: valid Markdown with headings, numbered lists, and fenced code blocks.`;
+Prioritize analytical depth, user-focused impact analysis, and contextual understanding of changes, including interactions across files or components.`;
 }
-/**
- * Generates a simple fallback analysis if OpenAI fails
- */
-function generateFallbackAnalysis(diff) {
-  if (!diff || typeof diff !== 'string') {
-    return '# Analysis Failed\n\nCould not analyze: Invalid diff content provided.';
-  }
+
   
   try {
     const additions = (diff.match(/^\+/gm) || []).length;
