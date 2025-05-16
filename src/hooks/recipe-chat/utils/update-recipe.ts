@@ -34,7 +34,8 @@ export async function updateRecipe(
     // Properly transform data to ensure type safety for ingredients
     // Ensure all required properties from Recipe are included with appropriate defaults
     const updatedRecipe: Recipe = {
-      ...updatedRecipeData,
+      ...recipe, // Start with the original recipe to ensure all properties exist
+      ...updatedRecipeData as Partial<Recipe>, // Apply the updates
       // Ensure title is always provided (required in Recipe type)
       title: updatedRecipeData.title || recipe.title || "Untitled Recipe",
       // Ensure instructions array is always present
