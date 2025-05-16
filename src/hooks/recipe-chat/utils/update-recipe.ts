@@ -31,8 +31,24 @@ export async function updateRecipe(
     // Process basic recipe updates - this now returns a complete recipe copy with changes applied
     const updatedRecipeData = processRecipeUpdates(recipe, chatMessage);
     
-    // Properly cast the updatedRecipeData to Recipe type
-    const updatedRecipe = updatedRecipeData as unknown as Recipe;
+    // Properly transform data to ensure type safety for ingredients
+    const updatedRecipe: Recipe = {
+      ...updatedRecipeData,
+      ingredients: Array.isArray(updatedRecipeData.ingredients)
+        ? updatedRecipeData.ingredients.map((ing: any) => ({
+            qty_metric: ing.qty_metric || 0,
+            unit_metric: ing.unit_metric || '',
+            qty_imperial: ing.qty_imperial || 0,
+            unit_imperial: ing.unit_imperial || '',
+            item: ing.item || '',
+            notes: ing.notes,
+            shop_size_qty: ing.shop_size_qty,
+            shop_size_unit: ing.shop_size_unit,
+            qty: ing.qty,
+            unit: ing.unit
+          }))
+        : []
+    };
 
     // Verify recipe integrity before saving
     ensureRecipeIntegrity(updatedRecipe);
