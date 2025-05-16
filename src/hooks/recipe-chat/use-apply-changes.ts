@@ -100,7 +100,7 @@ export const useApplyChanges = () => {
         ...recipeData,
         ingredients: recipeData.ingredients as any,
         instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
-        science_notes: Array.isArray(recipeData.science_notes) ? recipeData.science_notes : []
+        science_notes: Array.isArray(recipeData.science_notes) ? recipeData.science_notes as string[] : []
       };
       
       // Apply the changes

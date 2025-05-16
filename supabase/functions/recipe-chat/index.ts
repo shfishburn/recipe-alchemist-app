@@ -244,7 +244,7 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json();
-    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId, retryAttempt = 0 } = requestData;
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId } = requestData;
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
@@ -258,7 +258,6 @@ serve(async (req) => {
     }
     
     console.log(`Processing recipe chat request for recipe ${recipe.id} with message: ${userMessage.substring(0, 50)}...`);
-    console.log(`Retry attempt: ${retryAttempt}`);
     
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -276,41 +275,35 @@ serve(async (req) => {
     const newVersionNumber = latestVersionNumber + 1;
 
     try {
-      // Calculate an adaptive timeout based on retry attempt
-      const timeout = Math.min(60000 + (retryAttempt * 15000), 120000); // Between 60-120 seconds
-      
       // Determine whether to use the unified recipe prompt based on source type
       // For analysis requests, use the unified approach that returns complete recipe
       const systemPromptContent = sourceType === 'analysis' 
         ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
         : chatSystemPrompt;
       
-      const aiResponse = await Promise.race([
-        fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${openaiApiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              {
-                role: 'system',
-                content: systemPromptContent
-              },
-              {
-                role: 'user',
-                content: userMessage,
-              },
-            ],
-            temperature: 0.7,
-            response_format: { type: "json_object" }, // Enforce JSON output format
-            max_tokens: 3500, // Increased for more comprehensive responses
-          }),
-        }).then((res) => res.json()),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("OpenAI API timeout")), timeout))
-      ]);
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPromptContent
+            },
+            {
+              role: 'user',
+              content: userMessage,
+            },
+          ],
+          temperature: 0.7,
+          response_format: { type: "json_object" }, // Enforce JSON output format
+          max_tokens: 3500, // Increased for more comprehensive responses
+        }),
+      }).then((res) => res.json());
       
       if (!aiResponse.choices || !aiResponse.choices[0] || !aiResponse.choices[0].message) {
         console.error("Invalid AI response structure:", aiResponse);

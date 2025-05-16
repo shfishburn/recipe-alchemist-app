@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useRecipeChat } from '@/hooks/use-recipe-chat';
@@ -227,7 +228,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         optimisticMessages={optimisticMessages}
                         isSending={isSending}
                         setMessage={setMessage}
-                        applyChanges={(chatMessage) => applyChanges(recipe, chatMessage)}
+                        applyChanges={applyChanges}
                         isApplying={isApplying}
                         recipe={recipe}
                         retryMessage={(failedMessage, failedMessageId) => retryMessage(failedMessage, failedMessageId)}

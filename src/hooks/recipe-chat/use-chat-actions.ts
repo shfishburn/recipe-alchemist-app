@@ -201,8 +201,7 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
       await mutation.mutateAsync({
         message: failedMessage,
         sourceType: 'analysis',
-        messageId,
-        retryAttempt: 1
+        messageId
       });
     } catch (error) {
       console.error("Error retrying message:", error);
