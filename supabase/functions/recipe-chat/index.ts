@@ -141,54 +141,86 @@ ${JSON.stringify(cleanRecipe, null, 2)}
 USER REQUEST:
 "${userMessage}"
 
-IMPORTANT INSTRUCTIONS:
+IMPORTANT INSTRUCTIONS (MANDATORY):
 1. Analyze the user's request carefully to determine if they want:
    a) A simple answer to a question (return as textResponse only)
    b) Modification to the recipe (return complete modified recipe)
 
-2. When returning a modified recipe:
-   - Return a COMPLETE recipe object with ALL fields from the original recipe
-   - Apply all requested modifications directly to the recipe object
-   - NEVER return partial changes, always return the fully updated recipe
-   - Preserve the original recipe ID and structure
-   - Increment version_number to ${versionNumber}
-   - Include a clear modification_summary explaining what changed
-
-3. For recipe formatting:
-   - Format each ingredient consistently with all measurement fields
-   - Include both imperial and metric measurements for all ingredients
-   - Ensure all ingredients have the required fields: qty_metric, unit_metric, qty_imperial, unit_imperial, item
-   - Wrap ingredient names in recipe steps with **double asterisks**
-   - Include specific temperatures (°F AND °C) in cooking steps
-   - Maintain López-Alt style scientific explanations in instructions
-
-4. Return your response in JSON format with this structure:
+2. When modifying a recipe, you MUST ALWAYS RETURN A COMPLETE RECIPE OBJECT strictly adhering to this JSON schema:
 {
-  "textResponse": "Detailed analysis or answer to the user's question",
+  "textResponse": "Detailed summary of recipe modifications", // mandatory
   "recipe": {
-    // Complete recipe object with all original fields and your modifications
-    "id": "${originalRecipe.id}", // Preserve original ID
-    "title": "Recipe title",
-    "ingredients": [],
-    "instructions": [],
-    // All other original fields must be included
-    "version_info": {
-      "version_number": ${versionNumber},
-      "parent_version_id": "${originalRecipe.version_id || null}",
-      "modification_reason": "Brief reason for changes"
+    "id": "${originalRecipe.id}", // mandatory - preserve original ID
+    "title": "Recipe Title", // mandatory
+    "description": "ONE clear sentence summarizing key science insight", // mandatory
+    "ingredients": [{ // mandatory array - every ingredient MUST have all these fields
+      "qty_imperial": number, // mandatory
+      "unit_imperial": string, // mandatory
+      "qty_metric": number, // mandatory
+      "unit_metric": string, // mandatory
+      "shop_size_qty": number, // mandatory
+      "shop_size_unit": string, // mandatory
+      "item": string, // mandatory - ingredient name
+      "notes": string // optional, defaults to empty string
+    }],
+    "instructions": ["Detailed step-by-step instructions with scientific explanations"], // mandatory
+    "prep_time_min": number, // mandatory in minutes
+    "cook_time_min": number, // mandatory in minutes
+    "servings": number, // mandatory
+    "cuisine": "EXACT cuisine value from predefined list", // mandatory
+    "cuisine_category": "Global|Regional American|European|Asian|Dietary Styles|Middle Eastern", // mandatory
+    "science_notes": ["Array of scientific explanations"], // optional
+    "nutrition": { // mandatory object with all fields
+      "kcal": number, // mandatory
+      "protein_g": number, // mandatory
+      "carbs_g": number, // mandatory
+      "fat_g": number, // mandatory
+      "fiber_g": number, // mandatory
+      "sugar_g": number, // mandatory
+      "sodium_mg": number, // mandatory
+      "vitamin_a_iu": number, // optional, default 0
+      "vitamin_c_mg": number, // optional, default 0
+      "vitamin_d_iu": number, // optional, default 0
+      "calcium_mg": number, // optional, default 0
+      "iron_mg": number, // optional, default 0
+      "potassium_mg": number, // optional, default 0
+      "data_quality": "complete" | "partial", // mandatory
+      "calorie_check_pass": boolean // mandatory
+    },
+    "version_info": { // mandatory
+      "version_number": ${versionNumber}, // mandatory - incremented explicitly
+      "parent_version_id": "${originalRecipe.version_id || null}", // mandatory
+      "modification_reason": "Brief summary of the reason for changes" // mandatory
     }
   },
-  "followUpQuestions": ["Suggested follow-up question 1", "Suggested follow-up question 2"]
+  "followUpQuestions": ["Suggested follow-up question 1", "Suggested follow-up question 2"] // optional
 }
 
-If the user is just asking a question and not requesting changes, only include the textResponse field and followUpQuestions.
+MANDATORY RULES:
+- NEVER return partial changes.
+- ALWAYS provide ALL mandatory fields.
+- Keep the correct version_number (${versionNumber}) in the response.
+- Retain original recipe ID (${originalRecipe.id}) and parent_version_id fields properly.
+- If unsure about optional nutritional fields, default to zero or minimal value for robustness.
+- Wrap ingredient names in instructions with **double-asterisks**.
+- Include specific temperatures (°F AND °C) in cooking steps.
+- Maintain López-Alt style scientific explanations in instructions.
+
+3. For recipe formatting:
+   - Format each ingredient consistently with all required measurement fields
+   - Include both imperial and metric measurements for all ingredients
+   - Ensure all ingredients have the required fields: qty_imperial, unit_imperial, qty_metric, unit_metric, item
+   - Wrap ingredient names in recipe steps with **double asterisks**
+   - Include specific temperatures (°F AND °C) in cooking steps
+
+4. If the user is just asking a question and not requesting changes, only include the textResponse field and followUpQuestions in your JSON response.
 `;
 }
 
-// Inline chat system prompt
+// Chatbot system prompt for standard (non-unified) response format
 const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. Always respond in JSON format. When suggesting changes to recipes:
 
-1. Always return a complete recipe object with all changes applied, not just the modifications
+1. Always format responses as JSON with changes
 2. For cooking instructions:
    - Include specific temperatures (F° and C°)
    - Specify cooking durations
@@ -200,29 +232,41 @@ const chatSystemPrompt = `You are a culinary scientist specializing in food chem
    - Each item gets a typical US grocery package size
    - Include \`shop_size_qty\` and \`shop_size_unit\`
 4. Validate all titles are descriptive and clear
+5. Follow López-Alt tone and style:
+   - Active voice, clear instructions
+   - Concrete sensory cues
+   - Ingredient tags: wrap each referenced ingredient in \`**double-asterisks**\`
+   - No vague language
 
 Example format:
 {
   "textResponse": "Detailed explanation of changes...",
-  "recipe": {
-    "id": "original-recipe-id", 
-    "title": "Recipe title",
-    "description": "Brief description",
-    "ingredients": [
-      {
-        "qty_imperial": 2,
-        "unit_imperial": "tbsp",
-        "qty_metric": 30,
-        "unit_metric": "ml",
-        "item": "olive oil"
+  "changes": {
+    "title": "string",
+    "ingredients": {
+      "mode": "add" | "replace" | "none",
+      "items": [{
+        "qty_imperial": number,
+        "unit_imperial": string,
+        "qty_metric": number,
+        "unit_metric": string,
+        "shop_size_qty": number,
+        "shop_size_unit": string,
+        "item": string,
+        "notes": string
+      }]
+    },
+    "instructions": ["Array of steps"],
+    "cookingDetails": {
+      "temperature": {
+        "fahrenheit": number,
+        "celsius": number
+      },
+      "duration": {
+        "prep": number,
+        "cook": number,
+        "rest": number
       }
-    ],
-    "steps": ["Step 1", "Step 2"],
-    "servings": 4,
-    "version_info": {
-      "version_number": 0,
-      "parent_version_id": "original-version-id",
-      "modification_reason": "User requested changes"
     }
   },
   "followUpQuestions": ["Array of suggested follow-up questions"]

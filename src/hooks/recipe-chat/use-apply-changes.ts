@@ -8,6 +8,18 @@ import { updateRecipeUnified } from './utils/unified-recipe-update';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
+/**
+ * Helper function to convert database types to Recipe type
+ */
+function convertToRecipeType(data: any): Recipe {
+  return {
+    ...data,
+    ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+    instructions: Array.isArray(data.instructions) ? data.instructions : [],
+    science_notes: Array.isArray(data.science_notes) ? data.science_notes : []
+  } as Recipe;
+}
+
 export const useApplyChanges = () => {
   const [isApplying, setIsApplying] = useState(false);
   const queryClient = useQueryClient();
@@ -96,13 +108,7 @@ export const useApplyChanges = () => {
       }
       
       // Transform the raw data to Recipe type with explicit type conversions
-      const recipe: Recipe = {
-        ...recipeData,
-        // Ensure arrays are properly typed
-        ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
-        instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
-        science_notes: Array.isArray(recipeData.science_notes) ? recipeData.science_notes as string[] : []
-      } as Recipe;
+      const recipe = convertToRecipeType(recipeData);
       
       // Apply the changes
       await applyChangesMutation.mutateAsync({ recipe, chatMessage });

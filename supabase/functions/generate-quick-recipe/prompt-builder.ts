@@ -135,47 +135,56 @@ Format each as object → {
 }  
 \`shop_size_qty\` ≥ recipe qty (spices/herbs exempt).
 
-──────── RETURN JSON (schema fixed) ────────
+──────── RETURN JSON (MANDATORY SCHEMA) ────────
+AI responses must STRICTLY adhere to this JSON schema. Fields marked "mandatory" cannot be omitted:
+
 {
-  "title": "string",
-  "description": "ONE sentence of the key science insight",
-  "ingredients": [{ 
-    qty_imperial: number, 
-    unit_imperial: string, 
-    qty_metric: number, 
-    unit_metric: string, 
-    shop_size_qty: number, 
-    shop_size_unit: string, 
-    item: string, 
-    notes: string 
+  "title": "string", // mandatory
+  "description": "ONE sentence of the key science insight", // mandatory
+  "ingredients": [{ // mandatory array - every ingredient MUST have all these fields
+    qty_imperial: number, // mandatory
+    unit_imperial: string, // mandatory
+    qty_metric: number, // mandatory
+    unit_metric: string, // mandatory
+    shop_size_qty: number, // mandatory
+    shop_size_unit: string, // mandatory
+    item: string, // mandatory
+    notes: string // optional, defaults to empty string
   }],
-  "steps": [ "DETAILED instruction strings with scientific explanations" ],
-  "prepTime": number,
-  "cookTime": number,
-  "prep_time_min": number,
-  "cook_time_min": number,
-  "servings": number,
-  "cuisine": "string - MUST be one of the VALID CUISINE VALUES listed above",
-  "cuisine_category": "string - MUST be one of: Global, Regional American, European, Asian, Dietary Styles, or Middle Eastern",
-  "nutritionHighlight": "ONE evidence-based benefit",
-  "cookingTip": "ONE science-backed technique note",
-  "nutrition": {
-    "kcal": number,
-    "protein_g": number,
-    "carbs_g": number,
-    "fat_g": number,
-    "fiber_g": number,
-    "sugar_g": number,
-    "sodium_mg": number,
-    "vitamin_a_iu": number,
-    "vitamin_c_mg": number,
-    "vitamin_d_iu": number,
-    "calcium_mg": number,
-    "iron_mg": number,
-    "potassium_mg": number,
-    "data_quality": "complete" | "partial",
-    "calorie_check_pass": boolean
+  "steps": [ "DETAILED instruction strings with scientific explanations" ], // mandatory
+  "prepTime": number, // mandatory in minutes
+  "cookTime": number, // mandatory in minutes
+  "prep_time_min": number, // mandatory same as prepTime
+  "cook_time_min": number, // mandatory same as cookTime
+  "servings": number, // mandatory
+  "cuisine": "string - MUST be one of the VALID CUISINE VALUES listed above", // mandatory
+  "cuisine_category": "string - MUST be one of: Global, Regional American, European, Asian, Dietary Styles, or Middle Eastern", // mandatory
+  "nutritionHighlight": "ONE evidence-based benefit", // mandatory
+  "cookingTip": "ONE science-backed technique note", // mandatory
+  "nutrition": { // mandatory object with all fields
+    "kcal": number, // mandatory
+    "protein_g": number, // mandatory
+    "carbs_g": number, // mandatory
+    "fat_g": number, // mandatory
+    "fiber_g": number, // mandatory
+    "sugar_g": number, // mandatory
+    "sodium_mg": number, // mandatory
+    "vitamin_a_iu": number, // optional, default 0
+    "vitamin_c_mg": number, // optional, default 0
+    "vitamin_d_iu": number, // optional, default 0
+    "calcium_mg": number, // optional, default 0
+    "iron_mg": number, // optional, default 0
+    "potassium_mg": number, // optional, default 0
+    "data_quality": "complete" | "partial", // mandatory
+    "calorie_check_pass": boolean // mandatory
   },
-  "calorie_check_pass": boolean
-}`;
+  "calorie_check_pass": boolean // mandatory
+}
+
+IMPORTANT:
+- You MUST provide ALL mandatory fields.
+- For any optional field you cannot populate accurately, use a sensible default value of 0.
+- Follow measurement standardization strictly (imperial and metric both required).
+- Ensure ALL ingredient objects have the complete set of required properties.
+`;
 }
