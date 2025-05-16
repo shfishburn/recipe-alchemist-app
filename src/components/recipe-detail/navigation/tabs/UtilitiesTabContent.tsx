@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardWrapper } from '@/components/ui/card-wrapper';
@@ -9,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useDeleteRecipe } from '@/hooks/use-delete-recipe';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
 
 interface UtilitiesTabContentProps {
   recipe: Recipe;
@@ -20,6 +22,8 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
   const { mutate: deleteRecipe, isDeleting } = useDeleteRecipe();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const printDialogRef = React.useRef<HTMLButtonElement>(null);
 
   const handleForceRegenerate = () => {
     toast({
@@ -32,9 +36,11 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
     refetch?.(); // Use optional chaining to safely call refetch
   };
 
-  // Placeholder handlers for other utilities
+  // Handler for printing
   const handlePrint = () => {
-    window.print();
+    if (printDialogRef.current) {
+      printDialogRef.current.click();
+    }
   };
 
   const handleShare = () => {
@@ -174,6 +180,9 @@ export function UtilitiesTabContent({ recipe }: UtilitiesTabContentProps) {
               <Printer className="h-3.5 w-3.5 mr-1" />
               Print
             </Button>
+            
+            {/* Print Dialog */}
+            <PrintRecipe recipe={recipe} ref={printDialogRef} />
           </div>
 
           <Separator className="my-4" />

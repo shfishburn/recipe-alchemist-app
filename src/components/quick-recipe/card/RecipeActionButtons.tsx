@@ -1,9 +1,10 @@
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bookmark, Check } from 'lucide-react';
+import { Bookmark, Check, Printer } from 'lucide-react';
 import { Recipe } from '@/types/quick-recipe';
 import { useToast } from '@/hooks/use-toast';
+import { QuickRecipePrint } from '../QuickRecipePrint';
 
 /**
  * Props interface for the RecipeActionButtons component
@@ -60,6 +61,9 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
 }: RecipeActionButtonsProps) {
   // Access the toast functionality
   const { toast } = useToast();
+  
+  // State for print dialog
+  const [showPrint, setShowPrint] = useState(false);
   
   /**
    * Handles the save button click
@@ -118,6 +122,15 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
       });
     }
   };
+
+  // Handle print button click
+  const handlePrint = () => {
+    setShowPrint(true);
+    // Reset the print state after a short delay to allow re-triggering
+    setTimeout(() => {
+      setShowPrint(false);
+    }, 1000);
+  };
   
   return (
     <div className="pt-5 w-full flex flex-col gap-2">
@@ -139,6 +152,21 @@ export const RecipeActionButtons = memo(function RecipeActionButtons({
           </>
         )}
       </Button>
+
+      {/* Print button */}
+      <Button
+        variant="secondary"
+        onClick={handlePrint}
+        className="w-full"
+      >
+        <Printer className="mr-2 h-5 w-5" />
+        Print Recipe
+      </Button>
+
+      {/* Print Dialog */}
+      {recipe && showPrint && (
+        <QuickRecipePrint recipe={recipe} triggerPrint={true} />
+      )}
     </div>
   );
 });

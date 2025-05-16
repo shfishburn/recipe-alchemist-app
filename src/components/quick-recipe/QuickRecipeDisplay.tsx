@@ -10,6 +10,7 @@ import { RecipeActionButtons } from './card/RecipeActionButtons';
 import { RecipeDebugSection } from './card/RecipeDebugSection';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Info } from 'lucide-react';
+import { QuickRecipePrint } from './QuickRecipePrint';
 
 interface QuickRecipeDisplayProps {
   recipe: Recipe;

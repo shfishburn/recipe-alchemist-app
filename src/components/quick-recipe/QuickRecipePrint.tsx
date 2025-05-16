@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { QuickRecipe } from '@/hooks/use-quick-recipe';
 import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
@@ -47,9 +48,10 @@ const formatIngredientForDB = (ingredient: any): Ingredient => {
 
 interface QuickRecipePrintProps {
   recipe: QuickRecipe;
+  triggerPrint?: boolean;
 }
 
-export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
+export function QuickRecipePrint({ recipe, triggerPrint = false }: QuickRecipePrintProps) {
   const printDialogTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Function to trigger the print dialog
@@ -59,8 +61,21 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
     }
   };
 
+  // Automatically trigger print if requested
+  React.useEffect(() => {
+    if (triggerPrint) {
+      handlePrint();
+    }
+  }, [triggerPrint]);
+
   // Convert ingredients to expected format for PrintRecipe
   const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
+
+  // Determine which instructions/steps to display
+  const instructionsToDisplay = 
+    (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) ? recipe.instructions :
+    (Array.isArray(recipe.steps) && recipe.steps.length > 0) ? recipe.steps :
+    [];
 
   return (
     <>
@@ -71,10 +86,10 @@ export function QuickRecipePrint({ recipe }: QuickRecipePrintProps) {
           title: recipe.title,
           description: recipe.description,
           ingredients: formattedIngredients,
-          instructions: recipe.steps || [],
-          prep_time_min: recipe.prepTime,
-          cook_time_min: recipe.cookTime,
-          servings: recipe.servings,
+          instructions: instructionsToDisplay,
+          prep_time_min: recipe.prepTime || 0,
+          cook_time_min: recipe.cookTime || 0,
+          servings: recipe.servings || 2,
           nutrition: undefined, // Removed nutrition data as it's not relevant for cooking
           science_notes: [], // Removed science notes as they're not relevant for cooking
           tagline: recipe.description,

@@ -359,7 +359,12 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
             </>
           )}
           
-          {/* Removed nutrition section entirely */}
+          {recipe.cooking_tip && (
+            <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-400 rounded">
+              <h2 className="mt-0 text-lg font-semibold">Chef's Tip</h2>
+              <p>{recipe.cooking_tip}</p>
+            </div>
+          )}
         </div>
         
         <DialogFooter>
