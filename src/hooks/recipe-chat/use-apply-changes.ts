@@ -100,10 +100,10 @@ export const useApplyChanges = (options: ApplyChangesOptions = {}) => {
       throw new Error("Could not fetch recipe data");
     }
 
-    // Apply the changes
+    // Apply the changes - convert the data to proper Recipe type
     const result = await mutation.mutateAsync({ 
       chatMessage, 
-      recipe: recipeData as Recipe 
+      recipe: recipeData as unknown as Recipe 
     });
     
     return !!result;

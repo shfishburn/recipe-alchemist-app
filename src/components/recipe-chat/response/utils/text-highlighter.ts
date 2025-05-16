@@ -43,6 +43,52 @@ export function highlightRecipeText(text: string, options: TextHighlightOptions 
 }
 
 /**
+ * Highlights ingredients in text
+ * @param text The text to process
+ * @param changes Optional changes object to use for additional highlighting
+ */
+export function highlightIngredients(text: string, changes?: ChangesResponse | null): string {
+  if (!text) return '';
+  
+  // Basic ingredient highlighting
+  const ingredientPattern = /\b(flour|sugar|salt|butter|oil|eggs|milk|water|chicken|beef|pork|fish)\b/gi;
+  return text.replace(ingredientPattern, '<strong>$1</strong>');
+}
+
+/**
+ * Highlights instructions in text
+ * @param text The text to process
+ * @param changes Optional changes object to use for additional highlighting
+ */
+export function highlightInstructions(text: string, changes?: ChangesResponse | null): string {
+  if (!text) return '';
+  
+  // Highlight steps (e.g., Step 1, Step 2)
+  const stepPattern = /\b(step \d+)[:\.]?/gi;
+  return text.replace(stepPattern, '<strong class="text-blue-600">$1</strong>');
+}
+
+/**
+ * Highlights scientific values in text
+ * @param text The text to process
+ */
+export function highlightScientificValues(text: string): string {
+  if (!text) return '';
+  
+  // Highlight temperatures, weights, times
+  const tempPattern = /\b(\d{2,3})°([FC])\b/g;
+  const weightPattern = /\b(\d+(?:\.\d+)?\s*(?:g|kg|mg|oz|lb))\b/gi;
+  const timePattern = /\b(\d+(?:-\d+)?\s*(?:minute|min|hour|hr|second|sec)s?)\b/gi;
+  
+  let processedText = text;
+  processedText = processedText.replace(tempPattern, '<span class="text-red-500">$1°$2</span>');
+  processedText = processedText.replace(weightPattern, '<span class="text-green-600">$1</span>');
+  processedText = processedText.replace(timePattern, '<span class="text-purple-600">$1</span>');
+  
+  return processedText;
+}
+
+/**
  * Compares changes made to instructions and highlights differences
  * @param originalText Original instruction text
  * @param newText Updated instruction text

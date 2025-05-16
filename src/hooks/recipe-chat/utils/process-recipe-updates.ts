@@ -1,6 +1,11 @@
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Ingredient } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
+/**
+ * Processes recipe updates based on chat message data
+ * This function handles both the legacy changes_suggested format
+ * and the new unified recipe format
+ */
 export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Partial<Recipe> & { id: string } {
   console.log("Processing recipe updates with changes:", {
     hasTitle: !!chatMessage.changes_suggested?.title,
@@ -10,7 +15,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     hasNutrition: !!chatMessage.changes_suggested?.nutrition,
     hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length,
     // Check for complete recipe object coming from the updated API
-    hasCompleteRecipe: !!(chatMessage as any).recipe 
+    hasCompleteRecipe: !!chatMessage.recipe 
   });
 
   // Start with a complete copy of the original recipe to prevent data loss
@@ -20,22 +25,16 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   };
 
   // If we have a complete recipe object in the chat message, use it
-  // Note: We're using type assertion since the ChatMessage type might not be updated yet
-  if ((chatMessage as any).recipe) {
+  if (chatMessage.recipe) {
     console.log("Using complete recipe object from chat message");
     updatedRecipe = {
       ...updatedRecipe,
-      ...(chatMessage as any).recipe,
+      ...chatMessage.recipe as unknown as Recipe,
       id: recipe.id, // Always preserve the original recipe ID
       updated_at: new Date().toISOString() // Update the timestamp
     };
     
-    // If version info is present, add it to the recipe
-    if ((chatMessage as any).recipe.version_info) {
-      updatedRecipe.version_info = (chatMessage as any).recipe.version_info;
-    }
-    
-    // Return the updated recipe
+    // Return the updated recipe with safe casting
     return updatedRecipe;
   }
 
@@ -70,13 +69,14 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
         if (typeof instruction === 'string') {
           return instruction;
         }
-        if (typeof instruction === 'object' && instruction.action) {
-          return instruction.action;
+        // Safely handle non-string instructions with a type guard
+        if (instruction && typeof instruction === 'object' && 'action' in instruction) {
+          return instruction.action as string;
         }
         console.warn("Skipping invalid instruction format:", instruction);
         return null;
       }
-    ).filter(Boolean);
+    ).filter(Boolean) as string[];
     
     // Validate that instructions are not just placeholders
     const hasValidInstructions = formattedInstructions.some(instr => {
@@ -88,7 +88,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     
     if (hasValidInstructions) {
       console.log("Valid instruction updates found");
-      updatedRecipe.instructions = formattedInstructions as string[];
+      updatedRecipe.instructions = formattedInstructions;
     } else {
       console.warn("Only placeholder instructions detected - keeping original instructions");
       // Keep original instructions
@@ -101,13 +101,25 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     console.log("Processing ingredients:", { mode, itemCount: items.length });
     
     if (mode !== 'none' && items.length > 0) {
+      // Convert ingredients to the required Recipe.Ingredient format
+      const typedIngredients: Ingredient[] = items.map(item => ({
+        qty_metric: item.qty_metric || 0,
+        unit_metric: item.unit_metric || '',
+        qty_imperial: item.qty_imperial || 0,
+        unit_imperial: item.unit_imperial || '',
+        item: typeof item.item === 'string' ? item.item : String(item.item),
+        notes: item.notes,
+        qty: item.qty,
+        unit: item.unit
+      }));
+      
       // Update ingredients based on mode
       if (mode === 'add') {
         console.log("Adding new ingredients to existing recipe");
-        updatedRecipe.ingredients = [...recipe.ingredients, ...items];
+        updatedRecipe.ingredients = [...recipe.ingredients, ...typedIngredients];
       } else if (mode === 'replace') {
         console.log("Replacing all ingredients");
-        updatedRecipe.ingredients = items;
+        updatedRecipe.ingredients = typedIngredients;
       }
       // For 'none' mode, keep existing ingredients
     }
