@@ -67,7 +67,7 @@ export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProp
                     <li key={index} className="break-words truncate">
                       {typeof instruction === 'string' 
                         ? instruction.substring(0, 60) + (instruction.length > 60 ? '...' : '')
-                        : instruction.action?.substring(0, 60) + (instruction.action?.length > 60 ? '...' : '')}
+                        : String(instruction).substring(0, 60) + (String(instruction).length > 60 ? '...' : '')}
                     </li>
                   ))}
                 {Array.isArray(changes.instructions) && changes.instructions.length > 3 && (

@@ -1,102 +1,80 @@
 
-import type { ChangesResponse, InstructionChange } from '@/types/chat';
+import type { ChangesResponse } from '@/types/chat';
 
-/**
- * Highlights ingredient mentions in text based on the changes suggested
- */
-export function highlightIngredients(text: string, changesSuggested: ChangesResponse | null): string {
-  if (!text || !changesSuggested?.ingredients?.items || 
-      !Array.isArray(changesSuggested.ingredients.items) || 
-      changesSuggested.ingredients.mode === 'none') {
-    return text;
-  }
-  
-  let modifiedText = text;
-  const processedIngredients = new Set<string>();
-  
-  changesSuggested.ingredients.items.forEach((ingredient: any) => {
-    if (ingredient && typeof ingredient.item === 'string') {
-      // Skip if we already processed this ingredient to prevent duplicate highlighting
-      if (processedIngredients.has(ingredient.item.toLowerCase())) return;
-      processedIngredients.add(ingredient.item.toLowerCase());
-      
-      try {
-        // Make sure ingredient mention in text is highlighted with safer regex
-        const safeItemText = ingredient.item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${safeItemText}\\b`, 'gi');
-        modifiedText = modifiedText.replace(regex, `**${ingredient.item}**`);
-        
-        // Also highlight quantity mentions with safer approach
-        if (ingredient.qty !== undefined && ingredient.unit) {
-          const qtyString = String(ingredient.qty);
-          const safeUnitText = ingredient.unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const qtyRegex = new RegExp(`\\b${qtyString}\\s+${safeUnitText}\\s+(?!\\*\\*)`, 'gi');
-          modifiedText = modifiedText.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
-        }
-      } catch (err) {
-        console.warn("Error highlighting ingredient:", err);
-      }
-    }
-  });
-  
-  return modifiedText;
+export interface TextHighlightOptions {
+  boldIngredients?: boolean;
+  highlightTechniques?: boolean;
+  highlightTemperatures?: boolean;
 }
 
 /**
- * Highlights instructions in text based on the changes suggested
+ * Highlights specific text patterns in recipe instructions
+ * @param text The text to process
+ * @param options Highlighting options
+ * @returns The text with HTML formatting applied
  */
-export function highlightInstructions(text: string, changesSuggested: ChangesResponse | null): string {
-  if (!text || !changesSuggested?.instructions || 
-      !Array.isArray(changesSuggested.instructions) || 
-      changesSuggested.instructions.length === 0) {
-    return text;
+export function highlightRecipeText(text: string, options: TextHighlightOptions = {}): string {
+  if (!text) return '';
+
+  let processedText = text;
+  
+  // Handle ingredient highlighting
+  if (options.boldIngredients) {
+    // Pattern to match ingredients (basic implementation)
+    const ingredientPattern = /\b(flour|sugar|salt|butter|oil|eggs|milk|water|chicken|beef|pork|fish)\b/gi;
+    processedText = processedText.replace(ingredientPattern, '<strong>$1</strong>');
   }
   
-  let modifiedText = text;
-  const processedInstructions = new Set<string>();
+  // Handle technique highlighting
+  if (options.highlightTechniques) {
+    // Pattern to match cooking techniques
+    const techniquePattern = /\b(bake|roast|broil|grill|sauté|fry|simmer|boil|steam)\b/gi;
+    processedText = processedText.replace(techniquePattern, '<em class="text-blue-600">$1</em>');
+  }
   
-  changesSuggested.instructions.forEach((instruction: string | InstructionChange) => {
-    const instructionText = typeof instruction === 'string' ? instruction : instruction.action || '';
-    
-    if (instructionText && !instructionText.includes('**') && instructionText.length > 10) {
-      // Skip if we already processed this instruction
-      if (processedInstructions.has(instructionText.toLowerCase())) return;
-      processedInstructions.add(instructionText.toLowerCase());
-      
-      try {
-        // Use word boundaries for more accurate matching
-        const safeInstructionText = instructionText
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          .substring(0, 50); // Use first 50 chars max for matching to avoid regex issues
-        
-        const regex = new RegExp(`\\b${safeInstructionText}`, 'g');
-        modifiedText = modifiedText.replace(regex, `**${instructionText.substring(0, 50)}**`);
-      } catch (err) {
-        console.warn("Error highlighting instruction text:", err);
-      }
-    }
-  });
+  // Handle temperature highlighting
+  if (options.highlightTemperatures) {
+    // Pattern to match temperatures (both Fahrenheit and Celsius)
+    const tempPattern = /\b(\d{2,3})°([FC])\b/g;
+    processedText = processedText.replace(tempPattern, '<span class="text-red-500">$1°$2</span>');
+  }
   
-  return modifiedText;
+  return processedText;
 }
 
 /**
- * Highlights scientific units and nutrition values in text
+ * Compares changes made to instructions and highlights differences
+ * @param originalText Original instruction text
+ * @param newText Updated instruction text
+ * @returns HTML with highlighted differences
  */
-export function highlightScientificValues(text: string): string {
-  // Format scientific units and nutrition values
-  // Match patterns like "240 kcal", "28g fat", "0g carbs", "0g protein"
-  const scientificRegexes = [
-    { pattern: /(\d+)\s*(kcal|calories)/gi, replacement: "**$1 $2**" },
-    { pattern: /(\d+)([g])\s+(protein|carbs|fat|fiber|sugar)/gi, replacement: "**$1$2 $3**" },
-    { pattern: /(\d+)([%])/gi, replacement: "**$1$2**" },
-  ];
+export function highlightChanges(originalText: string, newText: string): string {
+  // This is a simplified implementation
+  // A real diff algorithm would be more complex
   
-  // Apply scientific formatting
-  let modifiedText = text;
-  scientificRegexes.forEach(({ pattern, replacement }) => {
-    modifiedText = modifiedText.replace(pattern, replacement);
-  });
+  if (originalText === newText) {
+    return newText;
+  }
   
-  return modifiedText;
+  // Very basic highlighting - in a real implementation we'd use a proper diff algorithm
+  return `<span class="bg-yellow-100">${newText}</span>`;
+}
+
+/**
+ * Highlights changes in a recipe based on the ChangesResponse
+ * @param original The original recipe text or instruction
+ * @param changes The changes object containing modifications
+ * @returns HTML with highlighted changes
+ */
+export function highlightRecipeChanges(
+  original: string | string[],
+  changes: ChangesResponse
+): string {
+  // Simplified implementation
+  if (typeof original === 'string') {
+    return original;
+  }
+  
+  // For arrays of instructions, return the original
+  return Array.isArray(original) ? original.join('\n') : original;
 }

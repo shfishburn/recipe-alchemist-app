@@ -1,5 +1,5 @@
 
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Ingredient } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { findDuplicateIngredients, validateIngredientQuantities } from './ingredients/ingredient-validation';
 import { processRecipeUpdates } from './process-recipe-updates';
@@ -142,11 +142,24 @@ export async function updateRecipe(
           }
         }
 
-        // Validate quantities - cast updatedRecipe.ingredients to any to avoid type errors
-        // This is safe because we've already ensured the structure above
+        // Validate quantities
+        // We need to transform ingredients to match expected types
+        const formattedItems = items.map(item => {
+          return {
+            qty_metric: item.qty_metric || 0,
+            unit_metric: item.unit_metric || '',
+            qty_imperial: item.qty_imperial || 0,
+            unit_imperial: item.unit_imperial || '',
+            item: typeof item.item === 'string' ? item.item : String(item.item),
+            notes: item.notes,
+            qty: item.qty,
+            unit: item.unit
+          };
+        });
+        
         const quantityValidation = validateIngredientQuantities(
-          { ...recipe, ingredients: updatedRecipe.ingredients as any }, 
-          items, 
+          recipe, 
+          formattedItems, 
           mode
         );
         
