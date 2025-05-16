@@ -17,6 +17,9 @@ interface ChatHistoryProps {
   retryMessage?: () => void;
 }
 
+// Type that can represent either a ChatMessage or OptimisticMessage
+type AnyMessageType = ChatMessageType | OptimisticMessage;
+
 export function ChatHistory({
   chatHistory,
   optimisticMessages = [],
@@ -42,7 +45,7 @@ export function ChatHistory({
     });
     
     // Return the filtered chat history followed by optimistic messages
-    return [...filteredChatHistory, ...optimisticMessages];
+    return [...filteredChatHistory, ...optimisticMessages] as AnyMessageType[];
   }, [chatHistory, optimisticMessages]);
   
   return (

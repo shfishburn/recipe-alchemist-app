@@ -1,74 +1,49 @@
 
-import type { ChatMessage, ChatMeta } from '@/types/chat';
+import type { ChatMessage, OptimisticMessage, ChatMeta } from '@/types/chat';
+
+// Union type that works with both ChatMessage and OptimisticMessage
+type AnyMessageType = ChatMessage | OptimisticMessage | null | undefined;
 
 /**
- * Safely get chat metadata value with type checking and fallback
+ * Gets a value from a chat message's meta property with proper type checking
+ * @param message Chat message object (can be ChatMessage, OptimisticMessage or null)
+ * @param key Meta property key to retrieve
+ * @param defaultValue Default value to return if key doesn't exist
+ * @returns The value from meta or the default value
  */
 export function getChatMeta<T>(
-  message: ChatMessage | null | undefined, 
-  key: string, 
+  message: AnyMessageType,
+  key: string,
   defaultValue: T
 ): T {
-  if (!message) return defaultValue;
-  
-  // If meta doesn't exist or isn't an object, return default
-  if (!message.meta || typeof message.meta !== 'object') return defaultValue;
+  if (!message?.meta || typeof message.meta !== 'object') return defaultValue;
   
   try {
-    // Try to get the value
     const value = message.meta[key];
-    
-    // Return the value if it exists and is not undefined
-    if (value !== undefined) {
-      // For primitive types like string, number, boolean - we can safely check type
-      if (typeof value === typeof defaultValue) {
-        return value as T;
-      }
-      
-      // For objects and arrays - we can't easily check type compatibility
-      // so we return the value and rely on TypeScript for type safety
-      if (typeof defaultValue === 'object' && defaultValue !== null) {
-        return value as T;
-      }
+    if (value !== undefined && (typeof value === typeof defaultValue || defaultValue === null)) {
+      return value as T;
     }
   } catch (e) {
-    console.error(`Error getting meta value for key ${key}:`, e);
+    console.error(`[ChatMeta] Error getting meta value for key ${key}:`, e);
   }
   
   return defaultValue;
 }
 
 /**
- * Sets a metadata value on a chat message
+ * Gets a tracking ID for a chat message, used to identify messages across optimistic and real states
+ * @param message Chat message object
+ * @returns The tracking ID or null if not available
  */
-export function setChatMeta<T>(
-  message: ChatMessage, 
-  key: string, 
-  value: T
-): ChatMessage {
-  // Create a new meta object with the existing meta properties
-  const updatedMeta: ChatMeta = {
-    ...(message.meta || {}),
-    [key]: value
-  };
+export function getMessageTrackingId(message: AnyMessageType): string | null {
+  // First try to get the tracking ID from meta
+  const trackingId = getChatMeta(message, 'tracking_id', null);
+  if (trackingId) return trackingId;
   
-  // Return a new message object with the updated meta
-  return {
-    ...message,
-    meta: updatedMeta
-  };
-}
-
-/**
- * Check if a message is an optimistic message based on its metadata
- */
-export function isOptimisticMessage(message: ChatMessage): boolean {
-  return !!getChatMeta(message, 'optimistic_id', '');
-}
-
-/**
- * Get the tracking ID for a message (either optimistic_id or id)
- */
-export function getMessageTrackingId(message: ChatMessage): string {
-  return getChatMeta(message, 'optimistic_id', '') || message.id || '';
+  // Then try optimistic_id from meta
+  const optimisticId = getChatMeta(message, 'optimistic_id', null);
+  if (optimisticId) return optimisticId;
+  
+  // Finally, use the message ID as a fallback
+  return message?.id || null;
 }

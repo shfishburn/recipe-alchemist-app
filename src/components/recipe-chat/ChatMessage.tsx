@@ -2,11 +2,14 @@
 import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';
-import type { ChatMessage as ChatMessageType } from '@/types/chat';
+import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
 import { getChatMeta } from '@/utils/chat-meta';
 
+// Create a union type that works with both ChatMessage and OptimisticMessage
+type AnyMessageType = ChatMessageType | OptimisticMessage;
+
 interface ChatMessageProps {
-  chat: ChatMessageType;
+  chat: AnyMessageType;
   setMessage: (message: string) => void;
   applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
   isApplying?: boolean;
@@ -40,7 +43,7 @@ export function ChatMessage({
       isOptimisticUserMessage,
       hasError,
       hasAiResponse: !!chat.ai_response,
-      hasChangesSuggested: !!chat.changes_suggested,
+      hasChangesSuggested: !!(chat as ChatMessageType).changes_suggested,
       userMessagePreview: chat.user_message?.substring(0, 50) + (chat.user_message?.length > 50 ? '...' : ''),
       aiResponseLength: chat.ai_response?.length || 0,
       meta: chat.meta || {},
@@ -79,12 +82,14 @@ export function ChatMessage({
   const handleApplyChanges = async () => {
     console.log("[ChatMessage] Applying changes for message:", {
       id: chat.id,
-      hasChangesSuggested: !!chat.changes_suggested,
+      hasChangesSuggested: !!(chat as ChatMessageType).changes_suggested,
       timestamp: new Date().toISOString()
     });
     
     try {
-      const result = await applyChanges(chat);
+      // We need to cast chat to ChatMessageType for applyChanges
+      // This is safe because isOptimisticUserMessage would have returned earlier if this was an optimistic message
+      const result = await applyChanges(chat as ChatMessageType);
       console.log("[ChatMessage] Apply changes result:", {
         id: chat.id,
         success: result,
@@ -111,8 +116,8 @@ export function ChatMessage({
       {chat.ai_response && (
         <ChatResponse
           response={chat.ai_response}
-          changesSuggested={chat.changes_suggested || null}
-          followUpQuestions={chat.follow_up_questions || []}
+          changesSuggested={(chat as ChatMessageType).changes_suggested || null}
+          followUpQuestions={(chat as ChatMessageType).follow_up_questions || []}
           setMessage={setMessage}
           onApplyChanges={handleApplyChanges}
           isApplying={isApplying}

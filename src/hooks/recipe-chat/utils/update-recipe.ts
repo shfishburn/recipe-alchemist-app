@@ -7,6 +7,19 @@ import { saveRecipeUpdate } from './db/save-recipe-update';
 import { validateRecipeUpdate } from './validation/validate-recipe-update';
 import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 
+// Type guard to ensure ingredient has required properties for Recipe.ingredients
+function ensureRequiredIngredientProps(ing: any): ing is Recipe['ingredients'][0] {
+  return (
+    typeof ing === 'object' &&
+    ing !== null &&
+    'qty_metric' in ing &&
+    'unit_metric' in ing &&
+    'qty_imperial' in ing &&
+    'unit_imperial' in ing &&
+    'item' in ing
+  );
+}
+
 export async function updateRecipe(
   recipe: Recipe,
   chatMessage: ChatMessage
@@ -49,25 +62,25 @@ export async function updateRecipe(
       ingredients: Array.isArray(updatedRecipeData.ingredients)
         ? updatedRecipeData.ingredients.map(ing => {
             // Handle ing as potentially any type, including null, string, etc.
-            if (typeof ing !== 'object' || ing === null) {
-              // Return default ingredient if ing is not a proper object
+            if (!ensureRequiredIngredientProps(ing)) {
+              // Return default ingredient if ing doesn't have required properties
               return {
                 qty_metric: 0,
                 unit_metric: '',
                 qty_imperial: 0,
                 unit_imperial: '',
-                item: '',
+                item: typeof ing?.item === 'string' ? ing.item : 'Unknown ingredient',
               };
             }
             
-            // Now TypeScript knows ing is a non-null object so we can safely access properties
+            // Now we know ing has the required properties
             return {
-              // Required fields with fallbacks
-              qty_metric: typeof ing.qty_metric === 'number' ? ing.qty_metric : 0,
-              unit_metric: typeof ing.unit_metric === 'string' ? ing.unit_metric : '',
-              qty_imperial: typeof ing.qty_imperial === 'number' ? ing.qty_imperial : 0,
-              unit_imperial: typeof ing.unit_imperial === 'string' ? ing.unit_imperial : '',
-              item: typeof ing.item === 'string' ? ing.item : '',
+              // Required fields
+              qty_metric: ing.qty_metric,
+              unit_metric: ing.unit_metric,
+              qty_imperial: ing.qty_imperial,
+              unit_imperial: ing.unit_imperial,
+              item: ing.item,
               
               // Optional fields
               notes: typeof ing.notes === 'string' ? ing.notes : undefined,
@@ -118,7 +131,7 @@ export async function updateRecipe(
 
         // Check for duplicates in add mode
         if (mode === 'add') {
-          const duplicates = findDuplicateIngredients(recipe.ingredients, items);
+          const duplicates = findDuplicateIngredients(updatedRecipe.ingredients, items);
           if (duplicates.length > 0) {
             console.error("Duplicate ingredients detected:", duplicates);
             throw new Error(
@@ -129,8 +142,14 @@ export async function updateRecipe(
           }
         }
 
-        // Validate quantities
-        const quantityValidation = validateIngredientQuantities(recipe, items, mode);
+        // Validate quantities - cast updatedRecipe.ingredients to any to avoid type errors
+        // This is safe because we've already ensured the structure above
+        const quantityValidation = validateIngredientQuantities(
+          { ...recipe, ingredients: updatedRecipe.ingredients as any }, 
+          items, 
+          mode
+        );
+        
         if (!quantityValidation.valid) {
           console.error("Ingredient quantity validation failed:", quantityValidation.message);
           throw new Error(quantityValidation.message || "Invalid ingredient quantities");
