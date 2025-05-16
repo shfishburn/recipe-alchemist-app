@@ -135,8 +135,37 @@ export async function updateRecipe(
     });
     
     // Save the recipe update and return the updated recipe
-    const savedRecipe = await saveRecipeUpdate(updatedRecipe);
-    return savedRecipe as Recipe;
+    const dbResponse = await saveRecipeUpdate(updatedRecipe);
+    
+    // Process database response to ensure it conforms to Recipe type
+    const savedRecipe: Recipe = {
+      ...updatedRecipe,
+      // Transform ingredients from database JSON to proper Ingredient[]
+      ingredients: Array.isArray(dbResponse.ingredients) 
+        ? dbResponse.ingredients.map(ing => ({
+            qty_metric: typeof ing.qty_metric === 'number' ? ing.qty_metric : 0,
+            unit_metric: typeof ing.unit_metric === 'string' ? ing.unit_metric : '',
+            qty_imperial: typeof ing.qty_imperial === 'number' ? ing.qty_imperial : 0,
+            unit_imperial: typeof ing.unit_imperial === 'string' ? ing.unit_imperial : '',
+            item: typeof ing.item === 'string' ? ing.item : String(ing.item || ''),
+            notes: typeof ing.notes === 'string' ? ing.notes : undefined,
+            shop_size_qty: typeof ing.shop_size_qty === 'number' ? ing.shop_size_qty : undefined,
+            shop_size_unit: typeof ing.shop_size_unit === 'string' ? ing.shop_size_unit : undefined,
+            qty: typeof ing.qty === 'number' ? ing.qty : undefined,
+            unit: typeof ing.unit === 'string' ? ing.unit : undefined
+          }))
+        : updatedRecipe.ingredients,
+        
+      // Ensure science_notes is always string array
+      science_notes: Array.isArray(dbResponse.science_notes)
+        ? dbResponse.science_notes.map(note => typeof note === 'string' ? note : String(note))
+        : updatedRecipe.science_notes,
+        
+      // Copy other fields that might be updated in the database
+      updated_at: dbResponse.updated_at || new Date().toISOString(),
+    };
+    
+    return savedRecipe;
   } catch (error) {
     console.error("Update recipe error:", error);
     throw error;
