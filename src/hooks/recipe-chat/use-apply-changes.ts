@@ -75,86 +75,86 @@ export function useApplyChanges() {
       }
       
       // Step 2: Update the recipe with the changes
-      await updateRecipe(recipe, enhancedChatMessage)
-        .then(() => {
-          // Success - Show toast notification
-          toast({
-            title: 'Changes Applied',
-            description: 'Recipe has been successfully updated.',
-          });
-          return true;
-        })
-        .catch((error) => {
-          console.error('Error applying changes:', error);
-          // Show error toast
-          toast({
-            title: 'Error Applying Changes',
-            description: error.message || 'An error occurred while updating the recipe.',
-            variant: 'destructive',
-          });
-          throw error; // Re-throw to trigger catch block below
+      try {
+        const updatedRecipe = await updateRecipe(recipe, enhancedChatMessage);
+        
+        // Success - Show toast notification
+        toast({
+          title: 'Changes Applied',
+          description: 'Recipe has been successfully updated.',
         });
         
-      // If the changes include science-related updates, analyze with the reactions function
-      if (enhancedChatMessage.changes_suggested && 
-          (enhancedChatMessage.changes_suggested.science_notes ||
-           enhancedChatMessage.changes_suggested.instructions)) {
-        
-        // Skip reactions analysis if the instructions array is empty
-        const instructionsArray = enhancedChatMessage.changes_suggested.instructions;
-        if (Array.isArray(instructionsArray) && instructionsArray.length === 0) {
-          console.log('Skipping reactions analysis: empty instructions array');
-          return true;
-        }
-        
-        try {
-          console.log('Starting scientific reaction analysis for recipe:', recipeId);
+        // If the changes include science-related updates, analyze with the reactions function
+        if (enhancedChatMessage.changes_suggested && 
+            (enhancedChatMessage.changes_suggested.science_notes ||
+            enhancedChatMessage.changes_suggested.instructions)) {
           
-          // Load updated recipe to get latest instructions
-          const { data: updatedRecipe, error: loadError } = await supabase
-            .from('recipes')
-            .select('*')
-            .eq('id', recipeId)
-            .single();
-            
-          if (loadError) {
-            console.error('Error loading updated recipe:', loadError);
-            return true; // Continue without scientific analysis
+          // Skip reactions analysis if the instructions array is empty
+          const instructionsArray = enhancedChatMessage.changes_suggested.instructions;
+          if (Array.isArray(instructionsArray) && instructionsArray.length === 0) {
+            console.log('Skipping reactions analysis: empty instructions array');
+            return true;
           }
           
-          // Call the reactions analysis edge function
-          const instructions = Array.isArray(updatedRecipe.instructions) ? 
-            updatedRecipe.instructions : [];
+          try {
+            console.log('Starting scientific reaction analysis for recipe:', recipeId);
             
-          if (instructions && instructions.length > 0) {
-            // Call the analyze-reactions edge function
-            supabase.functions.invoke('analyze-reactions', {
-              body: {
-                recipe_id: recipeId,
-                title: updatedRecipe.title || recipe.title,
-                instructions: instructions
-              }
-            }).then((response) => {
-              if (response.error) {
-                console.error('Error in scientific analysis:', response.error);
-              } else {
-                console.log('Scientific analysis completed:', response.data);
-              }
-            }).catch((error) => {
-              console.error('Failed to invoke scientific analysis:', error);
-            });
+            // Load updated recipe to get latest instructions
+            const { data: updatedRecipeData, error: loadError } = await supabase
+              .from('recipes')
+              .select('*')
+              .eq('id', recipeId)
+              .single();
+              
+            if (loadError) {
+              console.error('Error loading updated recipe:', loadError);
+              return true; // Continue without scientific analysis
+            }
+            
+            // Call the reactions analysis edge function
+            const instructions = Array.isArray(updatedRecipeData.instructions) ? 
+              updatedRecipeData.instructions : [];
+              
+            if (instructions && instructions.length > 0) {
+              // Call the analyze-reactions edge function
+              supabase.functions.invoke('analyze-reactions', {
+                body: {
+                  recipe_id: recipeId,
+                  title: updatedRecipeData.title || recipe.title,
+                  instructions: instructions
+                }
+              }).then((response) => {
+                if (response.error) {
+                  console.error('Error in scientific analysis:', response.error);
+                } else {
+                  console.log('Scientific analysis completed:', response.data);
+                }
+              }).catch((error) => {
+                console.error('Failed to invoke scientific analysis:', error);
+              });
+            }
+          } catch (analysisError) {
+            console.error('Error during scientific analysis:', analysisError);
+            // Don't block the main flow for scientific analysis errors
           }
-        } catch (analysisError) {
-          console.error('Error during scientific analysis:', analysisError);
-          // Don't block the main flow for scientific analysis errors
         }
+        
+        return true;
+      } catch (error: any) {
+        console.error('Error applying changes:', error);
+        
+        // Show error toast
+        toast({
+          title: 'Error Applying Changes',
+          description: error.message || 'An error occurred while updating the recipe.',
+          variant: 'destructive',
+        });
+        
+        throw error; // Re-throw to trigger catch block below
       }
-      
-      return true;
     } catch (error) {
       console.error('Error in apply changes flow:', error);
       return false;
-      // Error already handled in updateRecipe catch
     } finally {
       setIsApplying(false);
     }

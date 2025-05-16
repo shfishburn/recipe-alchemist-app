@@ -10,7 +10,7 @@ import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 export async function updateRecipe(
   recipe: Recipe,
   chatMessage: ChatMessage
-) {
+): Promise<Recipe> {
   // Initial validation of inputs
   if (!validateRecipeUpdate(recipe, chatMessage.changes_suggested)) {
     throw new Error("Failed to validate recipe update");
@@ -81,7 +81,9 @@ export async function updateRecipe(
       instructionCount: updatedRecipe.instructions?.length
     });
     
-    return await saveRecipeUpdate(updatedRecipe);
+    // Save the recipe update and return the updated recipe
+    const savedRecipe = await saveRecipeUpdate(updatedRecipe);
+    return savedRecipe as Recipe;
   } catch (error) {
     console.error("Update recipe error:", error);
     throw error;

@@ -1,5 +1,5 @@
 
-import type { ChangesResponse } from '@/types/chat';
+import type { ChangesResponse, InstructionChange } from '@/types/chat';
 
 /**
  * Highlights ingredient mentions in text based on the changes suggested
@@ -55,12 +55,12 @@ export function highlightInstructions(text: string, changesSuggested: ChangesRes
   let modifiedText = text;
   const processedInstructions = new Set<string>();
   
-  changesSuggested.instructions.forEach((instruction: string | { action: string }) => {
-    const instructionText = typeof instruction === 'string' ? instruction : instruction.action;
+  changesSuggested.instructions.forEach((instruction: string | InstructionChange) => {
+    const instructionText = typeof instruction === 'string' ? instruction : instruction.action || '';
     
     if (instructionText && !instructionText.includes('**') && instructionText.length > 10) {
       // Skip if we already processed this instruction
-      if (processedInstructions.has(instructionText.toLowerCase())) return;
+      if (processedIngredients.has(instructionText.toLowerCase())) return;
       processedInstructions.add(instructionText.toLowerCase());
       
       try {

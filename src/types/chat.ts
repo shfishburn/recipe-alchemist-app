@@ -12,6 +12,11 @@ export interface ChatMeta {
   timestamp?: number;
 }
 
+export interface InstructionChange {
+  action?: string;
+  [key: string]: any;
+}
+
 export interface ChatMessage {
   id: string;
   recipe_id?: string;
@@ -23,7 +28,7 @@ export interface ChatMessage {
       mode: 'add' | 'replace' | 'none';
       items: any[];
     };
-    instructions?: string[] | any[];
+    instructions?: string[] | InstructionChange[];
     science_notes?: string[];
     nutrition?: any;
     [key: string]: any;
@@ -47,3 +52,6 @@ export interface OptimisticMessage extends Partial<ChatMessage> {
   meta?: ChatMeta;
   timestamp: number;
 }
+
+// Alias for backward compatibility
+export type ChangesResponse = ChatMessage['changes_suggested'];
