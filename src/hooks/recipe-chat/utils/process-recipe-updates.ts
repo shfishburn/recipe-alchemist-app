@@ -1,5 +1,6 @@
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, InstructionChange } from '@/types/chat';
+import { Ingredient } from '@/types/quick-recipe'; // Import the Ingredient type
 
 export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Partial<Recipe> & { id: string } {
   console.log("Processing recipe updates with changes:", {
@@ -70,8 +71,8 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
         if (typeof instruction === 'string') {
           return instruction;
         }
-        if (typeof instruction === 'object' && instruction.action) {
-          return instruction.action;
+        if (typeof instruction === 'object' && instruction && 'action' in instruction) {
+          return (instruction as InstructionChange).action;
         }
         console.warn("Skipping invalid instruction format:", instruction);
         return null;
@@ -104,10 +105,36 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
       // Update ingredients based on mode
       if (mode === 'add') {
         console.log("Adding new ingredients to existing recipe");
-        updatedRecipe.ingredients = [...recipe.ingredients, ...items];
+        // Force type compatibility between the two ingredient types
+        const typedIngredients = items.map(item => ({
+          qty_metric: item.qty_metric || 0,
+          unit_metric: item.unit_metric || '',
+          qty_imperial: item.qty_imperial || 0,
+          unit_imperial: item.unit_imperial || '',
+          item: item.item,
+          notes: item.notes,
+          qty: item.qty,
+          unit: item.unit,
+          shop_size_qty: item.shop_size_qty,
+          shop_size_unit: item.shop_size_unit
+        }));
+        updatedRecipe.ingredients = [...recipe.ingredients, ...typedIngredients as any];
       } else if (mode === 'replace') {
         console.log("Replacing all ingredients");
-        updatedRecipe.ingredients = items;
+        // Force type compatibility
+        const typedIngredients = items.map(item => ({
+          qty_metric: item.qty_metric || 0,
+          unit_metric: item.unit_metric || '',
+          qty_imperial: item.qty_imperial || 0,
+          unit_imperial: item.unit_imperial || '',
+          item: item.item,
+          notes: item.notes,
+          qty: item.qty,
+          unit: item.unit,
+          shop_size_qty: item.shop_size_qty,
+          shop_size_unit: item.shop_size_unit
+        }));
+        updatedRecipe.ingredients = typedIngredients as any;
       }
       // For 'none' mode, keep existing ingredients
     }

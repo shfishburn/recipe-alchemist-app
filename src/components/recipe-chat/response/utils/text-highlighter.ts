@@ -1,4 +1,3 @@
-
 import type { ChangesResponse, InstructionChange } from '@/types/chat';
 
 /**
@@ -55,7 +54,7 @@ export function highlightInstructions(text: string, changesSuggested: ChangesRes
   let modifiedText = text;
   const processedInstructions = new Set<string>();
   
-  changesSuggested.instructions.forEach((instruction: string | InstructionChange) => {
+  changesSuggested.instructions.forEach((instruction) => {
     const instructionText = typeof instruction === 'string' ? instruction : instruction.action || '';
     
     if (instructionText && !instructionText.includes('**') && instructionText.length > 10) {

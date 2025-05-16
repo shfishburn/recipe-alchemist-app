@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { ChatOpenAI } from "https://esm.sh/@langchain/openai@0.0.10";
 import { StructuredOutputParser } from "https://esm.sh/langchain@0.0.146/output_parsers";
@@ -81,6 +80,8 @@ DO NOT include placeholder instructions like "Add bacon cooking steps" - instead
 For example, if adding bacon to a recipe, your instructions must include specific steps like:
 "Place bacon strips in a cold skillet. Cook over medium heat for 8-10 minutes, turning occasionally until bacon is golden brown and crispy. Transfer to a paper towel-lined plate to drain excess fat. Once cooled, chop into small pieces and set aside."
 
+Instructions with placeholders like "Add steps" or "Add cooking steps" will be rejected. You must provide detailed, specific cooking instructions for any new ingredients.
+
 IMPORTANT: Your response must contain a complete recipe object with all fields from the original that match the recipe generation format.
 `],
     new MessagesPlaceholder("history"),
@@ -102,6 +103,34 @@ function validateRecipe(recipe: any) {
     throw new Error("Must have at least one ingredient");
   if (!Array.isArray(recipe.steps) && !Array.isArray(recipe.instructions))
     throw new Error("Must have steps or instructions");
+}
+
+// === validate instructions ===
+function validateInstructions(instructions: string[] | null | undefined): boolean {
+  if (!instructions || !Array.isArray(instructions) || instructions.length === 0) {
+    return false;
+  }
+  
+  // Check for placeholder instructions
+  const placeholderPatterns = [
+    /add (\w+) cooking steps/i,
+    /add steps/i, 
+    /add instructions/i,
+    /add detailed steps/i,
+    /placeholder/i
+  ];
+  
+  // If any instruction matches a placeholder pattern, it's invalid
+  const hasPlaceholders = instructions.some(instruction => 
+    placeholderPatterns.some(pattern => pattern.test(instruction))
+  );
+  
+  // Instructions should have reasonable length
+  const hasShortInstructions = instructions.some(instruction => 
+    instruction.length < 15
+  );
+  
+  return !hasPlaceholders && !hasShortInstructions;
 }
 
 // === edge function ===
@@ -196,6 +225,20 @@ serve(async (req) => {
         }),
         { status: 422, headers }
       );
+    }
+
+    // Validate instructions
+    if (parsed.recipe?.instructions) {
+      const validInstructions = validateInstructions(parsed.recipe.instructions);
+      if (!validInstructions) {
+        return new Response(
+          JSON.stringify({
+            error: "Invalid recipe instructions",
+            details: "Recipe instructions contain placeholders or are too short. Please provide detailed cooking steps."
+          }),
+          { status: 422, headers }
+        );
+      }
     }
 
     // Get latest version number

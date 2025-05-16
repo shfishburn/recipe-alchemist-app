@@ -42,7 +42,7 @@ export function ChatHistory({
     });
     
     // Return the filtered chat history followed by optimistic messages
-    return [...filteredChatHistory, ...optimisticMessages];
+    return [...filteredChatHistory, ...optimisticMessages] as Array<ChatMessageType | OptimisticMessage>;
   }, [chatHistory, optimisticMessages]);
   
   return (
@@ -51,7 +51,7 @@ export function ChatHistory({
       {combinedMessages.map((chat) => (
         <ChatMessage
           key={getMessageTrackingId(chat) || `chat-${Date.now()}-${Math.random()}`}
-          chat={chat}
+          chat={chat as ChatMessageType}
           setMessage={setMessage}
           applyChanges={applyChanges}
           isApplying={isApplying && chat.id === chatHistory[chatHistory.length - 1]?.id}
