@@ -2,11 +2,11 @@
 import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';
-import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
+import type { ChatMessage as ChatMessageType } from '@/types/chat';
 import { getChatMeta } from '@/utils/chat-meta';
 
 interface ChatMessageProps {
-  chat: ChatMessageType | OptimisticMessage;
+  chat: ChatMessageType;
   setMessage: (message: string) => void;
   applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
   isApplying?: boolean;
@@ -26,7 +26,7 @@ export function ChatMessage({
 }: ChatMessageProps) {
   // Enhanced optimistic message detection
   const isOptimisticUserMessage = isOptimistic || 
-    (!!getChatMeta(chat, 'optimistic_id', '') && !('ai_response' in chat && chat.ai_response));
+    (!!getChatMeta(chat, 'optimistic_id', '') && !chat.ai_response);
   
   // Check if this message has an error
   const hasError = getChatMeta(chat, 'error', false);
@@ -34,30 +34,30 @@ export function ChatMessage({
   // Log chat message for debugging - enhanced with more details
   React.useEffect(() => {
     console.log("[ChatMessage] Message rendered:", {
-      id: 'id' in chat ? chat.id : 'unknown',
+      id: chat.id,
       timestamp: new Date().toISOString(),
       isOptimistic,
       isOptimisticUserMessage,
       hasError,
-      hasAiResponse: 'ai_response' in chat && !!chat.ai_response,
-      hasChangesSuggested: 'changes_suggested' in chat && !!chat.changes_suggested,
+      hasAiResponse: !!chat.ai_response,
+      hasChangesSuggested: !!chat.changes_suggested,
       userMessagePreview: chat.user_message?.substring(0, 50) + (chat.user_message?.length > 50 ? '...' : ''),
-      aiResponseLength: 'ai_response' in chat ? chat.ai_response?.length || 0 : 0,
+      aiResponseLength: chat.ai_response?.length || 0,
       meta: chat.meta || {},
-      applied: applied || ('applied' in chat && !!chat.applied)
+      applied: applied || !!chat.applied
     });
     
     // Log specific conditions for easier debugging
     if (hasError) {
       console.warn("[ChatMessage] Error detected in message:", {
-        id: 'id' in chat ? chat.id : 'unknown',
+        id: chat.id,
         errorDetails: chat.meta?.error_details || "No detailed error information"
       });
     }
     
     if (isOptimisticUserMessage) {
       console.log("[ChatMessage] Optimistic message render:", {
-        id: 'id' in chat ? chat.id : 'unknown',
+        id: chat.id,
         optimisticId: getChatMeta(chat, 'optimistic_id', ''),
         waitingForResponse: true
       });
@@ -76,25 +76,7 @@ export function ChatMessage({
     );
   }
 
-  // Safely check if this is a complete chat message with AI response
-  if (!('ai_response' in chat) || !chat.ai_response) {
-    // If it doesn't have an AI response but it's not optimistic, render as user message only
-    return (
-      <UserMessage 
-        message={chat.user_message}
-        isOptimistic={false}
-        isError={hasError}
-        onRetry={hasError && retryMessage ? retryMessage : undefined}
-      />
-    );
-  }
-
   const handleApplyChanges = async () => {
-    if (!('id' in chat)) {
-      console.error('[ChatMessage] Cannot apply changes for message without id');
-      return;
-    }
-    
     console.log("[ChatMessage] Applying changes for message:", {
       id: chat.id,
       hasChangesSuggested: !!chat.changes_suggested,
@@ -102,8 +84,7 @@ export function ChatMessage({
     });
     
     try {
-      // Safe type cast since we've verified this is a ChatMessageType with id
-      const result = await applyChanges(chat as ChatMessageType);
+      const result = await applyChanges(chat);
       console.log("[ChatMessage] Apply changes result:", {
         id: chat.id,
         success: result,
@@ -118,28 +99,27 @@ export function ChatMessage({
     }
   };
 
-  // This is definitely a ChatMessageType with ai_response at this point
-  const chatWithResponse = chat as ChatMessageType;
-
   return (
     <div className="space-y-4">
       <UserMessage 
-        message={chatWithResponse.user_message} 
+        message={chat.user_message} 
         isOptimistic={isOptimistic} 
         isError={hasError}
         onRetry={hasError && retryMessage ? retryMessage : undefined}
       />
       
-      <ChatResponse
-        response={chatWithResponse.ai_response}
-        changesSuggested={chatWithResponse.changes_suggested || null}
-        followUpQuestions={chatWithResponse.follow_up_questions || []}
-        setMessage={setMessage}
-        onApplyChanges={handleApplyChanges}
-        isApplying={isApplying}
-        applied={applied || !!chatWithResponse.applied}
-        messageId={chatWithResponse.id}
-      />
+      {chat.ai_response && (
+        <ChatResponse
+          response={chat.ai_response}
+          changesSuggested={chat.changes_suggested || null}
+          followUpQuestions={chat.follow_up_questions || []}
+          setMessage={setMessage}
+          onApplyChanges={handleApplyChanges}
+          isApplying={isApplying}
+          applied={applied || !!chat.applied}
+          messageId={chat.id}
+        />
+      )}
     </div>
   );
 }

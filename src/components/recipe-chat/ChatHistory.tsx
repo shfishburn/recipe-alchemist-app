@@ -42,8 +42,7 @@ export function ChatHistory({
     });
     
     // Return the filtered chat history followed by optimistic messages
-    // Type assertion to a union type that accurately represents the combined array
-    return [...filteredChatHistory, ...optimisticMessages] as Array<ChatMessageType | OptimisticMessage>;
+    return [...filteredChatHistory, ...optimisticMessages];
   }, [chatHistory, optimisticMessages]);
   
   return (
@@ -55,9 +54,9 @@ export function ChatHistory({
           chat={chat}
           setMessage={setMessage}
           applyChanges={applyChanges}
-          isApplying={isApplying && 'id' in chat && chat.id === chatHistory[chatHistory.length - 1]?.id}
+          isApplying={isApplying && chat.id === chatHistory[chatHistory.length - 1]?.id}
           isOptimistic={'pending' in chat && !!chat.pending}
-          applied={!!('applied' in chat && chat.applied)}
+          applied={!!chat.applied}
           retryMessage={retryMessage}
         />
       ))}
