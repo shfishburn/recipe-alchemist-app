@@ -120,6 +120,8 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
   // Transform recipe for database storage with improved type safety
   const dbRecipe = {
     ...updatedRecipe,
+    // Make sure the title isn't missing - this was causing the type error
+    title: updatedRecipe.title || 'Untitled Recipe', // Provide a default title if missing
     ingredients: updatedRecipe.ingredients as unknown as Json,
     nutrition: updatedRecipe.nutrition as unknown as Json,
     science_notes: scienceNotes as unknown as Json,
@@ -131,6 +133,7 @@ export async function saveRecipeUpdate(updatedRecipe: Partial<Recipe> & { id: st
 
   console.log("Saving recipe update with data:", {
     id: dbRecipe.id,
+    title: dbRecipe.title,
     hasIngredients: Array.isArray(updatedRecipe.ingredients) && updatedRecipe.ingredients.length > 0,
     ingredientCount: Array.isArray(updatedRecipe.ingredients) ? updatedRecipe.ingredients.length : 0,
     hasInstructions: Array.isArray(updatedRecipe.instructions) && updatedRecipe.instructions.length > 0,

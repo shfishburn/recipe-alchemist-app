@@ -5,7 +5,7 @@ import type { Recipe } from '@/types/recipe';
  * Ensures that the recipe has all required fields and proper data structure
  * This is a critical validation step before saving a complete recipe update
  */
-export function ensureRecipeIntegrity(recipe: Recipe): void {
+export function ensureRecipeIntegrity(recipe: Partial<Recipe> & { id: string }): void {
   // Check for required top-level fields
   if (!recipe.id) {
     throw new Error("Recipe ID is required");
