@@ -29,7 +29,10 @@ export async function updateRecipe(
 
   try {
     // Process basic recipe updates - this now returns a complete recipe copy with changes applied
-    const updatedRecipe = processRecipeUpdates(recipe, chatMessage);
+    const updatedRecipeData = processRecipeUpdates(recipe, chatMessage);
+    
+    // Properly cast the updatedRecipeData to Recipe type
+    const updatedRecipe = updatedRecipeData as unknown as Recipe;
 
     // Verify recipe integrity before saving
     ensureRecipeIntegrity(updatedRecipe);

@@ -46,6 +46,7 @@ export const useChatActions = (
       user_message: messageText,
       pending: true,
       id: messageId,
+      timestamp: Date.now(), // Added timestamp
       meta: {
         optimistic_id: messageId,
         tracking_id: messageId,
@@ -120,6 +121,7 @@ export const useChatActions = (
           user_message: "Analyzing recipe image...",
           pending: true,
           id: messageId,
+          timestamp: Date.now(), // Added timestamp
           meta: {
             optimistic_id: messageId,
             tracking_id: messageId,
@@ -199,6 +201,7 @@ export const useChatActions = (
       user_message: `Analyzing recipe from: ${url}`,
       pending: true,
       id: messageId,
+      timestamp: Date.now(), // Added timestamp
       meta: {
         optimistic_id: messageId,
         tracking_id: messageId,
@@ -248,6 +251,7 @@ export const useChatActions = (
       user_message: trimmedMessage,
       pending: true,
       id: messageId,
+      timestamp: Date.now(), // Added timestamp
       meta: {
         optimistic_id: messageId,
         tracking_id: messageId,

@@ -40,6 +40,10 @@ export interface ChatMessage {
   timestamp?: number;
   created_at?: string;
   
+  // New fields to fix build errors
+  applied?: boolean;
+  follow_up_questions?: string[];
+  
   // New field to support the complete recipe object
   recipe?: Recipe | QuickRecipe;
 }

@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ChatMessage, ChangesResponse } from '@/types/chat';
+import type { ChatMessage, ChangesResponse, ChatMeta } from '@/types/chat';
 
 /**
  * Hook for fetching and processing chat history for a recipe
@@ -47,7 +47,7 @@ export const useChatHistory = (recipeId: string) => {
           applied: chat.applied || false,
           created_at: chat.created_at,
           follow_up_questions: [], // Default empty array
-          meta: typeof chat.meta === 'object' ? chat.meta || {} : {} // Ensure meta is always a valid object
+          meta: typeof chat.meta === 'object' ? (chat.meta as unknown as ChatMeta) || {} : {} // Fix type cast
         };
 
         // Process changes_suggested as a properly typed object

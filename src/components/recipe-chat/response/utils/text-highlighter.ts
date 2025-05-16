@@ -60,7 +60,7 @@ export function highlightInstructions(text: string, changesSuggested: ChangesRes
     
     if (instructionText && !instructionText.includes('**') && instructionText.length > 10) {
       // Skip if we already processed this instruction
-      if (processedIngredients.has(instructionText.toLowerCase())) return;
+      if (processedInstructions.has(instructionText.toLowerCase())) return;
       processedInstructions.add(instructionText.toLowerCase());
       
       try {

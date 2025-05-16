@@ -76,6 +76,7 @@ export function useApplyChanges() {
       
       // Step 2: Update the recipe with the changes
       try {
+        // Using proper async/await pattern instead of .then()
         const updatedRecipe = await updateRecipe(recipe, enhancedChatMessage);
         
         // Success - Show toast notification
