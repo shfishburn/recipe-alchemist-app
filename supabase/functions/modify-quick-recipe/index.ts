@@ -75,6 +75,12 @@ You are a culinary nutrition expert. When modifying recipes:
 7) Include a modification_reason field in version_info explaining the changes.
 8) Maintain all original recipe fields even if you don't modify them.
 
+CRITICAL: When adding new ingredients, ALWAYS update the instructions with FULL DETAILED STEPS for using these ingredients.
+DO NOT include placeholder instructions like "Add bacon cooking steps" - instead, write precise, complete cooking instructions.
+
+For example, if adding bacon to a recipe, your instructions must include specific steps like:
+"Place bacon strips in a cold skillet. Cook over medium heat for 8-10 minutes, turning occasionally until bacon is golden brown and crispy. Transfer to a paper towel-lined plate to drain excess fat. Once cooled, chop into small pieces and set aside."
+
 IMPORTANT: Your response must contain a complete recipe object with all fields from the original that match the recipe generation format.
 `],
     new MessagesPlaceholder("history"),
@@ -148,6 +154,8 @@ serve(async (req) => {
       
       Return a complete JSON object containing the entire recipe with your modifications applied.
       Include every field from the original recipe, with your modifications applied.
+      IMPORTANT: If adding new ingredients, you MUST provide DETAILED cooking instructions for them,
+      not just placeholders like "Add bacon cooking steps".
     `;
     const history = [
       ...modificationHistory.map(e => ({ role: "human", content: e.request })),

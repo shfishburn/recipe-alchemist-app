@@ -1,4 +1,3 @@
-
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
@@ -59,7 +58,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     updatedRecipe.science_notes = chatMessage.changes_suggested.science_notes;
   }
 
-  // Safely update instructions - never replace with an empty array
+  // Process instructions if they exist and are not just placeholders
   if (chatMessage.changes_suggested?.instructions && 
       Array.isArray(chatMessage.changes_suggested.instructions) &&
       chatMessage.changes_suggested.instructions.length > 0) {
@@ -79,9 +78,20 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
       }
     ).filter(Boolean);
     
-    // Only update if we have valid instructions after processing
-    if (formattedInstructions.length > 0) {
+    // Validate that instructions are not just placeholders
+    const hasValidInstructions = formattedInstructions.some(instr => {
+      const instrText = String(instr).toLowerCase();
+      return instrText.length > 20 && 
+             !instrText.includes("add steps") &&
+             !instrText.includes("cooking steps");
+    });
+    
+    if (hasValidInstructions) {
+      console.log("Valid instruction updates found");
       updatedRecipe.instructions = formattedInstructions as string[];
+    } else {
+      console.warn("Only placeholder instructions detected - keeping original instructions");
+      // Keep original instructions
     }
   }
 
