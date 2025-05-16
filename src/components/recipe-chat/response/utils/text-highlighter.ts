@@ -1,3 +1,4 @@
+
 import type { ChangesResponse, InstructionChange } from '@/types/chat';
 
 /**
@@ -14,27 +15,37 @@ export function highlightIngredients(text: string, changesSuggested: ChangesResp
   const processedIngredients = new Set<string>();
   
   changesSuggested.ingredients.items.forEach((ingredient: any) => {
-    if (ingredient && typeof ingredient.item === 'string') {
-      // Skip if we already processed this ingredient to prevent duplicate highlighting
-      if (processedIngredients.has(ingredient.item.toLowerCase())) return;
-      processedIngredients.add(ingredient.item.toLowerCase());
-      
-      try {
-        // Make sure ingredient mention in text is highlighted with safer regex
-        const safeItemText = ingredient.item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${safeItemText}\\b`, 'gi');
-        modifiedText = modifiedText.replace(regex, `**${ingredient.item}**`);
+    // Skip invalid ingredient formats
+    if (!ingredient || typeof ingredient !== 'object') return;
+    
+    // Handle both string and object item types
+    const ingredientName = typeof ingredient.item === 'string' 
+      ? ingredient.item 
+      : typeof ingredient.item === 'object' && ingredient.item !== null
+        ? String(ingredient.item)
+        : null;
         
-        // Also highlight quantity mentions with safer approach
-        if (ingredient.qty !== undefined && ingredient.unit) {
-          const qtyString = String(ingredient.qty);
-          const safeUnitText = ingredient.unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const qtyRegex = new RegExp(`\\b${qtyString}\\s+${safeUnitText}\\s+(?!\\*\\*)`, 'gi');
-          modifiedText = modifiedText.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
-        }
-      } catch (err) {
-        console.warn("Error highlighting ingredient:", err);
+    if (!ingredientName) return;
+    
+    // Skip if we already processed this ingredient to prevent duplicate highlighting
+    if (processedIngredients.has(ingredientName.toLowerCase())) return;
+    processedIngredients.add(ingredientName.toLowerCase());
+    
+    try {
+      // Make sure ingredient mention in text is highlighted with safer regex
+      const safeItemText = ingredientName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${safeItemText}\\b`, 'gi');
+      modifiedText = modifiedText.replace(regex, `**${ingredientName}**`);
+      
+      // Also highlight quantity mentions with safer approach
+      if (ingredient.qty !== undefined && ingredient.unit) {
+        const qtyString = String(ingredient.qty);
+        const safeUnitText = ingredient.unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const qtyRegex = new RegExp(`\\b${qtyString}\\s+${safeUnitText}\\s+(?!\\*\\*)`, 'gi');
+        modifiedText = modifiedText.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
       }
+    } catch (err) {
+      console.warn("Error highlighting ingredient:", err);
     }
   });
   
@@ -55,24 +66,28 @@ export function highlightInstructions(text: string, changesSuggested: ChangesRes
   const processedInstructions = new Set<string>();
   
   changesSuggested.instructions.forEach((instruction) => {
-    const instructionText = typeof instruction === 'string' ? instruction : instruction.action || '';
+    const instructionText = typeof instruction === 'string' 
+      ? instruction 
+      : typeof instruction === 'object' && instruction && 'action' in instruction
+        ? (instruction as InstructionChange).action
+        : '';
     
-    if (instructionText && !instructionText.includes('**') && instructionText.length > 10) {
-      // Skip if we already processed this instruction
-      if (processedInstructions.has(instructionText.toLowerCase())) return;
-      processedInstructions.add(instructionText.toLowerCase());
+    if (!instructionText || instructionText.includes('**') || instructionText.length <= 10) return;
+    
+    // Skip if we already processed this instruction
+    if (processedInstructions.has(instructionText.toLowerCase())) return;
+    processedInstructions.add(instructionText.toLowerCase());
+    
+    try {
+      // Use word boundaries for more accurate matching
+      // Limit the text used for matching to avoid regex issues with very long instructions
+      const matchText = instructionText.substring(0, Math.min(50, instructionText.length));
+      const safeInstructionText = matchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       
-      try {
-        // Use word boundaries for more accurate matching
-        const safeInstructionText = instructionText
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          .substring(0, 50); // Use first 50 chars max for matching to avoid regex issues
-        
-        const regex = new RegExp(`\\b${safeInstructionText}`, 'g');
-        modifiedText = modifiedText.replace(regex, `**${instructionText.substring(0, 50)}**`);
-      } catch (err) {
-        console.warn("Error highlighting instruction text:", err);
-      }
+      const regex = new RegExp(`\\b${safeInstructionText}`, 'g');
+      modifiedText = modifiedText.replace(regex, `**${matchText}**`);
+    } catch (err) {
+      console.warn("Error highlighting instruction text:", err);
     }
   });
   

@@ -2,6 +2,70 @@ import type { Recipe } from '@/types/recipe';
 import type { ChatMessage, InstructionChange } from '@/types/chat';
 import { Ingredient } from '@/types/quick-recipe'; // Import the Ingredient type
 
+/**
+ * Normalizes an ingredient to ensure it has all required fields
+ */
+export function normalizeIngredient(ingredient: any): any {
+  if (typeof ingredient !== 'object' || ingredient === null) {
+    console.warn("Invalid ingredient object received:", ingredient);
+    return {
+      qty_metric: 0,
+      unit_metric: '',
+      qty_imperial: 0,
+      unit_imperial: '',
+      item: '',
+    };
+  }
+  
+  return {
+    // Required fields with fallbacks
+    qty_metric: typeof ingredient.qty_metric === 'number' ? ingredient.qty_metric : 0,
+    unit_metric: typeof ingredient.unit_metric === 'string' ? ingredient.unit_metric : '',
+    qty_imperial: typeof ingredient.qty_imperial === 'number' ? ingredient.qty_imperial : 0,
+    unit_imperial: typeof ingredient.unit_imperial === 'string' ? ingredient.unit_imperial : '',
+    item: typeof ingredient.item === 'string' ? ingredient.item : 
+          typeof ingredient.item === 'object' && ingredient.item !== null ? String(ingredient.item) : '',
+    
+    // Optional fields
+    notes: typeof ingredient.notes === 'string' ? ingredient.notes : undefined,
+    shop_size_qty: typeof ingredient.shop_size_qty === 'number' ? ingredient.shop_size_qty : undefined,
+    shop_size_unit: typeof ingredient.shop_size_unit === 'string' ? ingredient.shop_size_unit : undefined,
+    qty: typeof ingredient.qty === 'number' ? ingredient.qty : undefined,
+    unit: typeof ingredient.unit === 'string' ? ingredient.unit : undefined
+  };
+}
+
+/**
+ * Validates if instructions are complete and not just placeholders
+ */
+function validateInstructions(instructions: any[]): boolean {
+  if (!Array.isArray(instructions) || instructions.length === 0) return false;
+  
+  // Placeholder patterns that indicate incomplete instructions
+  const placeholderPatterns = [
+    /add (\w+) cooking steps/i,
+    /add steps/i,
+    /add instructions/i,
+    /placeholder/i,
+    /cooking steps/i
+  ];
+  
+  // Check if any instruction is too short or matches a placeholder pattern
+  return !instructions.some(instruction => {
+    const instructionText = typeof instruction === 'string' 
+      ? instruction 
+      : (instruction && typeof instruction === 'object' && 'action' in instruction) 
+        ? instruction.action 
+        : '';
+        
+    // Check if text is too short
+    if (instructionText.length < 15) return true;
+    
+    // Check if text matches any placeholder patterns
+    return placeholderPatterns.some(pattern => pattern.test(instructionText));
+  });
+}
+
 export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Partial<Recipe> & { id: string } {
   console.log("Processing recipe updates with changes:", {
     hasTitle: !!chatMessage.changes_suggested?.title,
@@ -24,16 +88,37 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
   // Note: We're using type assertion since the ChatMessage type might not be updated yet
   if ((chatMessage as any).recipe) {
     console.log("Using complete recipe object from chat message");
+    
+    // Get the complete recipe from the chat message
+    const completeRecipe = (chatMessage as any).recipe;
+    
+    // Ensure the ingredients are properly normalized
+    const normalizedIngredients = Array.isArray(completeRecipe.ingredients)
+      ? completeRecipe.ingredients.map(ing => normalizeIngredient(ing))
+      : recipe.ingredients;
+      
+    // Validate instructions to ensure they're complete
+    const instructions = Array.isArray(completeRecipe.instructions)
+      ? completeRecipe.instructions
+      : recipe.instructions;
+    
+    const areInstructionsValid = validateInstructions(instructions);
+    if (!areInstructionsValid) {
+      console.warn("Received instructions appear to be incomplete or contain placeholders");
+    }
+    
     updatedRecipe = {
       ...updatedRecipe,
-      ...(chatMessage as any).recipe,
+      ...completeRecipe,
       id: recipe.id, // Always preserve the original recipe ID
+      ingredients: normalizedIngredients,
+      instructions: areInstructionsValid ? instructions : recipe.instructions,
       updated_at: new Date().toISOString() // Update the timestamp
     };
     
     // If version info is present, add it to the recipe
-    if ((chatMessage as any).recipe.version_info) {
-      updatedRecipe.version_info = (chatMessage as any).recipe.version_info;
+    if (completeRecipe.version_info) {
+      updatedRecipe.version_info = completeRecipe.version_info;
     }
     
     // Return the updated recipe
@@ -66,8 +151,8 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     console.log("Updating instructions with", chatMessage.changes_suggested.instructions.length, "items");
     
     // Process instructions to ensure they're all strings
-    const formattedInstructions = chatMessage.changes_suggested.instructions.map(
-      instruction => {
+    const formattedInstructions = chatMessage.changes_suggested.instructions
+      .map(instruction => {
         if (typeof instruction === 'string') {
           return instruction;
         }
@@ -76,20 +161,15 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
         }
         console.warn("Skipping invalid instruction format:", instruction);
         return null;
-      }
-    ).filter(Boolean);
+      })
+      .filter(Boolean) as string[];
     
     // Validate that instructions are not just placeholders
-    const hasValidInstructions = formattedInstructions.some(instr => {
-      const instrText = String(instr).toLowerCase();
-      return instrText.length > 20 && 
-             !instrText.includes("add steps") &&
-             !instrText.includes("cooking steps");
-    });
+    const areInstructionsValid = validateInstructions(formattedInstructions);
     
-    if (hasValidInstructions) {
+    if (areInstructionsValid) {
       console.log("Valid instruction updates found");
-      updatedRecipe.instructions = formattedInstructions as string[];
+      updatedRecipe.instructions = formattedInstructions;
     } else {
       console.warn("Only placeholder instructions detected - keeping original instructions");
       // Keep original instructions
@@ -105,36 +185,13 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
       // Update ingredients based on mode
       if (mode === 'add') {
         console.log("Adding new ingredients to existing recipe");
-        // Force type compatibility between the two ingredient types
-        const typedIngredients = items.map(item => ({
-          qty_metric: item.qty_metric || 0,
-          unit_metric: item.unit_metric || '',
-          qty_imperial: item.qty_imperial || 0,
-          unit_imperial: item.unit_imperial || '',
-          item: item.item,
-          notes: item.notes,
-          qty: item.qty,
-          unit: item.unit,
-          shop_size_qty: item.shop_size_qty,
-          shop_size_unit: item.shop_size_unit
-        }));
-        updatedRecipe.ingredients = [...recipe.ingredients, ...typedIngredients as any];
+        // Normalize each ingredient before adding
+        const normalizedIngredients = items.map(item => normalizeIngredient(item));
+        updatedRecipe.ingredients = [...recipe.ingredients, ...normalizedIngredients];
       } else if (mode === 'replace') {
         console.log("Replacing all ingredients");
-        // Force type compatibility
-        const typedIngredients = items.map(item => ({
-          qty_metric: item.qty_metric || 0,
-          unit_metric: item.unit_metric || '',
-          qty_imperial: item.qty_imperial || 0,
-          unit_imperial: item.unit_imperial || '',
-          item: item.item,
-          notes: item.notes,
-          qty: item.qty,
-          unit: item.unit,
-          shop_size_qty: item.shop_size_qty,
-          shop_size_unit: item.shop_size_unit
-        }));
-        updatedRecipe.ingredients = typedIngredients as any;
+        // Normalize each ingredient before replacing
+        updatedRecipe.ingredients = items.map(item => normalizeIngredient(item));
       }
       // For 'none' mode, keep existing ingredients
     }
