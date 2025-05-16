@@ -23,7 +23,8 @@ export async function updateRecipeUnified(
   try {
     // Create a new recipe object that merges the original recipe's ID with the updated data
     const updatedRecipe: Recipe = {
-      ...chatMessage.recipe as unknown as Recipe, // Explicit cast to Recipe
+      ...originalRecipe, // Start with all original recipe fields
+      ...chatMessage.recipe as unknown as Recipe, // Overlay with the message's recipe (explicit cast to Recipe)
       id: originalRecipe.id, // Always preserve original ID
       updated_at: new Date().toISOString()
     };

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -320,6 +319,7 @@ serve(async (req) => {
       
       const rawResponse = aiResponse.choices[0].message.content;
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
+      console.log("Validating response length:", rawResponse.length);
 
       // Parse the response
       let processedResponse;
@@ -338,12 +338,29 @@ serve(async (req) => {
       // Check if the response contains a complete recipe (modification) or just text (question answer)
       let versionData = null;
       if (completeRecipe) {
-        // Ensure the complete recipe has all required fields and the correct ID
-        completeRecipe.id = recipe.id;
+        // Important: Make sure we have a complete recipe with all required fields preserved
+        // Clone the original recipe first to ensure we have all fields
+        const fullRecipe = {
+          ...recipe,
+          ...completeRecipe,
+          id: recipe.id, // Always preserve original ID
+          // Ensure we keep all standard fields with fallbacks to original values
+          title: completeRecipe.title || recipe.title,
+          ingredients: completeRecipe.ingredients || recipe.ingredients,
+          instructions: completeRecipe.instructions || recipe.instructions,
+          servings: completeRecipe.servings || recipe.servings,
+          description: completeRecipe.description || recipe.description,
+          cuisine: completeRecipe.cuisine || recipe.cuisine,
+          cuisine_category: completeRecipe.cuisine_category || recipe.cuisine_category,
+          prep_time_min: completeRecipe.prep_time_min || recipe.prep_time_min,
+          cook_time_min: completeRecipe.cook_time_min || recipe.cook_time_min,
+          science_notes: completeRecipe.science_notes || recipe.science_notes || [],
+          nutrition: completeRecipe.nutrition || recipe.nutrition
+        };
         
         // Verify recipe integrity before saving
         try {
-          validateRecipeIntegrity(completeRecipe);
+          validateRecipeIntegrity(fullRecipe);
         } catch (validationError) {
           console.error("Recipe validation failed:", validationError);
           throw new Error(`Recipe validation failed: ${validationError.message}`);
@@ -356,22 +373,16 @@ serve(async (req) => {
           versionNumber: newVersionNumber,
           userId: null, // No user ID in this context
           modificationRequest: userMessage,
-          recipeData: completeRecipe
+          recipeData: fullRecipe
         });
         
         if (versionData) {
-          completeRecipe.version_id = versionData.version_id;
+          fullRecipe.version_id = versionData.version_id;
+          // Update the complete recipe reference to use this fully populated version
+          processedResponse.recipe = fullRecipe;
         }
       }
       
-      // Prepare response data
-      const responseData = {
-        success: true,
-        textResponse,
-        recipe: completeRecipe || null,
-        followUpQuestions
-      };
-
       // Store the chat interaction
       if (recipe.id) {
         // Create meta object for optimistic updates tracking
@@ -384,12 +395,11 @@ serve(async (req) => {
               recipe_id: recipe.id,
               user_message: userMessage,
               ai_response: textResponse,
-              changes_suggested: null, // No longer using partial changes
-              recipe: completeRecipe, // Store the complete recipe directly
+              recipe: processedResponse.recipe, // Store the complete recipe directly
               source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
-              version_id: completeRecipe?.version_id, // Link to version if created
+              version_id: processedResponse.recipe?.version_id, // Link to version if created
               meta: meta
             });
 
@@ -404,7 +414,7 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify(responseData), { headers });
+      return new Response(JSON.stringify(processedResponse), { headers });
       
     } catch (aiError) {
       console.error("Error with OpenAI request:", aiError);

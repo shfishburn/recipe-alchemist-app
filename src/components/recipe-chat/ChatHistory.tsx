@@ -57,7 +57,7 @@ export function ChatHistory({
           isUser={message.user_message !== undefined && !('ai_response' in message)}
           recipe={recipe}
           onApplyChanges={applyChanges}
-          isApplying={isApplying && message.id === chatHistory[chatHistory.length - 1]?.id}
+          isApplying={isApplying && ('id' in message) && message.id === chatHistory[chatHistory.length - 1]?.id}
           onRetry={retryMessage}
         />
       ))}
