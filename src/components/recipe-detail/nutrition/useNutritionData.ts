@@ -1,52 +1,55 @@
 
-import { useState } from 'react';
-import { Recipe } from '@/types/recipe';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
-import { standardizeNutrition } from '@/types/nutrition-utils';
+import { useState, useEffect } from 'react';
+import type { Recipe } from '@/types/recipe';
+import { standardizeNutrition } from '@/utils/nutrition-utils';
 
-// Export the EnhancedNutrition type for components that need it
-export type { EnhancedNutrition };
-
-interface NutritionDataResult {
-  recipeNutrition: EnhancedNutrition;
-  isLoading: boolean;
-  error: Error | null;
-  refetchNutrition: () => void;
-}
-
-export function useNutritionData(recipe: Recipe): NutritionDataResult {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  // Process recipe nutrition to ensure it has all required fields
-  const recipeNutrition: EnhancedNutrition = recipe.nutrition ? 
-    standardizeNutrition(recipe.nutrition) as EnhancedNutrition : 
-    {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0, 
-      fiber: 0,
-      sugar: 0,
-      sodium: 0
-    };
-
-  // Function to refresh nutrition data if needed
-  const refetchNutrition = async () => {
-    setIsLoading(true);
-    try {
-      // Placeholder for actual fetch logic if needed in the future
-      setIsLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      setIsLoading(false);
+// Enhanced nutrition includes additional micronutrients and metadata
+export interface EnhancedNutrition {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+  calcium?: number;
+  iron?: number;
+  potassium?: number;
+  vitaminA?: number;
+  vitaminC?: number;
+  vitaminD?: number;
+  data_quality?: {
+    overall_confidence: string;
+    overall_confidence_score: number;
+    recommended_macros?: {
+      protein?: number;
+      carbs?: number;
+      fat?: number;
     }
   };
+  [key: string]: any;
+}
+
+export function useNutritionData(recipe: Recipe) {
+  const [recipeNutrition, setRecipeNutrition] = useState<EnhancedNutrition | null>(null);
+  
+  useEffect(() => {
+    if (recipe?.nutrition) {
+      // Standardize the nutrition data to ensure consistent format
+      const standardized = standardizeNutrition(recipe.nutrition);
+      setRecipeNutrition(standardized as EnhancedNutrition);
+    } else {
+      setRecipeNutrition(null);
+    }
+  }, [recipe]);
 
   return {
     recipeNutrition,
-    isLoading,
-    error,
-    refetchNutrition
+    refetchNutrition: () => {
+      if (recipe?.nutrition) {
+        const standardized = standardizeNutrition(recipe.nutrition);
+        setRecipeNutrition(standardized as EnhancedNutrition);
+      }
+    }
   };
 }

@@ -1,102 +1,78 @@
+import { ChatMessage } from '@/types/chat';
 
-import type { ChangesResponse, InstructionChange } from '@/types/chat';
+// Define the InstructionChange type that was previously imported
+interface InstructionChange {
+  action: string;
+  [key: string]: any;
+}
 
-/**
- * Highlights ingredient mentions in text based on the changes suggested
- */
-export function highlightIngredients(text: string, changesSuggested: ChangesResponse | null): string {
-  if (!text || !changesSuggested?.ingredients?.items || 
-      !Array.isArray(changesSuggested.ingredients.items) || 
-      changesSuggested.ingredients.mode === 'none') {
+export const highlightText = (
+  text: string,
+  changesSuggested: ChatMessage['changes_suggested']
+): string => {
+  if (!changesSuggested) {
     return text;
   }
-  
-  let modifiedText = text;
-  const processedIngredients = new Set<string>();
-  
-  changesSuggested.ingredients.items.forEach((ingredient: any) => {
-    if (ingredient && typeof ingredient.item === 'string') {
-      // Skip if we already processed this ingredient to prevent duplicate highlighting
-      if (processedIngredients.has(ingredient.item.toLowerCase())) return;
-      processedIngredients.add(ingredient.item.toLowerCase());
-      
-      try {
-        // Make sure ingredient mention in text is highlighted with safer regex
-        const safeItemText = ingredient.item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${safeItemText}\\b`, 'gi');
-        modifiedText = modifiedText.replace(regex, `**${ingredient.item}**`);
-        
-        // Also highlight quantity mentions with safer approach
-        if (ingredient.qty !== undefined && ingredient.unit) {
-          const qtyString = String(ingredient.qty);
-          const safeUnitText = ingredient.unit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const qtyRegex = new RegExp(`\\b${qtyString}\\s+${safeUnitText}\\s+(?!\\*\\*)`, 'gi');
-          modifiedText = modifiedText.replace(qtyRegex, `**${ingredient.qty} ${ingredient.unit}** `);
+
+  let highlightedText = text;
+
+  // Highlight title changes
+  if (changesSuggested.title) {
+    const titleRegex = new RegExp(changesSuggested.title, 'gi');
+    highlightedText = highlightedText.replace(
+      titleRegex,
+      (match) => `<mark class="bg-yellow-200">${match}</mark>`
+    );
+  }
+
+  // Highlight ingredient changes
+  if (changesSuggested.ingredients?.items) {
+    changesSuggested.ingredients.items.forEach((ingredient) => {
+      if (typeof ingredient === 'string') {
+        const ingredientRegex = new RegExp(ingredient, 'gi');
+        highlightedText = highlightedText.replace(
+          ingredientRegex,
+          (match) => `<mark class="bg-lime-200">${match}</mark>`
+        );
+      } else {
+        // Check if ingredient.item is a string or an object with a name property
+        const ingredientName = typeof ingredient.item === 'string' ? ingredient.item : ingredient.item?.name;
+        if (ingredientName) {
+          const ingredientRegex = new RegExp(ingredientName, 'gi');
+          highlightedText = highlightedText.replace(
+            ingredientRegex,
+            (match) => `<mark class="bg-lime-200">${match}</mark>`
+          );
         }
-      } catch (err) {
-        console.warn("Error highlighting ingredient:", err);
       }
-    }
-  });
-  
-  return modifiedText;
-}
-
-/**
- * Highlights instructions in text based on the changes suggested
- */
-export function highlightInstructions(text: string, changesSuggested: ChangesResponse | null): string {
-  if (!text || !changesSuggested?.instructions || 
-      !Array.isArray(changesSuggested.instructions) || 
-      changesSuggested.instructions.length === 0) {
-    return text;
+    });
   }
-  
-  let modifiedText = text;
-  const processedInstructions = new Set<string>();
-  
-  changesSuggested.instructions.forEach((instruction: string | InstructionChange) => {
-    const instructionText = typeof instruction === 'string' ? instruction : instruction.action || '';
-    
-    if (instructionText && !instructionText.includes('**') && instructionText.length > 10) {
-      // Skip if we already processed this instruction
-      if (processedInstructions.has(instructionText.toLowerCase())) return;
-      processedInstructions.add(instructionText.toLowerCase());
-      
-      try {
-        // Use word boundaries for more accurate matching
-        const safeInstructionText = instructionText
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          .substring(0, 50); // Use first 50 chars max for matching to avoid regex issues
-        
-        const regex = new RegExp(`\\b${safeInstructionText}`, 'g');
-        modifiedText = modifiedText.replace(regex, `**${instructionText.substring(0, 50)}**`);
-      } catch (err) {
-        console.warn("Error highlighting instruction text:", err);
-      }
-    }
-  });
-  
-  return modifiedText;
-}
 
-/**
- * Highlights scientific units and nutrition values in text
- */
-export function highlightScientificValues(text: string): string {
-  // Format scientific units and nutrition values
-  // Match patterns like "240 kcal", "28g fat", "0g carbs", "0g protein"
-  const scientificRegexes = [
-    { pattern: /(\d+)\s*(kcal|calories)/gi, replacement: "**$1 $2**" },
-    { pattern: /(\d+)([g])\s+(protein|carbs|fat|fiber|sugar)/gi, replacement: "**$1$2 $3**" },
-    { pattern: /(\d+)([%])/gi, replacement: "**$1$2**" },
-  ];
-  
-  // Apply scientific formatting
-  let modifiedText = text;
-  scientificRegexes.forEach(({ pattern, replacement }) => {
-    modifiedText = modifiedText.replace(pattern, replacement);
-  });
-  
-  return modifiedText;
-}
+  // Highlight instruction changes
+  if (changesSuggested.instructions) {
+    changesSuggested.instructions.forEach((instruction) => {
+      // Check if instruction is a string or an object with an action property
+      const instructionText = typeof instruction === 'string' ? instruction : (instruction as InstructionChange).action;
+      if (instructionText) {
+        const instructionRegex = new RegExp(instructionText, 'gi');
+        highlightedText = highlightedText.replace(
+          instructionRegex,
+          (match) => `<mark class="bg-orange-200">${match}</mark>`
+        );
+      }
+    });
+  }
+
+  // Highlight science_notes changes
+  if (changesSuggested.science_notes) {
+    changesSuggested.science_notes.forEach((note) => {
+      const noteRegex = new RegExp(note, 'gi');
+      highlightedText = highlightedText.replace(
+        noteRegex,
+        (match) => `<mark class="bg-purple-200">${match}</mark>`
+      );
+    });
+  }
+
+  return highlightedText;
+};
