@@ -16,9 +16,9 @@ interface QuickRecipePrintProps {
 export function QuickRecipePrint({ recipe, open, onOpenChange }: QuickRecipePrintProps) {
   const printRef = useRef<HTMLDivElement>(null);
   
-  // Setup react-to-print handler
+  // Setup react-to-print handler with updated property names
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    contentRef: printRef, // Use contentRef instead of content
     documentTitle: `${recipe.title} - Recipe Alchemy`,
     // Do not use onBeforeGetContent, it's not in the UseReactToPrintOptions type
   });

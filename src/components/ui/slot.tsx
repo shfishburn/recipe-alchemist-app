@@ -6,7 +6,7 @@ interface SlotProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 /**
- * Custom Slot implementation to replace Radix Slot
+ * Custom Slot implementation
  * Used for component composition
  */
 export const Slot = React.forwardRef<HTMLElement, SlotProps>(
@@ -52,10 +52,10 @@ function mergeRefs<T = any>(refs: Array<React.Ref<T> | undefined>): React.RefCal
 /**
  * Helper to merge props objects
  */
-function mergeProps<T extends Record<string, any>>(
+function mergeProps(
   slotProps: Record<string, any>,
   childProps: Record<string, any>
-): T {
+): Record<string, any> {
   // Create a new object with the properties of slotProps
   const merged = { ...slotProps };
 
@@ -101,7 +101,7 @@ function mergeProps<T extends Record<string, any>>(
     merged[propName] = childPropValue !== undefined ? childPropValue : slotPropValue;
   }
 
-  return merged as T;
+  return merged;
 }
 
 Slot.displayName = "Slot";

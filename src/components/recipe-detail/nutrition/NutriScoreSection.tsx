@@ -2,26 +2,31 @@
 import React from 'react';
 import { NutriScoreGrade } from './NutriScoreGrade';
 import { NutriScoreDetail } from './NutriScoreDetail';
-import type { NutriScore } from '@/types/recipe';
+import type { NutriScore, Recipe } from '@/types/recipe';
 
 interface NutriScoreSectionProps {
-  score: NutriScore;
+  score?: NutriScore;
+  recipe?: Recipe;
   compact?: boolean;
   showDetails?: boolean;
 }
 
 export function NutriScoreSection({
   score,
+  recipe,
   compact = false,
   showDetails = true,
 }: NutriScoreSectionProps) {
+  // Get score from recipe if provided and not directly passed
+  const nutriScore = score || (recipe?.nutri_score || null);
+  
   // If no score or grade, show nothing
-  if (!score || !score.grade) return null;
+  if (!nutriScore || !nutriScore.grade) return null;
   
   return (
     <div>
       <div className="flex items-center gap-3">
-        <NutriScoreGrade grade={score.grade} size={compact ? 'md' : 'lg'} />
+        <NutriScoreGrade grade={nutriScore.grade} size={compact ? 'md' : 'lg'} />
         
         {!compact && (
           <div className="text-sm">
@@ -33,11 +38,11 @@ export function NutriScoreSection({
         )}
       </div>
       
-      {showDetails && score.score !== null && (
+      {showDetails && nutriScore.score !== null && (
         <NutriScoreDetail 
-          score={score}
-          positive={score.positive_points}
-          negative={score.negative_points}
+          score={nutriScore}
+          positive={nutriScore.positive_points}
+          negative={nutriScore.negative_points}
         />
       )}
     </div>

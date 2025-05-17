@@ -2,8 +2,16 @@
 import { useMemo } from 'react';
 import type { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
-export function useNutritionData(nutrition?: any): EnhancedNutrition {
-  return useMemo(() => {
+// Re-export the EnhancedNutrition type for components that import it from here
+export type { EnhancedNutrition };
+
+interface UseNutritionDataResult {
+  recipeNutrition: EnhancedNutrition;
+  refetchNutrition: () => void;
+}
+
+export function useNutritionData(nutrition?: any): UseNutritionDataResult {
+  const recipeNutrition = useMemo(() => {
     // Default nutrition data structure
     const defaultNutrition: EnhancedNutrition = {
       calories: 0,
@@ -93,6 +101,14 @@ export function useNutritionData(nutrition?: any): EnhancedNutrition {
     
     return enhanced;
   }, [nutrition]);
+  
+  // Simple refetch function (in a real app, this would likely use a query client)
+  const refetchNutrition = () => {
+    console.log("Nutrition data refetch requested");
+    // Implementation would depend on the actual data fetching strategy
+  };
+  
+  return { recipeNutrition, refetchNutrition };
 }
 
 // Calculate macro percentage
