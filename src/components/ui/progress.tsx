@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -19,7 +20,7 @@ const Progress = React.forwardRef<
   ProgressProps
 >(({ 
   className, 
-  value, 
+  value = 0, 
   indicatorColor, 
   indicatorClassName,
   showValue = false,
@@ -28,10 +29,15 @@ const Progress = React.forwardRef<
   label,
   ...props 
 }, ref) => {
+  // Ensure value is a number and within valid range
+  const safeValue = typeof value === 'number' && !isNaN(value) ? 
+    Math.max(0, Math.min(100, value)) : 
+    0;
+  
   // Format value for display
   const formattedValue = valueFormatter 
-    ? valueFormatter(value || 0) 
-    : `${Math.round(value || 0)}%`;
+    ? valueFormatter(safeValue) 
+    : `${Math.round(safeValue)}%`;
 
   return (
     <div className="space-y-1.5">
@@ -47,6 +53,7 @@ const Progress = React.forwardRef<
           "relative h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700",
           className
         )}
+        value={safeValue}
         {...props}
       >
         <ProgressPrimitive.Indicator
@@ -55,7 +62,7 @@ const Progress = React.forwardRef<
             indicatorClassName
           )}
           style={{ 
-            width: `${value || 0}%`,
+            width: `${safeValue}%`,
             ...(indicatorColor ? { backgroundColor: indicatorColor } : { backgroundColor: "hsl(var(--primary))" })
           }}
         />

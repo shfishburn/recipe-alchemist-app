@@ -8,11 +8,16 @@ interface ShoppingListProgressProps {
   completionPercentage: number;
 }
 
-export function ShoppingListProgress({ completedCount, totalItems, completionPercentage }: ShoppingListProgressProps) {
+export function ShoppingListProgress({ completedCount, totalItems, completionPercentage = 0 }: ShoppingListProgressProps) {
+  // Ensure percentage is a valid number
+  const safePercentage = typeof completionPercentage === 'number' && !isNaN(completionPercentage) 
+    ? Math.max(0, Math.min(100, completionPercentage)) 
+    : 0;
+  
   // Determine color based on completion percentage
-  const indicatorColor = completionPercentage === 100 
+  const indicatorColor = safePercentage === 100 
     ? "#22c55e" // Green when complete
-    : completionPercentage > 50 
+    : safePercentage > 50 
       ? "#0EA5E9" // Blue when more than halfway
       : undefined; // Default primary color otherwise
       
@@ -21,11 +26,11 @@ export function ShoppingListProgress({ completedCount, totalItems, completionPer
       <div className="flex justify-between items-center mb-1">
         <span className="text-sm font-medium">Progress</span>
         <span className="text-sm text-muted-foreground">
-          {completedCount} of {totalItems} items ({Math.round(completionPercentage)}%)
+          {completedCount} of {totalItems} items ({Math.round(safePercentage)}%)
         </span>
       </div>
       <Progress 
-        value={completionPercentage} 
+        value={safePercentage} 
         indicatorColor={indicatorColor}
       />
     </div>

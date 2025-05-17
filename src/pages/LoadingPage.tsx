@@ -1,17 +1,21 @@
+
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
 import { generateQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { ErrorDisplay } from '@/components/ui/error-display';
 
-const LoadingPage: React.FC = () => {
+const LoadingContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cancelClicked, setCancelClicked] = useState(false);
   const [loadingStartTime] = useState(Date.now());
+  const progressIntervalRef = useRef<number | null>(null);
   
   // Get store state and actions
   const { 
@@ -31,6 +35,22 @@ const LoadingPage: React.FC = () => {
   const timestamp = location.state?.timestamp || Date.now();
   const formDataFromState = location.state?.formData;
   const isRetrying = location.state?.isRetrying === true;
+  
+  // Helper function for step description
+  const getStepDescription = (step: number): string => {
+    switch (step) {
+      case 0:
+        return "Analyzing your ingredients...";
+      case 1:
+        return "Crafting the perfect recipe for you...";
+      case 2:
+        return "Calculating nutrition information...";
+      case 3:
+        return "Adding final touches to your recipe...";
+      default:
+        return "Processing your request...";
+    }
+  };
   
   useEffect(() => {
     // First, ensure we're in loading state
@@ -58,15 +78,15 @@ const LoadingPage: React.FC = () => {
     // Start generating the recipe
     const generateRecipe = async () => {
       try {
-        // Simulate step progress
-        const progressInterval = setInterval(() => {
-          // read current state fresh to avoid stale closure
-          const current = useQuickRecipeStore.getState().loadingState;
-          const newStep = Math.min(current.step + 1, 3);
-          updateLoadingState({
-            step: newStep,
-            stepDescription: getStepDescription(newStep),
-            percentComplete: Math.min(current.percentComplete + 5, 95)
+        // Set up progress interval safely using ref
+        progressIntervalRef.current = window.setInterval(() => {
+          updateLoadingState(current => {
+            const newStep = Math.min(current.step + 1, 3);
+            return {
+              step: newStep,
+              stepDescription: getStepDescription(newStep),
+              percentComplete: Math.min(current.percentComplete + 5, 95)
+            };
           });
         }, 2000);
         
@@ -74,7 +94,11 @@ const LoadingPage: React.FC = () => {
         console.log("Starting recipe generation with data:", effectiveFormData);
         const generatedRecipe = await generateQuickRecipe(effectiveFormData);
         
-        clearInterval(progressInterval);
+        // Clear interval safely
+        if (progressIntervalRef.current !== null) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
         
         console.log("Recipe generated successfully:", generatedRecipe);
         
@@ -122,30 +146,25 @@ const LoadingPage: React.FC = () => {
       generateRecipe();
     }
     
+    // Cleanup function
     return () => {
-      // Cleanup function
-      console.log("LoadingPage unmounting");
+      console.log("LoadingPage unmounting, cleaning up intervals");
+      if (progressIntervalRef.current !== null) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     };
   }, []);
   
-  // Get description based on step number
-  const getStepDescription = (step: number): string => {
-    switch (step) {
-      case 0:
-        return "Analyzing your ingredients...";
-      case 1:
-        return "Crafting the perfect recipe for you...";
-      case 2:
-        return "Calculating nutrition information...";
-      case 3:
-        return "Adding final touches to your recipe...";
-      default:
-        return "Processing your request...";
-    }
-  };
-  
   const handleCancel = () => {
     setCancelClicked(true);
+    
+    // Clean up interval
+    if (progressIntervalRef.current !== null) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    
     setLoading(false);
     
     toast({
@@ -162,7 +181,6 @@ const LoadingPage: React.FC = () => {
   
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-      {/* single animated loader with built-in cancel button */}
       <QuickRecipeLoading
         onCancel={handleCancel}
         timeoutWarning={hasTimeoutError}
@@ -170,6 +188,36 @@ const LoadingPage: React.FC = () => {
         stepDescription={loadingState.stepDescription}
       />
     </div>
+  );
+};
+
+// Add error fallback UI
+const ErrorFallback = () => {
+  const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate('/', { replace: true });
+  };
+
+  return (
+    <div className="p-8 flex flex-col items-center justify-center min-h-[60vh]">
+      <ErrorDisplay 
+        error="Something went wrong during recipe generation"
+        title="Recipe Generation Error"
+        onRetry={handleGoBack}
+        variant="default"
+        size="lg"
+      />
+    </div>
+  );
+};
+
+// Main component with error boundary
+const LoadingPage: React.FC = () => {
+  return (
+    <ErrorBoundary fallback={<ErrorFallback />}>
+      <LoadingContent />
+    </ErrorBoundary>
   );
 };
 
