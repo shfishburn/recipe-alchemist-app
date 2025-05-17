@@ -26,7 +26,9 @@ export function useQuickRecipeForm() {
   
   // Store navigate function in the global store for use in other components
   useEffect(() => {
-    setNavigate(navigate);
+    if (setNavigate) {
+      setNavigate(navigate);
+    }
   }, [navigate, setNavigate]);
   
   // Handle form submission

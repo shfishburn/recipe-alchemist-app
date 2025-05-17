@@ -3,7 +3,7 @@ import { Recipe } from '@/types/recipe';
 
 export interface QuickRecipeForm {
   cuisine: string[] | string;
-  dietary?: string[] | string;
+  dietary: string[] | string;  // Changed from optional to required to match QuickRecipeFormData
   mainIngredient: string;
   servings: number;
   maxCalories?: number;

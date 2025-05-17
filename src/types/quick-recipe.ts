@@ -64,6 +64,7 @@ export interface QuickRecipeFormData {
   mainIngredient: string;
   servings: number;
   maxCalories?: number;
+  recipeRequest?: string;
 }
 
 export interface QuickRecipeOptions {

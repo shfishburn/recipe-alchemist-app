@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuickRecipeStore } from '@/store/use-quick-recipe-store';
@@ -76,7 +77,13 @@ export function useQuickRecipePage() {
             
             // Start an async generation
             try {
-              await generateQuickRecipe(recipeData.formData);
+              // Make sure dietary is always present, even if empty array
+              const processedFormData = {
+                ...recipeData.formData,
+                dietary: recipeData.formData.dietary || [],
+              };
+              
+              await generateQuickRecipe(processedFormData);
             } catch (e: unknown) {
               const message = e instanceof Error ? e.message : "Failed to resume recipe generation. Please try again.";
               console.error("Error resuming recipe generation from location state:", e);
@@ -135,7 +142,13 @@ export function useQuickRecipePage() {
               
               try {
                 // Start an async generation
-                await generateQuickRecipe(parsedData.formData);
+                // Ensure dietary is always present
+                const processedFormData = {
+                  ...parsedData.formData,
+                  dietary: parsedData.formData.dietary || [],
+                };
+                
+                await generateQuickRecipe(processedFormData);
               } catch (e: unknown) {
                 const message = e instanceof Error ? e.message : "Failed to resume recipe generation. Please try again.";
                 console.error("Error resuming recipe generation from session storage:", e);
@@ -211,7 +224,13 @@ export function useQuickRecipePage() {
         });
         
         // Start the recipe generation
-        await generateQuickRecipe(formData);
+        // Ensure dietary is always present, even if empty array
+        const processedFormData = {
+          ...formData,
+          dietary: formData.dietary || [],
+        };
+        
+        await generateQuickRecipe(processedFormData);
         
         setIsRetrying(false);
       } catch (e: unknown) {

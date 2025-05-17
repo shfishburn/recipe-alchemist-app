@@ -1,4 +1,3 @@
-
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -11,7 +10,6 @@ import LoadingOverlay from '@/components/ui/loading-overlay';
 import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 import { useAuth } from '@/hooks/use-auth';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
-import { Recipe } from '@/types/recipe';
 import { QuickRecipe } from '@/types/quick-recipe';
 
 const RecipePreviewPage: React.FC = () => {

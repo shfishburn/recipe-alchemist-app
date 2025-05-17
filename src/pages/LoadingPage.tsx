@@ -92,7 +92,14 @@ const LoadingContent = () => {
         
         // Generate the recipe
         console.log("Starting recipe generation with data:", effectiveFormData);
-        const generatedRecipe = await generateQuickRecipe(effectiveFormData);
+        
+        // Ensure dietary is always present, even if empty array
+        const processedFormData = {
+          ...effectiveFormData,
+          dietary: effectiveFormData.dietary || []
+        };
+        
+        const generatedRecipe = await generateQuickRecipe(processedFormData);
         
         // Clear interval safely
         if (progressIntervalRef.current !== null) {
@@ -109,10 +116,11 @@ const LoadingContent = () => {
         }
         
         // Ensure recipe has all required fields for the Recipe type before setting
+        // Fix type incompatibility by explicitly setting required fields with correct types
         const completeRecipe = {
           ...generatedRecipe,
           id: generatedRecipe.id || '', // Provide default value for required field
-          servings: generatedRecipe.servings || 1 // Ensure servings exists
+          servings: generatedRecipe.servings || 1, // Ensure servings exists
         };
         
         // Set the recipe
