@@ -1,45 +1,60 @@
-import type { Ingredient } from './quick-recipe';
-import type { Nutrition } from './recipe';
 
-export interface ChangesResponse {
+import { QuickRecipe } from './quick-recipe';
+
+export interface SuggestedChanges {
+  // Title changes
   title?: string;
+  
+  // Description changes
+  description?: string;
+  
+  // Ingredient changes
   ingredients?: {
-    mode: "add" | "replace" | "none";
-    items?: Ingredient[];
+    mode: 'none' | 'add' | 'replace' | 'update';
+    items?: Array<{
+      qty: number;
+      unit: string;
+      item: string;
+      action?: 'add' | 'update' | 'remove';
+      original?: string;
+    }>;
   };
-  instructions?: string[];
+  
+  // Instruction changes
+  instructions?: Array<string | InstructionChange>;
+  
+  // Nutrition changes
+  nutrition?: Record<string, any>;
+  
+  // Science notes
   science_notes?: string[];
-  nutrition?: Nutrition;
+  
+  // Cooking tips
+  cooking_tip?: string;
+  chef_notes?: string;
+  
+  // Complete recipe replacement (newer API returns full recipe)
+  recipe?: QuickRecipe;
+}
+
+export interface InstructionChange {
+  action: string;
+  original?: string;
 }
 
 export interface ChatMessage {
   id: string;
   user_message: string;
   ai_response: string;
-  changes_suggested?: ChangesResponse | null;
-  follow_up_questions?: string[];
-  meta?: ChatMeta;
-  timestamp?: number;
-  recipe_id?: string;
-  recipe?: any; // For full recipe updates
+  changes_suggested: SuggestedChanges;
+  meta?: Record<string, any>;
   applied?: boolean;
-  version_id?: string;
-  pending?: boolean;
+  timestamp?: number;
 }
 
-export type OptimisticMessage = Partial<ChatMessage> & {
-  user_message: string;
+export interface OptimisticMessage {
   id: string;
-  meta?: ChatMeta;
-};
-
-export interface ChatMeta {
-  [key: string]: any;
-  optimistic_id?: string;
-  error?: boolean;
-  error_details?: string;
-  processing_stage?: string;
-  timestamp?: number;
-  tracking_id?: string;
-  recipe_id?: string;
+  user_message: string;
+  ai_response?: string;
+  meta?: Record<string, any>;
 }

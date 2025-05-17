@@ -1,10 +1,10 @@
 
-import { Nutrition } from '@/types/recipe';
+import { RecipeNutrition } from '@/types/quick-recipe';
 
 /**
  * Enhanced nutrition data with quality and confidence information
  */
-export interface EnhancedNutrition extends Nutrition {
+export interface EnhancedNutrition extends RecipeNutrition {
   // Additional data quality information
   data_quality?: {
     overall_confidence: 'high' | 'medium' | 'low';

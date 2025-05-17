@@ -1,7 +1,7 @@
-import type { Recipe } from '@/types/recipe';
+import type { QuickRecipe } from '@/types/quick-recipe';
 import type { ChatMessage } from '@/types/chat';
 
-export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Partial<Recipe> & { id: string } {
+export function processRecipeUpdates(recipe: QuickRecipe, chatMessage: ChatMessage): Partial<QuickRecipe> & { id: string } {
   console.log("Processing recipe updates with changes:", {
     hasTitle: !!chatMessage.changes_suggested?.title,
     hasIngredients: !!chatMessage.changes_suggested?.ingredients?.items?.length,
@@ -10,29 +10,29 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     hasNutrition: !!chatMessage.changes_suggested?.nutrition,
     hasScienceNotes: !!chatMessage.changes_suggested?.science_notes?.length,
     // Check for complete recipe object coming from the updated API
-    hasCompleteRecipe: !!(chatMessage as any).recipe 
+    hasCompleteRecipe: !!(chatMessage.changes_suggested as any).recipe 
   });
 
   // Start with a complete copy of the original recipe to prevent data loss
-  let updatedRecipe: Recipe = {
+  let updatedRecipe: QuickRecipe = {
     ...recipe,
     updated_at: new Date().toISOString()
   };
 
   // If we have a complete recipe object in the chat message, use it
   // Note: We're using type assertion since the ChatMessage type might not be updated yet
-  if ((chatMessage as any).recipe) {
+  if ((chatMessage.changes_suggested as any).recipe) {
     console.log("Using complete recipe object from chat message");
     updatedRecipe = {
       ...updatedRecipe,
-      ...(chatMessage as any).recipe,
+      ...(chatMessage.changes_suggested as any).recipe,
       id: recipe.id, // Always preserve the original recipe ID
       updated_at: new Date().toISOString() // Update the timestamp
     };
     
     // If version info is present, add it to the recipe
-    if ((chatMessage as any).recipe.version_info) {
-      updatedRecipe.version_info = (chatMessage as any).recipe.version_info;
+    if ((chatMessage.changes_suggested as any).recipe.version_info) {
+      updatedRecipe.version_info = (chatMessage.changes_suggested as any).recipe.version_info;
     }
     
     // Return the updated recipe
@@ -70,8 +70,8 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
         if (typeof instruction === 'string') {
           return instruction;
         }
-        if (typeof instruction === 'object' && instruction.action) {
-          return instruction.action;
+        if (typeof instruction === 'object' && (instruction as any).action) {
+          return (instruction as any).action;
         }
         console.warn("Skipping invalid instruction format:", instruction);
         return null;

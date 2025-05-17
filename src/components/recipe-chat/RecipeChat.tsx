@@ -5,8 +5,8 @@ import { useRecipeChat } from '@/hooks/use-recipe-chat';
 import { useAuth } from '@/hooks/use-auth';
 import { useErrorHandler } from '@/hooks/use-error-handler';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
-import type { Recipe } from '@/types/recipe';
-import type { ChatMessage as ChatMessageType } from '@/types/chat';
+import type { QuickRecipe } from '@/types/quick-recipe';
+import type { ChatMessage } from '@/types/chat';
 import { RecipeChatInput } from './RecipeChatInput';
 import { ChatHistory } from './ChatHistory';
 import { EmptyChatState } from './EmptyChatState';
@@ -17,10 +17,9 @@ import { AuthOverlay } from './AuthOverlay';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ChatLayout } from './ChatLayout';
 
-export function RecipeChat({ recipe }: { recipe: Recipe }) {
+export function RecipeChat({ recipe }: { recipe: QuickRecipe }) {
   const { user, session } = useAuth();
   const { handleError } = useErrorHandler({
     toastTitle: "Chat Error",
@@ -50,8 +49,8 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     refetchChatHistory
   } = useRecipeChat(recipe);
 
-  // Create a wrapper for applyChanges that only takes the chatMessage parameter
-  const applyChanges = async (chatMessage: ChatMessageType) => {
+  // Create a wrapper for applyChanges to match the function signature expected by ChatMessage
+  const handleApplyChanges = async (chatMessage: ChatMessage): Promise<boolean> => {
     try {
       return await rawApplyChanges(recipe, chatMessage);
     } catch (error) {
@@ -60,7 +59,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
         description: "Please try again or modify your request",
         action: {
           label: "Retry",
-          onClick: () => applyChanges(chatMessage),
+          onClick: () => handleApplyChanges(chatMessage),
         },
       });
       return false;
@@ -245,7 +244,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         optimisticMessages={optimisticMessages}
                         isSending={isSending}
                         setMessage={setMessage}
-                        applyChanges={applyChanges}
+                        applyChanges={handleApplyChanges}
                         isApplying={isApplying}
                         recipe={recipe}
                         retryMessage={retryMessage}

@@ -1,5 +1,5 @@
 
-import type { Recipe } from '@/types/recipe';
+import type { QuickRecipe } from '@/types/quick-recipe';
 import type { ChatMessage } from '@/types/chat';
 import { findDuplicateIngredients, validateIngredientQuantities } from './ingredients/ingredient-validation';
 import { processRecipeUpdates } from './process-recipe-updates';
@@ -8,22 +8,18 @@ import { validateRecipeUpdate } from './validation/validate-recipe-update';
 import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 
 // Type guard to ensure ingredient has required properties for Recipe.ingredients
-function ensureRequiredIngredientProps(ing: any): ing is Recipe['ingredients'][0] {
+function ensureRequiredIngredientProps(ing: any): ing is QuickRecipe['ingredients'][0] {
   return (
     typeof ing === 'object' &&
     ing !== null &&
-    'qty_metric' in ing &&
-    'unit_metric' in ing &&
-    'qty_imperial' in ing &&
-    'unit_imperial' in ing &&
     'item' in ing
   );
 }
 
 export async function updateRecipe(
-  recipe: Recipe,
+  recipe: QuickRecipe,
   chatMessage: ChatMessage
-): Promise<Recipe> {
+): Promise<QuickRecipe> {
   // Initial validation of inputs
   if (!validateRecipeUpdate(recipe, chatMessage.changes_suggested)) {
     throw new Error("Failed to validate recipe update");
@@ -45,7 +41,7 @@ export async function updateRecipe(
     const updatedRecipeData = processRecipeUpdates(recipe, chatMessage);
     
     // Properly transform data to ensure type safety for ingredients
-    const updatedRecipe: Recipe = {
+    const updatedRecipe: QuickRecipe = {
       ...recipe, // Start with the original recipe to ensure all properties exist
       
       // Safely apply updates with explicit property assignments
@@ -55,7 +51,11 @@ export async function updateRecipe(
       
       // Ensure array fields are properly handled
       instructions: Array.isArray(updatedRecipeData.instructions)
-        ? updatedRecipeData.instructions.map(instr => typeof instr === 'string' ? instr : String(instr))
+        ? updatedRecipeData.instructions.map(instr => 
+            typeof instr === 'string' ? instr : 
+            typeof instr === 'object' && instr.action ? instr.action : 
+            String(instr)
+          )
         : recipe.instructions || [],
       
       // Transform ingredients with strict type checking for each property
@@ -76,10 +76,10 @@ export async function updateRecipe(
             // Now we know ing has the required properties
             return {
               // Required fields
-              qty_metric: ing.qty_metric,
-              unit_metric: ing.unit_metric,
-              qty_imperial: ing.qty_imperial,
-              unit_imperial: ing.unit_imperial,
+              qty_metric: ing.qty_metric || 0,
+              unit_metric: ing.unit_metric || '',
+              qty_imperial: ing.qty_imperial || 0,
+              unit_imperial: ing.unit_imperial || '',
               item: ing.item,
               
               // Optional fields
@@ -142,10 +142,9 @@ export async function updateRecipe(
           }
         }
 
-        // Validate quantities - cast updatedRecipe.ingredients to any to avoid type errors
-        // This is safe because we've already ensured the structure above
+        // Validate quantities - with proper type handling
         const quantityValidation = validateIngredientQuantities(
-          { ...recipe, ingredients: updatedRecipe.ingredients as any }, 
+          updatedRecipe, 
           items, 
           mode
         );

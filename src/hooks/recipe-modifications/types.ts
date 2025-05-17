@@ -23,13 +23,13 @@ export interface VersionInfo {
   version_id?: string;
 }
 
-// Version history entry
+// Version history entry - add missing properties needed by components
 export interface VersionHistoryEntry {
   version_id: string;
   recipe_id: string;
   version_number: number;
   parent_version_id?: string;
-  created_at: string;
+  created_at: string; // Required property that was missing
   user_id?: string;
   modification_request: string;
   recipe_data: QuickRecipe;
@@ -40,7 +40,7 @@ export interface RecipeModifications {
   reasoning: string;
   recipe: QuickRecipe & { version_info?: VersionInfo };
   nutritionImpact?: NutritionImpact;
-  // For backwards compatibility
+  // Legacy format for backward compatibility
   modifications?: {
     title?: string;
     description?: string;
