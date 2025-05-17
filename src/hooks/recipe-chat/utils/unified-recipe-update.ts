@@ -5,22 +5,6 @@ import { saveRecipeUpdate } from './db/save-recipe-update';
 import { ensureRecipeIntegrity } from './validation/validate-recipe-integrity';
 
 /**
- * Helper function to safely convert various data types to Recipe object
- */
-function ensureRecipeFormat(data: any): Recipe {
-  // Create a properly formatted Recipe object with correct types
-  return {
-    ...data,
-    // Ensure arrays have correct types
-    ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
-    instructions: Array.isArray(data.instructions) ? data.instructions : [],
-    science_notes: Array.isArray(data.science_notes) 
-      ? data.science_notes.map(note => typeof note === 'string' ? note : String(note)) 
-      : []
-  } as Recipe;
-}
-
-/**
  * Unified recipe update function that works with complete recipe objects
  * Rather than merging partial changes
  */
@@ -37,19 +21,12 @@ export async function updateRecipeUnified(
   }
   
   try {
-    // Ensure we have objects not strings by safely parsing any string representations
-    const messageRecipe = typeof chatMessage.recipe === 'string' 
-      ? JSON.parse(chatMessage.recipe) 
-      : chatMessage.recipe;
-    
     // Create a new recipe object that merges the original recipe's ID with the updated data
-    // Use type conversion to ensure it follows Recipe type definition
-    const updatedRecipe = ensureRecipeFormat({
-      ...originalRecipe, // Start with all original recipe fields
-      ...messageRecipe, // Overlay with the message's recipe
+    const updatedRecipe: Recipe = {
+      ...chatMessage.recipe as unknown as Recipe, // Explicit cast to Recipe
       id: originalRecipe.id, // Always preserve original ID
       updated_at: new Date().toISOString()
-    });
+    };
     
     // Log the key information about the updated recipe
     console.log("Unified recipe update data:", {

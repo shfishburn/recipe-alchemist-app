@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -40,19 +41,6 @@ interface ChatError {
 }
 
 /**
- * Interface for the message options
- */
-interface ChatMessageOptions {
-  message: string;
-  sourceType?: 'manual' | 'image' | 'url';
-  sourceUrl?: string;
-  sourceImage?: string;
-  messageId?: string;
-  isRetry?: boolean;
-  meta?: Record<string, any>;
-}
-
-/**
  * Custom hook for handling chat message mutations
  * Manages sending chat messages to the API and handling the responses
  */
@@ -70,9 +58,15 @@ export const useChatMutations = (recipe: Recipe) => {
       sourceUrl, 
       sourceImage,
       messageId,
-      isRetry = false,
-      meta = { use_unified_approach: true } // Set unified approach as default
-    }: ChatMessageOptions) => {
+      isRetry = false
+    }: {
+      message: string;
+      sourceType?: 'manual' | 'image' | 'url' | 'analysis';
+      sourceUrl?: string;
+      sourceImage?: string;
+      messageId?: string;
+      isRetry?: boolean;
+    }) => {
       // Enhanced debugging start log
       console.info("[ChatMutation] Starting mutation:", { 
         message: message.length > 20 ? `${message.substring(0, 20)}...` : message,
@@ -127,12 +121,6 @@ export const useChatMutations = (recipe: Recipe) => {
               timestamp: new Date().toISOString()
             });
             
-            // Add use_unified_approach flag in meta to ensure complete recipe objects are returned
-            const enhancedMeta = {
-              ...meta,
-              use_unified_approach: true
-            };
-            
             const response = await Promise.race([
               supabase.functions.invoke('recipe-chat', {
                 body: { 
@@ -142,8 +130,7 @@ export const useChatMutations = (recipe: Recipe) => {
                   sourceUrl,
                   sourceImage,
                   messageId,
-                  retryAttempt: retryCount,
-                  meta: enhancedMeta
+                  retryAttempt: retryCount
                 }
               }),
               new Promise<never>((_, reject) => 
@@ -256,14 +243,12 @@ export const useChatMutations = (recipe: Recipe) => {
         
         try {
           // Create meta object for optimistic updates tracking
-          const metaData = messageId ? { 
+          const meta = messageId ? { 
             optimistic_id: messageId,
             is_retry: !!isRetry,
-            processed_at: new Date().toISOString(),
-            ...meta // Include the original meta data
+            processed_at: new Date().toISOString()
           } : {
-            processed_at: new Date().toISOString(),
-            ...meta // Include the original meta data
+            processed_at: new Date().toISOString()
           };
           
           console.time("[ChatMutation] Database save");
@@ -275,7 +260,7 @@ export const useChatMutations = (recipe: Recipe) => {
           });
           
           // Insert the chat message into the database
-          // Convert changes_suggested to JSON type to match expected database type
+          // Fix: Convert changes_suggested to JSON type to match expected database type
           const changesValue = response.data.changes || null;
           
           const { data, error } = await supabase
@@ -288,7 +273,7 @@ export const useChatMutations = (recipe: Recipe) => {
               source_type: sourceType,
               source_url: sourceUrl,
               source_image: sourceImage,
-              meta: metaData as Json
+              meta: meta as Json
             })
             .select()
             .single();

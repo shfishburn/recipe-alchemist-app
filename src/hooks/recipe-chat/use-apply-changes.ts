@@ -8,18 +8,6 @@ import { updateRecipeUnified } from './utils/unified-recipe-update';
 import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 
-/**
- * Helper function to convert database types to Recipe type
- */
-function convertToRecipeType(data: any): Recipe {
-  return {
-    ...data,
-    ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
-    instructions: Array.isArray(data.instructions) ? data.instructions : [],
-    science_notes: Array.isArray(data.science_notes) ? data.science_notes : []
-  } as Recipe;
-}
-
 export const useApplyChanges = () => {
   const [isApplying, setIsApplying] = useState(false);
   const queryClient = useQueryClient();
@@ -92,45 +80,8 @@ export const useApplyChanges = () => {
     },
   });
 
-  // Modified to guarantee recipe_id is properly used and provide better error messages
-  const applyChanges = async (chatMessage: ChatMessage): Promise<boolean> => {
-    try {
-      // Validate the required recipe_id is present
-      const recipeId = chatMessage.recipe_id || (chatMessage.meta && chatMessage.meta.recipe_id);
-      
-      if (!recipeId) {
-        console.error("Missing recipe_id in chat message:", chatMessage);
-        throw new Error("Cannot apply changes: recipe_id is missing from chat message");
-      }
-      
-      console.log("Fetching recipe with ID:", recipeId);
-      
-      // First, fetch the current recipe data from the database
-      const { data: recipeData, error: fetchError } = await supabase
-        .from('recipes')
-        .select('*')
-        .eq('id', recipeId)
-        .single();
-        
-      if (fetchError) {
-        console.error("Error fetching recipe:", fetchError);
-        throw new Error(`Could not fetch recipe data: ${fetchError.message}`);
-      }
-      
-      if (!recipeData) {
-        throw new Error("Recipe not found with the provided ID");
-      }
-      
-      // Transform the raw data to Recipe type with explicit type conversions
-      const recipe = convertToRecipeType(recipeData);
-      
-      // Apply the changes
-      await applyChangesMutation.mutateAsync({ recipe, chatMessage });
-      return true;
-    } catch (error) {
-      console.error("Error applying changes:", error);
-      throw error; // Rethrow to allow proper handling in UI
-    }
+  const applyChanges = (recipe: Recipe, chatMessage: ChatMessage) => {
+    return applyChangesMutation.mutateAsync({ recipe, chatMessage });
   };
 
   return {
