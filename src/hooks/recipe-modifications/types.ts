@@ -1,73 +1,77 @@
 
-import type { QuickRecipe } from '@/types/quick-recipe';
+import { QuickRecipe } from '@/types/quick-recipe';
 
-export type ModificationStatus = 
-  | 'idle' 
-  | 'loading'
-  | 'success'
-  | 'error'
-  | 'applying'
-  | 'applied'
-  | 'rejected'
-  | 'not-authenticated'
-  | 'canceled'
-  | 'not-deployed';
-
-export interface RecipeModificationChange {
-  property: string;
-  original: any;
-  modified: any;
-}
-
+// Define the NutritionImpact type
 export interface NutritionImpact {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  sodium?: number;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
   fiber?: number;
   sugar?: number;
-  summary?: string;
+  sodium?: number;
   assessment?: string;
+  summary?: string;
+}
+
+// Version information
+export interface VersionInfo {
+  version_number: number;
+  parent_version_id?: string;
+  modification_reason: string;
+  created_at?: string;
+  version_id?: string;
+}
+
+// Version history entry
+export interface VersionHistoryEntry {
+  version_id: string;
+  recipe_id: string;
+  version_number: number;
+  parent_version_id?: string;
+  created_at: string;
+  user_id?: string;
+  modification_request: string;
+  recipe_data: QuickRecipe;
 }
 
 export interface RecipeModifications {
-  changes: RecipeModificationChange[];
-  summary: string;
-  rationale?: string;
-  recipe?: QuickRecipe;
+  textResponse: string;
+  reasoning: string;
+  recipe: QuickRecipe & { version_info?: VersionInfo };
   nutritionImpact?: NutritionImpact;
-}
-
-export interface VersionInfo {
-  version_id: string;
-  version_number: number;
-  modification_reason?: string;
-  modified_at?: string;
-  modified_by?: string;
-  previous_version_id?: string;
-}
-
-export interface RecipeModificationHistoryItem {
-  id: string;
-  request: string;
-  created_at: string;
-  status: 'applied' | 'rejected' | 'pending';
-}
-
-export interface VersionHistoryEntry {
-  version_id: string;
-  version_number: number;
-  previous_version_id?: string;
-  created_at: string;
-  modification_request?: string;
+  // For backwards compatibility
+  modifications?: {
+    title?: string;
+    description?: string;
+    ingredients?: {
+      original?: string;
+      modified: string;
+      reason?: string;
+    }[];
+    steps?: {
+      original?: string;
+      modified: string;
+      reason?: string;
+    }[];
+    cookingTip?: string;
+  };
 }
 
 export interface ModificationHistoryEntry {
   request: string;
+  response: RecipeModifications;
   timestamp: string;
-  response: {
-    reasoning: string;
-  };
   applied: boolean;
 }
+
+export type ModificationStatus =
+  | 'idle'
+  | 'loading'
+  | 'success'
+  | 'applying'
+  | 'applied'
+  | 'error'
+  | 'canceled'
+  | 'not-deployed'
+  | 'not-authenticated';

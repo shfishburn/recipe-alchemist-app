@@ -1,40 +1,34 @@
 
-import type { Nutrition, NutriScore, CuisineCategory } from './recipe';
-
 export interface Ingredient {
-  qty?: number;
-  unit?: string;
-  item: string | { name: string; [key: string]: any };
-  notes?: string;
+  // Metric measurements
   qty_metric?: number;
   unit_metric?: string;
+  // Imperial measurements
   qty_imperial?: number;
   unit_imperial?: string;
+  // Original measurement (backwards compatibility)
+  qty?: number;
+  unit?: string;
+  // Common fields
+  item: string | Record<string, any>;
+  notes?: string;
   shop_size_qty?: number;
   shop_size_unit?: string;
 }
 
-// Define the form data type for recipe generation
-export interface QuickRecipeFormData {
-  mainIngredient: string;
-  cuisine?: string[] | string;
-  dietary?: string[] | string;
-  servings?: number;
-  maxCalories?: number;
+// Version information
+export interface VersionInfo {
+  version_number: number;
+  parent_version_id?: string;
+  modification_reason: string;
 }
 
-// Define recipe version info type
-export interface RecipeVersionInfo {
-  version_number: number;
-  modification_reason?: string;
-  modified_at?: string;
-  modified_by?: string;
-  previous_version_id?: string;
-}
+// Rename/alias QuickRecipe as Recipe for backward compatibility
+export type Recipe = QuickRecipe;
 
 export interface QuickRecipe {
-  id: string;
   title: string;
+  tagline?: string;
   description?: string;
   ingredients: Ingredient[];
   steps?: string[];
@@ -42,44 +36,41 @@ export interface QuickRecipe {
   servings: number;
   prep_time_min?: number;
   cook_time_min?: number;
-  image_url?: string;
-  cuisine?: string;
-  cuisine_category?: CuisineCategory;
-  tags?: string[];
-  user_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  original_request?: string;
-  reasoning?: string;
-  tagline?: string;
-  version_number?: number;
-  previous_version_id?: string;
-  deleted_at?: string | null;
-  dietary?: string;
-  flavor_tags?: string[];
-  nutrition?: Nutrition;
+  prepTime?: number;
+  cookTime?: number;
+  nutrition?: any;
   science_notes?: string[];
-  chef_notes?: string;
-  nutri_score?: NutriScore;
-  slug?: string;
-  
-  // Additional fields for UI components
-  prepTime?: number; // Alias for prep_time_min
-  cookTime?: number; // Alias for cook_time_min
-  cookingTip?: string; // Cooking tips
-  nutritionHighlight?: string; // Highlight of nutritional benefits
-  error_message?: string; // Used for error handling
-  isError?: boolean; // Flag for error state
-  version_info?: RecipeVersionInfo; // Version information
+  nutritionHighlight?: string;
+  cookingTip?: string;
+  cuisine?: string[] | string;
+  dietary?: string[] | string;
+  flavor_tags?: string[];
+  highlights?: string[]; // Added for RecipeHighlights component
+  user_id?: string;
+  id?: string;
+  slug?: string;  // Added slug property
+  // Version-related properties
+  version_id?: string;
+  version_info?: VersionInfo;
+  // Error-related properties
+  error?: string;
+  error_message?: string;
+  isError?: boolean;
 }
 
-// Quick recipe options for API requests
-export interface QuickRecipeOptions {
-  cuisine?: string[];
-  dietary?: string[];
-  servings?: number;
+export interface QuickRecipeFormData {
+  cuisine: string[] | string;
+  dietary: string[] | string;
+  mainIngredient: string;
+  servings: number;
   maxCalories?: number;
-  restrictions?: string[];
-  flavors?: string[];
-  ingredients?: string[];
+}
+
+export interface QuickRecipeOptions {
+  cuisine: string[] | string;
+  dietary: string[] | string;
+  flavorTags: string[];
+  servings: number;
+  maxCalories?: number;
+  recipeRequest?: string;
 }

@@ -1,194 +1,206 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ChefHat, Timer, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, X, Timer } from 'lucide-react';
-import type { Recipe } from '@/types/recipe';
-import { ingredientToReactNode } from '@/utils/react-node-helpers';
-import { ScienceNotes } from './ScienceNotes';
-import { CookModeTimer } from './cooking-mode/CookModeTimer';
-import { cn } from '@/lib/utils';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Timer as TimerComponent } from './cooking/Timer';
+import { CookingStep } from './cooking/CookingStep';
+import { CookingProgress } from './cooking/CookingProgress';
+import { useRecipeScience, getStepReaction } from '@/hooks/use-recipe-science';
+import type { Recipe } from '@/hooks/use-recipe-detail';
 
 interface CookingModeProps {
   recipe: Recipe;
-  onClose: () => void;
 }
 
-export function CookingMode({ recipe, onClose }: CookingModeProps) {
+export function CookingMode({ recipe }: CookingModeProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [showTimer, setShowTimer] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<boolean[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   
-  // Total steps including title slide
-  const totalSteps = recipe.instructions ? recipe.instructions.length + 1 : 1;
+  // Use the unified science data hook
+  const { stepReactions } = useRecipeScience(recipe);
   
-  // Get all ingredient names for reference during cooking
-  const ingredientNames = recipe.ingredients.map(ing => 
-    typeof ing.item === 'string' ? ing.item : ing.item.name
-  );
+  useEffect(() => {
+    if (recipe.instructions) {
+      setCompletedSteps(new Array(recipe.instructions.length).fill(false));
+    }
+  }, [recipe.instructions]);
   
-  // Navigate to next step
-  const nextStep = () => {
-    if (currentStep < totalSteps - 1) {
+  useEffect(() => {
+    if (timeRemaining === null || timeRemaining <= 0) return;
+    
+    const interval = setInterval(() => {
+      setTimeRemaining(prev => (prev !== null && prev > 0) ? prev - 1 : null);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [timeRemaining]);
+  
+  useEffect(() => {
+    let wakeLock: any = null;
+    
+    const requestWakeLock = async () => {
+      if (isOpen && 'wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (err) {
+          console.error('Wake Lock error:', err);
+        }
+      }
+    };
+    
+    requestWakeLock();
+    
+    return () => {
+      if (wakeLock) {
+        wakeLock.release().catch(console.error);
+      }
+    };
+  }, [isOpen]);
+  
+  const toggleStepCompletion = (index: number) => {
+    const newCompleted = [...completedSteps];
+    newCompleted[index] = !newCompleted[index];
+    setCompletedSteps(newCompleted);
+  };
+  
+  const startTimer = (minutes: number) => {
+    setTimeRemaining(minutes * 60);
+  };
+  
+  const cancelTimer = () => {
+    setTimeRemaining(null);
+  };
+  
+  const goToNextStep = () => {
+    if (recipe.instructions && currentStep < recipe.instructions.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
   
-  // Navigate to previous step
-  const prevStep = () => {
+  const goToPrevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
   
-  // Show title screen content
-  const renderTitleScreen = () => (
-    <div className="text-center space-y-6">
-      <h1 className="text-3xl font-bold">{recipe.title}</h1>
-      
-      <div className="text-lg text-gray-600">
-        Ready to start cooking?
-      </div>
-      
-      <div className="text-sm text-gray-500">
-        {recipe.ingredients.length} ingredients • {totalSteps - 1} steps
-      </div>
-      
-      <div className="pt-4">
-        <Button
-          onClick={nextStep}
-          className="font-medium text-base px-8 py-6 h-auto"
-          size="lg"
-        >
-          Start Cooking <ChevronRight className="ml-2" />
-        </Button>
-      </div>
-    </div>
-  );
+  const completedCount = completedSteps.filter(Boolean).length;
   
-  // Show current instruction step
-  const renderInstructionStep = () => {
-    const stepIndex = currentStep - 1;
-    const instruction = recipe.instructions?.[stepIndex] || '';
-    
-    // Highlight ingredient mentions in the instruction
-    const highlightedInstruction = addIngredientHighlights(instruction, ingredientNames);
-    
-    // Get relevant science notes for this step
-    const stepScienceNotes = recipe.science_notes 
-      ? recipe.science_notes
-          .filter(note => 
-            note.toLowerCase().includes(instruction.toLowerCase().substr(0, 30))
-          )
-      : [];
-    
-    return (
-      <div className="space-y-6 h-full flex flex-col">
-        <div className="flex-1">
-          <div className="text-sm font-medium text-gray-500 mb-4">
-            Step {currentStep} of {totalSteps - 1}
+  // Get reaction data for the current step
+  const currentStepReaction = getStepReaction(stepReactions, currentStep);
+  
+  return (
+    <Drawer open={isOpen} onOpenChange={setIsOpen}>
+      <DrawerTrigger asChild>
+        <button id="cooking-mode-trigger" className="hidden">Cooking Mode</button>
+      </DrawerTrigger>
+      <DrawerContent className="h-[90vh] flex flex-col">
+        <div className="container max-w-3xl mx-auto flex-1 overflow-y-auto">
+          <DrawerHeader>
+            <DrawerTitle className="text-xl">Cooking: {recipe.title}</DrawerTitle>
+            <CookingProgress 
+              currentStep={currentStep}
+              totalSteps={recipe.instructions?.length || 0}
+              completedSteps={completedCount}
+            />
+          </DrawerHeader>
+          
+          <div className="px-4 py-2 mb-4">
+            <div className="flex gap-4 flex-wrap">
+              {recipe.servings && (
+                <div className="text-sm">
+                  <span className="font-medium">Servings:</span> {recipe.servings}
+                </div>
+              )}
+              {recipe.prep_time_min && (
+                <div className="text-sm">
+                  <span className="font-medium">Prep:</span> {recipe.prep_time_min} min
+                </div>
+              )}
+              {recipe.cook_time_min && (
+                <div className="text-sm">
+                  <span className="font-medium">Cook:</span> {recipe.cook_time_min} min
+                </div>
+              )}
+            </div>
           </div>
           
-          <div className="text-xl leading-relaxed">{highlightedInstruction}</div>
-          
-          {/* Show relevant science notes */}
-          {stepScienceNotes.length > 0 && (
-            <div className="mt-8">
-              <ScienceNotes notes={stepScienceNotes} compact={true} />
+          <div className="px-4 py-2">
+            <h3 className="text-lg font-medium mb-2">Ingredients</h3>
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {recipe.ingredients && recipe.ingredients.map((ingredient, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <span className="font-medium">{ingredient.qty} {ingredient.unit}</span> {ingredient.item}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
+          </div>
+          
+          <Separator className="my-6" />
+          
+          <div className="px-4 py-8">
+            {recipe.instructions && (
+              <CookingStep
+                stepNumber={currentStep + 1}
+                instruction={recipe.instructions[currentStep]}
+                isCompleted={completedSteps[currentStep]}
+                onToggleComplete={() => toggleStepCompletion(currentStep)}
+                stepReaction={currentStepReaction}
+              />
+            )}
+            
+            <TimerComponent
+              timeRemaining={timeRemaining}
+              onStart={startTimer}
+              onCancel={cancelTimer}
+            />
+          </div>
         </div>
         
-        <div className="flex justify-between items-center pt-4 border-t mt-auto">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="gap-1"
-          >
-            <ChevronLeft /> Previous
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => setShowTimer(!showTimer)}
-            className="gap-1"
-          >
-            <Timer className="h-4 w-4" /> Timer
-          </Button>
-          
-          <Button
-            onClick={nextStep}
-            disabled={currentStep === totalSteps - 1}
-            className="gap-1"
-          >
-            Next <ChevronRight />
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-gray-50 border-b p-4 flex justify-between items-center">
-        <div className="font-medium">Cooking Mode</div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="rounded-full"
-        >
-          <X className="h-5 w-5" />
-        </Button>
-      </div>
-      
-      {/* Main content */}
-      <div className="flex-1 overflow-auto p-6 md:p-8 lg:p-12">
-        <div className="max-w-3xl mx-auto">
-          {currentStep === 0 ? renderTitleScreen() : renderInstructionStep()}
-        </div>
-      </div>
-      
-      {/* Timer overlay */}
-      <CookModeTimer
-        isOpen={showTimer}
-        onClose={() => setShowTimer(false)}
-      />
-    </div>
-  );
-}
-
-// Helper function to highlight ingredients in instruction text
-function addIngredientHighlights(instruction: string, ingredients: (string | React.ReactNode)[]): React.ReactNode {
-  // Convert ReactNode ingredients to strings for matching
-  const ingredientStrings = ingredients.map(ing => 
-    typeof ing === 'string' ? ing : String(ing)
-  );
-  
-  // Find all ingredient mentions in the instruction
-  let result = instruction;
-  
-  ingredientStrings.forEach(ingredient => {
-    if (typeof ingredient === 'string') {
-      // Case-insensitive replacement with highlighting
-      const regex = new RegExp(`(${ingredient})`, 'gi');
-      result = result.replace(regex, '<span class="font-semibold text-recipe-green">$1</span>');
-    }
-  });
-  
-  // Split by highlighted parts and create React nodes
-  const parts = result.split(/(<span.*?<\/span>)/);
-  
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.startsWith('<span')) {
-          // Extract the content between >< tags
-          const content = part.match(/>([^<]*)</)?.[1] || '';
-          return <span key={i} className="font-semibold text-recipe-green">{content}</span>;
-        }
-        return <React.Fragment key={i}>{part}</React.Fragment>;
-      })}
-    </>
+        <DrawerFooter className="border-t px-4">
+          <div className="flex justify-between items-center w-full">
+            <Button 
+              onClick={goToPrevStep} 
+              disabled={currentStep === 0}
+              variant="outline"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
+            
+            <div className="text-center">
+              <span className="text-sm text-muted-foreground">
+                {completedCount}/{completedSteps.length} steps
+              </span>
+              <Progress value={(completedCount / completedSteps.length) * 100} className="w-24 h-2" />
+            </div>
+            
+            <Button 
+              onClick={goToNextStep} 
+              disabled={recipe.instructions && currentStep === recipe.instructions.length - 1}
+              variant={completedSteps[currentStep] ? "default" : "outline"}
+            >
+              Next
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

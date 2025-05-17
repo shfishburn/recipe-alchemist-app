@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { ModificationStatus } from '@/hooks/recipe-modifications/types';
+import { ModificationStatus } from '@/hooks/recipe-modifications';
 
 interface StatusDisplayProps {
   status: ModificationStatus;

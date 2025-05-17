@@ -17,6 +17,7 @@ import { AuthOverlay } from './AuthOverlay';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ChatLayout } from './ChatLayout';
 
 export function RecipeChat({ recipe }: { recipe: Recipe }) {
@@ -38,7 +39,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isLoadingHistory,
     sendMessage,
     isSending,
-    applyChanges,
+    applyChanges: rawApplyChanges,
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
@@ -48,6 +49,23 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isUploading,
     refetchChatHistory
   } = useRecipeChat(recipe);
+
+  // Create a wrapper for applyChanges that only takes the chatMessage parameter
+  const applyChanges = async (chatMessage: ChatMessageType) => {
+    try {
+      return await rawApplyChanges(recipe, chatMessage);
+    } catch (error) {
+      handleError(error);
+      toast.error("Changes couldn't be applied", {
+        description: "Please try again or modify your request",
+        action: {
+          label: "Retry",
+          onClick: () => applyChanges(chatMessage),
+        },
+      });
+      return false;
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {
@@ -199,32 +217,6 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
   // Check if we should show the empty state
   const showEmptyState = chatHistory.length === 0 && optimisticMessages.length === 0;
 
-  // Handle applying changes with proper wrapping
-  const handleApplyChanges = async (chatMessage: ChatMessageType) => {
-    try {
-      return await applyChanges(recipe, chatMessage);
-    } catch (error) {
-      handleError(error);
-      toast.error("Changes couldn't be applied", {
-        description: "Please try again or modify your request",
-        action: {
-          label: "Retry",
-          onClick: () => handleApplyChanges(chatMessage),
-        },
-      });
-      return false;
-    }
-  };
-
-  // Handle retry message with proper signature
-  const handleRetryMessage = (originalMessage: string, originalMessageId: string) => {
-    try {
-      retryMessage(originalMessage, originalMessageId);
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
   return (
     <ChatLayout>
       <Card className="flex flex-col h-full w-full overflow-hidden bg-white border-slate-100 shadow-sm hw-boost">
@@ -253,10 +245,10 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         optimisticMessages={optimisticMessages}
                         isSending={isSending}
                         setMessage={setMessage}
-                        applyChanges={handleApplyChanges}
+                        applyChanges={applyChanges}
                         isApplying={isApplying}
                         recipe={recipe}
-                        retryMessage={handleRetryMessage}
+                        retryMessage={retryMessage}
                       />
                       <div ref={messagesEndRef} />
                     </div>

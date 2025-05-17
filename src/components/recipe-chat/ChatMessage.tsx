@@ -3,6 +3,7 @@ import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
+import { getChatMeta } from '@/utils/chat-meta';
 
 // Create a union type that works with both ChatMessage and OptimisticMessage
 type AnyMessageType = ChatMessageType | OptimisticMessage;
@@ -15,7 +16,6 @@ interface ChatMessageProps {
   isOptimistic?: boolean;
   applied?: boolean;
   retryMessage?: () => void;
-  isLatest?: boolean; // Add this prop to fix the error
 }
 
 export function ChatMessage({
@@ -25,15 +25,14 @@ export function ChatMessage({
   isApplying = false,
   isOptimistic = false,
   applied = false,
-  retryMessage,
-  isLatest = false // Provide default value
+  retryMessage
 }: ChatMessageProps) {
   // Enhanced optimistic message detection
   const isOptimisticUserMessage = isOptimistic || 
-    (!!chat.meta?.optimistic_id && !chat.ai_response);
+    (!!getChatMeta(chat, 'optimistic_id', '') && !chat.ai_response);
   
   // Check if this message has an error
-  const hasError = chat.meta?.error || false;
+  const hasError = getChatMeta(chat, 'error', false);
   
   // Log chat message for debugging - enhanced with more details
   React.useEffect(() => {
@@ -62,7 +61,7 @@ export function ChatMessage({
     if (isOptimisticUserMessage) {
       console.log("[ChatMessage] Optimistic message render:", {
         id: chat.id,
-        optimisticId: chat.meta?.optimistic_id || '',
+        optimisticId: getChatMeta(chat, 'optimistic_id', ''),
         waitingForResponse: true
       });
     }
@@ -116,18 +115,14 @@ export function ChatMessage({
       
       {chat.ai_response && (
         <ChatResponse
-          message={{
-            id: chat.id,
-            role: 'assistant',
-            content: chat.ai_response,
-            changes_suggested: (chat as ChatMessageType).changes_suggested,
-            recipe: (chat as ChatMessageType).recipe,
-            displayText: (chat as ChatMessageType).displayText,
-            showWarning: (chat as ChatMessageType).showWarning,
-            changesPreview: (chat as ChatMessageType).changesPreview,
-            isMethodology: (chat as ChatMessageType).isMethodology,
-          }}
-          isLatest={isLatest}
+          response={chat.ai_response}
+          changesSuggested={(chat as ChatMessageType).changes_suggested || null}
+          followUpQuestions={(chat as ChatMessageType).follow_up_questions || []}
+          setMessage={setMessage}
+          onApplyChanges={handleApplyChanges}
+          isApplying={isApplying}
+          applied={applied || !!chat.applied}
+          messageId={chat.id}
         />
       )}
     </div>

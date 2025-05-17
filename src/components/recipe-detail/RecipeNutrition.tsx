@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -87,16 +86,7 @@ export function RecipeNutrition({ recipe, isOpen, onToggle, onRecipeUpdate }: Re
         fat: 0,
         fiber: 0,
         sugar: 0,
-        sodium: 0,
-        data_quality: {
-          overall_confidence: 'low'
-        },
-        per_serving: {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0
-        }
+        sodium: 0
       } as EnhancedNutrition;
     }
     

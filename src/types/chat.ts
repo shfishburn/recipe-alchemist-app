@@ -1,89 +1,45 @@
-// Define the structure for chat message changes
-export interface InstructionChange {
-  action: string;
-  index?: number;
-  text?: string;
-}
+import type { Ingredient } from './quick-recipe';
+import type { Nutrition } from './recipe';
 
-export interface IngredientChanges {
-  mode: 'add' | 'replace' | 'none';
-  items: any[];
-}
-
-export interface SuggestedChanges {
+export interface ChangesResponse {
   title?: string;
-  ingredients?: IngredientChanges;
-  instructions?: InstructionChange[] | string[];
-  nutrition?: any;
+  ingredients?: {
+    mode: "add" | "replace" | "none";
+    items?: Ingredient[];
+  };
+  instructions?: string[];
   science_notes?: string[];
+  nutrition?: Nutrition;
 }
 
-// Define metadata for chat messages
+export interface ChatMessage {
+  id: string;
+  user_message: string;
+  ai_response: string;
+  changes_suggested?: ChangesResponse | null;
+  follow_up_questions?: string[];
+  meta?: ChatMeta;
+  timestamp?: number;
+  recipe_id?: string;
+  recipe?: any; // For full recipe updates
+  applied?: boolean;
+  version_id?: string;
+  pending?: boolean;
+}
+
+export type OptimisticMessage = Partial<ChatMessage> & {
+  user_message: string;
+  id: string;
+  meta?: ChatMeta;
+};
+
 export interface ChatMeta {
+  [key: string]: any;
   optimistic_id?: string;
   error?: boolean;
   error_details?: string;
-  [key: string]: any;
-}
-
-// Response from changes application
-export interface ChangesResponse {
-  success: boolean;
-  recipe?: any;
-  error?: string;
-  message?: string;
-  // Add these fields to match SuggestedChanges to fix type errors
-  title?: string;
-  ingredients?: IngredientChanges;
-  instructions?: InstructionChange[] | string[];
-  nutrition?: any;
-  science_notes?: string[];
-}
-
-// Define the chat message type
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  status?: 'pending' | 'complete' | 'error';
+  processing_stage?: string;
   timestamp?: number;
-  error?: string;
-  changes_suggested?: SuggestedChanges;
-  recipe?: any; // For complete recipe updates
-  
-  // UI display properties
-  displayText?: string;
-  showWarning?: boolean;
-  changesPreview?: boolean;
-  isMethodology?: boolean;
-  
-  // Response properties
-  response?: any;
-  
-  // New fields that appear in existing code
-  user_message?: string;
-  ai_response?: string;
-  follow_up_questions?: string[];
-  applied?: boolean;
-  meta?: ChatMeta;
-}
-
-// Optimistic message for UI rendering during API calls
-export interface OptimisticMessage {
-  id: string;
-  user_message: string;
-  ai_response?: string;
-  status: 'pending' | 'complete' | 'error';
-  timestamp: number;
-  meta?: ChatMeta;
-  applied?: boolean;
-  pending?: boolean; // Add this property to fix type errors
-}
-
-export interface ChatSession {
-  id: string;
-  messages: ChatMessage[];
-  recipeId?: string;
-  createdAt: number;
-  title?: string;
+  tracking_id?: string;
+  recipe_id?: string;
 }

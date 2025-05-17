@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import { EnhancedNutrition } from './useNutritionData';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatNutrientWithUnit } from '@/components/ui/unit-display';
 import { DAILY_REFERENCE_VALUES, NUTRIENT_DESCRIPTIONS, NUTRIENT_DISPLAY_NAMES, NUTRIENT_UNITS } from '@/constants/nutrition';
@@ -150,7 +149,8 @@ export function MicronutrientsDisplay({ nutrition, unitSystem }: MicronutrientsD
   };
   
   // Check if we have any micronutrient data to display
-  const hasMicronutrients = vitamins.some(v => v.value > 0) || minerals.some(m => m.value > 0);
+  const hasMicronutrients = vitamins.some(v => typeof v.value === 'number' && v.value > 0) || 
+                           minerals.some(m => typeof m.value === 'number' && m.value > 0);
   
   if (!hasMicronutrients) return null;
   

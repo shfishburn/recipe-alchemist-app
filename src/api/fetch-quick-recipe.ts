@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { QuickRecipe } from '@/types/quick-recipe';
-import { Nutrition } from '@/types/recipe';
 
 export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
   if (!id) {
@@ -21,7 +20,6 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
 
   // Transform to ensure compatibility
   const recipe: QuickRecipe = {
-    id: data.id,
     title: data.title,
     tagline: data.tagline,
     // Handle potential JSON string conversion
@@ -30,23 +28,18 @@ export const fetchRecipe = async (id: string): Promise<QuickRecipe> => {
     instructions: Array.isArray(data.instructions) ? data.instructions :
                 (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []),
     steps: Array.isArray(data.instructions) ? data.instructions : 
-           (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []), 
+           (typeof data.instructions === 'string' ? JSON.parse(data.instructions) : []), // Ensure both properties are set for compatibility
     servings: data.servings,
     prep_time_min: data.prep_time_min,
     cook_time_min: data.cook_time_min,
-    // Properly type nutrition data
-    nutrition: data.nutrition as Nutrition,
+    nutrition: data.nutrition,
     science_notes: Array.isArray(data.science_notes) ? data.science_notes :
                   (typeof data.science_notes === 'string' ? JSON.parse(data.science_notes) : []),
     cuisine: data.cuisine,
     dietary: data.dietary,
     flavor_tags: data.flavor_tags,
     user_id: data.user_id,
-    
-    // Add UI-friendly aliases
-    prepTime: data.prep_time_min,
-    cookTime: data.cook_time_min,
-    cookingTip: data.cooking_tip
+    id: data.id
   };
 
   return recipe;

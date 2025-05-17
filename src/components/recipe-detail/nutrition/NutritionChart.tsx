@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ComparisonChart } from './charts/ComparisonChart';
 import { DistributionCharts } from './charts/DistributionCharts';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
+import { EnhancedNutrition } from './useNutritionData';
 import { MicronutrientsDisplay } from './MicronutrientsDisplay';
 import { NUTRITION_COLORS } from '@/constants/nutrition';
 
@@ -41,47 +41,37 @@ export function NutritionChart({ recipeNutrition, userPreferences }: NutritionCh
       NUTRITION_COLORS.fat
     ];
     
-    // Make sure nutrition values are numbers
-    const proteinValue = typeof recipeNutrition.protein === 'number' ? 
-      recipeNutrition.protein : 0;
-    
-    const carbsValue = typeof recipeNutrition.carbs === 'number' ? 
-      recipeNutrition.carbs : 0;
-    
-    const fatValue = typeof recipeNutrition.fat === 'number' ? 
-      recipeNutrition.fat : 0;
-    
     // Data for macros comparison chart
     const macroData = [
       {
         name: 'Protein',
-        Recipe: proteinValue,
+        Recipe: recipeNutrition.protein,
         Target: proteinTarget,
-        percentage: Math.round((proteinValue / proteinTarget) * 100),
+        percentage: Math.round((recipeNutrition.protein / proteinTarget) * 100),
         fill: COLORS[0]
       },
       {
         name: 'Carbs',
-        Recipe: carbsValue,
+        Recipe: recipeNutrition.carbs,
         Target: carbsTarget,
-        percentage: Math.round((carbsValue / carbsTarget) * 100),
+        percentage: Math.round((recipeNutrition.carbs / carbsTarget) * 100),
         fill: COLORS[1]
       },
       {
         name: 'Fat',
-        Recipe: fatValue,
+        Recipe: recipeNutrition.fat,
         Target: fatTarget,
-        percentage: Math.round((fatValue / fatTarget) * 100),
+        percentage: Math.round((recipeNutrition.fat / fatTarget) * 100),
         fill: COLORS[2]
       }
     ];
 
     // Calculate the total macros for pie chart data
-    const recipeMacrosTotal = proteinValue + carbsValue + fatValue;
+    const recipeMacrosTotal = recipeNutrition.protein + recipeNutrition.carbs + recipeNutrition.fat;
     const macrosData = [
-      { name: 'Protein', value: Math.round((proteinValue / recipeMacrosTotal) * 100), fill: COLORS[0] },
-      { name: 'Carbs', value: Math.round((carbsValue / recipeMacrosTotal) * 100), fill: COLORS[1] },
-      { name: 'Fat', value: Math.round((fatValue / recipeMacrosTotal) * 100), fill: COLORS[2] }
+      { name: 'Protein', value: Math.round((recipeNutrition.protein / recipeMacrosTotal) * 100), fill: COLORS[0] },
+      { name: 'Carbs', value: Math.round((recipeNutrition.carbs / recipeMacrosTotal) * 100), fill: COLORS[1] },
+      { name: 'Fat', value: Math.round((recipeNutrition.fat / recipeMacrosTotal) * 100), fill: COLORS[2] }
     ];
     
     const targetMacrosData = [

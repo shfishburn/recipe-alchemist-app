@@ -1,114 +1,101 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Info, CircleCheck, CircleX } from 'lucide-react';
+import { NutriScoreBadge } from './NutriScoreBadge';
 import type { NutriScore } from '@/types/recipe';
 
 interface NutriScoreDetailProps {
-  score: NutriScore;
-  positive: NutriScore['positive_points'];
-  negative: NutriScore['negative_points'];
+  nutriScore: NutriScore | null | undefined;
 }
 
-export function NutriScoreDetail({
-  score,
-  positive,
-  negative
-}: NutriScoreDetailProps) {
-  // Check if we have valid data
-  if (score.score === null || !positive || !negative) {
-    return null;
+export function NutriScoreDetail({ nutriScore }: NutriScoreDetailProps) {
+  if (!nutriScore || !nutriScore.grade) {
+    return (
+      <Card className="bg-muted/40">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md">Nutri-Score</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">
+            <p className="text-muted-foreground text-sm">
+              Nutri-Score not available for this recipe
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
-  
-  // Calculate percentages for bars
-  const maxNegative = 40; // Maximum possible negative points
-  const maxPositive = 15; // Maximum possible positive points
-  
-  const negativePercent = Math.min(100, ((negative.total || 0) / maxNegative) * 100);
-  const positivePercent = Math.min(100, ((positive.total || 0) / maxPositive) * 100);
 
+  // Calculate percentages for visualization
+  const negativePoints = nutriScore.negative_points?.total || 0;
+  const positivePoints = nutriScore.positive_points?.total || 0;
+  const maxPoints = 40; // Maximum possible points in Nutri-Score system
+  
+  const negativePercentage = Math.min(100, (negativePoints / maxPoints) * 100);
+  const positivePercentage = Math.min(100, (positivePoints / maxPoints) * 100);
+  
   return (
-    <div className="mt-3">
-      {/* Score breakdown */}
-      <div className="flex justify-between items-center text-xs mb-2">
-        <span className="text-gray-600 font-medium">Score breakdown</span>
-        <span className="font-medium">{score.score}</span>
-      </div>
-      
-      {/* Score bars */}
-      <div className="flex gap-1 items-center">
-        {/* Negative points bar */}
-        <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div 
-            className="bg-red-400 h-full rounded-full" 
-            style={{ width: `${negativePercent}%` }}
-          />
-        </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-md flex items-center justify-between">
+          <span>Nutri-Score</span>
+          <NutriScoreBadge grade={nutriScore.grade} size="sm" />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Score explanation */}
+        <p className="text-xs text-muted-foreground">
+          Nutri-Score rates foods from A (healthiest) to E (less nutritious) based on nutrients.
+        </p>
         
-        <span className="text-xs text-gray-500 w-8 text-center">vs</span>
-        
-        {/* Positive points bar */}
-        <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div 
-            className="bg-green-400 h-full rounded-full" 
-            style={{ width: `${positivePercent}%` }}
-          />
-        </div>
-      </div>
-      
-      {/* Labels */}
-      <div className="flex justify-between text-xs text-gray-500 mt-1">
-        <div>Negative: {negative.total || 0} pts</div>
-        <div>Positive: {positive.total || 0} pts</div>
-      </div>
-      
-      {/* Point breakdown */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3">
+        {/* Negative points */}
         <div>
-          <p className="text-xs font-medium text-gray-600">Negative Points</p>
-          <ul className="text-xs text-gray-500 space-y-0.5 mt-1">
-            {negative.energy !== null && (
-              <li className="flex justify-between">
-                <span>Energy:</span> <span>{negative.energy} pts</span>
-              </li>
-            )}
-            {negative.sugars !== null && (
-              <li className="flex justify-between">
-                <span>Sugars:</span> <span>{negative.sugars} pts</span>
-              </li>
-            )}
-            {negative.saturated_fat !== null && (
-              <li className="flex justify-between">
-                <span>Saturated fat:</span> <span>{negative.saturated_fat} pts</span>
-              </li>
-            )}
-            {negative.sodium !== null && (
-              <li className="flex justify-between">
-                <span>Sodium:</span> <span>{negative.sodium} pts</span>
-              </li>
-            )}
-          </ul>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="font-medium">Negative Points</span>
+            <span className="text-red-500 font-medium">{negativePoints}</span>
+          </div>
+          <Progress 
+            value={negativePercentage} 
+            className="h-2" 
+            indicatorColor="#ef4444"
+          />
+          <div className="flex justify-between items-center mt-2 gap-1">
+            <div className="flex items-center gap-1">
+              <CircleX className="h-3 w-3 text-red-500" />
+              <span className="text-xs text-muted-foreground">Energy, Sugars, Sat. Fat, Sodium</span>
+            </div>
+          </div>
         </div>
         
+        {/* Positive points */}
         <div>
-          <p className="text-xs font-medium text-gray-600">Positive Points</p>
-          <ul className="text-xs text-gray-500 space-y-0.5 mt-1">
-            {positive.fruit_veg_nuts !== null && (
-              <li className="flex justify-between">
-                <span>Fruits/veg/nuts:</span> <span>{positive.fruit_veg_nuts} pts</span>
-              </li>
-            )}
-            {positive.fiber !== null && (
-              <li className="flex justify-between">
-                <span>Fiber:</span> <span>{positive.fiber} pts</span>
-              </li>
-            )}
-            {positive.protein !== null && (
-              <li className="flex justify-between">
-                <span>Protein:</span> <span>{positive.protein} pts</span>
-              </li>
-            )}
-          </ul>
+          <div className="flex justify-between text-xs mb-1">
+            <span className="font-medium">Positive Points</span>
+            <span className="text-green-500 font-medium">{positivePoints}</span>
+          </div>
+          <Progress 
+            value={positivePercentage} 
+            className="h-2" 
+            indicatorColor="#22c55e"
+          />
+          <div className="flex justify-between items-center mt-2 gap-1">
+            <div className="flex items-center gap-1">
+              <CircleCheck className="h-3 w-3 text-green-500" />
+              <span className="text-xs text-muted-foreground">Fiber, Protein, Fruits/Veg</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+        
+        {/* Final score */}
+        <div className="pt-2 flex items-center justify-between">
+          <span className="text-xs font-medium">Final Score:</span>
+          <span className="text-xs font-semibold">
+            {nutriScore.score} ({nutriScore.grade})
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

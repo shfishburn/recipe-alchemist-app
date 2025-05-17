@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe } from '@/hooks/use-recipe-detail';
 import { useUnitSystemStore } from '@/stores/unitSystem';
 
 interface PrintRecipeProps {
@@ -44,9 +44,7 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
       : (ingredient.unit_imperial || ingredient.unit || '');
     
     const item = typeof ingredient.item === 'string' ? ingredient.item : 
-                (ingredient.item && typeof ingredient.item === 'object' && 'name' in ingredient.item)
-                ? String(ingredient.item.name)
-                : 'Unknown ingredient';
+                (ingredient.item ? JSON.stringify(ingredient.item) : '');
     
     const qtyStr = qty !== 0 ? `${qty} ` : '';
     const unitStr = unit ? `${unit} ` : '';
@@ -361,10 +359,10 @@ export const PrintRecipe = forwardRef<HTMLButtonElement, PrintRecipeProps>(({ re
             </>
           )}
           
-          {recipe.cookingTip && (
+          {recipe.cooking_tip && (
             <div className="mt-6 p-4 bg-amber-50 border-l-4 border-amber-400 rounded">
               <h2 className="mt-0 text-lg font-semibold">Chef's Tip</h2>
-              <p>{recipe.cookingTip}</p>
+              <p>{recipe.cooking_tip}</p>
             </div>
           )}
         </div>

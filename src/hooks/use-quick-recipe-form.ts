@@ -19,6 +19,8 @@ export function useQuickRecipeForm() {
     setFormData, 
     setError,
     setNavigate,
+    isRecipeValid,
+    setHasTimeoutError,
     updateLoadingState
   } = useQuickRecipeStore();
   
@@ -42,12 +44,23 @@ export function useQuickRecipeForm() {
         return null;
       }
       
+      // Ensure cuisine has a valid value - never undefined or null
+      const processedFormData = {
+        ...formData,
+        cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : 
+                (formData.cuisine ? [formData.cuisine] : ['any']), // Ensure it's an array with at least 'any'
+        dietary: Array.isArray(formData.dietary) ? formData.dietary : 
+                (formData.dietary ? [formData.dietary] : [])  // Ensure it's an array
+      };
+
+      console.log("Processed form data:", processedFormData);
+      
       // Reset any previous state
       reset();
       
       // Set loading state immediately so it shows the loading animation
       setLoading(true);
-      setFormData(formData);
+      setFormData(processedFormData);
       
       // Initialize loading state with estimated time
       updateLoadingState({
@@ -57,13 +70,14 @@ export function useQuickRecipeForm() {
         estimatedTimeRemaining: 30
       });
       
+      // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");
       
       // If user is not authenticated, store the generation data for resumption
       if (!session) {
         authStateManager.queueAction({
           type: 'generate-recipe',
-          data: { formData },
+          data: { formData: processedFormData },
           sourceUrl: location.pathname
         });
       }
@@ -72,30 +86,38 @@ export function useQuickRecipeForm() {
       navigate('/loading', { 
         state: { 
           timestamp: Date.now(),
-          formData // Explicitly pass formData in navigation state
+          formData: processedFormData // Explicitly pass formData in navigation state
         }
       });
       
       // Return the processed form data
-      return formData;
+      return processedFormData;
       
     } catch (error: unknown) {
       console.error('Error submitting quick recipe form:', error);
       setLoading(false);
       
       // Improved error handling with type narrowing
-      let errorMessage = "Failed to submit recipe request. Please try again.";
+      let errorMessage: string;
       
       if (error instanceof Error) {
-        errorMessage = error.message;
-        console.error('Detailed error information:', { message: error.message, stack: error.stack });
+        const { message, stack } = error; // Destructure to use const
+        errorMessage = message;
+        console.error('Detailed error information:', { message, stack });
+      } else {
+        errorMessage = "Failed to submit recipe request. Please try again.";
+        console.error('Unknown error type encountered');
       }
       
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
+      
+      // Navigate back to home page with error but retain form data
+      navigate('/', {
+        state: { 
+          error: errorMessage,
+          formData: formData // Keep the form data on error
+        },
+        replace: true
       });
       
       return null;

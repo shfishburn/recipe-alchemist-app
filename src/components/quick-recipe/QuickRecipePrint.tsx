@@ -1,48 +1,105 @@
 
 import React, { useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Printer } from 'lucide-react';
-import { useReactToPrint } from 'react-to-print';
-import { PrintRecipe } from './print/PrintRecipe';
-import type { QuickRecipe } from '@/types/quick-recipe';
+import { QuickRecipe } from '@/hooks/use-quick-recipe';
+import { PrintRecipe } from '@/components/recipe-detail/PrintRecipe';
+import { Ingredient } from '@/types/recipe';
+
+// Helper function to format ingredient for database storage
+const formatIngredientForDB = (ingredient: any): Ingredient => {
+  if (typeof ingredient === 'string') {
+    return {
+      qty: 1,
+      unit: '',
+      item: ingredient,
+      // Add required metric/imperial units
+      qty_metric: 1,
+      unit_metric: '',
+      qty_imperial: 1,
+      unit_imperial: ''
+    };
+  }
+  
+  // If it's already in the right format, return it
+  if (ingredient.item && typeof ingredient.item === 'string') {
+    return {
+      qty: ingredient.qty || 1,
+      unit: ingredient.unit || '',
+      item: ingredient.item,
+      // Add required metric/imperial units
+      qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+      unit_metric: ingredient.unit_metric || ingredient.unit || '',
+      qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+      unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
+    };
+  }
+  
+  // Otherwise, extract what we can
+  return {
+    qty: ingredient.qty || 1,
+    unit: ingredient.unit || '',
+    item: typeof ingredient === 'object' ? JSON.stringify(ingredient) : String(ingredient),
+    // Add required metric/imperial units
+    qty_metric: ingredient.qty_metric || ingredient.qty || 1,
+    unit_metric: ingredient.unit_metric || ingredient.unit || '',
+    qty_imperial: ingredient.qty_imperial || ingredient.qty || 1,
+    unit_imperial: ingredient.unit_imperial || ingredient.unit || ''
+  };
+};
 
 interface QuickRecipePrintProps {
   recipe: QuickRecipe;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  triggerPrint?: boolean;
 }
 
-export function QuickRecipePrint({ recipe, open, onOpenChange }: QuickRecipePrintProps) {
-  const printRef = useRef<HTMLDivElement>(null);
-  
-  // Setup react-to-print handler with updated property names
-  const handlePrint = useReactToPrint({
-    contentRef: printRef, // Use contentRef instead of content
-    documentTitle: `${recipe.title} - Recipe Alchemy`,
-    // Do not use onBeforeGetContent, it's not in the UseReactToPrintOptions type
-  });
-  
+export function QuickRecipePrint({ recipe, triggerPrint = false }: QuickRecipePrintProps) {
+  const printDialogTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Function to trigger the print dialog
+  const handlePrint = () => {
+    if (printDialogTriggerRef.current) {
+      printDialogTriggerRef.current.click();
+    }
+  };
+
+  // Automatically trigger print if requested
+  React.useEffect(() => {
+    if (triggerPrint) {
+      handlePrint();
+    }
+  }, [triggerPrint]);
+
+  // Convert ingredients to expected format for PrintRecipe
+  const formattedIngredients = recipe.ingredients.map(formatIngredientForDB);
+
+  // Determine which instructions/steps to display
+  const instructionsToDisplay = 
+    (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) ? recipe.instructions :
+    (Array.isArray(recipe.steps) && recipe.steps.length > 0) ? recipe.steps :
+    [];
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto p-0">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="font-semibold text-lg">Print Recipe</h2>
-          <Button 
-            onClick={handlePrint}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-        </div>
-        
-        <div className="overflow-y-auto">
-          <div ref={printRef}>
-            <PrintRecipe recipe={recipe} />
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <>
+      {/* Print Recipe Dialog */}
+      <PrintRecipe 
+        recipe={{
+          id: 'quick-recipe',
+          title: recipe.title,
+          description: recipe.description,
+          ingredients: formattedIngredients,
+          instructions: instructionsToDisplay,
+          prep_time_min: recipe.prepTime || 0,
+          cook_time_min: recipe.cookTime || 0,
+          servings: recipe.servings || 2,
+          nutrition: undefined, // Removed nutrition data as it's not relevant for cooking
+          science_notes: [], // Removed science notes as they're not relevant for cooking
+          tagline: recipe.description,
+          cooking_tip: recipe.cookingTip
+        }} 
+        ref={printDialogTriggerRef}
+      />
+      
+      {/* Return the handle print function for parent components to use */}
+      {handlePrint}
+    </>
   );
 }

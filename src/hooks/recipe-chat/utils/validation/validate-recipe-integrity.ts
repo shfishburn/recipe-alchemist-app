@@ -2,66 +2,79 @@
 import type { Recipe } from '@/types/recipe';
 
 /**
- * Ensures a recipe has all required fields and proper structure before saving
- * @param recipe Recipe object to validate
- * @throws Error if recipe is missing required fields or has structural issues
+ * Comprehensive recipe data integrity validation
+ * Ensures all critical fields are present and properly formatted
  */
-export function ensureRecipeIntegrity(recipe: Recipe): void {
-  // Check for required fields
+export function validateRecipeIntegrity(recipe: Recipe | Partial<Recipe>): { 
+  valid: boolean; 
+  issues: string[]; 
+} {
+  const issues: string[] = [];
+  
+  // Check for required recipe fields
   if (!recipe.id) {
-    throw new Error("Recipe must have an ID");
-  }
-
-  if (!recipe.title) {
-    throw new Error("Recipe must have a title");
-  }
-
-  // Validate ingredients
-  if (!Array.isArray(recipe.ingredients)) {
-    throw new Error("Recipe ingredients must be an array");
+    issues.push("Missing recipe ID");
   }
   
-  // Ensure each ingredient has required structure
-  recipe.ingredients.forEach((ingredient, index) => {
-    if (typeof ingredient !== 'object' || ingredient === null) {
-      throw new Error(`Ingredient at position ${index} must be an object`);
-    }
+  // Title validation
+  if (!recipe.title || typeof recipe.title !== 'string' || recipe.title.trim() === '') {
+    issues.push("Missing or invalid recipe title");
+  }
 
-    // Handle item field which can be string or object with name
-    if (ingredient.item === undefined) {
-      throw new Error(`Ingredient at position ${index} must have an item property`);
-    }
-
-    // If item is an object, ensure it has a name property
-    if (typeof ingredient.item === 'object') {
-      if (!ingredient.item || !('name' in ingredient.item)) {
-        throw new Error(`Ingredient object at position ${index} must have a name property`);
-      }
-    }
+  // Instructions validation
+  if (!recipe.instructions) {
+    issues.push("Missing recipe instructions");
+  } else if (!Array.isArray(recipe.instructions)) {
+    issues.push("Recipe instructions must be an array");
+  } else if (recipe.instructions.length === 0) {
+    issues.push("Recipe instructions array is empty");
+  } else {
+    // Validate each instruction
+    const invalidInstructions = recipe.instructions.filter(instruction => 
+      typeof instruction !== 'string' || instruction.trim() === ''
+    );
     
-    // Ensure metric/imperial fields exist
-    if (ingredient.qty_metric === undefined || 
-        ingredient.unit_metric === undefined ||
-        ingredient.qty_imperial === undefined ||
-        ingredient.unit_imperial === undefined) {
-      throw new Error(`Ingredient at position ${index} is missing required unit conversion properties`);
+    if (invalidInstructions.length > 0) {
+      issues.push(`${invalidInstructions.length} invalid instructions found`);
     }
-  });
-
-  // Validate instructions
-  if (!Array.isArray(recipe.instructions) || recipe.instructions.length === 0) {
-    throw new Error("Recipe must have at least one instruction");
   }
 
-  // Ensure each instruction is a string
-  recipe.instructions.forEach((instruction, index) => {
-    if (typeof instruction !== 'string') {
-      throw new Error(`Instruction at position ${index} must be a string`);
+  // Ingredients validation
+  if (!recipe.ingredients) {
+    issues.push("Missing recipe ingredients");
+  } else if (!Array.isArray(recipe.ingredients)) {
+    issues.push("Recipe ingredients must be an array");
+  } else if (recipe.ingredients.length === 0) {
+    issues.push("Recipe ingredients array is empty");
+  } else {
+    // Validate each ingredient
+    const invalidIngredients = recipe.ingredients.filter(ing => 
+      !ing || typeof ing !== 'object' || !ing.item || typeof ing.item !== 'string'
+    );
+    
+    if (invalidIngredients.length > 0) {
+      issues.push(`${invalidIngredients.length} invalid ingredients found`);
     }
-  });
-
-  // Validate servings
-  if (typeof recipe.servings !== 'number' || recipe.servings < 1) {
-    throw new Error("Recipe must have a valid servings count (minimum 1)");
   }
+
+  return {
+    valid: issues.length === 0,
+    issues
+  };
+}
+
+/**
+ * Ensures the recipe has all required fields before saving
+ * Throws an error with a detailed message if validation fails
+ */
+export function ensureRecipeIntegrity(recipe: Recipe | Partial<Recipe> & { id: string }): void {
+  const validation = validateRecipeIntegrity(recipe as Recipe);
+  
+  if (!validation.valid) {
+    const errorMessage = `Recipe integrity check failed: ${validation.issues.join(', ')}`;
+    console.error(errorMessage, recipe);
+    throw new Error(errorMessage);
+  }
+  
+  console.log("Recipe integrity validation passed");
 }

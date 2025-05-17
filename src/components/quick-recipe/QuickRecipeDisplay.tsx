@@ -1,76 +1,142 @@
 
 import React from 'react';
-import { QuickRecipe } from '@/types/quick-recipe';
+import { Recipe } from '@/types/quick-recipe';
+import { RecipeIngredients } from './card/RecipeIngredients';
+import { RecipeSteps } from './card/RecipeSteps';
+import { RecipeHighlights } from './card/RecipeHighlights';
+import { RecipeTimeInfo } from './card/RecipeTimeInfo';
+import { RecipeSectionHeader } from './card/RecipeSectionHeader';
+import { RecipeActionButtons } from './card/RecipeActionButtons';
+import { RecipeDebugSection } from './card/RecipeDebugSection';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle, Info } from 'lucide-react';
+import { QuickRecipePrint } from './QuickRecipePrint';
 
 interface QuickRecipeDisplayProps {
-  recipe: QuickRecipe;
-  showTitle?: boolean;
+  recipe: Recipe;
+  onSave?: () => Promise<void>;
+  isSaving?: boolean;
+  saveSuccess?: boolean;
+  debugMode?: boolean;
+  onResetSaveSuccess?: () => void;
+  savedSlug?: string;
 }
 
 export const QuickRecipeDisplay: React.FC<QuickRecipeDisplayProps> = ({ 
   recipe,
-  showTitle = true
+  onSave,
+  isSaving = false,
+  saveSuccess = false,
+  debugMode = false,
+  onResetSaveSuccess,
+  savedSlug
 }) => {
-  const instructions = recipe.instructions || recipe.steps || [];
+  if (!recipe) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>No recipe data available. Please try again.</AlertDescription>
+      </Alert>
+    );
+  }
+  
+  // Check if recipe has instructions or steps
+  const hasInstructions = Boolean(
+    (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) || 
+    (Array.isArray(recipe.steps) && recipe.steps.length > 0)
+  );
+  
+  // Check if recipe has ingredients
+  const hasIngredients = Boolean(
+    Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0
+  );
 
+  // Determine which instructions/steps to display
+  const instructionsToDisplay = 
+    (Array.isArray(recipe.instructions) && recipe.instructions.length > 0) ? recipe.instructions :
+    (Array.isArray(recipe.steps) && recipe.steps.length > 0) ? recipe.steps :
+    [];
+  
   return (
-    <div className="space-y-6 my-4">
-      {showTitle && (
-        <h2 className="text-xl font-semibold text-gray-800">{recipe.title}</h2>
-      )}
-      
-      {recipe.description && (
-        <p className="text-gray-600 italic">{recipe.description}</p>
-      )}
-      
-      <div>
-        <h3 className="text-lg font-medium mb-2">Ingredients</h3>
-        <ul className="space-y-1 list-disc list-inside">
-          {recipe.ingredients.map((ingredient, index) => {
-            const ingredientName = typeof ingredient.item === 'string' 
-              ? ingredient.item 
-              : ingredient.item.name;
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+      <div className="p-6 md:p-8">
+        <div className="space-y-6">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{recipe.title || 'Untitled Recipe'}</h2>
+          
+          {recipe.tagline && (
+            <p className="text-gray-600 dark:text-gray-300 italic">{recipe.tagline}</p>
+          )}
+          
+          <RecipeHighlights 
+            highlights={recipe.highlights || []}
+            cuisine={recipe.cuisine || ''}
+            dietary={recipe.dietary || []}
+            flavors={recipe.flavor_tags || []}
+            nutritionHighlight={recipe.nutritionHighlight || ''}
+            cookingTip={recipe.cookingTip || ''}
+          />
+          
+          <RecipeTimeInfo 
+            prepTime={recipe.prep_time_min || recipe.prepTime || 0}
+            cookTime={recipe.cook_time_min || recipe.cookTime || 0}
+            servings={recipe.servings || 0}
+          />
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              {/* Remove duplicated section header - it's already in RecipeIngredients */}
+              {hasIngredients ? (
+                <RecipeIngredients ingredients={recipe.ingredients || []} />
+              ) : (
+                <Alert className="mt-2 bg-amber-50 dark:bg-amber-900/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Missing Ingredients</AlertTitle>
+                  <AlertDescription>
+                    This recipe doesn't have any ingredients listed.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
             
-            const quantity = ingredient.qty || ingredient.qty_metric || ingredient.qty_imperial || '';
-            const unit = ingredient.unit || ingredient.unit_metric || ingredient.unit_imperial || '';
-            
-            return (
-              <li key={index} className="text-gray-700">
-                {quantity && unit ? `${quantity} ${unit} ` : ''}
-                {ingredientName}
-                {ingredient.notes && <span className="text-gray-500 text-sm"> ({ingredient.notes})</span>}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-      
-      <div>
-        <h3 className="text-lg font-medium mb-2">Instructions</h3>
-        <ol className="space-y-2 list-decimal list-inside">
-          {instructions.map((step, index) => (
-            <li key={index} className="text-gray-700">{step}</li>
-          ))}
-        </ol>
-      </div>
-      
-      {recipe.science_notes && recipe.science_notes.length > 0 && (
-        <div>
-          <h3 className="text-lg font-medium mb-2">Science Notes</h3>
-          <ul className="space-y-1 list-disc list-inside bg-gray-50 p-3 rounded-md">
-            {recipe.science_notes.map((note, index) => (
-              <li key={index} className="text-gray-700">{note}</li>
-            ))}
-          </ul>
+            <div>
+              {/* Remove duplicated section header - it's already in RecipeSteps */}
+              {hasInstructions ? (
+                <RecipeSteps steps={instructionsToDisplay} />
+              ) : (
+                <Alert className="mt-2 bg-amber-50 dark:bg-amber-900/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Missing Instructions</AlertTitle>
+                  <AlertDescription>
+                    This recipe doesn't have any cooking instructions.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </div>
+          
+          {!hasInstructions && !hasIngredients && (
+            <Alert className="bg-blue-50 dark:bg-blue-900/10 border-blue-200">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Incomplete Recipe</AlertTitle>
+              <AlertDescription>
+                This recipe is missing both ingredients and instructions. You may want to try generating a new recipe.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <RecipeActionButtons 
+            onSave={onSave}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+            recipe={recipe}
+            onResetSaveSuccess={onResetSaveSuccess}
+            savedSlug={savedSlug}
+          />
+          
+          {debugMode && <RecipeDebugSection recipe={recipe} />}
         </div>
-      )}
-      
-      {recipe.cookingTip && (
-        <div className="bg-blue-50 p-3 rounded-md">
-          <h3 className="text-md font-medium mb-1">Chef's Tip</h3>
-          <p className="text-gray-700">{recipe.cookingTip}</p>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

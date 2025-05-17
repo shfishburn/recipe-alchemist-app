@@ -1,6 +1,5 @@
-
 import type { Recipe } from '@/types/recipe';
-import type { ChatMessage, InstructionChange } from '@/types/chat';
+import type { ChatMessage } from '@/types/chat';
 
 export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): Partial<Recipe> & { id: string } {
   console.log("Processing recipe updates with changes:", {
@@ -67,17 +66,17 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     
     // Process instructions to ensure they're all strings
     const formattedInstructions = chatMessage.changes_suggested.instructions.map(
-      (instruction) => {
+      instruction => {
         if (typeof instruction === 'string') {
           return instruction;
         }
-        if (typeof instruction === 'object' && 'action' in instruction) {
-          return (instruction as InstructionChange).action;
+        if (typeof instruction === 'object' && instruction.action) {
+          return instruction.action;
         }
         console.warn("Skipping invalid instruction format:", instruction);
         return null;
       }
-    ).filter(Boolean) as string[];
+    ).filter(Boolean);
     
     // Validate that instructions are not just placeholders
     const hasValidInstructions = formattedInstructions.some(instr => {
@@ -89,7 +88,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
     
     if (hasValidInstructions) {
       console.log("Valid instruction updates found");
-      updatedRecipe.instructions = formattedInstructions;
+      updatedRecipe.instructions = formattedInstructions as string[];
     } else {
       console.warn("Only placeholder instructions detected - keeping original instructions");
       // Keep original instructions
@@ -130,7 +129,7 @@ export function processRecipeUpdates(recipe: Recipe, chatMessage: ChatMessage): 
 
   console.log("Final updated recipe status:", {
     hasIngredients: updatedRecipe.ingredients.length > 0,
-    hasInstructions: updatedRecipe.instructions?.length > 0,
+    hasInstructions: updatedRecipe.instructions.length > 0,
     hasScienceNotes: updatedRecipe.science_notes && updatedRecipe.science_notes.length > 0,
   });
 

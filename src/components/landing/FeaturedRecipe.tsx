@@ -1,77 +1,117 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Clock, Users } from 'lucide-react';
-import { QuickRecipe } from '@/types/quick-recipe';
-import { ingredientToReactNode } from '@/utils/react-node-helpers';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useRecipeDetail } from "@/hooks/use-recipe-detail";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface FeaturedRecipeProps {
-  recipe: QuickRecipe;
-}
+// Featured recipe ID for the Japanese Curry - update to your actual recipe ID
+const FEATURED_RECIPE_ID = "d2f44866-5ee9-4dc4-8537-21f01ed42ac2";
 
-export function FeaturedRecipe({ recipe }: FeaturedRecipeProps) {
-  const { title, description, prepTime, cookTime, servings, ingredients } = recipe;
+export function FeaturedRecipe() {
+  const { data: recipe, isLoading } = useRecipeDetail(FEATURED_RECIPE_ID);
 
-  // Calculate total time
-  const totalTime = (prepTime || 0) + (cookTime || 0);
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-muted/30">
+        <div className="container-page">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-recipe-blue" />
+                  Featured Recipe
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <Skeleton className="h-8 w-[250px]" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-[200px] w-full" />
+                <Skeleton className="h-[200px] w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
+
+  if (!recipe) {
+    return null;
+  }
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl mx-auto">
-      <div className="md:flex">
-        <div className="md:w-1/3 bg-cover bg-center h-56 md:h-auto" style={{ 
-          backgroundImage: recipe.image_url ? `url(${recipe.image_url})` : 'url(/images/placeholder-recipe.jpg)' 
-        }}>
-          {/* Image container */}
-          <div className="w-full h-full bg-gradient-to-tr from-black/40 to-transparent p-8">
-            <span className="bg-recipe-green text-white px-3 py-1 rounded-full text-xs font-medium">
-              Featured
-            </span>
-          </div>
-        </div>
-        <div className="p-6 md:p-8 md:w-2/3">
-          <div className="uppercase tracking-wide text-sm text-recipe-green font-semibold">
-            {recipe.cuisine || "Specialty Recipe"}
-          </div>
-          <h2 className="mt-1 text-2xl font-bold leading-tight">
-            {title}
-          </h2>
-          <p className="mt-2 text-gray-500">
-            {description || "A delicious recipe prepared with care."}
-          </p>
-
-          <div className="mt-4 flex flex-wrap gap-y-2">
-            <div className="flex items-center text-sm text-gray-500 mr-6">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>{totalTime} mins</span>
-            </div>
-            <div className="flex items-center text-sm text-gray-500">
-              <Users className="h-4 w-4 mr-1" />
-              <span>{servings} servings</span>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <h3 className="text-sm font-medium text-gray-900">Main Ingredients</h3>
-            <ul className="mt-2 text-sm text-gray-500 grid grid-cols-2 gap-x-2">
-              {ingredients.slice(0, 4).map((ingredient, index) => (
-                <li key={index} className="truncate">
-                  {/* Use our utility function to convert to a valid ReactNode */}
-                  {ingredientToReactNode(ingredient.item)}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-6">
-            <Link to={`/recipe/${recipe.id}`}>
-              <Button className="bg-recipe-green hover:bg-recipe-green/90">
-                View Recipe
+    <section className="py-16 bg-muted/30">
+      <div className="container-page">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-recipe-blue" />
+                Featured Recipe
+              </CardTitle>
+              <Button variant="outline" onClick={() => window.location.href = `/recipes/${FEATURED_RECIPE_ID}`}>
+                View Full Recipe
               </Button>
-            </Link>
-          </div>
-        </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">{recipe.title}</h3>
+                <p className="text-muted-foreground">{recipe.tagline || recipe.description}</p>
+              </div>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Quantity</TableHead>
+                    <TableHead className="w-[100px]">Unit</TableHead>
+                    <TableHead>Ingredient</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recipe.ingredients.slice(0, 5).map((ingredient, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{ingredient.qty}</TableCell>
+                      <TableCell>{ingredient.unit}</TableCell>
+                      <TableCell>{ingredient.item}</TableCell>
+                    </TableRow>
+                  ))}
+                  {recipe.ingredients.length > 5 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        +{recipe.ingredients.length - 5} more ingredients
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+
+              <div>
+                <h4 className="font-semibold mb-4">Instructions</h4>
+                <ol className="list-decimal list-inside space-y-2">
+                  {recipe.instructions.slice(0, 3).map((step, index) => (
+                    <li key={index} className="text-muted-foreground ml-4">
+                      <span className="text-foreground">{step}</span>
+                    </li>
+                  ))}
+                  {recipe.instructions.length > 3 && (
+                    <li className="text-center text-muted-foreground mt-2">
+                      +{recipe.instructions.length - 3} more steps available in the full recipe
+                    </li>
+                  )}
+                </ol>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </section>
   );
 }

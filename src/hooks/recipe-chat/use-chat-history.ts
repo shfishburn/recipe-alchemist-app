@@ -1,79 +1,88 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ChatMessage } from '@/types/chat';
-import { useToast } from '@/hooks/use-toast';
+import type { ChatMessage, ChangesResponse, ChatMeta } from '@/types/chat';
 
 /**
- * Hook for loading and managing recipe chat history
+ * Hook for fetching and processing chat history for a recipe
  */
-export function useChatHistory(recipeId: string) {
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
-
-  // Load chat history
-  const fetchChatHistory = useCallback(async () => {
-    try {
-      setIsLoadingHistory(true);
-      setError(null);
+export const useChatHistory = (recipeId: string) => {
+  const { data: chatHistory = [], isLoading: isLoadingHistory, refetch } = useQuery({
+    queryKey: ['recipe-chats', recipeId],
+    queryFn: async () => {
+      console.log(`Fetching chat history for recipe ${recipeId}`);
       
-      // Query recipe chat messages
+      // Validate recipe ID to prevent API errors
+      if (!recipeId) {
+        console.warn("Missing recipe ID in useChatHistory");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('recipe_chats')
         .select('*')
         .eq('recipe_id', recipeId)
         .is('deleted_at', null)
         .order('created_at', { ascending: true });
-        
+
       if (error) {
-        throw new Error(`Error loading chat history: ${error.message}`);
+        console.error("Error fetching chat history:", error);
+        throw error;
       }
       
-      // Transform database records to ChatMessage objects
-      const transformedData: ChatMessage[] = (data || []).map(record => ({
-        id: record.id,
-        role: record.source_type === 'system' ? 'system' : 'user',
-        content: record.user_message,
-        user_message: record.user_message,
-        ai_response: record.ai_response,
-        timestamp: new Date(record.created_at).getTime(),
-        applied: record.applied || false,
-        changes_suggested: record.changes_suggested,
-        meta: record.meta || {}
-      }));
+      if (data && data.length > 0) {
+        console.log(`Found ${data.length} chat messages for recipe ${recipeId}`);
+      } else {
+        console.log(`No existing chat history for recipe ${recipeId}`);
+      }
       
-      setChatHistory(transformedData);
-    } catch (err) {
-      console.error("Error fetching chat history:", err);
-      setError(err instanceof Error ? err : new Error('Failed to load chat history'));
-      
-      // Show error toast
-      toast({
-        title: "Failed to load chat history",
-        description: err instanceof Error ? err.message : 'An unexpected error occurred',
-        variant: "destructive",
+      // Process the chat messages to handle follow_up_questions and changes_suggested
+      return data.map(chat => {
+        // Initialize chat message with default values
+        const chatMessage: ChatMessage = {
+          id: chat.id,
+          user_message: chat.user_message,
+          ai_response: chat.ai_response,
+          changes_suggested: null,
+          applied: chat.applied || false,
+          created_at: chat.created_at,
+          follow_up_questions: [], // Default empty array
+          meta: typeof chat.meta === 'object' ? (chat.meta as unknown as ChatMeta) || {} : {} // Fix type cast
+        };
+
+        // Process changes_suggested as a properly typed object
+        if (chat.changes_suggested) {
+          try {
+            // Ensure changes_suggested is properly typed
+            chatMessage.changes_suggested = chat.changes_suggested as unknown as ChangesResponse;
+          } catch (e) {
+            console.error("Error processing changes_suggested data:", e);
+          }
+        }
+        
+        // Check if the chat response has followUpQuestions in the response data
+        if (typeof chat.ai_response === 'string') {
+          try {
+            // Try to extract follow-up questions from the AI response if they exist
+            const responseObj = JSON.parse(chat.ai_response);
+            if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
+              chatMessage.follow_up_questions = responseObj.followUpQuestions;
+            }
+          } catch (e) {
+            // If parsing fails, just continue with the empty array
+          }
+        }
+        
+        return chatMessage;
       });
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  }, [recipeId, toast]);
-  
-  // Refetch chat history
-  const refetchChatHistory = useCallback(async () => {
-    await fetchChatHistory();
-  }, [fetchChatHistory]);
-  
-  // Load chat history on initial render
-  useEffect(() => {
-    fetchChatHistory();
-  }, [fetchChatHistory]);
-  
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 5000, // Don't refetch too often to avoid flickering
+  });
+
   return {
     chatHistory,
     isLoadingHistory,
-    error,
-    refetchChatHistory
+    refetchChatHistory: refetch
   };
-}
+};

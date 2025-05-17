@@ -1,212 +1,303 @@
 
 import { useState, useCallback } from 'react';
-import { nanoid } from 'nanoid';
-import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useChatMutations } from './use-chat-mutations';
 import type { Recipe } from '@/types/recipe';
 import type { OptimisticMessage } from '@/types/chat';
-import { useStorageUploader } from './use-storage-uploader';
-import { uploadImage } from './utils/storage/upload-image';
-
-// Type for the addOptimisticMessage function
-type AddOptimisticMessageFn = (message: OptimisticMessage) => void;
 
 /**
- * Hook for handling recipe chat actions like sending messages and uploading images
+ * Hook for chat actions like sending messages, uploading images, and submitting URLs
  */
-export function useChatActions(
+export const useChatActions = (
   recipe: Recipe,
-  addOptimisticMessage: AddOptimisticMessageFn
-) {
+  addOptimisticMessage: (message: OptimisticMessage) => void
+) => {
   const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [pendingRetryData, setPendingRetryData] = useState<{
+    messageText: string;
+    messageId: string;
+    sourceType?: 'manual' | 'image' | 'url';
+    sourceUrl?: string;
+    sourceImage?: string;
+  } | null>(null);
   
-  // Storage uploader hook
-  const { uploadFile } = useStorageUploader({
-    bucket: 'recipe-images',
-    folder: `recipe-chats/${recipe.id}`
-  });
+  const { toast } = useToast();
+  const mutation = useChatMutations(recipe);
 
   /**
-   * Sends a message to the recipe chat
+   * Generate a tracking ID with timestamp and source information
    */
-  const sendMessage = useCallback(async () => {
-    if (!message.trim()) return;
-    
-    try {
-      setIsSending(true);
-      const messageId = nanoid();
-      const timestamp = Date.now();
-      
-      // Create optimistic message that will be displayed while sending
-      const optimisticMessage: OptimisticMessage = {
-        id: messageId,
-        user_message: message.trim(),
-        status: 'pending',
-        timestamp,
-        meta: { 
-          optimistic_id: messageId,
-          recipe_id: recipe.id 
-        }
-      };
-      
-      // Add optimistic message to UI
-      addOptimisticMessage(optimisticMessage);
-      
-      // Save message to database
-      await supabase.from('recipe_chats').insert({
-        recipe_id: recipe.id,
-        user_message: message.trim(),
-        ai_response: null, // Will be updated via webhook/function
-        source_type: 'chat'
-      });
-      
-      // Clear message input
-      setMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      // Message will be marked as error by the optimistic messages hook
-    } finally {
-      setIsSending(false);
-    }
-  }, [message, recipe.id, addOptimisticMessage]);
-  
+  const generateTrackingId = useCallback((prefix: string): string => {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  }, []);
+
   /**
    * Retry sending a failed message
    */
-  const retryMessage = useCallback(async (originalMessage: string, originalMessageId: string) => {
-    try {
-      setIsSending(true);
-      const timestamp = Date.now();
-      
-      // Create new optimistic message
-      const optimisticMessage: OptimisticMessage = {
-        id: nanoid(),
-        user_message: originalMessage,
-        status: 'pending',
-        timestamp,
-        meta: { 
-          optimistic_id: nanoid(),
-          recipe_id: recipe.id 
+  const retryMessage = useCallback(() => {
+    if (!pendingRetryData) return;
+    
+    const { messageText, messageId, sourceType, sourceUrl, sourceImage } = pendingRetryData;
+    
+    // Create new optimistic message with retry flag
+    const optimisticMessage: OptimisticMessage = {
+      user_message: messageText,
+      pending: true,
+      id: messageId,
+      timestamp: Date.now(), // Added timestamp
+      meta: {
+        optimistic_id: messageId,
+        tracking_id: messageId,
+        processing_stage: 'pending',
+        is_retry: true,
+        source_info: {
+          type: sourceType || 'manual',
+          url: sourceUrl,
         }
-      };
-      
-      // Add optimistic message to UI
-      addOptimisticMessage(optimisticMessage);
-      
-      // Save message to database
-      await supabase.from('recipe_chats').insert({
-        recipe_id: recipe.id,
-        user_message: originalMessage,
-        ai_response: null,
-        source_type: 'chat'
-      });
-    } catch (error) {
-      console.error('Error retrying message:', error);
-    } finally {
-      setIsSending(false);
-    }
-  }, [recipe.id, addOptimisticMessage]);
-  
+      }
+    };
+    
+    // Add optimistic message
+    addOptimisticMessage(optimisticMessage);
+    
+    // Send the message with retry flag
+    mutation.mutate({
+      message: messageText,
+      sourceType: sourceType || 'manual', // Ensure sourceType is always provided
+      sourceUrl,
+      sourceImage,
+      messageId,
+      isRetry: true
+    });
+    
+    // Clear retry data
+    setPendingRetryData(null);
+  }, [pendingRetryData, addOptimisticMessage, mutation]);
+
   /**
-   * Upload a recipe image
+   * Upload and process a recipe image with progress tracking
    */
   const uploadRecipeImage = useCallback(async (file: File) => {
-    if (!file) return;
-    
     try {
+      console.log("Processing image upload");
       setIsUploading(true);
+      setUploadProgress(10); // Start progress
       
-      // Upload file to storage
-      const imageUrl = await uploadImage(file, {
-        onProgress: setUploadProgress
-      });
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setIsUploading(false);
+        throw new Error('Selected file is not an image');
+      }
       
-      // Create optimistic message with image
-      const optimisticMessage: OptimisticMessage = {
-        id: nanoid(),
-        user_message: 'I uploaded an image',
-        status: 'pending',
-        timestamp: Date.now(),
-        meta: { 
-          optimistic_id: nanoid(),
-          recipe_id: recipe.id,
-          image_url: imageUrl
+      const reader = new FileReader();
+      
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 50); // Up to 50%
+          setUploadProgress(progress);
         }
       };
       
-      // Add optimistic message to UI
-      addOptimisticMessage(optimisticMessage);
+      reader.onload = async (e) => {
+        setUploadProgress(60); // Reading complete
+        
+        const base64Image = e.target?.result as string;
+        
+        // Create a unique message ID to help with tracking and cleanup
+        const messageId = generateTrackingId('image');
+        
+        // Always set sourceType explicitly for image uploads
+        const sourceType = 'image';
+        
+        // Save retry data
+        setPendingRetryData({
+          messageText: "Analyzing recipe image...",
+          messageId,
+          sourceType,
+          sourceImage: base64Image
+        });
+        
+        // Add optimistic message
+        const optimisticMessage: OptimisticMessage = {
+          user_message: "Analyzing recipe image...",
+          pending: true,
+          id: messageId,
+          timestamp: Date.now(), // Added timestamp
+          meta: {
+            optimistic_id: messageId,
+            tracking_id: messageId,
+            processing_stage: 'pending',
+            source_info: {
+              type: sourceType
+            }
+          }
+        };
+        
+        addOptimisticMessage(optimisticMessage);
+        setUploadProgress(80); // Added optimistic message
+        
+        // Set a timeout to ensure progress animation is visible
+        setTimeout(() => {
+          setUploadProgress(100);
+          setIsUploading(false);
+          mutation.mutate({
+            message: "Please analyze this recipe image",
+            sourceType,
+            sourceImage: base64Image,
+            messageId
+          });
+        }, 500);
+      };
       
-      // Save message with image to database
-      await supabase.from('recipe_chats').insert({
-        recipe_id: recipe.id,
-        user_message: 'I uploaded an image',
-        source_image: imageUrl,
-        source_type: 'image',
-        ai_response: null
-      });
+      reader.onerror = () => {
+        setIsUploading(false);
+        toast({
+          title: "Error",
+          description: "Failed to read image file",
+          variant: "destructive",
+        });
+      };
       
-      return imageUrl;
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    } finally {
       setIsUploading(false);
-    }
-  }, [recipe.id, addOptimisticMessage]);
-  
-  /**
-   * Submit a URL to analyze
-   */
-  const submitRecipeUrl = useCallback(async (url: string) => {
-    if (!url || !url.trim()) return;
-    
-    try {
-      setIsSending(true);
-      
-      // Create optimistic message
-      const optimisticMessage: OptimisticMessage = {
-        id: nanoid(),
-        user_message: `Analyze this recipe: ${url}`,
-        status: 'pending',
-        timestamp: Date.now(),
-        meta: { 
-          optimistic_id: nanoid(),
-          recipe_id: recipe.id,
-          url
-        }
-      };
-      
-      // Add optimistic message to UI
-      addOptimisticMessage(optimisticMessage);
-      
-      // Save URL submission to database
-      await supabase.from('recipe_chats').insert({
-        recipe_id: recipe.id,
-        user_message: `Analyze this recipe: ${url}`,
-        source_url: url,
-        source_type: 'url',
-        ai_response: null
+      console.error("Image upload error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process image",
+        variant: "destructive",
       });
-      
-    } catch (error) {
-      console.error('Error submitting URL:', error);
-    } finally {
-      setIsSending(false);
     }
-  }, [recipe.id, addOptimisticMessage]);
+  }, [toast, mutation, addOptimisticMessage, generateTrackingId]);
+
+  /**
+   * Submit a recipe URL for analysis
+   */
+  const submitRecipeUrl = useCallback((url: string) => {
+    console.log("Processing URL submission:", url);
+    
+    // Basic URL validation
+    if (!url.match(/^https?:\/\/.+\..+/)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid URL starting with http:// or https://",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Create a unique message ID
+    const messageId = generateTrackingId('url');
+    
+    // Always set sourceType explicitly for URL submissions
+    const sourceType = 'url';
+    
+    // Save retry data
+    setPendingRetryData({
+      messageText: `Analyzing recipe from: ${url}`,
+      messageId,
+      sourceType,
+      sourceUrl: url
+    });
+    
+    // Add optimistic message
+    const optimisticMessage: OptimisticMessage = {
+      user_message: `Analyzing recipe from: ${url}`,
+      pending: true,
+      id: messageId,
+      timestamp: Date.now(), // Added timestamp
+      meta: {
+        optimistic_id: messageId,
+        tracking_id: messageId,
+        processing_stage: 'pending',
+        source_info: {
+          type: sourceType,
+          url: url
+        }
+      }
+    };
+    addOptimisticMessage(optimisticMessage);
+    
+    mutation.mutate({
+      message: "Please analyze this recipe URL",
+      sourceType,
+      sourceUrl: url,
+      messageId
+    });
+  }, [toast, mutation, addOptimisticMessage, generateTrackingId]);
+
+  /**
+   * Send a chat message
+   */
+  const sendMessage = useCallback(() => {
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
+      toast({
+        title: "Error",
+        description: "Please enter a message",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Create a unique ID for tracking
+    const messageId = generateTrackingId('msg');
+    
+    // Always set sourceType explicitly for manual text messages
+    const sourceType = 'manual';
+    
+    // Save retry data
+    setPendingRetryData({
+      messageText: trimmedMessage,
+      messageId,
+      sourceType
+    });
+    
+    // Create optimistic message with unique ID
+    const optimisticMessage: OptimisticMessage = {
+      user_message: trimmedMessage,
+      pending: true,
+      id: messageId,
+      timestamp: Date.now(), // Added timestamp
+      meta: {
+        optimistic_id: messageId,
+        tracking_id: messageId,
+        processing_stage: 'pending',
+        source_info: {
+          type: sourceType
+        }
+      }
+    };
+    
+    // Add to optimistic messages queue
+    addOptimisticMessage(optimisticMessage);
+    
+    console.log("Sending chat message:", 
+      trimmedMessage.length > 30 
+        ? `${trimmedMessage.substring(0, 30)}...` 
+        : trimmedMessage
+    );
+    
+    mutation.mutate({ 
+      message: trimmedMessage,
+      sourceType, // Always include sourceType
+      messageId
+    });
+    
+    setMessage(''); // Clear the input after sending
+  }, [message, toast, mutation, addOptimisticMessage, generateTrackingId]);
 
   return {
     message,
     setMessage,
     sendMessage,
-    retryMessage,
     uploadRecipeImage,
     submitRecipeUrl,
-    isSending,
+    retryMessage,
+    uploadProgress,
     isUploading,
-    uploadProgress
+    isSending: mutation.isPending
   };
-}
+};

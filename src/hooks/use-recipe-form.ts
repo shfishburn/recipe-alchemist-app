@@ -1,61 +1,66 @@
 
 import { useState } from 'react';
-import { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
+import { useToast } from '@/hooks/use-toast';
+import type { RecipeFormData } from '@/components/recipe-builder/RecipeForm';
 
-export const useRecipeForm = (
-  onSubmit: (data: RecipeFormData) => void,
-  isLoading = false
-) => {
-  const [activeTab, setActiveTab] = useState('basic'); // 'basic' or 'advanced'
+export const useRecipeForm = (onSubmit: (formData: RecipeFormData) => void, isLoading = false) => {
+  const [activeTab, setActiveTab] = useState('inputs');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [ingredientInput, setIngredientInput] = useState('');
+  const { toast } = useToast();
   
-  // Form data state
   const [formData, setFormData] = useState<RecipeFormData>({
     title: '',
-    cuisine: '',
-    dietary: '',
+    cuisine: 'italian', // This is a valid value in our restructured cuisine data
+    dietary: 'no-restrictions',
     flavorTags: [],
     ingredients: [],
     url: '',
     servings: 2,
-    maxCalories: 0,
-    imageFile: null
+    maxCalories: 600,
+    imageFile: null,
   });
-  
+
   const handleAddIngredient = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && ingredientInput.trim()) {
       e.preventDefault();
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        ingredients: [...prev.ingredients, ingredientInput.trim()]
+        ingredients: [...prev.ingredients, ingredientInput.trim()],
       }));
       setIngredientInput('');
     }
   };
-  
+
   const handleRemoveIngredient = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index)
+      ingredients: prev.ingredients.filter((_, i) => i !== index),
     }));
   };
-  
-  const handleSettingChange = (name: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+
+  const handleSettingChange = (field: string, value: number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      toast({
+        title: "Missing Recipe Name",
+        description: "Please enter a name for your recipe.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     onSubmit(formData);
     setHasGenerated(true);
   };
-  
+
   return {
     formState: {
       activeTab,
@@ -76,5 +81,6 @@ export const useRecipeForm = (
       handleSettingChange,
       handleSubmit,
     },
+    isLoading,
   };
 };
