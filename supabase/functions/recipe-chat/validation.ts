@@ -1,72 +1,64 @@
 
 /**
- * Validates that a recipe object contains all required fields
- * and that they are in the expected format
- * @param recipe The recipe object to validate
- * @throws Error if the recipe is invalid
+ * Comprehensive recipe data integrity validation
+ * Ensures all critical fields are present and properly formatted
  */
-export function validateRecipeIntegrity(recipe: Record<string, any>): void {
-  // Check required fields
+export function validateRecipeIntegrity(recipe: any): { 
+  valid: boolean; 
+  issues: string[]; 
+} {
+  const issues: string[] = [];
+  
+  // Check for required recipe fields
   if (!recipe.id) {
-    throw new Error("Recipe is missing ID");
+    issues.push("Missing recipe ID");
   }
   
-  if (!recipe.title || typeof recipe.title !== 'string') {
-    throw new Error("Recipe is missing valid title");
+  // Title validation
+  if (!recipe.title || typeof recipe.title !== 'string' || recipe.title.trim() === '') {
+    issues.push("Missing or invalid recipe title");
   }
-  
-  if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-    throw new Error("Recipe must have at least one ingredient");
-  }
-  
-  if (!Array.isArray(recipe.instructions) || recipe.instructions.length === 0) {
-    throw new Error("Recipe must have at least one instruction");
-  }
-  
-  // Validate ingredients
-  for (let i = 0; i < recipe.ingredients.length; i++) {
-    const ingredient = recipe.ingredients[i];
-    if (typeof ingredient !== 'object' || ingredient === null) {
-      throw new Error(`Ingredient ${i+1} is invalid (not an object)`);
-    }
+
+  // Instructions validation
+  if (!recipe.instructions) {
+    issues.push("Missing recipe instructions");
+  } else if (!Array.isArray(recipe.instructions)) {
+    issues.push("Recipe instructions must be an array");
+  } else if (recipe.instructions.length === 0) {
+    issues.push("Recipe instructions array is empty");
+  } else {
+    // Validate each instruction
+    const invalidInstructions = recipe.instructions.filter((instruction: any) => 
+      typeof instruction !== 'string' || instruction.trim() === ''
+    );
     
-    if (!ingredient.item || typeof ingredient.item !== 'string') {
-      throw new Error(`Ingredient ${i+1} is missing item name`);
-    }
-  }
-  
-  // Validate instructions
-  for (let i = 0; i < recipe.instructions.length; i++) {
-    const instruction = recipe.instructions[i];
-    if (typeof instruction !== 'string' || instruction.trim() === '') {
-      throw new Error(`Instruction ${i+1} is invalid (empty or not a string)`);
-    }
-  }
-  
-  // Validate science_notes if present
-  if (recipe.science_notes !== undefined && recipe.science_notes !== null) {
-    if (!Array.isArray(recipe.science_notes)) {
-      throw new Error("science_notes must be an array");
-    }
-    
-    for (let i = 0; i < recipe.science_notes.length; i++) {
-      const note = recipe.science_notes[i];
-      if (typeof note !== 'string' || note.trim() === '') {
-        throw new Error(`Science note ${i+1} is invalid (empty or not a string)`);
-      }
+    if (invalidInstructions.length > 0) {
+      issues.push(`${invalidInstructions.length} invalid instructions found`);
     }
   }
 
-  // Validate basic types
-  if (recipe.servings !== undefined && typeof recipe.servings !== 'number') {
-    throw new Error("servings must be a number");
+  // Ingredients validation
+  if (!recipe.ingredients) {
+    issues.push("Missing recipe ingredients");
+  } else if (!Array.isArray(recipe.ingredients)) {
+    issues.push("Recipe ingredients must be an array");
+  } else if (recipe.ingredients.length === 0) {
+    issues.push("Recipe ingredients array is empty");
+  } else {
+    // Validate each ingredient has required fields
+    const invalidIngredients = recipe.ingredients.filter((ing: any) => 
+      !ing || typeof ing !== 'object' || !ing.item || 
+      typeof ing.item !== 'string' || !ing.qty_metric || 
+      !ing.unit_metric || !ing.qty_imperial || !ing.unit_imperial
+    );
+    
+    if (invalidIngredients.length > 0) {
+      issues.push(`${invalidIngredients.length} invalid ingredients found`);
+    }
   }
-  
-  if (recipe.prep_time_min !== undefined && typeof recipe.prep_time_min !== 'number') {
-    throw new Error("prep_time_min must be a number");
-  }
-  
-  if (recipe.cook_time_min !== undefined && typeof recipe.cook_time_min !== 'number') {
-    throw new Error("cook_time_min must be a number");
-  }
+
+  return {
+    valid: issues.length === 0,
+    issues
+  };
 }

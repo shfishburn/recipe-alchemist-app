@@ -4,6 +4,7 @@ import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/
 import type { Recipe } from '@/types/recipe';
 import { ChatMessage } from './ChatMessage';
 import { ChatProcessingIndicator } from './ChatProcessingIndicator';
+import { getMessageTrackingId } from '@/utils/chat-meta';
 
 interface ChatHistoryProps {
   chatHistory: ChatMessageType[];
@@ -13,7 +14,7 @@ interface ChatHistoryProps {
   applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
   isApplying?: boolean;
   recipe: Recipe;
-  retryMessage?: (failedMessage: string, failedMessageId: string) => void;
+  retryMessage?: () => void;
 }
 
 // Type that can represent either a ChatMessage or OptimisticMessage
@@ -33,13 +34,13 @@ export function ChatHistory({
   const combinedMessages = useMemo(() => {
     // Create a Set of tracking IDs from optimistic messages
     const optimisticIds = new Set(
-      optimisticMessages.map(msg => msg.meta?.optimistic_id)
+      optimisticMessages.map(msg => getMessageTrackingId(msg))
         .filter(Boolean)
     );
     
     // Filter out real messages that have a corresponding optimistic message
     const filteredChatHistory = chatHistory.filter(msg => {
-      const trackingId = msg.meta?.optimistic_id;
+      const trackingId = getMessageTrackingId(msg);
       return !trackingId || !optimisticIds.has(trackingId);
     });
     
@@ -50,15 +51,16 @@ export function ChatHistory({
   return (
     <div className="flex flex-col space-y-6 w-full">
       {/* Render the combined message history */}
-      {combinedMessages.map((message) => (
+      {combinedMessages.map((chat) => (
         <ChatMessage
-          key={message.meta?.optimistic_id || message.id || `chat-${Date.now()}-${Math.random()}`}
-          message={message}
-          isUser={message.user_message !== undefined && !('ai_response' in message)}
-          recipe={recipe}
-          onApplyChanges={applyChanges}
-          isApplying={isApplying && ('id' in message) && message.id === chatHistory[chatHistory.length - 1]?.id}
-          onRetry={retryMessage}
+          key={getMessageTrackingId(chat) || `chat-${Date.now()}-${Math.random()}`}
+          chat={chat}
+          setMessage={setMessage}
+          applyChanges={applyChanges}
+          isApplying={isApplying && chat.id === chatHistory[chatHistory.length - 1]?.id}
+          isOptimistic={'pending' in chat && !!chat.pending}
+          applied={!!chat.applied}
+          retryMessage={retryMessage}
         />
       ))}
       

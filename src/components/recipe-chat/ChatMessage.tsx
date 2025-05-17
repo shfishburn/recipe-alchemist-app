@@ -1,260 +1,130 @@
 
-import React, { useState } from 'react';
-import { cn } from '@/utils/cn';
-import { Button } from '@/components/ui/button';
-import { Markdown } from '@/components/markdown/Markdown';
-import { Spinner } from '@/components/ui/spinner';
-import { Card } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bug, Copy } from 'lucide-react';
+import React from 'react';
+import { ChatResponse } from './ChatResponse';
+import { UserMessage } from './UserMessage';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
-import type { Recipe } from '@/types/recipe';
+import { getChatMeta } from '@/utils/chat-meta';
 
+// Create a union type that works with both ChatMessage and OptimisticMessage
 type AnyMessageType = ChatMessageType | OptimisticMessage;
 
 interface ChatMessageProps {
-  message: AnyMessageType;
-  isUser: boolean;
-  recipe: Recipe;
-  onApplyChanges?: (message: ChatMessageType) => Promise<boolean>;
-  onRetry?: (text: string, id: string) => void;
+  chat: AnyMessageType;
+  setMessage: (message: string) => void;
+  applyChanges: (chatMessage: ChatMessageType) => Promise<boolean>;
   isApplying?: boolean;
+  isOptimistic?: boolean;
+  applied?: boolean;
+  retryMessage?: () => void;
 }
 
 export function ChatMessage({
-  message,
-  isUser,
-  recipe,
-  onApplyChanges,
-  onRetry,
+  chat,
+  setMessage,
+  applyChanges,
   isApplying = false,
+  isOptimistic = false,
+  applied = false,
+  retryMessage
 }: ChatMessageProps) {
-  const [isDebugOpen, setIsDebugOpen] = useState(false);
-  const [isApplyingLocal, setIsApplyingLocal] = useState(false);
+  // Enhanced optimistic message detection
+  const isOptimisticUserMessage = isOptimistic || 
+    (!!getChatMeta(chat, 'optimistic_id', '') && !chat.ai_response);
   
-  // Check if the message contains a complete recipe update
-  const hasCompleteRecipe = 'recipe' in message && !!message.recipe;
+  // Check if this message has an error
+  const hasError = getChatMeta(chat, 'error', false);
   
-  // Check if the message contains partial changes
-  const hasPartialChanges = 'changes_suggested' in message && !!message.changes_suggested;
-  
-  // Determine if any changes are suggested
-  const hasChanges = hasCompleteRecipe || hasPartialChanges;
-  
-  // Determine if changes can be applied (is a ChatMessage, has changes, and not applied yet)
-  const canApplyChanges = 
-    'ai_response' in message && 
-    hasChanges && 
-    !message.applied && 
-    typeof onApplyChanges === 'function';
+  // Log chat message for debugging - enhanced with more details
+  React.useEffect(() => {
+    console.log("[ChatMessage] Message rendered:", {
+      id: chat.id,
+      timestamp: new Date().toISOString(),
+      isOptimistic,
+      isOptimisticUserMessage,
+      hasError,
+      hasAiResponse: !!chat.ai_response,
+      hasChangesSuggested: !!(chat as ChatMessageType).changes_suggested,
+      userMessagePreview: chat.user_message?.substring(0, 50) + (chat.user_message?.length > 50 ? '...' : ''),
+      aiResponseLength: chat.ai_response?.length || 0,
+      meta: chat.meta || {},
+      applied: applied || !!chat.applied
+    });
     
-  // Check if message is pending
-  const isPending = 'pending' in message && message.pending;
+    // Log specific conditions for easier debugging
+    if (hasError) {
+      console.warn("[ChatMessage] Error detected in message:", {
+        id: chat.id,
+        errorDetails: chat.meta?.error_details || "No detailed error information"
+      });
+    }
+    
+    if (isOptimisticUserMessage) {
+      console.log("[ChatMessage] Optimistic message render:", {
+        id: chat.id,
+        optimisticId: getChatMeta(chat, 'optimistic_id', ''),
+        waitingForResponse: true
+      });
+    }
+  }, [chat, isOptimistic, hasError, isOptimisticUserMessage, applied]);
   
-  // Check if message has an error
-  const hasError = message.meta?.error;
+  // For optimistic user messages, only show the user message
+  if (isOptimisticUserMessage) {
+    return (
+      <UserMessage 
+        message={chat.user_message} 
+        isOptimistic={true} 
+        isError={hasError}
+        onRetry={hasError && retryMessage ? retryMessage : undefined} 
+      />
+    );
+  }
 
-  // Handle applying changes
   const handleApplyChanges = async () => {
-    if (!onApplyChanges || !('id' in message)) return;
-
+    console.log("[ChatMessage] Applying changes for message:", {
+      id: chat.id,
+      hasChangesSuggested: !!(chat as ChatMessageType).changes_suggested,
+      timestamp: new Date().toISOString()
+    });
+    
     try {
-      console.log("Applying changes for message:", { 
-        id: message.id,
-        hasChangesSuggested: hasChanges,
+      // We need to cast chat to ChatMessageType for applyChanges
+      // This is safe because isOptimisticUserMessage would have returned earlier if this was an optimistic message
+      const result = await applyChanges(chat as ChatMessageType);
+      console.log("[ChatMessage] Apply changes result:", {
+        id: chat.id,
+        success: result,
         timestamp: new Date().toISOString()
       });
-      
-      setIsApplyingLocal(true);
-      const result = await onApplyChanges(message as ChatMessageType);
-      
-      if (!result) {
-        throw new Error("Failed to apply changes");
-      }
     } catch (error) {
-      console.error("Error applying changes:", {
-        id: message.id,
+      console.error("[ChatMessage] Error applying changes:", {
+        id: chat.id,
         error,
         timestamp: new Date().toISOString()
       });
-    } finally {
-      setIsApplyingLocal(false);
     }
   };
 
-  // Handle copying debug info to clipboard
-  const handleCopyDebug = () => {
-    if (!('ai_response' in message)) return;
-    
-    const debugContent = JSON.stringify({
-      messageId: message.id,
-      userMessage: message.user_message,
-      aiResponse: message.ai_response,
-      recipe: message.recipe || null,
-      changesSuggested: message.changes_suggested || null,
-      applied: message.applied || false
-    }, null, 2);
-    
-    navigator.clipboard.writeText(debugContent);
-    console.log("Content copied to clipboard");
-  };
-  
   return (
-    <div
-      className={cn(
-        'flex w-full',
-        isUser ? 'justify-end' : 'justify-start'
+    <div className="space-y-4">
+      <UserMessage 
+        message={chat.user_message} 
+        isOptimistic={isOptimistic} 
+        isError={hasError}
+        onRetry={hasError && retryMessage ? retryMessage : undefined}
+      />
+      
+      {chat.ai_response && (
+        <ChatResponse
+          response={chat.ai_response}
+          changesSuggested={(chat as ChatMessageType).changes_suggested || null}
+          followUpQuestions={(chat as ChatMessageType).follow_up_questions || []}
+          setMessage={setMessage}
+          onApplyChanges={handleApplyChanges}
+          isApplying={isApplying}
+          applied={applied || !!chat.applied}
+          messageId={chat.id}
+        />
       )}
-    >
-      <div
-        className={cn(
-          'flex flex-col max-w-[80%] md:max-w-[70%] lg:max-w-[65%] rounded-lg p-3 mb-2 relative',
-          isUser 
-            ? 'bg-primary text-primary-foreground' 
-            : 'bg-muted text-muted-foreground'
-        )}
-      >
-        {/* User message */}
-        {isUser && (
-          <div className="text-sm md:text-base whitespace-pre-wrap break-words">
-            {message.user_message}
-          </div>
-        )}
-        
-        {/* AI Response */}
-        {!isUser && !isPending && 'ai_response' in message && (
-          <div className="text-sm md:text-base prose dark:prose-invert max-w-none">
-            <Markdown>{message.ai_response}</Markdown>
-            
-            {/* Debug button for AI messages */}
-            {!isUser && 'ai_response' in message && (
-              <div className="absolute top-2 right-2">
-                <Dialog open={isDebugOpen} onOpenChange={setIsDebugOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0" 
-                      title="Debug message"
-                      onClick={() => {
-                        console.log("Opening debug panel for message:", message.id);
-                        console.log("Viewing debug info for message:", {
-                          messageId: message.id,
-                          responseSummary: message.ai_response?.substring(0, 100) + "...",
-                          hasChanges: hasChanges
-                        });
-                      }}
-                    >
-                      <Bug className="h-3 w-3" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center justify-between">
-                        <span>Debug Info</span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 gap-1" 
-                          onClick={handleCopyDebug}
-                        >
-                          <Copy className="h-4 w-4" />
-                          <span>Copy</span>
-                        </Button>
-                      </DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[60vh]">
-                      <div className="space-y-4 p-4">
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">User Message:</h4>
-                          <pre className="text-xs bg-muted p-2 rounded overflow-auto break-words whitespace-pre-wrap">{message.user_message}</pre>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">AI Response:</h4>
-                          <pre className="text-xs bg-muted p-2 rounded overflow-auto break-words whitespace-pre-wrap">{message.ai_response}</pre>
-                        </div>
-                        {hasCompleteRecipe && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-1">Recipe Changes:</h4>
-                            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-[300px]">{JSON.stringify(message.recipe, null, 2)}</pre>
-                          </div>
-                        )}
-                        {hasPartialChanges && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-1">Suggested Changes:</h4>
-                            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-[300px]">{JSON.stringify(message.changes_suggested, null, 2)}</pre>
-                          </div>
-                        )}
-                        {message.meta && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-1">Metadata:</h4>
-                            <pre className="text-xs bg-muted p-2 rounded overflow-auto">{JSON.stringify(message.meta, null, 2)}</pre>
-                          </div>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
-            
-            {/* Display action buttons for messages with changes */}
-            {canApplyChanges && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button 
-                  onClick={handleApplyChanges} 
-                  disabled={isApplying || isApplyingLocal}
-                  size="sm"
-                  variant="secondary"
-                >
-                  {(isApplying || isApplyingLocal) && <Spinner className="mr-2 h-4 w-4" />}
-                  Apply Changes
-                </Button>
-              </div>
-            )}
-            
-            {/* Show applied badge for applied changes */}
-            {message.applied && (
-              <div className="mt-2">
-                <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                  Applied
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Loading state */}
-        {!isUser && isPending && (
-          <div className="flex items-center space-x-2">
-            <Spinner className="h-4 w-4" />
-            <span className="text-sm">Processing...</span>
-          </div>
-        )}
-        
-        {/* Error state */}
-        {!isUser && hasError && (
-          <Card className="mt-2 p-3 bg-destructive bg-opacity-10 border-destructive">
-            <p className="text-sm text-destructive mb-2">
-              {message.meta?.error_details || 'Failed to process request'}
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onRetry?.(message.user_message, message.id)}
-            >
-              Retry
-            </Button>
-          </Card>
-        )}
-      </div>
     </div>
   );
 }
