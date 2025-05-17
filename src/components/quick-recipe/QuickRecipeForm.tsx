@@ -1,14 +1,20 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CookingPot, Carrot, WheatOff, MilkOff, Heart, LeafyGreen } from 'lucide-react';
-import { QuickRecipeFormData } from '@/hooks/use-quick-recipe';
+import { CookingPot, Carrot, WheatOff, MilkOff, Heart, LeafyGreen, Search } from 'lucide-react';
+import { QuickRecipeFormData } from '@/types/quick-recipe';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { SubmitButton } from './form-components/SubmitButton';
 
-// Cuisine options with flag emojis instead of icons
+// Define constants for better maintainability
+const MAX_CUISINE_SELECTIONS = 2;
+const MAX_DIETARY_SELECTIONS = 2;
+
+// Cuisine options with flag emojis
 const CUISINES = [
   { name: "American", value: "american", flag: "🇺🇸" },
   { name: "Italian", value: "italian", flag: "🇮🇹" },
@@ -28,10 +34,6 @@ const DIETARY = [
   { name: "Vegetarian", value: "vegetarian", icon: LeafyGreen }
 ];
 
-// Maximum number of selections allowed
-const MAX_CUISINE_SELECTIONS = 2;
-const MAX_DIETARY_SELECTIONS = 2;
-
 interface QuickRecipeFormProps {
   onSubmit: (data: QuickRecipeFormData) => void;
   isLoading: boolean;
@@ -39,19 +41,47 @@ interface QuickRecipeFormProps {
 
 export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
   const [formData, setFormData] = useState<QuickRecipeFormData>({
+    mainIngredient: '',
     cuisine: [],
     dietary: [],
-    mainIngredient: '',
-    servings: 2, // Default value for servings
+    servings: 2,
   });
+  const [inputError, setInputError] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
+  
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Add pulsing effect on initial load
+  useEffect(() => {
+    const start = setTimeout(() => {
+      setIsPulsing(true);
+      const stop = setTimeout(() => setIsPulsing(false), 3000);
+      return () => clearTimeout(stop);
+    }, 1000);
+    return () => clearTimeout(start);
+  }, []);
+
+  // Auto-resize the textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      requestAnimationFrame(() => {
+        if (!textareaRef.current) return;
+        textareaRef.current.style.height = 'auto';
+        const minHeight = isMobile ? '56px' : '60px';
+        const scrollHeight = textareaRef.current.scrollHeight;
+        textareaRef.current.style.height = `${Math.max(parseInt(minHeight), scrollHeight)}px`;
+      });
+    }
+  }, [formData.mainIngredient, isMobile]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate mainIngredient before submitting
     if (!formData.mainIngredient || formData.mainIngredient.trim() === '') {
+      setInputError('Please enter at least one ingredient');
       toast({
         title: "Missing ingredient",
         description: "Please enter at least one main ingredient",
@@ -59,41 +89,39 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
       });
       return;
     }
+
+    setInputError('');
     
-    // Create a sanitized copy of the form data to ensure proper format
+    // Create a sanitized copy of the form data
     const sanitizedData = {
       ...formData,
       // Ensure cuisine is always an array of strings
-      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : formData.cuisine ? [formData.cuisine] : [],
+      cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : 
+               formData.cuisine ? [formData.cuisine] : [],
       // Ensure dietary is always an array of strings
-      dietary: Array.isArray(formData.dietary) ? formData.dietary : formData.dietary ? [formData.dietary] : []
+      dietary: Array.isArray(formData.dietary) ? formData.dietary : 
+               formData.dietary ? [formData.dietary] : []
     };
     
-    // Log the submission data with proper format
     console.log("Submitting form data:", sanitizedData);
-    
     onSubmit(sanitizedData);
   };
 
   const toggleCuisine = (value: string) => {
     setFormData(prev => {
-      const cuisineArray = Array.isArray(prev.cuisine) ? prev.cuisine : prev.cuisine ? [prev.cuisine] : [];
+      const cuisineArray = Array.isArray(prev.cuisine) ? prev.cuisine : 
+                          (prev.cuisine ? [prev.cuisine] : []);
       
-      // If the cuisine is already selected, remove it
       if (cuisineArray.includes(value)) {
         return { ...prev, cuisine: cuisineArray.filter(c => c !== value) };
-      } 
-      // Otherwise, check if we've reached the maximum number of selections
-      else if (cuisineArray.length >= MAX_CUISINE_SELECTIONS) {
+      } else if (cuisineArray.length >= MAX_CUISINE_SELECTIONS) {
         toast({
           title: "Selection limit reached",
           description: `You can select up to ${MAX_CUISINE_SELECTIONS} cuisines.`,
           variant: "default"
         });
         return prev;
-      }
-      // Add it to the selection
-      else {
+      } else {
         return { ...prev, cuisine: [...cuisineArray, value] };
       }
     });
@@ -101,29 +129,25 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
 
   const toggleDietary = (value: string) => {
     setFormData(prev => {
-      const dietaryArray = Array.isArray(prev.dietary) ? prev.dietary : prev.dietary ? [prev.dietary] : [];
+      const dietaryArray = Array.isArray(prev.dietary) ? prev.dietary : 
+                          (prev.dietary ? [prev.dietary] : []);
       
-      // If the dietary option is already selected, remove it
       if (dietaryArray.includes(value)) {
         return { ...prev, dietary: dietaryArray.filter(d => d !== value) };
-      } 
-      // Otherwise, check if we've reached the maximum number of selections
-      else if (dietaryArray.length >= MAX_DIETARY_SELECTIONS) {
+      } else if (dietaryArray.length >= MAX_DIETARY_SELECTIONS) {
         toast({
           title: "Selection limit reached",
           description: `You can select up to ${MAX_DIETARY_SELECTIONS} dietary preferences.`,
           variant: "default"
         });
         return prev;
-      }
-      // Add it to the selection
-      else {
+      } else {
         return { ...prev, dietary: [...dietaryArray, value] };
       }
     });
   };
 
-  // Helper function to check if a value is selected
+  // Helper functions to check if a value is selected
   const isCuisineSelected = (value: string): boolean => {
     if (Array.isArray(formData.cuisine)) {
       return formData.cuisine.includes(value);
@@ -138,19 +162,84 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
     return formData.dietary === value;
   };
 
+  const updateServings = (newValue: number) => {
+    // Keep servings between 1-12
+    const clampedValue = Math.max(1, Math.min(12, newValue));
+    setFormData(prev => ({ ...prev, servings: clampedValue }));
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 w-full mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 w-full mx-auto">
+      {/* Ingredient Input */}
       <div className="space-y-2 w-full">
-        <Input 
-          placeholder="Main ingredient (e.g., chicken, pasta, etc.)"
-          value={formData.mainIngredient}
-          onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
-          className={isMobile ? "h-10 w-full" : "h-12 text-lg w-full"}
-          aria-label="Main ingredient"
-        />
+        <div
+          className={cn(
+            'relative flex items-center rounded-xl shadow-md transition-all duration-300 w-full',
+            isPulsing ? 'animate-pulse ring-2 ring-recipe-blue ring-opacity-50' : '',
+            isFocused ? 'ring-2 ring-recipe-blue ring-opacity-100' : '',
+            inputError ? 'ring-2 ring-red-500' : '',
+            'bg-gradient-to-r from-white to-blue-50/70 dark:from-gray-900 dark:to-gray-800'
+          )}
+        >
+          <Search className="absolute left-3 h-5 w-5 text-recipe-blue" aria-hidden="true" />
+          <Textarea
+            id="mainIngredient"
+            ref={textareaRef}
+            placeholder="e.g., chicken curry: chicken, curry paste, coconut milk"
+            value={formData.mainIngredient}
+            onChange={(e) => setFormData({ ...formData, mainIngredient: e.target.value })}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            rows={1}
+            className={cn(
+              isMobile ? 'min-h-[56px] text-base' : 'min-h-[60px] text-lg',
+              'flex-1 text-left resize-none overflow-hidden transition-all bg-transparent border-2 rounded-xl',
+              'focus-within:border-recipe-blue placeholder:text-gray-500/80',
+              inputError ? 'border-red-500' : 'border-gray-200 focus:border-recipe-blue',
+              'pl-10 pr-4'
+            )}
+            style={{ touchAction: 'manipulation' }}
+          />
+        </div>
+
+        {inputError && (
+          <p className="text-sm text-red-500 mt-1">{inputError}</p>
+        )}
       </div>
 
-      <div className="space-y-4 w-full">
+      {/* Additional Options */}
+      <div className="space-y-6 w-full">
+        {/* Servings Selector */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium block">Servings:</label>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => updateServings(formData.servings! - 1)}
+              disabled={formData.servings === 1}
+              className="h-8 w-8 p-0"
+            >
+              -
+            </Button>
+            <span className={isMobile ? "text-base" : "text-lg"}>
+              {formData.servings} {formData.servings === 1 ? 'serving' : 'servings'}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => updateServings(formData.servings! + 1)}
+              disabled={formData.servings === 12}
+              className="h-8 w-8 p-0"
+            >
+              +
+            </Button>
+          </div>
+        </div>
+        
+        {/* Cuisine Selector */}
         <div>
           <label className="text-sm font-medium block mb-2">Cuisine (select up to {MAX_CUISINE_SELECTIONS}):</label>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full">
@@ -170,6 +259,7 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
           </div>
         </div>
 
+        {/* Dietary Selector */}
         <div>
           <label className="text-sm font-medium block mb-2">Dietary Restrictions (select up to {MAX_DIETARY_SELECTIONS}):</label>
           <div className="flex flex-wrap gap-2 justify-center md:justify-start w-full">
@@ -190,15 +280,13 @@ export function QuickRecipeForm({ onSubmit, isLoading }: QuickRecipeFormProps) {
         </div>
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-recipe-blue hover:bg-recipe-blue/90"
-        size={isMobile ? "default" : "lg"}
-        disabled={isLoading}
-      >
-        <CookingPot className="mr-2 h-5 w-5" />
-        {isLoading ? 'Creating...' : 'Create Quick Recipe'}
-      </Button>
+      {/* Submit Button */}
+      <div className="flex justify-center mt-6">
+        <SubmitButton 
+          isLoading={isLoading}
+          disabled={!formData.mainIngredient.trim()}
+        />
+      </div>
     </form>
   );
 }

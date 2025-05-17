@@ -1,134 +1,111 @@
+
 import React from 'react';
+import { Check, X } from 'lucide-react';
 import { ChatMessage } from '@/types/chat';
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckIcon, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-// Define instruction change type locally since it's no longer imported
-interface InstructionChange {
-  action: string;
-  [key: string]: any;
+export interface ChangesSummaryProps {
+  changes: ChatMessage['changes_suggested'];
+  isMobile?: boolean;
 }
 
-interface ChangesSummaryProps {
-  chatMessage: ChatMessage;
-  onApplyChanges?: () => void;
-  disabledApply?: boolean;
-  isApplying?: boolean;
-  hideControls?: boolean;
-}
+export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProps) {
+  if (!changes) {
+    return <div className="text-sm text-gray-500">No changes were suggested.</div>;
+  }
 
-export function ChangesSummary({
-  chatMessage,
-  onApplyChanges,
-  disabledApply = false,
-  isApplying = false,
-  hideControls = false,
-}: ChangesSummaryProps) {
-  // Helper function to render changes
-  const renderChanges = () => {
-    if (!chatMessage.changes_suggested) {
-      return <p className="text-muted-foreground">No changes suggested.</p>;
-    }
-    
-    const { title, ingredients, instructions, science_notes } = chatMessage.changes_suggested;
-    
-    return (
-      <>
-        {title && (
-          <div className="mb-2">
-            <p className="text-sm font-medium mb-1">Title:</p>
-            <p className="text-sm">{title}</p>
-          </div>
-        )}
-        
-        {ingredients?.items && ingredients.items.length > 0 && (
-          <div className="mb-2">
-            <p className="text-sm font-medium mb-1">
-              Ingredients ({ingredients.mode === 'add' ? 'Add' : ingredients.mode === 'replace' ? 'Replace' : 'Update'}):
-            </p>
-            <ul className="text-sm list-disc list-inside">
-              {ingredients.items.map((ingredient, idx) => (
-                <li key={idx}>
-                  {typeof ingredient === 'string' 
-                    ? ingredient 
-                    : `${ingredient.qty || ''} ${ingredient.unit || ''} ${
-                        typeof ingredient.item === 'string' 
-                          ? ingredient.item 
-                          : ingredient.item?.name || 'Ingredient'
-                      }`}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {instructions && instructions.length > 0 && (
-          <div className="mb-2">
-            <p className="text-sm font-medium mb-1">Instructions:</p>
-            <ol className="text-sm list-decimal list-inside">
-              {instructions.map((instruction, idx) => {
-                // Handle both string and object instructions
-                const instructionText = typeof instruction === 'string' 
-                  ? instruction 
-                  : (instruction as InstructionChange).action;
-                
-                return <li key={idx}>{instructionText}</li>;
-              })}
-            </ol>
-          </div>
-        )}
-        
-        {science_notes && science_notes.length > 0 && (
-          <div>
-            <p className="text-sm font-medium mb-1">Science Notes:</p>
-            <ul className="text-sm list-disc list-inside">
-              {science_notes.map((note, idx) => (
-                <li key={idx}>{note}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </>
-    );
-  };
-  
   return (
-    <Card className="mt-4 mb-4">
-      <CardContent className="pt-4">
-        <div className="mb-3">
-          <h3 className="text-lg font-medium">Suggested Changes</h3>
-          <p className="text-muted-foreground text-sm">
-            The following changes can be applied to your recipe.
+    <div className="space-y-3">
+      {/* Title Changes */}
+      {changes.title && (
+        <div className="flex gap-2">
+          <div className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-blue-100 flex items-center justify-center">
+            <Check className="w-3 h-3 text-blue-700" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Title</p>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
+              Update title to "{changes.title}"
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Ingredient Changes */}
+      {changes.ingredients && changes.ingredients.items && changes.ingredients.items.length > 0 && (
+        <div className="flex gap-2">
+          <div className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-green-100 flex items-center justify-center">
+            <Check className="w-3 h-3 text-green-700" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Ingredients ({changes.ingredients.mode})</p>
+            <ul className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 list-disc list-inside space-y-0.5`}>
+              {changes.ingredients.items.map((item, i) => {
+                // Handle different item formats
+                const ingredientText = typeof item === 'string' 
+                  ? item 
+                  : typeof item.item === 'string'
+                    ? `${item.qty || ''} ${item.unit || ''} ${item.item}`
+                    : item.item?.name || 'Ingredient';
+
+                return <li key={i}>{ingredientText}</li>;
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Instruction Changes */}
+      {changes.instructions && changes.instructions.length > 0 && (
+        <div className="flex gap-2">
+          <div className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-orange-100 flex items-center justify-center">
+            <Check className="w-3 h-3 text-orange-700" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Instructions</p>
+            <ul className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 list-disc list-inside space-y-0.5`}>
+              {changes.instructions.map((instruction, i) => {
+                const instructionText = typeof instruction === 'string'
+                  ? instruction
+                  // Handle instruction object with action property
+                  : instruction.action || JSON.stringify(instruction);
+                return <li key={i} className="line-clamp-1">{instructionText}</li>;
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Science Notes Changes */}
+      {changes.science_notes && changes.science_notes.length > 0 && (
+        <div className="flex gap-2">
+          <div className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-purple-100 flex items-center justify-center">
+            <Check className="w-3 h-3 text-purple-700" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Science Notes</p>
+            <ul className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 list-disc list-inside space-y-0.5`}>
+              {changes.science_notes.map((note, i) => (
+                <li key={i} className="line-clamp-1">{note}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* No Changes Detected */}
+      {!changes.title && 
+       (!changes.ingredients || !changes.ingredients.items || changes.ingredients.items.length === 0) && 
+       (!changes.instructions || changes.instructions.length === 0) && 
+       (!changes.science_notes || changes.science_notes.length === 0) && (
+        <div className="flex gap-2">
+          <div className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-gray-100 flex items-center justify-center">
+            <X className="w-3 h-3 text-gray-700" />
+          </div>
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
+            No specific changes were found in the suggested changes object.
           </p>
         </div>
-        
-        <div className="p-3 bg-muted/50 rounded-md">
-          {renderChanges()}
-        </div>
-        
-        {!hideControls && chatMessage.changes_suggested && (
-          <div className="mt-4 flex justify-end">
-            <Button
-              onClick={onApplyChanges}
-              disabled={disabledApply || isApplying}
-              className="flex items-center space-x-1"
-            >
-              {isApplying ? (
-                <>
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  <span>Applying...</span>
-                </>
-              ) : (
-                <>
-                  <CheckIcon className="h-4 w-4 mr-1" />
-                  <span>Apply Changes</span>
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

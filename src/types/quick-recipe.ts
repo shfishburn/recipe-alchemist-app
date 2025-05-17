@@ -14,6 +14,22 @@ export interface Ingredient {
   shop_size_unit?: string;
 }
 
+// Define the form data type for recipe generation
+export interface QuickRecipeFormData {
+  mainIngredient: string;
+  cuisine?: string[] | string;
+  dietary?: string[] | string;
+  servings?: number;
+}
+
+// Define recipe modification info type
+export interface RecipeVersionInfo {
+  version_number: number;
+  modification_reason?: string;
+  modified_at?: string;
+  modified_by?: string;
+}
+
 export interface QuickRecipe {
   id: string;
   title: string;
@@ -44,4 +60,24 @@ export interface QuickRecipe {
   chef_notes?: string;
   nutri_score?: NutriScore;
   slug?: string;
+  
+  // Additional fields for UI components
+  prepTime?: number; // Alias for prep_time_min
+  cookTime?: number; // Alias for cook_time_min
+  cookingTip?: string; // Cooking tips
+  nutritionHighlight?: string; // Highlight of nutritional benefits
+  error_message?: string; // Used for error handling
+  isError?: boolean; // Flag for error state
+  version_info?: RecipeVersionInfo; // Version information
+}
+
+// Quick recipe options for API requests
+export interface QuickRecipeOptions {
+  cuisine?: string[];
+  dietary?: string[];
+  servings?: number;
+  maxCalories?: number;
+  restrictions?: string[];
+  flavors?: string[];
+  ingredients?: string[];
 }
