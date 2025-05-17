@@ -3,7 +3,7 @@ import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ModificationHistoryEntry } from '@/hooks/recipe-modifications';
+import { ModificationHistoryEntry } from '@/hooks/recipe-modifications/types';
 
 interface ModificationHistoryProps {
   historyItems: ModificationHistoryEntry[];

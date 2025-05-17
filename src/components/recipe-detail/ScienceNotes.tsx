@@ -3,12 +3,14 @@ import React from 'react';
 import type { Recipe } from '@/types/recipe';
 
 interface ScienceNotesProps {
-  recipe: Recipe;
+  recipe?: Recipe;
   compact?: boolean;
+  notes?: string[];
 }
 
-export function ScienceNotes({ recipe, compact = false }: ScienceNotesProps) {
-  const scienceNotes = recipe.science_notes || [];
+export function ScienceNotes({ recipe, compact = false, notes }: ScienceNotesProps) {
+  // Use provided notes directly if available, otherwise get from recipe
+  const scienceNotes = notes || (recipe?.science_notes || []);
   
   if (scienceNotes.length === 0) {
     return (

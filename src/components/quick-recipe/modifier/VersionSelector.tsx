@@ -139,4 +139,4 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({
       </CardContent>
     </Card>
   );
-};
+}

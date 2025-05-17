@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { RecipeBlock } from './blocks/RecipeBlock';
 import { PersonalBlock } from './blocks/PersonalBlock';
-import { EnhancedNutrition } from './useNutritionData';
+import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
 interface NutritionBlockProps {
   recipeNutrition: EnhancedNutrition;
@@ -68,7 +69,15 @@ export function NutritionBlock({ recipeNutrition, viewMode, userPreferences }: N
       calcium: processed.calcium || 0,
       iron: processed.iron || 0,
       potassium: processed.potassium || 0,
-      data_quality: processed.data_quality
+      data_quality: processed.data_quality || {
+        overall_confidence: 'low'
+      },
+      per_serving: {
+        calories: processed.calories || 0,
+        protein: processed.protein || 0,
+        carbs: processed.carbs || 0,
+        fat: processed.fat || 0
+      }
     };
     
     return result;

@@ -1,87 +1,127 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from "@/components/ui/button";
-import { Clock, Play, Pause, RotateCcw } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Timer, X, Play, Pause, RotateCcw } from 'lucide-react';
 
 interface CookModeTimerProps {
-  initialMinutes?: number;
-  onComplete?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function CookModeTimer({ 
-  initialMinutes = 0, 
-  onComplete 
-}: CookModeTimerProps) {
-  const [totalSeconds, setTotalSeconds] = useState(initialMinutes * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  
-  const formatTime = useCallback(() => {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }, [totalSeconds]);
-  
+export function CookModeTimer({ isOpen, onClose }: CookModeTimerProps) {
+  const [minutes, setMinutes] = useState<number>(5);
+  const [seconds, setSeconds] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [timeRemaining, setTimeRemaining] = useState<number>(300); // 5 minutes * 60 seconds
+
+  // Set initial time when minutes/seconds inputs change
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    setTimeRemaining((minutes * 60) + seconds);
+  }, [minutes, seconds]);
+
+  // Timer functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
     
-    if (isRunning && totalSeconds > 0) {
-      timer = setInterval(() => {
-        setTotalSeconds(prev => {
-          if (prev <= 1 && onComplete) {
-            onComplete();
-          }
-          return prev - 1;
-        });
+    if (isRunning && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining(prev => prev - 1);
       }, 1000);
-    } else if (totalSeconds === 0) {
+    } else if (timeRemaining === 0) {
       setIsRunning(false);
+      // Add notification sound or visual alert here
     }
     
-    return () => clearInterval(timer);
-  }, [isRunning, totalSeconds, onComplete]);
-  
-  const toggleTimer = () => {
-    if (totalSeconds === 0) {
-      // If timer reached zero, reset to initial time
-      setTotalSeconds(initialMinutes * 60);
-      setIsRunning(true);
-    } else {
-      setIsRunning(!isRunning);
-    }
+    return () => clearInterval(interval);
+  }, [isRunning, timeRemaining]);
+
+  // Format time for display
+  const formatTime = () => {
+    const mins = Math.floor(timeRemaining / 60);
+    const secs = timeRemaining % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-  
-  const resetTimer = () => {
+
+  const handleStartPause = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handleReset = () => {
     setIsRunning(false);
-    setTotalSeconds(initialMinutes * 60);
+    setTimeRemaining((minutes * 60) + seconds);
   };
-  
+
+  if (!isOpen) return null;
+
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-center space-x-4">
-          <div className="flex items-center">
-            <Clock className="mr-2 h-5 w-5 text-gray-500" />
-            <span className="font-mono text-2xl">{formatTime()}</span>
-          </div>
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={toggleTimer}
-            >
-              {isRunning ? <Pause size={16} /> : <Play size={16} />}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetTimer}
-            >
-              <RotateCcw size={16} />
-            </Button>
-          </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-6 w-full max-w-sm mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Timer</h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="rounded-full h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+        
+        {isRunning ? (
+          <div className="text-5xl font-bold text-center my-8">
+            {formatTime()}
+          </div>
+        ) : (
+          <div className="flex gap-2 my-4">
+            <div className="flex-1">
+              <label htmlFor="minutes" className="block text-sm text-gray-600 mb-1">Minutes</label>
+              <Input
+                id="minutes"
+                type="number"
+                min="0"
+                max="60"
+                value={minutes}
+                onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
+                disabled={isRunning}
+              />
+            </div>
+            <div className="flex-1">
+              <label htmlFor="seconds" className="block text-sm text-gray-600 mb-1">Seconds</label>
+              <Input
+                id="seconds"
+                type="number"
+                min="0"
+                max="59"
+                value={seconds}
+                onChange={(e) => setSeconds(parseInt(e.target.value) || 0)}
+                disabled={isRunning}
+              />
+            </div>
+          </div>
+        )}
+        
+        <div className="flex gap-2 mt-6">
+          <Button
+            className="flex-1"
+            onClick={handleStartPause}
+          >
+            {isRunning ? (
+              <><Pause className="h-4 w-4 mr-2" /> Pause</>
+            ) : (
+              <><Play className="h-4 w-4 mr-2" /> Start</>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="flex-1"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" /> Reset
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -92,7 +92,7 @@ export function CookingMode({ recipe, onClose }: CookingModeProps) {
           {/* Show relevant science notes */}
           {stepScienceNotes.length > 0 && (
             <div className="mt-8">
-              <ScienceNotes notes={stepScienceNotes} compact />
+              <ScienceNotes notes={stepScienceNotes} compact={true} />
             </div>
           )}
         </div>

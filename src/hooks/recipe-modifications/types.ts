@@ -9,7 +9,9 @@ export type ModificationStatus =
   | 'applying'
   | 'applied'
   | 'rejected'
-  | 'not-authenticated';
+  | 'not-authenticated'
+  | 'canceled'
+  | 'not-deployed';
 
 export interface RecipeModificationChange {
   property: string;
@@ -25,6 +27,8 @@ export interface NutritionImpact {
   sodium?: number;
   fiber?: number;
   sugar?: number;
+  summary?: string;
+  assessment?: string;
 }
 
 export interface RecipeModifications {
@@ -49,4 +53,21 @@ export interface RecipeModificationHistoryItem {
   request: string;
   created_at: string;
   status: 'applied' | 'rejected' | 'pending';
+}
+
+export interface VersionHistoryEntry {
+  version_id: string;
+  version_number: number;
+  previous_version_id?: string;
+  created_at: string;
+  modification_request?: string;
+}
+
+export interface ModificationHistoryEntry {
+  request: string;
+  timestamp: string;
+  response: {
+    reasoning: string;
+  };
+  applied: boolean;
 }
