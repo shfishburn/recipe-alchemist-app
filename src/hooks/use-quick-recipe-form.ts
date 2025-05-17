@@ -46,8 +46,8 @@ export function useQuickRecipeForm() {
         return null;
       }
       
-      // Ensure cuisine has a valid value - never undefined or null
-      const processedFormData = {
+      // Ensure cuisine and dietary fields are always arrays, never undefined or null
+      const processedFormData: QuickRecipeFormData = {
         ...formData,
         cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : 
                 (formData.cuisine ? [formData.cuisine] : ['any']), // Ensure it's an array with at least 'any'

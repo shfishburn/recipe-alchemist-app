@@ -1,4 +1,3 @@
-
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,6 +8,7 @@ import { generateQuickRecipe } from '@/hooks/use-quick-recipe';
 import { QuickRecipeLoading } from '@/components/quick-recipe/QuickRecipeLoading';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { ErrorDisplay } from '@/components/ui/error-display';
+import { QuickRecipe } from '@/types/quick-recipe';
 
 const LoadingContent = () => {
   const navigate = useNavigate();
@@ -115,12 +115,12 @@ const LoadingContent = () => {
           throw new Error(generatedRecipe.error_message || "Error generating recipe");
         }
         
-        // Ensure recipe has all required fields for the Recipe type before setting
-        // Fix type incompatibility by explicitly setting required fields with correct types
-        const completeRecipe = {
+        // Explicitly cast the generated recipe to QuickRecipe to ensure type compatibility
+        const completeRecipe: QuickRecipe = {
           ...generatedRecipe,
-          id: generatedRecipe.id || '', // Provide default value for required field
+          id: generatedRecipe.id || '', 
           servings: generatedRecipe.servings || 1, // Ensure servings exists
+          instructions: generatedRecipe.instructions || generatedRecipe.steps || [], // Handle instructions OR steps
         };
         
         // Set the recipe

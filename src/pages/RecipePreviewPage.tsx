@@ -147,10 +147,11 @@ const RecipePreviewPage: React.FC = () => {
         return;
       }
 
-      // Ensure the recipe conforms to QuickRecipe type
+      // Ensure the recipe conforms to QuickRecipe type by guaranteeing required fields
       const quickRecipeData: QuickRecipe = {
         ...recipe,
-        servings: recipe.servings || 1 // Default value if missing
+        servings: recipe.servings || 1, // Default value if missing
+        instructions: recipe.instructions || recipe.steps || [] // Ensure instructions exist
       };
 
       const savedData = await saveRecipe(quickRecipeData);

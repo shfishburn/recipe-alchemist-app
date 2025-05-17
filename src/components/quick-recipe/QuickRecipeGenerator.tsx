@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChefHat } from 'lucide-react';
@@ -8,8 +7,9 @@ import { ServingsSelector } from './form-components/ServingsSelector';
 import { CuisineSelector } from './form-components/CuisineSelector';
 import { DietarySelector } from './form-components/DietarySelector';
 import { SubmitButton } from './form-components/SubmitButton';
+import { QuickRecipeFormData } from '@/types/quick-recipe';
 
-export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) => void }) {
+export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: QuickRecipeFormData) => void }) {
   const [mainIngredient, setMainIngredient] = useState('');
   const [cuisines, setCuisines] = useState<string[]>(['any']); // Default to 'any'
   const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
@@ -40,9 +40,9 @@ export function QuickRecipeGenerator({ onSubmit }: { onSubmit: (formData: any) =
       setIsSubmitting(true);
       setInputError('');
       
-      // Create form data with all fields
-      const formData = {
-        ingredients: mainIngredient.trim(),
+      // Create form data that matches QuickRecipeFormData interface
+      const formData: QuickRecipeFormData = {
+        mainIngredient: mainIngredient.trim(),
         cuisine: cuisines.length > 0 ? cuisines : ['any'], // Ensure we have an array
         dietary: dietaryPreferences, // Already an array
         servings: servings

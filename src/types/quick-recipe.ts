@@ -23,7 +23,8 @@ export interface VersionInfo {
   modification_reason: string;
 }
 
-// Rename/alias QuickRecipe as Recipe for backward compatibility
+// Make Recipe alias compatible with Recipe type from recipe.ts
+// by ensuring all required properties are also required here
 export type Recipe = QuickRecipe;
 
 export interface QuickRecipe {
@@ -32,8 +33,8 @@ export interface QuickRecipe {
   description?: string;
   ingredients: Ingredient[];
   steps?: string[];
-  instructions?: string[];
-  servings: number;
+  instructions?: string[] | undefined;
+  servings: number; // This is required in QuickRecipe
   prep_time_min?: number;
   cook_time_min?: number;
   prepTime?: number;
@@ -45,10 +46,10 @@ export interface QuickRecipe {
   cuisine?: string[] | string;
   dietary?: string[] | string;
   flavor_tags?: string[];
-  highlights?: string[]; // Added for RecipeHighlights component
+  highlights?: string[];
   user_id?: string;
   id?: string;
-  slug?: string;  // Added slug property
+  slug?: string;
   // Version-related properties
   version_id?: string;
   version_info?: VersionInfo;
@@ -60,7 +61,7 @@ export interface QuickRecipe {
 
 export interface QuickRecipeFormData {
   cuisine: string[] | string;
-  dietary: string[] | string;
+  dietary: string[] | string; // Required
   mainIngredient: string;
   servings: number;
   maxCalories?: number;
