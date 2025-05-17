@@ -45,3 +45,12 @@ export const useRecipeChatStore = create<RecipeChatState>((set) => ({
   // Set loading state
   setLoading: (isLoading) => set({ isLoading })
 }));
+
+// Export a more convenient hook for accessing just the state
+export function useRecipeChatStoreState() {
+  return useRecipeChatStore(state => ({
+    messages: state.messages,
+    isLoading: state.isLoading,
+    error: state.error
+  }));
+}

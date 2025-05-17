@@ -1,200 +1,212 @@
 
 import { useState, useCallback } from 'react';
 import { nanoid } from 'nanoid';
-import { toast } from '@/hooks/use-toast';
-import { useChatMutations } from './use-chat-mutations';
+import { supabase } from '@/integrations/supabase/client';
+import type { Recipe } from '@/types/recipe';
+import type { OptimisticMessage } from '@/types/chat';
 import { useStorageUploader } from './use-storage-uploader';
-import { uploadImageToStorage } from './utils/storage/upload-image';
-import { Recipe } from '@/types/recipe';
-import { OptimisticMessage } from '@/types/chat';
+import { uploadImage } from './utils/storage/upload-image';
 
-export function useChatActions(recipe: Recipe) {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [optimisticMessages, setOptimisticMessages] = useState<OptimisticMessage[]>([]);
-  const chatMutation = useChatMutations(recipe);
-  const uploader = useStorageUploader();
+// Type for the addOptimisticMessage function
+type AddOptimisticMessageFn = (message: OptimisticMessage) => void;
+
+/**
+ * Hook for handling recipe chat actions like sending messages and uploading images
+ */
+export function useChatActions(
+  recipe: Recipe,
+  addOptimisticMessage: AddOptimisticMessageFn
+) {
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
-  // Create a new optimistic message
-  const createOptimisticMessage = (userMessage: string, messageId: string): OptimisticMessage => ({
-    id: messageId,
-    user_message: userMessage,
-    status: 'pending',
-    timestamp: Date.now(),
-    meta: {
-      optimistic_id: messageId
-    }
+  // Storage uploader hook
+  const { uploadFile } = useStorageUploader({
+    bucket: 'recipe-images',
+    folder: `recipe-chats/${recipe.id}`
   });
 
-  // Update an optimistic message's status
-  const updateOptimisticMessageStatus = useCallback((
-    messageId: string,
-    status: 'pending' | 'complete' | 'error',
-    errorDetails?: string
-  ) => {
-    setOptimisticMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === messageId
-          ? {
-              ...msg,
-              status,
-              meta: {
-                ...msg.meta,
-                error: status === 'error',
-                error_details: errorDetails,
-              },
-            }
-          : msg
-      )
-    );
-  }, []);
-
-  // Remove an optimistic message from the list
-  const removeOptimisticMessage = useCallback((messageId: string) => {
-    setOptimisticMessages((prev) => prev.filter((msg) => msg.id !== messageId));
-  }, []);
-  
-  // Send a message to the chat API
-  const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim()) {
-      toast({
-        title: "Empty Message",
-        description: "Please enter a message to send",
-        variant: "destructive",
-      });
-      return;
-    }
+  /**
+   * Sends a message to the recipe chat
+   */
+  const sendMessage = useCallback(async () => {
+    if (!message.trim()) return;
     
     try {
-      setIsProcessing(true);
+      setIsSending(true);
       const messageId = nanoid();
+      const timestamp = Date.now();
       
-      // Create an optimistic message
-      const optimisticMsg = createOptimisticMessage(message, messageId);
-      setOptimisticMessages((prev) => [...prev, optimisticMsg]);
+      // Create optimistic message that will be displayed while sending
+      const optimisticMessage: OptimisticMessage = {
+        id: messageId,
+        user_message: message.trim(),
+        status: 'pending',
+        timestamp,
+        meta: { 
+          optimistic_id: messageId,
+          recipe_id: recipe.id 
+        }
+      };
       
-      // Make the API call
-      await chatMutation.mutateAsync({
-        message,
-        messageId,
+      // Add optimistic message to UI
+      addOptimisticMessage(optimisticMessage);
+      
+      // Save message to database
+      await supabase.from('recipe_chats').insert({
+        recipe_id: recipe.id,
+        user_message: message.trim(),
+        ai_response: null, // Will be updated via webhook/function
+        source_type: 'chat'
       });
       
-      // Update optimistic message to 'complete'
-      updateOptimisticMessageStatus(messageId, 'complete');
-      
-      // Remove optimistic message after a short delay
-      setTimeout(() => {
-        removeOptimisticMessage(messageId);
-      }, 300);
-      
+      // Clear message input
+      setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Failed to send message",
-        description: error instanceof Error ? error.message : "Try again later",
-        variant: "destructive",
-      });
+      // Message will be marked as error by the optimistic messages hook
     } finally {
-      setIsProcessing(false);
+      setIsSending(false);
     }
-  }, [chatMutation, removeOptimisticMessage, updateOptimisticMessageStatus]);
+  }, [message, recipe.id, addOptimisticMessage]);
   
-  // Retry a failed message
+  /**
+   * Retry sending a failed message
+   */
   const retryMessage = useCallback(async (originalMessage: string, originalMessageId: string) => {
     try {
-      // Remove the old optimistic message first
-      removeOptimisticMessage(originalMessageId);
+      setIsSending(true);
+      const timestamp = Date.now();
       
-      // Generate a new message ID
-      const newMessageId = nanoid();
+      // Create new optimistic message
+      const optimisticMessage: OptimisticMessage = {
+        id: nanoid(),
+        user_message: originalMessage,
+        status: 'pending',
+        timestamp,
+        meta: { 
+          optimistic_id: nanoid(),
+          recipe_id: recipe.id 
+        }
+      };
       
-      // Create a new optimistic message
-      const newOptimisticMsg = createOptimisticMessage(originalMessage, newMessageId);
-      setOptimisticMessages((prev) => [...prev, newOptimisticMsg]);
+      // Add optimistic message to UI
+      addOptimisticMessage(optimisticMessage);
       
-      // Send the message again
-      await chatMutation.mutateAsync({
-        message: originalMessage,
-        messageId: newMessageId,
-        isRetry: true,
+      // Save message to database
+      await supabase.from('recipe_chats').insert({
+        recipe_id: recipe.id,
+        user_message: originalMessage,
+        ai_response: null,
+        source_type: 'chat'
       });
-      
-      // Update optimistic message to 'complete'
-      updateOptimisticMessageStatus(newMessageId, 'complete');
-      
-      // Remove optimistic message after a short delay
-      setTimeout(() => {
-        removeOptimisticMessage(newMessageId);
-      }, 300);
-      
     } catch (error) {
       console.error('Error retrying message:', error);
-      toast({
-        title: "Retry Failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
+    } finally {
+      setIsSending(false);
     }
-  }, [chatMutation, removeOptimisticMessage, updateOptimisticMessageStatus]);
+  }, [recipe.id, addOptimisticMessage]);
   
-  // Upload an image and send it to the chat
-  const uploadImage = useCallback(async (file: File) => {
-    if (!file) {
-      toast({
-        title: "No file selected",
-        description: "Please select an image to upload",
-        variant: "destructive",
-      });
-      return;
-    }
+  /**
+   * Upload a recipe image
+   */
+  const uploadRecipeImage = useCallback(async (file: File) => {
+    if (!file) return;
     
     try {
-      setIsProcessing(true);
-      const messageId = nanoid();
+      setIsUploading(true);
       
-      // Create an optimistic message with placeholder text
-      const optimisticMsg = createOptimisticMessage("Analyzing image...", messageId);
-      setOptimisticMessages((prev) => [...prev, optimisticMsg]);
-      
-      // Upload the image
-      const { path } = await uploadImageToStorage(file);
-      
-      if (!path) {
-        throw new Error("Failed to upload image");
-      }
-      
-      // Make the API call with the image path
-      await chatMutation.mutateAsync({
-        message: "Analyze this image",
-        messageId,
-        sourceType: 'image',
-        sourceImage: path,
+      // Upload file to storage
+      const imageUrl = await uploadImage(file, {
+        onProgress: setUploadProgress
       });
       
-      // Update optimistic message to 'complete'
-      updateOptimisticMessageStatus(messageId, 'complete');
+      // Create optimistic message with image
+      const optimisticMessage: OptimisticMessage = {
+        id: nanoid(),
+        user_message: 'I uploaded an image',
+        status: 'pending',
+        timestamp: Date.now(),
+        meta: { 
+          optimistic_id: nanoid(),
+          recipe_id: recipe.id,
+          image_url: imageUrl
+        }
+      };
       
-      // Remove optimistic message after a short delay
-      setTimeout(() => {
-        removeOptimisticMessage(messageId);
-      }, 300);
+      // Add optimistic message to UI
+      addOptimisticMessage(optimisticMessage);
       
+      // Save message with image to database
+      await supabase.from('recipe_chats').insert({
+        recipe_id: recipe.id,
+        user_message: 'I uploaded an image',
+        source_image: imageUrl,
+        source_type: 'image',
+        ai_response: null
+      });
+      
+      return imageUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast({
-        title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
+      throw error;
     } finally {
-      setIsProcessing(false);
+      setIsUploading(false);
     }
-  }, [chatMutation, removeOptimisticMessage, updateOptimisticMessageStatus]);
+  }, [recipe.id, addOptimisticMessage]);
+  
+  /**
+   * Submit a URL to analyze
+   */
+  const submitRecipeUrl = useCallback(async (url: string) => {
+    if (!url || !url.trim()) return;
+    
+    try {
+      setIsSending(true);
+      
+      // Create optimistic message
+      const optimisticMessage: OptimisticMessage = {
+        id: nanoid(),
+        user_message: `Analyze this recipe: ${url}`,
+        status: 'pending',
+        timestamp: Date.now(),
+        meta: { 
+          optimistic_id: nanoid(),
+          recipe_id: recipe.id,
+          url
+        }
+      };
+      
+      // Add optimistic message to UI
+      addOptimisticMessage(optimisticMessage);
+      
+      // Save URL submission to database
+      await supabase.from('recipe_chats').insert({
+        recipe_id: recipe.id,
+        user_message: `Analyze this recipe: ${url}`,
+        source_url: url,
+        source_type: 'url',
+        ai_response: null
+      });
+      
+    } catch (error) {
+      console.error('Error submitting URL:', error);
+    } finally {
+      setIsSending(false);
+    }
+  }, [recipe.id, addOptimisticMessage]);
 
   return {
+    message,
+    setMessage,
     sendMessage,
     retryMessage,
-    uploadImage,
-    optimisticMessages,
-    isProcessing,
+    uploadRecipeImage,
+    submitRecipeUrl,
+    isSending,
+    isUploading,
+    uploadProgress
   };
 }

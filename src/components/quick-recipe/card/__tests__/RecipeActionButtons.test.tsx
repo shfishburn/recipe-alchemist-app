@@ -2,101 +2,138 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RecipeActionButtons } from '../RecipeActionButtons';
-import { QuickRecipe } from '@/types/quick-recipe';
-import '@testing-library/jest-dom';
+import { vi, expect, describe, it, beforeEach, Mock } from 'vitest';
+import { toast } from '@/hooks/use-toast';
+import type { QuickRecipe } from '@/types/quick-recipe';
 
-// Mock the useToast hook
-jest.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: jest.fn()
-  })
+// Mock toast
+vi.mock('@/hooks/use-toast', () => ({
+  toast: vi.fn()
 }));
 
+// Mock navigator APIs
+Object.assign(navigator, { 
+  clipboard: { 
+    writeText: vi.fn(() => Promise.resolve()) 
+  },
+  share: vi.fn(() => Promise.resolve())
+});
+
+// Test recipe data
+const testRecipe: QuickRecipe = {
+  id: 'test-id',
+  title: 'Test Recipe',
+  description: 'Test description',
+  ingredients: [
+    { 
+      qty_metric: 1, 
+      unit_metric: 'cup', 
+      qty_imperial: 1, 
+      unit_imperial: 'cup', 
+      item: 'sugar' 
+    }
+  ],
+  instructions: ['Step 1', 'Step 2'],
+  servings: 4
+};
+
 describe('RecipeActionButtons', () => {
-  const mockRecipe: QuickRecipe = {
-    id: "test-recipe-id",
-    title: 'Test Recipe',
-    ingredients: [{ item: 'Test Ingredient', qty: 1, unit: 'cup' }],
-    instructions: ['Step 1', 'Step 2'],
-    servings: 2
-  };
-  
-  const mockOnSave = jest.fn().mockResolvedValue(undefined);
-  const mockResetSaveSuccess = jest.fn();
+  let mockOnSave: Mock;
   
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockOnSave = vi.fn();
+    vi.clearAllMocks();
   });
 
-  it('renders the save button in default state', () => {
+  it('renders all action buttons', () => {
     render(
       <RecipeActionButtons 
-        recipe={mockRecipe} 
+        recipe={testRecipe}
+      />
+    );
+    
+    expect(screen.getAllByRole('button')).toHaveLength(4);
+  });
+  
+  it('calls onSave when save button is clicked', () => {
+    render(
+      <RecipeActionButtons 
+        recipe={testRecipe}
         onSave={mockOnSave}
       />
     );
     
-    expect(screen.getByText('Save Recipe')).toBeInTheDocument();
-    expect(screen.queryByText('Saved')).not.toBeInTheDocument();
+    // Find save button (first button)
+    const saveButton = screen.getAllByRole('button')[0];
+    fireEvent.click(saveButton);
+    
+    expect(mockOnSave).toHaveBeenCalledWith(testRecipe);
   });
   
-  it('renders the saved state when saveSuccess is true', () => {
+  it('shows check icon when save is successful', () => {
     render(
       <RecipeActionButtons 
-        recipe={mockRecipe} 
+        recipe={testRecipe}
         onSave={mockOnSave}
         saveSuccess={true}
       />
     );
     
-    expect(screen.getByText('Saved')).toBeInTheDocument();
-    expect(screen.queryByText('Save Recipe')).not.toBeInTheDocument();
+    expect(screen.getByTestId('check')).toBeInTheDocument();
   });
-  
-  it('disables the button when isSaving is true', () => {
+
+  it('shows loading state when saving', () => {
     render(
       <RecipeActionButtons 
-        recipe={mockRecipe} 
+        recipe={testRecipe}
         onSave={mockOnSave}
         isSaving={true}
       />
     );
     
-    const saveButton = screen.getByText('Saving...');
-    expect(saveButton).toBeInTheDocument();
-    expect(saveButton.closest('button')).toBeDisabled();
+    // First button should be disabled while saving
+    const saveButton = screen.getAllByRole('button')[0];
+    expect(saveButton).toBeDisabled();
   });
   
-  it('calls onSave when the save button is clicked', async () => {
+  it('copies recipe text to clipboard when copy option is clicked', async () => {
     render(
       <RecipeActionButtons 
-        recipe={mockRecipe} 
-        onSave={mockOnSave}
+        recipe={testRecipe}
       />
     );
     
-    fireEvent.click(screen.getByText('Save Recipe'));
+    // Open dropdown menu
+    const moreButton = screen.getAllByRole('button')[3];
+    fireEvent.click(moreButton);
     
-    await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalledTimes(1);
-    });
+    // Click copy option
+    const copyButton = await screen.findByText(/copy recipe text/i);
+    fireEvent.click(copyButton);
+    
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('Recipe copied')
+      })
+    );
   });
   
-  it('resets saveSuccess when trying to save again', async () => {
+  it('resets save success state after timeout', async () => {
+    const onResetSaveSuccess = vi.fn();
+    
     render(
       <RecipeActionButtons 
-        recipe={mockRecipe} 
+        recipe={testRecipe}
         onSave={mockOnSave}
         saveSuccess={true}
-        onResetSaveSuccess={mockResetSaveSuccess}
+        onResetSaveSuccess={onResetSaveSuccess}
       />
     );
     
-    fireEvent.click(screen.getByText('Saved'));
-    
+    // Wait for the reset timeout
     await waitFor(() => {
-      expect(mockResetSaveSuccess).toHaveBeenCalledTimes(1);
-      expect(mockOnSave).toHaveBeenCalledTimes(1);
-    });
+      expect(onResetSaveSuccess).toHaveBeenCalled();
+    }, { timeout: 2500 });
   });
 });

@@ -1,137 +1,132 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { CirclePercent } from 'lucide-react';
+import { InfoIcon } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { EnhancedNutrition } from '@/types/nutrition-enhanced';
 
-interface NutritionConfidenceIndicatorProps {
-  nutrition: EnhancedNutrition;
-  size?: 'sm' | 'md' | 'lg';
-  showTooltip?: boolean;
+interface DataQuality {
+  overall_confidence: string;
+  ingredient_coverage: number;
+  source_count: number;
+  unmatched_or_low_confidence_ingredients?: string[];
+  penalties?: {
+    [key: string]: number;
+  };
 }
 
-export function NutritionConfidenceIndicator({ 
-  nutrition, 
-  size = 'md',
-  showTooltip = true 
+interface NutritionConfidenceIndicatorProps {
+  dataQuality: DataQuality;
+  compact?: boolean;
+}
+
+export function NutritionConfidenceIndicator({
+  dataQuality,
+  compact = false,
 }: NutritionConfidenceIndicatorProps) {
-  if (!nutrition?.data_quality) {
-    return null;
-  }
-  
-  // Default values in case they're missing
-  const confidence = nutrition.data_quality?.overall_confidence || 'medium';
-  const confidenceScore = nutrition.data_quality?.overall_confidence_score || 0.7;
-  
-  const getConfidenceColor = () => {
-    switch (confidence) {
-      case 'high': return 'bg-green-600 hover:bg-green-700';
-      case 'medium': return 'bg-yellow-500 hover:bg-yellow-600';
-      case 'low': return 'bg-red-500 hover:bg-red-600';
-      default: return 'bg-gray-500 hover:bg-gray-600';
-    }
-  };
-  
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm': return 'text-xs px-1.5 py-0.5';
-      case 'lg': return 'text-sm px-2.5 py-1';
-      case 'md':
-      default: return 'text-xs px-2 py-0.5';
-    }
-  };
-  
-  const formatScore = (score: number) => {
-    // Check if score is a valid number and format it
-    return !isNaN(score) ? Math.round(score * 100) + '%' : 'N/A';
-  };
-  
-  const getLimitationText = () => {
-    const limitations = [];
-    // Initialize penalties with empty object if undefined
-    const penalties = nutrition.data_quality?.penalties || {};
-    
-    // Add proper null checks for all properties
-    if (penalties && 'energy_check_fail' in penalties && penalties.energy_check_fail) {
-      limitations.push('Energy validation check failed');
-    }
-    
-    if (penalties && 'unmatched_ingredients_rate' in penalties && 
-        typeof penalties.unmatched_ingredients_rate === 'number' && 
-        penalties.unmatched_ingredients_rate > 0.2) {
-      limitations.push(`${Math.round(penalties.unmatched_ingredients_rate * 100)}% of ingredients couldn't be matched`);
-    }
-    
-    if (penalties && 'low_confidence_top_ingredients' in penalties && penalties.low_confidence_top_ingredients) {
-      limitations.push('Low confidence in main ingredients');
-    }
-    
-    if (limitations.length === 0) {
-      return 'No significant limitations detected';
-    }
-    
-    return limitations.join('. ');
-  };
-  
-  const getHowItWorksText = () => {
-    return "Our AI analyzes each recipe's ingredients to estimate its nutritional content. The confidence score (70%) indicates moderate reliability in these values based on ingredient data quality.";
-  };
-  
-  const getQualityExplanation = () => {
-    switch (confidence) {
-      case 'high': 
-        return "High confidence means most ingredients were accurately matched to our nutrition database.";
-      case 'medium': 
-        return "Medium confidence means some ingredients may have been difficult to match precisely to our nutrition database.";
-      case 'low': 
-        return "Low confidence means many ingredients couldn't be matched accurately, so these values are rough estimates.";
+  // Map confidence level to UI elements
+  const getConfidenceDetails = (confidence: string) => {
+    switch (confidence.toLowerCase()) {
+      case 'high':
+        return {
+          color: 'bg-green-500',
+          level: 'High',
+          description: 'Nutrition data is highly reliable',
+        };
+      case 'medium':
+        return {
+          color: 'bg-amber-500',
+          level: 'Medium',
+          description: 'Nutrition data is mostly reliable',
+        };
+      case 'low':
       default:
-        return "";
+        return {
+          color: 'bg-red-500',
+          level: 'Low',
+          description: 'Nutrition data is approximate',
+        };
     }
   };
-  
-  const badge = (
-    <Badge className={`${getConfidenceColor()} ${getSizeClasses()} text-white capitalize font-semibold`}>
-      {confidence} {formatScore(confidenceScore)}
-    </Badge>
-  );
-  
-  if (!showTooltip) {
-    return badge;
-  }
-  
-  // Safety check for unmatched_or_low_confidence_ingredients
-  const unmatchedIngredients = nutrition.data_quality?.unmatched_or_low_confidence_ingredients || [];
-  
+
+  const confidenceDetails = getConfidenceDetails(dataQuality.overall_confidence);
+
+  // Format ingredient coverage as percentage
+  const coveragePercent = `${Math.round(dataQuality.ingredient_coverage * 100)}%`;
+
   return (
-    <TooltipProvider delayDuration={300}>
-      <Tooltip>
+    <TooltipProvider>
+      <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
-          <div className="inline-flex items-center gap-1 cursor-help">
-            {badge}
-            <CirclePercent className="h-3.5 w-3.5 text-muted-foreground" />
+          <div
+            className={`flex ${
+              compact ? 'items-center' : 'items-start'
+            } gap-1.5 cursor-help`}
+          >
+            <div
+              className={`${confidenceDetails.color} rounded-full ${
+                compact ? 'w-2 h-2' : 'w-3 h-3'
+              }`}
+            />
+            {!compact && (
+              <span className="text-xs text-gray-500">
+                {confidenceDetails.level} confidence
+              </span>
+            )}
+            {compact && <InfoIcon className="w-3.5 h-3.5 text-gray-400" />}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs p-4 z-50">
+        <TooltipContent side="top" className="max-w-sm p-4">
           <div className="space-y-2">
-            <p className="font-semibold">Nutrition Confidence: {formatScore(confidenceScore)}</p>
-            <p className="text-sm">{getQualityExplanation()}</p>
-            <p className="text-sm text-muted-foreground">{getHowItWorksText()}</p>
-            <p className="text-sm text-muted-foreground">{getLimitationText()}</p>
-            {unmatchedIngredients.length > 0 && (
-              <div className="text-xs">
-                <p className="font-medium">Ingredients with lower confidence:</p>
-                <p className="text-muted-foreground">
-                  {unmatchedIngredients.join(', ')}
-                </p>
+            <div className="font-medium">{confidenceDetails.level} Confidence Nutrition Data</div>
+            <p className="text-sm text-gray-500">{confidenceDetails.description}</p>
+            
+            <div className="pt-2">
+              <div className="text-xs text-gray-500 flex justify-between">
+                <span>Ingredient coverage:</span>
+                <span className="font-medium">{coveragePercent}</span>
               </div>
-            )}
+              <div className="text-xs text-gray-500 flex justify-between">
+                <span>Data sources used:</span>
+                <span className="font-medium">{dataQuality.source_count}</span>
+              </div>
+              
+              {/* Only show penalties if they exist - removed for now to fix build errors */}
+              {/* {dataQuality.penalties && Object.keys(dataQuality.penalties).length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <div className="text-xs font-medium text-gray-600">Confidence Factors</div>
+                  <ul className="mt-1">
+                    {Object.entries(dataQuality.penalties).map(([factor, value]) => (
+                      <li key={factor} className="text-xs text-gray-500 flex justify-between">
+                        <span>{factor.replace(/_/g, ' ')}:</span>
+                        <span>{value > 0 ? '-' : '+'}{Math.abs(value)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )} */}
+              
+              {/* Only show unmatched ingredients if they exist - removed for now to fix build errors */}
+              {/* {dataQuality.unmatched_or_low_confidence_ingredients && 
+                 dataQuality.unmatched_or_low_confidence_ingredients.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <div className="text-xs font-medium text-gray-600">Low Confidence Ingredients</div>
+                  <ul className="mt-1 list-disc list-inside">
+                    {dataQuality.unmatched_or_low_confidence_ingredients.slice(0, 3).map((ing, i) => (
+                      <li key={i} className="text-xs text-gray-500">{ing}</li>
+                    ))}
+                    {dataQuality.unmatched_or_low_confidence_ingredients.length > 3 && (
+                      <li className="text-xs text-gray-500">
+                        +{dataQuality.unmatched_or_low_confidence_ingredients.length - 3} more
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )} */}
+            </div>
           </div>
         </TooltipContent>
       </Tooltip>

@@ -1,313 +1,183 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { QuickRecipe } from '@/types/quick-recipe';
-import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
-import { 
-  ModificationStatus, 
-  RecipeModifications, 
-  ModificationHistoryEntry,
-  VersionHistoryEntry 
-} from './types';
-import { requestRecipeModifications } from './api-client';
-import { saveModificationRequest } from './storage-utils';
 
-export function useRecipeModifications(recipe: QuickRecipe) {
-  const { session } = useAuth();
-  const [status, setStatus] = useState<ModificationStatus>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const [modificationRequest, setModificationRequest] = useState<string>('');
-  const [modifications, setModifications] = useState<RecipeModifications | null>(null);
-  const [modificationHistory, setModificationHistory] = useState<ModificationHistoryEntry[]>([]);
-  const [modifiedRecipe, setModifiedRecipe] = useState<QuickRecipe>(recipe);
-  const [versionHistory, setVersionHistory] = useState<VersionHistoryEntry[]>([]);
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import type { QuickRecipe } from '@/types/quick-recipe';
+import { useToast } from '@/hooks/use-toast';
 
-  const pendingRequestRef = useRef<string | null>(null);
-  const requestTimerRef = useRef<number | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+export interface VersionInfo {
+  version_number: number;
+  modification_reason?: string;
+  modified_at?: string;
+  modified_by?: string;
+  previous_version_id?: string;
+}
 
-  // Reset on recipe change
-  useEffect(() => {
-    console.log("Recipe changed in useRecipeModifications:", recipe.id);
-    setModifiedRecipe(recipe);
-    setStatus('idle');
-    setError(null);
-    setModifications(null);
-    // keep history
-    
-    // Fetch version history when recipe changes
-    if (recipe.id) {
-      fetchVersionHistory(recipe.id);
-    }
-  }, [recipe.id]);
+export function useRecipeModifications(initialRecipe?: QuickRecipe) {
+  const [recipe, setRecipe] = useState<QuickRecipe & { version_info?: VersionInfo }>(
+    initialRecipe || {} as QuickRecipe
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false); 
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-      if (requestTimerRef.current != null) window.clearTimeout(requestTimerRef.current);
-    };
-  }, []);
-  
-  // Fetch recipe version history
-  const fetchVersionHistory = async (recipeId: string) => {
-    if (!session) {
-      console.log("Cannot fetch version history: No session");
-      return;
-    }
-    
+  /**
+   * Save a new version of the recipe
+   */
+  const saveRecipeVersion = useCallback(async (
+    modifiedRecipe: QuickRecipe,
+    reason?: string
+  ) => {
     try {
-      console.log("Fetching version history for recipe:", recipeId);
-      setStatus('loading');
+      setIsSaving(true);
       
-      const token = session.access_token;
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recipe-versions/${recipeId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("You must be logged in to save a recipe");
+      }
+      
+      // Determine version number
+      const currentVersion = modifiedRecipe.version_number || 1;
+      const newVersionNumber = currentVersion + 1;
+      
+      // Create version info
+      const versionInfo: VersionInfo = {
+        version_number: newVersionNumber,
+        modification_reason: reason || 'Recipe updated',
+        modified_at: new Date().toISOString(),
+        modified_by: user.id,
+        previous_version_id: modifiedRecipe.id
+      };
+      
+      // Create a new recipe with a new ID
+      const newRecipe = {
+        ...modifiedRecipe,
+        id: undefined, // Let the database generate a new ID
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        version_number: newVersionNumber,
+        previous_version_id: modifiedRecipe.id,
+        version_info: versionInfo
+      };
+      
+      // Insert new recipe into database
+      const { data, error } = await supabase
+        .from('recipes')
+        .insert([newRecipe])
+        .select('*')
+        .single();
+        
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // After new version is saved, store the version info in the recipes_versions table
+      await supabase.from('recipe_versions').insert([{
+        recipe_id: data.id,
+        parent_version_id: modifiedRecipe.id,
+        version_number: newVersionNumber,
+        user_id: user.id,
+        modification_request: reason || 'Recipe updated',
+        recipe_data: modifiedRecipe
+      }]);
+      
+      setRecipe(data);
+      setSaveSuccess(true);
+      
+      // Reset save success after a short delay
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+      
+      // Show success toast
+      toast({
+        title: "Recipe updated successfully",
+        description: `A new version (v${newVersionNumber}) has been created`,
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch version history');
-      }
+      // Navigate to the new recipe version
+      navigate(`/recipes/${data.id}`);
       
-      const versions = await response.json();
-      console.log(`Fetched ${versions.length} versions for recipe:`, recipeId);
-      setVersionHistory(versions);
+      return data;
+    } catch (error: any) {
+      // Show error toast
+      toast({
+        title: "Failed to save recipe",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
       
-      // Set selected version to the latest one
-      if (versions.length > 0) {
-        const latestVersion = versions[0]; // Already sorted descending
-        console.log("Setting selected version to latest:", latestVersion.version_id);
-        setSelectedVersionId(latestVersion.version_id);
-        
-        // If the recipe doesn't have a version_id, use the latest version data
-        if (!recipe.version_id) {
-          console.log("Recipe has no version_id, using latest version data");
-          setModifiedRecipe({
-            ...recipe,
-            ...latestVersion.recipe_data,
-            version_id: latestVersion.version_id
-          });
-        }
-      }
-      
-      setStatus('idle');
-    } catch (err) {
-      console.error("Error fetching version history:", err);
-      setError(err instanceof Error ? err.message : 'Unknown error fetching versions');
-      setStatus('error');
+      console.error("Error saving recipe version:", error);
+      return null;
+    } finally {
+      setIsSaving(false);
     }
-  };
+  }, [navigate, toast]);
   
-  // Select a specific version
-  const selectVersion = useCallback((versionId: string) => {
-    console.log("Selecting version:", versionId);
-    const version = versionHistory.find(v => v.version_id === versionId);
-    if (version) {
-      setSelectedVersionId(versionId);
-      setModifiedRecipe({
-        ...recipe,
-        ...version.recipe_data,
-        version_id: version.version_id
-      });
-      setStatus('applied');
-      console.log("Version selected successfully:", versionId);
-    } else {
-      console.warn("Version not found:", versionId);
-    }
-  }, [versionHistory, recipe]);
-
-  const requestModifications = useCallback(async (request: string, immediate = false) => {
-    if (!request.trim()) return;
-
-    // Fail fast if no authentication
-    if (!session) {
-      setError('Authentication required to modify recipes');
-      setStatus('not-authenticated');
-      // Save current request to localStorage for after login
-      saveModificationRequest(request, immediate);
-      return;
-    }
-
-    console.log("Initiating modification request:", request.substring(0, 50) + (request.length > 50 ? "..." : ""));
-    
-    // cancel previous
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = null;
-    if (requestTimerRef.current != null) window.clearTimeout(requestTimerRef.current);
-
-    pendingRequestRef.current = request;
-
-    const executeRequest = async () => {
-      if (!pendingRequestRef.current) return;
-      const actualRequest = pendingRequestRef.current;
-      pendingRequestRef.current = null;
-
-      setModificationRequest(actualRequest);
-      setStatus('loading');
-      setError(null);
-
-      // get session token
-      const token = session?.access_token;
-      if (!token) {
-        setError('Authentication required');
-        setStatus('not-authenticated');
-        return;
-      }
-
-      abortControllerRef.current = new AbortController();
-
-      try {
-        console.log("Executing modification request:", actualRequest.substring(0, 50) + (actualRequest.length > 50 ? "..." : ""));
-        console.log("Using recipe version:", modifiedRecipe.version_id || "none");
-        
-        const validated = await requestRecipeModifications(
-          modifiedRecipe,
-          actualRequest,
-          modificationHistory,
-          token,
-          abortControllerRef.current
-        );
-        
-        abortControllerRef.current = null;
-        
-        console.log("Modification request succeeded, response:", {
-          recipeId: validated.recipe?.id,
-          recipeTitle: validated.recipe?.title,
-          versionId: validated.recipe?.version_id
-        });
-        
-        const entry: ModificationHistoryEntry = {
-          request: actualRequest,
-          response: validated,
-          timestamp: new Date().toISOString(),
-          applied: false
-        };
-        
-        setModifications(validated);
-        setModificationHistory(h => [...h, entry]);
-        setStatus('success');
-        
-        // Refresh version history
-        if (recipe.id) {
-          console.log("Refreshing version history after successful modification");
-          fetchVersionHistory(recipe.id);
-        }
-      } catch (err: any) {
-        abortControllerRef.current = null;
-        
-        if (err.name === 'AbortError') {
-          console.log("Modification request aborted");
-          setStatus('canceled');
-        } else {
-          console.error('Modification error:', err);
-          setError(err.message);
-          setStatus(err.message.includes('not deployed') ? 'not-deployed' : 'error');
-          toast.error("Modification failed", { description: err.message });
-        }
-      }
-    };
-
-    if (immediate) {
-      console.log("Executing modification request immediately");
-      await executeRequest();
-    } else {
-      console.log("Scheduling modification request with delay");
-      requestTimerRef.current = window.setTimeout(executeRequest, 800);
-    }
-  }, [modifiedRecipe, modificationHistory, session, recipe.id]);
-
-  const applyModifications = useCallback(() => {
-    if (!modifications || status !== 'success') {
-      console.warn("Cannot apply modifications - status is not 'success' or modifications are null");
-      return;
-    }
-    
-    console.log("Applying modifications to recipe", modifiedRecipe.id);
-    setStatus('applying');
-    
+  /**
+   * Delete a recipe
+   */
+  const deleteRecipe = useCallback(async (recipeId: string) => {
     try {
-      // With the complete recipe update approach, we can just use the complete recipe
-      const next = modifications.recipe;
-      console.log("New recipe data:", {
-        id: next.id,
-        title: next.title,
-        versionId: next.version_id,
-        ingredientsCount: next.ingredients?.length || 0,
-        stepsCount: next.steps?.length || 0
+      setIsDeleting(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("You must be logged in to delete a recipe");
+      }
+      
+      // Soft delete the recipe by setting deleted_at
+      const { error } = await supabase
+        .from('recipes')
+        .update({
+          deleted_at: new Date().toISOString()
+        })
+        .eq('id', recipeId)
+        .eq('user_id', user.id);
+        
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Show success toast
+      toast({
+        title: "Recipe deleted",
+        description: "The recipe has been moved to trash",
       });
       
-      setModifiedRecipe(next);
-      setStatus('applied');
-      setModifications(null);
-      setModificationHistory(h =>
-        h.map((e, i) => i === h.length - 1 ? { ...e, applied: true } : e)
-      );
-      toast.success("Recipe updated");
-      console.log("Modifications applied successfully");
+      // Navigate back to recipes page
+      navigate('/recipes');
       
-      // Refresh version history
-      if (recipe.id) {
-        console.log("Refreshing version history after applying modifications");
-        fetchVersionHistory(recipe.id);
-      }
-    } catch (err: any) {
-      console.error("Error applying modifications:", err);
-      setError(err.message);
-      setStatus('error');
-      toast.error("Apply failed");
+      return true;
+    } catch (error: any) {
+      // Show error toast
+      toast({
+        title: "Failed to delete recipe",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      
+      console.error("Error deleting recipe:", error);
+      return false;
+    } finally {
+      setIsDeleting(false);
     }
-  }, [modifications, status, recipe.id]);
-
-  const rejectModifications = useCallback(() => {
-    console.log("Rejecting modifications");
-    setModifications(null);
-    setStatus('idle');
-    setModificationHistory(h =>
-      h.map((e, i) => i === h.length - 1 ? { ...e, applied: false } : e)
-    );
-    toast.info("Modifications rejected");
-  }, []);
-
-  const cancelRequest = useCallback(() => {
-    console.log("Canceling modification request");
-    abortControllerRef.current?.abort();
-    pendingRequestRef.current = null;
-    if (requestTimerRef.current != null) window.clearTimeout(requestTimerRef.current);
-    setStatus('canceled');
-    setError(null);
-    toast.info("Request canceled");
-  }, []);
-
-  const resetToOriginal = useCallback(() => {
-    console.log("Resetting recipe to original version");
-    setModifiedRecipe(recipe);
-    setStatus('idle');
-    setError(null);
-    setModifications(null);
-    setModificationHistory(h => h.map(e => ({ ...e, applied: false })));
-    toast.success("Reset to original");
-  }, [recipe]);
+  }, [navigate, toast]);
 
   return {
-    status,
-    error,
-    modifications,
-    modifiedRecipe,
-    modificationRequest,
-    modificationHistory,
-    versionHistory,
-    selectedVersionId,
-    isModified: JSON.stringify(recipe) !== JSON.stringify(modifiedRecipe),
-    requestModifications,
-    applyModifications,
-    rejectModifications,
-    cancelRequest,
-    resetToOriginal,
-    selectVersion,
-    refreshVersionHistory: () => recipe.id && fetchVersionHistory(recipe.id)
+    recipe,
+    setRecipe,
+    isSaving,
+    isDeleting,
+    saveSuccess,
+    saveRecipeVersion,
+    deleteRecipe,
+    resetSaveSuccess: () => setSaveSuccess(false)
   };
 }
