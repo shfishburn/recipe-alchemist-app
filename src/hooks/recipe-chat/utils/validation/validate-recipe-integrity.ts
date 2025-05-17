@@ -1,83 +1,75 @@
 
-import type { Recipe, Ingredient } from '@/types/recipe';
+import type { Recipe } from '@/types/recipe';
 
 /**
- * Validates that a recipe object has all required properties with correct types
- * This helps ensure consistency between frontend and database types
- * @param recipe The recipe to validate
- * @throws Error if the recipe is invalid or missing required fields
+ * Validates that a recipe object contains all required fields
+ * and that they are in the expected format
+ * @param recipe The recipe object to validate
+ * @throws Error if the recipe is invalid
  */
-export function ensureRecipeIntegrity(recipe: any): void {
-  // Check for required top-level fields
-  if (!recipe) {
-    throw new Error("Recipe cannot be null or undefined");
-  }
-  
+export function ensureRecipeIntegrity(recipe: Recipe): void {
+  // Check required fields
   if (!recipe.id) {
-    throw new Error("Recipe is missing required ID field");
+    throw new Error("Recipe is missing ID");
   }
   
-  if (!recipe.title) {
-    throw new Error("Recipe is missing required title field");
+  if (!recipe.title || typeof recipe.title !== 'string') {
+    throw new Error("Recipe is missing valid title");
   }
   
-  // Validate ingredients array
-  if (!Array.isArray(recipe.ingredients)) {
-    throw new Error("Recipe ingredients must be an array");
-  }
-  
-  if (recipe.ingredients.length === 0) {
+  if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
     throw new Error("Recipe must have at least one ingredient");
   }
   
-  // Validate instructions array
-  if (!Array.isArray(recipe.instructions)) {
-    throw new Error("Recipe instructions must be an array");
+  if (!Array.isArray(recipe.instructions) || recipe.instructions.length === 0) {
+    throw new Error("Recipe must have at least one instruction");
   }
   
-  if (recipe.instructions.length === 0) {
-    throw new Error("Recipe must have at least one instruction step");
-  }
-  
-  // Validate that ingredients have required fields
+  // Validate ingredients
   for (let i = 0; i < recipe.ingredients.length; i++) {
     const ingredient = recipe.ingredients[i];
-    
-    if (!ingredient) {
-      throw new Error(`Ingredient at index ${i} is null or undefined`);
+    if (typeof ingredient !== 'object' || ingredient === null) {
+      throw new Error(`Ingredient ${i+1} is invalid (not an object)`);
     }
     
-    // Check for item field which is absolutely required
-    if (!ingredient.item) {
-      throw new Error(`Ingredient at index ${i} is missing required 'item' field`);
+    if (!ingredient.item || typeof ingredient.item !== 'string') {
+      throw new Error(`Ingredient ${i+1} is missing item name`);
     }
-    
-    // Add fallbacks for common measurement fields
-    recipe.ingredients[i] = {
-      qty_metric: ingredient.qty_metric ?? 0,
-      unit_metric: ingredient.unit_metric ?? '',
-      qty_imperial: ingredient.qty_imperial ?? 0, 
-      unit_imperial: ingredient.unit_imperial ?? '',
-      ...ingredient
-    };
   }
   
-  // Ensure science_notes is an array
-  if (!Array.isArray(recipe.science_notes)) {
+  // Validate instructions
+  for (let i = 0; i < recipe.instructions.length; i++) {
+    const instruction = recipe.instructions[i];
+    if (typeof instruction !== 'string' || instruction.trim() === '') {
+      throw new Error(`Instruction ${i+1} is invalid (empty or not a string)`);
+    }
+  }
+  
+  // Validate science_notes if present
+  if (recipe.science_notes !== undefined && recipe.science_notes !== null) {
+    if (!Array.isArray(recipe.science_notes)) {
+      throw new Error("science_notes must be an array");
+    }
+    
+    // Ensure science_notes is an array of strings
+    recipe.science_notes = recipe.science_notes.map(note => 
+      typeof note === 'string' ? note : String(note)
+    );
+  } else {
+    // Ensure science_notes is at least an empty array
     recipe.science_notes = [];
   }
-  
-  // Validate servings is a number
-  if (typeof recipe.servings !== 'number' || isNaN(recipe.servings)) {
-    recipe.servings = 1;
+
+  // Validate basic types
+  if (recipe.servings !== undefined && typeof recipe.servings !== 'number') {
+    recipe.servings = Number(recipe.servings) || 2; // Default to 2 servings if invalid
   }
   
-  // Add basic defaults for missing fields to prevent database errors
-  recipe.prep_time_min = recipe.prep_time_min || recipe.prepTime || 0;
-  recipe.cook_time_min = recipe.cook_time_min || recipe.cookTime || 0;
+  if (recipe.prep_time_min !== undefined && typeof recipe.prep_time_min !== 'number') {
+    recipe.prep_time_min = Number(recipe.prep_time_min) || 0;
+  }
   
-  // Ensure updated_at is formatted as a string date
-  if (!recipe.updated_at) {
-    recipe.updated_at = new Date().toISOString();
+  if (recipe.cook_time_min !== undefined && typeof recipe.cook_time_min !== 'number') {
+    recipe.cook_time_min = Number(recipe.cook_time_min) || 0;
   }
 }

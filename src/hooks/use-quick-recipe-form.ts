@@ -26,9 +26,7 @@ export function useQuickRecipeForm() {
   
   // Store navigate function in the global store for use in other components
   useEffect(() => {
-    if (setNavigate) {
-      setNavigate(navigate);
-    }
+    setNavigate(navigate);
   }, [navigate, setNavigate]);
   
   // Handle form submission
@@ -46,14 +44,13 @@ export function useQuickRecipeForm() {
         return null;
       }
       
-      // Ensure cuisine and dietary fields are always arrays, never undefined or null
-      const processedFormData: QuickRecipeFormData = {
+      // Ensure cuisine has a valid value - never undefined or null
+      const processedFormData = {
         ...formData,
         cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : 
                 (formData.cuisine ? [formData.cuisine] : ['any']), // Ensure it's an array with at least 'any'
         dietary: Array.isArray(formData.dietary) ? formData.dietary : 
-                (formData.dietary ? [formData.dietary] : []),  // Ensure it's an array
-        servings: formData.servings || 1 // Ensure servings has a default value
+                (formData.dietary ? [formData.dietary] : [])  // Ensure it's an array
       };
 
       console.log("Processed form data:", processedFormData);
@@ -66,11 +63,12 @@ export function useQuickRecipeForm() {
       setFormData(processedFormData);
       
       // Initialize loading state with estimated time
-      updateLoadingState(currentState => ({
+      updateLoadingState({
         step: 0,
         stepDescription: "Analyzing your ingredients...",
-        percentComplete: 0
-      }));
+        percentComplete: 0,
+        estimatedTimeRemaining: 30
+      });
       
       // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");

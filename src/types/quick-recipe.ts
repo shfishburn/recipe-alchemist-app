@@ -23,16 +23,17 @@ export interface VersionInfo {
   modification_reason: string;
 }
 
-// QuickRecipe interface that's compatible with Recipe
+// Rename/alias QuickRecipe as Recipe for backward compatibility
+export type Recipe = QuickRecipe;
+
 export interface QuickRecipe {
-  id?: string; // Made optional to match usage in LoadingPage
   title: string;
   tagline?: string;
   description?: string;
   ingredients: Ingredient[];
-  instructions?: string[]; // Made optional but we'll handle both instructions and steps
-  steps?: string[]; // For backwards compatibility
-  servings: number; // Required in QuickRecipe
+  steps?: string[];
+  instructions?: string[];
+  servings: number;
   prep_time_min?: number;
   cook_time_min?: number;
   prepTime?: number;
@@ -44,9 +45,10 @@ export interface QuickRecipe {
   cuisine?: string[] | string;
   dietary?: string[] | string;
   flavor_tags?: string[];
-  highlights?: string[];
+  highlights?: string[]; // Added for RecipeHighlights component
   user_id?: string;
-  slug?: string;
+  id?: string;
+  slug?: string;  // Added slug property
   // Version-related properties
   version_id?: string;
   version_info?: VersionInfo;
@@ -56,21 +58,12 @@ export interface QuickRecipe {
   isError?: boolean;
 }
 
-// Export Recipe type - explicitly define what's required and what's optional
-// to align with the Recipe type from recipe.ts
-export interface Recipe extends QuickRecipe {
-  id: string; // Required in Recipe type
-  instructions: string[]; // Required in Recipe type
-  servings: number; // Explicitly required in both types
-}
-
 export interface QuickRecipeFormData {
   cuisine: string[] | string;
-  dietary: string[] | string; // Required
+  dietary: string[] | string;
   mainIngredient: string;
   servings: number;
   maxCalories?: number;
-  recipeRequest?: string;
 }
 
 export interface QuickRecipeOptions {

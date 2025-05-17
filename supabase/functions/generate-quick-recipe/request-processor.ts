@@ -91,10 +91,7 @@ export function processRequestParams(requestBody: any, debugInfo: string): {
         safeServings,
         safeTags,
         maxCalories,
-        uniqueId,
-        // Add this line to pass the main ingredient as an ingredients array
-        // This ensures compatibility with the buildOpenAIPrompt function
-        ingredients: [safeMain]
+        uniqueId
       }
     };
   } catch (error) {

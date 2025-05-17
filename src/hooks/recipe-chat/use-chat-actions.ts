@@ -15,17 +15,6 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
   const { toast } = useToast();
   const mutation = useChatMutations(recipe);
 
-  // Define the allowed message options type for mutateAsync
-  type MessageOptions = {
-    message: string;
-    sourceType?: 'manual' | 'image' | 'url';
-    sourceUrl?: string;
-    sourceImage?: string;
-    messageId?: string;
-    isRetry?: boolean;
-    meta?: Record<string, any>;
-  };
-
   const sendMessage = async (messageToSend: string = message) => {
     if (!messageToSend.trim()) {
       toast({
@@ -54,18 +43,15 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
     setMessage('');
 
     try {
-      // Define message options with metadata
-      const messageOptions: MessageOptions = {
+      // Send with source_type 'manual' instead of 'analysis'
+      await mutation.mutateAsync({
         message: messageToSend,
-        sourceType: 'manual', // Use 'manual' source type instead of 'analysis'
+        sourceType: 'manual', // Changed from 'analysis' to valid value 'manual'
         messageId,
         meta: {
           use_unified_approach: true // Pass metadata to indicate we want unified recipe approach
         }
-      };
-
-      // Send with the complete options
-      await mutation.mutateAsync(messageOptions);
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -133,16 +119,13 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
         }
       });
 
-      // Define the message options
-      const messageOptions: MessageOptions = {
+      // Send the actual message with the image
+      await mutation.mutateAsync({
         message: "Analyze this image of a recipe",
         sourceType: "image",
         sourceImage: publicUrl,
         messageId
-      };
-
-      // Send the actual message with the image
-      await mutation.mutateAsync(messageOptions);
+      });
 
       setUploadProgress(100);
       
@@ -186,15 +169,12 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
     });
 
     try {
-      // Define the message options
-      const messageOptions: MessageOptions = {
+      await mutation.mutateAsync({
         message: "Analyze this recipe URL",
         sourceType: "url",
         sourceUrl: url,
         messageId
-      };
-
-      await mutation.mutateAsync(messageOptions);
+      });
     } catch (error) {
       console.error("Error submitting URL:", error);
       toast({
@@ -223,17 +203,14 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
     });
 
     try {
-      // Define the message options
-      const messageOptions: MessageOptions = {
+      await mutation.mutateAsync({
         message: failedMessage,
-        sourceType: 'manual',
+        sourceType: 'manual', // Changed from 'analysis' to 'manual'
         messageId,
         meta: {
           use_unified_approach: true // Pass metadata to indicate we want unified recipe approach
         }
-      };
-
-      await mutation.mutateAsync(messageOptions);
+      });
     } catch (error) {
       console.error("Error retrying message:", error);
       toast({

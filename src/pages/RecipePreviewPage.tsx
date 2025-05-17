@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { QuickRecipeDisplay } from '@/components/quick-recipe/QuickRecipeDisplay';
@@ -10,10 +11,9 @@ import LoadingOverlay from '@/components/ui/loading-overlay';
 import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 import { useAuth } from '@/hooks/use-auth';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
-import { QuickRecipe } from '@/types/quick-recipe';
 
 const RecipePreviewPage: React.FC = () => {
-  const recipe = useQuickRecipeStore(state => state.recipe) as QuickRecipe | null;
+  const recipe = useQuickRecipeStore(state => state.recipe);
   const formData = useQuickRecipeStore(state => state.formData);
   const isLoading = useQuickRecipeStore(state => state.isLoading);
   const storeSetLoading = useQuickRecipeStore(state => state.setLoading);
@@ -79,13 +79,7 @@ const RecipePreviewPage: React.FC = () => {
             setIsSaving(true);
             
             try {
-              // Ensure the recipe conforms to QuickRecipe type
-              const quickRecipeData: QuickRecipe = {
-                ...pendingData.recipe,
-                servings: pendingData.recipe.servings || 1 // Default value if missing
-              };
-              
-              const savedData = await saveRecipe(quickRecipeData);
+              const savedData = await saveRecipe(pendingData.recipe);
               
               if (savedData && savedData.slug) {
                 // Use the centralized state management
@@ -147,17 +141,7 @@ const RecipePreviewPage: React.FC = () => {
         return;
       }
 
-      // Normalize the recipe to ensure it has all required fields
-      // Always make sure instructions exists (from steps if needed)
-      const normalizedRecipe: QuickRecipe = {
-        ...recipe,
-        // Ensure both formats are available (steps and instructions)
-        instructions: recipe.instructions || recipe.steps || [],
-        // Ensure servings exists (required for QuickRecipe)
-        servings: recipe.servings || 1
-      };
-
-      const savedData = await saveRecipe(normalizedRecipe);
+      const savedData = await saveRecipe(recipe);
       
       if (savedData && savedData.id && savedData.slug) {
         // Use the centralized state management
