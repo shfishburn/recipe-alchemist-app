@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
-import type { Recipe } from '@/types/recipe';
-import type { QuickRecipeForm } from '@/types/forms';
+import type { QuickRecipe } from '@/types/quick-recipe';
+import type { QuickRecipeFormData } from '@/types/quick-recipe';
 
 interface LoadingState {
   step: number;
@@ -11,8 +11,8 @@ interface LoadingState {
 
 interface QuickRecipeStore {
   // Recipe data
-  recipe: Recipe | null;
-  formData: QuickRecipeForm | null;
+  recipe: QuickRecipe | null;
+  formData: QuickRecipeFormData | null;
   
   // Loading and error states
   isLoading: boolean;
@@ -24,8 +24,8 @@ interface QuickRecipeStore {
   navigate: ((to: string, options?: any) => void) | null;
   
   // Actions
-  setRecipe: (recipe: Recipe | null) => void;
-  setFormData: (formData: QuickRecipeForm | null) => void;
+  setRecipe: (recipe: QuickRecipe | null) => void;
+  setFormData: (formData: QuickRecipeFormData | null) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   setHasTimeoutError: (hasTimeout: boolean) => void;
@@ -70,7 +70,14 @@ export const useQuickRecipeStore = create<QuickRecipeStore>((set, get) => ({
   isRecipeValid: () => {
     const recipe = get().recipe;
     if (!recipe) return false;
-    return !!(recipe.title && recipe.ingredients && recipe.ingredients.length > 0 && recipe.instructions);
+    
+    // Check for required fields from QuickRecipe interface
+    const hasInstructions = Array.isArray(recipe.instructions || recipe.steps) && 
+                           (recipe.instructions?.length || recipe.steps?.length);
+    
+    return !!(recipe.title && recipe.ingredients && 
+             recipe.ingredients.length > 0 && 
+             hasInstructions);
   },
   
   // Reset all state

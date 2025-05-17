@@ -1,3 +1,4 @@
+
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -115,16 +116,18 @@ const LoadingContent = () => {
           throw new Error(generatedRecipe.error_message || "Error generating recipe");
         }
         
-        // Explicitly cast the generated recipe to QuickRecipe to ensure type compatibility
-        const completeRecipe: QuickRecipe = {
+        // Ensure we have valid data - normalize instructions field
+        const normalizedRecipe: QuickRecipe = {
           ...generatedRecipe,
-          id: generatedRecipe.id || '', 
-          servings: generatedRecipe.servings || 1, // Ensure servings exists
-          instructions: generatedRecipe.instructions || generatedRecipe.steps || [], // Handle instructions OR steps
+          // Ensure both formats are available (steps and instructions)
+          instructions: generatedRecipe.instructions || generatedRecipe.steps || [],
+          steps: generatedRecipe.steps || generatedRecipe.instructions || [],
+          // Ensure servings exists (required for QuickRecipe)
+          servings: generatedRecipe.servings || 1
         };
         
-        // Set the recipe
-        setRecipe(completeRecipe);
+        // Set the recipe in the store
+        setRecipe(normalizedRecipe);
         
         // Navigate to the recipe preview
         navigate('/recipe-preview', { replace: true });

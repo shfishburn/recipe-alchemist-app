@@ -13,7 +13,7 @@ import { authStateManager } from '@/lib/auth/auth-state-manager';
 import { QuickRecipe } from '@/types/quick-recipe';
 
 const RecipePreviewPage: React.FC = () => {
-  const recipe = useQuickRecipeStore(state => state.recipe);
+  const recipe = useQuickRecipeStore(state => state.recipe) as QuickRecipe | null;
   const formData = useQuickRecipeStore(state => state.formData);
   const isLoading = useQuickRecipeStore(state => state.isLoading);
   const storeSetLoading = useQuickRecipeStore(state => state.setLoading);
@@ -147,14 +147,17 @@ const RecipePreviewPage: React.FC = () => {
         return;
       }
 
-      // Ensure the recipe conforms to QuickRecipe type by guaranteeing required fields
-      const quickRecipeData: QuickRecipe = {
+      // Normalize the recipe to ensure it has all required fields
+      // Always make sure instructions exists (from steps if needed)
+      const normalizedRecipe: QuickRecipe = {
         ...recipe,
-        servings: recipe.servings || 1, // Default value if missing
-        instructions: recipe.instructions || recipe.steps || [] // Ensure instructions exist
+        // Ensure both formats are available (steps and instructions)
+        instructions: recipe.instructions || recipe.steps || [],
+        // Ensure servings exists (required for QuickRecipe)
+        servings: recipe.servings || 1
       };
 
-      const savedData = await saveRecipe(quickRecipeData);
+      const savedData = await saveRecipe(normalizedRecipe);
       
       if (savedData && savedData.id && savedData.slug) {
         // Use the centralized state management

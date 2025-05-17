@@ -52,7 +52,8 @@ export function useQuickRecipeForm() {
         cuisine: Array.isArray(formData.cuisine) ? formData.cuisine : 
                 (formData.cuisine ? [formData.cuisine] : ['any']), // Ensure it's an array with at least 'any'
         dietary: Array.isArray(formData.dietary) ? formData.dietary : 
-                (formData.dietary ? [formData.dietary] : [])  // Ensure it's an array
+                (formData.dietary ? [formData.dietary] : []),  // Ensure it's an array
+        servings: formData.servings || 1 // Ensure servings has a default value
       };
 
       console.log("Processed form data:", processedFormData);
