@@ -39,7 +39,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isLoadingHistory,
     sendMessage,
     isSending,
-    applyChanges,
+    applyChanges: rawApplyChanges,
     isApplying,
     uploadRecipeImage,
     submitRecipeUrl,
@@ -49,6 +49,23 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
     isUploading,
     refetchChatHistory
   } = useRecipeChat(recipe);
+
+  // Create a wrapper for applyChanges that only takes the chatMessage parameter
+  const applyChanges = async (chatMessage: ChatMessageType) => {
+    try {
+      return await rawApplyChanges(recipe, chatMessage);
+    } catch (error) {
+      handleError(error);
+      toast.error("Changes couldn't be applied", {
+        description: "Please try again or modify your request",
+        action: {
+          label: "Retry",
+          onClick: () => applyChanges(chatMessage),
+        },
+      });
+      return false;
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive or when sending a message
   useEffect(() => {

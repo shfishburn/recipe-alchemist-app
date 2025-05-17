@@ -43,7 +43,7 @@ export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProp
               <ul className={`${textSize} list-disc list-inside text-slate-600 pl-1`}>
                 {changes.ingredients.items.slice(0, 5).map((ingredient, index) => (
                   <li key={index} className="break-words truncate">
-                    {ingredient.qty} {ingredient.unit} {typeof ingredient.item === 'string' ? ingredient.item : JSON.stringify(ingredient.item)}
+                    {ingredient.qty} {ingredient.unit} {ingredient.item}
                     {ingredient.notes ? <span className="text-slate-500 italic"> ({ingredient.notes})</span> : ''}
                   </li>
                 ))}
@@ -67,7 +67,7 @@ export function ChangesSummary({ changes, isMobile = false }: ChangesSummaryProp
                     <li key={index} className="break-words truncate">
                       {typeof instruction === 'string' 
                         ? instruction.substring(0, 60) + (instruction.length > 60 ? '...' : '')
-                        : String(instruction).substring(0, 60) + (String(instruction).length > 60 ? '...' : '')}
+                        : instruction.action?.substring(0, 60) + (instruction.action?.length > 60 ? '...' : '')}
                     </li>
                   ))}
                 {Array.isArray(changes.instructions) && changes.instructions.length > 3 && (

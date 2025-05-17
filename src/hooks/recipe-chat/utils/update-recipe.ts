@@ -1,5 +1,5 @@
 
-import type { Recipe, Ingredient } from '@/types/recipe';
+import type { Recipe } from '@/types/recipe';
 import type { ChatMessage } from '@/types/chat';
 import { findDuplicateIngredients, validateIngredientQuantities } from './ingredients/ingredient-validation';
 import { processRecipeUpdates } from './process-recipe-updates';
@@ -62,34 +62,32 @@ export async function updateRecipe(
       ingredients: Array.isArray(updatedRecipeData.ingredients)
         ? updatedRecipeData.ingredients.map(ing => {
             // Handle ing as potentially any type, including null, string, etc.
-            if (!ing || typeof ing !== 'object') {
-              // Return default ingredient if ing is null or not an object
+            if (!ensureRequiredIngredientProps(ing)) {
+              // Return default ingredient if ing doesn't have required properties
               return {
                 qty_metric: 0,
                 unit_metric: '',
                 qty_imperial: 0,
                 unit_imperial: '',
-                item: 'Unknown ingredient',
+                item: typeof ing?.item === 'string' ? ing.item : 'Unknown ingredient',
               };
             }
             
-            // Type cast ing to any to safely access properties
-            const ingredient = ing as any;
-            
+            // Now we know ing has the required properties
             return {
               // Required fields
-              qty_metric: typeof ingredient.qty_metric === 'number' ? ingredient.qty_metric : 0,
-              unit_metric: typeof ingredient.unit_metric === 'string' ? ingredient.unit_metric : '',
-              qty_imperial: typeof ingredient.qty_imperial === 'number' ? ingredient.qty_imperial : 0,
-              unit_imperial: typeof ingredient.unit_imperial === 'string' ? ingredient.unit_imperial : '',
-              item: typeof ingredient.item === 'string' ? ingredient.item : String(ingredient.item || 'Unknown ingredient'),
+              qty_metric: ing.qty_metric,
+              unit_metric: ing.unit_metric,
+              qty_imperial: ing.qty_imperial,
+              unit_imperial: ing.unit_imperial,
+              item: ing.item,
               
               // Optional fields
-              notes: typeof ingredient.notes === 'string' ? ingredient.notes : undefined,
-              shop_size_qty: typeof ingredient.shop_size_qty === 'number' ? ingredient.shop_size_qty : undefined,
-              shop_size_unit: typeof ingredient.shop_size_unit === 'string' ? ingredient.shop_size_unit : undefined,
-              qty: typeof ingredient.qty === 'number' ? ingredient.qty : undefined,
-              unit: typeof ingredient.unit === 'string' ? ingredient.unit : undefined
+              notes: typeof ing.notes === 'string' ? ing.notes : undefined,
+              shop_size_qty: typeof ing.shop_size_qty === 'number' ? ing.shop_size_qty : undefined,
+              shop_size_unit: typeof ing.shop_size_unit === 'string' ? ing.shop_size_unit : undefined,
+              qty: typeof ing.qty === 'number' ? ing.qty : undefined,
+              unit: typeof ing.unit === 'string' ? ing.unit : undefined
             };
           })
         : recipe.ingredients || [],
@@ -121,11 +119,9 @@ export async function updateRecipe(
       if (mode !== 'none' && items.length > 0) {
         // Validate ingredient format
         const validIngredients = items.every(item => 
-          typeof item === 'object' && 
-          item !== null &&
           typeof item.qty === 'number' && 
           typeof item.unit === 'string' && 
-          (typeof item.item === 'string' || item.item !== null)
+          typeof item.item === 'string'
         );
 
         if (!validIngredients) {
@@ -135,19 +131,7 @@ export async function updateRecipe(
 
         // Check for duplicates in add mode
         if (mode === 'add') {
-          // Convert changed ingredients to Recipe.Ingredient type
-          const typedIngredients: Ingredient[] = items.map(item => ({
-            qty_metric: item.qty_metric || 0,
-            unit_metric: item.unit_metric || '',
-            qty_imperial: item.qty_imperial || 0,
-            unit_imperial: item.unit_imperial || '',
-            item: typeof item.item === 'string' ? item.item : String(item.item || ''),
-            notes: item.notes,
-            qty: item.qty,
-            unit: item.unit
-          }));
-          
-          const duplicates = findDuplicateIngredients(updatedRecipe.ingredients, typedIngredients);
+          const duplicates = findDuplicateIngredients(updatedRecipe.ingredients, items);
           if (duplicates.length > 0) {
             console.error("Duplicate ingredients detected:", duplicates);
             throw new Error(
@@ -158,24 +142,11 @@ export async function updateRecipe(
           }
         }
 
-        // Validate quantities
-        // We need to transform ingredients to match expected types
-        const formattedItems = items.map(item => {
-          return {
-            qty_metric: item.qty_metric || 0,
-            unit_metric: item.unit_metric || '',
-            qty_imperial: item.qty_imperial || 0,
-            unit_imperial: item.unit_imperial || '',
-            item: typeof item.item === 'string' ? item.item : String(item.item || ''),
-            notes: item.notes,
-            qty: item.qty,
-            unit: item.unit
-          };
-        });
-        
+        // Validate quantities - cast updatedRecipe.ingredients to any to avoid type errors
+        // This is safe because we've already ensured the structure above
         const quantityValidation = validateIngredientQuantities(
-          recipe, 
-          formattedItems as Ingredient[], 
+          { ...recipe, ingredients: updatedRecipe.ingredients as any }, 
+          items, 
           mode
         );
         
