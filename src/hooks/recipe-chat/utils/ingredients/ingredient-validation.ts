@@ -1,114 +1,96 @@
 
-import type { Recipe } from '@/types/recipe';
+import { Recipe, Ingredient } from '@/types/recipe';
+import { stringSimilarity } from '../string-utils';
 
-// Enhanced ingredient name normalization for comparison
-function normalizeIngredient(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/s$/, '') // Remove trailing 's' for plurals
-    .replace(/^(fresh |dried |ground |powdered |minced |chopped |diced |sliced )/, ''); // Remove common preparation prefixes
+interface DuplicateIngredientPair {
+  existing: string;
+  new: string;
+  similarity: number;
 }
 
-// Improved similarity check for ingredients
-export function areSimilarIngredients(ing1: string, ing2: string): boolean {
-  const norm1 = normalizeIngredient(ing1);
-  const norm2 = normalizeIngredient(ing2);
+/**
+ * Finds potential duplicate ingredients when adding new ones
+ */
+export function findDuplicateIngredients(
+  existingIngredients: Ingredient[],
+  newIngredients: Ingredient[]
+): DuplicateIngredientPair[] {
+  const duplicates: DuplicateIngredientPair[] = [];
+  const similarityThreshold = 0.7; // 70% similarity threshold
   
-  // Direct match
-  if (norm1 === norm2) return true;
+  // Extract ingredient names for comparison
+  const existingNames = existingIngredients.map(ingredient => {
+    if (typeof ingredient.item === 'string') {
+      return ingredient.item.toLowerCase();
+    }
+    return ingredient.item.name.toLowerCase();
+  });
   
-  // Check if one contains the other
-  if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
+  newIngredients.forEach(newIngredient => {
+    const newItemName = typeof newIngredient.item === 'string' 
+      ? newIngredient.item.toLowerCase() 
+      : newIngredient.item.name.toLowerCase();
+    
+    // Compare against existing ingredients
+    existingNames.forEach((existingName, index) => {
+      const similarity = stringSimilarity(existingName, newItemName);
+      
+      if (similarity > similarityThreshold) {
+        duplicates.push({
+          existing: existingName,
+          new: newItemName,
+          similarity
+        });
+      }
+    });
+  });
   
-  // Check word overlap
-  const words1 = norm1.split(' ');
-  const words2 = norm2.split(' ');
-  const commonWords = words1.filter(word => words2.includes(word));
-  
-  // If there's significant word overlap
-  if (commonWords.length > 0 && 
-      commonWords.length / Math.max(words1.length, words2.length) > 0.5) {
-    return true;
-  }
-  
-  return false;
+  return duplicates;
 }
 
-// More sophisticated ingredient quantity validation
+/**
+ * Validates ingredient quantities
+ */
 export function validateIngredientQuantities(
-  originalRecipe: Recipe,
-  newIngredients: any[],
+  recipe: Recipe,
+  newIngredients: Ingredient[],
   mode: 'add' | 'replace' | 'none'
 ): { valid: boolean; message?: string } {
-  if (mode === 'none' || newIngredients.length === 0) {
+  // Skip validation for replace mode as we're replacing everything
+  if (mode === 'replace') {
     return { valid: true };
   }
-
-  // Calculate ingredients to check based on mode
-  const ingredientsToCheck = mode === 'replace' ? newIngredients : [...originalRecipe.ingredients, ...newIngredients];
   
-  // Check for reasonable quantities relative to serving size
-  const servingSize = originalRecipe.servings || 1;
-  
-  for (const ing of newIngredients) {
-    // Skip ingredients without proper quantity data
-    if (typeof ing.qty !== 'number' || typeof ing.unit !== 'string') {
-      continue;
-    }
+  // For add mode, ensure quantities are valid
+  if (mode === 'add') {
+    // Check if all new ingredients have at least one qty/unit pair
+    const invalidIngredients = newIngredients.filter(ing => {
+      // Must have at least one quantity measurement system defined
+      const hasMetric = typeof ing.qty_metric === 'number' && ing.unit_metric;
+      const hasImperial = typeof ing.qty_imperial === 'number' && ing.unit_imperial;
+      const hasGeneric = typeof ing.qty === 'number' && ing.unit;
+      
+      return !(hasMetric || hasImperial || hasGeneric);
+    });
     
-    const qtyPerServing = ing.qty / servingSize;
-    const unit = ing.unit.toLowerCase();
-    
-    // Detect extreme values based on common unit types
-    if ((unit.includes('cup') || unit.includes('cups')) && qtyPerServing > 3) {
+    if (invalidIngredients.length > 0) {
       return {
         valid: false,
-        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
-      };
-    }
-    
-    if ((unit.includes('pound') || unit.includes('lb')) && qtyPerServing > 1) {
-      return {
-        valid: false,
-        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
-      };
-    }
-    
-    if ((unit.includes('tablespoon') || unit.includes('tbsp')) && qtyPerServing > 4) {
-      return {
-        valid: false,
-        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} seems too high per serving`
-      };
-    }
-    
-    if (qtyPerServing <= 0) {
-      return {
-        valid: false,
-        message: `Warning: ${ing.qty} ${ing.unit} of ${ing.item} has an invalid quantity`
+        message: `Some ingredients are missing measurement information`
       };
     }
   }
-
+  
   return { valid: true };
 }
 
-// Enhanced duplicate ingredient detection
-export function findDuplicateIngredients(existingIngredients: Recipe['ingredients'], newIngredients: Recipe['ingredients']) {
-  const duplicates = [];
-  
-  for (const newIng of newIngredients) {
-    for (const existingIng of existingIngredients) {
-      if (areSimilarIngredients(existingIng.item, newIng.item)) {
-        duplicates.push({
-          new: newIng.item,
-          existing: existingIng.item
-        });
-        break;
-      }
-    }
+/**
+ * Gets the description of an ingredient for display
+ */
+export function getIngredientDescription(ingredient: Ingredient): string {
+  if (typeof ingredient.item === 'string') {
+    return ingredient.item;
   }
   
-  return duplicates;
+  return ingredient.item.name;
 }

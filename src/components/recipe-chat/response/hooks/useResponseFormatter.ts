@@ -5,7 +5,7 @@ import { highlightText } from '../utils/text-highlighter';
 import DOMPurify from 'dompurify';
 
 export function useResponseFormatter(message: ChatMessage) {
-  const [formattedContent, setFormattedContent] = useState<string>(message.content);
+  const [formattedContent, setFormattedContent] = useState<string>(message.content || '');
   
   useEffect(() => {
     if (!message.content) {

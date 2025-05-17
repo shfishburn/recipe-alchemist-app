@@ -1,5 +1,5 @@
 
-import type { Nutrition, NutriScore } from './recipe';
+import type { Nutrition, NutriScore, CuisineCategory } from './recipe';
 
 export interface Ingredient {
   qty?: number;
@@ -20,14 +20,16 @@ export interface QuickRecipeFormData {
   cuisine?: string[] | string;
   dietary?: string[] | string;
   servings?: number;
+  maxCalories?: number;
 }
 
-// Define recipe modification info type
+// Define recipe version info type
 export interface RecipeVersionInfo {
   version_number: number;
   modification_reason?: string;
   modified_at?: string;
   modified_by?: string;
+  previous_version_id?: string;
 }
 
 export interface QuickRecipe {
@@ -42,7 +44,7 @@ export interface QuickRecipe {
   cook_time_min?: number;
   image_url?: string;
   cuisine?: string;
-  cuisine_category?: string;
+  cuisine_category?: CuisineCategory;
   tags?: string[];
   user_id?: string;
   created_at?: string;

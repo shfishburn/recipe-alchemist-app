@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { QuickRecipe, QuickRecipeFormData } from '@/hooks/use-quick-recipe';
+import type { QuickRecipe, QuickRecipeFormData } from '@/types/quick-recipe';
 import { NavigateFunction } from 'react-router-dom';
 
 /**
@@ -73,16 +73,16 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           
           // Check for error conditions to distinguish between error and valid recipe
           if (recipe && (recipe.isError === true || recipe.error_message)) {
-            console.log('Recipe contains an error:', recipe.error_message || recipe.error || 'Unknown error');
+            console.log('Recipe contains an error:', recipe.error_message || 'Unknown error');
             set({ 
               // Don't set the recipe if it's an error
               recipe: null,
               // Also clear formData to prevent the "recipe ready to view" message
               formData: null,
               // Set the error message for user feedback
-              error: recipe.error_message || recipe.error || 'Unknown error',
+              error: recipe.error_message || 'Unknown error',
               isLoading: false,
-              hasTimeoutError: (recipe.error_message || recipe.error || '')
+              hasTimeoutError: (recipe.error_message || '')
                                 .toLowerCase().includes('timeout') ?? false
             });
           } else {
@@ -151,7 +151,7 @@ export const useQuickRecipeStore = create<QuickRecipeState>()(
           }
           
           // Explicitly check for error flags
-          if (recipe.isError === true || recipe.error || recipe.error_message) {
+          if (recipe.isError === true || recipe.error_message) {
             console.log('Recipe validation: has error flags');
             return false;
           }
