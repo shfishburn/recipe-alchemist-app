@@ -108,8 +108,15 @@ const LoadingContent = () => {
           throw new Error(generatedRecipe.error_message || "Error generating recipe");
         }
         
+        // Ensure recipe has all required fields for the Recipe type before setting
+        const completeRecipe = {
+          ...generatedRecipe,
+          id: generatedRecipe.id || '', // Provide default value for required field
+          servings: generatedRecipe.servings || 1 // Ensure servings exists
+        };
+        
         // Set the recipe
-        setRecipe(generatedRecipe);
+        setRecipe(completeRecipe);
         
         // Navigate to the recipe preview
         navigate('/recipe-preview', { replace: true });

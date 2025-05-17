@@ -63,12 +63,11 @@ export function useQuickRecipeForm() {
       setFormData(processedFormData);
       
       // Initialize loading state with estimated time
-      updateLoadingState({
+      updateLoadingState(currentState => ({
         step: 0,
         stepDescription: "Analyzing your ingredients...",
-        percentComplete: 0,
-        estimatedTimeRemaining: 30
-      });
+        percentComplete: 0
+      }));
       
       // Log in console instead of showing non-error toast
       console.log("Creating your recipe - processing request...");

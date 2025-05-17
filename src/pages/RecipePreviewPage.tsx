@@ -11,6 +11,8 @@ import LoadingOverlay from '@/components/ui/loading-overlay';
 import { useRecipeSaveState } from '@/hooks/use-recipe-save-state';
 import { useAuth } from '@/hooks/use-auth';
 import { authStateManager } from '@/lib/auth/auth-state-manager';
+import { Recipe } from '@/types/recipe';
+import { QuickRecipe } from '@/types/quick-recipe';
 
 const RecipePreviewPage: React.FC = () => {
   const recipe = useQuickRecipeStore(state => state.recipe);
@@ -79,7 +81,13 @@ const RecipePreviewPage: React.FC = () => {
             setIsSaving(true);
             
             try {
-              const savedData = await saveRecipe(pendingData.recipe);
+              // Ensure the recipe conforms to QuickRecipe type
+              const quickRecipeData: QuickRecipe = {
+                ...pendingData.recipe,
+                servings: pendingData.recipe.servings || 1 // Default value if missing
+              };
+              
+              const savedData = await saveRecipe(quickRecipeData);
               
               if (savedData && savedData.slug) {
                 // Use the centralized state management
@@ -141,7 +149,13 @@ const RecipePreviewPage: React.FC = () => {
         return;
       }
 
-      const savedData = await saveRecipe(recipe);
+      // Ensure the recipe conforms to QuickRecipe type
+      const quickRecipeData: QuickRecipe = {
+        ...recipe,
+        servings: recipe.servings || 1 // Default value if missing
+      };
+
+      const savedData = await saveRecipe(quickRecipeData);
       
       if (savedData && savedData.id && savedData.slug) {
         // Use the centralized state management
