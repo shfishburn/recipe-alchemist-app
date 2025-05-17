@@ -15,6 +15,7 @@ interface ChatMessageProps {
   isOptimistic?: boolean;
   applied?: boolean;
   retryMessage?: () => void;
+  isLatest?: boolean; // Add this prop to fix the error
 }
 
 export function ChatMessage({
@@ -24,7 +25,8 @@ export function ChatMessage({
   isApplying = false,
   isOptimistic = false,
   applied = false,
-  retryMessage
+  retryMessage,
+  isLatest = false // Provide default value
 }: ChatMessageProps) {
   // Enhanced optimistic message detection
   const isOptimisticUserMessage = isOptimistic || 

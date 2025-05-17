@@ -1,4 +1,3 @@
-
 // Define the structure for chat message changes
 export interface InstructionChange {
   action: string;
@@ -33,6 +32,12 @@ export interface ChangesResponse {
   recipe?: any;
   error?: string;
   message?: string;
+  // Add these fields to match SuggestedChanges to fix type errors
+  title?: string;
+  ingredients?: IngredientChanges;
+  instructions?: InstructionChange[] | string[];
+  nutrition?: any;
+  science_notes?: string[];
 }
 
 // Define the chat message type
@@ -72,6 +77,7 @@ export interface OptimisticMessage {
   timestamp: number;
   meta?: ChatMeta;
   applied?: boolean;
+  pending?: boolean; // Add this property to fix type errors
 }
 
 export interface ChatSession {

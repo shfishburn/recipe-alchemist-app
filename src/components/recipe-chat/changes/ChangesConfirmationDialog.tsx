@@ -11,14 +11,14 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from 'lucide-react';
-import type { ChangesResponse } from '@/types/chat';
+import type { ChangesResponse, SuggestedChanges } from '@/types/chat';
 import { ChangesSummary } from './ChangesSummary';
 
 interface ChangesConfirmationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  changes: ChangesResponse | null;
+  changes: ChangesResponse | SuggestedChanges | null;
   isApplying: boolean;
 }
 

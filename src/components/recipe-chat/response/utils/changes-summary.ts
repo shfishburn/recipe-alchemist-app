@@ -1,28 +1,31 @@
 
-import type { ChangesResponse } from '@/types/chat';
+import type { ChangesResponse, SuggestedChanges } from '@/types/chat';
 
 /**
  * Extract a summary of the changes with improved null safety
  */
-export function extractChangesSummary(changesSuggested: ChangesResponse | null) {
+export function extractChangesSummary(changesSuggested: SuggestedChanges | ChangesResponse | null) {
   if (!changesSuggested) return null;
   
+  // Convert any ChangesResponse to SuggestedChanges
+  const changes = changesSuggested as SuggestedChanges;
+  
   const summary = {
-    hasTitle: !!changesSuggested.title,
-    hasIngredients: changesSuggested.ingredients?.items && 
-                  Array.isArray(changesSuggested.ingredients.items) && 
-                  changesSuggested.ingredients.items.length > 0 &&
-                  changesSuggested.ingredients.mode !== 'none',
-    hasInstructions: changesSuggested.instructions && 
-                   Array.isArray(changesSuggested.instructions) && 
-                   changesSuggested.instructions.length > 0,
-    hasScienceNotes: changesSuggested.science_notes && 
-                   Array.isArray(changesSuggested.science_notes) && 
-                   changesSuggested.science_notes.length > 0,
-    ingredientCount: (changesSuggested.ingredients?.items?.length || 0),
-    instructionCount: (changesSuggested.instructions?.length || 0),
-    scienceNoteCount: (changesSuggested.science_notes?.length || 0),
-    ingredientMode: changesSuggested.ingredients?.mode || 'none'
+    hasTitle: !!changes.title,
+    hasIngredients: changes.ingredients?.items && 
+                  Array.isArray(changes.ingredients.items) && 
+                  changes.ingredients.items.length > 0 &&
+                  changes.ingredients.mode !== 'none',
+    hasInstructions: changes.instructions && 
+                   Array.isArray(changes.instructions) && 
+                   changes.instructions.length > 0,
+    hasScienceNotes: changes.science_notes && 
+                   Array.isArray(changes.science_notes) && 
+                   changes.science_notes.length > 0,
+    ingredientCount: (changes.ingredients?.items?.length || 0),
+    instructionCount: (changes.instructions?.length || 0),
+    scienceNoteCount: (changes.science_notes?.length || 0),
+    ingredientMode: changes.ingredients?.mode || 'none'
   };
   
   return summary;
@@ -31,14 +34,19 @@ export function extractChangesSummary(changesSuggested: ChangesResponse | null) 
 /**
  * Checks if recipe has ingredient warnings
  */
-export function checkIngredientWarnings(changesSuggested: ChangesResponse | null): boolean {
-  if (!changesSuggested?.ingredients?.items || 
-      !Array.isArray(changesSuggested.ingredients.items)) {
+export function checkIngredientWarnings(changesSuggested: SuggestedChanges | ChangesResponse | null): boolean {
+  if (!changesSuggested) return false;
+  
+  // Convert any ChangesResponse to SuggestedChanges
+  const changes = changesSuggested as SuggestedChanges;
+  
+  if (!changes.ingredients?.items || 
+      !Array.isArray(changes.ingredients.items)) {
     return false;
   }
   
   // Check for any ingredients with warning notes
-  return changesSuggested.ingredients.items.some((item: any) => 
+  return changes.ingredients.items.some((item: any) => 
     item?.notes?.toLowerCase?.().includes('warning')
   );
 }

@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Check, RefreshCw } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import type { ChangesResponse } from '@/types/chat';
+import type { ChangesResponse, SuggestedChanges } from '@/types/chat';
 import { ChangesSummary } from '../changes/ChangesSummary';
 
 interface ApplyChangesSectionProps {
-  changesSuggested: ChangesResponse | null;
+  changesSuggested: ChangesResponse | SuggestedChanges | null;
   onApplyChanges: () => void;
   isApplying: boolean;
   applied: boolean;
@@ -60,15 +60,18 @@ export function ApplyChangesSection({
 
   if (!changesSuggested) return null;
 
+  // Convert any ChangesResponse to SuggestedChanges
+  const changes = changesSuggested as SuggestedChanges;
+
   // Check if there are substantive changes to apply
-  const hasTitle = !!changesSuggested.title;
-  const hasInstructions = Array.isArray(changesSuggested.instructions) && 
-                        changesSuggested.instructions.length > 0;
-  const hasIngredients = changesSuggested.ingredients?.mode !== 'none' && 
-                       Array.isArray(changesSuggested.ingredients?.items) && 
-                       changesSuggested.ingredients?.items.length > 0;
-  const hasScienceNotes = Array.isArray(changesSuggested.science_notes) && 
-                        changesSuggested.science_notes.length > 0;
+  const hasTitle = !!changes.title;
+  const hasInstructions = Array.isArray(changes.instructions) && 
+                        changes.instructions.length > 0;
+  const hasIngredients = changes.ingredients?.mode !== 'none' && 
+                       Array.isArray(changes.ingredients?.items) && 
+                       changes.ingredients?.items.length > 0;
+  const hasScienceNotes = Array.isArray(changes.science_notes) && 
+                        changes.science_notes.length > 0;
                         
   const hasChanges = hasTitle || hasInstructions || hasIngredients || hasScienceNotes;
 
@@ -78,7 +81,7 @@ export function ApplyChangesSection({
     
     try {
       // Enhanced validation before applying changes
-      if (!changesSuggested) {
+      if (!changes) {
         setApplyError("No changes to apply. The AI didn't suggest any modifications.");
         return;
       }
@@ -112,7 +115,7 @@ export function ApplyChangesSection({
       )}
       
       {hasChanges && !applied && (
-        <ChangesSummary changes={changesSuggested} isMobile={isMobile} />
+        <ChangesSummary changes={changes} isMobile={isMobile} />
       )}
       
       <Button

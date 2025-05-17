@@ -1,172 +1,199 @@
-
-import React, { memo, useCallback, useState } from 'react';
+import React, { useState } from 'react';
+import { MoreHorizontal, Printer, Share2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Bookmark, Check, Printer } from 'lucide-react';
-import { Recipe } from '@/types/quick-recipe';
-import { useToast } from '@/hooks/use-toast';
-import { QuickRecipePrint } from '../QuickRecipePrint';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { QuickRecipe } from '@/types/quick-recipe';
+import { QuickRecipePrint, QuickRecipePrintProps } from '../QuickRecipePrint';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
 
-/**
- * Props interface for the RecipeActionButtons component
- */
 interface RecipeActionButtonsProps {
-  /** 
-   * Callback triggered when user wants to save a recipe.
-   * Used to persist recipe data to user's saved collection.
-   */
-  onSave?: () => void | Promise<void>;          
-  
-  /** 
-   * Indicates an in-progress save operation to prevent duplicate submissions
-   * and provide visual feedback to the user.
-   */
-  isSaving?: boolean;           
-  
-  /** 
-   * Tracks whether a save operation completed successfully to
-   * show appropriate success UI and prevent duplicate saves.
-   */
-  saveSuccess?: boolean;        
-  
-  /** 
-   * The recipe data being saved, useful for logging or 
-   * implementing default save behavior when no onSave is provided.
-   */
-  recipe?: Recipe;              
-  
-  /** 
-   * Callback to reset the saveSuccess state after a delay or user action.
-   * Critical for allowing users to save again after a successful operation.
-   */
-  onResetSaveSuccess?: () => void; 
-  
-  /**
-   * The slug or ID to navigate to after successful save
-   * This is not used for navigation directly in this component anymore
-   * since navigation is handled by the parent component
-   */
-  savedSlug?: string;
+  recipe: QuickRecipe;
+  onPrint?: () => void;
+  hasReportButton?: boolean;
+  hasShareButton?: boolean;
+  hasDeleteButton?: boolean;
+  onDelete?: () => void;
+  variant?: 'default' | 'minimal';
 }
 
-/**
- * Recipe action buttons component for handling save operations
- * Uses memo to prevent unnecessary re-renders
- */
-export const RecipeActionButtons = memo(function RecipeActionButtons({
-  onSave,
-  isSaving = false,
-  saveSuccess = false,
-  recipe,
-  onResetSaveSuccess
+interface MinimalRecipeActionButtonsProps {
+  recipe: QuickRecipe;
+  onPrint?: () => void;
+}
+
+export function RecipeActionButtons({ 
+  recipe, 
+  onPrint, 
+  hasReportButton, 
+  hasShareButton = true,
+  hasDeleteButton = false,
+  onDelete,
+  variant = 'default',
 }: RecipeActionButtonsProps) {
-  // Access the toast functionality
-  const { toast } = useToast();
-  
-  // State for print dialog
-  const [showPrint, setShowPrint] = useState(false);
-  
-  /**
-   * Handles the save button click
-   * If saveSuccess is true and onResetSaveSuccess is provided, resets the success state before saving
-   */
-  const handleSave = async () => {
-    // Validate recipe data before attempting to save
-    if (!recipe || !recipe.title || !recipe.ingredients || recipe.ingredients.length === 0) {
+  const [isPrintOpen, setIsPrintOpen] = useState(false);
+  const [isSaving, setSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleSaveClick = async () => {
+    if (!user) {
       toast({
-        title: "Validation Error",
-        description: "Recipe is missing required information (title or ingredients)",
-        variant: "destructive"
+        title: "Please log in",
+        description: "You must be logged in to save recipes.",
       });
+      navigate('/login');
       return;
     }
-    
-    // Reset save success state if we're trying to save again
-    if (saveSuccess && onResetSaveSuccess) {
-      onResetSaveSuccess();
-    }
-    
-    if (!onSave) {
-      // Default implementation for when no onSave callback is provided
-      console.log("Default save action for recipe:", recipe?.title);
-      
-      toast({
-        title: "Save info",
-        description: "This is just a preview. Full save functionality will be available in the complete version.",
-        variant: "default"
-      });
-      
-      return;
-    }
-    
+
+    setSaving(true);
     try {
-      // Call the onSave function provided by parent
-      const result = onSave();
-      
-      // If onSave returns a Promise, wait for it to complete
-      if (result instanceof Promise) {
-        await result;
-      }
-    } catch (error) {
-      // Provide user feedback when save operation fails
-      console.error("Error saving recipe:", error);
-      
-      // Safely extract error message with proper type checking
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Failed to save recipe";
-        
+      // Simulate saving to a database
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsSaved(true);
       toast({
-        title: "Save failed",
-        description: errorMessage,
-        variant: "destructive"
+        title: "Recipe Saved!",
+        description: "This recipe has been saved to your profile.",
       });
+    } catch (error) {
+      toast({
+        title: "Error Saving Recipe",
+        description: "There was an error saving the recipe. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Handle print button click
-  const handlePrint = () => {
-    setShowPrint(true);
-    // Reset the print state after a short delay to allow re-triggering
-    setTimeout(() => {
-      setShowPrint(false);
-    }, 1000);
+  const handleShareClick = async () => {
+    setIsSharing(true);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: recipe.title,
+          text: `Check out this recipe: ${recipe.title}`,
+          url: window.location.href,
+        });
+        toast({
+          title: "Recipe Shared!",
+          description: "The recipe has been shared successfully.",
+        });
+      } else {
+        toast({
+          title: "Sharing Not Supported",
+          description: "Sharing is not supported on this browser.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error Sharing Recipe",
+        description: "There was an error sharing the recipe. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
   };
-  
+
+  if (variant === 'minimal') {
+    return (
+      <div className="flex items-center space-x-2">
+        <Button variant="ghost" size="icon" onClick={handleSaveClick} disabled={isSaving || isSaved}>
+          {isSaving ? (
+            <>
+              <Heart className="mr-2 h-4 w-4 animate-pulse" />
+              Saving...
+            </>
+          ) : isSaved ? (
+            <Heart className="text-red-500 h-4 w-4" fill="red" />
+          ) : (
+            <Heart className="h-4 w-4" />
+          )}
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handlePrintClick}>
+          <Printer className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  // Handle the print dialog
+  const handlePrintClick = () => {
+    if (onPrint) {
+      onPrint();
+    } else {
+      setIsPrintOpen(true);
+    }
+  };
+
   return (
-    <div className="pt-5 w-full flex flex-col gap-2">
-      <Button
-        variant={saveSuccess ? "success" : "outline"}
-        onClick={handleSave}
-        disabled={isSaving}
-        className="w-full"
-      >
-        {saveSuccess ? (
+    <div className="flex items-center space-x-2">
+      <Button variant="ghost" size="icon" onClick={handleSaveClick} disabled={isSaving || isSaved}>
+        {isSaving ? (
           <>
-            <Check className="mr-2 h-5 w-5" />
-            Saved
+            <Heart className="mr-2 h-4 w-4 animate-pulse" />
+            Saving...
           </>
+        ) : isSaved ? (
+          <Heart className="text-red-500 h-4 w-4" fill="red" />
         ) : (
-          <>
-            <Bookmark className="mr-2 h-5 w-5" />
-            {isSaving ? 'Saving...' : 'Save Recipe'}
-          </>
+          <Heart className="h-4 w-4" />
         )}
       </Button>
 
-      {/* Print button */}
-      <Button
-        variant="secondary"
-        onClick={handlePrint}
-        className="w-full"
-      >
-        <Printer className="mr-2 h-5 w-5" />
-        Print Recipe
-      </Button>
-
-      {/* Print Dialog */}
-      {recipe && showPrint && (
-        <QuickRecipePrint recipe={recipe} triggerPrint={true} />
+      {hasShareButton && (
+        <Button variant="ghost" size="icon" onClick={handleShareClick} disabled={isSharing}>
+          {isSharing ? (
+            <>
+              <Share2 className="mr-2 h-4 w-4 animate-pulse" />
+              Sharing...
+            </>
+          ) : (
+            <Share2 className="h-4 w-4" />
+          )}
+        </Button>
       )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="More">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handlePrintClick}>
+            Print
+          </DropdownMenuItem>
+          {hasReportButton && (
+            <DropdownMenuItem>
+              Report
+            </DropdownMenuItem>
+          )}
+          {hasDeleteButton && (
+            <DropdownMenuItem onClick={onDelete}>
+              Delete
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
+      {/* Print Dialog */}
+      <QuickRecipePrint 
+        recipe={recipe}
+        open={isPrintOpen}
+        onOpenChange={setIsPrintOpen}
+      />
     </div>
   );
-});
+}

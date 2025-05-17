@@ -6,7 +6,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useRecipeChatStore } from '@/store/use-recipe-chat-store';
 import { ChatMessage } from '@/types/chat';
 import { Recipe } from '@/types/recipe';
-import { getChatMeta } from '@/utils/chat-meta';
 
 type UpdateRecipeMutationVariables = {
   recipe: Recipe;
@@ -74,7 +73,7 @@ export function useApplyChanges() {
         toast({ 
           title: "Already Applied", 
           description: "These changes have already been applied to the recipe",
-          variant: "secondary"
+          variant: "default"  // Changed from 'secondary' to 'default'
         });
         return false;
       }
@@ -84,7 +83,7 @@ export function useApplyChanges() {
         toast({ 
           title: "No Changes", 
           description: "No recipe changes were found to apply",
-          variant: "secondary"
+          variant: "default"  // Changed from 'secondary' to 'default'
         });
         return false;
       }
@@ -104,7 +103,7 @@ export function useApplyChanges() {
         toast({
           title: "Changes Applied",
           description: "Your recipe has been updated successfully",
-          variant: "success",
+          variant: "default",  // Changed from 'success' to 'default'
         });
         
         return true;
