@@ -2,7 +2,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RecipeActionButtons } from '../RecipeActionButtons';
-import { Recipe } from '@/types/quick-recipe';
+import { QuickRecipe } from '@/types/quick-recipe';
 import '@testing-library/jest-dom';
 
 // Mock the useToast hook
@@ -13,7 +13,8 @@ jest.mock('@/hooks/use-toast', () => ({
 }));
 
 describe('RecipeActionButtons', () => {
-  const mockRecipe: Recipe = {
+  const mockRecipe: QuickRecipe = {
+    id: "test-recipe-id",
     title: 'Test Recipe',
     ingredients: [{ item: 'Test Ingredient', qty: 1, unit: 'cup' }],
     instructions: ['Step 1', 'Step 2'],

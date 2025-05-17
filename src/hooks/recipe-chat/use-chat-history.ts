@@ -45,9 +45,9 @@ export const useChatHistory = (recipeId: string) => {
           ai_response: chat.ai_response,
           changes_suggested: null,
           applied: chat.applied || false,
-          created_at: chat.created_at,
-          follow_up_questions: [], // Default empty array
-          meta: typeof chat.meta === 'object' ? (chat.meta as unknown as ChatMeta) || {} : {} // Fix type cast
+          recipe_id: recipeId,
+          follow_up_questions: [], 
+          meta: typeof chat.meta === 'object' ? (chat.meta as unknown as ChatMeta) || {} : {}
         };
 
         // Process changes_suggested as a properly typed object

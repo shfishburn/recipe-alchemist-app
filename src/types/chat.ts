@@ -1,5 +1,6 @@
+
 import type { Ingredient } from './quick-recipe';
-import type { Nutrition } from './recipe';
+import type { QuickRecipe } from './quick-recipe';
 
 export interface ChangesResponse {
   title?: string;
@@ -9,7 +10,7 @@ export interface ChangesResponse {
   };
   instructions?: string[];
   science_notes?: string[];
-  nutrition?: Nutrition;
+  nutrition?: any;
 }
 
 export interface ChatMessage {
@@ -21,7 +22,7 @@ export interface ChatMessage {
   meta?: ChatMeta;
   timestamp?: number;
   recipe_id?: string;
-  recipe?: any; // For full recipe updates
+  recipe?: QuickRecipe; // Changed from Recipe to QuickRecipe
   applied?: boolean;
   version_id?: string;
   pending?: boolean;
