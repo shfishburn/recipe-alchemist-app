@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bug, Copy } from 'lucide-react';
@@ -66,14 +67,27 @@ export function ChatMessage({
     if (!onApplyChanges || !('id' in message)) return;
 
     try {
+      // Ensure the message has a recipe_id, preferably from the recipe prop
+      if (!message.recipe_id && recipe?.id) {
+        console.log("Adding recipe_id to message from recipe prop:", recipe.id);
+        // This is just for logging, we'll actually use the corrected message below
+      }
+
+      // Create an extended message with recipe_id guaranteed to be present
+      const extendedMessage: ChatMessageType = {
+        ...(message as ChatMessageType),
+        recipe_id: message.recipe_id || recipe?.id
+      };
+      
       console.log("Applying changes for message:", { 
-        id: message.id,
+        id: extendedMessage.id,
+        recipe_id: extendedMessage.recipe_id,
         hasChangesSuggested: hasChanges,
         timestamp: new Date().toISOString()
       });
       
       setIsApplyingLocal(true);
-      const result = await onApplyChanges(message as ChatMessageType);
+      const result = await onApplyChanges(extendedMessage);
       
       if (!result) {
         throw new Error("Failed to apply changes");
@@ -95,6 +109,7 @@ export function ChatMessage({
     
     const debugContent = JSON.stringify({
       messageId: message.id,
+      recipe_id: message.recipe_id || recipe?.id,
       userMessage: message.user_message,
       aiResponse: message.ai_response,
       recipe: message.recipe || null,
@@ -147,6 +162,7 @@ export function ChatMessage({
                         console.log("Opening debug panel for message:", message.id);
                         console.log("Viewing debug info for message:", {
                           messageId: message.id,
+                          recipe_id: message.recipe_id || recipe?.id,
                           responseSummary: message.ai_response?.substring(0, 100) + "...",
                           hasChanges: hasChanges
                         });
@@ -169,9 +185,16 @@ export function ChatMessage({
                           <span>Copy</span>
                         </Button>
                       </DialogTitle>
+                      <DialogDescription>
+                        Additional debugging information about this message
+                      </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="max-h-[60vh]">
                       <div className="space-y-4 p-4">
+                        <div>
+                          <h4 className="text-sm font-medium mb-1">Recipe ID:</h4>
+                          <pre className="text-xs bg-muted p-2 rounded overflow-auto break-words whitespace-pre-wrap">{message.recipe_id || recipe?.id || 'undefined'}</pre>
+                        </div>
                         <div>
                           <h4 className="text-sm font-medium mb-1">User Message:</h4>
                           <pre className="text-xs bg-muted p-2 rounded overflow-auto break-words whitespace-pre-wrap">{message.user_message}</pre>

@@ -92,9 +92,17 @@ export const useApplyChanges = () => {
     },
   });
 
-  // Modified to return boolean for compatibility
+  // Modified to ensure recipe_id is properly used
   const applyChanges = async (chatMessage: ChatMessage): Promise<boolean> => {
     try {
+      // Validate the required recipe_id is present
+      if (!chatMessage.recipe_id) {
+        console.error("Missing recipe_id in chat message:", chatMessage);
+        throw new Error("Cannot apply changes: recipe_id is missing from chat message");
+      }
+      
+      console.log("Fetching recipe with ID:", chatMessage.recipe_id);
+      
       // First, fetch the current recipe data from the database
       const { data: recipeData, error: fetchError } = await supabase
         .from('recipes')

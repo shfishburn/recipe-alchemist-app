@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
@@ -212,14 +211,10 @@ serve(async (req) => {
     const newVersionNumber = latestVersionNumber + 1;
 
     try {
-      // Determine whether to use the unified recipe prompt based on metadata
-      // Check meta.use_unified_approach instead of sourceType
-      const useUnifiedApproach = meta?.use_unified_approach === true;
-      const systemPromptContent = useUnifiedApproach
-        ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
-        : chatSystemPrompt;
+      // Always use the unified approach for better consistency
+      const systemPromptContent = buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber);
       
-      console.log(`Using ${useUnifiedApproach ? "unified" : "standard"} recipe prompt approach`);
+      console.log(`Using unified recipe prompt approach`);
       
       const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -336,7 +331,7 @@ serve(async (req) => {
               source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
-              version_id: processedResponse.recipe?.version_id, // Link to version if created
+              version_id: versionData?.version_id, // Link to version if created
               meta: metaData
             });
 
