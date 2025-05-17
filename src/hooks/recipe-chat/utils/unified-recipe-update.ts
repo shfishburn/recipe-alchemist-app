@@ -21,11 +21,24 @@ export async function updateRecipeUnified(
   }
   
   try {
+    // Ensure we have objects not strings by safely parsing any string representations
+    const messageRecipe = typeof chatMessage.recipe === 'string' 
+      ? JSON.parse(chatMessage.recipe) 
+      : chatMessage.recipe;
+    
     // Create a new recipe object that merges the original recipe's ID with the updated data
     const updatedRecipe: Recipe = {
-      ...chatMessage.recipe as unknown as Recipe, // Explicit cast to Recipe
+      ...originalRecipe, // Start with all original recipe fields
+      ...messageRecipe, // Overlay with the message's recipe
       id: originalRecipe.id, // Always preserve original ID
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      
+      // Ensure arrays are properly typed
+      ingredients: Array.isArray(messageRecipe.ingredients) ? messageRecipe.ingredients : originalRecipe.ingredients,
+      instructions: Array.isArray(messageRecipe.instructions) ? messageRecipe.instructions : originalRecipe.instructions,
+      science_notes: Array.isArray(messageRecipe.science_notes) 
+        ? messageRecipe.science_notes.map(note => typeof note === 'string' ? note : String(note)) 
+        : originalRecipe.science_notes || []
     };
     
     // Log the key information about the updated recipe

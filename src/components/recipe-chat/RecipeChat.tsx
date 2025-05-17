@@ -231,7 +231,7 @@ export function RecipeChat({ recipe }: { recipe: Recipe }) {
                         applyChanges={applyChanges}
                         isApplying={isApplying}
                         recipe={recipe}
-                        retryMessage={retryMessage}
+                        retryMessage={(failedMessage, failedMessageId) => retryMessage(failedMessage, failedMessageId)}
                       />
                       <div ref={messagesEndRef} />
                     </div>

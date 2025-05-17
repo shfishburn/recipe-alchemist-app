@@ -245,7 +245,7 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json();
-    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId, retryAttempt = 0 } = requestData;
+    const { recipe, userMessage, sourceType, sourceUrl, sourceImage, messageId, meta } = requestData;
     
     // Validate required parameters
     if (!recipe || !recipe.id) {
@@ -259,7 +259,6 @@ serve(async (req) => {
     }
     
     console.log(`Processing recipe chat request for recipe ${recipe.id} with message: ${userMessage.substring(0, 50)}...`);
-    console.log(`Retry attempt: ${retryAttempt}`);
     
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -277,41 +276,38 @@ serve(async (req) => {
     const newVersionNumber = latestVersionNumber + 1;
 
     try {
-      // Calculate an adaptive timeout based on retry attempt
-      const timeout = Math.min(60000 + (retryAttempt * 15000), 120000); // Between 60-120 seconds
-      
-      // Determine whether to use the unified recipe prompt based on source type
-      // For analysis requests, use the unified approach that returns complete recipe
-      const systemPromptContent = sourceType === 'analysis' 
+      // Determine whether to use the unified recipe prompt based on metadata
+      // Check meta.use_unified_approach instead of sourceType
+      const useUnifiedApproach = meta?.use_unified_approach === true;
+      const systemPromptContent = useUnifiedApproach
         ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
         : chatSystemPrompt;
       
-      const aiResponse = await Promise.race([
-        fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${openaiApiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              {
-                role: 'system',
-                content: systemPromptContent
-              },
-              {
-                role: 'user',
-                content: userMessage,
-              },
-            ],
-            temperature: 0.7,
-            response_format: { type: "json_object" }, // Enforce JSON output format
-            max_tokens: 3500, // Increased for more comprehensive responses
-          }),
-        }).then((res) => res.json()),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("OpenAI API timeout")), timeout))
-      ]);
+      console.log(`Using ${useUnifiedApproach ? "unified" : "standard"} recipe prompt approach`);
+      
+      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPromptContent
+            },
+            {
+              role: 'user',
+              content: userMessage,
+            },
+          ],
+          temperature: 0.7,
+          response_format: { type: "json_object" }, // Enforce JSON output format
+          max_tokens: 3500, // Increased for more comprehensive responses
+        }),
+      }).then((res) => res.json());
       
       if (!aiResponse.choices || !aiResponse.choices[0] || !aiResponse.choices[0].message) {
         console.error("Invalid AI response structure:", aiResponse);
@@ -320,6 +316,7 @@ serve(async (req) => {
       
       const rawResponse = aiResponse.choices[0].message.content;
       console.log("Raw AI response:", rawResponse.substring(0, 200) + "...");
+      console.log("Validating response length:", rawResponse.length);
 
       // Parse the response
       let processedResponse;
@@ -338,12 +335,29 @@ serve(async (req) => {
       // Check if the response contains a complete recipe (modification) or just text (question answer)
       let versionData = null;
       if (completeRecipe) {
-        // Ensure the complete recipe has all required fields and the correct ID
-        completeRecipe.id = recipe.id;
+        // Important: Make sure we have a complete recipe with all required fields preserved
+        // Clone the original recipe first to ensure we have all fields
+        const fullRecipe = {
+          ...recipe,
+          ...completeRecipe,
+          id: recipe.id, // Always preserve original ID
+          // Ensure we keep all standard fields with fallbacks to original values
+          title: completeRecipe.title || recipe.title,
+          ingredients: completeRecipe.ingredients || recipe.ingredients,
+          instructions: completeRecipe.instructions || recipe.instructions,
+          servings: completeRecipe.servings || recipe.servings,
+          description: completeRecipe.description || recipe.description,
+          cuisine: completeRecipe.cuisine || recipe.cuisine,
+          cuisine_category: completeRecipe.cuisine_category || recipe.cuisine_category,
+          prep_time_min: completeRecipe.prep_time_min || recipe.prep_time_min,
+          cook_time_min: completeRecipe.cook_time_min || recipe.cook_time_min,
+          science_notes: completeRecipe.science_notes || recipe.science_notes || [],
+          nutrition: completeRecipe.nutrition || recipe.nutrition
+        };
         
         // Verify recipe integrity before saving
         try {
-          validateRecipeIntegrity(completeRecipe);
+          validateRecipeIntegrity(fullRecipe);
         } catch (validationError) {
           console.error("Recipe validation failed:", validationError);
           throw new Error(`Recipe validation failed: ${validationError.message}`);
@@ -356,26 +370,23 @@ serve(async (req) => {
           versionNumber: newVersionNumber,
           userId: null, // No user ID in this context
           modificationRequest: userMessage,
-          recipeData: completeRecipe
+          recipeData: fullRecipe
         });
         
         if (versionData) {
-          completeRecipe.version_id = versionData.version_id;
+          fullRecipe.version_id = versionData.version_id;
+          // Update the complete recipe reference to use this fully populated version
+          processedResponse.recipe = fullRecipe;
         }
       }
       
-      // Prepare response data
-      const responseData = {
-        success: true,
-        textResponse,
-        recipe: completeRecipe || null,
-        followUpQuestions
-      };
-
       // Store the chat interaction
       if (recipe.id) {
         // Create meta object for optimistic updates tracking
-        const meta = messageId ? { optimistic_id: messageId } : {};
+        const metaData = {
+          ...meta || {},
+          optimistic_id: messageId || null
+        };
         
         try {
           const { error: chatError } = await supabaseClient
@@ -384,13 +395,12 @@ serve(async (req) => {
               recipe_id: recipe.id,
               user_message: userMessage,
               ai_response: textResponse,
-              changes_suggested: null, // No longer using partial changes
-              recipe: completeRecipe, // Store the complete recipe directly
-              source_type: sourceType || 'manual',
+              recipe: processedResponse.recipe, // Store the complete recipe directly
+              source_type: sourceType || 'manual', // Ensure we have a valid source type
               source_url: sourceUrl,
               source_image: sourceImage,
-              version_id: completeRecipe?.version_id, // Link to version if created
-              meta: meta
+              version_id: processedResponse.recipe?.version_id, // Link to version if created
+              meta: metaData
             });
 
           if (chatError) {
@@ -404,7 +414,7 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify(responseData), { headers });
+      return new Response(JSON.stringify(processedResponse), { headers });
       
     } catch (aiError) {
       console.error("Error with OpenAI request:", aiError);

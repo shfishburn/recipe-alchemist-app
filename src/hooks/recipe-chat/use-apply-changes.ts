@@ -80,8 +80,37 @@ export const useApplyChanges = () => {
     },
   });
 
-  const applyChanges = (recipe: Recipe, chatMessage: ChatMessage) => {
-    return applyChangesMutation.mutateAsync({ recipe, chatMessage });
+  // Modified to return boolean for compatibility
+  const applyChanges = async (chatMessage: ChatMessage): Promise<boolean> => {
+    try {
+      // First, fetch the current recipe data from the database
+      const { data: recipeData, error: fetchError } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', chatMessage.recipe_id)
+        .single();
+        
+      if (fetchError || !recipeData) {
+        console.error("Error fetching recipe:", fetchError);
+        throw new Error("Could not fetch recipe data");
+      }
+      
+      // Transform the raw data to Recipe type with explicit type conversions
+      const recipe: Recipe = {
+        ...recipeData,
+        // Ensure arrays are properly typed
+        ingredients: Array.isArray(recipeData.ingredients) ? recipeData.ingredients : [],
+        instructions: Array.isArray(recipeData.instructions) ? recipeData.instructions : [],
+        science_notes: Array.isArray(recipeData.science_notes) ? recipeData.science_notes as string[] : []
+      } as Recipe;
+      
+      // Apply the changes
+      await applyChangesMutation.mutateAsync({ recipe, chatMessage });
+      return true;
+    } catch (error) {
+      console.error("Error applying changes:", error);
+      return false;
+    }
   };
 
   return {

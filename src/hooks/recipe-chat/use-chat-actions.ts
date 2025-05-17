@@ -1,7 +1,9 @@
+
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { useChatMutations } from './use-chat-mutations';
+import { supabase } from '@/integrations/supabase/client';
 import type { Recipe } from '@/types/recipe';
 import type { OptimisticMessage } from '@/types/chat';
 
@@ -32,7 +34,8 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
       pending: true,
       meta: {
         optimistic_id: messageId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        use_unified_approach: true // Indicate that we want the unified recipe approach
       }
     });
 
@@ -40,108 +43,110 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
     setMessage('');
 
     try {
-      // Set source type to 'analysis' for the unified recipe update approach
+      // Send with source_type 'manual' instead of 'analysis'
       await mutation.mutateAsync({
         message: messageToSend,
-        sourceType: 'analysis', // Use analysis type to trigger unified recipe approach
-        messageId
+        sourceType: 'manual', // Changed from 'analysis' to valid value 'manual'
+        messageId,
+        meta: {
+          use_unified_approach: true // Pass metadata to indicate we want unified recipe approach
+        }
       });
     } catch (error) {
       console.error('Error sending message:', error);
-    }
-  };
-
-  // Retry a failed message
-  const retryMessage = async (failedMessage: string, failedMessageId: string) => {
-    addOptimisticMessage({
-      id: failedMessageId,
-      user_message: failedMessage,
-      pending: true,
-      meta: {
-        optimistic_id: failedMessageId,
-        is_retry: true,
-        timestamp: Date.now()
-      }
-    });
-
-    try {
-      await mutation.mutateAsync({
-        message: failedMessage, 
-        sourceType: 'analysis',
-        messageId: failedMessageId,
-        isRetry: true
+      
+      // Send a failed optimistic message to show the error
+      addOptimisticMessage({
+        id: messageId + '-error',
+        user_message: messageToSend,
+        pending: false,
+        meta: {
+          optimistic_id: messageId,
+          error: true,
+          error_details: error instanceof Error ? error.message : 'Unknown error occurred'
+        }
       });
-    } catch (error) {
-      console.error('Error retrying message:', error);
+      
+      toast({
+        title: "Failed to send message",
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: "destructive",
+      });
     }
   };
 
   const uploadRecipeImage = async (file: File) => {
-    setIsUploading(true);
-    setUploadProgress(0);
-  
-    const fileName = `recipe-image-${nanoid()}.${file.name.split('.').pop()}`;
-    const filePath = `recipe-images/${fileName}`;
-  
     try {
-      const { data, error } = await supabase.storage
-        .from('images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      // Generate a unique filename
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${recipe.id}/${timestamp}.${fileExt}`;
+      const filePath = `recipe-uploads/${fileName}`;
+
+      // Get the signed URL directly from Supabase
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('recipe-uploads')
+        .upload(fileName, file, {
+          upsert: true,
+          contentType: file.type,
         });
-  
-      if (error) {
-        console.error("Supabase upload error:", error);
-        toast({
-          title: "Upload failed",
-          description: "There was an error uploading the image.",
-          variant: "destructive",
-        });
-        return;
+
+      if (uploadError) {
+        throw uploadError;
       }
-  
-      const imageUrl = `${supabase.storageUrl}/images/${data.path}`;
-      console.log("Image uploaded successfully:", imageUrl);
-  
-      // Send the image URL to the chat
+
+      // Get public URL without accessing protected properties
+      const { data } = supabase.storage
+        .from('recipe-uploads')
+        .getPublicUrl(fileName);
+      
+      const publicUrl = data.publicUrl;
+
+      // Once upload is complete, send the image URL to the chat
       const messageId = nanoid();
+      
+      // Create optimistic message
       addOptimisticMessage({
         id: messageId,
-        user_message: 'Analyzing image...',
+        user_message: `[Uploaded image: ${file.name}]`,
         pending: true,
         meta: {
           optimistic_id: messageId,
           timestamp: Date.now()
         }
       });
-  
-      try {
-        await mutation.mutateAsync({
-          message: 'Analyze this image',
-          sourceType: 'image',
-          sourceImage: imageUrl,
-          messageId
-        });
-      } catch (error) {
-        console.error('Error sending image analysis request:', error);
-      }
-  
-    } catch (e) {
-      console.error("General upload error:", e);
+
+      // Send the actual message with the image
+      await mutation.mutateAsync({
+        message: "Analyze this image of a recipe",
+        sourceType: "image",
+        sourceImage: publicUrl,
+        messageId
+      });
+
+      setUploadProgress(100);
+      
       toast({
-        title: "Upload failed",
-        description: "There was an unexpected error during upload.",
+        title: "Image uploaded successfully",
+        description: "Your image has been uploaded and is being analyzed",
+      });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Failed to upload image",
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
     }
   };
 
   const submitRecipeUrl = async (url: string) => {
-    if (!url.trim()) {
+    if (!url) {
       toast({
         title: "Empty URL",
         description: "Please enter a URL before submitting",
@@ -149,27 +154,70 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
       });
       return;
     }
-  
+
     const messageId = nanoid();
+    
+    // Create optimistic message
     addOptimisticMessage({
       id: messageId,
-      user_message: 'Analyzing URL...',
+      user_message: `[Analyze recipe from URL: ${url}]`,
       pending: true,
       meta: {
         optimistic_id: messageId,
         timestamp: Date.now()
       }
     });
-  
+
     try {
       await mutation.mutateAsync({
-        message: 'Analyze this URL',
-        sourceType: 'url',
+        message: "Analyze this recipe URL",
+        sourceType: "url",
         sourceUrl: url,
         messageId
       });
     } catch (error) {
-      console.error('Error submitting URL:', error);
+      console.error("Error submitting URL:", error);
+      toast({
+        title: "Failed to analyze URL",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const retryMessage = async (failedMessage: string, failedMessageId: string) => {
+    const messageId = nanoid();
+    
+    // Create optimistic message
+    addOptimisticMessage({
+      id: messageId,
+      user_message: failedMessage,
+      pending: true,
+      meta: {
+        optimistic_id: messageId,
+        is_retry: true,
+        retry_of: failedMessageId,
+        timestamp: Date.now(),
+        use_unified_approach: true // Indicate that we want the unified recipe approach
+      }
+    });
+
+    try {
+      await mutation.mutateAsync({
+        message: failedMessage,
+        sourceType: 'manual', // Changed from 'analysis' to 'manual'
+        messageId,
+        meta: {
+          use_unified_approach: true // Pass metadata to indicate we want unified recipe approach
+        }
+      });
+    } catch (error) {
+      console.error("Error retrying message:", error);
+      toast({
+        title: "Failed to retry message",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
     }
   };
 
@@ -180,8 +228,8 @@ export const useChatActions = (recipe: Recipe, addOptimisticMessage: (message: O
     uploadRecipeImage,
     submitRecipeUrl,
     retryMessage,
-    isUploading,
     uploadProgress,
+    isUploading,
     isSending: mutation.isPending
   };
 };
