@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bug, Copy } from 'lucide-react';
@@ -38,6 +39,7 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [isApplyingLocal, setIsApplyingLocal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Check if the message contains a complete recipe update
   const hasCompleteRecipe = 'recipe' in message && !!message.recipe;
@@ -59,31 +61,39 @@ export function ChatMessage({
   const isPending = 'pending' in message && message.pending;
   
   // Check if message has an error
-  const hasError = message.meta?.error;
+  const hasError = message.meta?.error || errorMessage;
 
   // Handle applying changes
   const handleApplyChanges = async () => {
     if (!onApplyChanges || !('id' in message)) return;
 
     try {
+      setErrorMessage(null);
+      setIsApplyingLocal(true);
+      
+      // Create an extended message with recipe_id guaranteed to be present
+      // This is critical - we use recipe from props if message.recipe_id is missing
+      const extendedMessage: ChatMessageType = {
+        ...(message as ChatMessageType),
+        recipe_id: message.recipe_id || recipe?.id
+      };
+      
       console.log("Applying changes for message:", { 
-        id: message.id,
+        id: extendedMessage.id,
+        recipe_id: extendedMessage.recipe_id,
         hasChangesSuggested: hasChanges,
         timestamp: new Date().toISOString()
       });
       
-      setIsApplyingLocal(true);
-      const result = await onApplyChanges(message as ChatMessageType);
-      
-      if (!result) {
-        throw new Error("Failed to apply changes");
-      }
+      await onApplyChanges(extendedMessage);
     } catch (error) {
       console.error("Error applying changes:", {
         id: message.id,
         error,
         timestamp: new Date().toISOString()
       });
+      
+      setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
     } finally {
       setIsApplyingLocal(false);
     }
@@ -95,6 +105,7 @@ export function ChatMessage({
     
     const debugContent = JSON.stringify({
       messageId: message.id,
+      recipe_id: message.recipe_id || recipe?.id,
       userMessage: message.user_message,
       aiResponse: message.ai_response,
       recipe: message.recipe || null,
@@ -147,6 +158,7 @@ export function ChatMessage({
                         console.log("Opening debug panel for message:", message.id);
                         console.log("Viewing debug info for message:", {
                           messageId: message.id,
+                          recipe_id: message.recipe_id || recipe?.id,
                           responseSummary: message.ai_response?.substring(0, 100) + "...",
                           hasChanges: hasChanges
                         });
@@ -169,9 +181,16 @@ export function ChatMessage({
                           <span>Copy</span>
                         </Button>
                       </DialogTitle>
+                      <DialogDescription>
+                        Additional debugging information about this message
+                      </DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="max-h-[60vh]">
                       <div className="space-y-4 p-4">
+                        <div>
+                          <h4 className="text-sm font-medium mb-1">Recipe ID:</h4>
+                          <pre className="text-xs bg-muted p-2 rounded overflow-auto break-words whitespace-pre-wrap">{message.recipe_id || recipe?.id || 'undefined'}</pre>
+                        </div>
                         <div>
                           <h4 className="text-sm font-medium mb-1">User Message:</h4>
                           <pre className="text-xs bg-muted p-2 rounded overflow-auto break-words whitespace-pre-wrap">{message.user_message}</pre>
@@ -203,6 +222,13 @@ export function ChatMessage({
                   </DialogContent>
                 </Dialog>
               </div>
+            )}
+            
+            {/* Display any error message */}
+            {hasError && (
+              <Card className="mt-2 p-3 bg-red-50 border-red-200 text-red-700">
+                <p className="text-xs font-medium">Error: {typeof hasError === 'string' ? hasError : message.meta?.error_details || 'Failed to apply changes'}</p>
+              </Card>
             )}
             
             {/* Display action buttons for messages with changes */}
@@ -240,7 +266,7 @@ export function ChatMessage({
         )}
         
         {/* Error state */}
-        {!isUser && hasError && (
+        {!isUser && message.meta?.error && (
           <Card className="mt-2 p-3 bg-destructive bg-opacity-10 border-destructive">
             <p className="text-sm text-destructive mb-2">
               {message.meta?.error_details || 'Failed to process request'}

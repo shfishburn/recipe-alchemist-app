@@ -1,10 +1,9 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { getCorsHeadersWithOrigin } from "../_shared/cors.ts";
 import { storeRecipeVersion, getLatestVersionNumber } from "../_shared/recipe-versions.ts";
 import { validateRecipeIntegrity } from "./validation.ts";
-import { buildOpenAIPrompt } from "../generate-quick-recipe/prompt-builder.ts";
+import { buildUnifiedRecipePrompt } from "../_shared/recipe-prompts.ts";
 
 // Define circuit breaker to prevent cascading failures
 class CircuitBreaker {
@@ -109,86 +108,10 @@ function extractScienceNotesFromText(text: string): string[] {
   return scienceNotes.slice(0, 5); // Return at most 5 notes
 }
 
-// Modified function to create a unified recipe prompt that includes the original recipe
-function buildUnifiedRecipePrompt(
-  originalRecipe: Record<string, any>,
-  userMessage: string,
-  versionNumber: number
-): string {
-  // Clean up recipe for the prompt context
-  const cleanRecipe = {
-    id: originalRecipe.id,
-    title: originalRecipe.title,
-    instructions: originalRecipe.instructions,
-    ingredients: originalRecipe.ingredients,
-    science_notes: originalRecipe.science_notes || [],
-    servings: originalRecipe.servings,
-    prep_time_min: originalRecipe.prep_time_min,
-    cook_time_min: originalRecipe.cook_time_min,
-    cuisine: originalRecipe.cuisine,
-    cuisine_category: originalRecipe.cuisine_category,
-    description: originalRecipe.description,
-    nutrition: originalRecipe.nutrition
-  };
-  
-  // Format for the prompt 
-  return `
-You are a culinary scientist and expert chef in the López-Alt tradition, analyzing and modifying recipes through the lens of food chemistry and precision cooking techniques.
-
-CURRENT RECIPE (JSON):
-${JSON.stringify(cleanRecipe, null, 2)}
-
-USER REQUEST:
-"${userMessage}"
-
-IMPORTANT INSTRUCTIONS:
-1. Analyze the user's request carefully to determine if they want:
-   a) A simple answer to a question (return as textResponse only)
-   b) Modification to the recipe (return complete modified recipe)
-
-2. When returning a modified recipe:
-   - Return a COMPLETE recipe object with ALL fields from the original recipe
-   - Apply all requested modifications directly to the recipe object
-   - NEVER return partial changes, always return the fully updated recipe
-   - Preserve the original recipe ID and structure
-   - Increment version_number to ${versionNumber}
-   - Include a clear modification_summary explaining what changed
-
-3. For recipe formatting:
-   - Format each ingredient consistently with all measurement fields
-   - Include both imperial and metric measurements for all ingredients
-   - Ensure all ingredients have the required fields: qty_metric, unit_metric, qty_imperial, unit_imperial, item
-   - Wrap ingredient names in recipe steps with **double asterisks**
-   - Include specific temperatures (°F AND °C) in cooking steps
-   - Maintain López-Alt style scientific explanations in instructions
-
-4. Return your response in JSON format with this structure:
-{
-  "textResponse": "Detailed analysis or answer to the user's question",
-  "recipe": {
-    // Complete recipe object with all original fields and your modifications
-    "id": "${originalRecipe.id}", // Preserve original ID
-    "title": "Recipe title",
-    "ingredients": [],
-    "instructions": [],
-    // All other original fields must be included
-    "version_info": {
-      "version_number": ${versionNumber},
-      "parent_version_id": "${originalRecipe.version_id || null}",
-      "modification_reason": "Brief reason for changes"
-    }
-  },
-  "followUpQuestions": ["Suggested follow-up question 1", "Suggested follow-up question 2"]
-}
-
-If the user is just asking a question and not requesting changes, only include the textResponse field and followUpQuestions.
-`;
-}
-
-// Inline chat system prompt
+// Chatbot system prompt for standard (non-unified) response format
 const chatSystemPrompt = `You are a culinary scientist specializing in food chemistry and cooking techniques. Always respond in JSON format. When suggesting changes to recipes:
 
-1. Always return a complete recipe object with all changes applied, not just the modifications
+1. Always format responses as JSON with changes
 2. For cooking instructions:
    - Include specific temperatures (F° and C°)
    - Specify cooking durations
@@ -200,29 +123,41 @@ const chatSystemPrompt = `You are a culinary scientist specializing in food chem
    - Each item gets a typical US grocery package size
    - Include \`shop_size_qty\` and \`shop_size_unit\`
 4. Validate all titles are descriptive and clear
+5. Follow López-Alt tone and style:
+   - Active voice, clear instructions
+   - Concrete sensory cues
+   - Ingredient tags: wrap each referenced ingredient in \`**double-asterisks**\`
+   - No vague language
 
 Example format:
 {
   "textResponse": "Detailed explanation of changes...",
-  "recipe": {
-    "id": "original-recipe-id", 
-    "title": "Recipe title",
-    "description": "Brief description",
-    "ingredients": [
-      {
-        "qty_imperial": 2,
-        "unit_imperial": "tbsp",
-        "qty_metric": 30,
-        "unit_metric": "ml",
-        "item": "olive oil"
+  "changes": {
+    "title": "string",
+    "ingredients": {
+      "mode": "add" | "replace" | "none",
+      "items": [{
+        "qty_imperial": number,
+        "unit_imperial": string,
+        "qty_metric": number,
+        "unit_metric": string,
+        "shop_size_qty": number,
+        "shop_size_unit": string,
+        "item": string,
+        "notes": string
+      }]
+    },
+    "instructions": ["Array of steps"],
+    "cookingDetails": {
+      "temperature": {
+        "fahrenheit": number,
+        "celsius": number
+      },
+      "duration": {
+        "prep": number,
+        "cook": number,
+        "rest": number
       }
-    ],
-    "steps": ["Step 1", "Step 2"],
-    "servings": 4,
-    "version_info": {
-      "version_number": 0,
-      "parent_version_id": "original-version-id",
-      "modification_reason": "User requested changes"
     }
   },
   "followUpQuestions": ["Array of suggested follow-up questions"]
@@ -276,14 +211,10 @@ serve(async (req) => {
     const newVersionNumber = latestVersionNumber + 1;
 
     try {
-      // Determine whether to use the unified recipe prompt based on metadata
-      // Check meta.use_unified_approach instead of sourceType
-      const useUnifiedApproach = meta?.use_unified_approach === true;
-      const systemPromptContent = useUnifiedApproach
-        ? buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber)
-        : chatSystemPrompt;
+      // Always use the unified approach for better consistency
+      const systemPromptContent = buildUnifiedRecipePrompt(recipe, userMessage, newVersionNumber);
       
-      console.log(`Using ${useUnifiedApproach ? "unified" : "standard"} recipe prompt approach`);
+      console.log(`Using unified recipe prompt approach`);
       
       const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -330,6 +261,7 @@ serve(async (req) => {
       // Extract data from response
       const textResponse = processedResponse.textResponse || "No response text provided";
       const completeRecipe = processedResponse.recipe;
+      const changes = processedResponse.changes || null;
       const followUpQuestions = processedResponse.followUpQuestions || [];
       
       // Check if the response contains a complete recipe (modification) or just text (question answer)
@@ -380,7 +312,7 @@ serve(async (req) => {
         }
       }
       
-      // Store the chat interaction
+      // Store the chat interaction - strip out recipe to avoid db schema issues
       if (recipe.id) {
         // Create meta object for optimistic updates tracking
         const metaData = {
@@ -395,11 +327,11 @@ serve(async (req) => {
               recipe_id: recipe.id,
               user_message: userMessage,
               ai_response: textResponse,
-              recipe: processedResponse.recipe, // Store the complete recipe directly
-              source_type: sourceType || 'manual', // Ensure we have a valid source type
+              changes_suggested: changes, // Store changes not full recipe
+              source_type: sourceType || 'manual',
               source_url: sourceUrl,
               source_image: sourceImage,
-              version_id: processedResponse.recipe?.version_id, // Link to version if created
+              version_id: versionData?.version_id, // Link to version if created
               meta: metaData
             });
 
