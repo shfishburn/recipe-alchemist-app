@@ -13,7 +13,9 @@ const formatIngredient = (ingredient: Ingredient): string => {
 
   const item = typeof ingredient.item === 'string' 
     ? ingredient.item 
-    : ingredient.item.name;
+    : ingredient.item && typeof ingredient.item === 'object' && 'name' in ingredient.item
+      ? String(ingredient.item.name)
+      : 'Unknown ingredient';
   
   // For metric display
   if (ingredient.qty_metric !== undefined && ingredient.unit_metric) {
@@ -38,9 +40,10 @@ interface QuickRecipePrintProps {
   recipe: QuickRecipe;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  triggerPrint?: boolean;
 }
 
-export function QuickRecipePrint({ recipe, open, onOpenChange }: QuickRecipePrintProps) {
+export function QuickRecipePrint({ recipe, open, onOpenChange, triggerPrint = false }: QuickRecipePrintProps) {
   const printRef = useRef<HTMLDivElement>(null);
   
   const handlePrint = useReactToPrint({
@@ -50,6 +53,15 @@ export function QuickRecipePrint({ recipe, open, onOpenChange }: QuickRecipePrin
       console.log('Recipe printed successfully');
     }
   });
+  
+  // If triggerPrint changes to true, automatically print
+  React.useEffect(() => {
+    if (triggerPrint && open) {
+      setTimeout(() => {
+        handlePrint();
+      }, 100);
+    }
+  }, [triggerPrint, open, handlePrint]);
   
   if (!recipe) {
     return null;

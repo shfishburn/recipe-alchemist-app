@@ -1,93 +1,95 @@
-
 import type { Recipe } from '@/types/recipe';
-import type { ChangesResponse } from '@/types/chat';
+import type { SuggestedChanges } from '@/types/chat';
 
-export function validateRecipeUpdate(recipe: Recipe, changes: ChangesResponse | null | undefined) {
+/**
+ * Validates that the suggested changes can be properly applied to the recipe
+ * @param recipe The original recipe
+ * @param changes The suggested changes to apply
+ * @returns True if changes are valid, false otherwise
+ */
+export function validateRecipeUpdate(
+  recipe: Recipe,
+  changes: SuggestedChanges | undefined
+): boolean {
+  // No changes means nothing to validate
   if (!changes) {
-    console.log("No changes to validate");
     return false;
   }
 
-  if (!recipe?.id) {
-    console.error("Invalid recipe provided for validation");
+  // Basic validation of the recipe object
+  if (!recipe || !recipe.id) {
+    console.error("Invalid recipe provided for update");
     return false;
   }
 
-  // Basic validation - can be extended with more specific rules
   try {
-    // Validate title changes
-    if (changes.title !== undefined && typeof changes.title !== 'string') {
-      console.error("Invalid title format");
+    // If title change, validate it's a proper string
+    if (changes.title !== undefined && (typeof changes.title !== 'string' || changes.title.trim() === '')) {
+      console.error("Invalid title provided in changes");
       return false;
     }
-    
-    // Validate ingredients changes
+
+    // Validate ingredient changes
     if (changes.ingredients) {
       const { mode, items } = changes.ingredients;
       
-      if (mode !== 'add' && mode !== 'replace' && mode !== 'none') {
-        console.error("Invalid ingredients mode:", mode);
+      // Validate mode
+      if (!['add', 'replace', 'none'].includes(mode)) {
+        console.error("Invalid ingredient change mode:", mode);
         return false;
       }
       
-      if (mode !== 'none' && (!Array.isArray(items) || items.length === 0)) {
-        console.error("Missing or empty ingredients items array");
-        return false;
-      }
-      
-      // Validate each ingredient item structure
-      if (mode !== 'none' && Array.isArray(items)) {
-        for (const item of items) {
-          if (typeof item === 'string') {
-            continue; // String ingredients are valid
-          }
-          
-          // Basic structure validation for object ingredients
-          if (!item || typeof item !== 'object') {
-            console.error("Invalid ingredient item format");
-            return false;
-          }
+      // If there are items, validate they have the proper structure
+      if (items && Array.isArray(items)) {
+        const validIngredients = items.every(item => 
+          item && 
+          typeof item === 'object' &&
+          (typeof item.item === 'string' || 
+           (typeof item.item === 'object' && item.item !== null && 'name' in item.item))
+        );
+        
+        if (!validIngredients) {
+          console.error("Invalid ingredient structure in changes");
+          return false;
         }
       }
     }
-    
-    // Validate instructions changes
-    if (changes.instructions && !Array.isArray(changes.instructions)) {
-      console.error("Instructions must be an array");
-      return false;
-    }
-    
-    // Validate science_notes changes
-    if (changes.science_notes && !Array.isArray(changes.science_notes)) {
-      console.error("Science notes must be an array");
-      return false;
-    }
-    
-    // Validate nutrition data if present
-    if (changes.nutrition) {
-      // Ensure it's an object
-      if (typeof changes.nutrition !== 'object' || changes.nutrition === null) {
-        console.error("Nutrition must be a valid object");
+
+    // Validate instruction changes
+    if (changes.instructions) {
+      // If instructions is an array of strings, validate those
+      if (changes.instructions.every(instr => typeof instr === 'string')) {
+        // Valid array of strings - nothing to do
+      } 
+      // If it's an array of objects, validate they have the proper structure
+      else if (changes.instructions.every(instr => 
+        typeof instr === 'object' && instr !== null && 'action' in instr
+      )) {
+        // Valid array of instruction change objects - nothing to do
+      } 
+      // Otherwise, it's invalid
+      else {
+        console.error("Invalid instruction structure in changes");
         return false;
       }
+    }
+
+    // Validate science notes
+    if (changes.science_notes && Array.isArray(changes.science_notes)) {
+      const validNotes = changes.science_notes.every(note => 
+        typeof note === 'string' && note.trim() !== ''
+      );
       
-      // Check for minimum required nutrition fields
-      const requiredFields = ['calories', 'protein', 'carbs', 'fat'];
-      
-      // Log for debugging
-      console.log("Validating nutrition data:", changes.nutrition);
-      
-      // We don't strictly enforce these fields, just log warnings
-      for (const field of requiredFields) {
-        if (!(field in changes.nutrition) || changes.nutrition[field] === undefined) {
-          console.warn(`Missing nutrition field: ${field}`);
-        }
+      if (!validNotes) {
+        console.error("Invalid science notes in changes");
+        return false;
       }
     }
-    
+
+    // If we get here, everything is valid
     return true;
   } catch (error) {
-    console.error("Validation error:", error);
+    console.error("Error validating recipe update:", error);
     return false;
   }
 }

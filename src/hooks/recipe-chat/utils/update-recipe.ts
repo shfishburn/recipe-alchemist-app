@@ -61,7 +61,7 @@ export async function updateRecipe(
       // Transform ingredients with strict type checking for each property
       ingredients: Array.isArray(updatedRecipeData.ingredients)
         ? updatedRecipeData.ingredients.map(ing => {
-            // Handle ing as potentially any type, including null, string, etc.
+            // Handle ing as potentially any type, using type guard
             if (!ensureRequiredIngredientProps(ing)) {
               // Return default ingredient if ing doesn't have required properties
               return {
@@ -69,7 +69,10 @@ export async function updateRecipe(
                 unit_metric: '',
                 qty_imperial: 0,
                 unit_imperial: '',
-                item: typeof ing?.item === 'string' ? ing.item : 'Unknown ingredient',
+                item: typeof ing?.item === 'string' ? ing.item : 
+                       (ing?.item && typeof ing.item === 'object' && 'name' in ing.item) 
+                       ? String(ing.item.name) 
+                       : 'Unknown ingredient',
               };
             }
             
@@ -121,7 +124,7 @@ export async function updateRecipe(
         const validIngredients = items.every(item => 
           typeof item.qty === 'number' && 
           typeof item.unit === 'string' && 
-          typeof item.item === 'string'
+          (typeof item.item === 'string' || (typeof item.item === 'object' && item.item !== null))
         );
 
         if (!validIngredients) {

@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Recipe, Ingredient, Nutrition, NutriScore } from '@/types/recipe';
@@ -177,4 +176,23 @@ export const useRecipeDetail = (idOrSlug?: string) => {
     retry: 1,
     staleTime: 300000, // 5 minutes (increased from 30 seconds)
   });
+};
+
+const formatRecipeData = (data: any): QuickRecipe => {
+  if (!data) {
+    return null as unknown as QuickRecipe;
+  }
+
+  // Extract important fields for display
+  return {
+    ...data,
+    // Use proper cookingTip property
+    cookingTip: data.cookingTip || data.chef_notes || '',
+    prepTime: data.prep_time_min || 0,
+    cookTime: data.cook_time_min || 0,
+    id: data.id || '',
+    title: data.title || '',
+    instructions: data.instructions || data.steps || [],
+    ingredients: data.ingredients || []
+  };
 };

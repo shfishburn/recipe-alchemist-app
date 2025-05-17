@@ -66,7 +66,11 @@ export function ChangesSummary({ changes, recipe }: ChangesSummaryProps) {
             <ul className="list-disc pl-4 space-y-1">
               {changes.ingredients.items.map((item, index) => (
                 <li key={`ingredient-${index}`}>
-                  {typeof item.item === 'string' ? item.item : item.item.name}
+                  {typeof item.item === 'string' 
+                    ? item.item 
+                    : (item.item && typeof item.item === 'object' && 'name' in item.item) 
+                      ? String(item.item.name) 
+                      : 'Unknown ingredient'}
                   {item.notes && <span className="text-slate-500"> ({item.notes})</span>}
                 </li>
               ))}
@@ -92,25 +96,12 @@ export function ChangesSummary({ changes, recipe }: ChangesSummaryProps) {
           <div className="pl-2">
             <ul className="list-disc pl-4 space-y-1">
               {changes.science_notes.map((note, index) => (
-                <li key={`science-note-${index}`}>{note}</li>
+                <li key={`note-${index}`}>{note}</li>
               ))}
             </ul>
           </div>
         </div>
       )}
-      
-      {/* No changes detected */}
-      {!changes.title && 
-       (!changes.ingredients || !changes.ingredients.items || changes.ingredients.items.length === 0) &&
-       (!changes.instructions || changes.instructions.length === 0) &&
-       (!changes.science_notes || changes.science_notes.length === 0) && (
-        <Alert>
-          <p className="text-slate-500">No specific changes were detected in this response.</p>
-        </Alert>
-      )}
-      
-      <Separator className="my-2" />
-      <p className="text-xs text-slate-500">Review these changes before applying them to your recipe.</p>
     </div>
   );
 }

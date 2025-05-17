@@ -5,8 +5,8 @@ import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { ChatMessage } from '@/types/chat';
-import { useResponseFormatter } from './response/ResponseFormatter';
+import { ChatMessage, SuggestedChanges } from '@/types/chat';
+import { useResponseFormatter } from './response/hooks/useResponseFormatter';
 import { ChangesSummary } from './changes/ChangesSummary';
 import { MethodologyExplanation } from './methodology/MethodologyExplanation';
 
@@ -73,8 +73,8 @@ export function ChatResponse({ message, isLatest = false }: ChatResponseProps) {
                   className="mt-4"
                 >
                   <ChangesSummary 
-                    changes={message.changes_suggested} 
-                    recipe={message.response?.recipe}
+                    changes={message.changes_suggested as SuggestedChanges}
+                    recipe={message.recipe}
                   />
                 </motion.div>
               )}

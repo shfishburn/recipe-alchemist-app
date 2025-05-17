@@ -3,7 +3,6 @@ import React from 'react';
 import { ChatResponse } from './ChatResponse';
 import { UserMessage } from './UserMessage';
 import type { ChatMessage as ChatMessageType, OptimisticMessage } from '@/types/chat';
-import { getChatMeta } from '@/utils/chat-meta';
 
 // Create a union type that works with both ChatMessage and OptimisticMessage
 type AnyMessageType = ChatMessageType | OptimisticMessage;
@@ -29,10 +28,10 @@ export function ChatMessage({
 }: ChatMessageProps) {
   // Enhanced optimistic message detection
   const isOptimisticUserMessage = isOptimistic || 
-    (!!getChatMeta(chat, 'optimistic_id', '') && !chat.ai_response);
+    (!!chat.meta?.optimistic_id && !chat.ai_response);
   
   // Check if this message has an error
-  const hasError = getChatMeta(chat, 'error', false);
+  const hasError = chat.meta?.error || false;
   
   // Log chat message for debugging - enhanced with more details
   React.useEffect(() => {
@@ -61,7 +60,7 @@ export function ChatMessage({
     if (isOptimisticUserMessage) {
       console.log("[ChatMessage] Optimistic message render:", {
         id: chat.id,
-        optimisticId: getChatMeta(chat, 'optimistic_id', ''),
+        optimisticId: chat.meta?.optimistic_id || '',
         waitingForResponse: true
       });
     }
@@ -115,14 +114,18 @@ export function ChatMessage({
       
       {chat.ai_response && (
         <ChatResponse
-          response={chat.ai_response}
-          changesSuggested={(chat as ChatMessageType).changes_suggested || null}
-          followUpQuestions={(chat as ChatMessageType).follow_up_questions || []}
-          setMessage={setMessage}
-          onApplyChanges={handleApplyChanges}
-          isApplying={isApplying}
-          applied={applied || !!chat.applied}
-          messageId={chat.id}
+          message={{
+            id: chat.id,
+            role: 'assistant',
+            content: chat.ai_response,
+            changes_suggested: (chat as ChatMessageType).changes_suggested,
+            recipe: (chat as ChatMessageType).recipe,
+            displayText: (chat as ChatMessageType).displayText,
+            showWarning: (chat as ChatMessageType).showWarning,
+            changesPreview: (chat as ChatMessageType).changesPreview,
+            isMethodology: (chat as ChatMessageType).isMethodology,
+          }}
+          isLatest={isLatest}
         />
       )}
     </div>
