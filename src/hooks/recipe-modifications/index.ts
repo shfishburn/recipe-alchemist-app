@@ -4,6 +4,5 @@ export type {
   ModificationStatus, 
   RecipeModifications,
   NutritionImpact, 
-  ModificationHistoryEntry,
-  VersionHistoryEntry
+  ModificationHistoryEntry 
 } from './types';

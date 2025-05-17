@@ -206,9 +206,9 @@ export const QuickRecipeModifier: React.FC<QuickRecipeModifierProps> = ({ recipe
           onApplyModifications={handleApplyModifications}
           onRejectModifications={rejectModifications}
           onResetToOriginal={resetToOriginal}
-          isHistoricalVersion={hasMultipleVersions && selectedVersionId !== versionHistory[0]?.version_id}
+          isHistoricalVersion={hasMultipleVersions && selectedVersionId !== versionHistory[0].version_id}
         />
       </div>
     </div>
   );
-}
+};

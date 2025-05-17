@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { QuickRecipe } from '@/types/quick-recipe';
 import { toast } from 'sonner';
@@ -11,11 +10,7 @@ import {
 } from './types';
 import { requestRecipeModifications } from './api-client';
 import { saveModificationRequest } from './storage-utils';
-import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Hook for managing recipe modifications
- */
 export function useRecipeModifications(recipe: QuickRecipe) {
   const { session } = useAuth();
   const [status, setStatus] = useState<ModificationStatus>('idle');

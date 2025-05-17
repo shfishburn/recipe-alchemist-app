@@ -1,60 +1,45 @@
+import type { Ingredient } from './quick-recipe';
+import type { Nutrition } from './recipe';
 
-import { QuickRecipe } from './quick-recipe';
-
-export interface SuggestedChanges {
-  // Title changes
+export interface ChangesResponse {
   title?: string;
-  
-  // Description changes
-  description?: string;
-  
-  // Ingredient changes
   ingredients?: {
-    mode: 'none' | 'add' | 'replace' | 'update';
-    items?: Array<{
-      qty: number;
-      unit: string;
-      item: string;
-      action?: 'add' | 'update' | 'remove';
-      original?: string;
-    }>;
+    mode: "add" | "replace" | "none";
+    items?: Ingredient[];
   };
-  
-  // Instruction changes
-  instructions?: Array<string | InstructionChange>;
-  
-  // Nutrition changes
-  nutrition?: Record<string, any>;
-  
-  // Science notes
+  instructions?: string[];
   science_notes?: string[];
-  
-  // Cooking tips
-  cooking_tip?: string;
-  chef_notes?: string;
-  
-  // Complete recipe replacement (newer API returns full recipe)
-  recipe?: QuickRecipe;
-}
-
-export interface InstructionChange {
-  action: string;
-  original?: string;
+  nutrition?: Nutrition;
 }
 
 export interface ChatMessage {
   id: string;
   user_message: string;
   ai_response: string;
-  changes_suggested: SuggestedChanges;
-  meta?: Record<string, any>;
-  applied?: boolean;
+  changes_suggested?: ChangesResponse | null;
+  follow_up_questions?: string[];
+  meta?: ChatMeta;
   timestamp?: number;
+  recipe_id?: string;
+  recipe?: any; // For full recipe updates
+  applied?: boolean;
+  version_id?: string;
+  pending?: boolean;
 }
 
-export interface OptimisticMessage {
-  id: string;
+export type OptimisticMessage = Partial<ChatMessage> & {
   user_message: string;
-  ai_response?: string;
-  meta?: Record<string, any>;
+  id: string;
+  meta?: ChatMeta;
+};
+
+export interface ChatMeta {
+  [key: string]: any;
+  optimistic_id?: string;
+  error?: boolean;
+  error_details?: string;
+  processing_stage?: string;
+  timestamp?: number;
+  tracking_id?: string;
+  recipe_id?: string;
 }

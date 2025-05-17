@@ -1,26 +1,23 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ChatMessage } from '@/types/chat';
-import { toast } from 'sonner';
+import type { ChatMessage, ChangesResponse, ChatMeta } from '@/types/chat';
 
 /**
- * Hook to fetch and manage chat history for a recipe
+ * Hook for fetching and processing chat history for a recipe
  */
-export const useChatHistory = (recipeId?: string) => {
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-
-  // Fetch chat history when recipeId changes
-  const fetchChatHistory = async () => {
-    if (!recipeId) {
-      setChatHistory([]);
-      setIsLoadingHistory(false);
-      return;
-    }
-
-    try {
-      setIsLoadingHistory(true);
+export const useChatHistory = (recipeId: string) => {
+  const { data: chatHistory = [], isLoading: isLoadingHistory, refetch } = useQuery({
+    queryKey: ['recipe-chats', recipeId],
+    queryFn: async () => {
+      console.log(`Fetching chat history for recipe ${recipeId}`);
+      
+      // Validate recipe ID to prevent API errors
+      if (!recipeId) {
+        console.warn("Missing recipe ID in useChatHistory");
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('recipe_chats')
         .select('*')
@@ -29,38 +26,63 @@ export const useChatHistory = (recipeId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) {
+        console.error("Error fetching chat history:", error);
         throw error;
       }
+      
+      if (data && data.length > 0) {
+        console.log(`Found ${data.length} chat messages for recipe ${recipeId}`);
+      } else {
+        console.log(`No existing chat history for recipe ${recipeId}`);
+      }
+      
+      // Process the chat messages to handle follow_up_questions and changes_suggested
+      return data.map(chat => {
+        // Initialize chat message with default values
+        const chatMessage: ChatMessage = {
+          id: chat.id,
+          user_message: chat.user_message,
+          ai_response: chat.ai_response,
+          changes_suggested: null,
+          applied: chat.applied || false,
+          created_at: chat.created_at,
+          follow_up_questions: [], // Default empty array
+          meta: typeof chat.meta === 'object' ? (chat.meta as unknown as ChatMeta) || {} : {} // Fix type cast
+        };
 
-      // Convert database records to ChatMessage format with type safety
-      const typeSafeChatMessages: ChatMessage[] = data.map(item => ({
-        id: item.id,
-        user_message: item.user_message,
-        ai_response: item.ai_response || '',
-        // Need to parse the changes_suggested into the correct type
-        changes_suggested: item.changes_suggested || {},
-        meta: item.meta || {},
-        applied: Boolean(item.applied),
-        timestamp: new Date(item.created_at).getTime()
-      }));
-
-      setChatHistory(typeSafeChatMessages);
-    } catch (error) {
-      console.error('Error fetching chat history:', error);
-      toast.error('Failed to load chat history');
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
-
-  // Initial fetch
-  useEffect(() => {
-    fetchChatHistory();
-  }, [recipeId]);
+        // Process changes_suggested as a properly typed object
+        if (chat.changes_suggested) {
+          try {
+            // Ensure changes_suggested is properly typed
+            chatMessage.changes_suggested = chat.changes_suggested as unknown as ChangesResponse;
+          } catch (e) {
+            console.error("Error processing changes_suggested data:", e);
+          }
+        }
+        
+        // Check if the chat response has followUpQuestions in the response data
+        if (typeof chat.ai_response === 'string') {
+          try {
+            // Try to extract follow-up questions from the AI response if they exist
+            const responseObj = JSON.parse(chat.ai_response);
+            if (responseObj && Array.isArray(responseObj.followUpQuestions)) {
+              chatMessage.follow_up_questions = responseObj.followUpQuestions;
+            }
+          } catch (e) {
+            // If parsing fails, just continue with the empty array
+          }
+        }
+        
+        return chatMessage;
+      });
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 5000, // Don't refetch too often to avoid flickering
+  });
 
   return {
     chatHistory,
     isLoadingHistory,
-    refetchChatHistory: fetchChatHistory
+    refetchChatHistory: refetch
   };
 };

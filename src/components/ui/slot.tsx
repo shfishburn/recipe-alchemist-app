@@ -37,6 +37,7 @@ const Slot = React.forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
   }
   
   // Clone the element with merged props
+  // We need to use as React.ReactElement<any> to correctly handle refs
   return React.cloneElement(
     firstChild as React.ReactElement<any>, 
     {
