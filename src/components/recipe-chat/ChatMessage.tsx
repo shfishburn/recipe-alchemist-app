@@ -39,6 +39,7 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const [isDebugOpen, setIsDebugOpen] = useState(false);
   const [isApplyingLocal, setIsApplyingLocal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Check if the message contains a complete recipe update
   const hasCompleteRecipe = 'recipe' in message && !!message.recipe;
@@ -60,20 +61,18 @@ export function ChatMessage({
   const isPending = 'pending' in message && message.pending;
   
   // Check if message has an error
-  const hasError = message.meta?.error;
+  const hasError = message.meta?.error || errorMessage;
 
   // Handle applying changes
   const handleApplyChanges = async () => {
     if (!onApplyChanges || !('id' in message)) return;
 
     try {
-      // Ensure the message has a recipe_id, preferably from the recipe prop
-      if (!message.recipe_id && recipe?.id) {
-        console.log("Adding recipe_id to message from recipe prop:", recipe.id);
-        // This is just for logging, we'll actually use the corrected message below
-      }
-
+      setErrorMessage(null);
+      setIsApplyingLocal(true);
+      
       // Create an extended message with recipe_id guaranteed to be present
+      // This is critical - we use recipe from props if message.recipe_id is missing
       const extendedMessage: ChatMessageType = {
         ...(message as ChatMessageType),
         recipe_id: message.recipe_id || recipe?.id
@@ -86,18 +85,15 @@ export function ChatMessage({
         timestamp: new Date().toISOString()
       });
       
-      setIsApplyingLocal(true);
-      const result = await onApplyChanges(extendedMessage);
-      
-      if (!result) {
-        throw new Error("Failed to apply changes");
-      }
+      await onApplyChanges(extendedMessage);
     } catch (error) {
       console.error("Error applying changes:", {
         id: message.id,
         error,
         timestamp: new Date().toISOString()
       });
+      
+      setErrorMessage(error instanceof Error ? error.message : "Unknown error occurred");
     } finally {
       setIsApplyingLocal(false);
     }
@@ -228,6 +224,13 @@ export function ChatMessage({
               </div>
             )}
             
+            {/* Display any error message */}
+            {hasError && (
+              <Card className="mt-2 p-3 bg-red-50 border-red-200 text-red-700">
+                <p className="text-xs font-medium">Error: {typeof hasError === 'string' ? hasError : message.meta?.error_details || 'Failed to apply changes'}</p>
+              </Card>
+            )}
+            
             {/* Display action buttons for messages with changes */}
             {canApplyChanges && (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -263,7 +266,7 @@ export function ChatMessage({
         )}
         
         {/* Error state */}
-        {!isUser && hasError && (
+        {!isUser && message.meta?.error && (
           <Card className="mt-2 p-3 bg-destructive bg-opacity-10 border-destructive">
             <p className="text-sm text-destructive mb-2">
               {message.meta?.error_details || 'Failed to process request'}

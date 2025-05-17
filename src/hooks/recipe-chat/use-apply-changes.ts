@@ -92,27 +92,33 @@ export const useApplyChanges = () => {
     },
   });
 
-  // Modified to ensure recipe_id is properly used
+  // Modified to guarantee recipe_id is properly used and provide better error messages
   const applyChanges = async (chatMessage: ChatMessage): Promise<boolean> => {
     try {
       // Validate the required recipe_id is present
-      if (!chatMessage.recipe_id) {
+      const recipeId = chatMessage.recipe_id || (chatMessage.meta && chatMessage.meta.recipe_id);
+      
+      if (!recipeId) {
         console.error("Missing recipe_id in chat message:", chatMessage);
         throw new Error("Cannot apply changes: recipe_id is missing from chat message");
       }
       
-      console.log("Fetching recipe with ID:", chatMessage.recipe_id);
+      console.log("Fetching recipe with ID:", recipeId);
       
       // First, fetch the current recipe data from the database
       const { data: recipeData, error: fetchError } = await supabase
         .from('recipes')
         .select('*')
-        .eq('id', chatMessage.recipe_id)
+        .eq('id', recipeId)
         .single();
         
-      if (fetchError || !recipeData) {
+      if (fetchError) {
         console.error("Error fetching recipe:", fetchError);
-        throw new Error("Could not fetch recipe data");
+        throw new Error(`Could not fetch recipe data: ${fetchError.message}`);
+      }
+      
+      if (!recipeData) {
+        throw new Error("Recipe not found with the provided ID");
       }
       
       // Transform the raw data to Recipe type with explicit type conversions
@@ -123,7 +129,7 @@ export const useApplyChanges = () => {
       return true;
     } catch (error) {
       console.error("Error applying changes:", error);
-      return false;
+      throw error; // Rethrow to allow proper handling in UI
     }
   };
 
